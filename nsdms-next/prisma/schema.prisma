@@ -1,0 +1,4803 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Organisation {
+  id                        Int                   @id @default(autoincrement())
+  sdlNumber                 String?               @unique @map("sdl_number")
+  organisationName          String                @map("organisation_name")
+  tradingName               String?               @map("trading_name")
+  companyRegistrationNumber String?               @unique @map("company_registration_number")
+  email                     String?
+  telNumber                 String?               @map("tel_number")
+  address                   String?
+  bankAccountNumber         String?               @map("bank_account_number")
+  bankBranchCode            String?               @map("bank_branch_code")
+  sicCode                   String?               @map("sic_code")
+  status                    String                @default("Awaiting merSETA Approval") @map("status")
+  createdAt                 DateTime              @default(now()) @map("created_at")
+  createdBy                 Int?                  @map("created_by")
+  modifiedAt                DateTime              @updatedAt @map("modified_at")
+  modifiedBy                Int?                  @map("modified_by")
+  documents                 Document[]
+  grantApplications         GrantApplication[]
+  employerEnrollments       LearnerEnrollment[]   @relation("EmployerEnrollments")
+  providerEnrollments       LearnerEnrollment[]   @relation("ProviderEnrollments")
+  sarsLevyDetails           SarsLevyDetail[]
+  trainingProvider          TrainingProvider?
+  workplaceSkillsPlans      WorkplaceSkillsPlan[]
+
+  @@map("organisation")
+}
+
+model AuditLog {
+  id         Int      @id @default(autoincrement())
+  recordId   Int      @map("record_id")
+  entityName String   @map("entity_name")
+  actionName String   @map("action_name")
+  actor      String
+  snapshot   String
+  createdAt  DateTime @default(now()) @map("created_at")
+  createdBy  Int?     @map("created_by")
+  modifiedAt DateTime @updatedAt @map("modified_at")
+  modifiedBy Int?     @map("modified_by")
+
+  @@map("audit_log")
+}
+
+model CategoryType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("category_type")
+}
+
+model User {
+  id                   Int                            @id @default(autoincrement())
+  name                 String?
+  email                String?                        @unique
+  emailVerified        DateTime?                      @map("email_verified")
+  image                String?
+  role                 String                         @default("STANDARD")
+  createdAt            DateTime                       @default(now()) @map("created_at")
+  createdBy            Int?                           @map("created_by")
+  modifiedAt           DateTime                       @updatedAt @map("modified_at")
+  modifiedBy           Int?                           @map("modified_by")
+  accounts             Account[]
+  assessorApplications AssessorModeratorApplication[]
+  learners             Learner[]
+  learnerEnrollments   LearnerEnrollment[]
+  sessions             Session[]
+
+  @@map("user")
+}
+
+model Account {
+  id                Int      @id @default(autoincrement())
+  userId            Int      @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String   @map("provider_account_id")
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  createdAt         DateTime @default(now()) @map("created_at")
+  createdBy         Int?     @map("created_by")
+  modifiedAt        DateTime @updatedAt @map("modified_at")
+  modifiedBy        Int?     @map("modified_by")
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("account")
+}
+
+model Session {
+  id           Int      @id @default(autoincrement())
+  sessionToken String   @unique @map("session_token")
+  userId       Int      @map("user_id")
+  expires      DateTime
+  createdAt    DateTime @default(now()) @map("created_at")
+  createdBy    Int?     @map("created_by")
+  modifiedAt   DateTime @updatedAt @map("modified_at")
+  modifiedBy   Int?     @map("modified_by")
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("session")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_token")
+}
+
+model InterventionType {
+  id          Int                 @id @default(autoincrement())
+  name        String              @unique
+  code        String              @unique
+  description String?
+  active      Boolean             @default(true)
+  createdAt   DateTime            @default(now()) @map("created_at")
+  createdBy   Int?                @map("created_by")
+  modifiedAt  DateTime            @updatedAt @map("modified_at")
+  modifiedBy  Int?                @map("modified_by")
+  enrollments LearnerEnrollment[]
+
+  @@index([name])
+  @@index([code])
+  @@map("intervention_type")
+}
+
+model QualificationType {
+  id          Int                 @id @default(autoincrement())
+  name        String              @unique
+  code        String              @unique
+  description String?
+  active      Boolean             @default(true)
+  createdAt   DateTime            @default(now()) @map("created_at")
+  createdBy   Int?                @map("created_by")
+  modifiedAt  DateTime            @updatedAt @map("modified_at")
+  modifiedBy  Int?                @map("modified_by")
+  enrollments LearnerEnrollment[]
+
+  @@index([name])
+  @@index([code])
+  @@map("qualification_type")
+}
+
+model GenderType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("gender_type")
+}
+
+model EquityType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("equity_type")
+}
+
+model NationalityType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("nationality_type")
+}
+
+model ProvinceType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("province_type")
+}
+
+model ProviderTypeType {
+  id                Int                @id @default(autoincrement())
+  name              String             @unique
+  code              String             @unique
+  description       String?
+  active            Boolean            @default(true)
+  createdAt         DateTime           @default(now()) @map("created_at")
+  createdBy         Int?               @map("created_by")
+  modifiedAt        DateTime           @updatedAt @map("modified_at")
+  modifiedBy        Int?               @map("modified_by")
+  trainingProviders TrainingProvider[]
+
+  @@index([name])
+  @@index([code])
+  @@map("provider_type_type")
+}
+
+model ProviderClassType {
+  id                Int                @id @default(autoincrement())
+  name              String             @unique
+  code              String             @unique
+  description       String?
+  active            Boolean            @default(true)
+  createdAt         DateTime           @default(now()) @map("created_at")
+  createdBy         Int?               @map("created_by")
+  modifiedAt        DateTime           @updatedAt @map("modified_at")
+  modifiedBy        Int?               @map("modified_by")
+  trainingProviders TrainingProvider[]
+
+  @@index([name])
+  @@index([code])
+  @@map("provider_class_type")
+}
+
+model AccreditationStatusType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("accreditation_status_type")
+}
+
+model AbetBandType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("abet_band_type")
+}
+
+model AlternativeIdType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("alternative_id_type")
+}
+
+model ApplicantType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("applicant_type")
+}
+
+model BankType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("bank_type")
+}
+
+model ChamberType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("chamber_type")
+}
+
+model CitizenResidentStatusType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("citizen_resident_status_type")
+}
+
+model CountryType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("country_type")
+}
+
+model DepartmentType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("department_type")
+}
+
+model DisabilityRatingType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("disability_rating_type")
+}
+
+model DisabilityStatusType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("disability_status_type")
+}
+
+model EconomicStatusType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("economic_status_type")
+}
+
+model EmploymentTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("employment_type_type")
+}
+
+model HighestQualificationRequiredType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("highest_qualification_required_type")
+}
+
+model LanguageType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("language_type")
+}
+
+model MaritalStatusType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("marital_status_type")
+}
+
+model SetaType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("seta_type")
+}
+
+model SICCodeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("sic_code_type")
+}
+
+model SizeOfCompanyType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("size_of_company_type")
+}
+
+model SocioeconomicStatusType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("socioeconomic_status_type")
+}
+
+model TitleType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("title_type")
+}
+
+model TownType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("town_type")
+}
+
+model UrbanRuralType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("urban_rural_type")
+}
+
+model AccreditationType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("accreditation_type")
+}
+
+model AetProgrammeLevelType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("aet_programme_level_type")
+}
+
+model AqpType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("aqp_type")
+}
+
+model EtqaType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("etqa_type")
+}
+
+model InterventionLevelType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("intervention_level_type")
+}
+
+model InterventionTitleType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("intervention_title_type")
+}
+
+model LearnerAchievementStatusType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("learner_achievement_status_type")
+}
+
+model LearnerAchievementTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("learner_achievement_type_type")
+}
+
+model NQFAlignmentType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("nqf_alignment_type")
+}
+
+model NqfLevelsType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("nqf_levels_type")
+}
+
+model ProviderAccredStatusType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("provider_accred_status_type")
+}
+
+model ProviderStatusType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("provider_status_type")
+}
+
+model RejectReasonsType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("reject_reasons_type")
+}
+
+model WithdrawReasonsType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("withdraw_reasons_type")
+}
+
+model DGProjectType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("dg_project_type")
+}
+
+model DGYearType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("dg_year_type")
+}
+
+model DGYearLearningProgramsType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("dg_year_learning_programs_type")
+}
+
+model DesignationType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("designation_type")
+}
+
+model DesignationStructureStatusType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("designation_structure_status_type")
+}
+
+model FinYearQuartersLookUp {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("fin_year_quarters_lookup")
+}
+
+model FinancialYearsType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("financial_years_type")
+}
+
+model FundingType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("funding_type")
+}
+
+model GrantAmountType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("grant_amount_type")
+}
+
+model GrantOfoSelectionType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("grant_ofo_selection_type")
+}
+
+model InstitutionType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("institution_type")
+}
+
+model InstitutionDomainType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("institution_domain_type")
+}
+
+model MandatoryGrantEvaluationType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("mandatory_grant_evaluation_type")
+}
+
+model NoHardToFillVacanciesType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("no_hard_to_fill_vacancies_type")
+}
+
+model OccupationCategoryType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("occupation_category_type")
+}
+
+model OfoType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("ofo_type")
+}
+
+model OfoQualificationLinkType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("ofo_qualification_link_type")
+}
+
+model OrganisedLabourUnionType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("organised_labour_union_type")
+}
+
+model RelationshipToCompanyType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("relationship_to_company_type")
+}
+
+model ScarcityReasonType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("scarcity_reason_type")
+}
+
+model ScopeOfResponsibilityType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("scope_of_responsibility_type")
+}
+
+model SkillsIdentificationType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("skills_identification_type")
+}
+
+model StakeholderRelationsType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("stakeholder_relations_type")
+}
+
+model SubdomainType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("subdomain_type")
+}
+
+model SubfieldType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("subfield_type")
+}
+
+model UserResponsibilityType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("user_responsibility_type")
+}
+
+model VacancyReasonsType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("vacancy_reasons_type")
+}
+
+model WspHistoricDataType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("wsp_historic_data_type")
+}
+
+model AddressChangeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("address_change_type")
+}
+
+model ApprovalStatusType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("approval_status_type")
+}
+
+model AssessorModType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("assessor_mod_type")
+}
+
+model ExtensionRequestReasonType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("extension_request_reason_type")
+}
+
+model MailType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("mail_type")
+}
+
+model MeetingTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("meeting_type_type")
+}
+
+model NoteType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("note_type")
+}
+
+model PlacementTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("placement_type_type")
+}
+
+model PreparationTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("preparation_type_type")
+}
+
+model QuestionTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("question_type_type")
+}
+
+model RecommendationTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("recommendation_type_type")
+}
+
+model SessionTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("session_type_type")
+}
+
+model SetupTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("setup_type_type")
+}
+
+model SkillTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("skill_type_type")
+}
+
+model StatusType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("status_type")
+}
+
+model TrainingProviderTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("training_provider_type_type")
+}
+
+model WorkPlaceApprovalType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("work_place_approval_type")
+}
+
+model AllocationChangeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("allocation_change_type")
+}
+
+model AppraisalCategoriesType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("appraisal_categories_type")
+}
+
+model AreaForImprovementType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("area_for_improvement_type")
+}
+
+model CommunicatingRatingType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("communicating_rating_type")
+}
+
+model CompanyUserPositionType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("company_user_position_type")
+}
+
+model DateChangeReasonsType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("date_change_reasons_type")
+}
+
+model DesignatedTradeTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("designated_trade_type_type")
+}
+
+model DeviationReasonType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("deviation_reason_type")
+}
+
+model EmployerApprovalStatusType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("employer_approval_status_type")
+}
+
+model EnrolmentStatusReasonType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("enrolment_status_reason_type")
+}
+
+model EnrolmentTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("enrolment_type_type")
+}
+
+model HearingRatingType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("hearing_rating_type")
+}
+
+model HonoursClassificationType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("honours_classification_type")
+}
+
+model MailTemplatesType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("mail_templates_type")
+}
+
+model MailingListType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("mailing_list_type")
+}
+
+model MeetingAgendaType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("meeting_agenda_type")
+}
+
+model ModulesCategoryType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("modules_category_type")
+}
+
+model NextRefreshYearType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("next_refresh_year_type")
+}
+
+model NonNqfIntervStatusType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("non_nqf_interv_status_type")
+}
+
+model NqfDesigStatusType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("nqf_desig_status_type")
+}
+
+model PopiActStatusType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("popi_act_status_type")
+}
+
+model PrioritisationScaleType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("prioritisation_scale_type")
+}
+
+model PurposeOfSiteVisitType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("purpose_of_site_visit_type")
+}
+
+model QualificationEntryRequirementType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("qualification_entry_requirement_type")
+}
+
+model RememberingRatingType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("remembering_rating_type")
+}
+
+model SDFTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("sdf_type_type")
+}
+
+model SdpTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("sdp_type_type")
+}
+
+model SeeingRatingType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("seeing_rating_type")
+}
+
+model SelfcaringRatingType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("selfcaring_rating_type")
+}
+
+model SkillsGapTrackLookUpType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("skills_gap_track_lookup_type")
+}
+
+model StatementOfResultsType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("statement_of_results_type")
+}
+
+model TaskRejectionContentsType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("task_rejection_contents_type")
+}
+
+model ToolCategoryType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("tool_category_type")
+}
+
+model TradeTestResultType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("trade_test_result_type")
+}
+
+model TrainingDeliveryMethodType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("training_delivery_method_type")
+}
+
+model TrainingImpactRatingType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("training_impact_rating_type")
+}
+
+model UnionMembershipType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("union_membership_type")
+}
+
+model ValidityType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("validity_type")
+}
+
+model WalkingRatingType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("walking_rating_type")
+}
+
+model AppraisalCategoryCodeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("appraisal_category_code_type")
+}
+
+model AppraisalChecklistType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("appraisal_checklist_type")
+}
+
+model AppraisalsType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("appraisals_type")
+}
+
+model AuditorMonitorReviewType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("auditor_monitor_review_type")
+}
+
+model EnrolmentStatusType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("enrolment_status_type")
+}
+
+model FinYearQuartersLookUpType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("fin_year_quarters_lookup_type")
+}
+
+model InstitutionTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("institution_type_type")
+}
+
+model LearnerMentorRatioType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("learner_mentor_ratio_type")
+}
+
+model LearnerMonitoringSurveyType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("learner_monitoring_survey_type")
+}
+
+model NonCreditBearingInterventionTitleType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("non_credit_bearing_intervention_title_type")
+}
+
+model QualificationTasksType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("qualification_tasks_type")
+}
+
+model QualificationToolKitType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("qualification_tool_kit_type")
+}
+
+model QualificationToolListType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("qualification_tool_list_type")
+}
+
+model RatioType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("ratio_type")
+}
+
+model RefEntityType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("ref_entity_type")
+}
+
+model ReportGenerationPropertiesType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("report_generation_properties_type")
+}
+
+model STATSSAAreaCodeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("statssa_area_code_type")
+}
+
+model SkillsProgramType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("skills_program_type")
+}
+
+model SkillsSetType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("skills_set_type")
+}
+
+model SocioeconomicStatusCodeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("socioeconomic_status_code_type")
+}
+
+model StatusesType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("statuses_type")
+}
+
+model UnitStandardType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("unit_standard_type")
+}
+
+model YoutubeVideoType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("youtube_video_type")
+}
+
+model ArplType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("arpl_type")
+}
+
+model GlossaryType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("glossary_type")
+}
+
+model AccreditationApplicationTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("accreditation_application_type_type")
+}
+
+model ActionPlanValidiationTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("action_plan_validiation_type_type")
+}
+
+model AddressTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("address_type_type")
+}
+
+model AgeGroupType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("age_group_type")
+}
+
+model AllocationStatusType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("allocation_status_type")
+}
+
+model AnswerTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("answer_type_type")
+}
+
+model ApprovalType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("approval_type")
+}
+
+model AprlProgressType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("aprl_progress_type")
+}
+
+model ArplDocRequirementType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("arpl_doc_requirement_type")
+}
+
+model AssessorModeratorAppTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("assessor_moderator_app_type_type")
+}
+
+model BugReportTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("bug_report_type_type")
+}
+
+model BulkApprovalType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("bulk_approval_type")
+}
+
+model CategorizationType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("categorization_type")
+}
+
+model CeritificateCollectionType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("ceritificate_collection_type")
+}
+
+model CloRecommendationType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("clo_recommendation_type")
+}
+
+model CollectionType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("collection_type")
+}
+
+model CompanyRegOrSDLType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("company_reg_or_sdl_type")
+}
+
+model CompanyUserTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("company_user_type_type")
+}
+
+model CompetenceType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("competence_type")
+}
+
+model CompletedPlannedType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("completed_planned_type")
+}
+
+model ConfigDocProcessType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("config_doc_process_type")
+}
+
+model ContractStatusType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("contract_status_type")
+}
+
+model CreatedByType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("created_by_type")
+}
+
+model DGWindowTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("dg_window_type_type")
+}
+
+model DateScheduleType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("date_schedule_type")
+}
+
+model DeliveryTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("delivery_type_type")
+}
+
+model DhetFileNumberType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("dhet_file_number_type")
+}
+
+model DiscretionalWithdrawalAppealType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("discretional_withdrawal_appeal_type")
+}
+
+model DocumentRequiredCheckType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("document_required_check_type")
+}
+
+model DocumentTrackerType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("document_tracker_type")
+}
+
+model DocumetFileTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("documet_file_type_type")
+}
+
+model EmployedUnEmployedType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("employed_un_employed_type")
+}
+
+model GenerateAddType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("generate_add_type")
+}
+
+model GpDocumentTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("gp_document_type_type")
+}
+
+model GrantTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("grant_type_type")
+}
+
+model HighestEducationType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("highest_education_type")
+}
+
+model HoldingRoomStatusType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("holding_room_status_type")
+}
+
+model IdPassportType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("id_passport_type")
+}
+
+model LearnerChangeTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("learner_change_type_type")
+}
+
+model LearnerCompletenceType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("learner_completence_type")
+}
+
+model LearnerDocRequirementType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("learner_doc_requirement_type")
+}
+
+model LearnerStatusType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("learner_status_type")
+}
+
+model LearnerTransferApprovalType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("learner_transfer_approval_type")
+}
+
+model LearnerTransferTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("learner_transfer_type_type")
+}
+
+model LostTimeReasonType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("lost_time_reason_type")
+}
+
+model MailTagType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("mail_tag_type")
+}
+
+model MailingListTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("mailing_list_type_type")
+}
+
+model MoaTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("moa_type_type")
+}
+
+model ModerationType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("moderation_type")
+}
+
+model NewExistingLearnershipType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("new_existing_learnership_type")
+}
+
+model NewOrLegacyType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("new_or_legacy_type")
+}
+
+model NsdpReportRunTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("nsdp_report_run_type_type")
+}
+
+model OpenClosedType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("open_closed_type")
+}
+
+model PastFutureType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("past_future_type")
+}
+
+model PercentageType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("percentage_type")
+}
+
+model PivotNonPivotType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("pivot_non_pivot_type")
+}
+
+model PlannedImplementedType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("planned_implemented_type")
+}
+
+model ProgressTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("progress_type_type")
+}
+
+model ProviderNameRegisTrationNumberType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("provider_name_registration_number_type")
+}
+
+model ProviderSusActionsType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("provider_sus_actions_type")
+}
+
+model PublicPrivateType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("public_private_type")
+}
+
+model QCDTemplateTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("qcd_template_type_type")
+}
+
+model QCTOFileTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("qcto_file_type_type")
+}
+
+model QmrEnteredCompletedType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("qmr_entered_completed_type")
+}
+
+model QmrEquityType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("qmr_equity_type")
+}
+
+model QmrGenderType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("qmr_gender_type")
+}
+
+model QmrReportTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("qmr_report_type_type")
+}
+
+model QmrTypeSelectionType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("qmr_type_selection_type")
+}
+
+model QualificationTypeSelectionType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("qualification_type_selection_type")
+}
+
+model RatingType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("rating_type")
+}
+
+model RelationTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("relation_type_type")
+}
+
+model ReportGenerationType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("report_generation_type")
+}
+
+model ReportPropertiesType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("report_properties_type")
+}
+
+model RsaCitizenTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("rsa_citizen_type_type")
+}
+
+model SDPApplicationTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("sdp_application_type_type")
+}
+
+model SdfRegistartionDocType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("sdf_registartion_doc_type")
+}
+
+model SdpCompanyActionListType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("sdp_company_action_list_type")
+}
+
+model SetaIndustryFundedType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("seta_industry_funded_type")
+}
+
+model SetmisDisabilityType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("setmis_disability_type")
+}
+
+model SignoffByType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("signoff_by_type")
+}
+
+model SiteVisitReportStatusType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("site_visit_report_status_type")
+}
+
+model SiteVisitTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("site_visit_type_type")
+}
+
+model SkillsTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("skills_type_type")
+}
+
+model SmeTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("sme_type_type")
+}
+
+model SubmissionType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("submission_type")
+}
+
+model SupportTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("support_type_type")
+}
+
+model TaskStatusAndTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("task_status_and_type_type")
+}
+
+model TaskStatusType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("task_status_type")
+}
+
+model TemplateTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("template_type_type")
+}
+
+model TradeTestProgressType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("trade_test_progress_type")
+}
+
+model TradeTestProgressReportingType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("trade_test_progress_reporting_type")
+}
+
+model TradeTestTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("trade_test_type_type")
+}
+
+model TradeTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("trade_type_type")
+}
+
+model TrainingProviderFilterType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("training_provider_filter_type")
+}
+
+model TrancheType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("tranche_type")
+}
+
+model TrancheRuleType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("tranche_rule_type")
+}
+
+model TransferDocumentsType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("transfer_documents_type")
+}
+
+model TransferProgressType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("transfer_progress_type")
+}
+
+model TransferRequestTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("transfer_request_type_type")
+}
+
+model UnitStandardLinkTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("unit_standard_link_type_type")
+}
+
+model UserPermissionType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("user_permission_type")
+}
+
+model UserRoleType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("user_role_type")
+}
+
+model UsersStatusType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("users_status_type")
+}
+
+model WSPSearchTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("wsp_search_type_type")
+}
+
+model AllocationChangeTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("allocation_change_type_type")
+}
+
+model ArplReportingType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("arpl_reporting_type")
+}
+
+model AssessorModTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("assessor_mod_type_type")
+}
+
+model CompanySizeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("company_size_type")
+}
+
+model CompanyTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("company_type_type")
+}
+
+model MunicipalityTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("municipality_type_type")
+}
+
+model WorkplaceApprovalTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("workplace_approval_type_type")
+}
+
+model WorkplaceSurveyTypeType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("workplace_survey_type_type")
+}
+
+model WpaDocRequirementsType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("wpa_doc_requirements_type")
+}
+
+model WspDocRequirementsType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("wsp_doc_requirements_type")
+}
+
+model WspReopenLocationType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("wsp_reopen_location_type")
+}
+
+model WspReportType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("wsp_report_type")
+}
+
+model YesNoType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@index([name])
+  @@index([code])
+  @@map("yes_no_type")
+}
+
+model HostingCompany {
+  id               Int      @id @default(autoincrement())
+  companyName      String   @map("company_name")
+  companyRegNumber String   @map("company_reg_number")
+  vatNumber        String?  @map("vat_number")
+  incomeTaxNumber  String?  @map("income_tax_number")
+  theme            String?
+  title            String?
+  logo             String?
+  createdAt        DateTime @default(now()) @map("created_at")
+  createdBy        Int?     @map("created_by")
+  modifiedAt       DateTime @updatedAt @map("modified_at")
+  modifiedBy       Int?     @map("modified_by")
+
+  @@map("hosting_company")
+}
+
+model SystemSetting {
+  id          Int      @id @default(autoincrement())
+  key         String   @unique
+  value       String
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   Int?     @map("created_by")
+  modifiedAt  DateTime @updatedAt @map("modified_at")
+  modifiedBy  Int?     @map("modified_by")
+
+  @@map("system_setting")
+}
+
+model Learner {
+  id             Int                 @id @default(autoincrement())
+  userId         Int                 @map("user_id")
+  rsaIdNumber    String?             @unique @map("rsa_id_number")
+  passportNumber String?             @unique @map("passport_number")
+  dateOfBirth    DateTime?           @map("date_of_birth")
+  equityStatus   String?             @map("equity_status")
+  nationality    String?
+  createdAt      DateTime            @default(now()) @map("created_at")
+  createdBy      Int?                @map("created_by")
+  modifiedAt     DateTime            @updatedAt @map("modified_at")
+  modifiedBy     Int?                @map("modified_by")
+  user           User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  enrollments    LearnerEnrollment[]
+
+  @@map("learner")
+}
+
+model LearnerEnrollment {
+  id                  Int                  @id @default(autoincrement())
+  learnerId           Int                  @map("learner_id")
+  providerId          Int                  @map("provider_id")
+  employerId          Int?                 @map("employer_id")
+  interventionTypeId  Int                  @map("intervention_type_id")
+  qualificationTypeId Int                  @map("qualification_type_id")
+  status              String               @default("Application")
+  enrollmentDate      DateTime?            @map("enrollment_date")
+  completionDate      DateTime?            @map("completion_date")
+  createdAt           DateTime             @default(now()) @map("created_at")
+  createdBy           Int?                 @map("created_by")
+  modifiedAt          DateTime             @updatedAt @map("modified_at")
+  modifiedBy          Int?                 @map("modified_by")
+  userId              Int?
+  User                User?                @relation(fields: [userId], references: [id])
+  qualificationType   QualificationType    @relation(fields: [qualificationTypeId], references: [id])
+  interventionType    InterventionType     @relation(fields: [interventionTypeId], references: [id])
+  employer            Organisation?        @relation("EmployerEnrollments", fields: [employerId], references: [id])
+  provider            Organisation         @relation("ProviderEnrollments", fields: [providerId], references: [id])
+  learner             Learner              @relation(fields: [learnerId], references: [id], onDelete: Cascade)
+  terminations        LearnerTermination[]
+
+  @@map("learner_enrollment")
+}
+
+model WorkplaceSkillsPlan {
+  id                       Int                @id @default(autoincrement())
+  organisationId           Int                @map("organisation_id")
+  finYear                  Int                @map("fin_year")
+  submissionDate           DateTime?          @map("submission_date")
+  wspGuid                  String             @default(uuid()) @map("wsp_guid")
+  status                   String             @default("Draft")
+  holdingRoomStatus        String?            @map("holding_room_status")
+  totalPayroll             Float?             @map("total_payroll")
+  totalTrainingCosts       Float?             @map("total_training_costs")
+  percentagePayrollSpent   Float?             @map("percentage_payroll_spent")
+  estimatedOverallCost     Float?             @map("estimated_overall_project_cost")
+  approvedAmount           Float?             @map("approved_amount")
+  numberOfEmployees        Int?               @map("number_of_employees")
+  numberOfBeneficiaries    Int?               @map("number_of_beneficiaries")
+  requireSignOffUpload     Boolean            @default(false) @map("require_sign_off_upload")
+  requireProjectAdminCosts Boolean            @default(false) @map("require_project_administration_costs")
+  requireDisputeDocs       Boolean            @default(false) @map("require_dispute_docs")
+  withSdf                  Boolean            @default(false) @map("with_sdf")
+  sdfAppealedGrant         Boolean            @default(false) @map("sdf_appealed_grant")
+  grantRejected            Boolean            @default(false) @map("grant_rejected")
+  mancoApprovalRequired    Boolean            @default(false) @map("manco_approval_required")
+  mancoDecisionReached     Boolean            @default(false) @map("manco_decision_reached")
+  systemApprovalRejection  Boolean?           @map("system_approval_rejection")
+  applicationReopened      Boolean?           @map("application_reopened")
+  adminReopened            Boolean?           @map("admin_reopened")
+  rejectionNotified        Boolean            @default(false) @map("rejection_notified")
+  grantDeviated            Boolean?           @map("grant_deviated")
+  manuallyAdded            Boolean            @default(false) @map("manually_added")
+  projectDescription       String?            @map("project_description")
+  purpose                  String?
+  outcomes                 String?
+  location                 String?
+  interventions            String?
+  benefits                 String?
+  potentialRisks           String?            @map("potential_risks")
+  createdAt                DateTime           @default(now()) @map("created_at")
+  createdBy                Int                @default(0) @map("created_by")
+  modifiedAt               DateTime           @updatedAt @map("modified_at")
+  modifiedBy               Int                @default(0) @map("modified_by")
+  grantApplications        GrantApplication[]
+  organisation             Organisation       @relation(fields: [organisationId], references: [id])
+
+  @@index([organisationId])
+  @@index([finYear])
+  @@map("workplace_skills_plan")
+}
+
+model TrainingProvider {
+  id                   Int                            @id @default(autoincrement())
+  organisationId       Int                            @unique @map("organisation_id")
+  accreditationNumber  String?                        @unique @map("accreditation_number")
+  status               String                         @default("ACTIVE")
+  startDate            DateTime?                      @map("start_date")
+  expiryDate           DateTime?                      @map("expiry_date")
+  providerTypeId       Int?                           @map("provider_type_id")
+  providerClassId      Int?                           @map("provider_class_id")
+  createdAt            DateTime                       @default(now()) @map("created_at")
+  createdBy            Int?                           @map("created_by")
+  modifiedAt           DateTime                       @updatedAt @map("modified_at")
+  modifiedBy           Int?                           @map("modified_by")
+  assessorApplications AssessorModeratorApplication[]
+  documents            Document[]
+  siteVisits           SiteVisit[]
+  providerClass        ProviderClassType?             @relation(fields: [providerClassId], references: [id])
+  providerType         ProviderTypeType?              @relation(fields: [providerTypeId], references: [id])
+  organisation         Organisation                   @relation(fields: [organisationId], references: [id])
+  workplaceApprovals   WorkplaceApproval[]
+
+  @@map("training_provider")
+}
+
+model SiteVisit {
+  id                 Int              @id @default(autoincrement())
+  trainingProviderId Int              @map("training_provider_id")
+  visitDate          DateTime         @map("visit_date")
+  reportDate         DateTime?        @map("report_date")
+  recommendation     String?
+  auditorId          Int?             @map("auditor_id")
+  createdAt          DateTime         @default(now()) @map("created_at")
+  createdBy          Int?             @map("created_by")
+  modifiedAt         DateTime         @updatedAt @map("modified_at")
+  modifiedBy         Int?             @map("modified_by")
+  trainingProvider   TrainingProvider @relation(fields: [trainingProviderId], references: [id], onDelete: Cascade)
+
+  @@map("site_visit")
+}
+
+model LearnerTermination {
+  id                 Int               @id @default(autoincrement())
+  enrollmentId       Int               @map("enrollment_id")
+  reasonId           Int?              @map("reason_id")
+  effectiveDate      DateTime          @map("effective_date")
+  evidenceDocumentId Int?              @map("evidence_document_id")
+  createdAt          DateTime          @default(now()) @map("created_at")
+  createdBy          Int?              @map("created_by")
+  modifiedAt         DateTime          @updatedAt @map("modified_at")
+  modifiedBy         Int?              @map("modified_by")
+  enrollment         LearnerEnrollment @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+
+  @@map("learner_termination")
+}
+
+model WorkplaceApproval {
+  id                 Int              @id @default(autoincrement())
+  trainingProviderId Int              @map("training_provider_id")
+  status             String           @default("DRAFT")
+  qualificationCode  String           @map("qualification_code")
+  siteAddress        String?          @map("site_address")
+  createdAt          DateTime         @default(now()) @map("created_at")
+  createdBy          Int?             @map("created_by")
+  modifiedAt         DateTime         @updatedAt @map("modified_at")
+  modifiedBy         Int?             @map("modified_by")
+  trainingProvider   TrainingProvider @relation(fields: [trainingProviderId], references: [id])
+
+  @@map("workplace_approval")
+}
+
+model GrantApplication {
+  id              Int                  @id @default(autoincrement())
+  grantType       String               @map("grant_type")
+  status          String               @default("DRAFT")
+  finYear         Int                  @map("fin_year")
+  amountRequested Float?               @map("amount_requested")
+  amountApproved  Float?               @map("amount_approved")
+  organisationId  Int                  @map("organisation_id")
+  wspId           Int?                 @map("wsp_id")
+  createdAt       DateTime             @default(now()) @map("created_at")
+  createdBy       Int?                 @map("created_by")
+  modifiedAt      DateTime             @updatedAt @map("modified_at")
+  modifiedBy      Int?                 @map("modified_by")
+  documents       Document[]
+  wsp             WorkplaceSkillsPlan? @relation(fields: [wspId], references: [id])
+  organisation    Organisation         @relation(fields: [organisationId], references: [id])
+  verifications   GrantVerification[]
+  payments        PaymentRequest[]
+
+  @@map("grant_application")
+}
+
+model GrantVerification {
+  id                 Int              @id @default(autoincrement())
+  grantApplicationId Int              @map("grant_application_id")
+  status             String           @default("PENDING")
+  reviewerNotes      String?          @map("reviewer_notes")
+  createdAt          DateTime         @default(now()) @map("created_at")
+  createdBy          Int?             @map("created_by")
+  modifiedAt         DateTime         @updatedAt @map("modified_at")
+  modifiedBy         Int?             @map("modified_by")
+  grantApplication   GrantApplication @relation(fields: [grantApplicationId], references: [id], onDelete: Cascade)
+
+  @@map("grant_verification")
+}
+
+model PaymentRequest {
+  id                 Int              @id @default(autoincrement())
+  grantApplicationId Int              @map("grant_application_id")
+  status             String           @default("PENDING")
+  amount             Float
+  trancheNumber      Int              @map("tranche_number")
+  createdAt          DateTime         @default(now()) @map("created_at")
+  createdBy          Int?             @map("created_by")
+  modifiedAt         DateTime         @updatedAt @map("modified_at")
+  modifiedBy         Int?             @map("modified_by")
+  grantApplication   GrantApplication @relation(fields: [grantApplicationId], references: [id], onDelete: Cascade)
+
+  @@map("payment_request")
+}
+
+model AssessorModeratorApplication {
+  id                 Int                           @id @default(autoincrement())
+  userId             Int                           @map("user_id")
+  trainingProviderId Int?                          @map("training_provider_id")
+  applicationType    String                        @map("application_type")
+  status             String                        @default("DRAFT")
+  createdAt          DateTime                      @default(now()) @map("created_at")
+  createdBy          Int?                          @map("created_by")
+  modifiedAt         DateTime                      @updatedAt @map("modified_at")
+  modifiedBy         Int?                          @map("modified_by")
+  extensionsOfScope  AssessorModExtensionOfScope[]
+  trainingProvider   TrainingProvider?             @relation(fields: [trainingProviderId], references: [id])
+  user               User                          @relation(fields: [userId], references: [id])
+
+  @@map("assessor_moderator_application")
+}
+
+model AssessorModExtensionOfScope {
+  id                Int                          @id @default(autoincrement())
+  applicationId     Int                          @map("application_id")
+  status            String                       @default("PENDING")
+  qualificationCode String                       @map("qualification_code")
+  createdAt         DateTime                     @default(now()) @map("created_at")
+  createdBy         Int?                         @map("created_by")
+  modifiedAt        DateTime                     @updatedAt @map("modified_at")
+  modifiedBy        Int?                         @map("modified_by")
+  application       AssessorModeratorApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@map("assessor_mod_ext_scope")
+}
+
+model Document {
+  id                 Int               @id @default(autoincrement())
+  filename           String
+  mimeType           String            @map("mime_type")
+  sizeBytes          Int               @map("size_bytes")
+  blob               Bytes?
+  isGenerated        Boolean           @default(false) @map("is_generated")
+  organisationId     Int?              @map("organisation_id")
+  grantApplicationId Int?              @map("grant_application_id")
+  trainingProviderId Int?              @map("training_provider_id")
+  reportingExtractId Int?              @map("reporting_extract_id")
+  createdAt          DateTime          @default(now()) @map("created_at")
+  createdBy          Int?              @map("created_by")
+  modifiedAt         DateTime          @updatedAt @map("modified_at")
+  modifiedBy         Int?              @map("modified_by")
+  reportingExtract   ReportingExtract? @relation(fields: [reportingExtractId], references: [id])
+  trainingProvider   TrainingProvider? @relation(fields: [trainingProviderId], references: [id])
+  grantApplication   GrantApplication? @relation(fields: [grantApplicationId], references: [id])
+  organisation       Organisation?     @relation(fields: [organisationId], references: [id])
+
+  @@map("document")
+}
+
+model SarsLevyDetail {
+  id             Int          @id @default(autoincrement())
+  organisationId Int          @map("organisation_id")
+  arrivalDate    DateTime     @map("arrival_date")
+  levyYear       Int          @map("levy_year")
+  amount         Float
+  createdAt      DateTime     @default(now()) @map("created_at")
+  createdBy      Int?         @map("created_by")
+  modifiedAt     DateTime     @updatedAt @map("modified_at")
+  modifiedBy     Int?         @map("modified_by")
+  organisation   Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+
+  @@index([organisationId])
+  @@index([levyYear])
+  @@map("sars_levy_detail")
+}
+
+model ReportingExtract {
+  id               Int        @id @default(autoincrement())
+  extractType      String     @map("extract_type")
+  status           String     @default("COMPLETED")
+  recordsProcessed Int        @map("records_processed")
+  createdAt        DateTime   @default(now()) @map("created_at")
+  createdBy        Int?       @map("created_by")
+  modifiedAt       DateTime   @updatedAt @map("modified_at")
+  modifiedBy       Int?       @map("modified_by")
+  documents        Document[]
+
+  @@map("reporting_extract")
+}
