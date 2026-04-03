@@ -30,7 +30,7 @@ export function AuditLogGrid({ logs }: AuditLogGridProps) {
       {
         accessorKey: "entityName",
         header: "Domain Entity",
-        cell: (info) => <span className="font-semibold px-2 py-1 bg-gray-100 rounded-md text-gray-700 text-xs uppercase tracking-wide">{info.getValue() as string}</span>,
+        cell: (info) => <span className="font-semibold px-2 py-1 bg-gray-100 rounded-md text-muted-foreground text-xs uppercase tracking-wide">{info.getValue() as string}</span>,
       },
       {
         accessorKey: "actionName",
@@ -43,12 +43,12 @@ export function AuditLogGrid({ logs }: AuditLogGridProps) {
       {
         accessorKey: "recordId",
         header: "Target ID",
-        cell: (info) => <span className="font-mono text-gray-500">#{info.getValue() as number}</span>,
+        cell: (info) => <span className="font-mono text-muted-foreground">#{info.getValue() as number}</span>,
       },
       {
         accessorKey: "actor",
         header: "Actor",
-        cell: (info) => <span className="text-gray-900 border-b border-dotted border-gray-400">{info.getValue() as string}</span>,
+        cell: (info) => <span className="text-foreground border-b border-dotted border-gray-400">{info.getValue() as string}</span>,
       },
       {
         id: "actions",
@@ -80,13 +80,13 @@ export function AuditLogGrid({ logs }: AuditLogGridProps) {
     <div className="relative">
       <div className="space-y-4">
         
-        <div className="rounded-md border bg-white shadow-sm overflow-hidden">
+        <div className="rounded-md border bg-card text-card-foreground shadow-sm overflow-hidden">
           <table className="w-full text-sm text-left">
             <thead className="bg-[#f8f9fa] border-b">
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (
-                    <th key={header.id} className="px-4 py-3 font-semibold text-gray-900 uppercase text-xs tracking-wider">
+                    <th key={header.id} className="px-4 py-3 font-semibold text-foreground uppercase text-xs tracking-wider">
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -111,7 +111,7 @@ export function AuditLogGrid({ logs }: AuditLogGridProps) {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={columns.length} className="px-4 py-8 text-center text-gray-500">
+                  <td colSpan={columns.length} className="px-4 py-8 text-center text-muted-foreground">
                     No Double-Write audit logs found in the system boundary.
                   </td>
                 </tr>
@@ -146,39 +146,39 @@ export function AuditLogGrid({ logs }: AuditLogGridProps) {
       {selectedLog && (
           <>
             <div className="fixed inset-0 bg-black/20 z-40" onClick={() => setSelectedLog(null)} />
-            <div className="fixed top-0 right-0 h-full w-[500px] max-w-full bg-white shadow-2xl z-50 transform transition-transform border-l border-gray-200 overflow-y-auto">
+            <div className="fixed top-0 right-0 h-full w-[500px] max-w-full bg-card text-card-foreground shadow-2xl z-50 transform transition-transform border-l border-border overflow-y-auto">
                 <div className="p-6">
                     <div className="flex justify-between items-center border-b pb-4 mb-6">
                         <h2 className="text-xl font-bold flex gap-2 items-center text-primary">
                             <ShieldAlert className="w-5 h-5"/> Lineage Inspection
                         </h2>
                         <button onClick={() => setSelectedLog(null)} className="p-2 hover:bg-gray-100 rounded-full">
-                            <X className="w-5 h-5 text-gray-500" />
+                            <X className="w-5 h-5 text-muted-foreground" />
                         </button>
                     </div>
 
                     <div className="space-y-6">
                         <div className="grid grid-cols-2 gap-4 text-sm">
                             <div>
-                                <span className="block text-gray-400 font-semibold uppercase text-xs">Entity</span>
+                                <span className="block text-muted-foreground font-semibold uppercase text-xs">Entity</span>
                                 <span className="font-bold">{selectedLog.entityName} #{selectedLog.recordId}</span>
                             </div>
                             <div>
-                                <span className="block text-gray-400 font-semibold uppercase text-xs">Action</span>
+                                <span className="block text-muted-foreground font-semibold uppercase text-xs">Action</span>
                                 <span className="text-primary font-bold">{selectedLog.actionName}</span>
                             </div>
                             <div>
-                                <span className="block text-gray-400 font-semibold uppercase text-xs">Actor ID</span>
+                                <span className="block text-muted-foreground font-semibold uppercase text-xs">Actor ID</span>
                                 <span className="font-mono">{selectedLog.actor}</span>
                             </div>
                             <div>
-                                <span className="block text-gray-400 font-semibold uppercase text-xs">Timestamp</span>
+                                <span className="block text-muted-foreground font-semibold uppercase text-xs">Timestamp</span>
                                 <span>{new Date(selectedLog.createdAt).toLocaleString()}</span>
                             </div>
                         </div>
 
                         <div>
-                            <span className="block text-gray-400 font-semibold uppercase text-xs mb-2">Raw Topology (JSON)</span>
+                            <span className="block text-muted-foreground font-semibold uppercase text-xs mb-2">Raw Topology (JSON)</span>
                             <div className="bg-[#1e1e1e] rounded-md p-4 overflow-x-auto shadow-inner">
                                 <pre className="text-[#d4d4d4] font-mono text-sm leading-relaxed">
                                     {JSON.stringify(JSON.parse(selectedLog.snapshot || "{}"), null, 2)}

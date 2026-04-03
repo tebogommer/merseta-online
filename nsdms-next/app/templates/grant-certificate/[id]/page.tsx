@@ -20,15 +20,15 @@ export default async function GrantCertificateTemplate({ params }: { params: { i
 
   // Very specific layout designed to be exported as A4 PDF by Playwright
   return (
-    <div className="bg-white text-black min-h-screen p-12 max-w-[210mm] mx-auto overflow-hidden text-sm">
+    <div className="bg-card text-card-foreground text-black min-h-screen p-12 max-w-[210mm] mx-auto overflow-hidden text-sm">
       <div className="border-b-4 border-primary pb-6 mb-8 flex justify-between items-end">
         <div>
           <h1 className="text-4xl font-black text-primary tracking-tight">MerSETA</h1>
-          <p className="text-lg text-gray-600 font-semibold mt-1">Official Compliance Output</p>
+          <p className="text-lg text-muted-foreground font-semibold mt-1">Official Compliance Output</p>
         </div>
         <div className="text-right">
-          <p className="font-mono text-xs text-gray-500">REF: GRNT-{grant.finYear}-{grant.id.toString().padStart(6, '0')}</p>
-          <p className="font-mono text-xs text-gray-500">{new Date().toISOString().split('T')[0]}</p>
+          <p className="font-mono text-xs text-muted-foreground">REF: GRNT-{grant.finYear}-{grant.id.toString().padStart(6, '0')}</p>
+          <p className="font-mono text-xs text-muted-foreground">{new Date().toISOString().split('T')[0]}</p>
         </div>
       </div>
 
@@ -37,19 +37,19 @@ export default async function GrantCertificateTemplate({ params }: { params: { i
           <h2 className="text-xl font-bold uppercase tracking-widest text-gray-800 border-b pb-2 mb-4">Grant Application Details</h2>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <p className="text-gray-500 text-xs font-semibold uppercase">Organisation Name</p>
+              <p className="text-muted-foreground text-xs font-semibold uppercase">Organisation Name</p>
               <p className="font-medium text-lg">{grant.organisation?.organisationName}</p>
             </div>
             <div>
-              <p className="text-gray-500 text-xs font-semibold uppercase">SDL Number</p>
+              <p className="text-muted-foreground text-xs font-semibold uppercase">SDL Number</p>
               <p className="font-medium text-lg">{grant.organisation?.sdlNumber}</p>
             </div>
             <div>
-              <p className="text-gray-500 text-xs font-semibold uppercase">Financial Year</p>
+              <p className="text-muted-foreground text-xs font-semibold uppercase">Financial Year</p>
               <p className="font-medium">{grant.finYear}</p>
             </div>
             <div>
-              <p className="text-gray-500 text-xs font-semibold uppercase">Grant Type</p>
+              <p className="text-muted-foreground text-xs font-semibold uppercase">Grant Type</p>
               <p className="font-medium">{grant.grantType}</p>
             </div>
           </div>
@@ -57,7 +57,7 @@ export default async function GrantCertificateTemplate({ params }: { params: { i
 
         <section>
           <h2 className="text-xl font-bold uppercase tracking-widest text-gray-800 border-b pb-2 mb-4">Current Status</h2>
-          <div className="bg-gray-50 p-4 rounded-md border border-gray-200">
+          <div className="bg-muted p-4 rounded-md border border-border">
             <p className="text-2xl font-black text-center">{grant.status}</p>
           </div>
         </section>
@@ -67,7 +67,7 @@ export default async function GrantCertificateTemplate({ params }: { params: { i
             <h2 className="text-xl font-bold uppercase tracking-widest text-gray-800 border-b pb-2 mb-4">Verification Audit Trail</h2>
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-gray-100 text-gray-700 uppercase text-xs">
+                <tr className="bg-gray-100 text-muted-foreground uppercase text-xs">
                   <th className="p-3 border">Date</th>
                   <th className="p-3 border">Status</th>
                   <th className="p-3 border">Auditor Notes</th>
@@ -78,7 +78,7 @@ export default async function GrantCertificateTemplate({ params }: { params: { i
                   <tr key={v.id}>
                     <td className="p-3 border font-mono text-xs">{new Date(v.createdAt).toLocaleDateString()}</td>
                     <td className="p-3 border font-semibold">{v.status}</td>
-                    <td className="p-3 border text-gray-600">{v.reviewerNotes || 'Standard Signoff'}</td>
+                    <td className="p-3 border text-muted-foreground">{v.reviewerNotes || 'Standard Signoff'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -87,7 +87,7 @@ export default async function GrantCertificateTemplate({ params }: { params: { i
         )}
       </div>
 
-      <div className="fixed bottom-12 left-12 right-12 text-center text-xs text-gray-400 border-t pt-4">
+      <div className="fixed bottom-12 left-12 right-12 text-center text-xs text-muted-foreground border-t pt-4">
         <p>This document is automatically generated by the MerSETA NSDMS System.</p>
         <p>Do not alter. Refer to the internal UI for the absolute source of truth.</p>
       </div>

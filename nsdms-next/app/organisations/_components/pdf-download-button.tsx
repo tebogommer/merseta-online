@@ -41,7 +41,7 @@ export function PDFDownloadButton({ orgId }: { orgId: string }) {
     <button 
       onClick={handleDownload} 
       disabled={isPending}
-      className="inline-flex items-center gap-1 text-slate-600 hover:text-green-700 font-medium ml-4 transition-colors disabled:opacity-50"
+      className="inline-flex items-center gap-1 text-muted-foreground hover:text-green-700 font-medium ml-4 transition-colors disabled:opacity-50"
       title="Download Compliance Certificate"
     >
       {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}

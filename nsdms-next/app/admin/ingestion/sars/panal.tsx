@@ -83,6 +83,7 @@ export function SarsIngestionPanel() {
             </div>
             <input 
               type="file" 
+              aria-label="Upload SARS Data File"
               className="hidden" 
               id="sars-upload" 
               onChange={(e) => setFile(e.target.files?.[0] || null)}

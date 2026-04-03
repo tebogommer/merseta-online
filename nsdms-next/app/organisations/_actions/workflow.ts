@@ -102,8 +102,20 @@ export async function createOrganisationAction(prevState: ActionState, formData:
       }
     }
 
+    const cleanData = {
+      ...data,
+      companyRegistrationNumber: data.companyRegistrationNumber || null,
+      sdlNumber: data.sdlNumber || null,
+      email: data.email || null,
+      telNumber: data.telNumber || null,
+      bankAccountNumber: data.bankAccountNumber || null,
+      bankBranchCode: data.bankBranchCode || null,
+      tradingName: data.tradingName || null,
+      sicCode: data.sicCode || "99999",
+    };
+
     const org = await prisma.organisation.create({ 
-      data: { ...data, createdBy: (user.id ? Number(user.id) : null) as any } 
+      data: { ...cleanData, createdBy: (user.id ? Number(user.id) : null) as any } 
     });
     await createAuditLog(org.id, "Organisation", "CREATE", (org.createdBy)?.toString() || user.email || "system", org);
     
@@ -142,9 +154,22 @@ export async function updateOrganisationAction(id: number, prevState: ActionStat
     }
 
     const orgBefore = await prisma.organisation.findUnique({ where: { id } });
+    
+    const cleanData = {
+      ...data,
+      companyRegistrationNumber: data.companyRegistrationNumber || null,
+      sdlNumber: data.sdlNumber || null,
+      email: data.email || null,
+      telNumber: data.telNumber || null,
+      bankAccountNumber: data.bankAccountNumber || null,
+      bankBranchCode: data.bankBranchCode || null,
+      tradingName: data.tradingName || null,
+      sicCode: data.sicCode || "99999",
+    };
+
     const orgAfter = await prisma.organisation.update({ 
       where: { id }, 
-      data: { ...data, modifiedBy: (user.id ? Number(user.id) : null) as any } 
+      data: { ...cleanData, modifiedBy: (user.id ? Number(user.id) : null) as any } 
     });
     
     await createAuditLog(id, "Organisation", "UPDATE", (orgAfter.modifiedBy)?.toString() || user.email || "system", { before: orgBefore, after: orgAfter });

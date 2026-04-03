@@ -1,6 +1,31 @@
 import { test, expect } from '@playwright/test';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 test.describe('Security & CASL Enforcement', () => {
+  test.beforeAll(async () => {
+    await prisma.user.upsert({
+      where: { email: 'admin@merseta.org.za' },
+      update: { role: 'ADMIN' },
+      create: { 
+        email: 'admin@merseta.org.za', 
+        name: 'Admin User', 
+        role: 'ADMIN' 
+      }
+    });
+
+    await prisma.user.upsert({
+      where: { email: 'user@merseta.org.za' },
+      update: { role: 'STANDARD' },
+      create: { 
+        email: 'user@merseta.org.za', 
+        name: 'Standard User', 
+        role: 'STANDARD' 
+      }
+    });
+  });
+
 
   test('Unauthenticated user is redirected to Edge barrier', async ({ page }) => {
     // Attempting to directly hijack an internal entity detail page

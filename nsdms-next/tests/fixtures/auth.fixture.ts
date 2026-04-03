@@ -1,4 +1,7 @@
 import { test as base } from '@playwright/test';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 type AuthFixtures = {
   adminPage: import('@playwright/test').Page;
@@ -7,7 +10,18 @@ type AuthFixtures = {
 // Extend basic test by providing an "adminPage" fixture.
 export const test = base.extend<AuthFixtures>({
   adminPage: async ({ page }, use) => {
-    // Scaffold Admin Context for the application
+    // 0. Bootstrap Admin in Database
+    await prisma.user.upsert({
+      where: { email: 'admin@merseta.org.za' },
+      update: { role: 'ADMIN' },
+      create: { 
+        email: 'admin@merseta.org.za', 
+        name: 'Admin User', 
+        role: 'ADMIN' 
+      }
+    });
+
+    // 1. Scaffold Admin Context for the application
     await page.goto('/api/auth/signin');
     
     // Check if we are on a login form (handle next-auth basic UI)

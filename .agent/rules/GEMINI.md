@@ -95,6 +95,11 @@ When auto-applying an agent, inform the user:
 
 ## TIER 0: UNIVERSAL RULES (Always Active)
 
+- **Identity & Access Guardrails**: Always maintain the separation between `Person` (Demographics) and `User` (Authentication). A `Person` may exist without a `User` (and vice-versa).
+- **RSA ID Logic**: Always use RSA ID numbers to auto-calculate Date of Birth in the UI.
+- **Audit Requirement**: Link/Unlink actions must be captured in `audit_logs`.
+- **Prisma Windows Blocking**: Remind the user to restart `npm run dev` if `prisma generate` fails due to file locks.
+
 ### 🌐 Language Handling
 
 When user's prompt is NOT in English:
@@ -191,7 +196,7 @@ When user's prompt is NOT in English:
 
 **Priority Execution Order:**
 
-1. **Security** → 2. **Lint** → 3. **Schema** → 4. **Tests** → 5. **UX** → 6. **Seo** → 7. **Lighthouse/E2E**
+1. **Security** → 2. **Lint** → 3. **Schema** → 4. **Tests** → 5. **UX** → 6. **Lighthouse/E2E**
 
 **Rules:**
 
@@ -209,7 +214,6 @@ When user's prompt is NOT in English:
 | `schema_validator.py`      | database-design       | After DB change     |
 | `ux_audit.py`              | frontend-design       | After UI change     |
 | `accessibility_checker.py` | frontend-design       | After UI change     |
-| `seo_checker.py`           | seo-fundamentals      | After page change   |
 | `bundle_analyzer.py`       | performance-profiling | Before deploy       |
 | `mobile_audit.py`          | mobile-design         | After mobile change |
 | `lighthouse_audit.py`      | performance-profiling | Before deploy       |
@@ -267,7 +271,220 @@ When user's prompt is NOT in English:
 
 - **Verify**: `.agent/scripts/verify_all.py`, `.agent/scripts/checklist.py`
 - **Scanners**: `security_scan.py`, `dependency_analyzer.py`
-- **Audits**: `ux_audit.py`, `mobile_audit.py`, `lighthouse_audit.py`, `seo_checker.py`
+- **Audits**: `ux_audit.py`, `mobile_audit.py`, `lighthouse_audit.py`
 - **Test**: `playwright_runner.py`, `test_runner.py`
 
 ---
+
+## 🐞 Controlled Fix-As-You-Go Bug Policy
+
+> This block HARD-BINDS how the agent handles defects discovered during testing.
+> 
+> The agent MUST follow this policy. No exceptions. No questions.
+
+---
+
+### 1. Execution Philosophy
+
+The agent SHALL operate under a **Controlled Fix-As-You-Go** model:
+
+- Do NOT wait until all tests complete before fixing defects.
+- Do NOT blindly fix everything immediately.
+- Classify every failure before acting.
+- Prioritise system integrity, governance rules, and security invariants.
+
+All failures MUST be classified before any change is made.
+
+---
+
+### 2. Failure Classification Model (MANDATORY)
+
+Every failing test MUST be categorised into one of the following types:
+
+#### A) HARNESS / ENVIRONMENT DEFECT
+Examples:
+- Test DB not resetting
+- Seed data inconsistent
+- Migration drift
+- Misconfigured environment variables
+- Auth test mode not working
+
+**Action:**
+- FIX IMMEDIATELY.
+- Re-run entire suite after fix.
+- Document in `docs/testing/changes-for-testability.md`.
+
+#### B) PRODUCT DEFECT
+A defect in business logic, workflow enforcement, CASL permissions, audit integrity, or data consistency. Must be further classified as P0 / P1 / P2.
+
+#### C) TEST DEFECT
+Examples:
+- Incorrect expectation
+- Brittle selector
+- Invalid assumption
+- Race condition in E2E
+
+**Action:**
+- Fix test ONLY if business rule is confirmed correct.
+- Document rationale in commit message and execution report.
+
+---
+
+### 3. Severity Model (Hard-Bound)
+
+#### P0 — CRITICAL (FIX IMMEDIATELY)
+The agent MUST fix immediately if the defect affects:
+
+**Security / CASL**
+- Role escalation
+- Unauthorized read/write/update/delete
+- Bypassing ability checks
+- Condition-based rule failure (e.g., ownership constraints)
+
+**Workflow Governance**
+- Invalid state transition allowed
+- Valid transition blocked incorrectly
+- Transition not atomic (entity updated but transition log missing)
+- Transition log written but entity not updated
+- Status inconsistent with workflow state
+
+**Data Integrity**
+- Partial writes
+- Missing required relational integrity
+- Transaction not wrapped
+- Duplicate primary business identifiers
+
+**Audit Integrity**
+- createdAt/updatedAt missing
+- createdBy/updatedBy missing or incorrect
+- No trace of workflow transition
+- Audit middleware bypassed
+
+**Error Taxonomy**
+- Wrong error code
+- Missing error code
+- Generic 500 where domain error expected
+
+**Action for P0:**
+1. STOP adding new tests.
+2. Fix root cause immediately.
+3. Re-run full suite.
+4. Update traceability + execution report.
+
+#### P1 — HIGH (FIX AFTER STABILISATION PASS)
+- Incorrect UI messaging
+- Non-blocking validation error
+- Minor reporting miscalculation
+- Performance inefficiency not affecting correctness
+
+**Action:**
+- Log in `docs/testing/defects.md`
+- Fix after suite reaches stable baseline.
+
+#### P2 — LOW (DEFER)
+- Cosmetic UI issues
+- Minor formatting
+- Non-critical UX friction
+
+**Action:**
+- Log only.
+- Do NOT interrupt test stabilisation.
+
+---
+
+### 4. Fix-As-You-Go Algorithm (MANDATORY FLOW)
+
+For EACH failing test:
+1. Classify (Harness / Product / Test)
+2. If Harness → Fix immediately.
+3. If Product:
+    - Determine severity (P0/P1/P2)
+    - If P0 → Fix immediately.
+    - If P1/P2 → Log and continue.
+4. If Test defect → Correct test and document.
+5. Re-run affected tests.
+6. If root cause fixed → run FULL suite.
+
+The agent MUST always confirm that multiple failures do not share a single root cause before fixing individually.
+
+---
+
+### 5. Root Cause Enforcement Rule
+Before fixing more than one failure, the agent MUST:
+- Check if failures share module, error code, migration, or permission rule.
+- Fix root cause first.
+- Avoid patch-style fixes on multiple surfaces.
+
+---
+
+### 6. Transaction & Atomicity Safeguard
+If a defect touches:
+- Workflow transitions
+- Financial calculations
+- State changes
+- Permission checks + writes
+
+The agent MUST:
+- Ensure operation is wrapped in a transaction.
+- Validate atomic write + log.
+- Add regression test.
+
+---
+
+### 7. CASL Enforcement Safeguard
+If defect involves authorization:
+- Ability definitions MUST NOT be weakened to make tests pass.
+- Server-side enforcement MUST exist even if UI hides controls.
+- E2E tests MUST confirm denial behaviour.
+
+---
+
+### 8. Schema Drift Safeguard
+If defect requires schema change:
+- Update Prisma schema (or ORM schema)
+- Run migration
+- Update seeds
+- Update integration tests
+- Document in `docs/testing/schema-impact.md`
+
+No direct DB hot-fixes.
+
+---
+
+### 9. Documentation & Reporting Requirements
+After any fix:
+- Update `docs/testing/test-execution-report.md`
+- Add entry in `docs/testing/defects.md`
+- Update traceability matrix if rule changed
+
+Execution report MUST include:
+- Failure ID
+- Classification
+- Severity
+- Root cause summary
+- Fix summary
+- Verification evidence
+
+---
+
+### 10. Prohibited Behaviours
+The agent MUST NOT:
+- Silence failing tests
+- Remove assertions to force pass
+- Add arbitrary waits in E2E without root cause
+- Disable permission checks to satisfy test
+- Skip failed tests without classification
+
+---
+
+### 11. Completion Gate
+The agent may only declare testing phase complete when:
+- All P0 defects resolved
+- No Harness defects remain
+- Full suite passes
+- Execution report generated
+- Traceability updated
+
+---
+
+# END OF POLICY — NON-NEGOTIABLE

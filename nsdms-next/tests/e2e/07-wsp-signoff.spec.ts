@@ -1,6 +1,45 @@
 import { test, expect } from '../fixtures/auth.fixture';
 
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
+
 test.describe('WSP Document Signoff Workflow', () => {
+
+  test.beforeAll(async () => {
+     // Seed provider and organisation first
+     await prisma.organisation.upsert({
+         where: { id: 1 },
+         update: {},
+         create: { id: 1, organisationName: 'Test Org for Providers', sdlNumber: 'LTestOrg' }
+     });
+     
+     await prisma.providerTypeType.upsert({
+         where: { id: 1 },
+         update: {},
+         create: { id: 1, name: 'Skills Development Provider', code: 'SDP', description: 'SDP', active: true }
+     });
+
+     await prisma.trainingProvider.upsert({
+         where: { id: 1 },
+         update: {},
+         create: { id: 1, accreditationNumber: 'ACC-TEST-SEED', providerTypeId: 1, organisationId: 1, status: 'Active' }
+     });
+
+     await prisma.workplaceSkillsPlan.upsert({
+         where: { id: 1 },
+         update: {},
+         create: { 
+             id: 1, 
+             organisationId: 1, 
+             finYear: 2026,
+             totalPayroll: 100000,
+             totalTrainingCosts: 10000,
+             numberOfEmployees: 10,
+             status: 'Draft' 
+         }
+     });
+  });
 
   test('Signoff wizard successfully validates and simulates document upload', async ({ adminPage }) => {
     // 1. Navigate to an existing WSP detail page (mocked ID 1)

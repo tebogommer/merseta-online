@@ -89,8 +89,8 @@ export function WspGrid({ wsps, providerId }: WspGridProps) {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <BarChart2 className="w-5 h-5 text-gray-400" />
+        <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
+            <BarChart2 className="w-5 h-5 text-muted-foreground" />
             Declared Skills Plans
         </h3>
         <Link href={`/workplace-skills-plans/new?orgId=${providerId}`}>
@@ -100,13 +100,13 @@ export function WspGrid({ wsps, providerId }: WspGridProps) {
         </Link>
       </div>
 
-      <div className="rounded-md border bg-white shadow-sm overflow-hidden">
+      <div className="rounded-md border bg-card text-card-foreground shadow-sm overflow-hidden">
         <table className="w-full text-sm text-left">
-          <thead className="bg-gray-50 border-b">
+          <thead className="bg-muted border-b">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <th key={header.id} className={`px-4 py-3 font-semibold text-gray-900 uppercase text-xs tracking-wider ${(header.column.columnDef.meta as Record<string, string>)?.className || ''}`}>
+                  <th key={header.id} className={`px-4 py-3 font-semibold text-foreground uppercase text-xs tracking-wider ${(header.column.columnDef.meta as Record<string, string>)?.className || ''}`}>
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -121,7 +121,7 @@ export function WspGrid({ wsps, providerId }: WspGridProps) {
           <tbody>
             {table.getRowModel().rows.length > 0 ? (
               table.getRowModel().rows.map((row) => (
-                <tr key={row.id} className="border-b last:border-0 hover:bg-gray-50">
+                <tr key={row.id} className="border-b last:border-0 hover:bg-muted">
                   {row.getVisibleCells().map((cell) => (
                     <td key={cell.id} className={`px-4 py-3 ${(cell.column.columnDef.meta as Record<string, string>)?.className || ''}`}>
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -131,7 +131,7 @@ export function WspGrid({ wsps, providerId }: WspGridProps) {
               ))
             ) : (
               <tr>
-                <td colSpan={columns.length} className="px-4 py-8 text-center text-gray-500">
+                <td colSpan={columns.length} className="px-4 py-8 text-center text-muted-foreground">
                   This organisation has no active Workplace Skills Plans.
                 </td>
               </tr>

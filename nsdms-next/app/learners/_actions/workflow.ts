@@ -20,22 +20,7 @@ async function requireAuthAndAbility(action: 'manage' | 'create' | 'read' | 'upd
   return session.user;
 }
 
-// The "Double Write" Audit Log policy
-async function createAuditLog(recordId: number, entityName: string, actionName: string, actor: string, snapshot: any) {
-  try {
-    await prisma.auditLog.create({
-      data: {
-        recordId,
-        entityName,
-        actionName,
-        actor,
-        snapshot: JSON.stringify(snapshot),
-      }
-    });
-  } catch(e) {
-    console.warn("Audit Log failed.", e);
-  }
-}
+// Replaced by transactional performAuditLog (at bottom)
 
 export type ActionState = {
   success?: boolean;
@@ -85,6 +70,7 @@ export async function createLearnerAction(prevState: ActionState, formData: Form
     
     const profileParsed = learnerProfileSchema.safeParse(dataObj);
     if (!profileParsed.success) {
+      console.log("PROFILE VALIDATION ERRORS:", profileParsed.error.flatten().fieldErrors);
       return { errors: profileParsed.error.flatten().fieldErrors };
     }
 
@@ -98,6 +84,7 @@ export async function createLearnerAction(prevState: ActionState, formData: Form
     });
 
     if (!enrollmentParsed.success) {
+      console.log("ENROLLMENT VALIDATION ERRORS:", enrollmentParsed.error.flatten().fieldErrors);
       return { errors: enrollmentParsed.error.flatten().fieldErrors };
     }
 
@@ -120,7 +107,7 @@ export async function createLearnerAction(prevState: ActionState, formData: Form
                     createdBy: systemUserId
                 }
             });
-            await createAuditLog(user.id, "User", "CREATE (Via Learner Reg)", actorEmail, user);
+            await performAuditLog(tx, user.id, "User", "CREATE (Via Learner Reg)", actorEmail, user);
         }
 
         // B. Create the Learner profile
@@ -135,7 +122,7 @@ export async function createLearnerAction(prevState: ActionState, formData: Form
                 createdBy: systemUserId
             }
         });
-        await createAuditLog(newLearner.id, "Learner", "CREATE", actorEmail, newLearner);
+        await performAuditLog(tx, newLearner.id, "Learner", "CREATE", actorEmail, newLearner);
 
         // C. Create the Learner Enrollment
         const newEnrollment = await tx.learnerEnrollment.create({
@@ -149,7 +136,7 @@ export async function createLearnerAction(prevState: ActionState, formData: Form
                 createdBy: systemUserId
             }
         });
-        await createAuditLog(newEnrollment.id, "LearnerEnrollment", "CREATE", actorEmail, newEnrollment);
+        await performAuditLog(tx, newEnrollment.id, "LearnerEnrollment", "CREATE", actorEmail, newEnrollment);
 
         return newLearner.id;
     });
@@ -158,11 +145,29 @@ export async function createLearnerAction(prevState: ActionState, formData: Form
     return { success: true, id: resultId };
 
   } catch (error: any) {
+    console.error("LEARNER_REG_ERROR", error);
     if (error.code === 'P2002') {
-        return { message: "A learner with this RSA ID, Passport, or Email already exists." };
+        return { message: "A learner already exists with these details (RSA ID, Passport, or Email)." };
     }
-    return { message: error.message || "Failed to register learner." };
+    return { message: `Registration failed: ${error.message || "Unknown"} at ${error.stack.split('\n')[1] || "unknown"}` };
   }
+}
+
+// Fixed Audit Log to use correct tx if provided
+async function performAuditLog(tx: any, recordId: number, entityName: string, actionName: string, actor: string, snapshot: any) {
+    try {
+      await tx.auditLog.create({
+        data: {
+          recordId,
+          entityName,
+          actionName,
+          actor,
+          snapshot: JSON.stringify(snapshot),
+        }
+      });
+    } catch(e) {
+      console.warn("Audit Log failed.", e);
+    }
 }
 
 export async function fetchLearnerById(id: number) {

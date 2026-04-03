@@ -57,7 +57,7 @@ export function LookupForm({
     <form ref={formRef} action={handleAction} className="space-y-6">
       
       {/* Action Header Area */}
-      <div className="flex justify-between items-center bg-white dark:bg-slate-950 p-4 border border-gray-200 dark:border-slate-800 rounded-lg shadow-sm">
+      <div className="flex justify-between items-center bg-card text-card-foreground dark:bg-slate-950 p-4 border border-border dark:border-slate-800 rounded-lg shadow-sm">
         <h2 className="text-lg font-semibold dark:text-slate-100 placeholder:">
           {isNew ? "Create New Record" : "Edit Record"}
         </h2>
@@ -66,7 +66,7 @@ export function LookupForm({
           <button
             type="button"
             onClick={() => router.push(`/admin/lookups/${lookupType}`)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold rounded-md border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-gray-700 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold rounded-md border border-border dark:border-slate-700 bg-card text-card-foreground dark:bg-slate-900 text-muted-foreground dark:text-slate-300 hover:bg-muted dark:hover:bg-slate-800 transition-colors"
             disabled={isPending}
           >
             <X className="w-4 h-4" /> Cancel
@@ -94,53 +94,53 @@ export function LookupForm({
       </div>
 
       {/* Field Editor */}
-      <div className="bg-white dark:bg-slate-950 rounded-lg border border-gray-200 dark:border-slate-800 p-6 shadow-sm space-y-6">
+      <div className="bg-card text-card-foreground dark:bg-slate-950 rounded-lg border border-border dark:border-slate-800 p-6 shadow-sm space-y-6">
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-gray-700 dark:text-slate-300">Code</label>
-            <p className="text-xs text-gray-500 mb-2">Unique identifier code (will be uppercase)</p>
+            <label className="text-sm font-semibold text-muted-foreground dark:text-slate-300">Code</label>
+            <p className="text-xs text-muted-foreground mb-2">Unique identifier code (will be uppercase)</p>
             <input 
               name="code"
               defaultValue={initialData?.code}
               required
               placeholder="e.g. CAT-01"
-              className="w-full rounded-md border border-gray-300 dark:border-slate-700 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-merseta dark:text-slate-100 uppercase"
+              className="w-full rounded-md border border-border dark:border-slate-700 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-merseta dark:text-slate-100 uppercase"
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-gray-700 dark:text-slate-300">Name</label>
-            <p className="text-xs text-gray-500 mb-2">Internal display name</p>
+            <label className="text-sm font-semibold text-muted-foreground dark:text-slate-300">Name</label>
+            <p className="text-xs text-muted-foreground mb-2">Internal display name</p>
             <input 
               name="name"
               defaultValue={initialData?.name}
               required
               placeholder="e.g. Master Category"
-              className="w-full rounded-md border border-gray-300 dark:border-slate-700 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-merseta dark:text-slate-100"
+              className="w-full rounded-md border border-border dark:border-slate-700 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-merseta dark:text-slate-100"
             />
           </div>
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-semibold text-gray-700 dark:text-slate-300">Description</label>
+          <label className="text-sm font-semibold text-muted-foreground dark:text-slate-300">Description</label>
           <textarea 
             name="description"
             defaultValue={initialData?.description}
             rows={4}
-            className="w-full rounded-md border border-gray-300 dark:border-slate-700 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-merseta dark:text-slate-100 resize-none"
+            className="w-full rounded-md border border-border dark:border-slate-700 bg-transparent px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-merseta dark:text-slate-100 resize-none"
           />
         </div>
 
-        <div className="flex items-center gap-2 pt-4 border-t border-gray-100 dark:border-slate-800">
+        <div className="flex items-center gap-2 pt-4 border-t border-border dark:border-slate-800">
           <input 
             type="checkbox"
             name="active"
             id="active"
             defaultChecked={isNew ? true : initialData?.active}
-            className="rounded border-gray-300 w-4 h-4 text-merseta focus:ring-merseta"
+            className="rounded border-border w-4 h-4 text-merseta focus:ring-merseta"
           />
-          <label htmlFor="active" className="text-sm font-medium text-gray-700 dark:text-slate-300">
+          <label htmlFor="active" className="text-sm font-medium text-muted-foreground dark:text-slate-300">
             Record is active
           </label>
         </div>

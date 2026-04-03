@@ -22,7 +22,7 @@ export class OrganisationPage {
     this.addressInput = page.locator('input[name="address"]');
     this.saveButton = page.getByRole('button', { name: /Save Changes|Create Organisation/i });
     this.deleteButton = page.getByRole('button', { name: /Delete/i });
-    this.certificateButton = page.getByRole('button', { name: /Certificate/i });
+    this.certificateButton = page.locator('#btn-download-certificate');
   }
 
   async gotoList() {
@@ -33,11 +33,12 @@ export class OrganisationPage {
     await this.page.goto('/organisations/new');
   }
 
-  async createOrganisation(name: string, sdl: string, address: string) {
+  async createOrganisation(name: string, sdl: string, address: string, sicCode: string = "99999") {
     await this.gotoNew();
     await this.nameInput.fill(name);
     await this.sdlInput.fill(sdl);
     await this.addressInput.fill(address);
+    await this.page.locator('input[name="sicCode"]').fill(sicCode);
     await this.saveButton.click();
   }
 

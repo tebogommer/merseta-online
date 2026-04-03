@@ -7,9 +7,44 @@ const prisma = new PrismaClient();
 test.describe('Provider Accreditation Flow', () => {
 
   test.beforeAll(async () => {
-     // Ensure baseline relations exist for the E2E test
-     await prisma.$executeRawUnsafe(`INSERT OR IGNORE INTO Organisation (id, organisation_name, sdl_number) VALUES (1, 'Test Org', 'LTestOrg')`);
-     await prisma.$executeRawUnsafe(`INSERT OR IGNORE INTO TrainingProviderTypeType (id, name, code) VALUES (1, 'SDP', 'SDP')`);
+    // Seed Admin User
+    await prisma.user.upsert({
+      where: { email: 'admin@merseta.org.za' },
+      update: { role: 'ADMIN' },
+      create: { 
+        email: 'admin@merseta.org.za', 
+        name: 'Admin User', 
+        role: 'ADMIN' 
+      }
+    });
+
+    // Ensure cleanup of any previous provider linked to this org
+    const existingProvider = await prisma.trainingProvider.findUnique({ where: { organisationId: 1004 } });
+    if (existingProvider) {
+        await prisma.trainingProvider.delete({ where: { id: existingProvider.id } });
+    }
+
+    // Ensure consistent seeding for E2E
+    await prisma.organisation.upsert({
+      where: { id: 1004 },
+      update: {},
+      create: { 
+        id: 1004, 
+        organisationName: 'Provider Accreditation Test Org', 
+        sdlNumber: 'L1004ACC' 
+      }
+    });
+
+    await prisma.providerTypeType.upsert({
+      where: { code: 'SDP' },
+      update: {},
+      create: { 
+        name: 'Private SDP', 
+        code: 'SDP', 
+        description: 'Skills Development Provider', 
+        active: true 
+      }
+    });
   });
 
   test('Should strictly enforce accreditation unique bounds', async ({ adminPage }) => {
@@ -27,8 +62,9 @@ test.describe('Provider Accreditation Flow', () => {
     await expect(adminPage.getByText(/Accreditation number must be at least 3 characters/)).toBeVisible();
 
     // 4. Validate bounds by testing uniqueness/success constraint
+    const sdp = await prisma.providerTypeType.findUnique({ where: { code: 'SDP' } });
     const uniqueAccreditation = `ACC-TEST-${Date.now()}`;
-    await providerPage.fillApplication(uniqueAccreditation, "1", "1");
+    await providerPage.fillApplication(uniqueAccreditation, sdp?.id.toString() || "1", "1004");
     await providerPage.submit();
     
     // 5. Verify the "Double Write" success via sonner toast or router push

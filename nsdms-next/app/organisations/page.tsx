@@ -15,17 +15,17 @@ export default async function OrganisationsGridPage() {
   const canCreate = ability.can('create', 'Organisation');
 
   return (
-    <main className="min-h-screen bg-gray-50 p-8">
+    <main className="min-h-screen bg-transparent p-8">
       <div className="max-w-7xl mx-auto space-y-6">
         
         {/* Header Bar */}
-        <div className="flex justify-between items-center bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <div className="flex justify-between items-center bg-card text-card-foreground p-6 rounded-lg shadow-sm border border-border">
           <div>
-            <h1 className="text-3xl font-bold flex items-center gap-3 text-slate-900">
+            <h1 className="text-3xl font-bold flex items-center gap-3 text-foreground">
               <Building2 className="text-primary" /> 
               Organisations
             </h1>
-            <p className="text-gray-500 mt-1">Manage stakeholder SDL linkages and ETQA data.</p>
+            <p className="text-muted-foreground mt-1">Manage stakeholder SDL linkages and ETQA data.</p>
           </div>
           {canCreate && (
              <Link 

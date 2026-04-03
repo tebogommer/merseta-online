@@ -11,12 +11,12 @@ export const QUEUE_NAMES = {
   NOTIFICATION: "system-notification",
 };
 
-/**
- * Worker Logic for the SARS Levy Queue
- * This handles the heavy lifting of processing thousands of SARS records
- * in the background to avoid blocking the main server thread.
- */
-export const sarsLevyWorker = new Worker(
+const isMock = process.env.MOCK_BULLMQ === "true" || process.env.NODE_ENV === "test" || !process.env.REDIS_HOST;
+
+export const sarsLevyWorker = isMock ? {
+    on: () => {},
+    close: async () => {},
+} as unknown as Worker : new Worker(
   QUEUE_NAMES.SARS_LEVY_INGEST,
   async (job: Job) => {
     const { data } = job;
@@ -40,11 +40,16 @@ export const sarsLevyWorker = new Worker(
 );
 
 // Worker error handling
-sarsLevyWorker.on("failed", (job, err) => {
-  console.error(`[Worker] Job ${job?.id} failed with error: ${err.message}`);
-});
+if (!isMock) {
+  sarsLevyWorker.on("failed", (job, err) => {
+    console.error(`[Worker] Job ${job?.id} failed with error: ${err.message}`);
+  });
+}
 
-export const setmisExtractWorker = new Worker(
+export const setmisExtractWorker = isMock ? {
+    on: () => {},
+    close: async () => {},
+} as unknown as Worker : new Worker(
   QUEUE_NAMES.SETMIS_EXTRACT,
   async (job: Job) => {
     const { data } = job;
@@ -90,6 +95,8 @@ export const setmisExtractWorker = new Worker(
   }
 );
 
-setmisExtractWorker.on("failed", (job, err) => {
-  console.error(`[Worker] SETMIS Job ${job?.id} failed with error: ${err.message}`);
-});
+if (!isMock) {
+  setmisExtractWorker.on("failed", (job, err) => {
+    console.error(`[Worker] SETMIS Job ${job?.id} failed with error: ${err.message}`);
+  });
+}

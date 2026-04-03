@@ -1,122 +1,134 @@
 "use server";
 
 import { PrismaClient } from "@prisma/client";
-import { revalidatePath } from "next/cache";
-import { createWspSchema } from "../_validators/wsp-schema";
 import { auth } from "@/auth";
+import { defineAbilitiesFor } from "@/lib/abilities";
+import { revalidatePath } from "next/cache";
 
 const prisma = new PrismaClient();
 
-export type ActionState = {
-  errors?: Record<string, string[]>;
-  message?: string;
-  success?: boolean;
-};
+async function requireAuthAndAbility(action: any, subject: any) {
+  const session = await auth();
+  if (!session?.user) throw new Error("Unauthorized");
+  const ability = defineAbilitiesFor(session.user);
+  if (ability.cannot(action, subject)) throw new Error("Forbidden");
+  return session.user;
+}
 
-export async function fetchWsps(organisationId: number) {
-  try {
+export async function fetchWSPs(orgId?: number) {
+  const user = await requireAuthAndAbility('read', 'WorkplaceSkillsPlan');
+  const isAdmin = user.role === 'ADMIN';
+  
+  const baseWhere = orgId ? { organisationId: orgId } : {};
+
+  if (isAdmin) {
     return await prisma.workplaceSkillsPlan.findMany({
-      where: { organisationId },
-      orderBy: { finYear: 'desc' },
-      select: {
-          id: true,
-          finYear: true,
-          status: true,
-          totalPayroll: true,
-          totalTrainingCosts: true,
-          percentagePayrollSpent: true,
-          createdAt: true
-      }
+      where: baseWhere,
+      include: { organisation: true },
+      orderBy: { createdAt: 'desc' }
     });
-  } catch (error) {
-    console.error("fetchWsps Error:", error);
-    return [];
+  } else {
+    return await prisma.workplaceSkillsPlan.findMany({
+      where: { ...baseWhere, createdBy: user.id ? Number(user.id) : 0 },
+      include: { organisation: true },
+      orderBy: { createdAt: 'desc' }
+    });
   }
 }
 
-export async function createWspAction(
-  prevState: ActionState,
-  formData: FormData
-): Promise<ActionState> {
-  const session = await auth();
-  const userId = session?.user?.id ? Number(session.user.id) : 0;
+export async function getWSP(id: number) {
+  await requireAuthAndAbility('read', 'WorkplaceSkillsPlan');
+  return await prisma.workplaceSkillsPlan.findUnique({
+    where: { id },
+    include: { organisation: true }
+  });
+}
 
-  // 1. Data Normalization
-  const rawData = {
-    organisationId: Number(formData.get("organisationId")),
-    finYear: Number(formData.get("finYear")),
-    numberOfEmployees: Number(formData.get("numberOfEmployees")),
-    numberOfBeneficiaries: Number(formData.get("numberOfBeneficiaries") || 0),
-    totalPayroll: parseFloat(formData.get("totalPayroll") as string),
-    totalTrainingCosts: parseFloat(formData.get("totalTrainingCosts") as string),
-    projectDescription: formData.get("projectDescription")?.toString() || "",
-    interventions: formData.get("interventions")?.toString() || ""
-  };
+export type ActionState = {
+  success?: boolean;
+  message?: string;
+  errors?: Record<string, string[]>;
+  id?: number;
+};
 
-  // 2. Strict Zod Validation (WSP-2 Extraction)
-  const validatedFields = createWspSchema.safeParse(rawData);
+import { createWspSchema } from "../_validators/wsp-schema";
 
-  if (!validatedFields.success) {
-    return {
-      errors: validatedFields.error.flatten().fieldErrors,
-      message: "Please correct the financial and target metric errors before submission."
-    };
-  }
-
-  const data = validatedFields.data;
-  const derivedPercentage = Math.round((data.totalTrainingCosts / data.totalPayroll) * 100 * 100) / 100;
-
+export async function createWspAction(prevState: ActionState, formData: FormData): Promise<ActionState> {
   try {
-    // 3. Double Write & Audit Enforced Context (WSP-3)
-    await prisma.$transaction(async (tx) => {
-      
-      const newWsp = await tx.workplaceSkillsPlan.create({
-        data: {
-          organisationId: data.organisationId,
-          finYear: data.finYear,
-          numberOfEmployees: data.numberOfEmployees,
-          numberOfBeneficiaries: data.numberOfBeneficiaries,
-          totalPayroll: data.totalPayroll,
-          totalTrainingCosts: data.totalTrainingCosts,
-          percentagePayrollSpent: derivedPercentage,
-          projectDescription: data.projectDescription,
-          interventions: data.interventions,
-          
-          // Temporal / Defaults
-          status: "Draft",
-          createdBy: userId,
-          modifiedBy: userId,
-        }
-      });
-
-      // Issue Mandatory Audit Lineage Trail Drop
-      await tx.auditLog.create({
-        data: {
-          recordId: newWsp.id,
-          actionName: "CREATE_WSP",
-          entityName: "WorkplaceSkillsPlan",
-          actor: userId.toString(),
-          snapshot: JSON.stringify({ 
-             context: "New Financial Allocation",
-             payload: data 
-          })
-        }
-      });
-      
+    const user = await requireAuthAndAbility('create', 'WorkplaceSkillsPlan');
+    
+    // Parse form data strings to numbers where appropriate
+    const dataObj = Object.fromEntries(formData.entries());
+    const parsedData = createWspSchema.safeParse({
+      organisationId: dataObj.organisationId ? Number(dataObj.organisationId) : 0,
+      finYear: dataObj.finYear ? Number(dataObj.finYear) : 0,
+      numberOfEmployees: dataObj.numberOfEmployees ? Number(dataObj.numberOfEmployees) : 0,
+      numberOfBeneficiaries: dataObj.numberOfBeneficiaries ? Number(dataObj.numberOfBeneficiaries) : 0,
+      totalPayroll: dataObj.totalPayroll ? Number(dataObj.totalPayroll) : 0,
+      totalTrainingCosts: dataObj.totalTrainingCosts ? Number(dataObj.totalTrainingCosts) : 0,
+      projectDescription: dataObj.projectDescription,
+      interventions: dataObj.interventions
     });
 
-    revalidatePath(`/organisations/${data.organisationId}`);
-    
-    return {
-      success: true,
-      message: "Workplace Skills Plan explicitly registered and placed in Draft status."
-    };
+    if (!parsedData.success) {
+      return { 
+        errors: parsedData.error.flatten().fieldErrors,
+        message: "Please correct the financial and target metric errors before submission."
+      };
+    }
 
-  } catch (error) {
-    console.error("WSP Registration Error:", error);
-    return {
-      success: false,
-      message: "A database integrity error occurred while capturing the WSP record."
-    };
+    const val = parsedData.data;
+
+    const wsp = await prisma.workplaceSkillsPlan.create({
+      data: {
+        organisationId: val.organisationId,
+        finYear: val.finYear,
+        numberOfEmployees: val.numberOfEmployees,
+        totalPayroll: val.totalPayroll,
+        totalTrainingCosts: val.totalTrainingCosts,
+        status: "Draft",
+        createdBy: user.id ? Number(user.id) : 0
+      }
+    });
+
+    // Double-write to audit log
+    await prisma.auditLog.create({
+      data: {
+        recordId: wsp.id,
+        entityName: "WorkplaceSkillsPlan",
+        actionName: "CREATE",
+        actor: user.email || "system",
+        snapshot: JSON.stringify(wsp),
+        createdBy: user.id ? Number(user.id) : 0
+      }
+    });
+
+    revalidatePath("/workplace-skills-plans");
+    return { success: true, id: wsp.id, message: "Successfully created WSP" };
+  } catch (error: any) {
+    console.error("Failed to create WSP", error);
+    return { success: false, message: error.message || "Failed to create WSP" };
   }
+}
+
+
+export async function deleteWSPAction(id: number) {
+  const user = await requireAuthAndAbility('delete', 'WorkplaceSkillsPlan');
+  const before = await prisma.workplaceSkillsPlan.findUnique({ where: { id } });
+  
+  await prisma.workplaceSkillsPlan.delete({ where: { id } });
+  
+  await prisma.auditLog.create({
+    data: {
+      recordId: id,
+      entityName: "WorkplaceSkillsPlan",
+      actionName: "DELETE",
+      actor: user.email || "system",
+      snapshot: JSON.stringify({ before }),
+      createdBy: user.id ? Number(user.id) : 0
+    }
+  });
+
+  revalidatePath("/workplace-skills-plans");
+  return { success: true };
 }

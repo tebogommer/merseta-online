@@ -30,7 +30,7 @@ export default function NewLearner({ searchParams }: { searchParams: Promise<{ p
             router.push(`/learners`);
         }
       } else {
-        toast.error(result.message || "Enrollment failed");
+        toast.error(result.message || (result.errors ? JSON.stringify(result.errors) : "Enrollment failed"));
       }
     });
   };
@@ -45,10 +45,10 @@ export default function NewLearner({ searchParams }: { searchParams: Promise<{ p
   };
 
   return (
-    <main className="min-h-screen bg-gray-50 p-8">
+    <main className="min-h-screen bg-muted p-8">
       <div className="max-w-4xl mx-auto mb-6">
-        <div className="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-          <Link href={providerId ? `/organisations/${providerId}` : `/learners`} className="text-gray-500 hover:text-gray-900 inline-flex items-center gap-2">
+        <div className="flex justify-between items-center bg-card text-card-foreground p-4 rounded-lg shadow-sm border border-border">
+          <Link href={providerId ? `/organisations/${providerId}` : `/learners`} className="text-muted-foreground hover:text-foreground inline-flex items-center gap-2">
             <ArrowLeft className="w-4 h-4" /> Back
           </Link>
           <div className="font-bold text-lg text-primary">New Learner Enrollment</div>
@@ -62,7 +62,7 @@ export default function NewLearner({ searchParams }: { searchParams: Promise<{ p
             </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-6 bg-white p-8 rounded-lg shadow-sm border border-gray-200">
+        <form onSubmit={handleSubmit} className="space-y-6 bg-card text-card-foreground p-8 rounded-lg shadow-sm border border-border">
             <input type="hidden" name="providerId" value={providerId} />
             <input type="hidden" name="interventionTypeId" value="1" />
             <input type="hidden" name="qualificationTypeId" value="1" />
@@ -71,40 +71,40 @@ export default function NewLearner({ searchParams }: { searchParams: Promise<{ p
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Profile Section */}
                 <div className="space-y-6">
-                    <h3 className="text-lg font-semibold text-gray-900 border-b pb-2 flex items-center gap-2">
-                        <User className="w-5 h-5 text-gray-400" /> Identity Details
+                    <h3 className="text-lg font-semibold text-foreground border-b pb-2 flex items-center gap-2">
+                        <User className="w-5 h-5 text-muted-foreground" /> Identity Details
                     </h3>
                     
                     <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">RSA ID Number</label>
-                        <input name="rsaIdNumber" id="rsaIdNumber" placeholder="13-digit ID" className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:outline-none" />
+                        <label className="block text-sm font-semibold text-muted-foreground mb-2">RSA ID Number</label>
+                        <input name="rsaIdNumber" id="rsaIdNumber" placeholder="13-digit ID" className="w-full px-4 py-2 border border-border rounded focus:ring-2 focus:ring-primary focus:outline-none" />
                         <FieldError field="rsaIdNumber" />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">Passport Number (If no RSA ID)</label>
-                        <input name="passportNumber" id="passportNumber" className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:outline-none" />
+                        <label className="block text-sm font-semibold text-muted-foreground mb-2">Passport Number (If no RSA ID)</label>
+                        <input name="passportNumber" id="passportNumber" className="w-full px-4 py-2 border border-border rounded focus:ring-2 focus:ring-primary focus:outline-none" />
                         <FieldError field="passportNumber" />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">Date of Birth *</label>
+                        <label className="block text-sm font-semibold text-muted-foreground mb-2">Date of Birth *</label>
                         <div className="relative">
-                            <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-                            <input name="dateOfBirth" id="dateOfBirth" type="date" className="w-full pl-10 px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:outline-none" />
+                            <Calendar className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <input name="dateOfBirth" id="dateOfBirth" type="date" className="w-full pl-10 px-4 py-2 border border-border rounded focus:ring-2 focus:ring-primary focus:outline-none" />
                         </div>
                         <FieldError field="dateOfBirth" />
                     </div>
 
                     <div className="flex gap-4">
                         <div className="w-1/2">
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">Equity Status *</label>
-                            <input name="equityStatus" defaultValue="African" className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:outline-none" />
+                            <label className="block text-sm font-semibold text-muted-foreground mb-2">Equity Status *</label>
+                            <input name="equityStatus" defaultValue="African" className="w-full px-4 py-2 border border-border rounded focus:ring-2 focus:ring-primary focus:outline-none" />
                             <FieldError field="equityStatus" />
                         </div>
                         <div className="w-1/2">
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">Nationality *</label>
-                            <input name="nationality" defaultValue="South African" className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:outline-none" />
+                            <label className="block text-sm font-semibold text-muted-foreground mb-2">Nationality *</label>
+                            <input name="nationality" defaultValue="South African" className="w-full px-4 py-2 border border-border rounded focus:ring-2 focus:ring-primary focus:outline-none" />
                             <FieldError field="nationality" />
                         </div>
                     </div>
@@ -112,30 +112,30 @@ export default function NewLearner({ searchParams }: { searchParams: Promise<{ p
 
                 {/* Enrollment Section */}
                 <div className="space-y-6">
-                    <h3 className="text-lg font-semibold text-gray-900 border-b pb-2 flex items-center gap-2">
-                        <Folder className="w-5 h-5 text-gray-400" /> Enrollment Details
+                    <h3 className="text-lg font-semibold text-foreground border-b pb-2 flex items-center gap-2">
+                        <Folder className="w-5 h-5 text-muted-foreground" /> Enrollment Details
                     </h3>
 
                     {!providerId && (
                         <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-2">Provider ID *</label>
-                            <input name="providerId" id="providerId" type="number" className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:outline-none" />
+                            <label className="block text-sm font-semibold text-muted-foreground mb-2">Provider ID *</label>
+                            <input name="providerId" id="providerId" type="number" className="w-full px-4 py-2 border border-border rounded focus:ring-2 focus:ring-primary focus:outline-none" />
                             <FieldError field="providerId" />
                         </div>
                     )}
 
                     <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">Intervention Type ID *</label>
-                        <input name="interventionTypeId" type="number" defaultValue="1" className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:outline-none" />
+                        <label className="block text-sm font-semibold text-muted-foreground mb-2">Intervention Type ID *</label>
+                        <input name="interventionTypeId" type="number" defaultValue="1" className="w-full px-4 py-2 border border-border rounded focus:ring-2 focus:ring-primary focus:outline-none" />
                         <FieldError field="interventionTypeId" />
-                        <p className="text-xs text-gray-400 mt-1">Hint: Defaults to 1 for generic Type during testing.</p>
+                        <p className="text-xs text-muted-foreground mt-1">Hint: Defaults to 1 for generic Type during testing.</p>
                     </div>
 
                     <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">Qualification Type ID *</label>
-                        <input name="qualificationTypeId" type="number" defaultValue="1" className="w-full px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-primary focus:outline-none" />
+                        <label className="block text-sm font-semibold text-muted-foreground mb-2">Qualification Type ID *</label>
+                        <input name="qualificationTypeId" type="number" defaultValue="1" className="w-full px-4 py-2 border border-border rounded focus:ring-2 focus:ring-primary focus:outline-none" />
                         <FieldError field="qualificationTypeId" />
-                        <p className="text-xs text-gray-400 mt-1">Hint: Defaults to 1 for generic Qualification during testing.</p>
+                        <p className="text-xs text-muted-foreground mt-1">Hint: Defaults to 1 for generic Qualification during testing.</p>
                     </div>
                 </div>
             </div>

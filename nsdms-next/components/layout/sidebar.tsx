@@ -14,7 +14,8 @@ import {
   Briefcase,
   Shield,
   ClipboardList,
-  Award
+  Award,
+  Database
 } from "lucide-react";
 
 const navigation = [
@@ -25,12 +26,14 @@ const navigation = [
   { name: "Learner Records", href: "/learners", icon: GraduationCap },
   { name: "WSP Submissions", href: "/workplace-skills-plans", icon: ClipboardList },
   { name: "ETQA Approvals", href: "/etqa/approvals", icon: Award },
-  { name: "Users", href: "/users", icon: Users },
-  { name: "System Settings", href: "/settings", icon: Settings },
-  { name: "System Audit Matrix", href: "/admin/audit-logs", icon: Shield },
+  { name: "People Directory", href: "/admin/persons", icon: Users },
+  { name: "Access Control", href: "/admin/users", icon: Shield },
+  { name: "System Audit Matrix", href: "/admin/audit-logs", icon: ClipboardList },
+  { name: "System Settings", href: "/admin/settings", icon: Settings },
 ];
 
 const lookups = [
+  { name: "Master Registry", href: "/admin/lookups", icon: Database },
   { name: "Categories", href: "/admin/lookups/category-types", icon: FolderTree },
   { name: "Interventions", href: "/admin/lookups/intervention-types", icon: Library },
   { name: "Qualifications", href: "/admin/lookups/qualification-types", icon: FolderTree },
@@ -53,7 +56,7 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex flex-1 flex-col p-4 space-y-1">
-        <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 px-2">Menu</div>
+        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 px-2">Menu</div>
         {navigation.map((item) => {
           const isActive = pathname.startsWith(item.href) && (item.href !== "/" || pathname === "/");
           return (
@@ -70,7 +73,7 @@ export function Sidebar() {
               <item.icon
                 className={cn(
                   "h-5 w-5 shrink-0",
-                  isActive ? "text-primary" : "text-slate-500 group-hover:text-slate-300"
+                  isActive ? "text-primary" : "text-muted-foreground group-hover:text-slate-300"
                 )}
                 aria-hidden="true"
               />
@@ -79,7 +82,7 @@ export function Sidebar() {
           );
         })}
 
-        <div className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 mt-6 px-2">Data Lookups</div>
+        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 mt-6 px-2">Data Lookups</div>
         {lookups.map((item) => {
           const isActive = pathname.startsWith(item.href);
           return (
@@ -96,7 +99,7 @@ export function Sidebar() {
               <item.icon
                 className={cn(
                   "h-5 w-5 shrink-0",
-                  isActive ? "text-primary" : "text-slate-500 group-hover:text-slate-300"
+                  isActive ? "text-primary" : "text-muted-foreground group-hover:text-slate-300"
                 )}
                 aria-hidden="true"
               />
@@ -108,7 +111,7 @@ export function Sidebar() {
       
       {/* Footer / Info Segment */}
       <div className="mt-auto p-4 border-t border-slate-900 bg-slate-950/50">
-         <div className="text-xs text-slate-500 px-2 py-1 flex items-center justify-between">
+         <div className="text-xs text-muted-foreground px-2 py-1 flex items-center justify-between">
             <span>NSDMS v2</span>
             <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded text-[10px] font-mono border border-primary/20">MVP</span>
          </div>

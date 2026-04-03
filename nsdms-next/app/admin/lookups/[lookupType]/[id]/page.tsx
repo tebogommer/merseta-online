@@ -3,12 +3,14 @@ import { LookupForm } from "../../_components/lookup-form";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 
+import { LOOKUP_MODELS } from "../../_config/lookup-registry";
+
 export default async function LookupDetailPage({
   params
 }: {
-  params: { lookupType: string, id: string }
+  params: Promise<{ lookupType: string, id: string }>
 }) {
-  const { lookupType, id } = params;
+  const { lookupType, id } = await params;
   const isNew = id === 'new';
 
   let initialData = null;
@@ -16,15 +18,14 @@ export default async function LookupDetailPage({
     initialData = await fetchLookupById(lookupType, parseInt(id));
   }
 
-  const title = lookupType
-    .split('-')
-    .map(w => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(' ');
+  // Find name from registry
+  const match = LOOKUP_MODELS.find(m => m.route === lookupType || m.route === lookupType.slice(0, -1));
+  const title = match?.name || lookupType;
 
   return (
     <div className="space-y-6 max-w-4xl">
       <div className="flex items-center gap-4 text-sm font-semibold">
-         <Link href={`/admin/lookups/${lookupType}`} className="flex items-center text-slate-500 hover:text-merseta transition-colors">
+         <Link href={`/admin/lookups/${lookupType}`} className="flex items-center text-muted-foreground hover:text-merseta transition-colors">
            <ChevronLeft className="w-4 h-4" /> Back to {title}
          </Link>
       </div>

@@ -6,22 +6,32 @@ import { revalidatePath } from "next/cache";
 
 const prisma = new PrismaClient();
 
-const getModelName = (lookupType: string): any => {
-  switch (lookupType) {
-    case 'category-types': return 'categoryType';
-    case 'intervention-types': return 'interventionType';
-    case 'qualification-types': return 'qualificationType';
-    default: throw new Error(`Invalid lookup type: ${lookupType}`);
+import { LOOKUP_MODELS } from "../_config/lookup-registry";
+
+const getModelConfig = (lookupType: string) => {
+  // Normalize if it ends with an extra 's' that shouldn't be there because Prisma model is singular
+  // the route is e.g. "category-types" mapping to "CategoryType", wait I already have 'route' in my array
+  // We can just find by route. Wait, the route generated was 'category-type' but the URL might be plural?
+  // Let me check. The user URL parameter is 'lookupType'. They visited /admin/lookups/category-types.
+  // My generator made 'route: category-type'. I should handle optional 's' at the end or precisely map.
+  let exactMatch = LOOKUP_MODELS.find(m => m.route === lookupType);
+  if (!exactMatch && lookupType.endsWith('s')) {
+    exactMatch = LOOKUP_MODELS.find(m => m.route === lookupType.slice(0, -1));
   }
+  if (!exactMatch) {
+    throw new Error(`Invalid lookup type: ${lookupType}`);
+  }
+  return exactMatch;
+};
+
+const getModelName = (lookupType: string): any => {
+  const config = getModelConfig(lookupType);
+  // Prisma property is camelCase (e.g. categoryType)
+  return config.model.charAt(0).toLowerCase() + config.model.slice(1);
 };
 
 const getEntityName = (lookupType: string): string => {
-  switch (lookupType) {
-    case 'category-types': return 'CategoryType';
-    case 'intervention-types': return 'InterventionType';
-    case 'qualification-types': return 'QualificationType';
-    default: throw new Error(`Invalid lookup type: ${lookupType}`);
-  }
+  return getModelConfig(lookupType).model;
 };
 
 export async function fetchLookups(lookupType: string) {

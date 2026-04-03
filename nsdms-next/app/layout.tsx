@@ -23,7 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.className} bg-gray-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 h-screen overflow-hidden`}>
+      <body className={`${inter.className} bg-muted dark:bg-slate-950 text-foreground dark:text-slate-100 h-screen overflow-hidden`}>
         <ThemeProvider
             attribute="class"
             defaultTheme="system"
@@ -33,7 +33,7 @@ export default function RootLayout({
           <Providers>
             <div className="flex h-full w-full">
               <Sidebar />
-              <div className="flex flex-col flex-1 min-w-0 bg-slate-50 dark:bg-slate-900 relative">
+              <div className="flex flex-col flex-1 min-w-0 bg-muted dark:bg-slate-900 relative">
               <Topbar />
               <main className="flex-1 overflow-y-auto p-6 relative">
                 {children}

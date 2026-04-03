@@ -13,9 +13,34 @@ test.describe('Organisation Management E2E', () => {
     };
 
     // 1. Create Organisation
-    await orgPage.createOrganisation(testOrg.name, testOrg.sdl, testOrg.address);
+    adminPage.on('console', msg => console.log('BROWSER LOG:', msg.text()));
     
-    // 2. Verify we are on the detail page (Check for name in header/input)
+    // We can also bind to sonner toast DOM to grab the exact text
+    await adminPage.exposeFunction('logToast', (text: string) => console.log('TOAST_CONTENT:', text));
+    await adminPage.addScriptTag({ content: `
+      const observer = new MutationObserver((mutations) => {
+        for (const m of mutations) {
+          if (m.addedNodes.length > 0) {
+            m.addedNodes.forEach(node => {
+               if (node.innerText) window.logToast(node.innerText);
+            });
+          }
+        }
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+    `});
+
+    // 1. Create Organisation
+    await orgPage.createOrganisation(testOrg.name, testOrg.sdl, testOrg.address);
+
+    try {
+      await expect(adminPage.getByText(/Organisation successfully created/i)).toBeVisible({ timeout: 10000 });
+    } catch (e) {
+      const stateDump = await adminPage.locator('#__e2e_state_dump').textContent();
+      console.log("TEST FAILED. STATE DUMP:", stateDump);
+      throw e;
+    }
+    await expect(adminPage).toHaveURL(/\/organisations\/\d+/);
     await expect(adminPage.locator('#organisationName')).toHaveValue(testOrg.name);
     
     // 3. Download Certificate

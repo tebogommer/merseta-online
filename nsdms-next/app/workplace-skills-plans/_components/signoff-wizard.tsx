@@ -51,6 +51,7 @@ export function SignoffWizard({ wspId }: { wspId: string }) {
             </div>
             <input 
               type="file" 
+              aria-label="Upload Sign-Off Document"
               accept=".pdf"
               className="hidden" 
               id="signoff-upload" 

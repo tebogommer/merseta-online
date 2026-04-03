@@ -2,8 +2,14 @@ import { defineAbility } from '@casl/ability';
 import type { Session } from 'next-auth';
 
 // Define the shape of our RBAC mapping
-type Action = 'manage' | 'create' | 'read' | 'update' | 'delete' | 'review_etqa';
-type Subject = 'Organisation' | 'AuditLog' | 'User' | 'Learner' | 'LearnerEnrollment' | 'WorkplaceSkillsPlan' | 'TrainingProvider' | 'WorkplaceApproval' | 'GrantApplication' | 'GrantVerification' | 'PaymentRequest' | 'AssessorModeratorApplication' | 'AssessorModExtensionOfScope' | 'Document' | 'SarsLevyDetail' | 'ReportingExtract' | 'all';
+export type Action = 'manage' | 'create' | 'read' | 'update' | 'delete' | 'review_etqa';
+export type Subject = 'Organisation' | 'AuditLog' | 'User' | 'Learner' | 'LearnerEnrollment' | 'WorkplaceSkillsPlan' | 'TrainingProvider' | 'WorkplaceApproval' | 'GrantApplication' | 'GrantVerification' | 'PaymentRequest' | 'AssessorModeratorApplication' | 'AssessorModExtensionOfScope' | 'Document' | 'SarsLevyDetail' | 'ReportingExtract' | 'all';
+
+export interface PermissionOverride {
+  action: Action;
+  subject: Subject;
+  inverted?: boolean;
+}
 
 // The global policy factory
 export const defineAbilitiesFor = (user?: Session['user'] | null) => {
@@ -16,7 +22,7 @@ export const defineAbilitiesFor = (user?: Session['user'] | null) => {
     // Role-based coarse access:
     if (user.role === 'ADMIN') {
       can('manage', 'all'); // unrestricted
-      return;
+      // We still process overrides for ADMINs just in case we need explicit revokes, though 'manage all' overrides mostly.
     }
 
     if (user.role === 'STANDARD') {
@@ -66,6 +72,23 @@ export const defineAbilitiesFor = (user?: Session['user'] | null) => {
       
       // More examples later, e.g. can('update', 'Organisation', { ownerId: user.id })
     }
-    
+
+    // Process Hybrid Claim Overrides (from legacy booleans)
+    if (user.permissions) {
+      try {
+        const overrides = JSON.parse(user.permissions) as PermissionOverride[];
+        if (Array.isArray(overrides)) {
+          overrides.forEach(p => {
+            if (p.inverted) {
+              cannot(p.action, p.subject);
+            } else {
+              can(p.action, p.subject);
+            }
+          });
+        }
+      } catch (e) {
+        console.error('Failed to parse user permissions overrides', e);
+      }
+    }
   });
 };

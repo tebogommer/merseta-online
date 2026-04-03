@@ -93,7 +93,7 @@ export function OrganisationActions({
     <>
       <div className="sticky top-0 z-50 flex justify-end items-center bg-transparent pointer-events-none -mt-4 mb-4 mr-0">
          <div className="pointer-events-auto flex gap-3">
-             <Link href="/organisations" className="inline-flex items-center gap-2 bg-white border border-gray-300 text-gray-700 px-4 py-2 hover:bg-gray-50 uppercase text-xs font-bold rounded">
+             <Link href="/organisations" className="inline-flex items-center gap-2 bg-card border border-border text-foreground px-4 py-2 hover:bg-muted uppercase text-xs font-bold rounded">
                 Cancel
              </Link>
              
@@ -103,7 +103,7 @@ export function OrganisationActions({
                 onClick={handleDelete}
                 disabled={!canDelete || isPending}
                 id="btn-delete-organisation"
-                className={`inline-flex items-center gap-2 px-4 py-2 uppercase text-xs font-bold rounded ${canDelete ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-gray-100 text-gray-400 cursor-not-allowed'}`}
+                className={`inline-flex items-center gap-2 px-4 py-2 uppercase text-xs font-bold rounded ${canDelete ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-gray-100 text-muted-foreground cursor-not-allowed'}`}
               >
                 <Trash2 className="w-4 h-4" /> Delete
               </button>
@@ -128,7 +128,7 @@ export function OrganisationActions({
                   });
                 }}
                 disabled={isPending}
-                className="inline-flex items-center gap-2 bg-white border border-merseta text-merseta px-4 py-2 hover:bg-merseta-light uppercase text-xs font-bold rounded shadow-sm disabled:opacity-50 font-test-download"
+                className="inline-flex items-center gap-2 bg-card border border-merseta text-merseta px-4 py-2 hover:bg-merseta/10 uppercase text-xs font-bold rounded shadow-sm disabled:opacity-50 font-test-download"
               >
                 {isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
                 Certificate
@@ -140,7 +140,7 @@ export function OrganisationActions({
               type="submit" 
               id="btn-save-organisation"
               disabled={(isNew ? !canCreate : !canUpdate) || isPending}
-              className={`inline-flex items-center gap-2 px-4 py-2 uppercase text-xs font-bold rounded shadow-sm ${(isNew ? canCreate : canUpdate) ? 'bg-merseta text-white hover:bg-merseta-dark' : 'bg-gray-100 text-gray-400 cursor-not-allowed'} ${isPending ? 'opacity-50' : ''}`}
+              className={`inline-flex items-center gap-2 px-4 py-2 uppercase text-xs font-bold rounded shadow-sm ${(isNew ? canCreate : canUpdate) ? 'bg-merseta text-white hover:bg-merseta-dark' : 'bg-gray-100 text-muted-foreground cursor-not-allowed'} ${isPending ? 'opacity-50' : ''}`}
             >
               <Save className="w-4 h-4" /> {isPending ? "Saving..." : (isNew ? "Create Organisation" : "Save Changes")}
             </button>
@@ -153,61 +153,62 @@ export function OrganisationActions({
          </div>
       </div>
 
-      <form id="org-form" onSubmit={handleSubmit} className="space-y-6 bg-white p-8 rounded-lg shadow-sm border border-gray-200">
+      <form id="org-form" onSubmit={handleSubmit} className="space-y-6 bg-card text-card-foreground p-8 rounded-lg shadow-sm border border-border">
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <pre id="__e2e_state_dump" className="hidden">{JSON.stringify(state)}</pre>
           {/* Core Details column */}
           <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">Core Profile</h3>
+            <h3 className="text-lg font-semibold text-foreground mb-4 border-b pb-2">Core Profile</h3>
             
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Organisation Name *</label>
+              <label className="block text-sm font-semibold text-muted-foreground mb-2">Organisation Name *</label>
               <div className="relative">
-                <Building2 className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                <Building2 className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                 <input 
                   name="organisationName" 
                   id="organisationName"
                   defaultValue={org?.organisationName || ""}
-                  className={`w-full pl-10 px-4 py-2 border rounded focus:ring-2 focus:outline-none ${state.errors?.organisationName ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-ring'}`} 
+                  className={`w-full pl-10 px-4 py-2 border rounded focus:ring-2 focus:outline-none ${state.errors?.organisationName ? 'border-red-500 focus:ring-red-500' : 'border-border focus:ring-ring'}`} 
                 />
               </div>
               <FieldError field="organisationName" />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Trading Name</label>
+              <label className="block text-sm font-semibold text-muted-foreground mb-2">Trading Name</label>
               <div className="relative">
-                <Briefcase className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                <Briefcase className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                 <input 
                   name="tradingName" 
                   defaultValue={org?.tradingName || ""}
-                  className="w-full pl-10 px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-ring focus:outline-none" 
+                  className="w-full pl-10 px-4 py-2 border border-border rounded focus:ring-2 focus:ring-ring focus:outline-none" 
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Physical Address *</label>
+              <label className="block text-sm font-semibold text-muted-foreground mb-2">Physical Address *</label>
               <div className="relative">
-                <MapPin className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                <MapPin className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                 <input 
                   name="address" 
                   id="address"
                   defaultValue={org?.address || ""}
-                  className={`w-full pl-10 px-4 py-2 border rounded focus:ring-2 focus:outline-none ${state.errors?.address ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-ring'}`} 
+                  className={`w-full pl-10 px-4 py-2 border rounded focus:ring-2 focus:outline-none ${state.errors?.address ? 'border-red-500 focus:ring-red-500' : 'border-border focus:ring-ring'}`} 
                 />
               </div>
               <FieldError field="address" />
             </div>
             
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">SIC Code</label>
+              <label className="block text-sm font-semibold text-muted-foreground mb-2">SIC Code</label>
               <div className="relative">
-                <Hash className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                <Hash className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                 <input 
                   name="sicCode" 
                   defaultValue={org?.sicCode || ""}
-                  className={`w-full pl-10 px-4 py-2 border rounded focus:ring-2 focus:outline-none ${state.errors?.sicCode ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-ring'}`} 
+                  className={`w-full pl-10 px-4 py-2 border rounded focus:ring-2 focus:outline-none ${state.errors?.sicCode ? 'border-red-500 focus:ring-red-500' : 'border-border focus:ring-ring'}`} 
                 />
               </div>
               <FieldError field="sicCode" />
@@ -215,58 +216,58 @@ export function OrganisationActions({
           </div>
 
           {/* Registration column */}
-          <div className="space-y-6 bg-slate-50 p-6 rounded border border-slate-100">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 border-b pb-2">Registrations & Banking</h3>
+          <div className="space-y-6 bg-muted/50 p-6 rounded border border-border">
+            <h3 className="text-lg font-semibold text-foreground mb-4 border-b pb-2">Registrations & Banking</h3>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">SDL / Levy Number</label>
+              <label className="block text-sm font-semibold text-muted-foreground mb-2">SDL / Levy Number</label>
               <div className="relative">
-                <ShieldCheck className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                <ShieldCheck className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                 <input 
                   name="sdlNumber" 
                   id="sdlNumber"
                   defaultValue={org?.sdlNumber || ""} 
-                  className={`w-full pl-10 px-4 py-2 border rounded focus:ring-2 focus:outline-none ${state.errors?.sdlNumber ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-ring'}`} 
+                  className={`w-full pl-10 px-4 py-2 border rounded focus:ring-2 focus:outline-none ${state.errors?.sdlNumber ? 'border-red-500 focus:ring-red-500' : 'border-border focus:ring-ring'}`} 
                 />
               </div>
               <FieldError field="sdlNumber" />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Company Reg Number</label>
+              <label className="block text-sm font-semibold text-muted-foreground mb-2">Company Reg Number</label>
               <div className="relative">
-                <ShieldCheck className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                <ShieldCheck className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                 <input 
                   name="companyRegistrationNumber" 
                   defaultValue={org?.companyRegistrationNumber || ""} 
-                  className={`w-full pl-10 px-4 py-2 border rounded focus:ring-2 focus:outline-none ${state.errors?.companyRegistrationNumber ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-ring'}`} 
+                  className={`w-full pl-10 px-4 py-2 border rounded focus:ring-2 focus:outline-none ${state.errors?.companyRegistrationNumber ? 'border-red-500 focus:ring-red-500' : 'border-border focus:ring-ring'}`} 
                 />
               </div>
               <FieldError field="companyRegistrationNumber" />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Bank Account Number</label>
+              <label className="block text-sm font-semibold text-muted-foreground mb-2">Bank Account Number</label>
               <div className="relative">
-                <Building className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                <Building className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                 <input 
                   name="bankAccountNumber" 
                   defaultValue={org?.bankAccountNumber || ""} 
                   placeholder="e.g. 1002345678"
-                  className={`w-full pl-10 px-4 py-2 border rounded focus:ring-2 focus:outline-none ${state.errors?.bankAccountNumber ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-ring'}`} 
+                  className={`w-full pl-10 px-4 py-2 border rounded focus:ring-2 focus:outline-none ${state.errors?.bankAccountNumber ? 'border-red-500 focus:ring-red-500' : 'border-border focus:ring-ring'}`} 
                 />
               </div>
               <FieldError field="bankAccountNumber" />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Bank Branch Code</label>
+              <label className="block text-sm font-semibold text-muted-foreground mb-2">Bank Branch Code</label>
               <div className="relative">
-                <Building className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                <Building className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                 <input 
                   name="bankBranchCode" 
                   defaultValue={org?.bankBranchCode || ""} 
-                  className={`w-full pl-10 px-4 py-2 border rounded focus:ring-2 focus:outline-none ${state.errors?.bankBranchCode ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-ring'}`} 
+                  className={`w-full pl-10 px-4 py-2 border rounded focus:ring-2 focus:outline-none ${state.errors?.bankBranchCode ? 'border-red-500 focus:ring-red-500' : 'border-border focus:ring-ring'}`} 
                 />
               </div>
               <FieldError field="bankBranchCode" />
@@ -274,31 +275,31 @@ export function OrganisationActions({
           </div>
 
            {/* Contact Block */}
-           <div className="space-y-6 col-span-1 md:col-span-2 mt-4 pt-4 border-t border-gray-100">
-             <h3 className="text-lg font-semibold text-gray-900 mb-4">Contacts</h3>
+           <div className="space-y-6 col-span-1 md:col-span-2 mt-4 pt-4 border-t border-border">
+             <h3 className="text-lg font-semibold text-foreground mb-4">Contacts</h3>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Primary Email</label>
+                <label className="block text-sm font-semibold text-muted-foreground mb-2">Primary Email</label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                  <Mail className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                   <input 
                     name="email" 
                     type="text"
                     defaultValue={org?.email || ""} 
-                    className={`w-full pl-10 px-4 py-2 border rounded focus:ring-2 focus:outline-none ${state.errors?.email ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-ring'}`} 
+                    className={`w-full pl-10 px-4 py-2 border rounded focus:ring-2 focus:outline-none ${state.errors?.email ? 'border-red-500 focus:ring-red-500' : 'border-border focus:ring-ring'}`} 
                   />
                 </div>
                 <FieldError field="email" />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Telephone Number</label>
+                <label className="block text-sm font-semibold text-muted-foreground mb-2">Telephone Number</label>
                 <div className="relative">
-                  <Phone className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                  <Phone className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
                   <input 
                     name="telNumber" 
                     defaultValue={org?.telNumber || ""} 
-                    className="w-full pl-10 px-4 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-ring focus:outline-none" 
+                    className="w-full pl-10 px-4 py-2 border border-border rounded focus:ring-2 focus:ring-ring focus:outline-none" 
                   />
                 </div>
               </div>

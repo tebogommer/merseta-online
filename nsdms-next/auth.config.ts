@@ -19,7 +19,8 @@ export const authConfig = {
             id: "u1_mock_admin",
             name: "Mock Admin",
             email: "admin@merseta.org.za",
-            role: "ADMIN"
+            role: "ADMIN",
+            permissions: "[]"
           };
         }
         
@@ -29,7 +30,8 @@ export const authConfig = {
             id: "u2_mock_user",
             name: "Mock Standard User",
             email: "user@merseta.org.za",
-            role: "STANDARD"
+            role: "STANDARD",
+            permissions: "[]"
           };
         }
 
@@ -43,6 +45,7 @@ export const authConfig = {
         // user object is only passed in the very first login cycle
         token.role = user.role;
         token.id = user.id;
+        token.permissions = user.permissions;
       }
       return token;
     },
@@ -50,6 +53,7 @@ export const authConfig = {
       if (session.user) {
         session.user.role = token.role as string;
         session.user.id = token.id as string;
+        session.user.permissions = (token.permissions as string) || "[]";
       }
       return session;
     }

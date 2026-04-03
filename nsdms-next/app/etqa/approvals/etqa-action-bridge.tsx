@@ -41,7 +41,7 @@ export default function EtqaActionBridge({
 
        {/* Admin Review Commands (Visually locked mathematically by XState & Boolean logic) */}
        {canReview && (
-         <div className="flex gap-2 border-l pl-3 ml-2 border-slate-200">
+         <div className="flex gap-2 border-l pl-3 ml-2 border-border">
            <Button 
               className="bg-merseta-highlight text-white hover:bg-merseta-dark"
               disabled={status !== 'UNDER_REVIEW' || isPending}

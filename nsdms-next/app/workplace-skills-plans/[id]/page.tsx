@@ -29,16 +29,16 @@ export default async function WspDetailPage({ params }: { params: Promise<{ id: 
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 p-8">
+    <main className="min-h-screen bg-muted p-8">
       {/* Top Banner Context Area */}
       <div className="max-w-6xl mx-auto mb-6">
-        <div className="flex justify-between items-center bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+        <div className="flex justify-between items-center bg-card text-card-foreground p-4 rounded-lg shadow-sm border border-border">
            <div className="flex items-center gap-4">
-               <Link href={`/organisations/${wsp.organisationId}`} className="text-gray-500 hover:text-gray-900 border-r pr-4">
+               <Link href={`/organisations/${wsp.organisationId}`} className="text-muted-foreground hover:text-foreground border-r pr-4">
                  <ArrowLeft className="w-5 h-5" />
                </Link>
                <div>
-                   <h1 className="text-xl font-bold text-gray-900 tracking-tight">Workplace Skills Plan</h1>
+                   <h1 className="text-xl font-bold text-foreground tracking-tight">Workplace Skills Plan</h1>
                    <div className="text-sm font-medium text-muted-foreground flex gap-2 items-center">
                       <Building className="w-4 h-4"/>
                       {wsp.organisation.organisationName} • FinYear: {wsp.finYear}
@@ -66,7 +66,7 @@ export default async function WspDetailPage({ params }: { params: Promise<{ id: 
 
           <TabsContent value="overview" className="animate-in fade-in duration-500">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
-                 <div className="bg-white rounded-lg shadow-sm border p-6 space-y-4">
+                 <div className="bg-card text-card-foreground rounded-lg shadow-sm border p-6 space-y-4">
                      <h3 className="text-lg font-bold border-b pb-2">Financial Snapshot</h3>
                      <div className="grid grid-cols-2 gap-4">
                          <div>
@@ -84,7 +84,7 @@ export default async function WspDetailPage({ params }: { params: Promise<{ id: 
                      </div>
                  </div>
 
-                 <div className="bg-white rounded-lg shadow-sm border p-6 space-y-4">
+                 <div className="bg-card text-card-foreground rounded-lg shadow-sm border p-6 space-y-4">
                      <h3 className="text-lg font-bold border-b pb-2">Strategic Interventions</h3>
                      <div>
                         <span className="text-xs text-muted-foreground font-semibold uppercase block mb-1">Project Description</span>
