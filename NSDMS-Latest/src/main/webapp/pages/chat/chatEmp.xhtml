@@ -1,0 +1,185 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+
+
+
+
+		<h:form id="chatForm">
+		  <p:growl><p:autoUpdate/> </p:growl>
+			<div class="ui-g dashboard">
+
+			<div class="ui-g-12">
+			<h:panelGroup rendered="#{chatEmployerUI.availableDepartments.size() eq 0}">
+			  <div class="card">
+			    <span class="Fs25 FontLight">Coming Soon..........</span>
+			  </div>
+			</h:panelGroup>
+
+				<p:repeat var="rv" value="#{chatEmployerUI.availableDepartments}">
+				 <p:commandLink action="#{chatEmployerUI.findExistingRootChats}" update="@form"  style="width: 100% !important" process="@this" oncomplete="scrollToBottom()">
+					<f:setPropertyActionListener value="#{rv}" target="#{chatEmployerUI.hostingCompanyDepartments}" />
+					<div class="ui-g-12 ui-md-4 ui-lg-4">
+						<div class="ui-g card colorbox colorbox-1" >
+							<div class="ui-g-4">
+								<i class="material-icons">business</i>
+							</div>
+							<div class="ui-g-8">
+								<span class="colorbox-name">Select department</span>
+								<span class="colorbox-count">#{rv.department}</span>
+							</div>
+						</div>
+					</div>
+				  </p:commandLink>
+				</p:repeat>
+			</div>
+
+            <c:if test="#{chatEmployerUI.hostingCompanyDepartments ne null}">
+			  <div class="ui-g-12">
+			  	<h2 class="FontLight">Chat with</h2>
+            	<p:repeat var="rv" value="#{chatEmployerUI.chatMessageList}">
+
+				 <p:commandLink action="#{chatEmployerUI.findSelectedChats}" update="@form"  style="width: 100% !important" process="@this" oncomplete="handleRead(#{rv.user.id})">
+					<f:setPropertyActionListener value="#{rv}" target="#{chatEmployerUI.selectedChatmessage}" />
+					<div class="ui-g-12 ui-md-3 ui-lg-2" id="user#{rv.user.id}">
+						<div class="ui-g card colorbox colorbox-2">
+							<div class="ui-g-12">
+								<span class="colorbox-name"><p:outputLabel value="#{rv.user.firstName} #{rv.user.lastName}"/></span>
+							</div>
+						</div>
+					</div>
+				  </p:commandLink>
+              	</p:repeat>
+              </div>
+			</c:if>
+            <c:if test="#{chatEmployerUI.hostingCompanyDepartments ne null and chatEmployerUI.selectedChatmessage ne null}">
+                 <h:inputHidden value="#{chatEmployerUI.selectedChatmessage.user.id}" id="userId"/>
+                <p:defaultCommand target="sendLink"/>
+                <p:focus for="msgTxt"/>
+				<div class="ui-g-12">
+					<div class="card">
+						<div class="chat">
+							<p:panel header="Chat to #{chatEmployerUI.hostingCompanyDepartments.department}" styleClass="ui-shadow-content" id="chatPanel">
+							  <h:inputHidden value="#{chatEmployerUI.lastChatmessage.msg}" id="lastChatmessageMsg"/>
+
+							  <p:scrollPanel mode="native" style="height:300px">
+								<ul>
+									<p:repeat var="rv" value="#{chatEmployerUI.selectedChatmessageList}">
+										<li class="clearfix #{rv.user.id eq sessionUI.activeUser.id?'message-own':'message-from'} ">
+										    <p:graphicImage name="images/avatar2x.png" library="ultima-layout" rendered="#{rv.user.profileImage eq null}"/>
+											<p:graphicImage value="#{imageStreamer.image}"  rendered="#{rv.user.profileImage ne null}">
+												<f:param name="imageId" value="#{rv.user.profileImage.id}" />
+											</p:graphicImage>
+										   <span>#{rv.msg}
+										  		 <br/><p:outputLabel value="#{rv.user.firstName} #{rv.user.lastName}" styleClass="Fs12 FontLight"/>
+										      <br/><p:outputLabel value="#{rv.createDate}" styleClass="Fs10 FontLight"><f:convertDateTime pattern="dd MMM yyyy hh:mm a"/></p:outputLabel>
+										   </span>
+										</li>
+									</p:repeat>
+								</ul>
+  								</p:scrollPanel>
+								<div class="new-message">
+									<div class="message-input">
+										<p:inputText placeholder="Write a message" value="#{chatEmployerUI.selectedChatmessageEmp.msg}" requiredMessage="Please enter a message" required="true" id="msgTxt" style=" border: 0 none;font-size: 14px;width: 100%;background-color: transparent;outline: 0 none;color: #757575;"/>
+									</div>
+									<div class="message-attachment">
+										<p:commandLink action="#{chatEmployerUI.saveChatEmp}" update="chatPanel" style="color: #757575 !important;" id="sendLink" title="Send message" oncomplete="sendWS()">
+											<i class="fa fa-paper-plane-o" />
+										</p:commandLink>
+									</div>
+
+								</div>
+
+							</p:panel>
+						<div class="ui-g-12">
+						   <p:commandLink action="#{chatEmployerUI.findSelectedChats}" update="chatPanel" oncomplete="scrollToBottom()"  styleClass="Fright" style="color: #757575" id="refresh" title="Refresh" process="@this"><i class="fa fa-refresh" aria-hidden="true"></i></p:commandLink>
+						   <p:remoteCommand name="rc" action="#{chatEmployerUI.findSelectedChats}" update="chatPanel" process="@this" oncomplete="scrollToBottom()"/>
+						</div>
+						<br/>
+						</div>
+
+
+					</div>
+				</div>
+				</c:if>
+			</div>
+			<p:tooltip position="left"/>
+
+
+
+
+
+<script type="text/javascript">
+//<![CDATA[
+
+ /*     var txtAreaEcho = document.getElementById("txtAreaEcho");
+
+
+      txtAreaEcho.value = "";
+
+
+      websocket.onopen = function(msgEvent)
+                         {
+                            txtAreaEcho.value += "Connected ... \n";
+                         };
+
+     websocket.onmessage = function(msgEvent)
+                           {
+	 						console.log("----> chatEmp.xhtml and onmessage!!!" + msgEvent.data);
+                             handleUpdate(msgEvent.data);
+                          };
+     websocket.onclose = function(msgEvent)
+                           {
+                            txtAreaEcho.value += "Disconnect ... \n";
+                           };
+      websocket.onerror = function(msgEvent)
+                            {
+                              txtAreaEcho.value += "Error ... \n";
+                            };
+*/
+
+  function sendWS() {
+
+      var message =  { employee: '#{sessionUI.employee}', message: $('#chatForm\\:lastChatmessageMsg').val(), userId: $('#chatForm\\:userId').val() };
+
+      if (websocket != null && websocket.readyState == 1) {
+    	  websocket.send(JSON.stringify(message));
+       }
+
+
+      scrollToBottom();
+  }
+
+function scrollToBottom() {
+    $('.ui-scrollpanel').scrollTop(100000);
+}
+
+function handleUpdate(data) {
+	$('#user'+data).css({'background-color':'#D0525D'});
+    $('#user'+data ).fadeIn(500).fadeOut(500).fadeIn(500).fadeOut(500).fadeIn(500);
+    showHide(true);
+    rc();
+
+}
+
+function handleRead(data) {
+	$('#user'+data).css({'background-color':'#F5F4F5'});
+	$('.ui-scrollpanel').scrollTop(100000);
+	 showHide(false);
+}
+
+function showHide(show) {
+	  if (show) {
+		$("#chatNotificationBadge").show();
+	  }
+	  else {
+		  $("#chatNotificationBadge").hide();
+	   }
+	}
+
+//]]>
+</script>
+		</h:form>
+	</ui:define>
+
+</ui:composition>

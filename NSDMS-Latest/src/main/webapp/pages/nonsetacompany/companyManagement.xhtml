@@ -1,0 +1,724 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+
+					<h1>NSC Management</h1>
+
+					<p:growl showDetail="false" sticky="false" id="msg">
+						<p:autoUpdate />
+					</p:growl>
+
+					<p:tooltip position="left" />
+					<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+					<p:importEnum type="haj.com.entity.enums.UsersStatusEnum" />
+
+					<h:form id="mainForm">
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+						<p:dataTable var="rowVar" value="#{nonSetaCompanyManagementUI.dataModelNonSetaCompany}" id="companyList" rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,20,40" reflow="true" lazy="true" selectionMode="single" selection="#{nonSetaCompanyManagementUI.nonSetaCompany}">
+							<p:ajax event="rowSelect" update=":companyInformationForm" listener="#{nonSetaCompanyManagementUI.companySelection}" />
+							<p:column headerText="#{lang['company.name']}" filterBy="#{rowVar.companyName}" sortBy="#{rowVar.companyName}" filterStyle="width: 80%">
+								<h:outputText value="#{rowVar.companyName}" />
+							</p:column>
+							<p:column headerText="Registation Number" filterBy="#{rowVar.companyRegistrationNumber}" sortBy="#{rowVar.companyRegistrationNumber}" filterStyle="width: 95%" width="30%">
+								<h:outputText value="#{rowVar.companyRegistrationNumber}" />
+							</p:column>
+							<p:column headerText="#{lang['status']}" sortBy="#{rowVar.companyStatus}" width="10%">
+								<h:outputText value="#{lang[rowVar.companyStatus.registrationName]}" />
+							</p:column>
+						</p:dataTable>
+					</h:form>
+				</div>
+				<div class="ui-g-12">
+					<h:form id="companyInformationForm">
+						<c:if test="#{nonSetaCompanyManagementUI.nonSetaCompany ne null}">
+							<div class="card card-w-title">
+								<p:tabView id="tabView" activeIndex="#{companyinfoUI.index}">
+									<p:tab title="#{lang['company.information']}" id="companyInfo">
+										<div class="EmptyBox10" />
+										<p:fieldset legend="#{lang['company.details']}">
+
+											<h:graphicImage value="/resources/hls/images/green.svg" rendered="#{nonSetaCompanyManagementUI.nonSetaCompany.companyStatus eq CompanyStatusEnum.Approved or nonSetaCompanyManagementUI.nonSetaCompany.companyStatus eq CompanyStatusEnum.Active}" width="40" />
+											<h:graphicImage value="/resources/hls/images/red.svg" rendered="#{nonSetaCompanyManagementUI.nonSetaCompany.companyStatus eq CompanyStatusEnum.Rejected or snonSetaCompanyManagementUI.nonSetaCompany.companyStatus eq CompanyStatusEnum.InActive}" width="40"
+												styleClass="animated pulse infinite" />
+											<h:graphicImage value="/resources/hls/images/orange.svg" rendered="#{nonSetaCompanyManagementUI.nonSetaCompany.companyStatus eq CompanyStatusEnum.Pending}" width="40" styleClass="animated pulse infinite" />
+											<h:graphicImage value="/resources/hls/images/amber.svg" rendered="#{nonSetaCompanyManagementUI.nonSetaCompany.companyStatus eq CompanyStatusEnum.PendingChangeApproval}" width="40" styleClass="animated pulse infinite" />
+
+											<br />
+											<label>Status : #{lang[searchCompanyUI.company.companyStatus.registrationName]}</label>
+											<hr />
+											<br />
+											<br />
+
+
+
+											<p:panelGrid columns="2" style="opacity: 1 !important; color: black; width:100%" id="companyInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+												<h:panelGroup styleClass="md-inputfield">
+													<p:inputText disabled="true" id="companyName" value="#{nonSetaCompanyManagementUI.nonSetaCompany.companyName}" style="opacity: 1 !important; color: black; width:95%" required="true" requiredMessage="#{lang['enter.the.company.name']}">
+													</p:inputText>
+													<p:outputLabel value="#{lang['companyName']}" for="companyName" />
+												</h:panelGroup>
+
+												<h:panelGroup styleClass="md-inputfield">
+													<p:inputText disabled="true" id="regNumber" value="#{nonSetaCompanyManagementUI.nonSetaCompany.companyRegistrationNumber}" style="opacity: 1 !important; color: black; width:95%" required="true">
+													</p:inputText>
+													<p:outputLabel value="Registration Number" for="regNumber" />
+												</h:panelGroup>
+
+												<h:panelGroup styleClass="md-inputfield">
+													<p:inputText disabled="true" id="telNumber" value="#{nonSetaCompanyManagementUI.nonSetaCompany.telNumber}" style="opacity: 1 !important; color: black; width:95%" required="true" requiredMessage="#{lang['enter.the.tel.number']}">
+
+													</p:inputText>
+													<p:outputLabel value="#{lang['telNumber']}" for="telNumber" />
+												</h:panelGroup>
+
+												<h:panelGroup styleClass="md-inputfield">
+													<p:inputText disabled="true" id="faxNumber" value="#{nonSetaCompanyManagementUI.nonSetaCompany.faxNumber}" style="opacity: 1 !important; color: black; width:95%">
+													</p:inputText>
+													<p:outputLabel value="#{lang['faxNumber']}" for="faxNumber" />
+												</h:panelGroup>
+
+												<p:fieldset legend="#{lang['residentialAddress']}" style="margin-top: 20px">
+													<p:panelGrid columns="1" style="width : 95%" styleClass="ui-panelgrid-blank" id="addrPcode">
+														<h:panelGroup styleClass="md-inputfield">
+															<p:inputText disabled="true" id="addr1" value="#{nonSetaCompanyManagementUI.nonSetaCompany.residentialAddress.addressLine1}" style="opacity: 1 !important; color: black; width:95%" required="true" requiredMessage="#{lang['enter.residential.address']}">
+															</p:inputText>
+															<p:outputLabel value="#{lang['address.line.1']}" for="addr1" />
+														</h:panelGroup>
+														<h:panelGroup styleClass="md-inputfield">
+															<p:inputText disabled="true" id="addr2" style="opacity: 1 !important; color: black; width:95%" value="#{nonSetaCompanyManagementUI.nonSetaCompany.residentialAddress.addressLine2}">
+															</p:inputText>
+															<p:outputLabel value="#{lang['address.line.2']}" for="addr2" />
+														</h:panelGroup>
+														<h:panelGroup styleClass="md-inputfield">
+															<p:inputText disabled="true" id="addr3" style="opacity: 1 !important; color: black; width:95%" value="#{nonSetaCompanyManagementUI.nonSetaCompany.residentialAddress.addressLine3}">
+															</p:inputText>
+															<p:outputLabel value="#{lang['address.line.3']}" for="addr3" />
+														</h:panelGroup>
+														<h:panelGroup>
+															<div>
+																<h:outputLabel value="#{lang['town']}" for="town" />
+															</div>
+															<div>
+																<p:autoComplete id="town" value="#{nonSetaCompanyManagementUI.nonSetaCompany.residentialAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true"
+																	minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true" requiredMessage="#{lang['please.select.a.town']}" disabled="true">
+																	<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+																</p:autoComplete>
+															</div>
+														</h:panelGroup>
+
+														<h:panelGroup styleClass="md-inputfield">
+															<p:inputText disabled="true" id="pcode" style="opacity: 1 !important; color: black; width:95%" value="#{nonSetaCompanyManagementUI.nonSetaCompany.residentialAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}">
+															</p:inputText>
+															<p:outputLabel value="#{lang['post.code']}" for="pcode" />
+														</h:panelGroup>
+
+														<h:panelGroup>
+															<div>
+																<h:outputLabel value="#{lang['municipality']}" for="MunicipalityID" />
+															</div>
+															<div>
+																<p:autoComplete disabled="true" id="MunicipalityID" value="#{nonSetaCompanyManagementUI.nonSetaCompany.residentialAddress.municipality}" completeMethod="#{autoCompleteUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityDesc}" itemValue="#{rv}" forceSelection="true"
+																	converter="MunicipalityConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputstyle="opacity: 1 !important; color: black; width: 95%" style="opacity: 1 !important; color: black; width: 95%" required="true" requiredMessage="#{lang['select.municipality']}">
+																	<p:column headerText="#{lang['province']}" style="white-space: nowrap">#{rv.province.provinceDesc}</p:column>
+																	<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">#{rv.municipalityDesc}</p:column>
+																</p:autoComplete>
+															</div>
+														</h:panelGroup>
+
+														<h:panelGroup styleClass="md-inputfield">
+															<p:inputText type="number" rendered="true" disabled="true" id="latitude" style="opacity: 1 !important; color: black; width:95%" value="#{nonSetaCompanyManagementUI.nonSetaCompany.residentialAddress.latitude}">
+
+															</p:inputText>
+															<p:outputLabel value="#{lang['latitude']}" for="latitude" />
+														</h:panelGroup>
+
+														<h:panelGroup styleClass="md-inputfield">
+															<p:inputText type="number" disabled="true" id="longitude" value="#{nonSetaCompanyManagementUI.nonSetaCompany.residentialAddress.longitude}" style="opacity: 1 !important; color: black; width:95%" required="true" requiredMessage="#{lang['enter.longitude']}">
+															</p:inputText>
+															<p:outputLabel value="#{lang['longitude']}" for="longitude" />
+														</h:panelGroup>
+
+														<h:panelGroup styleClass="md-inputfield" rendered="#{trainingproviderUI.tpResidentialAddress.longitude eq null or trainingproviderUI.tpResidentialAddress.latitude eq null}">
+															<!-- <a href="https://getlatlong.net" target="_blank">Check GPS Coordinate</a> -->
+															<a href="https://www.gps-coordinates.net" target="_blank">Check GPS Coordinate</a>
+														</h:panelGroup>
+													</p:panelGrid>
+												</p:fieldset>
+
+												<p:fieldset legend="#{lang['postalAddress']}" style="margin-top: 20px">
+													<p:panelGrid columns="1" style="width : 95%" styleClass="ui-panelgrid-blank" id="postalAddress">
+														<h:panelGroup styleClass="md-inputfield" rendered="true">
+															<p:inputText disabled="true" id="postalAddressaddr1" value="#{nonSetaCompanyManagementUI.nonSetaCompany.postalAddress.addressLine1}" style="opacity: 1 !important; color: black; width:95%" required="true" requiredMessage="#{lang['enter.postal.address']}">
+															</p:inputText>
+															<p:outputLabel value="#{lang['address.line.1']}" for="postalAddressaddr1" />
+														</h:panelGroup>
+														<h:panelGroup styleClass="md-inputfield" rendered="true">
+															<p:inputText disabled="true" id="postalAddressaddr2" style="opacity: 1 !important; color: black; width:95%" value="#{nonSetaCompanyManagementUI.nonSetaCompany.postalAddress.addressLine2}">
+															</p:inputText>
+															<p:outputLabel value="#{lang['address.line.2']}" for="postalAddressaddr2" />
+														</h:panelGroup>
+														<h:panelGroup styleClass="md-inputfield" rendered="true">
+															<p:inputText disabled="#{companyinfoUI.sdfCompany.company.locked}" id="postalAddressaddr3" style="opacity: 1 !important; color: black; width:95%" value="#{nonSetaCompanyManagementUI.nonSetaCompany.postalAddress.addressLine3}">
+															</p:inputText>
+															<p:outputLabel value="#{lang['address.line.3']}" for="postalAddressaddr3" />
+														</h:panelGroup>
+
+														<h:panelGroup rendered="true">
+															<div>
+																<h:outputLabel value="#{lang['town']}" for="townPostal" />
+															</div>
+															<div>
+																<p:autoComplete id="townPostal" value="#{nonSetaCompanyManagementUI.nonSetaCompany.postalAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true"
+																	minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true" requiredMessage="#{lang['please.select.a.town']}" disabled="true">
+																	<p:column headerText="#{lang['town']}" style="white-space: nowrap">
+													#{rv.description}
+												</p:column>
+																</p:autoComplete>
+															</div>
+														</h:panelGroup>
+
+														<h:panelGroup styleClass="md-inputfield" rendered="true">
+															<p:inputText disabled="true" id="postalAddressPcode" style="opacity: 1 !important; color: black; width:95%" value="#{nonSetaCompanyManagementUI.nonSetaCompany.postalAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}">
+															</p:inputText>
+															<p:outputLabel value="#{lang['post.code']}" for="postalAddressPcode" />
+														</h:panelGroup>
+
+														<h:panelGroup rendered="true">
+															<div>
+																<h:outputLabel value="#{lang['municipality']}" for="postalAddressMunicipalityID" />
+															</div>
+															<div>
+																<p:autoComplete disabled="true" id="postalAddressMunicipalityID" value="#{nonSetaCompanyManagementUI.nonSetaCompany.postalAddress.municipality}" completeMethod="#{autoCompleteUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityProvince}" itemValue="#{rv}"
+																	forceSelection="true" converter="MunicipalityConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputstyle="opacity: 1 !important; color: black; width: 95%" style="opacity: 1 !important; color: black; width: 95%" required="true"
+																	requiredMessage="#{lang['select.municipality']}">
+																	<p:column headerText="#{lang['province']}" style="white-space: nowrap">#{rv.province.provinceDesc}</p:column>
+																	<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">#{rv.municipalityDesc}</p:column>
+																</p:autoComplete>
+															</div>
+														</h:panelGroup>
+
+														<h:panelGroup styleClass="md-inputfield">
+															<div class="EmptyBox40"></div>
+														</h:panelGroup>
+													</p:panelGrid>
+												</p:fieldset>
+											</p:panelGrid>
+										</p:fieldset>
+									</p:tab>
+									<p:tab title="Company Contacts" id="userAsiignedInfo">
+
+									
+										<p:dataTable rendered="false" var="rowVarCU" value="#{nonSetaCompanyManagementUI.dataModelNonSetaCompanyUsers}" id="companyUsersList" rowKey="#{rowVarCU.id}" paginator="true" rows="10" paginatorPosition="bottom"
+											paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,20,40" reflow="true" lazy="true">
+											<f:facet name="header"> Temp </f:facet>
+											<p:column headerText="#{lang['expand.row']}" width="45">
+												<p:rowToggler></p:rowToggler>
+											</p:column>
+											<p:column headerText="#{lang['contact.person']}">
+												<p:outputLabel value="#{rowVarCU.user.firstName} #{rowVarCU.user.lastName}"></p:outputLabel>
+											</p:column>
+											<p:column headerText="#{lang['rsapassport.number']}">
+												<p:outputLabel value="#{rowVarCU.user.rsaIDNumber}" rendered="#{rowVarCU.user.rsaIDNumber.length() > 0}" />
+												<p:outputLabel value="#{rowVarCU.user.passportNumber}" rendered="#{rowVarCU.user.passportNumber.length() > 0}" />
+											</p:column>
+											<p:column headerText="#{lang['email']}">
+												<p:outputLabel value="#{rowVarCU.user.email}"></p:outputLabel>
+											</p:column>
+											<p:column headerText="Confirmation Status" width="110" style="text-align:center">
+												<p:outputPanel rendered="#{rowVarCU.user.emailConfirmDate eq null}">
+													<i class="fa fa-times fa-3x red" aria-hidden="true"></i>
+												</p:outputPanel>
+												<p:outputPanel rendered="#{rowVarCU.user.emailConfirmDate ne null}">
+													<i class="fa fa-check fa-3x green" aria-hidden="true"></i>
+												</p:outputPanel>
+											</p:column>
+											<p:rowExpansion>
+												<p:panelGrid columns="3" style="width:100%" id="s" layout="grid" styleClass="ui-panelgrid-blank form-group">
+													<h:panelGroup>
+														<h:outputText value="#{lang['contact.person']}" styleClass="Fs12 FontLight" />
+														<br />
+														<h:outputText value="#{rowVarCU.user.firstName} #{rowVar.user.lastName}" />
+													</h:panelGroup>
+													<h:panelGroup>
+														<h:outputText value="#{lang['email']}" styleClass="Fs12 FontLight" />
+														<br />
+														<h:outputText value="#{rowVarCU.user.email}" />
+													</h:panelGroup>
+													<h:panelGroup>
+														<h:outputText value="#{lang['tel.number']}" styleClass="Fs12 FontLight" />
+														<br />
+														<h:outputText value="#{rowVarCU.user.telNumber}" />
+													</h:panelGroup>
+													<h:panelGroup>
+														<h:outputText value="#{lang['cell.number']}" styleClass="Fs12 FontLight" />
+														<br />
+														<h:outputText value="#{rowVarCU.user.cellNumber}" />
+													</h:panelGroup>
+													<h:panelGroup>
+														<h:outputText value="#{lang['fax.number']}" styleClass="Fs12 FontLight" />
+														<br />
+														<h:outputText value="#{rowVarCU.user.faxNumber}" />
+													</h:panelGroup>
+													<h:panelGroup>
+														<h:outputText value="#{lang['work.contact.number']}" styleClass="Fs12 FontLight" />
+														<br />
+														<h:outputText value="#{rowVarCU.user.workContactNumber}" />
+													</h:panelGroup>
+												</p:panelGrid>
+											</p:rowExpansion>
+										</p:dataTable>
+										<div class="EmptyBox10" />
+										<p:dataTable rendered="true" var="rvcu" value="#{nonSetaCompanyManagementUI.nonSetaCompanyUsersContactPersons}" id="companyContactUsersList" rowKey="#{rvcu.id}" paginator="true" rows="10" paginatorPosition="bottom"
+											paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,20,40" reflow="true">
+											<f:facet name="header"> Contact Users </f:facet>
+											<p:column headerText="#{lang['expand.row']}" width="45">
+												<p:rowToggler></p:rowToggler>
+											</p:column>
+											<p:column headerText="#{lang['contact.person']}">
+												<p:outputLabel value="#{rvcu.user.firstName} #{rvcu.user.lastName}"></p:outputLabel>
+											</p:column>
+											<p:column headerText="#{lang['rsapassport.number']}">
+												<p:outputLabel value="#{rvcu.user.rsaIDNumber}" rendered="#{rvcu.user.rsaIDNumber.length() > 0}" />
+												<p:outputLabel value="#{rvcu.user.passportNumber}" rendered="#{rvcu.user.passportNumber.length() > 0}" />
+											</p:column>
+											<p:column headerText="#{lang['email']}">
+												<p:outputLabel value="#{rvcu.user.email}"></p:outputLabel>
+											</p:column>
+											<p:column headerText="Designation">
+												<p:outputLabel value="#{rvcu.designation.description}"></p:outputLabel>
+											</p:column>
+											<p:column headerText="Confirmation Status" width="110" style="text-align:center">
+												<p:outputPanel rendered="#{rvcu.user.emailConfirmDate eq null}">
+													<i class="fa fa-times fa-3x red" aria-hidden="true"></i>
+												</p:outputPanel>
+												<p:outputPanel rendered="#{rvcu.user.emailConfirmDate ne null}">
+													<i class="fa fa-check fa-3x green" aria-hidden="true"></i>
+												</p:outputPanel>
+											</p:column>
+											<p:rowExpansion>
+												<p:panelGrid columns="3" style="width:100%" id="s" layout="grid" styleClass="ui-panelgrid-blank form-group">
+													<h:panelGroup>
+														<h:outputText value="#{lang['contact.person']}" styleClass="Fs12 FontLight" />
+														<br />
+														<h:outputText value="#{rvcu.user.firstName} #{rvcu.user.lastName}" />
+													</h:panelGroup>
+													<h:panelGroup>
+														<h:outputText value="#{lang['email']}" styleClass="Fs12 FontLight" />
+														<br />
+														<h:outputText value="#{rvcu.user.email}" />
+													</h:panelGroup>
+													<h:panelGroup>
+														<h:outputText value="#{lang['tel.number']}" styleClass="Fs12 FontLight" />
+														<br />
+														<h:outputText value="#{rvcu.user.telNumber}" />
+													</h:panelGroup>
+													<h:panelGroup>
+														<h:outputText value="#{lang['cell.number']}" styleClass="Fs12 FontLight" />
+														<br />
+														<h:outputText value="#{rvcu.user.cellNumber}" />
+													</h:panelGroup>
+													<h:panelGroup>
+														<h:outputText value="#{lang['fax.number']}" styleClass="Fs12 FontLight" />
+														<br />
+														<h:outputText value="#{rvcu.user.faxNumber}" />
+													</h:panelGroup>
+													<h:panelGroup>
+														<h:outputText value="#{lang['work.contact.number']}" styleClass="Fs12 FontLight" />
+														<br />
+														<h:outputText value="#{rvcu.user.workContactNumber}" />
+													</h:panelGroup>
+												</p:panelGrid>
+											</p:rowExpansion>
+										</p:dataTable>
+									</p:tab>
+									<p:tab title="Assesor and Moderators" id="assesorModTab" >
+										<p:outputLabel value="No Assesor and Moderators Have Been Added" rendered="#{nonSetaCompanyManagementUI.nonSetaCompanyUsersAssesModerators.size() eq 0}"/>
+										<p:dataTable rendered="#{nonSetaCompanyManagementUI.nonSetaCompanyUsersAssesModerators.size() ne 0}" var="rvam" value="#{nonSetaCompanyManagementUI.nonSetaCompanyUsersAssesModerators}" id="companyAssessorandModeratorsList" rowKey="#{rvam.id}" paginator="true" rows="10" paginatorPosition="bottom"
+											paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,20,40" reflow="true">
+											<f:facet name="header"> Assesor and Moderators Assigned </f:facet>
+											<p:column headerText="#{lang['expand.row']}" width="45">
+												<p:rowToggler></p:rowToggler>
+											</p:column>
+											<p:column headerText="Full Name">
+												<p:outputLabel value="#{rvam.user.firstName} #{rvam.user.lastName}"></p:outputLabel>
+											</p:column>
+											<p:column headerText="#{lang['rsapassport.number']}">
+												<p:outputLabel value="#{rvam.user.rsaIDNumber}" rendered="#{rvam.user.rsaIDNumber.length() > 0}" />
+												<p:outputLabel value="#{rvam.user.passportNumber}" rendered="#{rvam.user.passportNumber.length() > 0}" />
+											</p:column>
+											<p:column headerText="#{lang['email']}">
+												<p:outputLabel value="#{rvam.user.email}"></p:outputLabel>
+											</p:column>
+											<p:column headerText="Confirmation Status" width="110" style="text-align:center">
+												<p:outputPanel rendered="#{rvam.user.emailConfirmDate eq null}">
+													<i class="fa fa-times fa-3x red" aria-hidden="true"></i>
+												</p:outputPanel>
+												<p:outputPanel rendered="#{rvam.user.emailConfirmDate ne null}">
+													<i class="fa fa-check fa-3x green" aria-hidden="true"></i>
+												</p:outputPanel>
+											</p:column>
+											<p:rowExpansion>
+												<p:panelGrid columns="3" style="width:100%" id="s" layout="grid" styleClass="ui-panelgrid-blank form-group">
+													<h:panelGroup>
+														<h:outputText value="#{lang['contact.person']}" styleClass="Fs12 FontLight" />
+														<br />
+														<h:outputText value="#{rvam.user.firstName} #{rvam.user.lastName}" />
+													</h:panelGroup>
+													<h:panelGroup>
+														<h:outputText value="#{lang['email']}" styleClass="Fs12 FontLight" />
+														<br />
+														<h:outputText value="#{rvam.user.email}" />
+													</h:panelGroup>
+													<h:panelGroup>
+														<h:outputText value="#{lang['tel.number']}" styleClass="Fs12 FontLight" />
+														<br />
+														<h:outputText value="#{rvam.user.telNumber}" />
+													</h:panelGroup>
+													<h:panelGroup>
+														<h:outputText value="#{lang['cell.number']}" styleClass="Fs12 FontLight" />
+														<br />
+														<h:outputText value="#{rvam.user.cellNumber}" />
+													</h:panelGroup>
+													<h:panelGroup>
+														<h:outputText value="#{lang['fax.number']}" styleClass="Fs12 FontLight" />
+														<br />
+														<h:outputText value="#{rvam.user.faxNumber}" />
+													</h:panelGroup>
+													<h:panelGroup>
+														<h:outputText value="#{lang['work.contact.number']}" styleClass="Fs12 FontLight" />
+														<br />
+														<h:outputText value="#{rvam.user.workContactNumber}" />
+													</h:panelGroup>
+												</p:panelGrid>
+											</p:rowExpansion>
+										</p:dataTable>
+									</p:tab>
+									<p:tab title="Company Qualifications and Skill Sets" id="qualificationInformation" rendered="#{nonSetaCompanyManagementUI.trainingProviderApplication ne null and nonSetaCompanyManagementUI.trainingProviderApplication.id ne null}">
+										<ui:include src="/pages/includes/filterGuide.xhtml" />
+										<div class="EmptyBox10" />
+										<p:fieldset legend="Qualifications Assigned" rendered="#{nonSetaCompanyManagementUI.companyQualificationsList.size() ne 0}">
+											<p:dataTable var="rowVarCQ" value="#{nonSetaCompanyManagementUI.companyQualificationsList}" id="companyQualificationsList" rowKey="#{rowVarCQ.id}" paginator="true" rows="10" paginatorPosition="bottom"
+												paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,20,40" reflow="true">
+												<p:column headerText="#{lang['expand.row']}" width="45">
+													<p:rowToggler rendered="#{rowVarCQ.trainingProviderDocParent ne null}"></p:rowToggler>
+												</p:column>
+												<p:column headerText="#{lang['code']}">
+													<h:outputText value="#{rowVarCQ.qualification.code}" />
+												</p:column>
+												<p:column headerText="#{lang['qualification']}">
+													<h:outputText value="#{rowVarCQ.qualification.description}" />
+												</p:column>
+												<p:column headerText="#{lang['level']}">
+													<h:outputText value="#{rowVarCQ.qualification.nqflevelg2description}" />
+												</p:column>
+												<p:column headerText="Approved">
+													<p:selectBooleanCheckbox disabled="true" value="#{rowVarCQ.accept}"></p:selectBooleanCheckbox>
+												</p:column>
+												<p:rowExpansion>
+													<p:panelGrid columns="1" style="width:100%" id="docListQualifications" layout="grid" styleClass="ui-panelgrid-blank form-group">
+														<p:dataTable value="#{rowVarCQ.docList}" var="rv2" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv2.id}">
+															<p:column headerText="#{lang['type']}" width="18%">Supporting Document</p:column>
+															<p:column headerText="#{lang['original.file.name']}" priority="4">
+																<p:outputLabel value="#{rv2.originalFname}" styleClass="Fs12"></p:outputLabel>
+															</p:column>
+															<p:column headerText="#{lang['uploaded.by']}">#{rv2.users.firstName} #{rv2.users.lastName}</p:column>
+															<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+																<h:outputText value="#{rv2.createDate}">
+																	<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+																</h:outputText>
+															</p:column>
+															<p:column headerText="#{lang['version']}" width="10%" priority="4">
+																<h:outputText value="#{rv2.versionNo}">
+																</h:outputText>
+															</p:column>
+															<p:column headerText="#{lang['original.required']}" rendered="false">
+																<center>
+																	<h:panelGroup rendered="#{rv2.configDoc.originalRequired}" styleClass="green">
+																		<i class="fa fa-files-o fa-3x" aria-hidden="true"></i>
+																	</h:panelGroup>
+																	<h:panelGroup rendered="#{not rv2.configDoc.originalRequired}" styleClass="red">
+																		<i class="fa fa-times fa-3x" aria-hidden="true"></i>
+																	</h:panelGroup>
+																</center>
+															</p:column>
+															<p:column width="180"  headerText="Action">
+																<p:commandButton ajax="false" icon="fa fa-download" action="#{uploadDocUI.download}" id="dlbq" rendered="#{rv2.id ne null}" immediate="true">
+																	<f:setPropertyActionListener value="#{rv2}" target="#{uploadDocUI.doc}" />
+																</p:commandButton>
+																<p:tooltip for="dlbq" value="#{lang['download.the.file']}" position="left" rendered="#{rv2.id ne null}" />
+
+																<p:spacer width="5" rendered="#{rv2.id ne null}" />
+																<p:commandButton icon="fa fa-bars " id="dhistq" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv2.id ne null}" process="@this">
+																	<f:setPropertyActionListener value="#{rv2}" target="#{uploadDocUI.doc}" />
+																</p:commandButton>
+
+																<p:tooltip for="dhistq" value="#{lang['document.tracker']}" position="left" rendered="#{rv2.id ne null}" />
+																<h:panelGroup id="panelGroupThreeq" rendered="#{rv2.note ne null and rv2.note.length() gt 0}">
+																	<p:spacer width="5" />
+																	<p:commandButton icon="fa fa-comment-o" id="dnoteq" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel" process="@this">
+																		<f:setPropertyActionListener value="#{rv2}" target="#{uploadDocUI.doc}" />
+																	</p:commandButton>
+																	<p:tooltip for="dnoteq" value="#{lang['view.note']}" position="left" />
+																</h:panelGroup>
+
+																<h:panelGroup id="panelGroupFourq" rendered="#{rv2.extension.toLowerCase() eq 'pdf' or rv2.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv2.extension.toLowerCase() eq 'jpeg' or rv2.extension.toLowerCase() eq 'gif'}">
+																	<p:spacer width="5" />
+																	<p:commandButton icon="fa fa-eye " id="viewerButtonq" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}" process="@this">
+																		<f:setPropertyActionListener value="#{rv2}" target="#{uploadDocUI.doc}" />
+																	</p:commandButton>
+																	<p:tooltip for="viewerButtonq" value="#{lang['view.document']} " position="left" />
+																</h:panelGroup>
+															</p:column>
+														</p:dataTable>
+													</p:panelGrid>
+												</p:rowExpansion>
+											</p:dataTable>
+										</p:fieldset>
+										<div class="EmptyBox10" />
+										<p:fieldset legend="Unit Standards Assigned" rendered="#{nonSetaCompanyManagementUI.companyUnitStandardList.size() ne 0}">
+											<p:dataTable var="rowVarUS" value="#{nonSetaCompanyManagementUI.companyUnitStandardList}" id="companyUnitStandardList" rowKey="#{rowVarUS.id}" paginator="true" rows="10" paginatorPosition="bottom"
+												paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,20,40">
+												<p:column headerText="#{lang['expand.row']}" width="45">
+													<p:rowToggler rendered="#{rowVarUS.trainingProviderDocParent ne null}"></p:rowToggler>
+												</p:column>
+												<p:column headerText="#{lang['code']}">
+													<h:outputText value="#{rowVarUS.unitStandard.code}" />
+												</p:column>
+												<p:column headerText="#{lang['qualification']}">
+													<h:outputText value="#{rowVarUS.unitStandard.title}" />
+												</p:column>
+												<p:column headerText="#{lang['level']}">
+													<h:outputText value="#{rowVarUS.unitStandard.nqf}" />
+												</p:column>
+												<p:column headerText="Approved">
+													<p:selectBooleanCheckbox disabled="true" value="#{rowVarUS.accept}"></p:selectBooleanCheckbox>
+												</p:column>
+												<p:rowExpansion>
+													<p:panelGrid columns="1" style="width:100%" id="docListUnitStandard" layout="grid" styleClass="ui-panelgrid-blank form-group">
+														<p:dataTable value="#{rowVarUS.docList}" var="rv1" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv1.id}">
+															<p:column headerText="#{lang['type']}" width="18%">Supporting Document</p:column>
+															<p:column headerText="#{lang['original.file.name']}" priority="4">
+																<p:outputLabel value="#{rv1.originalFname}" styleClass="Fs12"></p:outputLabel>
+															</p:column>
+															<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+															<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+																<h:outputText value="#{rv1.createDate}">
+																	<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+																</h:outputText>
+															</p:column>
+															<p:column headerText="#{lang['version']}" width="10%" priority="4">
+																<h:outputText value="#{rv1.versionNo}">
+																</h:outputText>
+															</p:column>
+															<p:column headerText="#{lang['original.required']}" rendered="false">
+																<center>
+																	<h:panelGroup rendered="#{rv1.configDoc.originalRequired}" styleClass="green">
+																		<i class="fa fa-files-o fa-3x" aria-hidden="true"></i>
+																	</h:panelGroup>
+																	<h:panelGroup rendered="#{not rv1.configDoc.originalRequired}" styleClass="red">
+																		<i class="fa fa-times fa-3x" aria-hidden="true"></i>
+																	</h:panelGroup>
+																</center>
+															</p:column>
+															<p:column width="180"  headerText="Action">
+																<p:commandButton ajax="false" icon="fa fa-download" action="#{uploadDocUI.download}" id="dlb" rendered="#{rv1.id ne null}" immediate="true">
+																	<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+																</p:commandButton>
+																<p:tooltip for="dlb" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+
+																<p:spacer width="5" rendered="#{rv1.id ne null}" />
+																<p:commandButton icon="fa fa-bars " id="dhist" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}" process="@this">
+																	<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+																</p:commandButton>
+
+																<p:tooltip for="dhist" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+																<h:panelGroup id="panelGroupThree" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+																	<p:spacer width="5" />
+																	<p:commandButton icon="fa fa-comment-o" id="dnote" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel" process="@this">
+																		<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+																	</p:commandButton>
+																	<p:tooltip for="dnote" value="#{lang['view.note']}" position="left" />
+																</h:panelGroup>
+
+																<h:panelGroup id="panelGroupFour" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+																	<p:spacer width="5" />
+																	<p:commandButton icon="fa fa-eye " id="viewerButton" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}" process="@this">
+																		<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+																	</p:commandButton>
+																	<p:tooltip for="viewerButton" value="#{lang['view.document']} " position="left" />
+																</h:panelGroup>
+															</p:column>
+														</p:dataTable>
+													</p:panelGrid>
+												</p:rowExpansion>
+											</p:dataTable>
+										</p:fieldset>
+										<div class="EmptyBox10" />
+										<p:fieldset legend="Skills Programe Assigned" rendered="#{nonSetaCompanyManagementUI.trainingProviderSkillsProgrammeList.size() ne 0}">
+											<p:dataTable var="rowVarPS" value="#{nonSetaCompanyManagementUI.trainingProviderSkillsProgrammeList}" id="companySkillProgramList" rowKey="#{rowVarPS.id}" paginator="true" rows="10" paginatorPosition="bottom"
+												paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,20,40" reflow="true">
+												<p:column headerText="#{lang['expand.row']}" width="45">
+													<p:rowToggler rendered="#{rowVarPS.trainingProviderDocParent ne null}"></p:rowToggler>
+												</p:column>
+												<p:column headerText="#{lang['code']}">
+													<h:outputText value="#{rowVarPS.skillsProgram.programmeID}" />
+												</p:column>
+												<p:column headerText="#{lang['qualification']}">
+													<h:outputText value="#{rowVarPS.skillsProgram.description}" />
+												</p:column>
+												<p:column headerText="Approved">
+													<p:selectBooleanCheckbox disabled="true" value="#{rowVarPS.accept}"></p:selectBooleanCheckbox>
+												</p:column>
+												<p:rowExpansion>
+													<p:panelGrid columns="1" style="width:100%" id="docListSP" layout="grid" styleClass="ui-panelgrid-blank form-group">
+														<p:dataTable value="#{rowVarPS.docList}" var="rv3" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv3.id}">
+															<p:column headerText="#{lang['type']}" width="18%">Supporting Document</p:column>
+															<p:column headerText="#{lang['original.file.name']}" priority="4">
+																<p:outputLabel value="#{rv3.originalFname}" styleClass="Fs12"></p:outputLabel>
+															</p:column>
+															<p:column headerText="#{lang['uploaded.by']}">#{rv3.users.firstName} #{rv3.users.lastName}</p:column>
+															<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+																<h:outputText value="#{rv3.createDate}">
+																	<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+																</h:outputText>
+															</p:column>
+															<p:column headerText="#{lang['version']}" width="10%" priority="4">
+																<h:outputText value="#{rv3.versionNo}">
+																</h:outputText>
+															</p:column>
+															<p:column headerText="#{lang['original.required']}" rendered="false">
+																<center>
+																	<h:panelGroup rendered="#{rv3.configDoc.originalRequired}" styleClass="green">
+																		<i class="fa fa-files-o fa-3x" aria-hidden="true"></i>
+																	</h:panelGroup>
+																	<h:panelGroup rendered="#{not rv3.configDoc.originalRequired}" styleClass="red">
+																		<i class="fa fa-times fa-3x" aria-hidden="true"></i>
+																	</h:panelGroup>
+																</center>
+															</p:column>
+															<p:column width="180"  headerText="Action">
+																<p:commandButton ajax="false" icon="fa fa-download" action="#{uploadDocUI.download}" id="dlbsp" rendered="#{rv3.id ne null}" immediate="true">
+																	<f:setPropertyActionListener value="#{rv3}" target="#{uploadDocUI.doc}" />
+																</p:commandButton>
+																<p:tooltip for="dlbsp" value="#{lang['download.the.file']}" position="left" rendered="#{rv3.id ne null}" />
+
+																<p:spacer width="5" rendered="#{rv3.id ne null}" />
+																<p:commandButton icon="fa fa-bars " id="dhistsp" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv3.id ne null}" process="@this">
+																	<f:setPropertyActionListener value="#{rv3}" target="#{uploadDocUI.doc}" />
+																</p:commandButton>
+
+																<p:tooltip for="dhistsp" value="#{lang['document.tracker']}" position="left" rendered="#{rv3.id ne null}" />
+																<h:panelGroup id="panelGroupThreesp" rendered="#{rv3.note ne null and rv3.note.length() gt 0}">
+																	<p:spacer width="5" />
+																	<p:commandButton icon="fa fa-comment-o" id="dnotesp" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel" process="@this">
+																		<f:setPropertyActionListener value="#{rv3}" target="#{uploadDocUI.doc}" />
+																	</p:commandButton>
+																	<p:tooltip for="dnotesp" value="#{lang['view.note']}" position="left" />
+																</h:panelGroup>
+
+																<h:panelGroup id="panelGroupFourssp" rendered="#{rv3.extension.toLowerCase() eq 'pdf' or rv3.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv3.extension.toLowerCase() eq 'jpeg' or rv3.extension.toLowerCase() eq 'gif'}">
+																	<p:spacer width="5" />
+																	<p:commandButton icon="fa fa-eye " id="viewerButtonsp" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}" process="@this">
+																		<f:setPropertyActionListener value="#{rv3}" target="#{uploadDocUI.doc}" />
+																	</p:commandButton>
+																	<p:tooltip for="viewerButtonsp" value="#{lang['view.document']} " position="left" />
+																</h:panelGroup>
+															</p:column>
+														</p:dataTable>
+													</p:panelGrid>
+												</p:rowExpansion>
+											</p:dataTable>
+										</p:fieldset>
+										<div class="EmptyBox10" />
+										<p:fieldset legend="Skills Set Assigned" rendered="#{nonSetaCompanyManagementUI.trainingProviderSkillsSetList.size() ne 0}">
+											<p:dataTable var="rowVarSS" value="#{nonSetaCompanyManagementUI.trainingProviderSkillsSetList}" id="companySkillSetList" rowKey="#{rowVarSS.id}" paginator="true" rows="10" paginatorPosition="bottom"
+												paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,20,40" reflow="true">
+												<p:column headerText="#{lang['expand.row']}" width="45">
+													<p:rowToggler rendered="#{rowVarSS.trainingProviderDocParent ne null}"></p:rowToggler>
+												</p:column>
+												<p:column headerText="#{lang['code']}">
+													<h:outputText value="#{rowVarSS.skillsSet.programmeID}" />
+												</p:column>
+												<p:column headerText="#{lang['qualification']}">
+													<h:outputText value="#{rowVarSS.skillsSet.description}" />
+												</p:column>
+												<p:column headerText="Approved">
+													<p:selectBooleanCheckbox disabled="true" value="#{rowVarSS.accept}"></p:selectBooleanCheckbox>
+												</p:column>
+												<p:rowExpansion>
+													<p:panelGrid columns="1" style="width:100%" id="docListSS" layout="grid" styleClass="ui-panelgrid-blank form-group">
+														<p:dataTable value="#{rowVarSS.docList}" var="rv4" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv4.id}">
+															<p:column headerText="#{lang['type']}" width="18%">Supporting Document</p:column>
+															<p:column headerText="#{lang['original.file.name']}" priority="4">
+																<p:outputLabel value="#{rv4.originalFname}" styleClass="Fs12"></p:outputLabel>
+															</p:column>
+															<p:column headerText="#{lang['uploaded.by']}">#{rv4.users.firstName} #{rv4.users.lastName}</p:column>
+															<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+																<h:outputText value="#{rv4.createDate}">
+																	<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+																</h:outputText>
+															</p:column>
+															<p:column headerText="#{lang['version']}" width="10%" priority="4">
+																<h:outputText value="#{rv4.versionNo}">
+																</h:outputText>
+															</p:column>
+															<p:column headerText="#{lang['original.required']}" rendered="false">
+																<center>
+																	<h:panelGroup rendered="#{rv4.configDoc.originalRequired}" styleClass="green">
+																		<i class="fa fa-files-o fa-3x" aria-hidden="true"></i>
+																	</h:panelGroup>
+																	<h:panelGroup rendered="#{not rv4.configDoc.originalRequired}" styleClass="red">
+																		<i class="fa fa-times fa-3x" aria-hidden="true"></i>
+																	</h:panelGroup>
+																</center>
+															</p:column>
+															<p:column width="180" headerText="Action">
+																<p:commandButton ajax="false" icon="fa fa-download" action="#{uploadDocUI.download}" id="dlbSS" rendered="#{rv4.id ne null}" immediate="true">
+																	<f:setPropertyActionListener value="#{rv4}" target="#{uploadDocUI.doc}" />
+																</p:commandButton>
+																<p:tooltip for="dlbSS" value="#{lang['download.the.file']}" position="left" rendered="#{rv4.id ne null}" />
+
+																<p:spacer width="5" rendered="#{rv4.id ne null}" />
+																<p:commandButton icon="fa fa-bars " id="dhistSS" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv4.id ne null}" process="@this">
+																	<f:setPropertyActionListener value="#{rv4}" target="#{uploadDocUI.doc}" />
+																</p:commandButton>
+
+																<p:tooltip for="dhistSS" value="#{lang['document.tracker']}" position="left" rendered="#{rv4.id ne null}" />
+																<h:panelGroup id="panelGroupThreeSS" rendered="#{rv4.note ne null and rv4.note.length() gt 0}">
+																	<p:spacer width="5" />
+																	<p:commandButton icon="fa fa-comment-o" id="dnoteSS" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel" process="@this">
+																		<f:setPropertyActionListener value="#{rv4}" target="#{uploadDocUI.doc}" />
+																	</p:commandButton>
+																	<p:tooltip for="dnoteSS" value="#{lang['view.note']}" position="left" />
+																</h:panelGroup>
+
+																<h:panelGroup id="panelGroupFoursSS" rendered="#{rv4.extension.toLowerCase() eq 'pdf' or rv4.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv4.extension.toLowerCase() eq 'jpeg' or rv4.extension.toLowerCase() eq 'gif'}">
+																	<p:spacer width="5" />
+																	<p:commandButton icon="fa fa-eye " id="viewerButtonSS" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}" process="@this">
+																		<f:setPropertyActionListener value="#{rv4}" target="#{uploadDocUI.doc}" />
+																	</p:commandButton>
+																	<p:tooltip for="viewerButtonSS" value="#{lang['view.document']} " position="left" />
+																</h:panelGroup>
+															</p:column>
+														</p:dataTable>
+													</p:panelGrid>
+												</p:rowExpansion>
+											</p:dataTable>
+											
+										</p:fieldset>
+									</p:tab>
+								</p:tabView>
+							</div>
+						</c:if>
+					</h:form>
+				</div>
+			</div>
+		</div>
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+	</ui:define>
+</ui:composition>

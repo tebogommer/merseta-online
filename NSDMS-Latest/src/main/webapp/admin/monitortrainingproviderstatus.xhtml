@@ -1,0 +1,162 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+
+					<p:growl showDetail="false" sticky="false" id="msg">
+						<p:autoUpdate />
+					</p:growl>
+
+					<p:importEnum type="haj.com.entity.enums.CompanyRegOrSDLEnum" var="regSDL"></p:importEnum>
+					<p:importEnum type="haj.com.entity.enums.YesNoEnum"></p:importEnum>
+					<p:importEnum type="haj.com.entity.enums.PivotNonPivotEnum" />
+					<p:importEnum type="haj.com.entity.enums.IdPassportEnum"></p:importEnum>
+					<p:importEnum type="haj.com.entity.enums.EmploymentStatusEnum"></p:importEnum>
+					<p:importEnum type="haj.com.entity.enums.AccreditationApplicationTypeEnum"></p:importEnum>
+					<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+
+					<h1>Monitor Provider Applications</h1>
+					<h:form id="mainForm">
+						<p:dataTable var="rowVar" value="#{monitorTrainingProvidersStatusUI.dataModelTrainingProviderApplication}" id="SDPList" rowKey="#{rowVar.id}" sortBy="#{rowVar.company.id}" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20,40,60,80,100" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['company.name']}" filterBy="#{rowVar.company.companyName}" sortBy="#{rowVar.company.companyName}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.company.companyName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['tradingName']}" filterBy="#{rowVar.company.tradingName}" sortBy="#{rowVar.company.tradingName}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.company.tradingName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['entity.id']}" filterBy="#{rowVar.company.levyNumber}" sortBy="#{rowVar.company.levyNumber}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.company.levyNumber}" />
+							</p:column>
+
+							<p:column headerText="#{lang['accreditation.number']}" filterBy="#{rowVar.certificateNumber}" sortBy="#{rowVar.certificateNumber}" filterStyle="width: 95%">
+								<h:outputText rendered="#{rowVar.certificateNumber ne null}" value="#{rowVar.certificateNumber}" />
+								<h:outputText rendered="#{rowVar.certificateNumber eq null}" value="#{rowVar.accreditationNumber}" />
+								<h:outputText rendered="#{(rowVar.certificateNumber eq null or rowVar.certificateNumber eq '') and (rowVar.accreditationNumber eq null or rowVar.accreditationNumber eq '') }" value="N/A" />
+							</p:column>
+
+							<p:column headerText="#{lang['start.date']}" sortBy="#{rowVar.startDate}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.startDate}">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</h:outputText>
+								<h:outputText rendered="#{rowVar.startDate eq null}" value="N/A" />
+							</p:column>
+
+							<p:column headerText="Accreditation End Date " sortBy="#{rowVar.expiriyDate}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.expiriyDate}">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</h:outputText>
+								<h:outputText rendered="#{rowVar.expiriyDate eq null}" value="N/A" />
+							</p:column>
+
+							<p:column headerText="#{lang['review.committee.date']}" sortBy="#{rvwpa.approvalDate}">
+								<h:outputText value="#{rowVar.reviewCommitteeMeeting.fromDateTime}">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</h:outputText>
+								<h:outputText rendered="#{rowVar.reviewCommitteeMeeting.fromDateTime eq null}" value="N/A" />
+
+							</p:column>
+
+							<p:column headerText="#{lang['decision.number']}" sortBy="#{rowVar.reviewCommitteeMeetingAgenda.decisionNumber}">
+								<h:outputText rendered="#{rowVar.reviewCommitteeMeetingAgenda ne null}" value="#{rowVar.reviewCommitteeMeetingAgenda.decisionNumber}" />
+								<h:outputText rendered="#{rowVar.reviewCommitteeMeetingAgenda eq null}" value="N/A" />
+							</p:column>
+
+							<p:column headerText="#{lang['type.of.application']}" sortBy="#{rowVar.accreditationApplicationTypeEnum}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.accreditationApplicationTypeEnum.friendlyName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['company.approval']}" sortBy="#{rowVar.company.companyStatus}" filterStyle="width: 95%" rendered="false">
+								<h:outputText value="#{lang[rowVar.company.companyStatus.registrationName]}" />
+							</p:column>
+
+							<p:column headerText="#{lang['tp.application.status']}" sortBy="#{rowVar.approvalStatus}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.approvalStatus.friendlyName}" />
+							</p:column>
+
+							<p:column width="45" rendered="true" headerText="#{lang['view.edit']}">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']} Status" update="updateForm" oncomplete="PF('updateDialog').show()" action="#{monitorTrainingProvidersStatusUI.prepare}" immediate="true">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{monitorTrainingProvidersStatusUI.trainingProviderApplication}" />
+								</p:commandButton>
+							</p:column>
+
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+			<h:form>
+				<p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="fa fa-check" />
+				<p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="fa fa-times" />
+			</h:form>
+		</p:confirmDialog>
+		
+		<p:dialog header="Update Training Provider" widgetVar="updateDialog" resizable="false" hideEffect="clip" showEffect="clip" id="dlgID" width="70%" responsive="true" modal="true" dynamic="true">
+			<h:form id="updateForm">
+				<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" id="updateFormDialog">
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText value="#{monitorTrainingProvidersStatusUI.trainingProviderApplication.company.companyName}" style="width:95%" disabled="true" />
+						<p:outputLabel value="Company Name" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText value="#{monitorTrainingProvidersStatusUI.trainingProviderApplication.company.tradingName}" style="width:95%" disabled="true" />
+						<p:outputLabel value="Company Trading Name" />
+					</h:panelGroup>
+					
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText value="#{monitorTrainingProvidersStatusUI.trainingProviderApplication.company.levyNumber}" style="width:95%" disabled="true" />
+						<p:outputLabel value="Levy Number" />
+					</h:panelGroup>
+					
+					
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText rendered="#{monitorTrainingProvidersStatusUI.trainingProviderApplication.certificateNumber ne null}" value="#{monitorTrainingProvidersStatusUI.trainingProviderApplication.certificateNumber}" style="width:95%" disabled="true" />
+						<p:inputText rendered="#{monitorTrainingProvidersStatusUI.trainingProviderApplication.certificateNumber eq null}" value="#{monitorTrainingProvidersStatusUI.trainingProviderApplication.accreditationNumber}" style="width:95%" disabled="true" />
+						<p:outputLabel value="Company Trading Name" />
+					</h:panelGroup>
+					
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="Termination Type" for="statuses" />
+						</div>
+						<div>
+							<p:selectOneMenu id="statuses" value="#{monitorTrainingProvidersStatusUI.trainingProviderApplication.approvalStatus}" style="width:100%" required="true" requiredMessage="Select Status">
+								<p:ajax />
+								<f:selectItem itemLabel="#{lang['select.one']}" itemValue="" noSelectionOption="true" />
+								<f:selectItems value="#{enumUI.approvalEnumDD}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					
+					
+					<h:panelGroup styleClass="md-inputfield" >
+						<p:outputLabel value="Start Date" for="startDate" />
+						<br />
+						<p:calendar inputStyle="width:calc(99% - 40px);" navigator="true" id="startDate" value="#{monitorTrainingProvidersStatusUI.trainingProviderApplication.startDate}" size="19" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" readonlyInput="true" yearRange="c-100:c" requiredMessage="Provide Start Date" required="true" >
+							<p:ajax event="dateSelect" />
+						</p:calendar>
+					</h:panelGroup>
+					
+					<h:panelGroup styleClass="md-inputfield" >
+						<p:outputLabel value="End Date" for="endDate" />
+						<br />
+						<p:calendar inputStyle="width:calc(99% - 40px);" navigator="true" id="endDate" value="#{monitorTrainingProvidersStatusUI.trainingProviderApplication.expiriyDate}" size="19" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" readonlyInput="true" yearRange="c-100:c" requiredMessage="Provide End Date" required="true" >
+							<p:ajax event="dateSelect" />
+						</p:calendar>
+					</h:panelGroup>
+						
+				</p:panelGrid>
+				
+				<p:commandButton value="#{lang['submit']}" icon="fa fa-check" styleClass="flat" action="#{monitorTrainingProvidersStatusUI.updateProvider}" update="mainForm" oncomplete="PF('updateDialog').hide()" />
+			</h:form>
+		</p:dialog>
+
+	</ui:define>
+</ui:composition>

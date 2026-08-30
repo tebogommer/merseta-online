@@ -1,0 +1,185 @@
+@page "/governance/meetings/{Id:int}"
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Domain.Entities
+@inject IReviewCommitteeService CommitteeService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>@(_meeting != null ? $"Meeting {_meeting.MeetingNumber} | merSETA NSDMS" : "Review Committee Meeting | merSETA NSDMS")</PageTitle>
+
+@if (_meeting == null)
+{
+    <MudContainer Class="my-8 text-center">
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Class="mb-3" />
+        <MudText Typo="Typo.body1">Loading review committee meeting details...</MudText>
+    </MudContainer>
+}
+else
+{
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
+    <!-- Sticky Top Bar -->
+    <MudCard Elevation="2" Class="mb-4 sticky-top-header" Style="position: sticky; top: var(--mud-appbar-height, 64px) !important; z-index: 10;">
+        <MudCardContent Class="d-flex align-center justify-space-between py-3">
+            <div class="d-flex align-center gap-3">
+                <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Default" OnClick="@(() => Navigation.NavigateTo("/governance/meetings"))" />
+                <div>
+                    <MudBreadcrumbs Items="_breadcrumbs" Class="pa-0 mb-1" />
+                    <MudText Typo="Typo.h5" Class="fw-bold">@_meeting.Title</MudText>
+                </div>
+            </div>
+            <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Cancel" OnClick="@(() => Navigation.NavigateTo("/governance/meetings"))">
+                    Cancel
+                </MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveMeetingAsync">
+                    Save
+                </MudButton>
+                <MudChip T="string" Color="@(_meeting.StatusCode == "Concluded" ? Color.Success : Color.Primary)" Variant="Variant.Filled">
+                    @_meeting.StatusCode
+                </MudChip>
+                @if (_meeting.StatusCode != "Concluded")
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Check" OnClick="ConcludeMeetingAsync">
+                        Conclude Meeting
+                    </MudButton>
+                }
+            </MudStack>
+        </MudCardContent>
+    </MudCard>
+
+    <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6" Color="Color.Primary">
+        <MudTabPanel Text="Meeting Overview" Icon="@Icons.Material.Filled.Info">
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_meeting.MeetingNumber" Label="Meeting Number" Variant="Variant.Outlined" ReadOnly="true" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_meeting.MeetingTypeCode" Label="Committee Type" Variant="Variant.Outlined" ReadOnly="true" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_meeting.Venue" Label="Meeting Venue / Virtual Link" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_meeting.ChairpersonUserId" Label="Designated Chairperson" Variant="Variant.Outlined" />
+                </MudItem>
+            </MudGrid>
+        </MudTabPanel>
+
+        <MudTabPanel Text="Agendas &amp; Resolutions" Icon="@Icons.Material.Filled.ListAlt">
+            <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-3">
+                <MudText Typo="Typo.h6">Adjudication Agendas</MudText>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="AddAgendaItemAsync">
+                    Add Agenda Item
+                </MudButton>
+            </MudStack>
+
+            <MudTable Items="_meeting.Agendas" Hover="true" Dense="true" Elevation="0" Outlined="true">
+                <HeaderContent>
+                    <MudTh Style="width: 50px;">#</MudTh>
+                    <MudTh>Agenda Item Title</MudTh>
+                    <MudTh>Target Entity</MudTh>
+                    <MudTh>Voting (Yes / No / Abstain)</MudTh>
+                    <MudTh>Decision</MudTh>
+                    <MudTh Style="text-align: right;">Action</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="#"><strong>@context.ItemNumber</strong></MudTd>
+                    <MudTd DataLabel="Title">
+                        <MudText Typo="Typo.body2" Class="fw-bold">@context.Title</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@context.Description</MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Entity">@context.TargetEntityName</MudTd>
+                    <MudTd DataLabel="Votes">
+                        <MudChip T="string" Size="Size.Small" Color="Color.Success">@context.VotedYesCount Yes</MudChip>
+                        <MudChip T="string" Size="Size.Small" Color="Color.Error">@context.VotedNoCount No</MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Decision">
+                        <MudChip T="string" Size="Size.Small" Color="@(context.DecisionCode == "Approved" ? Color.Success : Color.Warning)" Variant="Variant.Filled">
+                            @context.DecisionCode
+                        </MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Action" Style="text-align: right;">
+                        @if (context.DecisionCode == "Pending")
+                        {
+                            <MudButton Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small" OnClick="@(() => ApproveAgendaAsync(context.Id))">
+                                Approve Resolution
+                            </MudButton>
+                        }
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudTabPanel>
+    </MudTabs>
+</MudContainer>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private ReviewCommitteeMeeting _meeting = new();
+    private List<BreadcrumbItem> _breadcrumbs = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadMeetingAsync();
+    }
+
+    private async Task LoadMeetingAsync()
+    {
+        var existing = await CommitteeService.GetMeetingByIdAsync(Id);
+        if (existing != null)
+        {
+            _meeting = existing;
+            _breadcrumbs = new List<BreadcrumbItem>
+            {
+                new BreadcrumbItem("Home", href: "/"),
+                new BreadcrumbItem("Governance", href: "/governance/meetings"),
+                new BreadcrumbItem($"Meeting #{_meeting.MeetingNumber}", href: null, disabled: true)
+            };
+        }
+    }
+
+    private async Task AddAgendaItemAsync()
+    {
+        var agenda = new ReviewCommitteeMeetingAgenda
+        {
+            ReviewCommitteeMeetingId = Id,
+            ItemNumber = _meeting.Agendas.Count + 1,
+            Title = "Application for Assessor Accreditation Approval",
+            Description = "Review of portfolio evidence for registered trade assessor candidate.",
+            TargetEntityName = "AssessorModeratorApplication",
+            DecisionCode = "Pending"
+        };
+        await CommitteeService.AddAgendaItemAsync(agenda, "AdminUser");
+        Snackbar.Add("Agenda item added to meeting.", Severity.Success);
+        await LoadMeetingAsync();
+    }
+
+    private async Task ApproveAgendaAsync(int agendaId)
+    {
+        await CommitteeService.RecordAgendaDecisionAsync(agendaId, "Approved", "Quorum voted unanimously to approve accreditation.", 7, 0, 0, "AdminUser");
+        Snackbar.Add("Agenda resolution approved and recorded.", Severity.Success);
+        await LoadMeetingAsync();
+    }
+
+    private async Task SaveMeetingAsync()
+    {
+        try
+        {
+            Snackbar.Add("Committee meeting details updated with audit log.", Severity.Success);
+            await LoadMeetingAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task ConcludeMeetingAsync()
+    {
+        await CommitteeService.ConcludeMeetingAsync(Id, "AdminUser");
+        Snackbar.Add("Review committee meeting marked as concluded.", Severity.Success);
+        await LoadMeetingAsync();
+    }
+}

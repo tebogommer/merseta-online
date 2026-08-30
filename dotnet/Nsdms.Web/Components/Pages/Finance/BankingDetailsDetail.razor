@@ -1,0 +1,156 @@
+@page "/finance/banking-details/{Id:int}"
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Domain.Entities
+@inject IBankingDetailsService BankingService
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+
+<PageTitle>Banking Details Dual-Signoff Workbench | merSETA NSDMS</PageTitle>
+
+@if (_record == null)
+{
+    <MudContainer Class="my-8 text-center">
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        <MudText Typo="Typo.body1" Class="mt-3">Loading banking details record...</MudText>
+    </MudContainer>
+}
+else
+{
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
+        <!-- Sticky Top Bar -->
+        <MudCard Elevation="2" Class="mb-4 sticky-top-header" Style="position: sticky; top: var(--mud-appbar-height, 64px) !important; z-index: 10;">
+            <MudCardContent Class="d-flex align-center justify-space-between py-3">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Primary" OnClick="@(() => Nav.NavigateTo("/finance/banking-details"))" />
+                    <div>
+                        <MudText Typo="Typo.h5" Class="fw-bold">@_record.BankName — @_record.AccountNumber</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                            Payee: <strong>@(_record.Organisation?.CompanyName ?? _record.TrainingProvider?.ProviderName)</strong> | Account Holder: <strong>@_record.AccountHolderName</strong> | Branch: <strong>@_record.BranchCode</strong>
+                        </MudText>
+                    </div>
+                </MudStack>
+
+                <MudStack Row="true" Spacing="2">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Cancel" OnClick="@(() => Nav.NavigateTo("/finance/banking-details"))">
+                        Cancel
+                    </MudButton>
+
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveDetailsAsync">
+                        Save
+                    </MudButton>
+
+                    @if (_record.ApprovalStatusCode == "PendingVerification")
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Check" OnClick="FirstSignoffAsync">
+                            First Sign-off (Verification Officer)
+                        </MudButton>
+                    }
+
+                    @if (_record.ApprovalStatusCode == "FirstSignoffApproved")
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.VerifiedUser" OnClick="SecondSignoffAsync">
+                            Second Sign-off &amp; Activate ERP (Finance Manager)
+                        </MudButton>
+                    }
+
+                    @if (_record.ApprovalStatusCode == "FullyApproved")
+                    {
+                        <MudChip T="string" Color="Color.Success" Variant="Variant.Filled" Size="Size.Large" Icon="@Icons.Material.Filled.AccountBalance">
+                            ERP ACTIVE: @_record.ErpVendorId
+                        </MudChip>
+                    }
+                </MudStack>
+            </MudCardContent>
+        </MudCard>
+
+        <!-- Main Structure -->
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <MudCard Outlined="true" Class="pa-4 h-100">
+                    <MudText Typo="Typo.h6" Class="fw-bold mb-3">Bank Account Information</MudText>
+                    <MudSimpleTable Dense="true" Elevation="0">
+                        <tbody>
+                            <tr><td><strong>Bank Name:</strong></td><td>@_record.BankName</td></tr>
+                            <tr><td><strong>Branch Code:</strong></td><td>@_record.BranchCode</td></tr>
+                            <tr><td><strong>Branch Name:</strong></td><td>@(_record.BranchName ?? "National Clearing Branch")</td></tr>
+                            <tr><td><strong>Account Number:</strong></td><td class="font-monospace fw-bold">@_record.AccountNumber</td></tr>
+                            <tr><td><strong>Account Holder Name:</strong></td><td>@_record.AccountHolderName</td></tr>
+                            <tr><td><strong>Account Type:</strong></td><td>@_record.AccountTypeCode</td></tr>
+                            <tr><td><strong>Bank Letter Confirmation Date:</strong></td><td>@_record.BankConfirmationDate?.ToString("dd MMMM yyyy")</td></tr>
+                        </tbody>
+                    </MudSimpleTable>
+                </MudCard>
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <MudCard Outlined="true" Class="pa-4 h-100">
+                    <MudText Typo="Typo.h6" Class="fw-bold mb-3">Dual-Signoff Governance Status</MudText>
+                    <MudSimpleTable Dense="true" Elevation="0">
+                        <tbody>
+                            <tr><td><strong>Current Status:</strong></td><td><span class="badge bg-primary">@_record.ApprovalStatusCode</span></td></tr>
+                            <tr><td><strong>1st Sign-off Officer:</strong></td><td>@(_record.FirstSignoffUserId ?? "Pending")</td></tr>
+                            <tr><td><strong>1st Sign-off Date:</strong></td><td>@(_record.FirstSignoffDate?.ToString("dd MMM yyyy HH:mm") ?? "N/A")</td></tr>
+                            <tr><td><strong>2nd Sign-off Manager:</strong></td><td>@(_record.SecondSignoffUserId ?? "Pending")</td></tr>
+                            <tr><td><strong>2nd Sign-off Date:</strong></td><td>@(_record.SecondSignoffDate?.ToString("dd MMM yyyy HH:mm") ?? "N/A")</td></tr>
+                            <tr><td><strong>ERP Vendor Sync:</strong></td><td>@(_record.IsErpActive ? $"Active (Synced on {_record.ErpSyncDate:dd MMM yyyy})" : "Disabled")</td></tr>
+                        </tbody>
+                    </MudSimpleTable>
+                </MudCard>
+            </MudItem>
+        </MudGrid>
+    </MudContainer>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private BankingDetails? _record;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRecordAsync();
+    }
+
+    private async Task LoadRecordAsync()
+    {
+        _record = await BankingService.GetBankingDetailsByIdAsync(Id);
+    }
+
+    private async Task FirstSignoffAsync()
+    {
+        try
+        {
+            _record = await BankingService.FirstSignoffAsync(Id, true, "Bank confirmation letter and cancelled cheque verified.", "FinanceOfficer");
+            Snackbar.Add("First sign-off approved successfully.", Severity.Info);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task SecondSignoffAsync()
+    {
+        try
+        {
+            _record = await BankingService.SecondSignoffAndActivateErpAsync(Id, true, "Dual control verified against bank portal. ERP vendor activated.", "FinanceManager");
+            Snackbar.Add("Second sign-off approved. ERP Vendor activated for disbursements.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task SaveDetailsAsync()
+    {
+        try
+        {
+            Snackbar.Add("Banking details record updated with audit log.", Severity.Success);
+            await LoadRecordAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+}

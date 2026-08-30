@@ -1,0 +1,139 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	
+		<div class="card card-w-title">
+			<h1>Skills Programme / Skills Set Application</h1>
+			<p:fieldset legend="Available Skills Set" id="u1"  widgetVar="fs_new_po1"
+		        toggleable="true"
+		        toggleSpeed="500"
+		        collapsed="true">	
+				<ui:include src="/pages/includes/filterGuide.xhtml" />
+				<ui:include src="/pages/includes/download_lazy.xhtml">
+					<ui:param name="file_name" value="Skills_Set" />
+					<ui:param name="target" value="skillssetList" />
+				</ui:include>		
+				<p:dataTable var="rowVar" value="#{skillssetUI.dataModel}" filteredValue="#{skillssetUI.skillsSetfilteredList}" id="skillssetList" rowKey="#{rowVar.id}" paginator="true" rows="15" paginatorPosition="bottom"
+					paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="15,20,25" reflow="true" lazy="true">		
+					<p:column width="20">
+						<p:rowToggler>
+						</p:rowToggler>
+					</p:column>
+					
+					<p:column headerText="#{lang['programmeID']}" filterBy="#{rowVar.programmeID}" sortBy="#{rowVar.programmeID}" filterStyle="width: 100%" width="15%">
+						<h:outputText value="#{rowVar.programmeID}" />
+					</p:column>									
+					<p:column headerText="#{lang['title']}" filterBy="#{rowVar.description}" sortBy="#{rowVar.description}" filterStyle="width: 45%">
+						<h:outputText value="#{rowVar.description}" />
+					</p:column>									
+					<p:column headerText="SAQA Link">
+						<h:outputText value="(#{rowVar.qualification.code})" />
+						<h:outputText value="#{rowVar.qualification.description} " />
+					</p:column>	
+					
+					<p:rowExpansion>	
+						<p:fieldset legend="Unit Standard Details">
+							<p:dataTable value="#{rowVar.skillsSetUnitStandards}" var="rv" reflow="true" emptyMessage="#{lang['no.records.found']}">
+								<p:column headerText="#{lang['saqa.code']}" style="white-space: nowrap" width="3">#{rv.qualification.code}</p:column>
+								<p:column headerText="#{lang['saqa.qualifications']}" style="white-space: nowrap" width="30">#{rv.qualification.description}</p:column>								
+								<p:column headerText="#{lang['code']}" style="white-space: nowrap" width="3">#{rv.unitStandards.code}</p:column>
+								<p:column headerText="#{lang['description']}" style="white-space: nowrap" width="58">#{rv.unitStandards.title}</p:column>
+								<p:column headerText="#{lang['credits']}" style="white-space: nowrap" width="3">#{rv.unitStandards.unitstdnumberofcredits}</p:column>
+								<p:column headerText="#{lang['nqf.level']}" style="white-space: nowrap" width="3">#{rv.unitStandards.nqflevelg2description}</p:column>
+							</p:dataTable>
+						</p:fieldset>
+					</p:rowExpansion>
+				</p:dataTable>
+			</p:fieldset>
+			<br />
+			<br />
+			<p:fieldset legend="Available Skills Programme Application" id="u2"  widgetVar="fs_new_po2"
+		        toggleable="true"
+		        toggleSpeed="500"
+		        collapsed="true">	
+				<ui:include src="/pages/includes/filterGuide.xhtml" />
+				<ui:include src="/pages/includes/download_lazy.xhtml">
+					<ui:param name="file_name" value="Skills_Program" />
+					<ui:param name="target" value="skillsprogramList" />
+				</ui:include>		
+				<p:dataTable var="rowVar" value="#{skillsprogramUI.dataModel}" filteredValue="#{skillsprogramUI.skillsProgramfilteredList}" id="skillsprogramList" rowKey="#{rowVar.id}" paginator="true" rows="15" paginatorPosition="bottom"
+					paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="15,20,25" reflow="true" lazy="true">									
+					
+					<p:column width="20">
+						<p:rowToggler>
+						</p:rowToggler>
+					</p:column>
+					
+					<p:column headerText="#{lang['programmeID']}" filterBy="#{rowVar.programmeID}" sortBy="#{rowVar.programmeID}" filterStyle="width: 100%" width="15%">
+						<h:outputText value="#{rowVar.programmeID}" />
+					</p:column>									
+					<p:column headerText="#{lang['title']}" filterBy="#{rowVar.description}" sortBy="#{rowVar.description}" filterStyle="width: 45%">
+						<h:outputText value="#{rowVar.description}" />
+					</p:column>									
+					<p:column headerText="SAQA Link">
+						<h:outputText value="(#{rowVar.qualification.code})" />
+						<h:outputText value="#{rowVar.qualification.description} " />
+					</p:column>
+					
+					<p:rowExpansion>	
+						<p:fieldset legend="Unit Standard Details">
+							<p:dataTable value="#{rowVar.skillsProgramUnitStandards}" var="rv" reflow="true" emptyMessage="#{lang['no.records.found']}">
+								<p:column headerText="#{lang['code']}" style="white-space: nowrap" width="10">#{rv.unitStandards.code}</p:column>
+								<p:column headerText="#{lang['description']}" style="white-space: nowrap" width="70">#{rv.unitStandards.title}</p:column>
+								<p:column headerText="#{lang['credits']}" style="white-space: nowrap" width="10">#{rv.unitStandards.unitstdnumberofcredits}</p:column>
+								<p:column headerText="#{lang['nqf.level']}" style="white-space: nowrap" width="10">#{rv.unitStandards.nqflevelg2description}</p:column>
+							</p:dataTable>
+						</p:fieldset>
+					</p:rowExpansion>			
+				</p:dataTable>
+			</p:fieldset>							
+			
+			<p:growl sticky="false">
+				<p:autoUpdate />
+			</p:growl>
+			
+			<br/><br/>
+			<p:fieldset legend="#{lang['company']}" rendered="#{skillsregistrationUI.selectedCompany ne null}">
+				<p:panelGrid columns="2" style="width:100%" id="companyInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+	
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText disabled="true" id="companyName" value="#{skillsregistrationUI.selectedCompany.companyName}" style="width:100%;  opacity: 1 !important; color:black !important" required="true" requiredMessage="#{lang['enter.the.company.name']}" />
+						<p:outputLabel value="#{lang['companyName']}" for="companyName" styleClass="gray"/>
+					</h:panelGroup>
+	
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText disabled="true" id="tradingName" value="#{skillsregistrationUI.selectedCompany.tradingName}" style="width:100%;  opacity: 1 !important; color:black !important" required="true" requiredMessage="#{lang['enter.the.trading.name']}" />
+						<p:outputLabel value="#{lang['tradingName']}" for="tradingName" styleClass="gray"/>
+					</h:panelGroup>
+	
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText disabled="true" id="telNumber" value="#{skillsregistrationUI.selectedCompany.telNumber}" style="width:100%;  opacity: 1 !important; color:black !important" required="true" requiredMessage="#{lang['enter.the.tel.number']}" />
+						<p:outputLabel value="#{lang['telNumber']}" for="telNumber" styleClass="gray"/>
+					</h:panelGroup>
+	
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText disabled="true" id="faxNumber" value="#{skillsregistrationUI.selectedCompany.faxNumber}" style="width:100%;  opacity: 1 !important; color:black !important" />
+						<p:outputLabel value="#{lang['faxNumber']}" for="faxNumber" styleClass="gray"/>
+					</h:panelGroup>
+	
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText disabled="true" id="companyRegistrationNumber" value="#{skillsregistrationUI.selectedCompany.companyRegistrationNumber}" style="width:100%;  opacity: 1 !important; color:black !important" required="true" requiredMessage="#{lang['enter.company.registration.number']}" />
+						<p:outputLabel value="#{lang['companyRegistrationNumber']}" for="companyRegistrationNumber" styleClass="gray"/>
+					</h:panelGroup>
+	
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText disabled="true" id="email" value="#{skillsregistrationUI.selectedCompany.email}" style="width:100%;  opacity: 1 !important; color:black !important" required="true" requiredMessage="#{lang['enter.email.address']}" />
+						<p:outputLabel value="#{lang['email']}" for="email" styleClass="gray"/>
+					</h:panelGroup>
+	
+				</p:panelGrid>
+			</p:fieldset>
+			<br />
+			<br />							
+			<ui:include src="/pages/tp/includes/skillsregistrationInc.xhtml" />
+			
+			<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+				<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update="@form" action="#{skillsregistrationUI.submitRegistration}" styleClass="flat green-btn Fs18" style="height: 50px;">
+				</p:commandButton>
+			</p:panelGrid>
+		</div>
+
+</ui:composition>

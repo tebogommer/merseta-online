@@ -499,6 +499,11 @@ The agent may only declare testing phase complete when:
 5. **Employer Visit Requirement**: When building features that schedule or execute ANY type of "Visit" activity against an Employer, ALWAYS enforce selection of a specific Contact Person (`contact_person_id` / `ContactPersonId`).
 6. **UI Pattern**: MudBlazor Stacked Master-Detail layout (`/employers` table -> `/employers/{id}` full-page view with sticky top bar, breadcrumb back button, and confirmation toasts).
 7. **Organisation Nomenclature**: We work with organisations across all legal forms (NPOs, NGOs, public entities, private corporations, levy payers, non-levy payers). The database, domain models, services, and UI components must consistently use `Organisation` (not `Company`), unless specifically referring to a registered corporate entity subtype.
+8. **MudBlazor Layout & App Bar Spacing Standard**:
+   - Never place utility padding classes (`Class="pa-*"`, `Class="pt-*"`, `Class="py-*"`) directly on `<MudMainContent>`. MudBlazor utility classes apply `!important` which overrides the framework's calculated `padding-top: var(--mud-appbar-height)` (64px) and causes the header to overlap page content by 48px.
+   - Always nest inner padding inside `<MudMainContent>`: `<MudMainContent><div class="pa-4"><main id="main-content">@Body</main></div></MudMainContent>`.
+   - All sticky action bars, detail top bars, and table toolbars must use `top: var(--mud-appbar-height, 64px) !important;` (or the `.sticky-top` / `.sticky-top-header` CSS classes) so they dock flush underneath the `MudAppBar` during scroll.
+
 
 ---
 
@@ -517,5 +522,22 @@ The agent may only declare testing phase complete when:
 
 ---
 
+### ⚙️ Dynamic Configuration & Feature Flags Governance
+1. **Zero Hardcoding Invariant**: No business parameter, threshold, storage path, or external integration endpoint may be hardcoded. Always use `ISystemConfigurationService` with cascading database overrides.
+2. **Integrations Off-By-Default**: All external integrations (Dynamics GP, Sage, Live DHET SFTP, Live SARS FTP, SMS OTP, Azure Blob) MUST default to `IsEnabled = false`. Workflows must cleanly execute in mock simulation mode when disabled.
+---
+
+### 🛡️ Razor Component & Master-Detail Invariants
+1. **Nomenclature Invariant**: Never use `Company` in labels, placeholders, or headers unless referring to a registered corporate entity subtype. Always use `Organisation`.
+2. **Master-Detail Action Toolbar**:
+   - Every `*Detail.razor` page must include an action bar with a Back button (`Icons.Material.Filled.ArrowBack`), Cancel button (`Icons.Material.Filled.Cancel`), and Save button (`Icons.Material.Filled.Save`).
+   - Mutations must provide `ISnackbar` toast feedback and perform atomic double-writes into `audit_logs`.
+   - Top bars on detail views must include `.sticky-top-header` docking below the 64px `MudAppBar` using `position: sticky; top: var(--mud-appbar-height, 64px) !important; z-index: 10;`.
+3. **Employer Visit Contact Person Requirement**: Any page scheduling, recording, or executing a visit/monitoring against an Employer MUST enforce selection of a `ContactPersonId`.
+4. **Demographics RSA ID Helper**: Any component capturing an RSA ID number must bind an `OnBlur` / `TextChanged` handler to automatically extract and populate Date of Birth, Gender, and Citizenship via `RsaIdValidator.Parse`.
+
+---
+
 # END OF POLICY — NON-NEGOTIABLE
+
 

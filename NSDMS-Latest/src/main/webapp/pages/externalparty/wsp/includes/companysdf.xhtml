@@ -1,0 +1,96 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<p:outputPanel id="sdfTable" rendered="true">
+		<p:dataTable var="rowVar" value="#{initiatewspUI.usersDataModel}" id="userList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}" paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25"
+			reflow="true" lazy="true">
+
+			<p:column headerText="#{lang['first.name']}">
+				<h:outputText value="#{rowVar.sdf.firstName}" />
+			</p:column>
+
+			<p:column headerText="#{lang['surname']}">
+				<h:outputText value="#{rowVar.sdf.lastName}" />
+			</p:column>
+
+			<p:column headerText="#{lang['rsapassport.number']}">
+				<p:outputLabel value="#{rowVar.sdf.rsaIDNumber}" rendered="#{rowVar.sdf.rsaIDNumber.length() > 0}"></p:outputLabel>
+				<p:outputLabel value="#{rowVar.sdf.passportNumber}" rendered="#{rowVar.sdf.passportNumber.length() > 0}"></p:outputLabel>
+			</p:column>
+
+			<p:column headerText="#{lang['email']}">
+				<h:outputText value="#{rowVar.sdf.email}" />
+			</p:column>
+
+
+
+			<p:column headerText="#{lang['sdf.type']}">
+				<h:outputText value="#{rowVar.sdfType.description}" />
+			</p:column>
+
+			<p:column headerText="#{lang['approval.status']}">
+				<h:outputText value="#{rowVar.approvalStatus}" />
+			</p:column>
+
+			<p:column headerText="Confirmation Status" width="110" style="text-align:center">
+				<p:outputPanel rendered="#{rowVar.sdf.emailConfirmDate eq null}">
+					<i class="fa fa-times fa-3x red" aria-hidden="true"></i>
+				</p:outputPanel>
+				<p:outputPanel rendered="#{rowVar.sdf.emailConfirmDate ne null}">
+					<i class="fa fa-check fa-3x green" aria-hidden="true"></i>
+				</p:outputPanel>
+			</p:column>
+
+		</p:dataTable>
+		
+		
+		<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank"  layout="grid" >
+			<p:commandButton icon="fa fa-bars" value="View Company SDF History" action="#{initiatewspUI.sdfCompanyHistortInfo}" rendered="true" update="pgSdfHist"/>
+		</p:panelGrid>
+		<h:panelGrid id="pgSdfHist">
+			<p:dataTable id="sdfHistTable" rendered="#{initiatewspUI.sdfHistory eq true}" value="#{initiatewspUI.sdfCompanyHistory}" var="rv" rowKey="#{rv.id}" paginator="true" rows="5" paginatorPosition="bottom" 
+						 paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+						 rowsPerPageTemplate="2,5" reflow="true">							 
+				<p:column headerText="#{lang['first.name']}">
+					<h:outputText value="#{rv.sdf.firstName}" />
+				</p:column>
+				<p:column headerText="#{lang['last.name']}">
+					<h:outputText value="#{rv.sdf.lastName}"  />
+				</p:column>
+				<p:column headerText="#{lang['rsapassport.number']}">
+					<p:outputLabel value="#{rv.sdf.rsaIDNumber}" rendered="#{rv.sdf.rsaIDNumber.length() > 0}"/>
+					<p:outputLabel value="#{rv.sdf.passportNumber}" rendered="#{rv.sdf.passportNumber.length() > 0}"/>
+				</p:column>
+				<p:column headerText="#{lang['email']}">
+					<h:outputText value="#{rv.sdf.email}" />
+				</p:column>
+				<p:column headerText="#{lang['sdf.type']}">
+					<h:outputText value="#{rv.sdfType.description}" />
+				</p:column>
+				<p:column headerText="Confirmation Status" width="110" style="text-align:center">
+					<p:outputPanel rendered="#{rv.sdf.status ne UsersStatusEnum.Active}">
+						<i class="fa fa-times fa-3x red" aria-hidden="true"></i>
+					</p:outputPanel>
+					<p:outputPanel rendered="#{rv.sdf.status eq UsersStatusEnum.Active}">
+						<i class="fa fa-check fa-3x green" aria-hidden="true"></i>
+					</p:outputPanel>
+					<p:outputPanel rendered="#{rv.sdf.emailConfirmDate eq null} and false">
+						<i class="fa fa-times fa-3x red" aria-hidden="true"></i>
+					</p:outputPanel>
+					<p:outputPanel rendered="#{rv.sdf.emailConfirmDate ne null} and false">
+						<i class="fa fa-check fa-3x green" aria-hidden="true"></i>
+					</p:outputPanel>
+				</p:column>
+				<p:column headerText="Confirmation Date" width="110">
+					<p:outputLabel value="#{rv.createDate}">
+						<f:convertDateTime pattern="yyyy-MM-dd" />
+					</p:outputLabel>
+				</p:column>
+				<p:column headerText="Profile Status" width="110">
+					<p:outputLabel value="#{rv.sdf.status.friendlyName}" />
+				</p:column>											
+			</p:dataTable>
+		</h:panelGrid>
+		
+		
+	</p:outputPanel>
+
+</ui:composition>

@@ -1,0 +1,133 @@
+﻿@page "/non-seta/verifications"
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Domain.Entities
+@inject INonSetaVerificationService NonSetaService
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+
+<PageTitle>Non-SETA Qualifications &amp; Articulation | merSETA NSDMS</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
+    <!-- Top Bar -->
+    <MudCard Elevation="2" Class="mb-4">
+        <MudCardContent Class="d-flex align-center justify-space-between py-3">
+            <div>
+                <MudBreadcrumbs Items="_breadcrumbs" Class="pa-0 mb-1" />
+                <MudText Typo="Typo.h5" Class="fw-bold">Non-SETA Qualifications &amp; Provider Articulation</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    Verification of qualifications and credits completed through other SETAs, TVETs, and Higher Education institutions for merSETA endorsement.
+                </MudText>
+            </div>
+            <MudStack Row="true" Spacing="2">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadDataAsync">
+                    Refresh
+                </MudButton>
+            </MudStack>
+        </MudCardContent>
+    </MudCard>
+
+    @if (_isLoading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+    }
+
+    <!-- Table -->
+    <MudCard Elevation="2">
+        <MudCardContent>
+            <MudTable Items="_verifications" Hover="true" Dense="true" Elevation="0" Filter="FilterVerifications">
+                <ToolBarContent>
+                    <MudText Typo="Typo.h6">Qualification Verifications (@_verifications.Count)</MudText>
+                    <MudSpacer />
+                    <MudTextField @bind-Value="_searchString" Placeholder="Search by candidate, qualification, originating SETA..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Immediate="true" />
+                </ToolBarContent>
+                <HeaderContent>
+                    <MudTh>Candidate</MudTh>
+                    <MudTh>Originating SETA</MudTh>
+                    <MudTh>Qualification Title</MudTh>
+                    <MudTh>NQF Level</MudTh>
+                    <MudTh>Credits</MudTh>
+                    <MudTh>Cert #</MudTh>
+                    <MudTh>Status</MudTh>
+                    <MudTh Style="text-align: right;">Action</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Candidate">@(context.Person != null ? $"{context.Person.FirstName} {context.Person.LastName}" : "Candidate")</MudTd>
+                    <MudTd DataLabel="Originating SETA">
+                        <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">@context.OriginatingSetaCode</MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Qualification Title">@context.QualificationTitle</MudTd>
+                    <MudTd DataLabel="NQF Level">Level @context.NqfLevel</MudTd>
+                    <MudTd DataLabel="Credits"><strong>@context.TotalCreditsAchieved</strong></MudTd>
+                    <MudTd DataLabel="Cert #" Class="font-monospace">@context.ExternalCertificateNumber</MudTd>
+                    <MudTd DataLabel="Status">
+                        <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.VerificationStatusCode)" Variant="Variant.Filled">
+                            @context.VerificationStatusCode
+                        </MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Action" Style="text-align: right;">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.VerifiedUser" OnClick="@(() => Nav.NavigateTo($"/non-seta/verifications/{context.Id}"))">
+                            Verify &amp; Endorse
+                        </MudButton>
+                    </MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager />
+                </PagerContent>
+            </MudTable>
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
+
+@code {
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Quality Assurance", href: "/etqa/accreditation"),
+        new BreadcrumbItem("Non-SETA Verifications", href: null, disabled: true)
+    };
+
+    private List<NonSetaQualificationsCompletion> _verifications = new();
+    private bool _isLoading = true;
+    private string _searchString = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _verifications = await NonSetaService.GetVerificationsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to load non-SETA verifications: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private bool FilterVerifications(NonSetaQualificationsCompletion v)
+    {
+        if (string.IsNullOrWhiteSpace(_searchString)) return true;
+        var personName = v.Person != null ? $"{v.Person.FirstName} {v.Person.LastName}" : "";
+        return v.QualificationTitle.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+               v.OriginatingSetaCode.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+               v.ExternalCertificateNumber.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+               personName.Contains(_searchString, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private Color GetStatusColor(string status) => status switch
+    {
+        "EndorsedByMerSeta" => Color.Success,
+        "CreditsArticulated" => Color.Info,
+        "PendingVerification" => Color.Warning,
+        "Rejected" => Color.Error,
+        _ => Color.Default
+    };
+}

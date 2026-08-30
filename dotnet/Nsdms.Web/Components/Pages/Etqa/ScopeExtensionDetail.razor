@@ -1,0 +1,138 @@
+@page "/etqa/scope-extensions/{Id:int}"
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Domain.Entities
+@inject IExtensionOfScopeService ScopeService
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+
+<PageTitle>Scope Extension Evaluation | merSETA NSDMS</PageTitle>
+
+@if (_eos == null)
+{
+    <MudContainer Class="my-8 text-center">
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        <MudText Typo="Typo.body1" Class="mt-3">Loading scope extension application...</MudText>
+    </MudContainer>
+}
+else
+{
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
+        <!-- Sticky Top Bar -->
+        <MudCard Elevation="2" Class="mb-4 sticky-top-header" Style="position: sticky; top: var(--mud-appbar-height, 64px) !important; z-index: 10;">
+            <MudCardContent Class="d-flex align-center justify-space-between py-3">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Primary" OnClick="@(() => Nav.NavigateTo("/etqa/scope-extensions"))" />
+                    <div>
+                        <MudText Typo="Typo.h5" Class="fw-bold">@_eos.ApplicationNumber — @_eos.AdditionalQualificationTitle</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                            Provider: <strong>@_eos.TrainingProvider?.ProviderName</strong> | NQF: <strong>Level @_eos.NqfLevel (@_eos.Credits Credits)</strong> | Type: <strong>@_eos.ProgrammeTypeCode</strong>
+                        </MudText>
+                    </div>
+                </MudStack>
+
+                <MudStack Row="true" Spacing="2">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Cancel" OnClick="@(() => Nav.NavigateTo("/etqa/scope-extensions"))">
+                        Cancel
+                    </MudButton>
+
+                    @if (!_eos.SiteInspectionPassed && _eos.StatusCode == "Submitted")
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Checklist" OnClick="RecordInspectionAsync">
+                            Record Site Inspection Passed
+                        </MudButton>
+                    }
+
+                    @if (_eos.SiteInspectionPassed && _eos.StatusCode == "CommitteeReview")
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.CheckCircle" OnClick="ApproveAsync">
+                            Approve Scope Extension
+                        </MudButton>
+                    }
+
+                    @if (_eos.StatusCode == "Approved")
+                    {
+                        <MudChip T="string" Color="Color.Success" Variant="Variant.Filled" Size="Size.Large" Icon="@Icons.Material.Filled.Verified">
+                            SCOPE EXTENSION ENDORSED: @_eos.CommitteeDecisionReference
+                        </MudChip>
+                    }
+                </MudStack>
+            </MudCardContent>
+        </MudCard>
+
+        <!-- Main Structure -->
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <MudCard Outlined="true" Class="pa-4 h-100">
+                    <MudText Typo="Typo.h6" Class="fw-bold mb-3">Qualification Scope Parameters</MudText>
+                    <MudSimpleTable Dense="true" Elevation="0">
+                        <tbody>
+                            <tr><td><strong>Application #:</strong></td><td class="font-monospace fw-bold">@_eos.ApplicationNumber</td></tr>
+                            <tr><td><strong>Qualification Title:</strong></td><td>@_eos.AdditionalQualificationTitle</td></tr>
+                            <tr><td><strong>SAQA ID:</strong></td><td>@(_eos.SaqaQualificationId ?? "N/A")</td></tr>
+                            <tr><td><strong>NQF Level:</strong></td><td>Level @_eos.NqfLevel</td></tr>
+                            <tr><td><strong>Total Credits:</strong></td><td>@_eos.Credits</td></tr>
+                            <tr><td><strong>Programme Type:</strong></td><td>@_eos.ProgrammeTypeCode</td></tr>
+                        </tbody>
+                    </MudSimpleTable>
+                </MudCard>
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <MudCard Outlined="true" Class="pa-4 h-100">
+                    <MudText Typo="Typo.h6" Class="fw-bold mb-3">ETQA Site Inspection &amp; Committee Review</MudText>
+                    <MudSimpleTable Dense="true" Elevation="0">
+                        <tbody>
+                            <tr><td><strong>Application Status:</strong></td><td><span class="badge bg-primary">@_eos.StatusCode</span></td></tr>
+                            <tr><td><strong>Site Inspection Passed:</strong></td><td>@(_eos.SiteInspectionPassed ? "Yes" : "Pending")</td></tr>
+                            <tr><td><strong>Inspection Date:</strong></td><td>@(_eos.SiteInspectionDate?.ToString("dd MMM yyyy") ?? "N/A")</td></tr>
+                            <tr><td><strong>Site Evaluator:</strong></td><td>@(_eos.SiteEvaluatorUserId ?? "N/A")</td></tr>
+                            <tr><td><strong>Committee Decision Ref:</strong></td><td>@(_eos.CommitteeDecisionReference ?? "Pending Review")</td></tr>
+                            <tr><td><strong>Approval Date:</strong></td><td>@(_eos.ApprovalDate?.ToString("dd MMM yyyy HH:mm") ?? "N/A")</td></tr>
+                        </tbody>
+                    </MudSimpleTable>
+                </MudCard>
+            </MudItem>
+        </MudGrid>
+    </MudContainer>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private SdpExtensionOfScope? _eos;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRecordAsync();
+    }
+
+    private async Task LoadRecordAsync()
+    {
+        _eos = await ScopeService.GetSdpScopeExtensionByIdAsync(Id);
+    }
+
+    private async Task RecordInspectionAsync()
+    {
+        try
+        {
+            _eos = await ScopeService.RecordSiteInspectionAsync(Id, true, "EtqaInspector");
+            Snackbar.Add("Site inspection audit passed and submitted for committee review.", Severity.Info);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task ApproveAsync()
+    {
+        try
+        {
+            _eos = await ScopeService.ApproveSdpScopeExtensionAsync(Id, "ETQA-COM-2026-DEC-0081", "EtqaManager");
+            Snackbar.Add("Accreditation Scope Extension approved successfully.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+}

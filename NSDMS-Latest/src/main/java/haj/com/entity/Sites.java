@@ -1,0 +1,551 @@
+package haj.com.entity;
+
+import static javax.persistence.GenerationType.IDENTITY;
+
+import java.util.Date;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
+import javax.persistence.Transient;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
+import org.hibernate.envers.AuditTable;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.RelationTargetAuditMode;
+import org.hibernate.validator.constraints.Email;
+
+import haj.com.entity.enums.CompanyStatusEnum;
+import haj.com.entity.lookup.LegacyOrganisationSites;
+import haj.com.framework.IDataEntity;
+import haj.com.validators.CheckTelNumber;
+import haj.com.validators.exports.ExportValidation;
+import haj.com.validators.exports.SETMISFieldValidation;
+import haj.com.validators.exports.services.CompanyValidationService;
+
+// TODO: Auto-generated Javadoc
+/**
+ * Company.
+ *
+ * @author Techfinium
+ */
+@Entity
+@Table(name = "sites")
+@AuditTable(value = "sites_hist")
+@Audited
+@ExportValidation(message = "Invalid Sites Profile")
+public class Sites implements IDataEntity, Cloneable {
+
+	/**
+	 * The Constant serialVersionUID.
+	 */
+	private static final long serialVersionUID = 1L;
+
+	/** Unique Id of Sites. */
+	@Id
+	@GeneratedValue(strategy = IDENTITY)
+	@Column(name = "id", unique = true, nullable = false)
+	private Long id;
+
+	/** Create Date of Sites. */
+	@CreationTimestamp
+	@Temporal(TemporalType.TIMESTAMP)
+	@Column(name = "create_date", length = 19)
+	private Date createDate;
+
+	/** The company name of Sites. */
+	@Column(name = "company_name", length = 70)
+	// @Size(min = 1, max = 40, message = "Company can't be more than 40
+	// characters")
+	@SETMISFieldValidation(className = CompanyValidationService.class, method = "companyNameValidation", paramClass = String.class, message = "Validation Failed For SETMIS Company Name failed. Field may not be left blank, value in field may only contain letters, numbers and @#&+()?|:._,' characters.", fieldName = "companyName", fieldValue = "NOT_NULL")
+	private String companyName;
+
+	/** The guid of Sites. */
+	@Column(name = "site_number", length = 100, nullable = true)
+	private String siteNumber;
+
+	/** The guid of Sites. */
+	@Column(name = "company_guid", length = 100, nullable = true)
+	private String companyGuid;
+
+	/** The registered address of Sites. */
+	@ManyToOne(fetch = FetchType.LAZY)
+	@Fetch(FetchMode.JOIN)
+	@JoinColumn(name = "registered_address_id", nullable = true)
+	@SETMISFieldValidation(process = true , fieldName = "registeredAddress", fieldValue = "NOT_NULL")
+	private Address registeredAddress;
+
+	/** The company registration number of Sites. */
+	@Column(name = "company_registration_number", length = 40)
+	private String companyRegistrationNumber;
+
+	/** The tel number of Sites. */
+	@CheckTelNumber(message = "Tel number not valid")
+	@Column(name = "tel_number", length = 20, nullable = true)
+	@SETMISFieldValidation(className = CompanyValidationService.class, method = "contactNumberValidation", paramClass = String.class, message = "Validation Failed For SETMIS Company Name failed. Field may not be left blank, value in field may only contain letters, numbers and @#&+()?|:._,' characters.", fieldName = "telNumber", fieldValue = "NOT_NULL")
+	private String telNumber;
+
+	/** The fax number of Sites. */
+	@Column(name = "fax_number", length = 20)
+	@SETMISFieldValidation(className = CompanyValidationService.class, method = "contactNumberValidation", paramClass = String.class, message = "Validation Failed For SETMIS Company Name failed. Field may not be left blank, value in field may only contain letters, numbers and @#&+()?|:._,' characters.", fieldName = "faxNumber", fieldValue = "NOT_NULL")
+	private String faxNumber;
+
+	/** The email of Sites. */
+	@Column(name = "email", length = 100, nullable = true)
+	@Email(message = "Please enter a valid Email Address")
+	private String email;
+
+	/** The number of employees of Sites. */
+	@Column(name = "number_of_employees")
+	private Integer numberOfEmployees;
+
+	/** The levy number of Sites. */
+	@Column(name = "levy_number", length = 40)
+	private String levyNumber;
+
+	/** The form user. */
+	@Fetch(FetchMode.JOIN)
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "form_user_id", nullable = true)
+	@SETMISFieldValidation(process = true , fieldName = "formUser", fieldValue = "NOT_NULL")
+	private Users formUser;
+
+	/** The company. */
+	@Fetch(FetchMode.JOIN)
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "company_id", nullable = true)
+	@SETMISFieldValidation(process = true , fieldName = "company", fieldValue = "NOT_NULL")
+	private Company company;
+
+	/** The Site status. */
+	@Enumerated
+	@Column(name = "site_status")
+	private CompanyStatusEnum siteStatus;
+	
+	@Column(name = "company_site_number", length = 10)
+	private String companySiteNumber;
+
+	@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
+	@Fetch(FetchMode.JOIN)
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "legacy_organisation_sites_id", nullable = true)
+	private LegacyOrganisationSites legacyOrganisationSites;
+	
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#hashCode()
+	 */
+
+	/** The done search. */
+	@Transient
+	private boolean doneSearch;
+
+	/** The existing company. */
+	@Transient
+	private boolean existingCompany;
+
+	/** The temp update. */
+	@Transient
+	private boolean tempUpdate;
+
+	/** The reg done. */
+	@Transient
+	private boolean regDone;
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#hashCode()
+	 */
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((id == null) ? 0 : id.hashCode());
+		return result;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see java.lang.Object#equals(java.lang.Object)
+	 */
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) return true;
+		if (obj == null) return false;
+		if (getClass() != obj.getClass()) return false;
+		Sites other = (Sites) obj;
+		if (id == null) {
+			if (other.id != null) return false;
+		} else if (!id.equals(other.id)) return false;
+		return true;
+	}
+
+	/**
+	 * Gets the id.
+	 *
+	 * @return the id
+	 */
+	public Long getId() {
+		return id;
+	}
+
+	/**
+	 * Sets the id.
+	 *
+	 * @param id
+	 *            the new id
+	 */
+	public void setId(Long id) {
+		this.id = id;
+	}
+
+	/**
+	 * Gets the creates the date.
+	 *
+	 * @return the creates the date
+	 */
+	public Date getCreateDate() {
+		return createDate;
+	}
+
+	/**
+	 * Sets the creates the date.
+	 *
+	 * @param createDate
+	 *            the new creates the date
+	 */
+	public void setCreateDate(Date createDate) {
+		this.createDate = createDate;
+	}
+
+	/**
+	 * Gets the company name.
+	 *
+	 * @return the company name
+	 */
+	public String getCompanyName() {
+		return companyName;
+	}
+
+	/**
+	 * Sets the company name.
+	 *
+	 * @param companyName
+	 *            the new company name
+	 */
+	public void setCompanyName(String companyName) {
+		this.companyName = companyName;
+	}
+
+	/**
+	 * Gets the company guid.
+	 *
+	 * @return the company guid
+	 */
+	public String getCompanyGuid() {
+		return companyGuid;
+	}
+
+	/**
+	 * Sets the company guid.
+	 *
+	 * @param companyGuid
+	 *            the new company guid
+	 */
+	public void setCompanyGuid(String companyGuid) {
+		this.companyGuid = companyGuid;
+	}
+
+	/**
+	 * Gets the registered address.
+	 *
+	 * @return the registered address
+	 */
+	public Address getRegisteredAddress() {
+		return registeredAddress;
+	}
+
+	/**
+	 * Sets the registered address.
+	 *
+	 * @param registeredAddress
+	 *            the new registered address
+	 */
+	public void setRegisteredAddress(Address registeredAddress) {
+		this.registeredAddress = registeredAddress;
+	}
+
+	/**
+	 * Gets the company registration number.
+	 *
+	 * @return the company registration number
+	 */
+	public String getCompanyRegistrationNumber() {
+		return companyRegistrationNumber;
+	}
+
+	/**
+	 * Sets the company registration number.
+	 *
+	 * @param companyRegistrationNumber
+	 *            the new company registration number
+	 */
+	public void setCompanyRegistrationNumber(String companyRegistrationNumber) {
+		this.companyRegistrationNumber = companyRegistrationNumber;
+	}
+
+	/**
+	 * Gets the tel number.
+	 *
+	 * @return the tel number
+	 */
+	public String getTelNumber() {
+		return telNumber;
+	}
+
+	/**
+	 * Sets the tel number.
+	 *
+	 * @param telNumber
+	 *            the new tel number
+	 */
+	public void setTelNumber(String telNumber) {
+		this.telNumber = telNumber;
+	}
+
+	/**
+	 * Gets the fax number.
+	 *
+	 * @return the fax number
+	 */
+	public String getFaxNumber() {
+		return faxNumber;
+	}
+
+	/**
+	 * Sets the fax number.
+	 *
+	 * @param faxNumber
+	 *            the new fax number
+	 */
+	public void setFaxNumber(String faxNumber) {
+		this.faxNumber = faxNumber;
+	}
+
+	/**
+	 * Gets the email.
+	 *
+	 * @return the email
+	 */
+	public String getEmail() {
+		return email;
+	}
+
+	/**
+	 * Sets the email.
+	 *
+	 * @param email
+	 *            the new email
+	 */
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+	/**
+	 * Gets the number of employees.
+	 *
+	 * @return the number of employees
+	 */
+	public Integer getNumberOfEmployees() {
+		return numberOfEmployees;
+	}
+
+	/**
+	 * Sets the number of employees.
+	 *
+	 * @param numberOfEmployees
+	 *            the new number of employees
+	 */
+	public void setNumberOfEmployees(Integer numberOfEmployees) {
+		this.numberOfEmployees = numberOfEmployees;
+	}
+
+	/**
+	 * Gets the levy number.
+	 *
+	 * @return the levy number
+	 */
+	public String getLevyNumber() {
+		return levyNumber;
+	}
+
+	/**
+	 * Sets the levy number.
+	 *
+	 * @param levyNumber
+	 *            the new levy number
+	 */
+	public void setLevyNumber(String levyNumber) {
+		this.levyNumber = levyNumber;
+	}
+
+	/**
+	 * Gets the form user.
+	 *
+	 * @return the form user
+	 */
+	public Users getFormUser() {
+		return formUser;
+	}
+
+	/**
+	 * Sets the form user.
+	 *
+	 * @param formUser
+	 *            the new form user
+	 */
+	public void setFormUser(Users formUser) {
+		this.formUser = formUser;
+	}
+
+	/**
+	 * Gets the company.
+	 *
+	 * @return the company
+	 */
+	public Company getCompany() {
+		return company;
+	}
+
+	/**
+	 * Sets the company.
+	 *
+	 * @param company
+	 *            the new company
+	 */
+	public void setCompany(Company company) {
+		this.company = company;
+	}
+
+	/**
+	 * Checks if is done search.
+	 *
+	 * @return true, if is done search
+	 */
+	public boolean isDoneSearch() {
+		return doneSearch;
+	}
+
+	/**
+	 * Sets the done search.
+	 *
+	 * @param doneSearch
+	 *            the new done search
+	 */
+	public void setDoneSearch(boolean doneSearch) {
+		this.doneSearch = doneSearch;
+	}
+
+	/**
+	 * Checks if is existing company.
+	 *
+	 * @return true, if is existing company
+	 */
+	public boolean isExistingCompany() {
+		return existingCompany;
+	}
+
+	/**
+	 * Sets the existing company.
+	 *
+	 * @param existingCompany
+	 *            the new existing company
+	 */
+	public void setExistingCompany(boolean existingCompany) {
+		this.existingCompany = existingCompany;
+	}
+
+	/**
+	 * Checks if is temp update.
+	 *
+	 * @return true, if is temp update
+	 */
+	public boolean isTempUpdate() {
+		return tempUpdate;
+	}
+
+	/**
+	 * Sets the temp update.
+	 *
+	 * @param tempUpdate
+	 *            the new temp update
+	 */
+	public void setTempUpdate(boolean tempUpdate) {
+		this.tempUpdate = tempUpdate;
+	}
+
+	/**
+	 * Checks if is reg done.
+	 *
+	 * @return true, if is reg done
+	 */
+	public boolean isRegDone() {
+		return regDone;
+	}
+
+	/**
+	 * Sets the reg done.
+	 *
+	 * @param regDone
+	 *            the new reg done
+	 */
+	public void setRegDone(boolean regDone) {
+		this.regDone = regDone;
+	}
+
+	public String getSiteNumber() {
+		return siteNumber;
+	}
+
+	public void setSiteNumber(String siteNumber) {
+		this.siteNumber = siteNumber;
+	}
+
+	public CompanyStatusEnum getSiteStatus() {
+		return siteStatus;
+	}
+
+	public void setSiteStatus(CompanyStatusEnum siteStatus) {
+		this.siteStatus = siteStatus;
+	}
+
+	public String getCompanySiteNumber() {
+		return companySiteNumber;
+	}
+
+	public void setCompanySiteNumber(String companySiteNumber) {
+		this.companySiteNumber = companySiteNumber;
+	}
+
+	public LegacyOrganisationSites getLegacyOrganisationSites() {
+		return legacyOrganisationSites;
+	}
+
+	public void setLegacyOrganisationSites(LegacyOrganisationSites legacyOrganisationSites) {
+		this.legacyOrganisationSites = legacyOrganisationSites;
+	}
+
+}

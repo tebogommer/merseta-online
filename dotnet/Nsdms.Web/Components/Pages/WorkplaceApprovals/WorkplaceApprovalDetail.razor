@@ -11,7 +11,7 @@
 <PageTitle>@(IsNew ? "New Workplace Approval" : $"Workplace Approval {_approval.ApprovalNumber}") - NSDMS</PageTitle>
 
 <!-- STICKY TOP BAR -->
-<MudPaper Elevation="2" Class="sticky-top pa-4 mb-4 rounded-lg bg-surface d-flex justify-space-between align-center" Style="top: 0; z-index: 10;">
+<MudPaper Elevation="2" Class="sticky-top pa-4 mb-4 rounded-lg bg-surface d-flex justify-space-between align-center" Style="top: var(--mud-appbar-height, 64px); z-index: 10;">
     <div class="d-flex align-center gap-3">
         <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Default" OnClick="@(() => Navigation.NavigateTo("/workplace-approvals"))" Title="Back to List" />
         <div>
@@ -58,6 +58,12 @@
 
 @if (!IsNew)
 {
+    <!-- Visual Workflow Step Tracker -->
+    <WorkflowProgressBar ProcessCode="WPAPP" 
+                         EntityId="@Id" 
+                         EntityTitle="@($"{_approval.QualificationTitle} ({_approval.ApprovalNumber})")" 
+                         EntityRef="@_approval.ApprovalNumber" />
+
     <!-- Workflow Action Bridge -->
     <WorkflowActionBridge ProcessCode="WPAPP" 
                           EntityId="@Id" 
@@ -117,7 +123,16 @@ else
                         </MudItem>
 
                         <MudItem xs="12" md="6">
-                            <MudSelect T="int?" @bind-Value="_approval.AssessorPersonId" Label="Evaluating Assessor" Variant="Variant.Outlined" Clearable="true">
+                            <MudSelect T="int?" @bind-Value="_approval.ContactPersonId" Label="Mandatory Employer Contact Person" Variant="Variant.Outlined" Required="true" RequiredError="Employer Contact Person must be selected per visit governance rules" Clearable="true">
+                                <MudSelectItem Value="@((int?)null)">-- Select Employer Contact Person --</MudSelectItem>
+                                @foreach (var person in _people)
+                                {
+                                    <MudSelectItem Value="@((int?)person.Id)">@person.FullName (@(person.RsaIdNumber ?? person.Email))</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudSelect T="int?" @bind-Value="_approval.AssessorPersonId" Label="Evaluating Assessor / Inspector" Variant="Variant.Outlined" Clearable="true">
                                 <MudSelectItem Value="@((int?)null)">-- Select Assessor --</MudSelectItem>
                                 @foreach (var person in _people)
                                 {
@@ -125,7 +140,7 @@ else
                                 }
                             </MudSelect>
                         </MudItem>
-                        <MudItem xs="12" md="6">
+                        <MudItem xs="12" md="12">
                             <MudSelect T="string" @bind-Value="_approval.ApprovalStatusCode" Label="Approval Status" Variant="Variant.Outlined">
                                 <MudSelectItem Value="@("DRAFT")">Draft</MudSelectItem>
                                 <MudSelectItem Value="@("AUDIT_SCHEDULED")">Audit Scheduled</MudSelectItem>
@@ -413,6 +428,12 @@ else
         if (_approval.OrganisationId <= 0)
         {
             Snackbar.Add("Please select a valid Host Employer.", Severity.Warning);
+            return;
+        }
+
+        if (!_approval.ContactPersonId.HasValue || _approval.ContactPersonId.Value <= 0)
+        {
+            Snackbar.Add("Please select a mandatory Employer Contact Person per visit governance rules.", Severity.Warning);
             return;
         }
 

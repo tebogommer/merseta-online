@@ -1,0 +1,226 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+
+		<p:growl sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+
+		<p:importEnum type="haj.com.entity.enums.SdpCompanyActionListEnum" />
+
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<ui:include src="/pages/includes/taskdiagram.xhtml" />
+			</div>
+		</div>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+
+					<h1>SDP Company Actions Workflow</h1>
+
+					<h:form id="mainForm">
+						<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid" rendered="#{sdpCompanyActionsWorkflowUI.sdpCompanyActions.company ne null}">
+							<p:fieldset legend="Company Information">
+								<ui:include src="/pages/includes/company_info_display.xhtml">
+									<ui:param name="company" value="#{sdpCompanyActionsWorkflowUI.sdpCompanyActions.company}" />
+								</ui:include>
+								<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+									<p:outputPanel rendered="#{sdpCompanyActionsWorkflowUI.sdpCompanyActions.company.residentialAddress ne null}">
+										<ui:include src="/pages/includes/addressInformation.xhtml">
+											<ui:param name="header" value="#{lang['residentialAddress']}" />
+											<ui:param name="address" value="#{sdpCompanyActionsWorkflowUI.sdpCompanyActions.company.residentialAddress}" />
+										</ui:include>
+									</p:outputPanel>
+									<p:outputPanel rendered="#{sdpCompanyActionsWorkflowUI.sdpCompanyActions.company.postalAddress ne null}">
+										<ui:include src="/pages/includes/addressInformation.xhtml">
+											<ui:param name="header" value="Postal Address" />
+											<ui:param name="address" value="#{sdpCompanyActionsWorkflowUI.sdpCompanyActions.company.postalAddress}" />
+										</ui:include>
+									</p:outputPanel>
+								</p:panelGrid>
+							</p:fieldset>
+						</p:panelGrid>
+
+						<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid" rendered="#{sdpCompanyActionsWorkflowUI.sdpCompanyActions.trainingSite ne null}">
+							<p:fieldset legend="Training Site Information">
+								<ui:include src="/pages/includes/training_site_info_display.xhtml">
+									<ui:param name="trainingSite" value="#{sdpCompanyActionsWorkflowUI.sdpCompanyActions.trainingSite}" />
+								</ui:include>
+								<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+									<p:outputPanel rendered="#{sdpCompanyActionsWorkflowUI.sdpCompanyActions.trainingSite.residentialAddress ne null}">
+										<ui:include src="/pages/includes/addressInformation.xhtml">
+											<ui:param name="header" value="#{lang['residentialAddress']}" />
+											<ui:param name="address" value="#{sdpCompanyActionsWorkflowUI.sdpCompanyActions.trainingSite.residentialAddress}" />
+										</ui:include>
+									</p:outputPanel>
+									<p:outputPanel rendered="#{sdpCompanyActionsWorkflowUI.sdpCompanyActions.trainingSite.postalAddress ne null}">
+										<ui:include src="/pages/includes/addressInformation.xhtml">
+											<ui:param name="header" value="Postal Address" />
+											<ui:param name="address" value="#{sdpCompanyActionsWorkflowUI.sdpCompanyActions.trainingSite.postalAddress}" />
+										</ui:include>
+									</p:outputPanel>
+								</p:panelGrid>
+							</p:fieldset>
+						</p:panelGrid>
+
+						<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+							<h2>Action: #{sdpCompanyActionsWorkflowUI.sdpCompanyActions.sdpCompanyAction.friendlyName}</h2>
+
+							<p:fieldset legend="Submission User">
+								<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{sdpCompanyActionsWorkflowUI.sdpCompanyActions.createUser.firstName}" />
+										<p:outputLabel value="First Name" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{sdpCompanyActionsWorkflowUI.sdpCompanyActions.createUser.lastName}" />
+										<p:outputLabel value="Last Name" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{sdpCompanyActionsWorkflowUI.sdpCompanyActions.createUser.email}" />
+										<p:outputLabel value="Email Address" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{sdpCompanyActionsWorkflowUI.sdpCompanyActions.createDate}">
+											<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME}" />
+										</p:inputText>
+										<p:outputLabel value="Date Submitted" />
+									</h:panelGroup>
+								</p:panelGrid>
+							</p:fieldset>
+
+							<p:fieldset legend="SDP For Action">
+								<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{sdpCompanyActionsWorkflowUI.sdpCompanyActions.sdpUser.firstName}" />
+										<p:outputLabel value="First Name" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{sdpCompanyActionsWorkflowUI.sdpCompanyActions.sdpUser.lastName}" />
+										<p:outputLabel value="Last Name" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{sdpCompanyActionsWorkflowUI.sdpCompanyActions.sdpUser.email}" />
+										<p:outputLabel value="Email Address" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield" rendered="#{sdpCompanyActionsWorkflowUI.sdpCompanyActions.sdpCompanyAction eq SdpCompanyActionListEnum.UpdateDesignation or sdpCompanyActionsWorkflowUI.sdpCompanyActions.sdpCompanyAction eq SdpCompanyActionListEnum.RemoveSDP}">
+										<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{sdpCompanyActionsWorkflowUI.sdpCompanyActions.currentDesignation.description}" />
+										<p:outputLabel value="Current Designation" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield" rendered="#{sdpCompanyActionsWorkflowUI.sdpCompanyActions.sdpCompanyAction eq SdpCompanyActionListEnum.UpdateDesignation or sdpCompanyActionsWorkflowUI.sdpCompanyActions.sdpCompanyAction eq SdpCompanyActionListEnum.NewSDP}">
+										<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{sdpCompanyActionsWorkflowUI.sdpCompanyActions.newDesignation.description}" />
+										<p:outputLabel value="New Designation" />
+									</h:panelGroup>
+								</p:panelGrid>
+							</p:fieldset>
+							
+							<p:fieldset legend="Reason" rendered="#{sdpCompanyActionsWorkflowUI.sdpCompanyActions.reason ne null and sdpCompanyActionsWorkflowUI.sdpCompanyActions.reason ne ''}">
+								<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{sdpCompanyActionsWorkflowUI.sdpCompanyActions.reason}" />
+										<p:outputLabel value="Reason" />
+									</h:panelGroup>
+								</p:panelGrid>
+							</p:fieldset>
+						</p:panelGrid>
+						
+						<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+							<h2>Supporting Documents</h2>
+							<p:dataTable value="#{sdpCompanyActionsWorkflowUI.sdpCompanyActions.doc}" var="rv1" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+								<p:column headerText="#{lang['type']}" width="20%">Supporting Document</p:column>
+								<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+								<p:column headerText="#{lang['uploaded']}" width="15%">
+									<h:outputText value="#{rv1.createDate}">
+										<f:convertDateTime pattern="dd MMM yyyy" />
+									</h:outputText>
+								</p:column>
+
+								<p:column headerText="#{lang['document.is.required']}" width="150">
+									<p:selectBooleanCheckbox value="#{rv1.configDoc.requiredDocument}" disabled="true" style="opacity: 1 !important" rendered="#{not rv1.required}"></p:selectBooleanCheckbox>
+									<p:selectBooleanCheckbox value="#{rv1.required}" disabled="true" style="opacity: 1 !important" rendered="#{rv1.required}"></p:selectBooleanCheckbox>
+								</p:column>
+
+								<p:column headerText="#{lang['original.required']}" width="150">
+									<p:selectBooleanCheckbox value="#{rv1.configDoc.originalRequired}" disabled="true" style="opacity: 1 !important" rendered="#{not rv1.configDoc.originalRequired}"></p:selectBooleanCheckbox>
+									<p:selectBooleanCheckbox value="#{rv1.configDoc.originalRequired}" disabled="true" style="opacity: 1 !important" rendered="#{rv1.configDoc.originalRequired}"></p:selectBooleanCheckbox>
+								</p:column>
+
+								<p:column headerText="#{lang['version']}" width="15%">
+									<h:outputText value="#{rv1.versionNo}">
+									</h:outputText>
+								</p:column>
+								<p:column width="180" headerText="#{lang['view.edit']}">
+									<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}">
+										<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+									<p:spacer width="5" rendered="#{rv1.id ne null}" />
+									<p:commandButton icon="fa fa-bars " id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}">
+										<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="dhistUserDocs" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+									<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+										<p:spacer width="5" />
+										<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+									</h:panelGroup>
+									<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+										<p:spacer width="5" />
+										<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+									</h:panelGroup>
+								</p:column>
+							</p:dataTable>
+						</p:panelGrid>
+						<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+							<p:commandButton value="Final Approve" icon="ui-icon-save" action="#{sdpCompanyActionsWorkflowUI.finalApproveWorkflow}" update="@form" styleClass="flat green-btn Fs18" style="height: 50px;" onstart="uploadStart()" oncomplete="uploadDone()">
+								<p:confirm header="Confirmation" message="Are you sure you wish to final approve?" icon="pi pi-exclamation-triangle" />
+							</p:commandButton>
+							<p:commandButton value="Final Reject" action="#{sdpCompanyActionsWorkflowUI.prepFinalRejection}" icon="fa fa-times" update="rejectReasonForm" styleClass="red-btn flat Fs18" style="height: 50px;" process="@this">
+								<p:confirm header="Confirmation" message="Are you sure you wish to final reject?" icon="pi pi-exclamation-triangle" />
+							</p:commandButton>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+			<h:form>
+				<p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="fa fa-check" />
+				<p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="fa fa-times" />
+			</h:form>
+		</p:confirmDialog>
+
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+
+		<p:dialog header="Final Reject Reasons" widgetVar="rejectReasonsDlg" hideEffect="clip" showEffect="clip" id="dialogRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{sdpCompanyActionsWorkflowUI.selectedRejectionReasons}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:100%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<p:ajax />
+								<f:selectItems value="#{sdpCompanyActionsWorkflowUI.rejectReasonsForSelection}" var="rv" itemValue="#{rv}" />
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+							</p:selectManyMenu>
+						</div>
+					</div>
+					<p:commandButton value="Final Reject" action="#{sdpCompanyActionsWorkflowUI.finalRejectWorkflow}" update="@form" onstart="uploadStart()" oncomplete="uploadDone()" />
+				</div>
+			</h:form>
+		</p:dialog>
+	</ui:define>
+
+
+
+</ui:composition>

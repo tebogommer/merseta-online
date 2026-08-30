@@ -1,0 +1,43 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+
+		<h:panelGroup id="discgrantGroup">
+			<h:form id="discgrantTableForm">
+				<p:importEnum type="haj.com.entity.enums.PivotNonPivotEnum" />
+
+				<div class="card">
+					<h2>#{lang['inter.seta.transfer']}</h2>
+					<p:dataTable var="rowVar" value="#{intersetatransferdetailUI.dataModel}" lazy="true" id="employeesimportList" rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+						paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,15,20,25,50,100" reflow="true">
+						<p:column  headerText="#{lang['entity.id']}"  filterBy="#{rowVar.company.levyNumber}" sortBy="#{rowVar.company.levyNumber}">
+							<p:outputLabel value="#{rowVar.company.levyNumber}" style="width:95%" />
+						</p:column>
+						<p:column headerText="#{lang['user']}" filterBy="#{rowVar.company.companyName}" sortBy="#{rowVar.company.companyName}">
+							<p:outputLabel value="#{rowVar.users.firstName} #{rowVar.users.lastName}" style="width:95%" />
+						</p:column>
+						<p:column headerText="#{lang['organisation']}" filterBy="#{rowVar.company.companyName}" sortBy="#{rowVar.company.companyName}">
+							<p:outputLabel value="#{rowVar.company.companyName}" style="width:95%" />
+						</p:column>
+						<p:column headerText="#{lang['current.etqa.short']}" sortBy="#{rowVar.currentEtqa.description}" filterBy="#{rowVar.currentEtqa.description}">
+							<p:outputLabel value="#{rowVar.currentEtqa.description}" style="width:95%" />
+						</p:column>
+						<p:column headerText="#{lang['create.date']}" sortBy="#{rowVar.createDate}">
+							<p:outputLabel value="#{rowVar.createDate}" style="width:95%">
+								<f:convertDateTime pattern="dd MMMM yyyy" />
+							</p:outputLabel>
+						</p:column>
+						<p:column headerText="#{lang['status']}">
+							<p:outputLabel value="#{rowVar.approval.friendlyName}" style="width:95%" />
+						</p:column>
+						<p:column width="40">
+							<p:commandButton icon="fa fa-search" title="View transfer request" update="@form" action="#{intersetatransferdetailUI.viewTransfer}" ajax="false">
+								<f:setPropertyActionListener value="#{rowVar}" target="#{intersetatransferdetailUI.interSetaTransfer}" />
+							</p:commandButton>
+						</p:column>
+					</p:dataTable>
+				</div>
+
+			</h:form>
+		</h:panelGroup>
+	</ui:define>
+</ui:composition>

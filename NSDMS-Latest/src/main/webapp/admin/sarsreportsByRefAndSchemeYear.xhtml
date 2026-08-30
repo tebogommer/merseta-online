@@ -1,0 +1,259 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="head">
+
+
+		<script src="#{request.contextPath}/js/highcharts.js" />
+		<script src="#{request.contextPath}/js/highcharts-3d.js" />
+		<script src="#{request.contextPath}/js/exporting.js" />
+	</ui:define>
+
+	<ui:define name="content">
+		<div class="ui-g">
+
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="uploadForm">
+						<h1>SARS Levy Report by Entity and SARS Scheme Year</h1>
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:panelGrid layout="grid" columns="5">
+							<p:outputLabel value="#{lang['sdl.number']}:" styleClass="FontBold" />
+
+							<p:inputMask id="key" mask="#{sarsReportsUI.companyLevyNumberFormat}" value="#{sarsReportsUI.refNo}" />
+							<p:outputLabel value="SARS/DHET #{lang['scheme.year']}:" styleClass="FontBold" />
+							<p:selectOneMenu id="sarsDateF" value="#{sarsReportsUI.schemeYear}" style="width: 110px !important;">
+								<f:selectItems value="#{sarsLevyReconUI.sarsYears}" var="sars" itemLabel="#{sars.year}" itemValue="#{sars.year}" />
+							</p:selectOneMenu>
+							<p:commandButton value="#{lang['submit']}" action="#{sarsReportsUI.bySdlAndSchemeYear}" update="@form :summaryForm :chartForm" />
+
+						</p:panelGrid>
+						<br />
+						<h:panelGroup rendered="#{sarsReportsUI.levies.size() gt 0}">
+							<p:fieldset legend="#{lang['company.information']}">
+								<p:panelGrid columns="4" styleClass="ui-panelgrid-blank" layout="grid" columnClasses="FontBold,Fs14,FontBold,Fs14">
+									<p:outputLabel value="#{lang['name']}" />
+									<p:outputLabel value="#{sarsReportsUI.sarsEmployerDetail.registeredNameOfEntity}" />
+
+									<p:outputLabel value="#{lang['company.reg.number']}" />
+									<p:outputLabel value="#{sarsReportsUI.sarsEmployerDetail.companyRegistrationNumber}" />
+
+									<p:outputLabel value="#{lang['tradingName']}" />
+									<p:outputLabel value="#{sarsReportsUI.sarsEmployerDetail.tradingName}" />
+
+									<p:outputLabel value="#{lang['trading.status']}" />
+									<p:outputLabel value="(#{sarsReportsUI.sarsEmployerDetail.tradingStatus}) #{sarsReportsUI.sarsEmployerDetail.status}" />
+
+									<p:outputLabel value="#{lang['sic']}" />
+									<p:outputLabel value="#{sarsReportsUI.sarsEmployerDetail.sicCode2}" />
+
+								</p:panelGrid>
+
+							</p:fieldset>
+
+							<br />
+							<div align="right">
+								<h:commandLink id="eExcel">
+									<i class="fa fa-file-excel-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+									<p:dataExporter type="xls" target="sarsfilesList" fileName="SarsLevies_#{sarsReportsUI.refNo}" />
+								</h:commandLink>
+								<h:commandLink id="ePdf" rendered="false">
+									<i class="fa fa-file-pdf-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+									<p:dataExporter type="pdf" target="sarsfilesList" fileName="SarsLevies_#{sarsReportsUI.refNo}" />
+								</h:commandLink>
+								<h:commandLink id="eCsv">
+									<i class="fa fa-file-text-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+									<p:dataExporter type="csv" target="sarsfilesList" fileName="SarsLevies_#{sarsReportsUI.refNo}" />
+								</h:commandLink>
+								<h:commandLink id="eXml">
+									<i class="fa fa-file-code-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+									<p:dataExporter type="xml" target="sarsfilesList" fileName="SarsLevies_#{sarsReportsUI.refNo}" />
+								</h:commandLink>
+
+								<p:tooltip for="eExcel" value="#{lang['export.search.results.to.excel']}" position="left" />
+								<p:tooltip for="ePdf" value="#{lang['export.search.results.to.pdf']}" position="left" />
+								<p:tooltip for="eCsv" value="#{lang['export.search.results.as.a.csv']}" position="left" />
+								<p:tooltip for="eXml" value="#{lang['export.search.results.as.a.xml']}" position="left" />
+							</div>
+						</h:panelGroup>
+						<br />
+
+
+
+						<p:dataTable var="rv" value="#{sarsReportsUI.levies}" filteredValue="#{sarsfilesUI.sarsFilesfilteredList}" id="sarsfilesList" rowKey="#{rowVar.id}" reflow="true" rendered="#{sarsReportsUI.levies.size() gt 0}">
+
+
+							<p:column headerText="#{lang['arrival.date']}">
+								<h:outputText value="#{rv.arrivalDate1}">
+									<f:convertDateTime pattern="dd MMM yyyy" />
+								</h:outputText>
+							</p:column>
+
+							<p:column headerText="#{lang['mandatory.levy']}">
+								<h:outputText value="#{rv.mandatoryLevy}" styleClass="Fright">
+									<f:convertNumber pattern="###,###,###,##0.00" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['discretionary.levy']}">
+								<h:outputText value="#{rv.discretionaryLevy}" styleClass="Fright">
+									<f:convertNumber pattern="###,###,###,##0.00" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['admin.levy']}">
+								<h:outputText value="#{rv.adminLevy}" styleClass="Fright">
+									<f:convertNumber pattern="###,###,###,##0.00" />
+								</h:outputText>
+							</p:column>
+
+							<p:column headerText="#{lang['interest']}">
+								<h:outputText value="#{rv.interest}" styleClass="Fright">
+									<f:convertNumber pattern="##.##" />
+								</h:outputText>
+							</p:column>
+
+							<p:column headerText="#{lang['penalty']}">
+								<h:outputText value="#{rv.penalty}" styleClass="Fright">
+									<f:convertNumber pattern="###,###,###,##0.00" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['total']}">
+								<h:outputText value="#{rv.total}" styleClass="Fright">
+									<f:convertNumber pattern="###,###,###,##0.00" />
+								</h:outputText>
+							</p:column>
+
+
+
+						</p:dataTable>
+
+
+
+					</h:form>
+				</div>
+			</div>
+
+
+		</div>
+		<h:form id="summaryForm">
+			<c:if test="#{sarsReportsUI.levies.size() gt 0}">
+				<div class="ui-g ui-fluid">
+					<div class="ui-g-12 ui-lg-6">
+						<!-- Left Side -->
+						<div class="card card-w-title">
+							<p:fieldset legend="Summary Totals">
+								<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" layout="grid" columnClasses="FontBold,Fs16,FontBold,Fs16">
+
+									<p:outputLabel value="#{lang['mandatory.levy']}:" styleClass="Fright" />
+									<h:outputText value="#{sarsReportsUI.totals.mandatoryLevy}" styleClass="Fright">
+										<f:convertNumber pattern="###,###,###,##0.00" />
+									</h:outputText>
+
+
+									<p:outputLabel value="#{lang['discretionary.levy']}:" styleClass="Fright" />
+									<h:outputText value="#{sarsReportsUI.totals.discretionaryLevy}" styleClass="Fright">
+										<f:convertNumber pattern="###,###,###,##0.00" />
+									</h:outputText>
+
+									<p:outputLabel value="#{lang['admin.levy']}:" styleClass="Fright" />
+									<h:outputText value="#{sarsReportsUI.totals.adminLevy}" styleClass="Fright">
+										<f:convertNumber pattern="###,###,###,##0.00" />
+									</h:outputText>
+
+									<p:outputLabel value="#{lang['interest']}:" styleClass="Fright" />
+									<h:outputText value="#{sarsReportsUI.totals.interest}" styleClass="Fright">
+										<f:convertNumber pattern="###,###,###,##0.00" />
+									</h:outputText>
+
+									<p:outputLabel value="#{lang['penalty']}:" styleClass="Fright" />
+									<h:outputText value="#{sarsReportsUI.totals.penalty}" styleClass="Fright">
+										<f:convertNumber pattern="###,###,###,##0.00" />
+									</h:outputText>
+
+									<p:outputLabel value="#{lang['total']}:" styleClass="Fright" />
+									<h:outputText value="#{sarsReportsUI.totals.total}" styleClass="Fright">
+										<f:convertNumber pattern="###,###,###,##0.00" />
+									</h:outputText>
+
+								</p:panelGrid>
+
+							</p:fieldset>
+						</div>
+					</div>
+					<div class="ui-g-12 ui-lg-6">
+						<!-- Left Side -->
+						<div class="card card-w-title">
+							<div id="container"></div>
+						</div>
+					</div>
+				</div>
+			</c:if>
+		</h:form>
+
+		<h:form id="chartForm">
+
+
+
+
+
+			<script type="text/javascript">
+//<![CDATA[
+ 
+	function test() {
+		    alert('ready');
+	}
+	
+	function doChart () {
+
+		 Highcharts.setOptions({
+			    colors: ['#4D2600', '#999372', '#C5913E', '#C57901', '#F0C070', '#8B592E', '#1E4B88', '#767776', '#87C6E1']
+			});
+		
+		Highcharts.chart('container', {
+		    chart: {
+		        type: 'column'
+		    },
+		    title: {
+		        text: '#{sarsReportsUI.sarsEmployerDetail.registeredNameOfEntity}'
+		    },
+		    xAxis: {
+		        categories: ['Summary Totals']
+		    },
+		    credits: {
+		        enabled: false
+		    },
+		    series: [{
+		        name: 'Mandatory',
+		        data: [#{sarsReportsUI.totals.mandatoryLevy}]
+		    },
+		    {
+		        name: 'Discretionary',
+		        data: [#{sarsReportsUI.totals.discretionaryLevy}]
+		    },
+		    {
+		        name: 'Admin',
+		        data: [ #{sarsReportsUI.totals.adminLevy}]
+		    },
+		    {
+		        name: 'Interest',
+		        data: [#{sarsReportsUI.totals.interest}]
+		    },
+		    {
+		        name: 'Penalties',
+		        data: [  #{sarsReportsUI.totals.penalty}]
+		    }
+		    ]
+		});
+	 
+	 }; /* end of $(function ()  */		 
+
+//]]>		  
+</script>
+
+
+
+		</h:form>
+
+	</ui:define>
+
+</ui:composition>

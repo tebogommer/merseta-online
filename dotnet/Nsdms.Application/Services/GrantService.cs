@@ -131,9 +131,9 @@ public class GrantService : IGrantService
             application.ApplicationNumber = $"DG-{DateTime.UtcNow.Year}-{application.OrganisationId}-{Guid.NewGuid().ToString("N")[..6].ToUpper()}";
         }
 
-        if (string.IsNullOrWhiteSpace(application.StatusCode))
+        if (string.IsNullOrWhiteSpace(application.ApplicationStatusCode))
         {
-            application.StatusCode = "Submitted";
+            application.ApplicationStatusCode = "Submitted";
         }
 
         using var db = await _contextFactory.CreateDbContextAsync();
@@ -168,14 +168,14 @@ public class GrantService : IGrantService
         {
             existing.ProjectTitle,
             existing.GrantTypeCode,
-            existing.StatusCode,
+            existing.ApplicationStatusCode,
             existing.RequestedAmount,
             existing.ApprovedAmount
         };
 
         existing.ProjectTitle = application.ProjectTitle;
         existing.GrantTypeCode = application.GrantTypeCode;
-        existing.StatusCode = application.StatusCode;
+        existing.ApplicationStatusCode = application.ApplicationStatusCode;
         existing.RequestedAmount = application.RequestedAmount;
         existing.ApprovedAmount = application.ApprovedAmount;
         existing.ModifiedAt = DateTime.UtcNow;
@@ -249,7 +249,7 @@ public class GrantService : IGrantService
 
         if (!string.IsNullOrWhiteSpace(status))
         {
-            query = query.Where(g => g.StatusCode == status);
+            query = query.Where(g => g.ApplicationStatusCode == status);
         }
 
         if (!string.IsNullOrWhiteSpace(search))
@@ -280,9 +280,9 @@ public class GrantService : IGrantService
             throw new ArgumentException("Approved amount cannot be negative.");
         }
 
-        var beforeState = new { application.StatusCode, application.ApprovedAmount };
+        var beforeState = new { application.ApplicationStatusCode, application.ApprovedAmount };
 
-        application.StatusCode = "Approved";
+        application.ApplicationStatusCode = "Approved";
         application.ApprovedAmount = approvedAmount;
         application.ModifiedAt = DateTime.UtcNow;
         application.ModifiedBy = currentUsername;
@@ -302,9 +302,9 @@ public class GrantService : IGrantService
             throw new KeyNotFoundException($"GrantApplication with ID {id} was not found.");
         }
 
-        var beforeState = new { application.StatusCode };
+        var beforeState = new { application.ApplicationStatusCode };
 
-        application.StatusCode = "Rejected";
+        application.ApplicationStatusCode = "Rejected";
         application.ModifiedAt = DateTime.UtcNow;
         application.ModifiedBy = currentUsername;
 
@@ -334,7 +334,7 @@ public class GrantService : IGrantService
             application.Id,
             application.OrganisationId,
             application.ApplicationNumber,
-            application.StatusCode
+            application.ApplicationStatusCode
         };
 
         db.GrantApplications.Remove(application);

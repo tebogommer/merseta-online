@@ -1,0 +1,828 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+
+		<p:growl showDetail="false" sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+		<h:panelGroup id="discgrantGroup">
+
+			<div class="ui-g">
+				<div class="ui-g-12">
+					<ui:include src="/pages/includes/taskdiagram.xhtml" />
+					<br />
+					<ui:include src="/pages/includes/tabinfo.xhtml">
+						<ui:param name="showInfoCircle" value="true" />
+						<ui:param name="cssClass" value="secondaryText Fs15" />
+						<ui:param name="helpTxt" value="#{lang['The.system.will.auto-fill.based.selections']}" />
+					</ui:include>
+				</div>
+			</div>
+			<h:form id="discgrantTableForm">
+				<p:importEnum type="haj.com.entity.enums.PivotNonPivotEnum" />
+				<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+				<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+				<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+				<p:importEnum type="haj.com.entity.enums.CloRecommendationEnum" />
+				<c:if test="#{discretionarygrantverificationUI.dataModel ne null}">
+					<div class="card">
+						<h2>#{discretionarygrantverificationUI.company.companyName} #{lang['dg.verification.full']}</h2>
+						<p:tabView id="tabView">
+							<p:tab title="#{lang['company.details']}">
+								<p:panelGrid columns="3" style="width:100%" id="companyInsGrid" layout="grid" styleClass="ui-panelgrid-blank">
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['companyName']}" for="companyName" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel id="companyName" value="#{discretionarygrantverificationUI.company.companyName}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.company.name']}" />
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['tradingName']}" for="tradingName" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel id="tradingName" value="#{discretionarygrantverificationUI.company.tradingName}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.trading.name']}" />
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['reg.number']}" for="regNumber" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel id="regNumber" value="#{discretionarygrantverificationUI.company.companyRegistrationNumber}" style="width:95%" />
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['levy.number']}" for="levyNum" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel id="levyNum" value="#{discretionarygrantverificationUI.company.levyNumber}" style="width:95%" />
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['telNumber']}" for="telNumberComp" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel id="telNumberComp" value="#{discretionarygrantverificationUI.company.telNumber}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.tel.number']}" />
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['faxNumber']}" for="faxNumberComp" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel id="faxNumberComp" value="#{discretionarygrantverificationUI.company.faxNumber}" style="width:95%" rendered="#{discretionarygrantverificationUI.company.faxNumber ne null and discretionarygrantverificationUI.company.faxNumber.length() gt 0}" />
+										<p:outputLabel id="faxNumberComp2" value="#{lang['n.a']}" style="width:95%" rendered="#{discretionarygrantverificationUI.company.faxNumber eq null or discretionarygrantverificationUI.company.faxNumber.length() eq 0}" />
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['email']}" for="emailComp" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel id="emailComp" value="#{discretionarygrantverificationUI.company.email}" style="width:95%" />
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['sicCode']}" for="sicCode" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel id="sicCode" value="#{discretionarygrantverificationUI.company.sicCode.description}" style="width:95%" required="true" requiredMessage="#{lang['enter.sic.code']}" />
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['chamber']}" for="chamberDisplay" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{discretionarygrantverificationUI.company.sicCode eq null or discretionarygrantverificationUI.company.sicCode.chamber eq null}" />
+										<p:outputLabel id="chamberDisplay" value="#{discretionarygrantverificationUI.company.sicCode.chamber.description}" style="width:95%" rendered="#{discretionarygrantverificationUI.company.sicCode ne null and discretionarygrantverificationUI.company.sicCode.chamber ne null}" />
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['organisation.type']}" for="organisationType" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel value="#{lang['n.a']}" rendered="#{discretionarygrantverificationUI.company.organisationType eq null}" />
+										<p:outputLabel id="organisationType" value="#{discretionarygrantverificationUI.company.organisationType.description}" style="width:95%" rendered="#{discretionarygrantverificationUI.company.organisationType ne null}" />
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['numberOfEmployees']}" for="numberOfEmployees" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel id="numberOfEmployees" value="#{discretionarygrantverificationUI.company.numberOfEmployees}" style="width:95%" />
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['recognition.agreement']}" for="recAgr" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel value="#{lang['n.a']}" rendered="#{discretionarygrantverificationUI.company.recognitionAgreement eq null}" style="width:95%" />
+										<p:outputLabel id="recAgr" value="#{discretionarygrantverificationUI.company.recognitionAgreement.yesNoName}" style="width:95%" rendered="#{discretionarygrantverificationUI.company.recognitionAgreement ne null}" />
+									</h:panelGroup>
+								</p:panelGrid>
+								<p:panelGrid columns="2" style="width:100%" id="companyInsGrida" layout="grid" styleClass="ui-panelgrid-blank">
+									<p:fieldset legend="#{lang['residentialAddress']}">
+										<p:panelGrid columns="1" style="width : 95%" styleClass="ui-panelgrid-blank" id="addrPcode">
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['address.line.1']}" for="addr1" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="addr1" value="#{discretionarygrantverificationUI.company.residentialAddress.addressLine1}" style="width:95%" required="true" requiredMessage="#{lang['enter.residential.address']}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['address.line.2']}" for="addr2" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{discretionarygrantverificationUI.company.residentialAddress.addressLine2 eq null or discretionarygrantverificationUI.company.residentialAddress.addressLine2.length() eq 0}" />
+												<p:outputLabel id="addr2" style="width:95%" value="#{discretionarygrantverificationUI.company.residentialAddress.addressLine2}" rendered="#{discretionarygrantverificationUI.company.residentialAddress.addressLine2 ne null and discretionarygrantverificationUI.company.residentialAddress.addressLine2.length() gt 0}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['address.line.3']}" for="addr3" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="addr3" style="width:95%" value="#{discretionarygrantverificationUI.company.residentialAddress.addressLine3}" rendered="#{discretionarygrantverificationUI.company.residentialAddress.addressLine3 ne null and discretionarygrantverificationUI.company.residentialAddress.addressLine3.length() gt 0}" />
+												<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{discretionarygrantverificationUI.company.residentialAddress.addressLine3 eq null or discretionarygrantverificationUI.company.residentialAddress.addressLine3.length() eq 0}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['address.line.4']}" for="addr4" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="addr4" style="width:95%" value="#{discretionarygrantverificationUI.company.residentialAddress.addressLine4}" rendered="#{discretionarygrantverificationUI.company.residentialAddress.addressLine4 ne null and discretionarygrantverificationUI.company.residentialAddress.addressLine4.length() gt 0}" />
+												<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{discretionarygrantverificationUI.company.residentialAddress.addressLine4 eq null or discretionarygrantverificationUI.company.residentialAddress.addressLine4.length() eq 0}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['post.code']}" for="pcode" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="pcode" style="width:95%" value="#{discretionarygrantverificationUI.company.residentialAddress.postcode}" rendered="#{discretionarygrantverificationUI.company.residentialAddress.postcode ne null and discretionarygrantverificationUI.company.residentialAddress.postcode.length() gt 0}" />
+												<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{discretionarygrantverificationUI.company.residentialAddress.postcode eq null or discretionarygrantverificationUI.company.residentialAddress.postcode.length() eq 0}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['town.area']}" for="addressTown" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel value="#{lang['n.a']}" rendered="#{discretionarygrantverificationUI.company.residentialAddress.town eq null and false}" />
+												<p:outputLabel id="addressTown" value="#{discretionarygrantverificationUI.company.residentialAddress.town.description}" style="width:95%" rendered="#{discretionarygrantverificationUI.company.residentialAddress.town ne null}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<h:outputLabel value="#{lang['municipality']}" for="MunicipalityID" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="MunicipalityID" style="width:95%" value="#{discretionarygrantverificationUI.company.residentialAddress.municipality.municipalityDesc}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<h:outputLabel value="#{lang['province.name']}" for="addressProvince" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="addressProvince" style="width:95%" value="#{discretionarygrantverificationUI.company.residentialAddress.municipality.province.provinceDesc}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<div class="EmptyBox40"></div>
+											</h:panelGroup>
+										</p:panelGrid>
+									</p:fieldset>
+
+									<p:fieldset legend="#{lang['postalAddress']}">
+										<p:panelGrid columns="1" style="width : 95%" styleClass="ui-panelgrid-blank" id="postalAddress">
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['address.line.1']}" for="postalAddressaddr1" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="postalAddressaddr1" value="#{discretionarygrantverificationUI.company.postalAddress.addressLine1}" style="width:95%" required="true" requiredMessage="#{lang['enter.postal.address']}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['address.line.2']}" for="postalAddressaddr2" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="postalAddressaddr2" style="width:95%" value="#{discretionarygrantverificationUI.company.postalAddress.addressLine2}" />
+												<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{discretionarygrantverificationUI.company.postalAddress.addressLine2 eq null or discretionarygrantverificationUI.company.postalAddress.addressLine2.length() eq 0}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['address.line.3']}" for="postalAddressaddr3" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="postalAddressaddr3" style="width:95%" value="#{discretionarygrantverificationUI.company.postalAddress.addressLine3}" />
+												<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{discretionarygrantverificationUI.company.postalAddress.addressLine3 eq null or discretionarygrantverificationUI.company.postalAddress.addressLine3.length() eq 0}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['address.line.4']}" for="postalAddressaddr4" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="postalAddressaddr4" style="width:95%" value="#{discretionarygrantverificationUI.company.postalAddress.addressLine4}" />
+												<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{discretionarygrantverificationUI.company.postalAddress.addressLine4 eq null or discretionarygrantverificationUI.company.postalAddress.addressLine4.length() eq 0}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['post.code']}" for="postalAddressPcode" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="postalAddressPcode" style="width:95%" value="#{discretionarygrantverificationUI.company.postalAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}" />
+												<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{discretionarygrantverificationUI.company.postalAddress.postcode eq null or discretionarygrantverificationUI.company.postalAddress.postcode.length() eq 0}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['town.area']}" for="postalAddressTown" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel value="#{lang['n.a']}" rendered="#{discretionarygrantverificationUI.company.postalAddress.town eq null and false}" />
+												<p:outputLabel id="postalAddressTown" value="#{discretionarygrantverificationUI.company.postalAddress.town.description}" style="width:95%" rendered="#{discretionarygrantverificationUI.company.postalAddress.town ne null}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<h:outputLabel value="#{lang['municipality']}" for="postalAddressMunicipalityID" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="postalAddressMunicipalityID" style="width:95%" value="#{discretionarygrantverificationUI.company.postalAddress.municipality.municipalityDesc}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<h:outputLabel value="#{lang['province.name']}" for="postalAddressProvince" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="postalAddressProvince" style="width:95%" value="#{discretionarygrantverificationUI.company.postalAddress.municipality.province.provinceDesc}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<div>
+													<p:outputLabel value="#{lang['same.as.my.address']}" styleClass="Fs12 FontLight" />
+												</div>
+												<div>
+													<p:selectBooleanCheckbox value="#{discretionarygrantverificationUI.company.postalAddress.sameAddress}" disabled="true">
+													</p:selectBooleanCheckbox>
+												</div>
+											</h:panelGroup>
+										</p:panelGrid>
+									</p:fieldset>
+								</p:panelGrid>
+							</p:tab>
+
+							<p:tab title="DG Application Verification" id="DgVerificationTab">
+								<c:if test="#{discretionarygrantverificationUI.dgVerification.discretionalWithdrawalAppealEnum ne null}">
+									<h2>Reason for appeal: #{discretionarygrantverificationUI.dgVerification.discretionalWithdrawalAppealEnum.friendlyName}</h2>
+								</c:if>
+								<p:dataTable var="rowVar2" value="#{discretionarygrantverificationUI.dataModel}" lazy="true" id="employeesimportList" rowKey="#{rowVar2.id}" paginator="true" rows="10" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+									paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,15,20,25,50,100" reflow="true">
+									<p:column width="20">
+										<p:rowToggler rendered="#{rowVar2.grantRecommendations.size() gt 0}"></p:rowToggler>
+									</p:column>
+									<p:column headerText="#{lang['reference.id']}" width="100">
+										<p:outputLabel value="#{rowVar2.id}" />
+									</p:column>
+									<p:column headerText="#{lang['fin.year']}" sortBy="#{rowVar2.wsp.finYear}">
+										<p:outputLabel value="#{rowVar2.wsp.finYear}" style="width:95%" />
+									</p:column>
+									<p:column headerText="#{lang['mg.status']}" sortBy="#{rowVar2.wsp.wspStatusEnum}">
+										<p:outputLabel value="#{rowVar2.wsp.wspStatusEnum.friendlyName}" style="width:95%" />
+									</p:column>
+									<p:column headerText="#{lang['intervention.type']}" sortBy="#{rowVar2.interventionType.description}">
+										<p:outputLabel value="#{rowVar2.interventionType.description}" style="width:95%" />
+									</p:column>
+									<p:column headerText="#{lang['number.of.learners']}">
+										<p:outputLabel value="#{rowVar2.amount}" style="width:95%" />
+									</p:column>
+									<p:column headerText="#{lang['recommendationLastOneQuantity']}" exportable="false">
+										<p:outputLabel value="#{rowVar2.grantRecommendations.get(rowVar2.grantRecommendations.size() - 1).quantity}" style="width:95%" rendered="#{rowVar2.grantRecommendations.size() gt 0}" />
+									</p:column>
+									<p:column headerText="Processed" rendered="#{!sessionUI.sdf}">
+										<p:outputPanel rendered="#{rowVar2.grantRecommendations.size() eq 0}">
+											<i class="fa fa-times fa-3x red" aria-hidden="true"></i>
+										</p:outputPanel>
+										<p:outputPanel rendered="#{rowVar2.grantRecommendations.size() gt 0}">
+											<i class="fa fa-check fa-3x green" aria-hidden="true"></i>
+										</p:outputPanel>
+									</p:column>
+									<p:column width="40" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve || sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval}">
+										<p:commandButton icon="fa fa-sticky-note-o" title="Give Recommendation" update="recommendForm" process="@this" action="#{discretionarygrantverificationUI.generateMandatoryGrantRecommendation}" oncomplete="PF('dlgRecommend').show()">
+											<f:setPropertyActionListener value="#{rowVar2}" target="#{discretionarygrantverificationUI.mandatoryGrant}" />
+										</p:commandButton>
+									</p:column>
+									<p:rowExpansion>
+										<p:outputPanel rendered="#{rowVar2.grantRecommendations.size() gt 0}">
+											<h3>Recommendations</h3>
+											<p:dataTable value="#{rowVar2.grantRecommendations}" var="rv4" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv4.id}">
+													<p:column headerText="#{lang['first.name']}">
+														<h:outputText value="#{rv4.recommendingUser.firstName}" />
+													</p:column>
+													<p:column headerText="#{lang['last.name']}">
+														<h:outputText value="#{rv4.recommendingUser.lastName}" />
+													</p:column>
+													<p:column headerText="#{lang['intervention.type']}" >
+														<p:outputLabel value="#{rv4.interventionType.description}" />
+													</p:column>
+													<p:column headerText="#{lang['qualification.id']}">
+														<h:outputText value="#{rv4.qualification.code}" rendered="#{rv4.qualification ne null}" />
+														<h:outputText value="#{rv4.unitStandards.code}" rendered="#{rv4.unitStandards ne null}" />
+														<h:outputText value="#{rv4.skillsProgram.programmeID}" rendered="#{rv4.skillsProgram ne null}" />
+														<h:outputText value="#{rv4.skillsSet.code}" rendered="#{rv4.skillsSet ne null}" />
+														<h:outputText value="#{rv4.nonCreditBearingIntervationTitle.code}" rendered="#{rv4.nonCreditBearingIntervationTitle ne null}" />
+													</p:column>
+													<p:column headerText="#{lang['intervention.title']}">
+														<h:outputText value="#{rv4.qualification.description}" rendered="#{rv4.qualification ne null}" />
+														<h:outputText value="#{rv4.unitStandards.title}" rendered="#{rv4.unitStandards ne null}" />
+														<h:outputText value="#{rv4.skillsProgram.description}" rendered="#{rv4.skillsProgram ne null}" />
+														<h:outputText value="#{rv4.skillsSet.description}" rendered="#{rv4.skillsSet ne null}" />
+														<h:outputText value="#{rv4.nonCreditBearingIntervationTitle.description}" rendered="#{rv4.nonCreditBearingIntervationTitle ne null}" />
+													</p:column>
+													<p:column headerText="#{lang['nqf.level']}">
+														<h:outputText value="#{rv4.qualification.nqflevel.description}" rendered="#{rv4.qualification ne null}" />
+														<h:outputText value="#{rv4.unitStandards.nqflevelg2description}" rendered="#{rv4.unitStandards ne null}" />
+														<h:outputText value="#{rv4.skillsProgram.qualification.nqflevel.description}" rendered="#{rv4.skillsProgram ne null}" />
+														<h:outputText value="#{rv4.skillsSet.qualification.nqflevel.description}" rendered="#{rv4.skillsSet ne null}" />
+														<h:outputText value="N/A" rendered="#{rv4.nonCreditBearingIntervationTitle ne null}" />
+													</p:column>
+													<p:column headerText="#{lang['number.of.learners']}">
+														<h:outputText value="#{rv4.quantity}" />
+													</p:column>
+													<p:column headerText="Reason for Recommendation">
+														<h:outputText value="#{rv4.rejectReasons.description}" />
+														<br />
+														<h:outputText styleClass="Fs12 gray" value="#{rv4.rejectReasons.howTo}" />
+													</p:column>
+											</p:dataTable>
+											<br />
+										</p:outputPanel>
+										<p:panelGrid columns="1" style="width:100%" id="s" layout="grid" styleClass="ui-panelgrid-blank form-group">
+											<p:fieldset legend="Original #{lang['discretionary.data']}" rendered="#{rowVar2.pivotNonPivot eq PivotNonPivotEnum.Pivotal}">
+												<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+												
+													<h:panelGroup styleClass="md-inputfield" rendered="#{rowVar2.nqfAligned ne null}">
+														<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar2.nqfAligned.yesNoName}" disabled="true" />
+														<p:outputLabel value="#{lang['nqf.aligned']}" />
+													</h:panelGroup>
+													
+													<h:panelGroup styleClass="md-inputfield" rendered="#{rowVar2.qualification ne null}">
+														<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar2.qualification.code}" disabled="true" />
+														<p:outputLabel value="#{lang['saqa.id']}" />
+													</h:panelGroup>
+													
+													<h:panelGroup styleClass="md-inputfield" rendered="#{rowVar2.unitStandard ne null}">
+														<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar2.unitStandard.code}" disabled="true" />
+														<p:outputLabel value="#{lang['unit.standard']} Code" />
+													</h:panelGroup>
+													
+													<h:panelGroup styleClass="md-inputfield" rendered="#{rowVar2.skillsSet ne null}">
+														<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar2.skillsSet.code}" disabled="true" />
+														<p:outputLabel value="#{lang['skills.program']}"  />
+													</h:panelGroup>
+													<h:panelGroup styleClass="md-inputfield" rendered="#{rowVar2.skillsProgram ne null}">
+														<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar2.skillsProgram.programmeID}" disabled="true" />
+														<p:outputLabel value="#{lang['skills.set']}" />
+													</h:panelGroup>
+													<h:panelGroup styleClass="md-inputfield" rendered="#{rowVar2.nonCreditBearingIntervationTitle ne null}">
+														<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar2.nonCreditBearingIntervationTitle.code}" disabled="true" />
+														<p:outputLabel value="Non-Credit Bearing Intervation Title" />
+													</h:panelGroup>	
+													<h:panelGroup styleClass="md-inputfield" >
+														<p:inputText style="width:95%; opacity:1 !important;" disabled="true" decimalPlaces="0" value="#{rowVar2.qualification.description}" rendered="#{rowVar2.qualification ne null}"/>
+														<p:inputText style="width:95%; opacity:1 !important;" disabled="true" decimalPlaces="0" value="#{rowVar2.unitStandard.title}" rendered="#{rowVar2.unitStandard ne null}" />
+														<p:inputText style="width:95%; opacity:1 !important;" disabled="true" decimalPlaces="0" value="#{rowVar2.skillsProgram.description}" rendered="#{rowVar2.skillsProgram ne null}" />
+														<p:inputText style="width:95%; opacity:1 !important;" disabled="true" decimalPlaces="0" value="#{rowVar2.skillsSet.description}" rendered="#{rowVar2.skillsSet ne null}" />
+														<p:inputText style="width:95%; opacity:1 !important;" disabled="true" decimalPlaces="0" value="#{rowVar2.nonCreditBearingIntervationTitle.description}" rendered="#{rowVar2.nonCreditBearingIntervationTitle ne null}" />
+														<p:outputLabel value="#{lang['intervention.title']}" />
+													</h:panelGroup>
+													<h:panelGroup styleClass="md-inputfield" rendered="#{rowVar2.nqfLevels ne null}">
+														<p:inputText style="width:95%; opacity:1 !important;" minValue="0" value="#{rowVar2.nqfLevels.description}" decimalPlaces="0" disabled="true" />
+														<p:outputLabel value=" #{lang['nqf.level']}" />
+													</h:panelGroup>
+													<h:panelGroup styleClass="md-inputfield" rendered="#{rowVar2.interventionLevel ne null}">
+														<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar2.interventionLevel.description}" decimalPlaces="0" disabled="true" />
+														<p:outputLabel value="#{lang['level.of.training']}" />
+													</h:panelGroup>
+													<h:panelGroup styleClass="md-inputfield" rendered="#{rowVar2.etqa ne null}" >
+														<p:inputText style="width:95%; opacity:1 !important;" minValue="0" value="#{rowVar2.etqa.description}" decimalPlaces="0" disabled="true" />
+														<p:outputLabel value="#{lang['etqa']}" />
+													</h:panelGroup>
+													<h:panelGroup styleClass="md-inputfield"  >
+														<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar2.providerType.description}" decimalPlaces="0" disabled="true" />
+														<p:outputLabel value="#{lang['provider.type']}" />
+													</h:panelGroup>
+													<h:panelGroup styleClass="md-inputfield">
+														<p:inputText style="width:95%; opacity:1 !important;" minValue="0" value="R#{rowVar2.interventionType.basicGrantAmount*rowVar2.amount}" decimalPlaces="0" disabled="true" />
+														<p:outputLabel value=" #{lang['estimated.cost']}" />
+													</h:panelGroup>
+													<h:panelGroup styleClass="md-inputfield" rendered="#{rowVar2.startDate ne null}">
+														<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar2.startDate}" decimalPlaces="0" disabled="true">
+															<f:convertDateTime pattern="dd MMMM yyyy" />
+														</p:inputText>
+														<p:outputLabel value="#{lang['start.date']}" />
+													</h:panelGroup>
+													<h:panelGroup styleClass="md-inputfield" rendered="#{rowVar2.endDate ne null}">
+														<p:inputText style="width:95%; opacity:1 !important;" minValue="0" value="#{rowVar2.endDate}" decimalPlaces="0" disabled="true">
+															<f:convertDateTime pattern="dd MMMM yyyy" />
+														</p:inputText>
+														<p:outputLabel value=" #{lang['end.date']}" />
+													</h:panelGroup>
+												</p:panelGrid>
+											</p:fieldset>
+										</p:panelGrid>
+									</p:rowExpansion>
+								</p:dataTable>
+							</p:tab>
+							<p:tab id="docUploadTab" title="Document Upload"
+								rendered="#{discretionarygrantverificationUI.dgVerification.crmDecision eq CloRecommendationEnum.Rejection and (sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload)}">
+								<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" id="docTable" rendered="#{discretionarygrantverificationUI.dgVerification ne null}">
+									<p:dataTable value="#{discretionarygrantverificationUI.dgVerification.docs}" var="rv1" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv1.id}">
+										<p:column headerText="#{lang['type']}" width="18%">#{rv1.configDoc.name}</p:column>
+										<p:column headerText="#{lang['original.file.name']}" priority="4">
+											<p:outputLabel value="#{rv1.originalFname}" styleClass="Fs12"></p:outputLabel>
+										</p:column>
+										<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+										<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+											<h:outputText value="#{rv1.createDate}">
+												<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+											</h:outputText>
+										</p:column>
+										<p:column headerText="#{lang['version']}" width="10%" priority="4">
+											<h:outputText value="#{rv1.versionNo}">
+											</h:outputText>
+										</p:column>
+										<p:column headerText="#{lang['original.required']}">
+											<center>
+												<h:panelGroup rendered="#{rv1.configDoc.originalRequired}" styleClass="green">
+													<i class="fa fa-files-o fa-3x" aria-hidden="true"></i>
+												</h:panelGroup>
+												<h:panelGroup rendered="#{not rv1.configDoc.originalRequired}" styleClass="red">
+													<i class="fa fa-times fa-3x" aria-hidden="true"></i>
+												</h:panelGroup>
+											</center>
+										</p:column>
+										<p:column width="180" rendered="#{sessionUI.task ne null}">
+											<p:commandButton icon="fa fa-upload" id="upload" styleClass="flat" process="@this" oncomplete="PF('dlgUpload').show()" update=":uploadForm" rendered="#{sessionUI.task.processRole ne null and sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload}">
+												<f:setPropertyActionListener value="#{rv1}" target="#{discretionarygrantverificationUI.doc}" />
+												<p:tooltip for="upload" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+											</p:commandButton>
+
+											<p:spacer width="5" rendered="#{sessionUI.task.processRole ne null and sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload}" />
+											<p:commandButton ajax="false" icon="fa fa-download" action="#{uploadDocUI.download}" id="dlb" rendered="#{rv1.id ne null}" immediate="true">
+												<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+											</p:commandButton>
+											<p:tooltip for="dlb" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+
+											<p:spacer width="5" rendered="#{rv1.id ne null}" />
+											<p:commandButton icon="fa fa-bars " id="dhist" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}" process="@this">
+												<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+											</p:commandButton>
+
+											<p:tooltip for="dhist" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+											<h:panelGroup id="panelGroupThree" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+												<p:spacer width="5" />
+												<p:commandButton icon="fa fa-comment-o" id="dnote" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel" process="@this">
+													<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+												</p:commandButton>
+												<p:tooltip for="dnote" value="#{lang['view.note']}" position="left" />
+											</h:panelGroup>
+
+											<h:panelGroup id="panelGroupFour" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+												<p:spacer width="5" />
+												<p:commandButton icon="fa fa-eye " id="viewerButton" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}" process="@this">
+													<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+													<f:setPropertyActionListener value="#{sessionUI.activeUser}" target="#{uploadDocUI.viewUser}" />
+												</p:commandButton>
+												<p:tooltip for="viewerButton" value="#{lang['view.document']} " position="left" />
+											</h:panelGroup>
+										</p:column>
+									</p:dataTable>
+								</p:panelGrid>
+							</p:tab>
+						</p:tabView>
+						<br />
+						<c:if test="#{sessionUI.task.firstInProcess}">
+							<h3>CLO Recommendation: #{discretionarygrantverificationUI.dgVerification.cloRecommendation.friendlyName}</h3>
+						</c:if>
+						<c:if test="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve and sessionUI.task.firstInProcess and discretionarygrantverificationUI.dgVerification.cloRecommendation eq CloRecommendationEnum.Approval}">
+							<span style="color: grey"><i class="fa fa-info-circle" aria-hidden="true"></i> Approving the CLO Recommendation will approve the Discretionary Grant Verification Recommendation.</span>
+						</c:if>
+						<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid"
+							rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve and sessionUI.task.firstInProcess and discretionarygrantverificationUI.dgVerification.cloRecommendation eq CloRecommendationEnum.Approval and sessionUI.task ne null}">
+							<p:commandButton id="updateDGVerification" value="#{lang['approve']} CLO Recommendation" icon="fa fa-check" process="@form" action="#{discretionarygrantverificationUI.crmApproveTaskNotification}" update="@form" styleClass="Fs18 flat green-btn" style="height: 50px" />
+							<p:commandButton id="updateDGVerificationFinalReject" value="Reject CLO Recommendation" icon="fa fa-times" oncomplete="PF('rejectReasonCrm').show()" process="@form" update="@form :rejectReasonFormCrm" styleClass="Fs18 flat red-btn" style="height: 50px" />
+						</p:panelGrid>
+						<c:if test="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve and sessionUI.task.firstInProcess and discretionarygrantverificationUI.dgVerification.cloRecommendation eq CloRecommendationEnum.Rejection}">
+							<h1>None Approval Reasons:</h1>
+							<p:repeat var="rwrr" value="#{discretionarygrantverificationUI.cloRejectionReasons}">
+								<p:outputLabel value="#{rwrr.description}" style="font-weight:bold; font-size: 20px; color: red;" />
+								<br />
+								<p:outputLabel value="#{rwrr.howTo}" style="color: grey;" />
+								<br />
+								<br />
+							</p:repeat>
+							<span style="color: grey"><i class="fa fa-info-circle" aria-hidden="true"></i> Approving the CLO Recommendation will reject the Discretionary Grant Application</span>
+						</c:if>
+						
+						<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid"
+							rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve and sessionUI.task.firstInProcess and discretionarygrantverificationUI.dgVerification.cloRecommendation eq CloRecommendationEnum.Rejection and sessionUI.task ne null}">
+							<p:commandButton id="updateDGVerificationFinalRejection" value="#{lang['approve']} CLO Recommendation" icon="fa fa-times" oncomplete="PF('rejectReasonCrm').show()" process="@form" update="@form :rejectReasonFormCrm" styleClass="Fs18 flat red-btn" style="height: 50px" />
+							<p:commandButton id="updateDGVerificationApproval" value="Reject CLO Recommendation" icon="fa fa-check" process="@form" action="#{discretionarygrantverificationUI.crmApproveTaskNotification}" update="@form" styleClass="Fs18 flat green-btn" style="height: 50px" />
+						</p:panelGrid>
+						
+						<c:if test="#{discretionarygrantverificationUI.dgVerification.crmDecision eq CloRecommendationEnum.Approval}">
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload and sessionUI.task ne null}">
+								<p:commandButton id="acceptRejectionBtn" value="Accept" icon="fa fa-check" action="#{discretionarygrantverificationUI.acceptVerification}" update="@form" styleClass="Fs18 flat green-btn" style="height: 50px" />
+								<p:commandButton id="updateDGVerification3" value="Withdraw Application" icon="fa fa-user-times" oncomplete="PF('dlgSelectReasonWithdrawal').show()" update="@form" styleClass="Fs18 flat" style="height: 50px" />
+							</p:panelGrid>
+						</c:if>
+
+						<c:if test="#{discretionarygrantverificationUI.dgVerification.crmDecision eq CloRecommendationEnum.Rejection}">
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload and sessionUI.task ne null}">
+								<p:commandButton id="updateDGVerification1" value="Accept" icon="fa fa-check" action="#{discretionarygrantverificationUI.acceptVerificationRejection}" update="@form" styleClass="Fs18 flat green-btn" style="height: 50px" />
+								<p:commandButton id="appealAplicationBtn" value="Appeal DG Verification Decision" icon="fa fa-user-times" action="#{discretionarygrantverificationUI.sdfAppealApplicationTaskNotification}" update="@form" styleClass="Fs18 flat" style="height: 50px" />
+							</p:panelGrid>
+						</c:if>
+						<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval and sessionUI.task ne null}">
+							<p:commandButton id="finalApproveBtn" value="#{lang['final.approval']}" icon="fa fa-check" process="@form" update="@form :finalApproveForm" styleClass="Fs18 flat green-btn" style="height: 50px" action="#{discretionarygrantverificationUI.finalApproveValidiationCheck}"/>
+							<p:commandButton id="finalRejectBtn" value="#{lang['final.reject']}" icon="fa fa-times" process="@form" update="@form :finalRejectForm" oncomplete="PF('finalRejectDlg').show()" styleClass="Fs18 flat red-btn" style="height: 50px" />
+						</p:panelGrid>
+						
+						<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{discretionarygrantverificationUI.errorEncountered}">
+							<h4>Validation Errors</h4>
+							<p:outputLabel value="#{discretionarygrantverificationUI.errors}" escape="false"/>
+						</p:panelGrid>
+
+						<c:if test="false">
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalUploadApproval}">
+								<p:commandButton id="updateDGVerification4" value="#{lang['approve']}" icon="fa fa-check" action="#{discretionarygrantverificationUI.finalApproveTask}" update="@form" styleClass="Fs18 flat green-btn" style="height: 50px" />
+								<p:commandButton id="updateDGVerification5" value="Reject" icon="fa fa-times" action="#{discretionarygrantverificationUI.finalRejectTask}" update="@form" styleClass="Fs18 flat red-btn" style="height: 50px" />
+							</p:panelGrid>
+						</c:if>
+					</div>
+				</c:if>
+			</h:form>
+		</h:panelGroup>
+
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+
+		<p:dialog header="Final Response: Approve" widgetVar="finalApproveDlg" hideEffect="clip" showEffect="clip" id="dialogFinalApprove" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="finalApproveForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<span style="color: grey"><i class="fa fa-info-circle" aria-hidden="true"></i> Provide final response for approving the application.</span> <br />
+							<p:inputTextarea required="true" requiredMessage="Provide Response Before Proceeding" id="finalResponseEntryApprove" rows="3" value="#{discretionarygrantverificationUI.dgVerification.finalResponse}">
+								<p:ajax />
+							</p:inputTextarea>
+						</div>
+					</div>
+					<p:commandButton value="Approve Application" id="finalApproveApplicationBtn" action="#{discretionarygrantverificationUI.finalApproveApplication}" />
+				</div>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="Final Response: Reject" widgetVar="finalRejectDlg" hideEffect="clip" showEffect="clip" id="dialogFinalReject" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="finalRejectForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<span style="color: grey"><i class="fa fa-info-circle" aria-hidden="true"></i> Provide final response for rejecting the application.</span> <br />
+							<p:inputTextarea required="true" requiredMessage="Provide Response Before Proceeding" id="finalResponseEntryReject" rows="3" value="#{discretionarygrantverificationUI.dgVerification.finalResponse}">
+								<p:ajax />
+							</p:inputTextarea>
+						</div>
+					</div>
+					<p:commandButton value="Reject Application" id="finalRejectApplicationBtn" action="#{discretionarygrantverificationUI.finalRejectApplication}" />
+				</div>
+			</h:form>
+		</p:dialog>
+
+
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true">
+			<h:form id="uploadForm">
+				<h:panelGroup id="uploadGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{sdfUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{sitevisitUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{discretionarygrantverificationUI.storeNewFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}"
+										update=":discgrantTableForm:tabView:docTable" multiple="false" fileLimit="1" allowTypes="/(\.|\/)(gif|jpe?g|png|pdf|docx|txt)$/" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="Reject Reasons" widgetVar="rejectReasonCrm" hideEffect="clip" showEffect="clip" id="dialogRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonFormCrm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{discretionarygrantverificationUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{discretionarygrantverificationUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+
+							</p:selectManyMenu>
+						</div>
+					</div>
+					<p:commandButton value="Reject" action="#{discretionarygrantverificationUI.crmRejectApplicationNotifySDF}"></p:commandButton>
+				</div>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="Recommendations" position="top" widgetVar="dlgRecommend" resizable="false" hideEffect="clip" showEffect="clip" id="recommendDLG" width="80%" responsive="true" modal="true" dynamic="true" closeOnEscape="true">
+			<h:form id="recommendForm">
+				<ui:include src="/pages/includes/tabinfo.xhtml">
+					<ui:param name="showInfoCircle" value="true" />
+					<ui:param name="cssClass" value="secondaryText Fs15" />
+					<ui:param name="helpTxt" value="#{lang['The.system.will.auto-fill.based.selections']}" />
+				</ui:include>
+				<p:panelGrid columns="1" style="width:100%" id="s" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<p:fieldset legend="#{lang['discretionary.data']}">
+						<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText style="width:95%; opacity:1 !important;" value="#{discretionarygrantverificationUI.mandatoryGrant.interventionType.description}" disabled="true" />
+								<p:outputLabel value="#{lang['intervention.type']}" />
+							</h:panelGroup>
+							
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText style="width:95%; opacity:1 !important;" value="#{discretionarygrantverificationUI.mandatoryGrant.amount}" disabled="true" />
+								<p:outputLabel value="#{lang['number.of.learners']}" />
+							</h:panelGroup>
+							
+							<h:panelGroup styleClass="md-inputfield" rendered="#{discretionarygrantverificationUI.mandatoryGrant.nqfAligned ne null}">
+								<p:inputText style="width:95%; opacity:1 !important;" value="#{discretionarygrantverificationUI.mandatoryGrant.nqfAligned.yesNoName}" disabled="true" />
+								<p:outputLabel value="#{lang['nqf.aligned']}" />
+							</h:panelGroup>
+							
+							<h:panelGroup styleClass="md-inputfield" rendered="#{discretionarygrantverificationUI.mandatoryGrant.qualification ne null}">
+								<p:inputText style="width:95%; opacity:1 !important;" value="#{discretionarygrantverificationUI.mandatoryGrant.qualification.code}" disabled="true" />
+								<p:outputLabel value="#{lang['saqa.id']}" />
+							</h:panelGroup>
+							
+							<h:panelGroup styleClass="md-inputfield" rendered="#{discretionarygrantverificationUI.mandatoryGrant.unitStandard ne null}">
+								<p:inputText style="width:95%; opacity:1 !important;" value="#{discretionarygrantverificationUI.mandatoryGrant.unitStandard.code}" disabled="true" />
+								<p:outputLabel value="#{lang['unit.standard']} Code" />
+							</h:panelGroup>
+							
+							<h:panelGroup styleClass="md-inputfield" rendered="#{discretionarygrantverificationUI.mandatoryGrant.skillsSet ne null}">
+								<p:inputText style="width:95%; opacity:1 !important;" value="#{discretionarygrantverificationUI.mandatoryGrant.skillsSet.code}" disabled="true" />
+								<p:outputLabel value="#{lang['skills.program']}"  />
+							</h:panelGroup>
+							
+							<h:panelGroup styleClass="md-inputfield" rendered="#{discretionarygrantverificationUI.mandatoryGrant.skillsProgram ne null}">
+								<p:inputText style="width:95%; opacity:1 !important;" value="#{discretionarygrantverificationUI.mandatoryGrant.skillsProgram.programmeID}" disabled="true" />
+								<p:outputLabel value="#{lang['skills.set']}" />
+							</h:panelGroup>
+							
+							<h:panelGroup styleClass="md-inputfield" rendered="#{discretionarygrantverificationUI.mandatoryGrant.nonCreditBearingIntervationTitle ne null}">
+								<p:inputText style="width:95%; opacity:1 !important;" value="#{discretionarygrantverificationUI.mandatoryGrant.nonCreditBearingIntervationTitle.code}" disabled="true" />
+								<p:outputLabel value="Non-Credit Bearing Intervation Title" />
+							</h:panelGroup>	
+							
+							<h:panelGroup styleClass="md-inputfield" >
+								<p:inputText style="width:95%; opacity:1 !important;" disabled="true" decimalPlaces="0" value="#{discretionarygrantverificationUI.mandatoryGrant.qualification.description}" rendered="#{discretionarygrantverificationUI.mandatoryGrant.qualification ne null}"/>
+								<p:inputText style="width:95%; opacity:1 !important;" disabled="true" decimalPlaces="0" value="#{discretionarygrantverificationUI.mandatoryGrant.unitStandard.title}" rendered="#{discretionarygrantverificationUI.mandatoryGrant.unitStandard ne null}" />
+								<p:inputText style="width:95%; opacity:1 !important;" disabled="true" decimalPlaces="0" value="#{discretionarygrantverificationUI.mandatoryGrant.skillsProgram.description}" rendered="#{discretionarygrantverificationUI.mandatoryGrant.skillsProgram ne null}" />
+								<p:inputText style="width:95%; opacity:1 !important;" disabled="true" decimalPlaces="0" value="#{discretionarygrantverificationUI.mandatoryGrant.skillsSet.description}" rendered="#{discretionarygrantverificationUI.mandatoryGrant.skillsSet ne null}" />
+								<p:inputText style="width:95%; opacity:1 !important;" disabled="true" decimalPlaces="0" value="#{discretionarygrantverificationUI.mandatoryGrant.nonCreditBearingIntervationTitle.description}" rendered="#{discretionarygrantverificationUI.mandatoryGrant.nonCreditBearingIntervationTitle ne null}" />
+								<p:outputLabel value="#{lang['intervention.title']}" />
+							</h:panelGroup>
+							
+							<h:panelGroup styleClass="md-inputfield" rendered="false">
+								<p:inputText style="width:95%; opacity:1 !important;" value="#{discretionarygrantverificationUI.mandatoryGrant.qualification.code}" disabled="true" />
+								<p:outputLabel value="#{lang['saqa.id']}" />
+							</h:panelGroup>
+							
+							<h:panelGroup styleClass="md-inputfield" rendered="false">
+								<p:inputText style="width:95%; opacity:1 !important;" value="#{discretionarygrantverificationUI.mandatoryGrant.qualification.description}" decimalPlaces="0" disabled="true" />
+								<p:outputLabel value="#{lang['intervention.title']}" />
+							</h:panelGroup>
+							
+							<h:panelGroup styleClass="md-inputfield" rendered="#{discretionarygrantverificationUI.mandatoryGrant.nqfLevels ne null}" >
+								<p:inputText style="width:95%; opacity:1 !important;" minValue="0" value="#{discretionarygrantverificationUI.mandatoryGrant.nqfLevels.description}" decimalPlaces="0" disabled="true" />
+								<p:outputLabel value=" #{lang['nqf.level']}" />
+							</h:panelGroup>
+							
+							<h:panelGroup styleClass="md-inputfield" rendered="#{discretionarygrantverificationUI.mandatoryGrant.interventionLevel ne null}" >
+								<p:inputText style="width:95%; opacity:1 !important;" value="#{discretionarygrantverificationUI.mandatoryGrant.interventionLevel.description}" decimalPlaces="0" disabled="true" />
+								<p:outputLabel value="#{lang['level.of.training']}" />
+							</h:panelGroup>
+							
+							<h:panelGroup styleClass="md-inputfield" rendered="#{discretionarygrantverificationUI.mandatoryGrant.etqa ne null}">
+								<p:inputText style="width:95%; opacity:1 !important;" minValue="0" value="#{discretionarygrantverificationUI.mandatoryGrant.etqa.description}" decimalPlaces="0" disabled="true" />
+								<p:outputLabel value="#{lang['etqa']}" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield" rendered="#{discretionarygrantverificationUI.mandatoryGrant.providerType ne null}">
+								<p:inputText style="width:95%; opacity:1 !important;" value="#{discretionarygrantverificationUI.mandatoryGrant.providerType.description}" decimalPlaces="0" disabled="true" />
+								<p:outputLabel value="#{lang['provider.type']}" />
+							</h:panelGroup>
+							
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputNumber inputStyle="width:95%; opacity:1 !important;" minValue="0" value="#{discretionarygrantverificationUI.mandatoryGrant.interventionType.basicGrantAmount*discretionarygrantverificationUI.mandatoryGrant.amount}" decimalPlaces="2" disabled="true" symbol="R" />
+								<p:outputLabel value=" #{lang['estimated.cost']}" />
+							</h:panelGroup>
+							
+						</p:panelGrid>
+					</p:fieldset>
+				</p:panelGrid>
+
+				<p:panelGrid columns="2" style="width:100%" id="sawas" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="Intervention Type" for="proc2" styleClass="gray" />
+						</div>
+						<div>
+							<p:selectOneMenu id="proc2" value="#{discretionarygrantverificationUI.mandatoryGrantRecommendation.interventionType}" style="width:100%" required="false" var="v" requiredMessage="Please select an intervention type" converter="InterventionTypeConvertor">
+								<p:ajax event="itemSelect" listener="#{discretionarygrantverificationUI.applyInterventionDataSelection}" update="interventionTypeSelectionPanel" />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{discretionarygrantverificationUI.interventionType}" var="rv" itemLabel="#{rv.description}" />
+								<p:column>
+									<h:outputText value="#{v.description}" />
+								</p:column>
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="Reason for Change" for="proc" styleClass="gray" />
+						</div>
+						<div>
+							<p:selectOneMenu id="proc" value="#{discretionarygrantverificationUI.mandatoryGrantRecommendation.rejectReasons}" style="width:100%" required="false" var="t" requiredMessage="Please select a reason" converter="RejectReasonsConvertor">
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{discretionarygrantverificationUI.rejectReasons}" var="rv" itemLabel="#{rv.description}" />
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					
+					<p:outputPanel id="interventionTypeSelectionPanel">
+						<h:panelGroup styleClass="md-inputfield" rendered="#{discretionarygrantverificationUI.mandatoryGrantRecommendation.interventionType ne null and not discretionarygrantverificationUI.skillsSet and not discretionarygrantverificationUI.skillsProgram and not discretionarygrantverificationUI.shortCreditBearing and not discretionarygrantverificationUI.nonCreditBearing}">
+							<p:autoComplete  required="true" style="width: 100%" id="qualificationAuto" value="#{discretionarygrantverificationUI.mandatoryGrantRecommendation.qualification}" completeMethod="#{autoCompleteUI.completeQualification}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true"
+								converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+								<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+								<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+								<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+							</p:autoComplete>
+							<p:outputLabel value="#{lang['saqa.id']}"  for="qualificationAuto"/>
+						</h:panelGroup>
+						
+						<h:panelGroup styleClass="md-inputfield" rendered="#{discretionarygrantverificationUI.mandatoryGrantRecommendation.interventionType ne null and discretionarygrantverificationUI.shortCreditBearing}">
+							<p:autoComplete required="true" id="unitStandard" value="#{discretionarygrantverificationUI.mandatoryGrantRecommendation.unitStandards}" completeMethod="#{autoCompleteUI.completeUnitStandards}" var="rv" itemLabel="#{rv.title}" itemValue="#{rv}" forceSelection="true" converter="UnitStandardsConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 100%">
+								<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+								<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.title}</p:column>
+							</p:autoComplete>
+							<p:outputLabel value="#{lang['unit.standard']}" for="unitStandard" />
+						</h:panelGroup>
+						
+						<h:panelGroup styleClass="md-inputfield" rendered="#{discretionarygrantverificationUI.mandatoryGrantRecommendation.interventionType ne null and discretionarygrantverificationUI.skillsProgram}" >
+							<p:autoComplete required="true" id="skillsProgram" value="#{discretionarygrantverificationUI.mandatoryGrantRecommendation.skillsProgram}" completeMethod="#{autoCompleteUI.completeSkillsProgram}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SkillsProgramConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 100%">
+								<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+								<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+							</p:autoComplete>
+							<p:outputLabel value="#{lang['skills.program']}" for="skillsProgram" />
+						</h:panelGroup>
+	
+						<h:panelGroup styleClass="md-inputfield" rendered="#{discretionarygrantverificationUI.mandatoryGrantRecommendation.interventionType ne null and discretionarygrantverificationUI.skillsSet}" >
+							<p:autoComplete required="true" id="skillsSet" value="#{discretionarygrantverificationUI.mandatoryGrantRecommendation.skillsSet}" completeMethod="#{autoCompleteUI.completeSkillsSet}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SkillsSetConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 100%">
+								<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+								<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+							</p:autoComplete>
+							<p:outputLabel value="#{lang['skills.set']}" for="skillsSet" />
+						</h:panelGroup>
+						
+						<h:panelGroup styleClass="md-inputfield" rendered="#{discretionarygrantverificationUI.mandatoryGrantRecommendation.interventionType ne null and discretionarygrantverificationUI.nonCreditBearing}" >
+							<p:autoComplete required="true" id="ncbit" value="#{discretionarygrantverificationUI.mandatoryGrantRecommendation.nonCreditBearingIntervationTitle}" completeMethod="#{autoCompleteUI.completeNonCreditBearingIntervationTitle}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="NonCreditBearingIntervationTitleConvertor" dropdown="true" minQueryLength="1" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 100%">
+								<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+								<p:column headerText="Description" style="white-space: nowrap">#{rv.description}</p:column>
+							</p:autoComplete>
+							<p:outputLabel value="Non-Credit Bearing Intervation Title" for="ncbit" />
+						</h:panelGroup>
+						
+					</p:outputPanel>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputNumber value="#{discretionarygrantverificationUI.mandatoryGrantRecommendation.quantity}" minValue="0" decimalPlaces="0" maxValue="#{discretionarygrantverificationUI.mandatoryGrant.amount}" inputStyle="width:100%"></p:inputNumber>
+						<p:outputLabel value="#{lang['number.of.learners']}" />
+					</h:panelGroup>
+				</p:panelGrid>
+				<p:panelGrid columns="2" style="width:100%" id="sa" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<p:commandButton value="#{lang['submit']}" process="@form" action="#{discretionarygrantverificationUI.saveRecommendation}" update="@form discgrantTableForm:tabView:employeesimportList" styleClass="Fs18 flat" style="height: 50px" />
+					<p:commandButton rendered="false" value="Recommend Company Request" process="@this" action="#{discretionarygrantverificationUI.useGrantDataForRecommendation}" update="@form discgrantTableForm:tabView:DgVerificationTab" styleClass="Fs18 flat" style="height: 50px"
+						oncomplete="PF('dlgRecommend').hide()" />
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="Decline Application" widgetVar="dlgSelectReason" resizable="false" hideEffect="clip" showEffect="clip" id="selectReason" width="40%" responsive="true" modal="true" dynamic="true">
+			<h:form id="selectReasonForm">
+				<h:panelGroup>
+					<h:panelGroup id="typeofApp">
+						<div>
+							<p:outputLabel value="Reason for decline" for="sipsas"></p:outputLabel>
+						</div>
+						<div>
+							<p:selectOneMenu style="width:100%" id="sipsas" required="true" value="#{discretionarygrantverificationUI.dgVerification.discretionalWithdrawalAppealEnum}">
+								<f:selectItem itemLabel="---Select One---" noSelectionOption="true" />
+
+								<f:selectItems value="#{enumUI.discretionalAppealEnumDD}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+				</h:panelGroup>
+				<br />
+				<br />
+				<p:commandButton id="updateDGVerification2" value="Decline" icon="fa fa-times" action="#{discretionarygrantverificationUI.declineVerification}" update="@form" rendered="#{discretionarygrantverificationUI.enableIfCurrentUserNotSDF}" />
+				<p:commandButton id="updateDGVerificationDeclineAllId" value="Decline All" icon="fa fa-times" action="#{discretionarygrantverificationUI.declineAllVerification}" update="@form" rendered="#{discretionarygrantverificationUI.enableIfCurrentUserIsCLO}" />
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="Withdraw Application" widgetVar="dlgSelectReasonWithdrawal" resizable="false" hideEffect="clip" showEffect="clip" id="selectReasonWithdrawal" width="40%" responsive="true" modal="true" dynamic="true">
+			<h:form id="selectReasonWithdrawalForm">
+				<h:panelGroup>
+					<h:panelGroup id="typeofApp">
+						<div>
+							<p:outputLabel value="Reason for withdrawal" for="sipsas"></p:outputLabel>
+						</div>withdrawnVerification
+						<div>
+							<p:selectOneMenu style="width:100%" id="sipsas" required="true" value="#{discretionarygrantverificationUI.dgVerification.discretionalWithdrawalAppealEnum}">
+								<f:selectItem itemLabel="---Select One---" noSelectionOption="true" />
+
+								<f:selectItems value="#{enumUI.discretionalWithdrawalEnumDD}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+				</h:panelGroup>
+				<br />
+				<br />
+				<p:commandButton id="updateDGVerification3" value="Withdraw Application" icon="fa fa-user-times" action="#{discretionarygrantverificationUI.withdrawnVerification}" update="@form" />
+			</h:form>
+		</p:dialog>
+
+	</ui:define>
+</ui:composition>

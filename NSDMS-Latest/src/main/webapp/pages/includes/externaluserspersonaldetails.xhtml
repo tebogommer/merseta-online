@@ -1,0 +1,134 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui">
+	<!-- 	<h:panelGrid style="margin-bottom: 10px">
+		<h1 style="margin-bottom: 5px">#{lang['sdf.main.user.heading']}</h1>
+		<span class="Fs12 gray">#{lang['sdf.main.user.heading.info']}</span>
+	</h:panelGrid> -->
+
+	<p:importEnum type="haj.com.entity.enums.CompanyRegOrSDLEnum" var="regSDL"></p:importEnum>
+	<c:if test="#{!qdfCompanyUI.formUser.doneSearch}">
+		<div align="right">
+
+			<p:commandLink id="hb" onclick="helpGuide()">
+				<i class="fa fa-question-circle Fs50 secondaryText" aria-hidden="true"></i>
+			</p:commandLink>
+
+			<p:tooltip for="hb" position="left" value="#{lang['help.guide']}" />
+		</div>
+		<ui:include src="/pages/includes/searchUserPassportOrID.xhtml" />
+	</c:if>
+	<h:panelGroup id="regSelfServiceForm" rendered="#{qdfCompanyUI.formUser.doneSearch}">
+
+		<p:fieldset legend="#{!qdfCompanyUI.formUser.doneSearch ? 'Enter RSA ID number or Passport number' : lang['your.details'] }">
+
+			<!-- SDF User Information -->
+			<ui:include src="/pages/includes/tabinfo.xhtml">
+				<ui:param name="showInfoCircle" value="false" />
+				<ui:param name="cssClass" value="red Fs15 FontBold" />
+				<ui:param name="helpTxt" value="Please Ensure Names Are As Per Your ID Document." />
+			</ui:include>
+			<p:panelGrid columns="2" style="width:100%" id="sdfInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText id="userName" value="#{qdfCompanyUI.formUser.firstName}" maxlength="#{qdfCompanyUI.MAX_FIRST_NAME_SIZE}" style="width:95%" required="true" disabled="#{qdfCompanyUI.formUser.existingUser or qdfCompanyUI.formUser.regFieldsDone}" requiredMessage="#{lang['enter.your.name']}" />
+					<p:outputLabel value="#{lang['first.name']}:" for="userName" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText id="userSurname" value="#{qdfCompanyUI.formUser.lastName}" maxlength="#{qdfCompanyUI.MAX_LAST_NAME_SIZE}" style="width:95%" required="true" disabled="#{qdfCompanyUI.formUser.existingUser or qdfCompanyUI.formUser.regFieldsDone}" requiredMessage="#{lang['enter.your.last.name']}" />
+					<p:outputLabel value="#{lang['surname']}:" for="userSurname" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText id="userEmail" value="#{qdfCompanyUI.formUser.email}" maxlength="#{qdfCompanyUI.MAX_EMAIL_SIZE}" style="width:95%" required="true" disabled="#{qdfCompanyUI.formUser.existingUser or qdfCompanyUI.formUser.regFieldsDone}" requiredMessage="#{lang['enter.your.email.address']}" />
+					<p:outputLabel value="#{lang['emails']}:" for="userEmail" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputMask id="telNumber" value="#{qdfCompanyUI.formUser.telNumber}" mask="#{qdfCompanyUI.TELPHONE_FORMAT}" style="width:95%" required="true" requiredMessage="#{lang['enter.tell.number']}" disabled="#{qdfCompanyUI.formUser.existingUser or qdfCompanyUI.formUser.regFieldsDone}" />
+					<p:outputLabel value="#{lang['tel.number']}:" for="telNumber" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputMask id="cellPhone" value="#{qdfCompanyUI.formUser.cellNumber}" mask="#{qdfCompanyUI.CELLPHONE_FORMAT}" style="width:95%" required="true" requiredMessage="#{lang['enter.cell.number']}" disabled="#{qdfCompanyUI.formUser.existingUser or qdfCompanyUI.formUser.regFieldsDone}" />
+					<p:outputLabel value="#{lang['cell.number']}:" for="cellPhone" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputMask id="faxNumber" mask="#{qdfCompanyUI.FAX_NUMBER_FORMAT}" validatorMessage="#{lang['user.faxnumber.length']}" value="#{qdfCompanyUI.formUser.faxNumber}" style="width:95%" disabled="#{qdfCompanyUI.formUser.existingUser or qdfCompanyUI.formUser.regFieldsDone}">
+					</p:inputMask>
+					<p:outputLabel value="#{lang['fax.number']} : " for="faxNumber" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield" rendered="#{qdfCompanyUI.formUser.rsaIDNumber.length() gt 0}">
+					<p:inputText id="userIdNumber" value="#{qdfCompanyUI.formUser.rsaIDNumber}" style="width:95%" disabled="true" />
+					<p:outputLabel value="#{lang['rsa.id.number']}:" for="userIdNumber" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield" rendered="#{qdfCompanyUI.formUser.passportNumber.length() gt 0}">
+					<p:inputText id="userPassport" value="#{qdfCompanyUI.formUser.passportNumber}" style="width:95%" disabled="true" />
+					<p:outputLabel value="#{lang['passport.number']}:" for="userPassport" />
+				</h:panelGroup>
+			</p:panelGrid>
+			
+			<!-- Register User Command Button -->
+			<p:panelGrid columns="1" style="width:100%" id="actionGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<p:commandButton id="continueBtn" value="#{lang['submit']}" update="@form actionGrid" icon="ui-icon-save"  styleClass="flat" action="#{qdfCompanyUI.createSDF}" />
+			</p:panelGrid>
+		</p:fieldset>
+
+		<br />
+	</h:panelGroup>
+
+
+	<h:panelGroup id="idPassportHelp">
+		<script type="text/javascript">
+
+        var intro = introJs();          
+          function helpGuide() {  
+            <c:if test="#{(searchUserPassportOrIdUI.idpassport ne idPassportEnum.RsaId) and (searchUserPassportOrIdUI.idpassport ne idPassportEnum.Passport)}">
+				intro.setOptions({
+              		steps: [{
+                  		element: document.querySelector('#companyInsForm\\:searchRsaIdOrPassportPnl'),
+                  		intro: "#{lang['select.if.you.want.to.supply.your.id.number.or.passport.as.a.method.of.identification']}"
+                		}
+              		]
+            		});
+                 intro.start();
+            </c:if>   
+            <c:if test="#{searchUserPassportOrIdUI.idpassport eq idPassportEnum.RsaId}">
+             if ($('#companyInsForm\\:rsaIdCriteria').val().length == 0) {
+            	 intro.setOptions({
+                     steps: [
+                       {
+                         element: document.querySelector('#companyInsForm\\:rsaIDInput'),
+                         intro: "#{lang['enter.you.valid.RSA.ID.number']}"
+                       },
+                       {
+                           element: document.querySelector('#companyInsForm\\:idPassBtn'),
+                           intro: "#{lang['the.click.find.to.validate.your.id.number']}"
+                         }
+                     ]
+                   });
+            	 	intro.start();
+             } 
+            </c:if>   
+            <c:if test="#{searchUserPassportOrIdUI.idpassport eq idPassportEnum.Passport}">
+            if ($('#companyInsForm\\:passportNumCriteria').val().length == 0) {
+            		intro.setOptions({
+                    steps: [
+                      {
+                        element: document.querySelector('#companyInsForm\\:passportNumInput'),
+                        intro: "#{lang['enter.your.passport.number']}"
+                      },
+                      {
+                          element: document.querySelector('#companyInsForm\\:idPassBtn'),
+                          intro: "#{lang['the.click.find.to.validate.your.id.number']}"
+                        }
+                    ]
+                  });
+            			intro.start();
+            } 
+           </c:if>
+          }
+
+    </script>
+	</h:panelGroup>
+</ui:composition>

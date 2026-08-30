@@ -1,0 +1,255 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+		<style>
+body.layout-compact .ui-radiobutton .ui-radiobutton-box {
+	opacity: 1 !important;
+}
+
+body .ui-selectmanycheckbox.ui-widget label, body .ui-selectoneradio.ui-widget label
+	{
+	opacity: 1 !important;
+}
+</style>
+		<p:growl showDetail="false" sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+		<div class="ui-g">
+			<h:form id="discgrantTableForm">
+				<p:importEnum type="haj.com.entity.enums.PivotNonPivotEnum" />
+				<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+				<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+			             
+             <c:if test="true">              	
+             	<div class="ui-g-12 ">					  
+					<p:tabView  rendered="true">
+						<p:tab title="#{lang['company.details']}">
+							<p:panel>
+								<f:facet name="header">#{lang['company.details']}</f:facet>
+								<p:panelGrid columns="2" style="width:100%" id="companyInsGrid" layout="grid" styleClass="ui-panelgrid-blank">
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['companyName']}" for="companyName" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel id="companyName" value="#{mandatoryGrantVerificationapprovalUI.company.companyName}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.company.name']}" />
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['tradingName']}" for="tradingName" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel id="tradingName" value="#{mandatoryGrantVerificationapprovalUI.company.tradingName}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.trading.name']}" />
+									</h:panelGroup>
+
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['telNumber']}" for="telNumberComp" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel id="telNumberComp" value="#{mandatoryGrantVerificationapprovalUI.company.telNumber}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.tel.number']}" />
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['faxNumber']}" for="faxNumberComp" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel id="faxNumberComp" value="#{mandatoryGrantVerificationapprovalUI.company.faxNumber}" style="width:95%" rendered="#{mandatoryGrantVerificationapprovalUI.company.faxNumber ne null and mandatoryGrantVerificationapprovalUI.company.faxNumber.length() gt 0}" />
+										<p:outputLabel id="faxNumberComp2" value="N/A" style="width:95%" rendered="#{mandatoryGrantVerificationapprovalUI.company.faxNumber eq null or mandatoryGrantVerificationapprovalUI.company.faxNumber.length() eq 0}" />
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['companyRegistrationNumber']}" for="companyRegistrationNumber" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel id="companyRegistrationNumber" value="#{mandatoryGrantVerificationapprovalUI.company.companyRegistrationNumber}" style="width:95%" />
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['email']}" for="emailComp" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel id="emailComp" value="#{mandatoryGrantVerificationapprovalUI.company.email}" style="width:95%" />
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['levyNumber']}" for="levyNumber" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel id="levyNumber" value="#{mandatoryGrantVerificationapprovalUI.company.levyNumber}" style="width:95%" />
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['numberOfEmployees']}" for="numberOfEmployees" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel id="numberOfEmployees" value="#{mandatoryGrantVerificationapprovalUI.company.numberOfEmployees}" style="width:95%" />
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['sicCode']}" for="sicCode" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel id="sicCode" value="#{mandatoryGrantVerificationapprovalUI.company.sicCode.description}" style="width:95%" required="true" requiredMessage="#{lang['enter.sic.code']}" />
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['chamber']}" for="sicCode" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel id="chamber" value="#{mandatoryGrantVerificationapprovalUI.company.chamber.description}" style="width:95%" />
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['organisation.type']}" for="organisationType" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel value="N/A" rendered="#{mandatoryGrantVerificationapprovalUI.company.organisationType eq null}" />
+										<p:outputLabel id="organisationType" value="#{mandatoryGrantVerificationapprovalUI.company.organisationType.description}" style="width:95%" rendered="#{mandatoryGrantVerificationapprovalUI.company.organisationType ne null}" />
+									</h:panelGroup>
+								</p:panelGrid>
+								
+								<p:panelGrid columns="2" style="width:100%" id="companyInsGrida" layout="grid" styleClass="ui-panelgrid-blank">
+										<p:fieldset legend="#{lang['residentialAddress']}">
+											<p:panelGrid columns="2" style="width : 95%" styleClass="ui-panelgrid-blank" id="addrPcode">
+												<h:panelGroup>
+													<p:outputLabel value="#{lang['address.line.1']}" for="addr1" styleClass="Fs12 FontLight" />
+													<br />
+													<p:outputLabel id="addr1" value="#{mandatoryGrantVerificationapprovalUI.company.residentialAddress.addressLine1}" style="width:95%" required="true" requiredMessage="#{lang['enter.residential.address']}" />
+													<br />
+													<p:outputLabel value="#{lang['address.line.2']}" for="addr2" styleClass="Fs12 FontLight" />
+													<br />
+													<p:outputLabel value="N/A" style="width:95%" rendered="#{mandatoryGrantVerificationapprovalUI.company.residentialAddress.addressLine2 eq null or mandatoryGrantVerificationapprovalUI.company.residentialAddress.addressLine2.length() eq 0}" />
+													<p:outputLabel id="addr2" style="width:95%" value="#{mandatoryGrantVerificationapprovalUI.company.residentialAddress.addressLine2}"
+														rendered="#{mandatoryGrantVerificationapprovalUI.company.residentialAddress.addressLine2 ne null and mandatoryGrantVerificationapprovalUI.company.residentialAddress.addressLine2.length() gt 0}" />
+												</h:panelGroup>
+												<h:panelGroup>
+													<p:outputLabel value="#{lang['address.line.3']}" for="addr3" styleClass="Fs12 FontLight" />
+													<br />
+													<p:outputLabel id="addr3" style="width:95%" value="#{mandatoryGrantVerificationapprovalUI.company.residentialAddress.addressLine3}"
+														rendered="#{mandatoryGrantVerificationapprovalUI.company.residentialAddress.addressLine3 ne null and mandatoryGrantVerificationapprovalUI.company.residentialAddress.addressLine3.length() gt 0}" />
+													<p:outputLabel value="N/A" style="width:95%" rendered="#{mandatoryGrantVerificationapprovalUI.company.residentialAddress.addressLine3 eq null or mandatoryGrantVerificationapprovalUI.company.residentialAddress.addressLine3.length() eq 0}" />
+													<br />
+													<p:outputLabel value="#{lang['address.line.4']}" for="addr4" styleClass="Fs12 FontLight" />
+													<br />
+													<p:outputLabel id="addr4" style="width:95%" value="#{mandatoryGrantVerificationapprovalUI.company.residentialAddress.addressLine4}"
+														rendered="#{mandatoryGrantVerificationapprovalUI.company.residentialAddress.addressLine4 ne null and mandatoryGrantVerificationapprovalUI.company.residentialAddress.addressLine4.length() gt 0}" />
+													<p:outputLabel value="N/A" style="width:95%" rendered="#{mandatoryGrantVerificationapprovalUI.company.residentialAddress.addressLine4 eq null or mandatoryGrantVerificationapprovalUI.company.residentialAddress.addressLine4.length() eq 0}" />
+												</h:panelGroup>
+												<h:panelGroup>
+													<p:outputLabel value="#{lang['post.code']}" for="pcode" styleClass="Fs12 FontLight" />
+													<br />
+													<p:outputLabel id="pcode" style="width:95%" value="#{mandatoryGrantVerificationapprovalUI.company.residentialAddress.postcode}"
+														rendered="#{mandatoryGrantVerificationapprovalUI.company.residentialAddress.postcode ne null and mandatoryGrantVerificationapprovalUI.company.residentialAddress.postcode.length() gt 0}" />
+													<p:outputLabel value="N/A" style="width:95%" rendered="#{mandatoryGrantVerificationapprovalUI.company.residentialAddress.postcode eq null or mandatoryGrantVerificationapprovalUI.company.residentialAddress.postcode.length() eq 0}" />
+													<br />
+													<h:outputLabel value="#{lang['municipality']}" for="MunicipalityID" styleClass="Fs12 FontLight" />
+													<br />
+													<p:outputLabel id="MunicipalityID" style="width:95%" value="#{mandatoryGrantVerificationapprovalUI.company.residentialAddress.municipality.municipalityDesc}" />
+												</h:panelGroup>
+	
+												<h:panelGroup>
+													<div class="EmptyBox40"></div>
+												</h:panelGroup>
+											</p:panelGrid>
+										</p:fieldset>
+	
+										<p:fieldset legend="#{lang['postalAddress']}">
+											<p:panelGrid columns="2" style="width : 95%" styleClass="ui-panelgrid-blank" id="postalAddress">
+												<h:panelGroup>
+													<p:outputLabel value="#{lang['address.line.1']}" for="postalAddressaddr1" styleClass="Fs12 FontLight" />
+													<br />
+													<p:outputLabel id="postalAddressaddr1" value="#{mandatoryGrantVerificationapprovalUI.company.postalAddress.addressLine1}" style="width:95%" required="true" requiredMessage="#{lang['enter.postal.address']}" />
+													<br />
+													<p:outputLabel value="#{lang['address.line.2']}" for="postalAddressaddr2" styleClass="Fs12 FontLight" />
+													<br />
+													<p:outputLabel id="postalAddressaddr2" style="width:95%" value="#{mandatoryGrantVerificationapprovalUI.company.postalAddress.addressLine2}" />
+													<p:outputLabel value="N/A" style="width:95%" rendered="#{mandatoryGrantVerificationapprovalUI.company.postalAddress.addressLine2 eq null or mandatoryGrantVerificationapprovalUI.company.postalAddress.addressLine2.length() eq 0}" />
+												</h:panelGroup>
+												<h:panelGroup>
+													<p:outputLabel value="#{lang['address.line.3']}" for="postalAddressaddr3" styleClass="Fs12 FontLight" />
+													<br />
+													<p:outputLabel id="postalAddressaddr3" style="width:95%" value="#{mandatoryGrantVerificationapprovalUI.company.postalAddress.addressLine3}" />
+													<p:outputLabel value="N/A" style="width:95%" rendered="#{mandatoryGrantVerificationapprovalUI.company.postalAddress.addressLine3 eq null or mandatoryGrantVerificationapprovalUI.company.postalAddress.addressLine3.length() eq 0}" />
+													<br />
+													<p:outputLabel value="#{lang['address.line.4']}" for="postalAddressaddr4" styleClass="Fs12 FontLight" />
+													<br />
+													<p:outputLabel id="postalAddressaddr4" style="width:95%" value="#{mandatoryGrantVerificationapprovalUI.company.postalAddress.addressLine4}" />
+													<p:outputLabel value="N/A" style="width:95%" rendered="#{mandatoryGrantVerificationapprovalUI.company.postalAddress.addressLine4 eq null or mandatoryGrantVerificationapprovalUI.company.postalAddress.addressLine4.length() eq 0}" />
+												</h:panelGroup>
+												<h:panelGroup>
+													<p:outputLabel value="#{lang['post.code']}" for="postalAddressPcode" styleClass="Fs12 FontLight" />
+													<br />
+													<p:outputLabel id="postalAddressPcode" style="width:95%" value="#{mandatoryGrantVerificationapprovalUI.company.postalAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}" />
+													<p:outputLabel value="N/A" style="width:95%" rendered="#{mandatoryGrantVerificationapprovalUI.company.postalAddress.postcode eq null or mandatoryGrantVerificationapprovalUI.company.postalAddress.postcode.length() eq 0}" />
+													<br />
+													<h:outputLabel value="#{lang['municipality']}" for="postalAddressMunicipalityID" styleClass="Fs12 FontLight" />
+													<br />
+													<p:outputLabel id="postalAddressMunicipalityID" style="width:95%" value="#{mandatoryGrantVerificationapprovalUI.company.postalAddress.municipality.municipalityDesc}" />
+												</h:panelGroup>
+	
+												<h:panelGroup>
+													<div>
+														<p:outputLabel value="#{lang['same.as.my.address']}" styleClass="Fs12 FontLight" />
+													</div>
+													<div>
+														<p:selectBooleanCheckbox value="#{mandatoryGrantVerificationapprovalUI.company.postalAddress.sameAddress}" disabled="true">
+														</p:selectBooleanCheckbox>
+													</div>
+												</h:panelGroup>
+											</p:panelGrid>
+										</p:fieldset>
+									</p:panelGrid>
+							</p:panel>
+						</p:tab>
+						
+						<p:tab title="#{lang['mandatory.grants.verification']}">						
+								<p:panel>
+									<f:facet name="header">#{lang['mandatory.grants.verification']}</f:facet>									
+		
+									<p:panelGrid columns="2" style="width:100%" id="reviewDateEntryGrid" layout="grid" styleClass="ui-panelgrid-blank" rendered="true">
+										<h:panelGroup>											
+											<div>
+												<p:outputLabel value="#{mandatoryGrantVerificationapprovalUI.mgVerification.reviewDate}" rendered="false">
+													<f:convertDateTime pattern="dd MMMM yyyy" />
+												</p:outputLabel>											
+											</div>
+										</h:panelGroup>										
+									</p:panelGrid>
+		
+									<p:panelGrid columns="1" style="width:100%" id="workplaceTradesChecklist2" layout="grid" styleClass="ui-panelgrid-blank">
+										<p:dataTable var="rowVar" value="#{mandatoryGrantVerificationapprovalUI.dataModel}" lazy="true" id="employeesimportList" rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+													paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,15,20,25,50,100" reflow="true">
+										
+											<p:column headerText="#{lang['ofo.codes']}" sortBy="#{rowVar.ofoCodes}" filterBy="#{rowVar.ofoCodes.ofoCode}" filterMatchMode="contains">
+												<p:outputLabel value="#{rowVar.ofoCodes.ofoDescription}" style="width:95%" />
+											</p:column>
+											
+											<p:column headerText="#{lang['employment.status']}" >
+												<p:outputLabel value="#{rowVar.employmentStatus.friendlyName}" style="width:95%" />
+											</p:column>
+											
+											<p:column headerText="#{lang['intervention.type']}" sortBy="#{rowVar.interventionType.description}">
+												<p:outputLabel value="#{rowVar.interventionType.description}" style="width:95%" />
+											</p:column>
+											
+											<p:column headerText="#{lang['number.of.learners']}" sortBy="#{rowVar.amount}">
+												<p:outputLabel value="#{rowVar.amount}" style="width:95%" />
+											</p:column>
+											
+											<p:column headerText="No. of Learners Started / Registered ">
+												<p:outputLabel value="#{rowVar.disabledAmount}" style="width:95%" />
+											</p:column>
+											
+											<p:column headerText="No. of Learners Withdrawn" >
+												<p:outputLabel value="#{rowVar.disabledAmount}" style="width:95%" />
+											</p:column>
+											
+											<p:column headerText="No. of Learners Completed" >
+												<p:outputLabel value="#{rowVar.disabledAmount}" style="width:95%" />
+											</p:column>
+											
+											<p:column headerText="Reason for Deviation" >
+												<p:outputLabel value="#{rowVar.disabledAmount}" style="width:95%" />
+											</p:column>
+											
+											<p:column headerText="Action Plan" >
+												<p:outputLabel value="#{rowVar.disabledAmount}" style="width:95%" />
+											</p:column>
+											
+											<p:column headerText="Upload Evidence" >
+												<p:outputLabel value="#{rowVar.disabledAmount}" style="width:95%" />
+											</p:column>
+									
+										</p:dataTable>															
+									</p:panelGrid>									
+								</p:panel>						
+						</p:tab>
+					</p:tabView>	
+				</div>
+			</c:if>
+			<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250" dynamic="false">
+				<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" immediate="false" />
+				<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" immediate="false" />
+			</p:confirmDialog>
+			</h:form>
+		</div>	
+	</ui:define>
+</ui:composition>

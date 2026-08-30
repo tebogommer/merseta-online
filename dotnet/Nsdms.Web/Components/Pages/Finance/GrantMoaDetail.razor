@@ -1,12 +1,16 @@
 @page "/finance/grants/{id:int}"
+@using Nsdms.Application.Services
+@using Nsdms.Web.Components.Shared
 @inject IFinanceService FinanceService
+@inject IReportExportService ReportExportService
+@inject IJSRuntime JS
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @rendermode InteractiveServer
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-4">
     <!-- Sticky Top Bar / Action Bridge -->
-    <MudPaper Class="pa-4 mb-4 sticky-top bg-surface" Elevation="2" Style="top: 0; z-index: 10;">
+    <MudPaper Class="pa-4 mb-4 sticky-top bg-surface" Elevation="2" Style="top: var(--mud-appbar-height, 64px); z-index: 10;">
         <div class="d-flex flex-wrap justify-space-between align-center gap-4">
             <div class="d-flex align-center gap-3">
                 <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Default" OnClick="BackToList" aria-label="Back to List" />
@@ -26,6 +30,9 @@
             </div>
 
             <div class="d-flex align-center gap-2">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PictureAsPdf" OnClick="DownloadMoaPdf">
+                    Download MOA (PDF)
+                </MudButton>
                 @if (_moa.MoaStatusCode == "Pending Signature")
                 {
                     <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Draw" OnClick="SignoffMoa">
@@ -47,6 +54,10 @@
     }
     else
     {
+        <WorkflowProgressBar ProcessCode="GRANT_MOA" 
+                             EntityId="@Id" 
+                             EntityTitle="@_moa.MoaNumber" 
+                             EntityRef="@_moa.MoaNumber" />
         <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Color="Color.Primary">
             <!-- TAB 1: Contract Details -->
             <MudTabPanel Text="Contract Terms" Icon="@Icons.Material.Filled.Gavel">
@@ -378,6 +389,21 @@
         await FinanceService.ProcessTranchePayoutAsync(paymentId, "finance@merseta.org.za", bankRef);
         Snackbar.Add($"Tranche EFT payment released. Bank Ref: {bankRef}.", Severity.Success);
         await LoadData();
+    }
+
+    private async Task DownloadMoaPdf()
+    {
+        try
+        {
+            var pdfBytes = await ReportExportService.GenerateGrantMoaAgreementPdfAsync(_moa.Id);
+            using var streamRef = new DotNetStreamReference(new MemoryStream(pdfBytes));
+            await JS.InvokeVoidAsync("downloadFileFromStream", $"MOA_{_moa.MoaNumber}_Agreement.pdf", streamRef);
+            Snackbar.Add("Grant MOA Legal Agreement PDF downloaded.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error generating MOA agreement PDF: {ex.Message}", Severity.Error);
+        }
     }
 
     private void BackToList()

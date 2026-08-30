@@ -1,0 +1,204 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="head">
+		<script src="#{request.contextPath}/js/exporting.js" />
+	</ui:define>
+
+	<ui:define name="content">
+		<h:form id="mainForm">
+			<div class="ui-g">
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+						<h1>Below Threshold Report</h1>
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:panelGrid layout="grid" columns="2" styleClass="ui-panelgrid-blank">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText disabled="true" value="#{belowThresholdReportUI.schemeYearIdentifierBean.startOfYear}" style="width:95%">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</p:inputText>
+								<p:outputLabel value="Current Financial Year: Start Date" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText disabled="true" value="#{belowThresholdReportUI.schemeYearIdentifierBean.endOfYear}" style="width:95%">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</p:inputText>
+								<p:outputLabel value="Current Financial Year: End Date" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText disabled="true" value="#{belowThresholdReportUI.lastestSchemeYear}" style="width:95%" />
+								<p:outputLabel value="Lastest DHET scheme Year Identified" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield" rendered="false">
+								<p:inputText disabled="true" value="#{belowThresholdReportUI.countFilesUploadedForLastestSchemeYear}" style="width:95%" />
+								<p:outputLabel value="Files Uploaded For Lastest Scheme Year" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield" rendered="false">
+								<p:inputText disabled="true" value="#{belowThresholdReportUI.thresholdProRataMinAmount}" style="width:95%">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</p:inputText>
+								<p:outputLabel value="Minimum Threshold Amount for DHET scheme Year: #{belowThresholdReportUI.lastestSchemeYear}" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield" rendered="false">
+								<p:inputText disabled="true" value="#{belowThresholdReportUI.thresholdProRataMaxAmount}" style="width:95%">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</p:inputText>
+								<p:outputLabel value="Maximum Threshold Amount for DHET scheme Year: #{belowThresholdReportUI.lastestSchemeYear}" />
+							</h:panelGroup>
+						</p:panelGrid>
+						<p:panelGrid layout="grid" columns="2" styleClass="ui-panelgrid-blank">
+							<h:panelGroup styleClass="md-inputfield" >
+								<p:inputText disabled="true" value="#{belowThresholdReportUI.thresholdMinAmount}" style="width:95%">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</p:inputText>
+								<p:outputLabel value="Minimum Threshold Amount" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield" >
+								<p:inputText disabled="true" value="#{belowThresholdReportUI.thresholdMaxAmount}" style="width:95%">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</p:inputText>
+								<p:outputLabel value="Maximum Threshold Amount" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield" rendered="false">
+								<p:inputText disabled="true" value="#{belowThresholdReportUI.thresholdMinAmount}" style="width:95%">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</p:inputText>
+								<p:outputLabel value="Minimum Threshold Amount (DHET scheme Year: #{belowThresholdReportUI.lastestSchemeYear - 1} and below)" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield" rendered="false">
+								<p:inputText disabled="true" value="#{belowThresholdReportUI.thresholdMaxAmount}" style="width:95%">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</p:inputText>
+								<p:outputLabel value="Maximum Threshold Amount (DHET scheme Year: #{belowThresholdReportUI.lastestSchemeYear - 1} and below)" />
+							</h:panelGroup>
+						</p:panelGrid>
+						<p:panelGrid layout="grid" columns="1" styleClass="ui-panelgrid-blank">
+							<p:commandButton icon="fa fa-search-plus" onstart="uploadStart()" oncomplete="uploadDone()" value="View Thresholds For DHET Scheme Years" action="#{belowThresholdReportUI.generateAllSchmeYearsView}" update=":allShemeYearsForm" />
+						</p:panelGrid>
+						<p:panelGrid layout="grid" columns="1" styleClass="ui-panelgrid-blank">
+							<span class="Fs13 gray"><i class="fa fa-info-circle" aria-hidden="true"></i> Select DHET scheme years for report generation. </span>
+							<p:pickList converter="IntegerConvertor" id="companySelectionPickList" value="#{belowThresholdReportUI.schemeYearDualList}" var="compRW" itemLabel="#{compRW}" itemValue="#{compRW}" responsive="true" showCheckbox="true" showSourceFilter="true" showTargetFilter="true" filterMatchMode="contains"
+								styleClass="picklist-responsive">
+								<p:ajax event="transfer" />
+								<f:facet name="sourceCaption">Available DHET Scheme Years</f:facet>
+								<f:facet name="targetCaption">Selected DHET Scheme Years</f:facet>
+							</p:pickList>
+							<span class="Fs13 gray"><i class="fa fa-info-circle" aria-hidden="true"></i> Please be advised: the more DHET scheme years selected, the longer the report will take to generate.</span>
+							<p:commandButton icon="fa fa-bars" onstart="uploadStart()" oncomplete="uploadDone()" value="Generate Report" action="#{belowThresholdReportUI.generateReport}" update=":mainForm:resultsPanel" />
+						</p:panelGrid>
+					</div>
+					<p:outputPanel id="resultsPanel">
+						<c:if test="#{belowThresholdReportUI.reportBean ne null and belowThresholdReportUI.reportBean.size() ne 0}">
+							<div class="card card-w-title">
+								<p:panelGrid layout="grid" columns="1" styleClass="ui-panelgrid-blank">
+									<p:repeat var="rv" value="#{belowThresholdReportUI.reportBean}">
+										<h2>DHET #{rv.schemeYear} Results</h2>
+										<ui:include src="/pages/includes/download_lazy.xhtml">
+											<ui:param name="file_name" value="Below_Threshold_Report" />
+											<ui:param name="target" value="resultsTable" />
+										</ui:include>
+										<p:dataTable value="#{rv.resultsForSchemeYear}" var="rvDetail" id="resultsTable" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+											rowsPerPageTemplate="5,10,20,40,50" reflow="true">
+											<f:facet name="header">Scheme Year Lastest Is (DHET #{rv.schemeYear} But MerSETA #{rv.schemeYear + 1})  Results</f:facet>
+											<p:column headerText="Entity ID">
+												<p:outputLabel value="#{rvDetail.refNo}" />
+											</p:column>
+											<p:column headerText="DHET Scheme Year">
+												<p:outputLabel value="#{rvDetail.schemeYear}" styleClass="Fright" />
+											</p:column>
+											<p:column headerText="Total Amount (M+D+A)" rendered="false" exportable="false">
+												<h:outputText value="#{rvDetail.totalMDA}" styleClass="Fright">
+													<f:convertNumber pattern="###,###,###,###,##0.00" />
+												</h:outputText>
+											</p:column>
+											<p:column headerText="Total Amount (M+D+A)">
+												<h:outputText value="#{rvDetail.totalMDAMultipled}" styleClass="Fright">
+													<f:convertNumber pattern="###,###,###,###,##0.00" />
+												</h:outputText>
+											</p:column>
+											<p:column headerText="Total (P+I)" rendered="false" exportable="false">
+												<h:outputText value="#{rvDetail.totalPI}" styleClass="Fright">
+													<f:convertNumber pattern="###,###,###,###,##0.00" />
+												</h:outputText>
+											</p:column>
+											<p:column headerText="Total (P+I)">
+												<h:outputText value="#{rvDetail.totalPIMultipled}" styleClass="Fright">
+													<f:convertNumber pattern="###,###,###,###,##0.00" />
+												</h:outputText>
+											</p:column>
+											<p:column headerText="Total (M+D+A+P+I)" rendered="false" exportable="false">
+												<h:outputText value="#{rvDetail.totalAmount}" styleClass="Fright">
+													<f:convertNumber pattern="###,###,###,###,##0.00" />
+												</h:outputText>
+											</p:column>
+											<p:column headerText="Total (M+D+A+P+I)">
+												<h:outputText value="#{rvDetail.totalAmountMultipled}" styleClass="Fright">
+													<f:convertNumber pattern="###,###,###,###,##0.00" />
+												</h:outputText>
+											</p:column>
+										</p:dataTable>
+										<div class="EmptyBox10" />
+									</p:repeat>
+								</p:panelGrid>
+							</div>
+						</c:if>
+					</p:outputPanel>
+				</div>
+			</div>
+		</h:form>
+
+
+		<p:dialog position="top" header="DHET Scheme Year Threshold Report" dynamic="true" responsive="true" widgetVar="allShemeYearsDlg" resizable="false" hideEffect="clip" showEffect="clip" id="allShemeYearsDialog" appendTo="@(body)" modal="true" width="70%" height="80vh">
+			<h:form id="allShemeYearsForm">
+				<ui:include src="/pages/includes/download_lazy.xhtml">
+					<ui:param name="file_name" value="DHET_Scheme_Year_Threshold_Report" />
+					<ui:param name="target" value="schemeYearTable" />
+				</ui:include>
+				<p:dataTable value="#{belowThresholdReportUI.allSchmeYearsBeanList}" var="rowVar" id="schemeYearTable" paginator="true" rows="10" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+					rowsPerPageTemplate="10,20,40,50" reflow="true">
+					<p:column headerText="DHET Scheme Year">
+						<p:outputLabel value="#{rowVar.schemeYear}" />
+					</p:column>
+					<p:column headerText="MerSETA Financial Year: Start Date" >
+						<h:outputText value="#{rowVar.startFinDate}" styleClass="Fright">
+							<f:convertDateTime pattern="dd MMMM yyyy"/>
+						</h:outputText>
+					</p:column>
+					<p:column headerText="Files Uploaded Search: Start Month" >
+						<h:outputText value="#{rowVar.startFinDatePlusMonth}" styleClass="Fright">
+							<f:convertDateTime pattern="dd MMMM yyyy"/>
+						</h:outputText>
+					</p:column>
+					<p:column headerText="MerSETA Financial Year: End Date" >
+						<h:outputText value="#{rowVar.endFinDate}" styleClass="Fright">
+							<f:convertDateTime pattern="dd MMMM yyyy"/>
+						</h:outputText>
+					</p:column>
+					<p:column headerText="Files Uploaded Search: End Month" >
+						<h:outputText value="#{rowVar.endFinDatePlusMonth}" styleClass="Fright">
+							<f:convertDateTime pattern="dd MMMM yyyy"/>
+						</h:outputText>
+					</p:column>
+					<p:column headerText="Files Uploaded In Search" >
+						<h:outputText value="#{rowVar.filesFound}" styleClass="Fright">
+						</h:outputText>
+					</p:column>
+					<p:column headerText="Minimum Threshold Amount" >
+						<h:outputText value="#{rowVar.minAmount}" styleClass="Fright">
+							<f:convertNumber pattern="###,###,###,###,##0.00" />
+						</h:outputText>
+					</p:column>
+					<p:column headerText="Maximum Threshold Amount">
+						<h:outputText value="#{rowVar.maxAmount}" styleClass="Fright">
+							<f:convertNumber pattern="###,###,###,###,##0.00" />
+						</h:outputText>
+					</p:column>
+				</p:dataTable>
+
+			</h:form>
+		</p:dialog>
+
+	</ui:define>
+
+</ui:composition>

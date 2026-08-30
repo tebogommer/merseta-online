@@ -583,7 +583,7 @@ public static class SampleDataSeeder
                 ImportDate = new DateTime(2026, 6, 30),
                 TotalRecords = 4,
                 TotalAmount = 250000.00m,
-                StatusCode = "Reconciled"
+                ImportStatusCode = "Reconciled"
             };
 
             db.LevyFiles.Add(levyFile);
@@ -793,6 +793,96 @@ public static class SampleDataSeeder
             };
 
             db.LearnerTradeTests.Add(tradeTestFatima);
+            await db.SaveChangesAsync();
+        }
+
+        // ==========================================
+        // 10. SEED AUXILIARY & GOVERNANCE WORKBENCHES
+        // ==========================================
+        if (!await db.BankingDetails.AnyAsync())
+        {
+            var bankToyota = new BankingDetails
+            {
+                OrganisationId = orgToyotaDb.Id,
+                BankName = "Standard Bank South Africa",
+                BranchCode = "051001",
+                BranchName = "Johannesburg Corporate Branch",
+                AccountNumber = "00284719284",
+                AccountHolderName = "Toyota SA Motors (Pty) Ltd",
+                AccountTypeCode = "Current",
+                ApprovalStatusCode = "FullyApproved",
+                FirstSignoffUserId = "finance.officer@merseta.org.za",
+                FirstSignoffDate = DateTime.UtcNow.AddDays(-10),
+                FirstSignoffNotes = "Bank confirmation letter and stamped statement verified.",
+                SecondSignoffUserId = "finance.manager@merseta.org.za",
+                SecondSignoffDate = DateTime.UtcNow.AddDays(-8),
+                SecondSignoffNotes = "Dual signoff complete. ERP vendor synchronized.",
+                IsErpActive = true,
+                ErpVendorId = "VEND-TOYOTA-001",
+                ErpSyncDate = DateTime.UtcNow.AddDays(-8),
+                CreatedAt = DateTime.UtcNow.AddDays(-12),
+                CreatedBy = "SYSTEM"
+            };
+
+            db.BankingDetails.Add(bankToyota);
+            await db.SaveChangesAsync();
+        }
+
+        if (!await db.LearnerTradeTestApplications.AnyAsync())
+        {
+            var learnerDb = await db.CompanyLearners.FirstOrDefaultAsync() ?? new CompanyLearner { Id = 1, PersonId = pFatima.Id, OrganisationId = orgToyotaDb.Id };
+            var ttApp = new LearnerTradeTestApplication
+            {
+                CompanyLearnerId = learnerDb.Id,
+                PersonId = learnerDb.PersonId,
+                OrganisationId = learnerDb.OrganisationId,
+                TrainingProviderId = providerFestoDb.Id,
+                ApplicationNumber = "TT-2026-TOYOTA-001",
+                TradeTitle = "Automotive Motor Mechanic",
+                TradeOfoCode = "653101",
+                ApplicationTypeCode = "ARPL",
+                AttemptNumber = 1,
+                LearnerReadinessDate = DateTime.UtcNow.AddDays(-30),
+                StatusCode = "TradeCenterAllocated",
+                CompetencyStatusCode = "Competent",
+                NambSerialNumber = "NAMB-2026-8842",
+                SerialCertificateNumber = "CERT-2026-TOYOTA-88412",
+                CertificateIssueDate = DateTime.UtcNow.AddDays(-5),
+                CreatedAt = DateTime.UtcNow.AddDays(-35),
+                CreatedBy = "SYSTEM"
+            };
+
+            db.LearnerTradeTestApplications.Add(ttApp);
+            await db.SaveChangesAsync();
+        }
+
+        if (!await db.ReviewCommitteeMeetings.AnyAsync())
+        {
+            var meeting = new ReviewCommitteeMeeting
+            {
+                MeetingNumber = "RCM-2026-Q1-001",
+                Title = "ETQA & Governance Review Committee Q1 Ordinary Session",
+                MeetingTypeCode = "EtqaReviewCommittee",
+                FromDateTime = DateTime.UtcNow.AddDays(7),
+                ToDateTime = DateTime.UtcNow.AddDays(7).AddHours(4),
+                Venue = "merSETA Head Office - Boardroom 3 / Microsoft Teams Hybrid",
+                StatusCode = "Scheduled",
+                CreatedAt = DateTime.UtcNow.AddDays(-5),
+                CreatedBy = "SYSTEM"
+            };
+
+            meeting.Agendas.Add(new ReviewCommitteeMeetingAgenda
+            {
+                ItemNumber = 1,
+                Title = "Workplace Approval & Site Accreditation Ratifications",
+                Description = "Review and ratify 14 employer site inspection approvals recommended by Regional Field Officers.",
+                TargetEntityName = "WorkplaceApproval",
+                DecisionCode = "Pending",
+                CreatedAt = DateTime.UtcNow.AddDays(-5),
+                CreatedBy = "SYSTEM"
+            });
+
+            db.ReviewCommitteeMeetings.Add(meeting);
             await db.SaveChangesAsync();
         }
     }

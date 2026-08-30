@@ -38,6 +38,7 @@ public class PersonService : IPersonService
                 p.FirstName.Contains(s) ||
                 p.LastName.Contains(s) ||
                 p.RsaIdNumber.Contains(s) ||
+                (p.PassportNumber != null && p.PassportNumber.Contains(s)) ||
                 (p.Email != null && p.Email.Contains(s)) ||
                 (p.PhoneNumber != null && p.PhoneNumber.Contains(s)));
         }
@@ -115,6 +116,7 @@ public class PersonService : IPersonService
             existing.LastName,
             existing.RsaIdNumber,
             existing.PassportNumber,
+            existing.AlternateIdTypeId,
             existing.DateOfBirth,
             existing.Gender,
             existing.GenderCode,
@@ -125,11 +127,30 @@ public class PersonService : IPersonService
             existing.NationalityCode,
             existing.HomeLanguageCode,
             existing.ProvinceCode,
+            existing.SeeingRatingId,
+            existing.HearingRatingId,
+            existing.WalkingRatingId,
+            existing.RememberingRatingId,
+            existing.CommunicatingRatingId,
+            existing.SelfCareRatingId,
+            existing.LastSchoolEmisNumber,
+            existing.LastSchoolYear,
+            existing.StatssaAreaCode,
+            existing.PopiActStatusId,
+            existing.PopiActConsentDate,
+            existing.PreviousLastName,
+            existing.PreviousAlternateId,
+            existing.PreviousAlternateIdTypeId,
+            existing.PreviousProviderCode,
+            existing.PreviousProviderEtqaId,
             existing.Email,
             existing.PhoneNumber,
             existing.CellNumber,
+            existing.FaxNumber,
             existing.PhysicalAddress,
+            existing.PhysicalAddressPostalCode,
             existing.PostalAddress,
+            existing.PostalAddressPostalCode,
             existing.IsActive
         };
 
@@ -139,6 +160,7 @@ public class PersonService : IPersonService
         existing.LastName = person.LastName;
         existing.RsaIdNumber = person.RsaIdNumber;
         existing.PassportNumber = person.PassportNumber;
+        existing.AlternateIdTypeId = person.AlternateIdTypeId;
         existing.DateOfBirth = person.DateOfBirth;
         existing.Gender = person.Gender;
         existing.GenderCode = person.GenderCode;
@@ -149,11 +171,30 @@ public class PersonService : IPersonService
         existing.NationalityCode = person.NationalityCode;
         existing.HomeLanguageCode = person.HomeLanguageCode;
         existing.ProvinceCode = person.ProvinceCode;
+        existing.SeeingRatingId = person.SeeingRatingId;
+        existing.HearingRatingId = person.HearingRatingId;
+        existing.WalkingRatingId = person.WalkingRatingId;
+        existing.RememberingRatingId = person.RememberingRatingId;
+        existing.CommunicatingRatingId = person.CommunicatingRatingId;
+        existing.SelfCareRatingId = person.SelfCareRatingId;
+        existing.LastSchoolEmisNumber = person.LastSchoolEmisNumber;
+        existing.LastSchoolYear = person.LastSchoolYear;
+        existing.StatssaAreaCode = person.StatssaAreaCode;
+        existing.PopiActStatusId = person.PopiActStatusId;
+        existing.PopiActConsentDate = person.PopiActConsentDate;
+        existing.PreviousLastName = person.PreviousLastName;
+        existing.PreviousAlternateId = person.PreviousAlternateId;
+        existing.PreviousAlternateIdTypeId = person.PreviousAlternateIdTypeId;
+        existing.PreviousProviderCode = person.PreviousProviderCode;
+        existing.PreviousProviderEtqaId = person.PreviousProviderEtqaId;
         existing.Email = person.Email;
         existing.PhoneNumber = person.PhoneNumber;
         existing.CellNumber = person.CellNumber;
+        existing.FaxNumber = person.FaxNumber;
         existing.PhysicalAddress = person.PhysicalAddress;
+        existing.PhysicalAddressPostalCode = person.PhysicalAddressPostalCode;
         existing.PostalAddress = person.PostalAddress;
+        existing.PostalAddressPostalCode = person.PostalAddressPostalCode;
         existing.IsActive = person.IsActive;
         existing.ModifiedAt = DateTime.UtcNow;
         existing.ModifiedBy = currentUsername;
@@ -211,13 +252,13 @@ public class PersonService : IPersonService
             if (!string.IsNullOrWhiteSpace(parseResult.Gender))
             {
                 person.Gender = parseResult.Gender;
-                person.GenderCode ??= parseResult.Gender.StartsWith("M", StringComparison.OrdinalIgnoreCase) ? "M" : "F";
+                person.GenderCode = parseResult.Gender.StartsWith("M", StringComparison.OrdinalIgnoreCase) ? "M" : "F";
             }
 
             if (parseResult.IsSouthAfricanCitizen.HasValue)
             {
                 person.IsSouthAfricanCitizen = parseResult.IsSouthAfricanCitizen.Value;
-                person.CitizenStatusCode ??= parseResult.IsSouthAfricanCitizen.Value ? "SA_CIT" : "PERM_RES";
+                person.CitizenStatusCode = parseResult.IsSouthAfricanCitizen.Value ? "SA_CIT" : "PERM_RES";
             }
         }
     }

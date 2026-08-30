@@ -1,7 +1,9 @@
 @page "/employers/{id:int}"
 @page "/employers/create"
+@using Nsdms.Application.Services
 @inject IOrganisationService OrgService
 @inject IPersonService PersonService
+@inject IBrandAssetService BrandAssetService
 @inject VisitService VisitService
 @inject LookupService LookupService
 @inject NavigationManager NavManager
@@ -10,7 +12,7 @@
 @rendermode InteractiveServer
 
 <!-- Sticky Top Bar with Breadcrumbs and Action Buttons -->
-<div class="sticky-top bg-white pa-4 mb-4 border-bottom elevation-1 d-flex flex-wrap justify-space-between align-center gap-3">
+<MudPaper Elevation="1" Class="sticky-top pa-4 mb-4 rounded-lg d-flex flex-wrap justify-space-between align-center gap-3" Style="top: var(--mud-appbar-height, 64px); z-index: 10;">
     <div class="d-flex align-center gap-3">
         <MudButton Variant="Variant.Text"
                    StartIcon="@Icons.Material.Filled.ArrowBack"
@@ -19,6 +21,16 @@
             Back to Employers
         </MudButton>
         <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-2" />
+        @if (!string.IsNullOrEmpty(_logoDataUri))
+        {
+            <img src="@_logoDataUri" alt="Logo" style="height: 38px; width: 38px; object-fit: cover; border-radius: 4px; border: 1px solid var(--mud-palette-lines-default);" />
+        }
+        else
+        {
+            <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Small">
+                <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Small" />
+            </MudAvatar>
+        }
         <div>
             <MudBreadcrumbs Items="_breadcrumbItems" Separator=">" Class="pa-0 ma-0" />
             <MudText Typo="Typo.h6" Class="font-weight-bold">
@@ -29,6 +41,12 @@
     <div class="d-flex align-center gap-2">
         @if (Id > 0)
         {
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Info"
+                       StartIcon="@Icons.Material.Filled.PhotoCamera"
+                       OnClick="@(() => _showLogoDialog = true)">
+                Brand Logo
+            </MudButton>
             <MudButton Variant="Variant.Outlined"
                        Color="Color.Error"
                        StartIcon="@Icons.Material.Filled.Delete"
@@ -49,7 +67,7 @@
             @(_isSaving ? "Saving..." : "Save Employer")
         </MudButton>
     </div>
-</div>
+</MudPaper>
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-0">
     @if (_loading)
@@ -81,9 +99,9 @@
                                     <MudGrid>
                                         <MudItem xs="12" md="6">
                                             <MudTextField T="string"
-                                                          Label="Legal Company Name"
+                                                          Label="Legal Organisation Name"
                                                           Required="true"
-                                                          RequiredError="Legal Company Name is mandatory"
+                                                          RequiredError="Legal Organisation Name is mandatory"
                                                           @bind-Value="_organisation.CompanyName"
                                                           Variant="Variant.Outlined" />
                                         </MudItem>
@@ -104,7 +122,7 @@
                                         </MudItem>
                                         <MudItem xs="12" md="4">
                                             <MudTextField T="string"
-                                                          Label="CIPC Company Registration No"
+                                                          Label="CIPC / Enterprise Registration No"
                                                           @bind-Value="_organisation.RegistrationNumber"
                                                           Variant="Variant.Outlined"
                                                           Placeholder="e.g. 2018/123456/07" />
@@ -168,7 +186,7 @@
                                             </MudSelect>
                                         </MudItem>
                                         <MudItem xs="12" md="4">
-                                            <MudSelect T="string" Label="Company Size" @bind-Value="_organisation.CompanySizeCode" Variant="Variant.Outlined">
+                                            <MudSelect T="string" Label="Organisation Size" @bind-Value="_organisation.CompanySizeCode" Variant="Variant.Outlined">
                                                 @foreach (var cs in _companySizes)
                                                 {
                                                     <MudSelectItem Value="@cs.Code">@cs.Name</MudSelectItem>
@@ -737,6 +755,29 @@
     }
 </MudContainer>
 
+<!-- Brand Logo Dialog -->
+<MudDialog @bind-Visible="_showLogoDialog">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.PhotoCamera" Class="mr-2" /> Update High-DPI Corporate Logo
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField @bind-Value="_newLogoUri" Label="Image URL or Base64 Data URI" Variant="Variant.Outlined" Class="mb-3" />
+        <MudTextField @bind-Value="_newBrandColor" Label="Primary Corporate Brand Color (Hex)" Variant="Variant.Outlined" Class="mb-3" />
+        @if (!string.IsNullOrEmpty(_newLogoUri))
+        {
+            <div class="pa-2 border rounded text-center">
+                <img src="@_newLogoUri" style="max-height: 80px; max-width: 100%; object-fit: contain;" alt="Preview" />
+            </div>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showLogoDialog = false)">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveBrandLogo">Save Logo</MudButton>
+    </DialogActions>
+</MudDialog>
+
 @code {
     [Parameter] public int Id { get; set; }
 
@@ -826,12 +867,18 @@
         };
     }
 
+    private string? _logoDataUri;
+    private bool _showLogoDialog = false;
+    private string _newLogoUri = string.Empty;
+    private string _newBrandColor = "#cc9c47";
+
     private async Task LoadOrganisationData()
     {
         var org = await OrgService.GetByIdAsync(Id);
         if (org != null)
         {
             _organisation = org;
+            _logoDataUri = await BrandAssetService.GetLogoDataUriAsync(Id, "Organisation");
             _contacts = await OrgService.GetContactsAsync(Id);
             _sites = await OrgService.GetSitesAsync(Id);
             _visits = await VisitService.GetVisitsForOrganisationAsync(Id);
@@ -843,11 +890,22 @@
         }
     }
 
+    private async Task SaveBrandLogo()
+    {
+        if (Id > 0 && !string.IsNullOrWhiteSpace(_newLogoUri))
+        {
+            await BrandAssetService.SetOrganisationBrandAsync(Id, _newLogoUri, _newBrandColor, "AdminUser");
+            _logoDataUri = _newLogoUri;
+            _showLogoDialog = false;
+            Snackbar.Add("Corporate brand logo updated with audit log.", Severity.Success);
+        }
+    }
+
     private async Task SaveEmployer()
     {
         if (string.IsNullOrWhiteSpace(_organisation.CompanyName) || string.IsNullOrWhiteSpace(_organisation.SdlNumber))
         {
-            Snackbar.Add("Company Name and SDL Levy Number are required.", Severity.Warning);
+            Snackbar.Add("Organisation Name and SDL Levy Number are required.", Severity.Warning);
             return;
         }
 

@@ -1,0 +1,123 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>FormType</h1>
+					<h:form id="formtypeInsForm">
+						<p:growl sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+
+						<p:panelGrid columns="2" style="width:100%" id="formtypeInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="formTitle" value="#{formtypeUI.formtype.formTitle}" style="width:100%" />
+								<p:outputLabel value="Title" for="formTitle" />
+							</h:panelGroup>
+							
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="paperNum" value="#{formtypeUI.formtype.paperNumber}" style="width:100%" />
+								<p:outputLabel value="Paper Number" for="paperNum" />
+							</h:panelGroup>
+							
+							<h:panelGroup styleClass="md-inputfield">
+								<p:autoComplete style="width:100%"  id="qualificationAuto" value="#{formtypeUI.formtype.qualification}" required="true" completeMethod="#{autoCompleteUI.completeQualification}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}"
+											forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="1" maxResults="10" placeholder="#{lang['qualification']}">
+									<p:column headerText="#{lang['description']}" style="white-space: nowrap">#{rv.description}</p:column>
+								</p:autoComplete>
+							</h:panelGroup>
+							
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputNumber id="passMArk" value="#{formtypeUI.formtype.pointsThreshold}" style="width:100%" />
+								<p:outputLabel value="Pass Requirement" for="passMArk" style="width:100%" />
+								
+							</h:panelGroup>
+							
+							
+
+							<h:panelGroup>
+								<p:outputLabel value="#{lang['active']}" for="active" styleClass="gray" />
+								<p:spacer width="10"></p:spacer>
+								<p:selectBooleanCheckbox id="active" value="#{formtypeUI.formtype.active}" style="width:20%" />
+							</h:panelGroup>
+							
+						</p:panelGrid>
+					
+					<p:panelGrid columns="1" style="width:100%" id="formtypeInsGrid2" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					
+						<h:panelGroup>
+								<p:outputLabel value="Introduction" for="formIntro" />
+								<br />
+								<p:textEditor id="formIntro" value="#{formtypeUI.formtype.formIntroduction}" height="100" style="width:100%" />
+							</h:panelGroup>
+
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:formtypeList :formtypeInsForm:formtypeInsGrid" action="#{formtypeUI.formtypeInsert}" />
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="formtypeInsGrid" process="@this" action="#{formtypeUI.prepareNew}">
+									<p:resetInput target="formtypeInsGrid" />
+								</p:commandButton>
+							</p:panelGrid>
+					</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{formtypeUI.dataModel}" filteredValue="#{formtypeUI.formTypefilteredList}" id="formtypeList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25"
+							reflow="true" lazy="true">
+
+							<p:column headerText="Title">
+								<h:outputText value="#{rowVar.formTitle}" />
+							</p:column>
+
+							<p:column headerText="Pass Requirement">
+								<h:outputText value="#{rowVar.pointsThreshold}" />
+							</p:column>
+
+							<p:column headerText="#{lang['active']}">
+								<p:selectBooleanCheckbox id="active" value="#{rowVar.active}" style="width:95%" disabled="true" />
+							</p:column>
+
+
+							<p:column width="120">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":formtypeInsForm:formtypeInsGrid">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{formtypeUI.formtype}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:formtypeList" action="#{formtypeUI.formtypeDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{formtypeUI.formtype}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-search" title="View Form" update=":mainForm:formtypeList" action="#{formtypeUI.gotoConfig}">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{formtypeUI.formtype}" />
+								</p:commandButton>
+							</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+	<!-- 
+pointsThreshold = pointsThreshold
+active = active
+company = company
+createDate = createDate
+orderPos = orderPos
+users = users
+formTitle = formTitle
+
+-->
+</ui:composition>

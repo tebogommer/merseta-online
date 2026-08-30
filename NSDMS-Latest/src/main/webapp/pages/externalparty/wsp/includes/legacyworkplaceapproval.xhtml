@@ -1,0 +1,107 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+		<c:if test="#{sessionUI.externalParty}">
+			<ui:include src="/pages/includes/download_lazy.xhtml">
+				<ui:param name="file_name" value="Workplace approval Lagacy Data" />
+				<ui:param name="target" value="LegacyWorkPlaceApprovalData" />
+			</ui:include>
+		</c:if>
+		
+		<p:dataTable var="rowVar" value="#{legacyWorkplaceApprovalUI.dataModel}" id="LegacyWorkPlaceApprovalData" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+			<p:column style="width:7%" headerText="#{lang['expand.row']}">
+				<p:rowToggler />
+			</p:column>
+			<p:column headerText="NSDMS REF ID" rendered="false">
+				<h:outputText value="#{rowVar.id}" />
+			</p:column>
+			<p:column headerText="WAEmployerId" filterBy="#{rowVar.waEmployerId}">
+				<h:outputText value="#{rowVar.waEmployerId}" />
+			</p:column>
+			<p:column headerText="Site Number" filterBy="#{rowVar.sdlNo}">
+				<h:outputText value="#{rowVar.sdlNo}" />
+			</p:column>
+			<p:column headerText="Linked_SDL" filterBy="#{rowVar.linkedSdl}" rendered="false">
+				<h:outputText value="#{rowVar.linkedSdl}" />
+			</p:column>
+			<p:column headerText="OrganisationNameLegal">
+				<h:outputText value="#{rowVar.organisationNameLegal}" />
+			</p:column>
+			<p:column headerText="OrganisationNameTrade">
+				<h:outputText value="#{rowVar.organisationNameTrade}" />
+			</p:column>
+			<p:column headerText="WAEmployerStatus">
+				<h:outputText value="#{rowVar.waEmployerStatus}" />
+			</p:column>
+			<p:column headerText="ApplicationRecDate">
+				<h:outputText value="#{rowVar.applicationRecDate}" />
+			</p:column>
+			<p:column headerText="AccreditationStartDate">
+				<h:outputText value="#{rowVar.accreditationStartDate}" />
+			</p:column>
+			<p:column headerText="AccreditationEndDate">
+				<h:outputText value="#{rowVar.accreditationEndDate}" />
+			</p:column>
+			<p:column headerText="DateCreated">
+				<h:outputText value="#{rowVar.dateCreated}" />
+			</p:column>
+			<p:column headerText="LastDateChanged">
+				<h:outputText value="#{rowVar.lastDateChanged}" />
+			</p:column>
+			<p:column headerText="#{lang['setmisCode']}" rendered="false">
+				<h:outputText value="#{rowVar.setmisCode}" />
+			</p:column>
+			<p:column headerText="#{lang['qctoCode']}" rendered="false">
+				<h:outputText value="#{rowVar.qctoCode}" />
+			</p:column>
+			<p:column headerText="#{lang['code']}" rendered="false">
+				<h:outputText value="#{rowVar.code}" />
+			</p:column>
+			<p:column headerText="#{lang['createDate']}" rendered="false">
+				<h:outputText value="#{rowVar.createDate}" />
+			</p:column>
+
+			<p:column headerText="#{lang['nlrdCode']}" rendered="false">
+				<h:outputText value="#{rowVar.nlrdCode}" />
+			</p:column>
+
+			<p:column headerText="#{lang['smsCode']}" rendered="false">
+				<h:outputText value="#{rowVar.smsCode}" />
+			</p:column>
+
+			<p:rowExpansion>
+				<!-- <p:outputPanel rendered="#{rowVar.legacyEmployerWA2Learnership.size() > 0}"> -->
+				<p:outputPanel rendered="#{rowVar.legacyEmployerWA2Learnership.size() > 0}">
+					<ui:include src="/pages/externalparty/wsp/includes/legacyworkplaceapprovallearnership.xhtml" />
+				</p:outputPanel>
+				
+				<!-- <p:outputPanel rendered="#{rowVar.legacyEmployerWA2Qualification.size() > 0}"> -->
+				<p:outputPanel rendered="#{rowVar.legacyEmployerWA2Qualification.size() > 0}">
+					<ui:include src="/pages/externalparty/wsp/includes/legacyworkplaceapprovalqualification.xhtml" />
+				</p:outputPanel>
+				
+				<!-- <p:outputPanel rendered="#{rowVar.legacyEmployerWA2SkillsProgramme.size() > 0}"> -->
+				<p:outputPanel rendered="#{rowVar.legacyEmployerWA2SkillsProgramme.size() > 0}">
+					<ui:include src="/pages/externalparty/wsp/includes/legacyworkplaceapprovalskillsprogram.xhtml" />
+				</p:outputPanel>
+				
+				<!-- <p:outputPanel rendered="#{rowVar.legacyEmployerWA2Trade.size() > 0}"> -->
+				<p:outputPanel rendered="#{rowVar.legacyEmployerWA2Trade.size() > 0}">
+					<ui:include src="/pages/externalparty/wsp/includes/legacyworkplaceapprovaltrade.xhtml" />
+				</p:outputPanel>
+				
+				<!-- <p:outputPanel rendered="#{rowVar.legacyEmployerWA2UnitStandard.size() > 0}"> -->
+				<p:outputPanel rendered="#{rowVar.legacyEmployerWA2UnitStandard.size() > 0}">
+					<ui:include src="/pages/externalparty/wsp/includes/legacyworkplaceapprovalunitstandard.xhtml" />
+				</p:outputPanel>
+				
+			</p:rowExpansion>
+
+		</p:dataTable>
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+			<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+			<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+		</p:confirmDialog>
+
+</ui:composition>

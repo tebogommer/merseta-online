@@ -1,0 +1,56 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui">
+
+	<c:if test="#{trainingproviderapplicationUI.canActionInformation and trainingproviderapplicationUI.sdpType.alterSdpsLinked}">
+		<p:commandButton action="#{trainingproviderapplicationUI.prepNewSdpContactPerson}" value="Add New SDP contact Person" update=":sdpNewSdpForm" icon="fa fa-plus" process="@this" />
+		<div class="EmptyBox10" />
+		<span class="gray  Fleft"><p:commandButton icon="fa fa-database" disabled="true" /> - Update: SDP Contact Person's Designation </span>
+		<div class="EmptyBox5" />
+		<span class="gray  Fleft"><p:commandButton styleClass="red-btn" icon="fa fa-times" disabled="true" /> - Remove / De-link: SDP Contact Person </span>
+		<div class="EmptyBox5" />
+	</c:if>
+
+	<p:dataTable var="rowVarSdp" value="#{trainingproviderapplicationUI.sdpCompanyDataModel}" id="sdpCompList" paginator="true" rows="5" paginatorPosition="bottom" lazy="true"
+		paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+		<p:column headerText="Designation">
+			<p:outputLabel value="#{rowVarSdp.sdpType.description}"></p:outputLabel>
+		</p:column>
+		<p:column headerText="Title">
+			<p:outputLabel value="#{rowVarSdp.sdp.title.description}"></p:outputLabel>
+		</p:column>
+		<p:column headerText="First Name">
+			<p:outputLabel value="#{rowVarSdp.sdp.firstName}"></p:outputLabel>
+		</p:column>
+		<p:column headerText="Last Name">
+			<p:outputLabel value="#{rowVarSdp.sdp.lastName}"></p:outputLabel>
+		</p:column>
+		<p:column headerText="Identity Number">
+			<p:outputLabel value="#{rowVarSdp.sdp.rsaIDNumber}"></p:outputLabel>
+			<p:outputLabel value="#{rowVarSdp.sdp.passportNumber}"></p:outputLabel>
+		</p:column>
+		<p:column headerText="Email">
+			<p:outputLabel value="#{rowVarSdp.sdp.email}"></p:outputLabel>
+		</p:column>
+		<p:column headerText="Cell Number">
+			<p:outputLabel value="#{rowVarSdp.sdp.cellNumber}"></p:outputLabel>
+		</p:column>
+		<p:column headerText="Tel Number">
+			<p:outputLabel value="#{rowVarSdp.sdp.telNumber}"></p:outputLabel>
+		</p:column>
+		<p:column headerText="Fax Number">
+			<p:outputLabel value="#{rowVarSdp.sdp.faxNumber}"></p:outputLabel>
+		</p:column>
+		<p:column headerText="Status">
+			<p:outputLabel value="#{rowVarSdp.approvalStatus.friendlyName}"></p:outputLabel>
+		</p:column>
+		<p:column width="80" rendered="#{trainingproviderapplicationUI.canActionInformation}">
+			<p:commandButton rendered="#{rowVarSdp.canAction and trainingproviderapplicationUI.sdpType.alterSdpsLinked}" title="Update Designation" icon="fa fa-database" update=":sdpUpdateDesForm" action="#{trainingproviderapplicationUI.prepUpdateDesignationSdp}">
+				<f:setPropertyActionListener value="#{rowVarSdp}" target="#{trainingproviderapplicationUI.alterSdpCompany}" />
+			</p:commandButton>
+			<p:spacer width="5" />
+			<p:commandButton rendered="#{rowVarSdp.canAction and trainingproviderapplicationUI.sdpType.alterSdpsLinked}" title="Remove / De-link SDP Contact Person" icon="fa fa-times" update="@form :sdpRemoveSdpForm" action="#{trainingproviderapplicationUI.prepDelinkSdpContactPerson}" styleClass="red-btn">
+				<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="fa fa-exclamation-triangle" />
+				<f:setPropertyActionListener value="#{rowVarSdp}" target="#{trainingproviderapplicationUI.alterSdpCompany}" />
+			</p:commandButton>
+		</p:column>
+	</p:dataTable>
+</ui:composition>

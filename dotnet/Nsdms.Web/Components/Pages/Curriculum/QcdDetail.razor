@@ -1,0 +1,260 @@
+@page "/curriculum/{Id:int}"
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Domain.Entities
+@inject IQcdAndCurriculumService QcdService
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<PageTitle>Curriculum Scoping & SAQA Registration | merSETA NSDMS</PageTitle>
+
+@if (_qcd == null)
+{
+    <MudContainer Class="my-8 text-center">
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        <MudText Typo="Typo.body1" Class="mt-3">Loading curriculum development application...</MudText>
+    </MudContainer>
+}
+else
+{
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
+        <!-- Sticky Top Bar -->
+        <MudCard Elevation="2" Class="mb-4 sticky-top-header" Style="position: sticky; top: var(--mud-appbar-height, 64px) !important; z-index: 10;">
+            <MudCardContent Class="d-flex align-center justify-space-between py-3">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Primary" OnClick="@(() => Nav.NavigateTo("/curriculum"))" />
+                    <div>
+                        <MudText Typo="Typo.h5" Class="fw-bold">@_qcd.ApplicationNumber — @_qcd.QualificationTitle</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                            OFO: <strong>@_qcd.OfoCode</strong> | NQF: <strong>Level @_qcd.NqfLevel (@_qcd.TotalCreditsRequired Credits)</strong> | Type: <strong>@_qcd.DevelopmentTypeCode</strong>
+                        </MudText>
+                    </div>
+                </MudStack>
+
+                <MudStack Row="true" Spacing="2">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Cancel" OnClick="@(() => Nav.NavigateTo("/curriculum"))">
+                        Cancel
+                    </MudButton>
+
+                    @if (_qcd.StatusCode == "Draft")
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Warning" StartIcon="@Icons.Material.Filled.Groups" OnClick="ConveneWorkingGroupAsync">
+                            Convene Working Group
+                        </MudButton>
+                    }
+
+                    @if (_qcd.StatusCode == "PublicCommentOpen")
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Send" OnClick="SubmitToQctoAsync">
+                            Submit to QCTO / SAQA
+                        </MudButton>
+                    }
+
+                    @if (_qcd.StatusCode == "SubmittedToQcto")
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.CheckCircle" OnClick="RecordSaqaApprovalAsync">
+                            Record SAQA Registration
+                        </MudButton>
+                    }
+
+                    @if (_qcd.StatusCode == "ApprovedBySaqa")
+                    {
+                        <MudChip T="string" Color="Color.Success" Variant="Variant.Filled" Size="Size.Large" Icon="@Icons.Material.Filled.Verified">
+                            REGISTERED: @_qcd.SaqaRegistrationNumber
+                        </MudChip>
+                    }
+                </MudStack>
+            </MudCardContent>
+        </MudCard>
+
+        <!-- Main Structure Tabs -->
+        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6" Color="Color.Primary">
+            <!-- Tab 1: Scope & Strategic Alignment -->
+            <MudTabPanel Text="Scope & Policy Alignment" Icon="@Icons.Material.Filled.MenuBook">
+                <MudGrid>
+                    <MudItem xs="12" md="6">
+                        <MudCard Outlined="true" Class="pa-4 h-100">
+                            <MudText Typo="Typo.h6" Class="fw-bold mb-3">Occupational Qualification Scope</MudText>
+                            <MudSimpleTable Dense="true" Elevation="0">
+                                <tbody>
+                                    <tr><td><strong>Qualification Title:</strong></td><td>@_qcd.QualificationTitle</td></tr>
+                                    <tr><td><strong>OFO Code:</strong></td><td>@_qcd.OfoCode</td></tr>
+                                    <tr><td><strong>NQF Level:</strong></td><td>Level @_qcd.NqfLevel</td></tr>
+                                    <tr><td><strong>Total Credits:</strong></td><td>@_qcd.TotalCreditsRequired</td></tr>
+                                    <tr><td><strong>Development Type:</strong></td><td>@_qcd.DevelopmentTypeCode</td></tr>
+                                    <tr><td><strong>DQP Partner:</strong></td><td>@_qcd.DevelopmentQualityPartner</td></tr>
+                                    <tr><td><strong>AQP Partner:</strong></td><td>@_qcd.AssessmentQualityPartner</td></tr>
+                                </tbody>
+                            </MudSimpleTable>
+                        </MudCard>
+                    </MudItem>
+
+                    <MudItem xs="12" md="6">
+                        <MudCard Outlined="true" Class="pa-4 h-100">
+                            <MudText Typo="Typo.h6" Class="fw-bold mb-3">National Strategic Alignment</MudText>
+                            <MudStack Spacing="2">
+                                <MudCheckBox Value="_qcd.NationalDevelopmentPlanChecked" Label="National Development Plan (NDP 2030) Aligned" Color="Color.Success" ReadOnly="true" />
+                                <MudCheckBox Value="_qcd.NewGrowthPlanChecked" Label="New Growth Path (NGP) Job Creation Driver" Color="Color.Success" ReadOnly="true" />
+                                <MudCheckBox Value="_qcd.IndustrialPolicyActionPlanChecked" Label="Industrial Policy Action Plan (IPAP) Priority Sector" Color="Color.Success" ReadOnly="true" />
+                                <MudCheckBox Value="_qcd.StrategicInfrastructureChecked" Label="Strategic Integrated Projects (SIPs) Enabler" Color="Color.Info" ReadOnly="true" />
+                            </MudStack>
+                        </MudCard>
+                    </MudItem>
+                </MudGrid>
+            </MudTabPanel>
+
+            <!-- Tab 2: Development Working Group Stakeholders -->
+            <MudTabPanel Text="Working Group Stakeholders" Icon="@Icons.Material.Filled.Groups">
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-3">
+                    <MudText Typo="Typo.h6">QDF &amp; Stakeholder Working Group</MudText>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.PersonAdd" OnClick="AddMemberAsync">
+                        Add Working Group Member
+                    </MudButton>
+                </MudStack>
+
+                <MudTable Items="_qcd.WorkingGroupMembers" Dense="true" Elevation="0" Outlined="true">
+                    <HeaderContent>
+                        <MudTh>Member Name</MudTh>
+                        <MudTh>Stakeholder Role</MudTh>
+                        <MudTh>Organisation Represented</MudTh>
+                        <MudTh>Email</MudTh>
+                        <MudTh>Phone</MudTh>
+                        <MudTh>Attendance</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd Class="fw-semibold">@context.MemberName</MudTd>
+                        <MudTd>
+                            <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">@context.StakeholderRoleTitle</MudChip>
+                        </MudTd>
+                        <MudTd>@context.OrganisationRepresented</MudTd>
+                        <MudTd>@context.EmailAddress</MudTd>
+                        <MudTd>@context.PhoneNumber</MudTd>
+                        <MudTd>
+                            <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Filled">Confirmed</MudChip>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudTabPanel>
+
+            <!-- Tab 3: Skills Programmes & Part-Qualifications -->
+            <MudTabPanel Text="Skills Programmes & Modules" Icon="@Icons.Material.Filled.ViewModule">
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-3">
+                    <MudText Typo="Typo.h6">Skills Programmes (Part-Qualifications)</MudText>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add" OnClick="AddSkillsProgAsync">
+                        Add Skills Programme
+                    </MudButton>
+                </MudStack>
+
+                <MudTable Items="_qcd.SkillsRegistrations" Dense="true" Elevation="0" Outlined="true">
+                    <HeaderContent>
+                        <MudTh>Code</MudTh>
+                        <MudTh>Programme Title</MudTh>
+                        <MudTh>NQF Level</MudTh>
+                        <MudTh>Credits</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd Class="font-monospace fw-bold">@context.SkillsProgrammeCode</MudTd>
+                        <MudTd>@context.SkillsProgrammeTitle</MudTd>
+                        <MudTd>Level @context.NqfLevel</MudTd>
+                        <MudTd><strong>@context.Credits</strong></MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudTabPanel>
+        </MudTabs>
+    </MudContainer>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private QualificationsCurriculumDevelopment? _qcd;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadQcdAsync();
+    }
+
+    private async Task LoadQcdAsync()
+    {
+        _qcd = await QcdService.GetQcdByIdAsync(Id);
+    }
+
+    private async Task ConveneWorkingGroupAsync()
+    {
+        try
+        {
+            _qcd = await QcdService.ConveneWorkingGroupAndOpenPublicCommentAsync(Id, DateTime.UtcNow.AddDays(30), "QdfLead");
+            Snackbar.Add("Working group convened. Public comment period opened.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task SubmitToQctoAsync()
+    {
+        try
+        {
+            _qcd = await QcdService.SubmitToQctoForSaqaRegistrationAsync(Id, "QdfLead");
+            Snackbar.Add("Submitted to QCTO for national SAQA registration.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task RecordSaqaApprovalAsync()
+    {
+        try
+        {
+            var regNo = $"SAQA-{Guid.NewGuid().ToString("N")[..6].ToUpper()}";
+            _qcd = await QcdService.RecordSaqaRegistrationApprovalAsync(Id, regNo, DateTime.UtcNow, "ExecutiveManager");
+            Snackbar.Add($"SAQA qualification registration approved: {regNo}", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task AddMemberAsync()
+    {
+        try
+        {
+            _qcd = await QcdService.AddWorkingGroupMemberAsync(
+                Id,
+                "Dr. Dumisani Sithole",
+                "IndustryExpert",
+                "Automotive Industry Development Centre (AIDC)",
+                "d.sithole@aidc.co.za",
+                "0125643100",
+                "QdfLead");
+            Snackbar.Add("Added working group member.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task AddSkillsProgAsync()
+    {
+        try
+        {
+            _qcd = await QcdService.AddSkillsRegistrationAsync(
+                Id,
+                "SP-EV-001",
+                "Electric Vehicle High-Voltage Battery Safety & Isolation",
+                30,
+                4,
+                "[\"US-9844\", \"US-9845\"]",
+                "QdfLead");
+            Snackbar.Add("Added skills programme.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+}

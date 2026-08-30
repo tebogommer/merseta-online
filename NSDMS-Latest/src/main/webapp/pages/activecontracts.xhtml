@@ -1,0 +1,248 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+		<p:importEnum type="haj.com.entity.enums.ContractStatusEnum"></p:importEnum>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<c:if test="#{sessionUI.user.projectCreation}">
+					<div class="card card-w-title">
+						<h1>New Contracts</h1>
+						<h:form id="activecontractsInsForm">
+							<p:growl sticky="false">
+								<p:autoUpdate />
+							</p:growl>
+							<p:panelGrid columns="2" style="width:100%" id="activecontractsInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+								<h:panelGroup styleClass="md-inputfield">
+									<p:autoComplete id="company" value="#{activecontractsUI.activecontracts.company}" completeMethod="#{autoCompleteUI.completeCompany}" var="rv" itemLabel="#{rv.companyNameDisplay}" itemValue="#{rv}" forceSelection="true" converter="CompanyConvertor" dropdown="false" minQueryLength="3" maxResults="10" style="width:100%" inputStyle="width:95%">
+										<p:column headerText="#{lang['companyName']}" style="white-space: nowrap">#{rv.companyName}</p:column>
+										<p:column headerText="#{lang['entity.id']}" style="white-space: nowrap">#{rv.levyNumber}</p:column>
+										<p:ajax event="itemSelect" update="@form"></p:ajax>
+									</p:autoComplete>
+									<p:outputLabel value="#{lang['company']}" for="company" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:calendar id="startdate" value="#{activecontractsUI.activecontracts.startdate}" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" inputStyle="width:95%" />
+									<p:outputLabel value="#{lang['start.date']}" for="startdate" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:calendar id="reviseddate" value="#{activecontractsUI.activecontracts.reviseddate}" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" inputStyle="width:95%" />
+									<p:outputLabel value="#{lang['reviseddate']}" for="reviseddate" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:calendar id="signdate" value="#{activecontractsUI.activecontracts.signdate}" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" inputStyle="width:95%" />
+									<p:outputLabel value="#{lang['signdate']}" for="signdate" />
+								</h:panelGroup>
+								<h:panelGroup>
+									<div>
+										<p:outputLabel value="Contract Status" for="contractStatus" />
+									</div>
+									<div>
+										<p:selectOneMenu id="contractStatus" value="#{activecontractsUI.activecontracts.contractStatusEnum}" style="width:95%" required="true">
+											<p:ajax />
+											<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+											<f:selectItems value="#{enumUI.contractStatusEnumDD}" />
+										</p:selectOneMenu>
+									</div>
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="refno" value="#{activecontractsUI.activecontracts.refno}" style="width:95%" />
+									<p:outputLabel value="Project Reference/Name" for="refno" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="tranchintervals" value="#{activecontractsUI.activecontracts.tranchintervals}" style="width:95%" />
+									<p:outputLabel value="#{lang['tranchintervals']}" for="tranchintervals" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="nooflearners" value="#{activecontractsUI.activecontracts.nooflearners}" style="width:95%" />
+									<p:outputLabel value="#{lang['nooflearners']}" for="nooflearners" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputNumber id="contractvalue" value="#{activecontractsUI.activecontracts.contractvalue}" inputStyle="width:95%" style="width:95%" decimalPlaces="2">
+										<f:convertNumber pattern="####################0.00" />
+									</p:inputNumber>
+									<p:outputLabel value="#{lang['contractvalue']}" for="contractvalue" />
+								</h:panelGroup>
+							</p:panelGrid>
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:activecontractsList :activecontractsInsForm:activecontractsInsGrid" action="#{activecontractsUI.activecontractsInsert}" />
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="activecontractsInsGrid" process="@this" action="#{activecontractsUI.prepareNew}">
+									<p:resetInput target="activecontractsInsGrid" />
+								</p:commandButton>
+							</p:panelGrid>
+						</h:form>
+					</div>
+				</c:if>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Commitment Register</h1>
+					<h:form id="mainForm">
+						<div align="right">
+							<h:commandLink title="#{lang['export.search.results.to.excel']}">
+								<i class="fa fa-file-excel-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+								<p:dataExporter type="xls" target="activecontractsList" fileName="activecontract" pageOnly="false" />
+							</h:commandLink>
+							<h:commandLink rendered="false" title="#{lang['export.search.results.to.pdf']}">
+								<i class="fa fa-file-pdf-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+								<p:dataExporter type="pdf" target="activecontractsList" fileName="activecontract" pageOnly="false" />
+							</h:commandLink>
+							<h:commandLink title="#{lang['export.search.results.as.a.csv']}">
+								<i class="fa fa-file-text-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+								<p:dataExporter type="csv" target="activecontractsList" fileName="activecontract" pageOnly="false" />
+							</h:commandLink>
+							<h:commandLink title="#{lang['export.search.results.as.a.xml']}">
+								<i class="fa fa-file-code-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+								<p:dataExporter type="xml" target="activecontractsList" fileName="activecontract" pageOnly="false" />
+							</h:commandLink>
+							<p:tooltip position="left" />
+						</div>
+						<p:dataTable var="rowVar" value="#{activecontractsUI.dataModel}" filteredValue="#{activecontractsUI.activeContractsfilteredList}" id="activecontractsList" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+							rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+							<p:column headerText="#{lang['expand.row']}" width="45" exportable="false">
+								<p:rowToggler></p:rowToggler>
+							</p:column>
+							<p:column headerText="#{lang['refno']}">
+								<h:outputText value="#{rowVar.refnoAuto}" />
+								<h:outputText value="#{rowVar.refno}" />
+							</p:column>
+							<p:column headerText="#{lang['company']}">
+								<h:outputText value="#{rowVar.company.companyNameDisplay}" />
+								<h:outputText value="#{rowVar.dgAllocationParent.wsp.company.companyNameDisplay}" />
+							</p:column>
+							<p:column headerText="#{lang['start.date']}">
+								<h:outputText value="#{rowVar.startdate}">
+									<f:convertDateTime pattern="dd MMMM yyyy" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['originalenddate']}">
+								<h:outputText value="#{rowVar.endDateAuto}">
+									<f:convertDateTime pattern="dd MMMM yyyy" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['amendmentenddate']}">
+								<h:outputText value="#{rowVar.amendmentenddate}">
+									<f:convertDateTime pattern="dd MMMM yyyy" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['contractStatusEnum']}">
+								<h:outputText value="#{rowVar.contractStatusEnum.friendlyName}" />
+							</p:column>
+							<p:column headerText="#{lang['nooflearners']}">
+								<h:outputText value="#{rowVar.nooflearners}" />
+							</p:column>
+							<p:column headerText="#{lang['contractvalue']}">
+								<h:outputText value="#{rowVar.contractvalue}">
+									<f:convertNumber pattern="####################0.00" />
+								</h:outputText>
+							</p:column>
+							<p:column width="80" headerText="#{lang['view.edit']}" rendered="#{sessionUI.user.projectCreation or sessionUI.user.projectTermination}" exportable="false">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":activecontractsInsForm:activecontractsInsGrid" rendered="#{sessionUI.user.projectCreation and (rowVar.contractStatusEnum ne ContractStatusEnum.SuspendProgress and rowVar.contractStatusEnum ne ContractStatusEnum.Terminated)}">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{activecontractsUI.activecontracts}" />
+								</p:commandButton>
+								<p:spacer width="5"></p:spacer>
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['dg.terminate.project']}" update="activecontractdetailInsForm mainForm" action="#{activecontractsUI.terminateProject}" rendered="#{sessionUI.user.projectTermination and (rowVar.contractStatusEnum ne ContractStatusEnum.SuspendProgress and rowVar.contractStatusEnum ne ContractStatusEnum.Terminated)}">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{activecontractsUI.activecontracts}" />
+								</p:commandButton>
+							</p:column>
+							<p:rowExpansion>
+								<p:dataTable value="#{rowVar.activeContractDetails}" var="detail" reflow="true" emptyMessage="#{lang['no.records.found']}">
+									<p:column headerText="#{lang['status']}">
+										<h:outputText value="#{detail.statusValid.friendlyName}">
+										</h:outputText>
+									</p:column>
+									<p:column headerText="Payment Type" rendered="#{rowVar.dgAllocationParent ne null}">
+										<h:outputText value="#{detail.trancheEnum.friendlyName}">
+										</h:outputText>
+									</p:column>
+									<p:column headerText="#{lang['payment.month']}">
+										<h:outputText value="#{detail.paymentMonth}">
+											<f:convertDateTime pattern="MMMM yyyy" />
+										</h:outputText>
+									</p:column>
+									<p:column headerText="Deliverable">
+										<h:outputText value="#{detail.projectImplementationPlan.interventionType.description}">
+										</h:outputText>
+										<h:outputText value="#{detail.projectImplementationPlan.interventionTypeDescription}"></h:outputText>
+									</p:column>
+									<p:column headerText="Funded Learners" rendered="#{rowVar.dgAllocationParent ne null}">
+										<h:outputText value="#{detail.projectImplementationPlan.fullyFundedLearnerAwarded}">
+										</h:outputText>
+									</p:column>
+									<p:column headerText="Partially Funded Learners" rendered="#{rowVar.dgAllocationParent ne null}">
+										<h:outputText value="#{detail.projectImplementationPlan.coFundingLearnersAwarded}">
+										</h:outputText>
+									</p:column>
+									<p:column headerText="Opening Balance">
+										<p:outputLabel value="#{detail.openingbalance}">
+											<f:convertNumber pattern="####################0.00" />
+										</p:outputLabel>
+									</p:column>
+									<p:column headerText="#{lang['payments']}">
+										<h:outputText value="#{detail.payments}" />
+									</p:column>
+									<p:column headerText="#{lang['total']}">
+										<h:outputText value="#{detail.total}" />
+									</p:column>
+									<p:column headerText="Closing Balance">
+										<p:outputLabel value="#{detail.closingbalance}">
+											<f:convertNumber pattern="####################0.00" />
+										</p:outputLabel>
+									</p:column>
+									<p:column width="40" headerText="#{lang['view.edit']}">
+										<p:commandButton icon="fa fa-pencil" title="Edit Detail" update="activecontractdetailInsForm" oncomplete="PF('newDetail').show()" rendered="#{detail.id eq null}">
+											<f:setPropertyActionListener value="#{detail}" target="#{activecontractdetailUI.activecontractdetail}" />
+										</p:commandButton>
+									</p:column>
+								</p:dataTable>
+							</p:rowExpansion>
+						</p:dataTable>
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+					</h:form>
+				</div>
+			</div>
+		</div>
+		<p:dialog header="Active Contract Detail" widgetVar="newDetail" resizable="false" hideEffect="clip" showEffect="clip" id="dlgDetailID" width="50%" responsive="true" modal="true" dynamic="true">
+			<h:form id="activecontractdetailInsForm">
+				<p:panelGrid columns="2" style="width:100%" id="activecontractdetailInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<h:panelGroup styleClass="md-inputfield">
+						<p:calendar id="paymentMonth" value="#{activecontractdetailUI.activecontractdetail.paymentMonth}" inputStyle="width:95%" pattern="MMMMM yyyy" required="true" />
+						<p:outputLabel value="#{lang['payment.month']}" for="paymentMonth" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="payments" value="#{activecontractdetailUI.activecontractdetail.payments}" style="width:95%" />
+						<p:outputLabel value="#{lang['payments']}" for="payments" />
+					</h:panelGroup>
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="Payment Type" for="tranche" />
+						</div>
+						<div>
+							<p:selectOneMenu id="tranche" value="#{activecontractdetailUI.activecontractdetail.trancheEnum}" style="width:75%" required="true">
+								<p:ajax />
+								<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+								<f:selectItems value="#{enumUI.trancheEnumDD}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="Intervention" for="intervention" />
+						</div>
+						<div>
+							<p:selectOneMenu id="intervention" value="#{activecontractdetailUI.activecontractdetail.interventionType}" converter="InterventionTypeConvertor" style="width:75%">
+								<p:ajax></p:ajax>
+								<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsInterventionType}" var="il" itemLabel="#{il.description}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+						<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update="mainForm" action="#{activecontractdetailUI.activecontractdetailInsert}" />
+					</p:panelGrid>
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+	</ui:define>
+</ui:composition>

@@ -4,29 +4,29 @@
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 
-<div class="workflow-action-bridge pa-3 my-3 rounded-lg elevation-1" style="background-color: #f8fafc; border: 1px solid #e2e8f0;">
+<MudPaper Elevation="1" Class="workflow-action-bridge pa-3 my-3 rounded-lg">
     <div class="d-flex flex-wrap align-center justify-space-between gap-3">
         <!-- Current Workflow State Badge & Info -->
         <div class="d-flex align-center gap-2">
-            <MudIcon Icon="@Icons.Material.Filled.AccountTree" Style="color: #1e40af;" Size="Size.Small" />
-            <span style="font-weight: 600; font-size: 0.875rem; color: #334155;">Workflow Status:</span>
+            <MudIcon Icon="@Icons.Material.Filled.AccountTree" Color="Color.Primary" Size="Size.Small" />
+            <MudText Typo="Typo.body2" Class="font-weight-bold">Workflow Status:</MudText>
             @if (_instance != null && _instance.CurrentWorkflowState != null)
             {
-                <span class="px-2 py-1 rounded" style="background-color: #dbeafe; color: #1e40af; font-size: 0.8125rem; font-weight: 700;">
+                <MudChip T="string" Color="Color.Primary" Variant="Variant.Filled" Size="Size.Small">
                     @_instance.CurrentWorkflowState.StateName
-                </span>
+                </MudChip>
                 @if (_instance.IsCompleted)
                 {
-                    <span class="px-2 py-1 rounded" style="background-color: #d1fae5; color: #065f46; font-size: 0.75rem; font-weight: 700;">
-                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Style="vertical-align: middle;" /> Completed
-                    </span>
+                    <MudChip T="string" Color="Color.Success" Variant="Variant.Filled" Size="Size.Small" Icon="@Icons.Material.Filled.CheckCircle">
+                        Completed
+                    </MudChip>
                 }
             }
             else
             {
-                <span class="px-2 py-1 rounded" style="background-color: #f1f5f9; color: #64748b; font-size: 0.8125rem; font-weight: 600;">
+                <MudChip T="string" Color="Color.Default" Variant="Variant.Outlined" Size="Size.Small">
                     Not Initiated
-                </span>
+                </MudChip>
             }
         </div>
 
@@ -36,7 +36,7 @@
             {
                 <MudButton Variant="Variant.Filled" 
                            Color="Color.Primary" 
-                           Size="Size.Small"
+                           Size="Size.Medium"
                            StartIcon="@Icons.Material.Filled.PlayArrow"
                            Disabled="@_isProcessing"
                            OnClick="StartWorkflowAsync">
@@ -48,34 +48,34 @@
                 @foreach (var transition in _availableTransitions)
                 {
                     var isReject = transition.ActionName.Contains("Reject", StringComparison.OrdinalIgnoreCase) || transition.ActionName.Contains("Decline", StringComparison.OrdinalIgnoreCase);
-                    <button type="button"
-                            class="btn-action-transition"
-                            style="background-color: @(isReject ? "#991b1b" : (transition.ButtonColor ?? "#1e40af")); color: #ffffff; padding: 6px 14px; border-radius: 6px; font-weight: 600; font-size: 0.8125rem; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;"
-                            disabled="@_isProcessing"
-                            @onclick="() => HandleTransitionClickAsync(transition)">
-                        <MudIcon Icon="@(isReject ? Icons.Material.Filled.Cancel : Icons.Material.Filled.Check)" Size="Size.Small" />
+                    <MudButton Variant="Variant.Filled"
+                               Color="@(isReject ? Color.Error : Color.Primary)"
+                               Size="Size.Medium"
+                               StartIcon="@(isReject ? Icons.Material.Filled.Cancel : Icons.Material.Filled.Check)"
+                               Disabled="@_isProcessing"
+                               OnClick="() => HandleTransitionClickAsync(transition)">
                         @transition.ActionName
-                    </button>
+                    </MudButton>
                 }
             }
             else if (_instance.IsCompleted)
             {
-                <span style="color: #065f46; font-size: 0.8125rem; font-weight: 600;">
-                    <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Small" Style="vertical-align: middle;" /> Final State Locked
-                </span>
+                <MudChip T="string" Color="Color.Success" Variant="Variant.Text" Size="Size.Small" Icon="@Icons.Material.Filled.Lock">
+                    Final State Locked
+                </MudChip>
             }
         </div>
     </div>
 
     @if (_showCommentModal && _selectedTransition != null)
     {
-        <div class="comment-modal-backdrop mt-3 pa-4 rounded-lg elevation-2" style="background-color: #ffffff; border: 1px solid #cbd5e1;">
-            <p style="font-weight: 700; color: #0f172a; margin: 0 0 8px 0; font-size: 0.9rem;">
+        <MudPaper Elevation="2" Class="comment-modal mt-3 pa-4 rounded-lg">
+            <MudText Typo="Typo.subtitle2" Class="font-weight-bold mb-1">
                 Confirm Action: @_selectedTransition.ActionName
-            </p>
-            <p style="font-size: 0.8125rem; color: #475569; margin: 0 0 12px 0;">
+            </MudText>
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block mb-3">
                 Please provide notes or justification for this state transition.
-            </p>
+            </MudText>
             <MudTextField @bind-Value="_commentText" 
                           Label="Action Comments / Notes" 
                           Variant="Variant.Outlined" 
@@ -93,16 +93,9 @@
                     Confirm Transition
                 </MudButton>
             </div>
-        </div>
+        </MudPaper>
     }
-</div>
-
-<style>
-    .btn-action-transition:hover {
-        opacity: 0.92;
-        filter: brightness(1.1);
-    }
-</style>
+</MudPaper>
 
 @code {
     [Parameter] public string ProcessCode { get; set; } = string.Empty;

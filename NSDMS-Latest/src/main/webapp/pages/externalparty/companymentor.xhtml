@@ -1,0 +1,638 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<p:importEnum type="haj.com.entity.enums.PivotNonPivotEnum" />
+					<p:importEnum type="haj.com.entity.enums.LearnerStatusEnum" />
+					<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+					<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+					<p:importEnum type="haj.com.entity.enums.LearnerChangeTypeEnum" />
+					<p:importEnum type="haj.com.entity.enums.YesNoEnum" />
+					<p:importEnum type="haj.com.entity.enums.IdPassportEnum" var="idPassportEnum"></p:importEnum>
+					<h1>Companies</h1>
+					
+					<h:form id="learnersInsForm">
+						<p:growl sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						
+						<p:dataTable value="#{dashboardExternalPartyUI.companies}" var="rv" reflow="true" emptyMessage="#{lang['no.records.found']}"
+							 rows="5" paginatorPosition="bottom"
+			                 paginator="true"
+			                 paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+			                 rowsPerPageTemplate="5,10,15,25,30,35,40,45,50,100,150,200">
+							<p:column headerText="#{lang['companyName']}" filterBy="#{rv.companyName}" sortBy="#{rv.companyName}">#{rv.companyName}</p:column>
+							<p:column headerText="#{lang['companyRegistrationNumber']}" filterBy="#{rv.companyRegistrationNumber}" sortBy="#{rv.companyRegistrationNumber}">#{rv.companyRegistrationNumber}</p:column>
+							<p:column headerText="#{lang['entity.id']}" filterBy="#{rv.levyNumber}" sortBy="#{rv.levyNumber}">#{rv.levyNumber}</p:column>
+							<p:column headerText="#{lang['company.status']}" width="10%">#{lang[rv.companyStatus.registrationName]}</p:column>
+							<p:column headerText="Size of Company" width="10%">#{rv.sizeOfCompany.detailDescription}</p:column>
+							<p:column headerText="#{lang['levy.paying']}" width="110" style="text-align:center">
+								<p:outputPanel rendered="#{rv.nonLevyPaying}">
+									<i class="fa fa-times fa-3x red" aria-hidden="true"></i>
+								</p:outputPanel>
+								<p:outputPanel rendered="#{not rv.nonLevyPaying}">
+									<i class="fa fa-check fa-3x green" aria-hidden="true"></i>
+								</p:outputPanel>
+							</p:column>
+							<p:column headerText="#{lang['RAG']}" width="37">
+								<h:graphicImage value="/resources/hls/images/red.svg" rendered="#{rv.companyStatus eq CompanyStatusEnum.Pending}" width="40" styleClass="animated pulse infinite" />
+								<h:graphicImage value="/resources/hls/images/green.svg" rendered="#{rv.companyStatus eq CompanyStatusEnum.Active}" width="30" />
+							</p:column>
+
+							<p:column width="45" rendered="true" headerText="#{lang['view.edit']}">
+								<p:commandButton icon="fa fa-users" title="#{lang['mentor.management']}" action="#{companyMentorUI.checkLearnerInfo}" update="learnersInsForm" rendered="#{rv.companyStatus eq CompanyStatusEnum.Active and rv.organisationType.workplaceApprovalRequired}">
+									<f:setPropertyActionListener value="#{rv}" target="#{companyMentorUI.selectedCompany}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+						
+						
+						<c:if test="#{companyMentorUI.selectedCompany ne null}">
+							<div class="card card-w-title">
+								<h3>#{companyMentorUI.selectedCompany.companyName}'s Mentors</h3>
+								<p:commandButton icon="fa fa-plus" value="Add Mentor" immediate="true" update=":siteSmeForm" oncomplete="PF('dlgAddSiteSme').show()"  action="#{sitessmeUI.prepNewSmeUser}" rendered="#{sessionUI.mentorregistration}">
+									<f:setPropertyActionListener value="#{companyMentorUI.selectedCompany}" target="#{sitessmeUI.company}" />
+									<f:setPropertyActionListener value="PF('dlgAddSiteSme').show()" target="#{companyinfoUI.redirectionPage}" />
+								</p:commandButton>
+								<p:commandButton  icon="fa fa-plus" value="Add Mentor" immediate="true" update=":siteSmeForm" oncomplete="PF('dlgAddSiteSme').show()" rendered="false" action="#{companyMentorUI.prepNewSmeUser}">
+									<f:setPropertyActionListener value="#{companyMentorUI.selectedCompany}" target="#{companyMentorUI.selectedCompany}" />
+								</p:commandButton>
+								<br />
+								<br />
+								<ui:include src="/pages/includes/download_lazy.xhtml">
+									<ui:param name="file_name" value="Mentor_List" />
+									<ui:param name="target" value="mentorList" />
+								</ui:include>
+								<ui:include src="/pages/includes/filterGuide.xhtml" />
+								
+								<p:dataTable var="rowVarSme" id="mentorList" value="#{companyMentorUI.allSmeDataModel}" rowKey="#{rowVarSme.id}" paginator="true" rows="5" paginatorPosition="bottom"
+									paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+									<p:ajax event="rowToggle" listener="#{companyMentorUI.listenerMethod(rowVarSme)}" />
+									<p:column style="width:7%" headerText="#{lang['expand.row']}" exportable="false">
+										<p:rowToggler />
+									</p:column>
+	
+									<p:column headerText="Site Name" sortBy="#{rowVarSme.sites}">
+										<p:outputLabel value="#{rowVarSme.sites.companyName}" rendered="#{rowVarSme.sites ne null}" />
+										<p:outputLabel value="#{rowVarSme.company.companyName}" rendered="#{rowVarSme.sites eq null}" />
+									</p:column>
+									<p:column headerText="Address" exportable="false">
+										<p:outputLabel value="#{rowVarSme.sites.registeredAddress.addressLine1}" rendered="#{rowVarSme.sites ne null}" />
+										<p:outputLabel value="#{rowVarSme.company.residentialAddress.addressLine1}" rendered="#{rowVarSme.company.residentialAddress ne null}" />
+										<br />
+										<p:outputLabel value="#{rowVarSme.sites.registeredAddress.addressLine2}" rendered="#{rowVarSme.sites ne null}" />
+										<p:outputLabel value="#{rowVarSme.company.residentialAddress.addressLine2}" rendered="#{rowVarSme.company.residentialAddress ne null}" />
+										<br />
+										<p:outputLabel value="#{rowVarSme.sites.registeredAddress.addressLine3}" rendered="#{rowVarSme.sites ne null}" />
+										<p:outputLabel value="#{rowVarSme.company.residentialAddress.addressLine3}" rendered="#{rowVarSme.company.residentialAddress ne null}" />
+										<br />
+										<p:outputLabel value="#{rowVarSme.sites.registeredAddress.town.description}" rendered="#{rowVarSme.sites ne null}" />
+										<p:outputLabel value="#{rowVarSme.company.residentialAddress.town.description}" rendered="#{rowVarSme.company.residentialAddress ne null}" />
+										<br />
+									</p:column>
+									<p:column headerText="Address" style="display:none" >
+										<p:outputLabel value="#{rowVarSme.sites.registeredAddress.addressLine1}" rendered="#{rowVarSme.sites ne null}" />
+										<p:outputLabel value="#{rowVarSme.company.residentialAddress.addressLine1}" rendered="#{rowVarSme.company.residentialAddress ne null}" />
+										, 
+										<p:outputLabel value="#{rowVarSme.sites.registeredAddress.addressLine2}" rendered="#{rowVarSme.sites ne null}" />
+										<p:outputLabel value="#{rowVarSme.company.residentialAddress.addressLine2}" rendered="#{rowVarSme.company.residentialAddress ne null}" />
+										, 
+										<p:outputLabel value="#{rowVarSme.sites.registeredAddress.addressLine3}" rendered="#{rowVarSme.sites ne null}" />
+										<p:outputLabel value="#{rowVarSme.company.residentialAddress.addressLine3}" rendered="#{rowVarSme.company.residentialAddress ne null}" />
+										, 
+										<p:outputLabel value="#{rowVarSme.sites.registeredAddress.town.description}" rendered="#{rowVarSme.sites ne null}" />
+										<p:outputLabel value="#{rowVarSme.company.residentialAddress.town.description}" rendered="#{rowVarSme.company.residentialAddress ne null}" />
+									</p:column>
+									<p:column headerText="First Name" filterBy="#{rowVarSme.firstName}">
+										<p:outputLabel style="width:95%; opacity:1 !important;" value="#{rowVarSme.firstName}" />
+									</p:column>
+									<p:column headerText="Last Name" filterBy="#{rowVarSme.lastName}">
+										<p:outputLabel style="width:95%; opacity:1 !important;" value="#{rowVarSme.lastName}" />
+									</p:column>
+									<p:column headerText="Identity Number" filterBy="#{rowVarSme.identityNumber}">
+										<p:outputLabel style="width:95%; opacity:1 !important;" value="#{rowVarSme.identityNumber}" />
+									</p:column>
+									<p:column headerText="Passport  Number" filterBy="#{rowVarSme.passportNumber}">
+										<p:outputLabel style="width:95%; opacity:1 !important;" value="#{rowVarSme.passportNumber}" />
+									</p:column>
+									<p:column headerText="Active" sortBy="#{rowVarSme.active}" rendered="false">
+										<p:selectBooleanCheckbox value="#{rowVarSme.active}" disabled="true" />
+									</p:column>
+									<p:column headerText="Status" sortBy="{rowVarSme.status}">
+										<p:outputLabel value="#{rowVarSme.status.friendlyName}" />
+									</p:column>
+	
+									<p:column headerText="Approval Date" sortBy="#{rowVarSme.approvedDate}">
+										<p:outputLabel value="#{rowVarSme.approvedDate}">
+											<f:convertDateTime pattern="dd MMMM yyyy" />
+										</p:outputLabel>
+									</p:column>
+						
+									<p:column width="80" headerText="View" rendered="#{sessionUI.mentorregistration}" exportable="false">
+										<p:commandButton immediate="true" icon="fa fa-database" title="#{lang['update']}" update=":siteSmeUpdateForms" oncomplete="PF('dlgSmeChangeReason').show()" action="#{sitessmeUI.prepUpdatemeQualification}" rendered="#{!rowVarSme.lockSme}">
+											<f:setPropertyActionListener value="#{rowVarSme}" target="#{sitessmeUI.sitessmeupdate}" />
+										</p:commandButton>
+										<p:commandButton immediate="true" icon="fa fa-trash-o" title="#{lang['delete']}" update=":siteSmeUpdateForms" oncomplete="if (args &amp;&amp; !args.validationFailed)  PF('dlgDeleteReason').show()" rendered="#{!rowVarSme.lockSme}" action="#{sitessmeUI.prepUpdatemeQualification}">
+											<f:setPropertyActionListener value="#{rowVarSme}" target="#{sitessmeUI.sitessmeupdate}" />
+										</p:commandButton>
+									</p:column>
+											
+									<p:rowExpansion>
+										<p:outputPanel>
+											<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+												<p:dataTable id="smeQualificationDt" value="#{rowVarSme.smeQualificationsList}" var="rvql" rowKey="#{rvql.id}" paginator="true" paginatorPosition="bottom" rows="5" reflow="true">
+													<p:column headerText="SAQA ID" style="width:8%">
+														<p:outputLabel value="#{rvql.qualification.code}" />
+													</p:column>
+													<p:column headerText="Qualification">
+														<p:outputLabel value="#{rvql.qualification.description}" />
+													</p:column>
+	
+													<p:column headerText="#{lang['nqf.level']}">
+														<h:outputText value="#{rvql.qualification.nqflevel.description}" />
+													</p:column>
+	
+													<p:column headerText="#{lang['status']}">
+														<h:outputText value="#{rvql.status.friendlyName}" />
+													</p:column>
+	
+													<p:column headerText="Approval/Reject Date">
+														<h:outputText value="#{rvql.approvedDate}">
+															<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+														</h:outputText>
+													</p:column>
+	
+													<p:column headerText="Reject Reasons">
+														<h:outputText value="#{rvql.reason}" />
+													</p:column>
+	
+												</p:dataTable>
+	
+												<p:dataTable value="#{companyMentorUI.docs}" var="rv1" emptyMessage="#{lang['no.records.found']}" paginator="true" paginatorPosition="bottom" rowKey="#{rv1.id}" rows="5" reflow="true">
+													<p:column headerText="#{lang['type']}" width="18%">
+														#{rv1.configDoc.name}
+														<p:outputLabel rendered="#{rv1.configDoc.name eq null}" value="Certified Copy of Trade Test/Qualification"></p:outputLabel>
+													</p:column>
+													<p:column headerText="#{lang['original.file.name']}" priority="4">
+														<p:outputLabel value="#{rv1.originalFname}"></p:outputLabel>
+													</p:column>
+													<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+													<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+														<h:outputText value="#{rv1.createDate}">
+															<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+														</h:outputText>
+													</p:column>
+													<p:column headerText="#{lang['version']}" width="10%" priority="4">
+														<h:outputText value="#{rv1.versionNo}">
+														</h:outputText>
+													</p:column>
+	
+													<p:column width="120" headerText="View">
+														<p:commandButton immediate="true" process="@this" ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlb" rendered="#{rv1.id ne null}">
+															<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+														</p:commandButton>
+	
+														<p:spacer width="5" />
+														<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+															<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+														</p:commandButton>
+	
+														<p:spacer width="5" />
+														<p:commandButton icon="fa fa-bars " id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update="@form" rendered="#{rv1.id ne null}">
+															<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+														</p:commandButton>
+	
+													</p:column>
+												</p:dataTable>
+											</p:panelGrid>
+										</p:outputPanel>
+									</p:rowExpansion>
+								</p:dataTable>
+	
+								<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+									<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+									<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+								</p:confirmDialog>
+	
+							</div>
+						</c:if>
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+
+		<p:dialog closeOnEscape="true" position="top" header="New Mentor Details" width="90vw" height="85vh" widgetVar="dlgAddSiteSme" resizable="false" hideEffect="clip" showEffect="clip" id="dialogAddSiteSme" appendTo="@(body)" modal="true">
+			<h:form id="siteSmeForm">
+				<p:outputPanel id="userSearchPanel" rendered="#{!sitessmeUI.smeUser.doneSearch}">
+					<p:fieldset id="searchRsaIdOrPassport" legend="Enter In RSA ID or Passport Number">
+						<p:panelGrid id="searchRsaIdOrPassportPnl" columns="3" styleClass="ui-panelgrid-blank form-group">
+							<p:selectOneRadio id="passNumID" value="#{sitessmeUI.idpassport}" columns="1" layout="responsive">
+								<p:ajax update="userSearchPanel" />
+								<f:selectItems value="#{enumUI.idPassportEnumDD}" var="idpassEnum" itemLabel="#{idpassEnum}" itemValue="#{idpassEnum}" />
+							</p:selectOneRadio>
+							<h:panelGroup id="rsaIDInput" styleClass="md-inputfield" rendered="#{sitessmeUI.idpassport eq idPassportEnum.RsaId}">
+								<p:inputText id="rsaIdCriteria" maxlength="#{sitessmeUI.MAX_RSA_ID_NUMBER}" value="#{sitessmeUI.idnumber}" style="width:95%" requiredMessage="#{lang['rsa.id.number']} " required="false">
+								</p:inputText>
+								<p:outputLabel value="#{lang['rsa.id.number']}" for="rsaIdCriteria" />
+							</h:panelGroup>
+							<h:panelGroup id="passportNumInput" styleClass="md-inputfield" rendered="#{sitessmeUI.idpassport eq idPassportEnum.Passport}">
+								<p:inputText validatorMessage="#{lang['user.passport.length']}" id="passportNumCriteria" maxlength="#{sitessmeUI.MAX_PASSPORT_NUMBER}" value="#{sitessmeUI.passportNumber}" style="width:95%" requiredMessage="#{lang['passport.number']}" required="false">
+								</p:inputText>
+								<h:message for="passportNumCriteria" />
+								<p:outputLabel value="#{lang['passport.number']}" for="passportNumCriteria" />
+							</h:panelGroup>
+							<p:commandButton id="idPassBtn" icon="fa fa-search" value="Submit" process="searchRsaIdOrPassport" actionListener="#{sitessmeUI.searchForUser}" update="siteSmeForm" rendered="#{sitessmeUI.idpassport ne null}" />
+						</p:panelGrid>
+					</p:fieldset>
+				</p:outputPanel>
+				<p:outputPanel id="userInformationPanel" rendered="#{sitessmeUI.smeUser.doneSearch}">
+					<p:tabView id="tabViewInsert">
+						<p:tab title="Mentor Information">
+							<p:fieldset id="smeUserInfomation" legend="Provide Mentor Information">
+								<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%">
+									<c:if test="#{sitessmeUI.companyHasSites}">
+										<h:panelGroup styleClass="md-inputfield" rendered="#{!sitessmeUI.sitessme.useCompanyAddress}">
+											<p:autoComplete style="width:100%" inputStyle="width:100%" id="unitStandardAuto" value="#{sitessmeUI.sitessme.sites}" completeMethod="#{sitessmeUI.completeSites}" var="rv" itemLabel="#{rv.companyName}" itemValue="#{rv}" forceSelection="true" converter="SitesConvertor" dropdown="true"
+												minQueryLength="3" maxResults="10">
+												<p:ajax event="itemSelect" />
+											</p:autoComplete>
+											<p:outputLabel value="Select #{lang['sites']}" for="unitStandardAuto" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield" rendered="#{!sitessmeUI.sitessme.useCompanyAddress}">
+										</h:panelGroup>
+										<h:panelGroup>
+											<p:outputLabel value="Use Company Address:" style="color:grey" />
+											<p:spacer width="5" />
+											<p:selectBooleanCheckbox value="#{sitessmeUI.sitessme.useCompanyAddress}">
+												<p:ajax update="smeUserInfomation" />
+											</p:selectBooleanCheckbox>
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+										</h:panelGroup>
+									</c:if>
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText style="width:95%; opacity:1 !important;" value="#{sitessmeUI.sitessme.firstName}" disabled="#{sitessmeUI.smeUser.id ne null}">
+											<p:ajax />
+										</p:inputText>
+										<p:outputLabel value="First Name" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText style="width:95%; opacity:1 !important;" value="#{sitessmeUI.sitessme.lastName}" disabled="#{sitessmeUI.smeUser.id ne null}">
+											<p:ajax />
+										</p:inputText>
+										<p:outputLabel value="Last Name" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield" rendered="#{sitessmeUI.idpassport eq idPassportEnum.RsaId}">
+										<p:inputText style="width:95%; opacity:1 !important;" value="#{sitessmeUI.sitessme.identityNumber}" disabled="true" />
+										<p:outputLabel value="#{lang['rsa.id.number']}" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield" rendered="#{sitessmeUI.idpassport eq idPassportEnum.Passport}">
+										<p:inputText style="width:95%; opacity:1 !important;" value="#{sitessmeUI.sitessme.passportNumber}" disabled="true" />
+										<p:outputLabel value="#{lang['passport.number']}" />
+									</h:panelGroup>
+								</p:panelGrid>
+								<h:panelGroup id="docListUsers" rendered="#{sitessmeUI.sitessme.docs.size() gt 0}">
+									<br />
+									<span class="FontBold"> <i class="fa fa-exclamation-circle" aria-hidden="true"></i> #{lang['please.upload.the.following.compulsory.documents']}
+									</span>
+									<br />
+									<div class="ui-g dashboard">
+										<div class="ui-g-12">
+											<p:repeat var="rcu" value="#{sitessmeUI.sitessme.docs}" varStatus="x">
+												<div class="ui-g-12 ui-md-6 ui-lg-3">
+													<div class="ui-g card colorbox #{rcu.originalFname eq null ? 'colorbox-5' : 'colorbox-1'}">
+														<div class="ui-g-4">
+															<i class="material-icons">#{rcu.originalFname eq null ? 'cloud_upload' : 'check_circle'}</i>
+														</div>
+														<div class="ui-g-8">
+															<span class="colorbox-name">#{rcu.configDoc.name}</span> <span class="colorbox-count"> <p:commandButton icon="fa fa-download" id="cbDownload" rendered="#{rcu.originalFname ne null}" action="#{sitessmeUI.download(rcu)}" ajax="false" value="#{lang['download']}" immediate="true"
+																	process="@parent">
+																	<p:ajax onevent="oneventFunction" />
+																</p:commandButton> <p:commandButton value="#{rc.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" styleClass="#{rcu.originalFname eq null ? 'red-btn' : 'green-btn'} flat" process="@this" oncomplete="PF('dlgUploadUser').show()" update=":uploadFormUser">
+																	<f:setPropertyActionListener value="#{rcu}" target="#{sitessmeUI.doc}" />
+																</p:commandButton>
+															</span>
+														</div>
+													</div>
+												</div>
+											</p:repeat>
+										</div>
+									</div>
+								</h:panelGroup>
+							</p:fieldset>
+						</p:tab>
+						<p:tab title="Mentor Qualifications">
+							<p:fieldset id="smeQualificationsList" legend="Provide Qualifications">
+								<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%">
+									<h:panelGroup>
+										<div>
+											<p:outputLabel value="#{lang['qualification']}" for="qualificationAuto"></p:outputLabel>
+										</div>
+										<div>
+											<p:autoComplete style="width:100%" inputStyle="width:50%" id="qualificationAuto" value="#{sitessmeUI.smeQualifications.qualification}" completeMethod="#{assesorModiratorUI.completeQualification}" var="rvq" itemLabel="#{rvq.description}" itemValue="#{rvq}" forceSelection="true"
+												converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+
+
+												<p:column headerText="SAQA ID" style="white-space: nowrap">#{rvq.code}</p:column>
+												<p:column headerText="#{lang['description']}" style="white-space: nowrap">#{rvq.description}</p:column>
+												<p:column headerText="NQF Level" style="white-space: nowrap">#{rvq.nqflevelg2description}</p:column>
+												<p:ajax event="itemSelect" update="smeQualificationsList" />
+											</p:autoComplete>
+										</div>
+									</h:panelGroup>
+									<h:panelGroup id="docListQualifications" rendered="#{sitessmeUI.smeQualifications.docs.size() gt 0}">
+										<br />
+										<span class="FontBold"> <i class="fa fa-exclamation-circle" aria-hidden="true"></i> #{lang['please.upload.the.following.compulsory.documents']}
+										</span>
+										<br />
+										<div class="ui-g dashboard">
+											<div class="ui-g-12">
+												<p:repeat var="rc" value="#{sitessmeUI.smeQualifications.docs}" varStatus="x">
+													<div class="ui-g-12 ui-md-6 ui-lg-3">
+														<div class="ui-g card colorbox #{rc.originalFname eq null ? 'colorbox-5' : 'colorbox-1'}">
+															<div class="ui-g-4">
+																<i class="material-icons">#{rc.originalFname eq null ? 'cloud_upload' : 'check_circle'}</i>
+															</div>
+															<div class="ui-g-8">
+																<span class="colorbox-name">Certified Copy of Trade Test/Qualification</span> <span class="colorbox-count"> <p:commandButton icon="fa fa-download" id="cbDownload1" rendered="#{rc.originalFname ne null}" action="#{sitessmeUI.download(rc)}" ajax="false"
+																		value="#{lang['download']}" immediate="true" process="@parent">
+																		<p:ajax onevent="oneventFunction" />
+																	</p:commandButton> <p:commandButton value="#{rc.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" styleClass="#{rc.originalFname eq null ? 'red-btn' : 'green-btn'} flat" process="@this" oncomplete="PF('dlgQualificationDocument').show()" update="qualificationFormUser">
+																		<f:setPropertyActionListener value="#{rc}" target="#{sitessmeUI.doc}" />
+																	</p:commandButton>
+																</span>
+															</div>
+														</div>
+													</div>
+												</p:repeat>
+											</div>
+										</div>
+									</h:panelGroup>
+									<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%">
+										<p:commandButton icon="fa fa-plus" value="Add Qualification" update="smeQualificationsList" action="#{sitessmeUI.addSmeQualificationToList}" />
+										<p:commandButton icon="ui-icon-clear-all" value="Clear Qualification" update="smeQualificationsList" action="#{sitessmeUI.prepNewSmeQualification}" />
+									</p:panelGrid>
+								</p:panelGrid>
+								<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%">
+									<p:dataTable var="rowVarsmeq" value="#{sitessmeUI.sitessme.smeQualificationsList}" rowKey="#{rowVarsmeq.id}" paginator="true" rows="3" paginatorPosition="bottom"
+										paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" reflow="true">
+										<p:column headerText="Qualification">
+											<p:outputLabel value="(#{rowVarsmeq.qualification.code})" />
+											<p:outputLabel value="#{rowVarsmeq.qualification.description}" />
+										</p:column>
+										<p:column width="7%">
+											<p:commandButton icon="fa fa-trash-o" update="@form" action="#{sitessmeUI.removeFromList}">
+												<f:setPropertyActionListener value="#{rowVarsmeq}" target="#{sitessmeUI.smeQualifications}" />
+											</p:commandButton>
+										</p:column>
+									</p:dataTable>
+								</p:panelGrid>
+							</p:fieldset>
+							<div class="EmptyBox10" />
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%">
+								<p:commandButton icon="ui-icon-save" value="Complete Task" action="#{sitessmeUI.createUpdateSmeEntry}" update="@form" />
+								<p:commandButton icon="ui-icon-clear-all" value="Clear" update="@form" action="#{sitessmeUI.prepareNew}" />
+							</p:panelGrid>
+						</p:tab>
+					</p:tabView>
+				</p:outputPanel>
+			</h:form>
+		</p:dialog>
+		
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUploadUser" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOADUser" width="80%" responsive="true" modal="true">
+			<h:form id="uploadFormUser">
+				<h:panelGroup id="uploadGroupUser">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{sitessmeUI.doc.configDoc eq null ? 'Certified Copy of Trade Test/Qualification' : sitessmeUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{sitessmeUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{sitessmeUI.storeNewFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update="uploadFormUser :siteSmeForm"
+										multiple="false" fileLimit="1" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+		
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgQualificationDocument" resizable="false" hideEffect="clip" showEffect="clip" id="docQualificationUpload" width="80%" responsive="true" modal="true">
+			<h:form id="qualificationFormUser">
+				<h:panelGroup id="qualificationGroupUser">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{sitessmeUI.doc.configDoc eq null ? 'Certified Copy of Trade Test/Qualification' : sitessmeUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{sitessmeUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{sitessmeUI.storeNewFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}"
+										update="uploadFormUser :siteSmeForm" multiple="false" fileLimit="1" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+		
+		<!--SME Info ChangeReason Dialog -->
+		<p:dialog closeOnEscape="true" header="#{lang['change.reason']}" widgetVar="dlgSmeChangeReason" resizable="false" hideEffect="clip" showEffect="clip" width="60%" height="45vh" responsive="true" modal="true" position="center">
+			<h:form id="smeChangeReasonForms">
+				<p:outputPanel id="userSearchPanels">
+					<p:fieldset id="searchRsaIdOrPassports1" legend="Enter Change Reason">
+						<p:textEditor widgetVar="txtChange1" id="txtChange1" rendered="true" requiredMessage="Provide Delete Reason" value="#{sitessmeUI.sitessmeupdate.reason}" height="100" style="margin-bottom:10px">
+							<p:ajax></p:ajax>
+						</p:textEditor>
+						<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank">
+							<p:commandButton icon="fa fa-save" value="#{lang['submit']}" title="#{lang['submit']}" update="smeChangeReasonForms" oncomplete="PF('dlgUpdateSiteSme').show(), PF('dlgSmeChangeReason').hide()">
+								<f:setPropertyActionListener value="PF('dlgUpdateSiteSme').show()" target="#{companyinfoUI.redirectionPage}" />
+							</p:commandButton>
+						</p:panelGrid>
+					</p:fieldset>
+				</p:outputPanel>
+			</h:form>
+			<p:ajax immediate="true" event="close" update="smeChangeReasonForms" />
+			<p:ajax event="open" listener="#{companyinfoUI.prepChangeDoc}" update="smeChangeReasonForms" />
+		</p:dialog>
+		
+		<p:dialog closeOnEscape="true" position="top" header="Update Mentor Details" width="75%" height="50%" widgetVar="dlgUpdateSiteSme" resizable="false" hideEffect="clip" showEffect="clip" id="dialogUpdateSiteSme" appendTo="@(body)" modal="true">
+			<h:form id="siteSmeUpdateForms">
+				<p:outputPanel id="userInformationPanels">
+					<p:tabView id="tabViewInsert">
+						<p:tab title="Mentor Information">
+							<p:fieldset id="smeUserInfomations" legend="Provide Mentor Information">
+								<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%">
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText style="width:95%; opacity:1 !important;" value="#{sitessmeUI.sitessmeupdate.firstName}" disabled="true">
+											<p:ajax />
+										</p:inputText>
+										<p:outputLabel value="First Name" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText style="width:95%; opacity:1 !important;" value="#{sitessmeUI.sitessmeupdate.lastName}" disabled="true">
+											<p:ajax />
+										</p:inputText>
+										<p:outputLabel value="Last Name" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield" rendered="#{sitessmeUI.sitessmeupdate.identityNumber ne null}">
+										<p:inputText style="width:95%; opacity:1 !important;" value="#{sitessmeUI.sitessmeupdate.identityNumber}" disabled="true" />
+										<p:outputLabel value="#{lang['rsa.id.number']}" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield" rendered="#{sitessmeUI.sitessmeupdate.passportNumber ne null}">
+										<p:inputText style="width:95%; opacity:1 !important;" value="#{sitessmeUI.sitessmeupdate.passportNumber}" disabled="true" />
+										<p:outputLabel value="#{lang['passport.number']}" />
+									</h:panelGroup>
+								</p:panelGrid>
+								<h:panelGroup id="docListUsers" rendered="#{sitessmeUI.sitessmeupdate.docs.size() gt 0}">
+									<br />
+									<span class="FontBold"> <i class="fa fa-exclamation-circle" aria-hidden="true"></i> Please upload documents if there are any changes to your personal details and/or CV
+									</span>
+									<br />
+									<div class="ui-g dashboard">
+										<div class="ui-g-12">
+											<p:repeat var="rcu" value="#{sitessmeUI.sitessmeupdate.docs}" varStatus="x">
+												<div class="ui-g-12 ui-md-6 ui-lg-3">
+													<div class="ui-g card colorbox #{rcu.originalFname eq null ? 'colorbox-5' : 'colorbox-1'}">
+														<div class="ui-g-4">
+															<i class="material-icons">#{rcu.originalFname eq null ? 'cloud_upload' : 'check_circle'}</i>
+														</div>
+														<div class="ui-g-8">
+															<span class="colorbox-name">#{rcu.configDoc.name}</span> <span class="colorbox-count"> <p:commandButton icon="fa fa-download" id="cbDownload" rendered="#{rcu.originalFname ne null}" action="#{uploadDocUI.download}" ajax="false" value="#{lang['download']}" immediate="true"
+																	process="@parent">
+																	<p:ajax onevent="oneventFunction" />
+																</p:commandButton> <p:commandButton value="#{rc.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" styleClass="#{rcu.originalFname eq null ? 'red-btn' : 'green-btn'} flat" process="@this" oncomplete="PF('dlgUploadUser').show()" update=":uploadFormUser">
+																	<f:setPropertyActionListener value="#{rcu}" target="#{sitessmeUI.doc}" />
+																</p:commandButton>
+															</span>
+														</div>
+													</div>
+												</div>
+											</p:repeat>
+										</div>
+									</div>
+								</h:panelGroup>
+							</p:fieldset>
+						</p:tab>
+						<p:tab title="Mentor Qualifications">
+							<p:fieldset id="smeQualificationsList" legend="Provide Qualifications">
+								<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%">
+									<h:panelGroup>
+										<div>
+											<p:outputLabel value="#{lang['qualification']}" for="qualificationAuto"></p:outputLabel>
+										</div>
+										<div>
+											<p:autoComplete style="width:100%" inputStyle="width:50%" id="qualificationAuto" value="#{sitessmeUI.smeQualifications.qualification}" completeMethod="#{assesorModiratorUI.completeQualification}" var="rvq" itemLabel="#{rvq.description}" itemValue="#{rvq}" forceSelection="true"
+												converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+												<p:column headerText="SAQA ID" style="white-space: nowrap">#{rvq.code}</p:column>
+												<p:column headerText="#{lang['description']}" style="white-space: nowrap">#{rvq.description}</p:column>
+												<p:column headerText="NQF Level" style="white-space: nowrap">#{rvq.nqflevelg2description}</p:column>
+												<p:ajax event="itemSelect" update="smeQualificationsList" />
+											</p:autoComplete>
+										</div>
+									</h:panelGroup>
+									<h:panelGroup id="docListQualifications" rendered="#{sitessmeUI.smeQualifications.docs.size() gt 0}">
+										<br />
+										<span class="FontBold"> <i class="fa fa-exclamation-circle" aria-hidden="true"></i> #{lang['please.upload.the.following.compulsory.documents']}
+										</span>
+										<br />
+										<div class="ui-g dashboard">
+											<div class="ui-g-12">
+												<p:repeat var="rc" value="#{sitessmeUI.smeQualifications.docs}" varStatus="x">
+													<div class="ui-g-12 ui-md-6 ui-lg-3">
+														<div class="ui-g card colorbox #{rc.originalFname eq null ? 'colorbox-5' : 'colorbox-1'}">
+															<div class="ui-g-4">
+																<i class="material-icons">#{rc.originalFname eq null ? 'cloud_upload' : 'check_circle'}</i>
+															</div>
+															<div class="ui-g-8">
+																<span class="colorbox-name">Certified Copy of Trade Test/Qualification</span> <span class="colorbox-count"> <p:commandButton icon="fa fa-download" id="cbDownload1" rendered="#{rc.originalFname ne null}" action="#{sitessmeUI.download(rc)}" ajax="false"
+																		value="#{lang['download']}" immediate="true" process="@parent">
+																		<p:ajax onevent="oneventFunction" />
+																	</p:commandButton> <p:commandButton value="#{rc.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" styleClass="#{rc.originalFname eq null ? 'red-btn' : 'green-btn'} flat" process="@this" oncomplete="PF('dlgQualificationDocument').show()" update=":qualificationFormUser">
+																		<f:setPropertyActionListener value="#{rc}" target="#{sitessmeUI.doc}" />
+																	</p:commandButton>
+																</span>
+															</div>
+														</div>
+													</div>
+												</p:repeat>
+											</div>
+										</div>
+									</h:panelGroup>
+									<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%">
+										<p:commandButton icon="fa fa-plus" value="Add Qualification" update="smeQualificationsList" action="#{sitessmeUI.updateSmeQualificationToList}" />
+										<p:commandButton icon="ui-icon-clear-all" value="Clear Qualification" update="smeQualificationsList" action="#{sitessmeUI.prepUpdatemeQualification}" />
+									</p:panelGrid>
+								</p:panelGrid>
+								<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%">
+									<p:dataTable var="rowVarsmeq" value="#{sitessmeUI.sitessmeupdate.smeQualificationsList}" rowKey="#{rowVarsmeq.id}" paginator="true" rows="3" paginatorPosition="bottom"
+										paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" reflow="true">
+										<p:column headerText="Qualification">
+											<p:outputLabel value="(#{rowVarsmeq.qualification.code}) #{rowVarsmeq.qualification.description}" />
+
+
+										</p:column>
+										<p:column width="7%">
+											<p:commandButton icon="fa fa-trash-o" update="@form" action="#{sitessmeUI.removeFromUpdateList}" disabled="#{rowVarsmeq.status eq ApprovalEnum.Approved}">
+												<f:setPropertyActionListener value="#{rowVarsmeq}" target="#{sitessmeUI.smeQualifications}" />
+											</p:commandButton>
+										</p:column>
+									</p:dataTable>
+								</p:panelGrid>
+							</p:fieldset>
+							<div class="EmptyBox10" />
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%">
+								<p:commandButton icon="ui-icon-save" value="Update" action="#{sitessmeUI.updateSmeEntry}" update="@form learnersInsForm" />
+								<p:commandButton icon="ui-icon-clear-all" value="Clear" update="@form" action="#{sitessmeUI.prepareNewUpdate}" rendered="false"/>
+							</p:panelGrid>
+						</p:tab>
+					</p:tabView>
+				</p:outputPanel>
+			</h:form>
+		</p:dialog>
+		
+		<!-- ChangeReason Dialog -->
+		<p:dialog closeOnEscape="true" header="Remove Profile" widgetVar="dlgDeleteReason" resizable="false" hideEffect="clip" showEffect="clip" width="60%" height="45vh" responsive="true" modal="true" position="center">
+			<h:form id="deleteReasonForm">
+				<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank">
+					<p:fieldset legend="Provide Delete Reason *">
+						<p:textEditor widgetVar="txtChange" id="txtChange" rendered="true" requiredMessage="Provide Delete Reason" value="#{sitessmeUI.sitessmeupdate.reason}" height="100" style="margin-bottom:10px">
+							<p:ajax></p:ajax>
+						</p:textEditor>
+					</p:fieldset>
+					<p:commandButton update="@form learnersInsForm" value="#{lang['submit']}" icon="ui-icon-save" action="#{sitessmeUI.sitessmeCreateDeleteWorkflow}" onstart="uploadStart()" oncomplete="uploadDone();PF('dlgDeleteReason').hide()">
+						<f:setPropertyActionListener value="PF('dlgDeleteReason').hide()" target="#{companyinfoUI.redirectionPage}" />
+					</p:commandButton>
+				</p:panelGrid>
+			</h:form>
+			<p:ajax immediate="true" event="close" update="deleteReasonForm" />
+			<p:ajax event="open" listener="#{companyinfoUI.prepChangeDoc}" update="smeChangeReasonForms" />
+		</p:dialog>
+	</ui:define>
+</ui:composition>

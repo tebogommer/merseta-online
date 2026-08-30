@@ -1,0 +1,119 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:c="http://java.sun.com/jsp/jstl/core"
+                template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Designated Trade Type</h1>
+					<h:form id="designatedtradetypeInsForm">
+						<p:growl sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						
+						<p:panelGrid columns="1" style="width:100%" id="designatedtradetypeInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+       						         							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="description" value="#{designatedtradetypeUI.designatedtradetype.description}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['description']}" for="description"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="code" value="#{designatedtradetypeUI.designatedtradetype.code}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['code']}" for="code"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="setmisCode" value="#{designatedtradetypeUI.designatedtradetype.setmisCode}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['setmisCode']}" for="setmisCode"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="nlrdCode" value="#{designatedtradetypeUI.designatedtradetype.nlrdCode}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['nlrdCode']}" for="nlrdCode"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="smsCode" value="#{designatedtradetypeUI.designatedtradetype.smsCode}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['smsCode']}" for="smsCode"/>
+     							</h:panelGroup>   
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="qctoCode" value="#{designatedtradetypeUI.designatedtradetype.qctoCode}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['qctoCode']}" for="qctoCode"/>
+     							</h:panelGroup>  
+
+
+        					    <p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+									<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:designatedtradetypeList :designatedtradetypeInsForm:designatedtradetypeInsGrid" action="#{designatedtradetypeUI.designatedtradetypeInsert}" />
+									<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="designatedtradetypeInsGrid" process="@this" action="#{designatedtradetypeUI.prepareNew}">
+										<p:resetInput target="designatedtradetypeInsGrid" />
+									</p:commandButton>									
+								</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{designatedtradetypeUI.dataModel}" filteredValue="#{designatedtradetypeUI.designatedTradeTypefilteredList}" id="designatedtradetypeList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+           						              					<p:column headerText="#{lang['description']}">  
+                        			<h:outputText value="#{rowVar.description}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['code']}">  
+                        			<h:outputText value="#{rowVar.code}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['setmisCode']}">  
+                        			<h:outputText value="#{rowVar.setmisCode}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['nlrdCode']}">  
+                        			<h:outputText value="#{rowVar.nlrdCode}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['smsCode']}">  
+                        			<h:outputText value="#{rowVar.smsCode}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['createDate']}">  
+                        			<h:outputText value="#{rowVar.createDate}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['qctoCode']}">  
+                        			<h:outputText value="#{rowVar.qctoCode}" />  
+            					</p:column>      
+
+
+           						<p:column width="80">
+									<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":designatedtradetypeInsForm:designatedtradetypeInsGrid">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{designatedtradetypeUI.designatedtradetype}" />
+									</p:commandButton>
+									<p:spacer width="5" />
+									<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:designatedtradetypeList" action="#{designatedtradetypeUI.designatedtradetypeDelete}">
+										<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+										<f:setPropertyActionListener value="#{rowVar}" target="#{designatedtradetypeUI.designatedtradetype}" />
+									</p:commandButton>
+								</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+<!-- 
+description = description
+code = code
+setmisCode = setmisCode
+nlrdCode = nlrdCode
+smsCode = smsCode
+createDate = createDate
+qctoCode = qctoCode
+
+-->
+</ui:composition>

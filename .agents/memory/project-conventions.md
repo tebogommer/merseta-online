@@ -1,10 +1,15 @@
 ---
 type: project
 created: 2026-05-25
-updated: 2026-07-12
+updated: 2026-08-30
 ---
 
 # Project Conventions
+
+## Porting Source Baseline
+- The definitive, canonical source codebase for all migration and porting into .NET 10 is located at: `C:\Antigravity\nsdms-2026-04-01\nsdms\MerSETA\NSDMS-Latest`.
+- All legacy business rules, workflows, calculations, and data structures must be referenced directly from this directory.
+- **Strict Read-Only Invariant**: NEVER modify, delete, format, or write code into the `NSDMS-Latest/` folder. It is an immutable legacy reference source.
 
 ## Git Workflow
 - Always create a new dedicated branch for major code changes.

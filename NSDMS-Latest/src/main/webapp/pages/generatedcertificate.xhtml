@@ -1,0 +1,285 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<ui:include src="/pages/includes/taskdiagram.xhtml" />
+				<br />
+				<ui:include src="/pages/includes/tabinfo.xhtml">
+					<ui:param name="showInfoCircle" value="true" />
+					<ui:param name="cssClass" value="secondaryText Fs15" />
+					<ui:param name="helpTxt" value="#{lang['The.system.will.auto-fill.based.selections']}" />
+				</ui:include>
+			</div>
+		</div>
+
+		<h:form id="learnersInsForm">
+
+			<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+			<p:importEnum type="haj.com.entity.enums.LearnerTransferTypeEnum" />
+			<p:importEnum type="haj.com.entity.enums.PivotNonPivotEnum" />
+			<p:importEnum type="haj.com.entity.enums.YesNoEnum" />
+			<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+			<p:importEnum type="haj.com.entity.enums.CeritificateCollectionEnum" />
+			
+			<p:growl>
+				<p:autoUpdate></p:autoUpdate>
+			</p:growl>
+			
+			<div class="ui-g">
+			
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+						<h1>Generate Certificate</h1>
+						<p:dataTable var="rowVar" value="#{generatedCertificateUI.dataModelScheduledEvent}" id="learnersList"  rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" 
+									paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" 
+									rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true" >
+															
+								<p:column headerText="#{lang['company.name']}" filterBy="#{rowVar.company.companyName}" sortBy="#{rowVar.company.companyName}" filterStyle="width: 95%" >
+									<h:outputText value="#{rowVar.company.companyName}" />
+								</p:column>
+								<p:column headerText="#{lang['tradingName']}" filterBy="#{rowVar.company.tradingName}" sortBy="#{rowVar.company.tradingName}" filterStyle="width: 95%" >
+									<h:outputText value="#{rowVar.company.tradingName}" />
+								</p:column>
+								<p:column headerText="#{lang['entity.id']}" filterBy="#{rowVar.company.levyNumber}" sortBy="#{rowVar.company.levyNumber}" filterStyle="width: 95%" width="10%" >
+									<h:outputText value="#{rowVar.company.levyNumber}" />
+								</p:column>
+															
+								<p:column headerText="Date Generated">
+									<h:outputText value="#{rowVar.createDate}">
+										<f:convertDateTime pattern="dd MMMM yyyy HH:mm:ss" />
+									</h:outputText>
+								</p:column>
+								
+								<p:column width="5%" headerText="#{lang['view.edit']}" exportable="false">
+									<p:commandButton icon="fa fa-eye" title="#{lang['view']}" update="learnersInsForm" action="#{generatedCertificateUI.trainingproviderverficationListInfo()}" process="@this">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{generatedCertificateUI.scheduledEvent}" />
+									</p:commandButton>
+									
+									<p:commandButton icon="fa fa-calendar" title="Collection" update="@form" action="#{generatedCertificateUI.createWorkflow}" process="@this" rendered="false">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{generatedCertificateUI.scheduledEvent}" />
+										<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									</p:commandButton>
+								</p:column>
+								
+						</p:dataTable>
+					</div>
+				</div>
+				
+		
+				<c:if test="#{generatedCertificateUI.trainingproviderverficationList.size() gt 0}">
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+						<h1>Learner Certificates</h1>
+						<p:commandButton ajax="false" icon="fa fa-book" value="Download Certificate" update="@form" action="#{generatedCertificateUI.downloadSelectedDocuments}" process="@this" rendered="false">
+																
+						</p:commandButton>
+						<p:commandButton ajax="false" icon="fa fa-book" value="Download Certificate" update="@form" action="#{generatedCertificateUI.generateAndZipDocuments}" process="@this">
+																
+						</p:commandButton>
+						<br /><br />
+						<p:dataTable var="rowVar" value="#{generatedCertificateUI.trainingproviderverficationList}" id="learnersLists"  rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" 
+									paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" 
+									rowsPerPageTemplate="5,10,15,20,25">
+																
+								<p:column headerText="#{lang['companyName']}" filterBy="#{rowVar.trainingProvider.companyName}" sortBy="#{rowVar.trainingProvider.companyName}">
+									#{rowVar.trainingProvider.companyName}
+								</p:column>
+								<p:column headerText="#{lang['tradingName']}" filterBy="#{rowVar.trainingProvider.tradingName}" sortBy="#{rowVar.trainingProvider.tradingName}" filterStyle="width: 95%">
+									#{rowVar.trainingProvider.tradingName}
+								</p:column>
+								<p:column headerText="#{lang['companyRegistrationNumber']}" filterBy="#{rowVar.trainingProvider.companyRegistrationNumber}" sortBy="#{rowVar.trainingProvider.companyRegistrationNumber}" rendered="false">
+									#{rowVar.trainingProvider.companyRegistrationNumber}
+								</p:column>
+								<p:column headerText="#{lang['entity.id']}" filterBy="#{rowVar.trainingProvider.levyNumber}" sortBy="#{rowVar.trainingProvider.levyNumber}">
+									#{rowVar.trainingProvider.levyNumber}
+								</p:column>
+								<p:column headerText="#{lang['first.name']}" filterBy="#{rowVar.companyLearners.user.firstName}" sortBy="#{rowVar.companyLearners.user.firstName}">
+									<h:outputText value="#{rowVar.companyLearners.user.firstName}" />
+								</p:column>
+								<p:column headerText="#{lang['last.name']}" filterBy="#{rowVar.companyLearners.user.lastName}" sortBy="#{rowVar.companyLearners.user.lastName}">
+									<h:outputText value="#{rowVar.companyLearners.user.lastName}" />
+								</p:column>
+								<p:column headerText="Identity Number" filterBy="#{rowVar.companyLearners.user.rsaIDNumber}" sortBy="#{rowVar.companyLearners.user.rsaIDNumber}">
+									<h:outputText value="#{rowVar.companyLearners.user.rsaIDNumber}" />
+									<h:outputText rendered="#{rowVar.companyLearners.user.rsaIDNumber.length() lt 1}" value="N/A" />
+								</p:column>
+								<p:column headerText="Passport Number" filterBy="#{rowVar.companyLearners.user.rsaIDNumber}" sortBy="#{rowVar.companyLearners.user.rsaIDNumber}">
+									<h:outputText rendered="#{rowVar.companyLearners.user.passportNumber.length() lt 1}" value="N/A" />
+									<h:outputText value="#{rowVar.companyLearners.user.passportNumber}" />
+								</p:column>
+								<p:column headerText="Employment Status">
+									<h:outputText value="#{rowVar.companyLearners.employmentStatus.friendlyName}" />
+								</p:column>
+								<p:column headerText="Application Status">
+									<h:outputText value="#{rowVar.companyLearners.learnerStatus.friendlyName}" />
+								</p:column>
+								<p:column headerText="Intervention Type">
+									<h:outputText value="#{rowVar.companyLearners.interventionType.description}" />
+								</p:column>
+								<p:column headerText="Course / Qualification " width="20%">									
+									<h:outputText value="(#{rowVar.companyLearners.learnership.code})" rendered="#{rowVar.companyLearners.learnership.code ne null}"/>
+									<h:outputText value="#{rowVar.companyLearners.learnership.description}" rendered="#{rowVar.companyLearners.learnership.description ne null}"/>
+									<p:spacer width="5" rendered="#{rowVar.companyLearners.learnership.description ne null}" />
+									<h:outputText value="(#{rowVar.companyLearners.learnership.qualification.codeString})" rendered="#{rowVar.companyLearners.learnership.qualification.codeString ne null}"/>
+									<h:outputText value="#{rowVar.companyLearners.learnership.qualification.description}" rendered="#{rowVar.companyLearners.learnership.qualification.description ne null}"/>
+									
+									<h:outputText value="(#{rowVar.companyLearners.skillsSet.programmeID})" rendered="#{rowVar.companyLearners.skillsSet ne null}" />
+									<h:outputText value="#{rowVar.companyLearners.skillsSet.description}" rendered="#{rowVar.companyLearners.skillsSet ne null}" />
+									
+									<h:outputText value="(#{rowVar.companyLearners.skillsProgram.programmeID})" rendered="#{rowVar.companyLearners.skillsProgram ne null}" />
+									<h:outputText value="#{rowVar.companyLearners.skillsProgram.description}" rendered="#{rowVar.companyLearners.skillsProgram ne null}" />
+									
+									<h:outputText value="(#{rowVar.companyLearners.unitStandard.code})" rendered="#{rowVar.companyLearners.unitStandard ne null}" />
+									<h:outputText value="#{rowVar.companyLearners.unitStandard.title}" rendered="#{rowVar.companyLearners.unitStandard ne null}" />
+									
+									<h:outputText value="#{rowVar.companyLearners.nonCredidBearingDescription}" rendered="#{rowVar.companyLearners.nonCredidBearingDescription ne null}" />
+									
+									<h:outputText value="(#{rowVar.companyLearners.qualification.code})" rendered="#{rowVar.companyLearners.qualification ne null and rowVar.companyLearners.skillsProgram eq null and rowVar.companyLearners.learnership eq null and rowVar.companyLearners.unitStandard eq null}"/>
+									<h:outputText value="#{rowVar.companyLearners.qualification.description}" rendered="#{rowVar.companyLearners.qualification ne null and rowVar.companyLearners.skillsProgram eq null and rowVar.companyLearners.learnership eq null and rowVar.companyLearners.unitStandard eq null}"/>
+								</p:column>
+
+								<p:column headerText="Created Date" rendered="false">
+									<h:outputText value="#{rowVar.createDate}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</h:outputText>
+								</p:column>
+
+								<p:column headerText="Registered Date" rendered="false">
+									<h:outputText value="#{rowVar.companyLearners.registeredDate}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</h:outputText>
+								</p:column>
+
+								<p:column headerText="Registered Number">
+									<h:outputText value="#{rowVar.companyLearners.registrationNumber}">
+									</h:outputText>
+								</p:column>
+								
+								<p:column headerText="Certificate Date" sortBy="#{rowVar.cetificateGeneratedDate}">
+									<h:outputText value="#{rowVar.cetificateGeneratedDate}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</h:outputText>
+								</p:column>
+
+								<p:column headerText="Certificate Number" sortBy="#{rowVar.certificateNumber}">
+									<h:outputText value="#{rowVar.certificateNumber}">
+									</h:outputText>
+								</p:column>
+								
+								<p:column width="4%" headerText="#{lang['view.edit']}" exportable="false" rendered="false">
+									<p:commandButton icon="fa fa-calendar" title="Request Moderation" update="@form" action="#{generatedCertificateUI.createWorkflow}">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{generatedCertificateUI.trainingproviderverfication}" />
+										
+									</p:commandButton>
+								</p:column>
+								
+								
+						</p:dataTable>
+					</div>
+				</div>
+				</c:if>
+			</div>
+		</h:form>
+
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true" dynamic="true">
+
+			<h:form id="uploadForm">
+
+				<h:panelGroup id="uploadGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{generatedCertificateUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{generatedCertificateUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span>
+										<br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{generatedCertificateUI.storeFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update="learnersInsForm:learnerRegUploadForm" multiple="false" fileLimit="1" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+
+			</h:form>
+
+		</p:dialog>
+		
+		<p:dialog header="Reject Reasons" widgetVar="rejectReason" hideEffect="clip" showEffect="clip" id="dialogRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{generatedCertificateUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{generatedCertificateUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+
+							</p:selectManyMenu>
+
+							<br />
+							<br />
+						</div>
+					</div>
+					<p:commandButton oncomplete="PF('rejectReason').hide()" update="learnersInsForm" value="Reject" action="#{generatedCertificateUI.rejectWorkflow}">
+					</p:commandButton>
+				</div>
+			</h:form>
+		</p:dialog>
+		
+		<p:dialog header="Reject Reasons" widgetVar="rejectReasonReview" hideEffect="clip" showEffect="clip" id="dialogRejectReasonReview" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonReviewForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{generatedCertificateUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{generatedCertificateUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+
+							</p:selectManyMenu>
+
+							<br />
+							<br />
+						</div>
+					</div>
+					<p:commandButton oncomplete="PF('rejectReasonReview').hide()" update="learnersInsForm" value="Reject" action="#{generatedCertificateUI.finalRejectWorkflow}">
+					</p:commandButton>
+				</div>
+			</h:form>
+		</p:dialog>
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+			<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+			<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+		</p:confirmDialog>
+	</ui:define>
+	<!-- 
+docs = docs
+createDate = createDate
+approvalDate = approvalDate
+status = status
+trainingProvider = trainingProvider
+
+-->
+</ui:composition>

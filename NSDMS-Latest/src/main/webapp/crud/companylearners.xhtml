@@ -1,0 +1,148 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>CompanyLearners</h1>
+					<h:form id="companylearnersInsForm">
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:panelGrid columns="1" style="width:100%" id="companylearnersInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="dgtag" value="#{companylearnersUI.companylearners.dgtag}" style="width:95%" />
+								<p:outputLabel value="#{lang['dgtag']}" for="dgtag" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="etqid" value="#{companylearnersUI.companylearners.etqid}" style="width:95%" />
+								<p:outputLabel value="#{lang['etqid']}" for="etqid" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="createDate" value="#{companylearnersUI.companylearners.createDate}" style="width:95%" />
+								<p:outputLabel value="#{lang['createDate']}" for="createDate" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="company" value="#{companylearnersUI.companylearners.company}" style="width:95%" />
+								<p:outputLabel value="#{lang['company']}" for="company" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="learner" value="#{companylearnersUI.companylearners.learner}" style="width:95%" />
+								<p:outputLabel value="#{lang['learner']}" for="learner" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="schemeYear" value="#{companylearnersUI.companylearners.schemeYear}" style="width:95%" />
+								<p:outputLabel value="#{lang['schemeYear']}" for="schemeYear" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="learnershipCode" value="#{companylearnersUI.companylearners.learnershipCode}" style="width:95%" />
+								<p:outputLabel value="#{lang['learnershipCode']}" for="learnershipCode" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="qualificationCode" value="#{companylearnersUI.companylearners.qualificationCode}" style="width:95%" />
+								<p:outputLabel value="#{lang['qualificationCode']}" for="qualificationCode" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="current_status" value="#{companylearnersUI.companylearners.current_status}" style="width:95%" />
+								<p:outputLabel value="#{lang['current_status']}" for="current_status" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="funding" value="#{companylearnersUI.companylearners.funding}" style="width:95%" />
+								<p:outputLabel value="#{lang['funding']}" for="funding" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="certificateDate" value="#{companylearnersUI.companylearners.certificateDate}" style="width:95%" />
+								<p:outputLabel value="#{lang['certificateDate']}" for="certificateDate" />
+							</h:panelGroup>
+
+
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:companylearnersList :companylearnersInsForm:companylearnersInsGrid" action="#{companylearnersUI.companylearnersInsert}" />
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="companylearnersInsGrid" process="@this" action="#{companylearnersUI.prepareNew}">
+									<p:resetInput target="companylearnersInsGrid" />
+								</p:commandButton>
+							</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{companylearnersUI.dataModel}" filteredValue="#{companylearnersUI.companyLearnersfilteredList}" id="companylearnersList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['dgtag']}">
+								<h:outputText value="#{rowVar.dgtag}" />
+							</p:column>
+							<p:column headerText="#{lang['etqid']}">
+								<h:outputText value="#{rowVar.etqid}" />
+							</p:column>
+							<p:column headerText="#{lang['createDate']}">
+								<h:outputText value="#{rowVar.createDate}" />
+							</p:column>
+							<p:column headerText="#{lang['company']}">
+								<h:outputText value="#{rowVar.company}" />
+							</p:column>
+							<p:column headerText="#{lang['learner']}">
+								<h:outputText value="#{rowVar.learner}" />
+							</p:column>
+							<p:column headerText="#{lang['schemeYear']}">
+								<h:outputText value="#{rowVar.schemeYear}" />
+							</p:column>
+							<p:column headerText="#{lang['learnershipCode']}">
+								<h:outputText value="#{rowVar.learnershipCode}" />
+							</p:column>
+							<p:column headerText="#{lang['qualificationCode']}">
+								<h:outputText value="#{rowVar.qualificationCode}" />
+							</p:column>
+							<p:column headerText="#{lang['current_status']}">
+								<h:outputText value="#{rowVar.current_status}" />
+							</p:column>
+							<p:column headerText="#{lang['funding']}">
+								<h:outputText value="#{rowVar.funding}" />
+							</p:column>
+							<p:column headerText="#{lang['certificateDate']}">
+								<h:outputText value="#{rowVar.certificateDate}" />
+							</p:column>
+
+
+							<p:column width="80">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":companylearnersInsForm:companylearnersInsGrid">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{companylearnersUI.companylearners}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:companylearnersList" action="#{companylearnersUI.companylearnersDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{companylearnersUI.companylearners}" />
+								</p:commandButton>
+							</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+	<!-- 
+dgtag = dgtag
+etqid = etqid
+createDate = createDate
+company = company
+learner = learner
+schemeYear = schemeYear
+learnershipCode = learnershipCode
+qualificationCode = qualificationCode
+current_status = current_status
+funding = funding
+certificateDate = certificateDate
+
+-->
+</ui:composition>

@@ -1,0 +1,310 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+	<p:importEnum type="haj.com.entity.enums.QCDTemplateTypeEnum" />
+	
+	<div class="ui-g">
+		<div class="ui-g-12">
+			<p:panelGrid columns="1" style="width:95%" id="qualificationsCurriculumDevelopmentInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+				<h:panelGroup>
+					<div>
+						<p:outputLabel value="#{lang['qcd.template.type']}" for="templateTypeId" />
+					</div>
+					<div>
+						<p:selectOneMenu disabled="#{sessionUI.task.processRole ne null and (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload)}" style="width:95%;color:black !important" id="templateTypeId" 
+							value="#{qualificationRequestsUI.qualificationscurriculumdevelopment.templateType}" required="true"
+							requiredMessage="#{lang['select.template.type']}">
+							<f:selectItem itemLabel="-- Select --" noSelectionOption="true" />
+							<f:selectItems value="#{enumUI.QCDTemplateTypeEnumDD}" itemValue="rv" var="rv"></f:selectItems>
+							<p:ajax process="@this" update="qualificationsCurriculumDevelopmentInsGrid1" />
+						</p:selectOneMenu>
+					</div>
+				</h:panelGroup>
+			</p:panelGrid>
+			<p:outputPanel id="qualificationsCurriculumDevelopmentInsGrid1">
+
+				<p:outputPanel rendered="#{qualificationRequestsUI.qualificationscurriculumdevelopment.templateType ne null and qualificationRequestsUI.qualificationscurriculumdevelopment.templateType eq QCDTemplateTypeEnum.NewDevelopment}">
+					<p:panelGrid columns="2" layout="grid" styleClass="ui-panelgrid-blank form-group" style="margin-left:0px; padding-left:0px;">
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText disabled="#{sessionUI.task.processRole ne null and (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload)}" id="newDevelopment1" required="true" value="#{qualificationRequestsUI.qualificationscurriculumdevelopment.newDevelopment1}" style="width: 100%">
+							</p:inputText>
+							<p:outputLabel for="newDevelopment1" value="#{lang['qcd.new.development.description.1']}" />
+						</h:panelGroup>
+					</p:panelGrid>
+				</p:outputPanel>
+
+				<p:outputPanel rendered="#{qualificationRequestsUI.qualificationscurriculumdevelopment.templateType ne null and qualificationRequestsUI.qualificationscurriculumdevelopment.templateType eq QCDTemplateTypeEnum.ReAlignment}">
+					<p:panelGrid columns="1" layout="grid" styleClass="ui-panelgrid-blank form-group" style="margin-left:0px; padding-left:0px;">
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="#{lang['qcd.realignment.description']}" />
+							</div>
+						</h:panelGroup>
+						<h:panelGroup>
+							<p:autoComplete disabled="#{sessionUI.task.processRole ne null and (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload)}" required="true" id="qualificationsListIdReAlignmentAutoComplete" value="#{qualificationRequestsUI.selectedRealignmentQualification}"
+								completeMethod="#{autoCompleteUI.completeQualificationReAlignment}" maxResults="10" minQueryLength="0" var="rv" itemLabel="#{rv.saqaQualification}" itemValue="#{rv}" converter="QualificationConvertor" forceSelection="true" autocomplete="true" styleClass="hsauto2" readonly="false" dropdown="true" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+								<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+								<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+								<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+								<p:ajax event="itemSelect" process="@this" listener="#{qualificationRequestsUI.addQualificationToRealignmentTable}" update="qualificationsCurriculumDevelopmentInsGrid" />
+							</p:autoComplete>
+						</h:panelGroup>
+					</p:panelGrid>
+					<p:dataTable var="rowVar" value="#{qualificationRequestsUI.qualificationscurriculumdevelopment.reAlignmentQualificationList}" id="reAlignmentQualificationListId" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+						rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+						<p:column headerText="#{lang['description']}">
+							<h:outputText value="#{rowVar.saqaQualification}" />
+						</p:column>
+						<p:column width="5%">
+							<p:commandButton disabled="#{sessionUI.task.processRole ne null and (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload)}" icon="fa fa-trash-o" title="#{lang['delete']}" update="reAlignmentQualificationListId"
+								action="#{qualificationRequestsUI.removeFromQualificationToRealignmentTable}">
+								<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+								<f:setPropertyActionListener value="#{rowVar}" target="#{qualificationRequestsUI.selectedRealignmentQualification}" />
+							</p:commandButton>
+						</p:column>
+					</p:dataTable>
+				</p:outputPanel>
+
+				<p:outputPanel style="width:95%" rendered="#{qualificationRequestsUI.qualificationscurriculumdevelopment.templateType ne null and qualificationRequestsUI.qualificationscurriculumdevelopment.templateType eq QCDTemplateTypeEnum.Review}">
+					<p:panelGrid columns="1" layout="grid" styleClass="ui-panelgrid-blank form-group" style="margin-left:0px; padding-left:0px;">
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="#{lang['qcd.review.description']}" />
+							</div>
+						</h:panelGroup>
+						<h:panelGroup>
+							<p:autoComplete disabled="#{sessionUI.task.processRole ne null and (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload)}" id="qualificationsListIdReviewAutoComplete" value="#{qualificationRequestsUI.selectedReviewQualification}"
+								completeMethod="#{autoCompleteUI.completeQualificationReview}" maxResults="10" minQueryLength="0" var="rv" itemLabel="#{rv.saqaQualification}" itemValue="#{rv}" converter="QualificationConvertor" forceSelection="true" autocomplete="true" styleClass="hsauto2" readonly="false" dropdown="true" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+								<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+								<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+								<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+								<p:ajax event="itemSelect" process="@this" listener="#{qualificationRequestsUI.addQualificationToReviewTable}" update="qualificationsCurriculumDevelopmentInsGrid" />
+							</p:autoComplete>
+
+						</h:panelGroup>
+					</p:panelGrid>
+					<p:dataTable var="rowVar" value="#{qualificationRequestsUI.qualificationscurriculumdevelopment.reviewQualificationList}" id="reviewQualificationListId" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+						rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+						<p:column headerText="#{lang['description']}">
+							<h:outputText value="#{rowVar.saqaQualification}" />
+						</p:column>
+						<p:column width="5%">
+							<p:commandButton disabled="#{sessionUI.task.processRole ne null and (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload)}" icon="fa fa-trash-o" title="#{lang['delete']}" update="reviewQualificationListId" action="#{qualificationRequestsUI.removeFromQualificationToReviewTable}">
+								<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+								<f:setPropertyActionListener value="#{rowVar}" target="#{qualificationRequestsUI.selectedReviewQualification}" />
+							</p:commandButton>
+						</p:column>
+					</p:dataTable>
+				</p:outputPanel>
+
+			</p:outputPanel>
+
+			<!-- <p:fieldset legend="#{lang['qcd.economic.drivers']}"> -->
+
+			<p:panelGrid columns="2" style="width:95%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+				<h:panelGroup style="width:95%">
+					<div>
+						<p:outputLabel value="#{lang['qcd.economic.drivers']}" />
+					</div>
+					<br />
+					<div>
+						<p:outputLabel value="#{lang['qcd.economic.drivers.description.1']}" styleClass="gray Fs13" />
+					</div>
+					<div>
+						<p:outputLabel value="#{lang['qcd.economic.drivers.description.2']}" styleClass="gray Fs13" />
+					</div>
+				</h:panelGroup>
+				<p:panelGrid columns="1" style="width:95%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<h:panelGroup style="width:95%">
+						<p:selectBooleanCheckbox disabled="#{sessionUI.task.processRole ne null and (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload)}" value="#{qualificationRequestsUI.qualificationscurriculumdevelopment.nationalDevelopmentPlanChecked}">
+							<f:ajax render="checkboxesEvidence" />
+						</p:selectBooleanCheckbox>
+						<p:outputLabel value="#{lang['qcd.economic.drivers.evidence.ndp']}" />
+					</h:panelGroup>
+					<h:panelGroup style="width:95%">
+						<p:selectBooleanCheckbox disabled="#{sessionUI.task.processRole ne null and (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload)}" value="#{qualificationRequestsUI.qualificationscurriculumdevelopment.newGrowthPlanChecked}">
+							<f:ajax render="checkboxesEvidence" />
+						</p:selectBooleanCheckbox>
+						<p:outputLabel value="#{lang['qcd.economic.drivers.evidence.ngp']}" />
+					</h:panelGroup>
+					<h:panelGroup style="width:95%">
+						<p:selectBooleanCheckbox disabled="#{sessionUI.task.processRole ne null and (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload)}" value="#{qualificationRequestsUI.qualificationscurriculumdevelopment.industrialPolicyActionPlanChecked}">
+							<f:ajax render="checkboxesEvidence" />
+						</p:selectBooleanCheckbox>
+						<p:outputLabel value="#{lang['qcd.economic.drivers.evidence.ipap']}" />
+					</h:panelGroup>
+					<h:panelGroup style="width:95%">
+						<p:selectBooleanCheckbox disabled="#{sessionUI.task.processRole ne null and (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload)}" value="#{qualificationRequestsUI.qualificationscurriculumdevelopment.economicDriversInStrategicInfrastructureProjectsChecked}">
+							<f:ajax render="checkboxesEvidence" />
+						</p:selectBooleanCheckbox>
+						<p:outputLabel value="#{lang['qcd.economic.drivers.evidence.edisip']}" />
+					</h:panelGroup>
+				</p:panelGrid>
+			</p:panelGrid>
+
+			<p:panelGrid columns="2" style="width:95%" id="checkboxesEvidence" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup styleClass="md-inputfield" style="width:95%" rendered="#{qualificationRequestsUI.qualificationscurriculumdevelopment.nationalDevelopmentPlanChecked eq true}">
+					<p:inputText id="entryOneId" required="true" disabled="#{sessionUI.task.processRole ne null and (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload)}" style="width: 95%" value="#{qualificationRequestsUI.qualificationscurriculumdevelopment.nationalDevelopmentPlanCheckedEvidence}">
+						<p:ajax />
+					</p:inputText>
+					<p:outputLabel for="entryOneId" value="#{lang['qcd.economic.drivers.evidence.ndp']}" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield" style="width:95%" rendered="#{qualificationRequestsUI.qualificationscurriculumdevelopment.newGrowthPlanChecked eq true}">
+					<p:inputText id="entryTwoId" required="true" disabled="#{sessionUI.task.processRole ne null and (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload)}" style="width: 95%" value="#{qualificationRequestsUI.qualificationscurriculumdevelopment.newGrowthPlanCheckedEvidence}">
+						<p:ajax />
+					</p:inputText>
+					<p:outputLabel for="entryTwoId" value="#{lang['qcd.economic.drivers.evidence.ngp']}" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield" style="width:95%" rendered="#{qualificationRequestsUI.qualificationscurriculumdevelopment.industrialPolicyActionPlanChecked eq true}">
+					<p:inputText id="entryThreeId" required="true" disabled="#{sessionUI.task.processRole ne null and (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload)}" style="width: 95%" value="#{qualificationRequestsUI.qualificationscurriculumdevelopment.industrialPolicyActionPlanCheckedEvidence}">
+						<p:ajax />
+					</p:inputText>
+					<p:outputLabel for="entryThreeId" value="#{lang['qcd.economic.drivers.evidence.ipap']}" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield" style="width:95%" rendered="#{qualificationRequestsUI.qualificationscurriculumdevelopment.economicDriversInStrategicInfrastructureProjectsChecked eq true}">
+					<p:inputText id="entryFourId" required="true" disabled="#{sessionUI.task.processRole ne null and (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload)}" style="width: 95%"
+						value="#{qualificationRequestsUI.qualificationscurriculumdevelopment.economicDriversInStrategicInfrastructureProjectsCheckedEvidence}">
+						<p:ajax />
+					</p:inputText>
+					<p:outputLabel for="entryFourId" value="#{lang['qcd.economic.drivers.evidence.edisip']}" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText id="qcdpurposeofqualification" required="true" disabled="#{sessionUI.task.processRole ne null and (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload)}" value="#{qualificationRequestsUI.qualificationscurriculumdevelopment.purposeQualification}"
+						style="width:95%;  opacity: 1 !important; color:black !important">
+						<p:ajax />
+					</p:inputText>
+					<p:outputLabel for="qcdpurposeofqualification" value="#{lang['qcd.purpose.of.the.qualification.question']}" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText id="roleOfTheQualification" required="true" disabled="#{sessionUI.task.processRole ne null and (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload)}" value="#{qualificationRequestsUI.qualificationscurriculumdevelopment.roleQualification}"
+						style="width:95%;  opacity: 1 !important; color:black !important">
+						<p:ajax />
+					</p:inputText>
+					<p:outputLabel for="roleOfTheQualification" value="#{lang['qcd.role.of.the.qualification.question']}" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText id="primaryServiceOccupation" required="true" disabled="#{sessionUI.task.processRole ne null and (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload)}" value="#{qualificationRequestsUI.qualificationscurriculumdevelopment.primaryServiceForOccupation}"
+						style="width:95%;  opacity: 1 !important; color:black !important">
+						<p:ajax />
+					</p:inputText>
+					<p:outputLabel for="primaryServiceOccupation" value="#{lang['qcd.primary.service.for.the.occupation.question']}" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText id="usersOfService" required="true" disabled="#{sessionUI.task.processRole ne null and (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload)}" value="#{qualificationRequestsUI.qualificationscurriculumdevelopment.usersOfService}"
+						style="width:95%;  opacity: 1 !important; color:black !important">
+						<p:ajax />
+					</p:inputText>
+					<p:outputLabel for="usersOfService" value="#{lang['qcd.users.of.the.service.question']}" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText id="demandQuestion" required="true" disabled="#{sessionUI.task.processRole ne null and (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload)}" value="#{qualificationRequestsUI.qualificationscurriculumdevelopment.demand}"
+						style="width:95%;  opacity: 1 !important; color:black !important">
+						<p:ajax />
+					</p:inputText>
+					<p:outputLabel for="demandQuestion" value="#{lang['qcd.demand.question']}" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText id="currentTraining" required="true" disabled="#{sessionUI.task.processRole ne null and (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload)}" value="#{qualificationRequestsUI.qualificationscurriculumdevelopment.currentTraining}"
+						style="width:95%;  opacity: 1 !important; color:black !important">
+						<p:ajax />
+					</p:inputText>
+					<p:outputLabel for="currentTraining" value="#{lang['qcd.current.training.question']}" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText id="keyStakeholders" required="true" disabled="#{sessionUI.task.processRole ne null and (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload)}" value="#{qualificationRequestsUI.qualificationscurriculumdevelopment.keyStakeholders}"
+						style="width:95%;  opacity: 1 !important; color:black !important">
+						<p:ajax />
+					</p:inputText>
+					<p:outputLabel for="keyStakeholders" value="#{lang['qcd.key.stakeholders.question']}" />
+				</h:panelGroup>
+			</p:panelGrid>
+			<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" id="docTable" rendered="#{(qualificationRequestsUI.qualificationscurriculumdevelopment.id ne null and qualificationRequestsUI.qualificationscurriculumdevelopment.company ne null) and sessionUI.task.processRole ne null}">
+				<p:dataTable value="#{qualificationRequestsUI.qualificationscurriculumdevelopment.docs}" var="rv1" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv1.id}">
+					<p:column headerText="#{lang['type']}" width="18%">#{rv1.configDoc.name}</p:column>
+					<p:column headerText="#{lang['original.file.name']}" priority="4">
+						<p:outputLabel value="#{rv1.originalFname}" styleClass="Fs12" rendered="#{rv1.originalFname ne null}" />
+						<p:outputLabel value="Document Not Uploaded" rendered="#{rv1.originalFname eq null or rv1.originalFname eq ''}" />
+					</p:column>
+					<p:column headerText="#{lang['uploaded.by']}">
+						<p:outputLabel value="#{rv1.users.firstName} #{rv1.users.lastName}" rendered="#{rv1.users ne null}" />
+						<p:outputLabel value="N/A" rendered="#{rv1.users eq null and rv1.originalFname eq null}" />
+						<p:outputLabel value="Awaiting Submission" rendered="#{rv1.users eq null and rv1.originalFname ne null}" />
+					</p:column>
+					<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+						<h:outputText value="#{rv1.createDate}" rendered="#{rv1.createDate ne null}">
+							<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+						</h:outputText>
+						<p:outputLabel value="N/A" rendered="#{rv1.createDate eq null and rv1.originalFname eq null}" />
+						<p:outputLabel value="Awaiting Submission" rendered="#{rv1.createDate eq null and rv1.originalFname ne null}" />
+					</p:column>
+					<p:column headerText="#{lang['version']}" width="11%" priority="4">
+						<h:outputText value="#{rv1.versionNo}" rendered="#{rv1.versionNo ne null}" />
+						<p:outputLabel value="N/A" rendered="#{rv1.versionNo eq null and rv1.originalFname eq null}" />
+						<p:outputLabel value="Awaiting Submission" rendered="#{rv1.versionNo eq null and rv1.originalFname ne null}" />
+					</p:column>
+					<p:column headerText="#{lang['original.required']}">
+						<center>
+							<h:panelGroup rendered="#{rv1.configDoc.originalRequired}" styleClass="green">
+								<i class="fa fa-files-o fa-3x" aria-hidden="true"></i>
+							</h:panelGroup>
+							<h:panelGroup rendered="#{not rv1.configDoc.originalRequired}" styleClass="red">
+								<i class="fa fa-times fa-3x" aria-hidden="true"></i>
+							</h:panelGroup>
+						</center>
+					</p:column>
+
+					<p:column width="180" headerText="#{lang['view.edit']}">
+						<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}">
+							<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+						</p:commandButton>
+						<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+
+						<p:spacer width="5" rendered="#{rv1.id ne null}" />
+						<p:commandButton icon="fa fa-bars " id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}">
+							<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+						</p:commandButton>
+						<p:tooltip for="dhistUserDocs" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+
+						<!-- only with permission to upload can upload a new version -->
+						<p:commandButton rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalUploadApproval or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalUpload}" icon="fa fa-upload" id="uploadUserDocs" styleClass="#{rv1.originalFname eq null ? 'red-btn' : ''} flat" process="@this" oncomplete="PF('dlgUpload').show()" update=":uploadForm">
+							<f:setPropertyActionListener value="#{rv1}" target="#{qualificationRequestsUI.doc}" />
+						</p:commandButton>
+						<p:tooltip for="uploadUserDocs" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+
+						<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+							<p:spacer width="5" />
+							<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+								<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+							</p:commandButton>
+							<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+						</h:panelGroup>
+
+						<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+							<p:spacer width="5" />
+							<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+								<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+							</p:commandButton>
+							<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+						</h:panelGroup>
+
+					</p:column>
+
+				</p:dataTable>
+			</p:panelGrid>
+		</div>
+	</div>
+
+	<style>
+.ui-selectlistbox-item.ui-corner-all {
+	border: 1pt solid #eee
+}
+</style>
+</ui:composition>

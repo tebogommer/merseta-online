@@ -1,0 +1,261 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:pt="http://xmlns.jcp.org/jsf/passthrough" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui"
+	xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+	<p:fieldset legend="#{lang['qualifications']}" rendered="#{trainingproviderUI.doneSMEReg}">
+		<p:outputPanel rendered="#{trainingproviderUI.doneSMEReg}" id="companyQualificationsQctoSkillsDev">
+			<p:panelGrid columns="2" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup>
+					<div>
+						<p:outputLabel rendered="true" value="#{lang['qualification']}" for="qualificationAutoQctoSkillsDev"></p:outputLabel>
+					</div>
+					<div>
+						<p:autoComplete rendered="true" style="width: 100%" id="qualificationAutoQctoSkillsDev" value="#{trainingproviderUI.qualification}" completeMethod="#{autoCompleteUI.completeQualificationAutocompleteExcludingTrades}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true"
+							converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+							<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+							<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+						</p:autoComplete>
+					</div>
+				</h:panelGroup>
+				<p:commandButton style="float:left;" value="#{lang['add.qualification']}" update="companyQualificationsQctoSkillsDev pgSkillsProgQctoSkillsDev companyInsForm" process="@this companyQualificationsQctoSkillsDev" icon="ui-icon-plus" iconPos="right" styleClass="flat Fright"
+					action="#{trainingproviderUI.addQualificationToList}" />
+			</p:panelGrid>
+			<p:dataList value="#{trainingproviderUI.qualificationList}" var="company" rendered="#{trainingproviderUI.qualificationList.size() gt 0}">
+				<p:outputLabel value="#{company.saqaQualification}"></p:outputLabel>
+				<p:commandLink id="ajaxss" update="@form" process="@this" action="#{trainingproviderUI.removeQualificationFromList}">
+					<span class="fa fa-times Fs12 grey"></span>
+					<f:setPropertyActionListener value="#{company}" target="#{trainingproviderUI.qualification}" />
+				</p:commandLink>
+			</p:dataList>
+		</p:outputPanel>
+	</p:fieldset>
+
+	<p:fieldset legend="#{lang['skills.programme']}" rendered="#{trainingproviderUI.doneSMEReg}">
+		<p:outputPanel rendered="#{trainingproviderUI.doneSMEReg}" id="fsSkillsProgramQctoSkillsDev">
+			<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup id="pgSkillsPQctoSkillsDev" rendered="true">
+
+					<div>
+						<p:outputLabel value="Skills Programme" for="pgSkillsPQctoSkillsDev" />
+					</div>
+					<div>
+						<p:autoComplete required="false" id="tpSkillsProgramQctoSkillsDev" value="#{trainingproviderUI.skillsProgram}" completeMethod="#{autoCompleteUI.completeSkillsProgramLinkedToMerseta}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true"
+							converter="SkillsProgramConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 100%; opacity:1 !important;" style="width: 100%">
+							<p:ajax event="itemSelect" update="companyInsForm:fsSkillsProgramQctoSkillsDev" />
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+							<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+						</p:autoComplete>
+					</div>
+				</h:panelGroup>
+				<p:commandButton style="float:left;" value="#{lang['add.skills.program']}" update="companyInsForm:fsSkillsProgramQctoSkillsDev" process="@this fsSkillsProgramQctoSkillsDev" icon="ui-icon-plus" iconPos="right" styleClass="flat Fright" action="#{trainingproviderUI.addSkillsProgramToList}" />
+			</p:panelGrid>
+			<p:dataList value="#{trainingproviderUI.skillsProgramList}" var="sp" rendered="#{trainingproviderUI.skillsProgramList.size() gt 0}">
+				<p:outputLabel value="(#{sp.programmeID}) #{sp.description}"></p:outputLabel>
+				<p:commandLink id="ajaxss" update="companyInsForm:fsSkillsProgramQctoSkillsDev" process="@this" disabled="#{sp.cannotRemove}" action="#{trainingproviderUI.removeSkillsProgramFromList}">
+					<span class="fa fa-times Fs12 grey"></span>
+					<f:setPropertyActionListener value="#{sp}" target="#{trainingproviderUI.skillsProgram}" />
+				</p:commandLink>
+			</p:dataList>
+		</p:outputPanel>
+	</p:fieldset>
+
+	<p:fieldset legend="#{lang['skills.set']}" rendered="#{trainingproviderUI.doneSMEReg}">
+		<p:outputPanel rendered="#{trainingproviderUI.doneSMEReg}" id="fsSkillsSetQctoSkillsDev">
+			<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup>
+					<div>
+						<p:outputLabel value="Skills Set" for="skillsSetQctoSkillsDev" />
+					</div>
+					<div>
+						<p:autoComplete required="false" id="skillsSetQctoSkillsDev" value="#{trainingproviderUI.skillsSet}" completeMethod="#{autoCompleteUI.completeSkillsSetLinkedToMerseta}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SkillsSetConvertor" dropdown="true"
+							minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 100%">
+							<p:ajax event="itemSelect" update="fsSkillsSetQctoSkillsDev" />
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+							<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+						</p:autoComplete>
+					</div>
+				</h:panelGroup>
+				<p:commandButton style="float:left;" value="#{lang['add.skills.set']}" update="companyInsForm:fsSkillsSetQctoSkillsDev @form" process="@this fsSkillsSetQctoSkillsDev" icon="ui-icon-plus" iconPos="right" styleClass="flat Fright" action="#{trainingproviderUI.addSkillsSetToList}" />
+			</p:panelGrid>
+			<p:dataList value="#{trainingproviderUI.skillsSetList}" var="sp" rendered="#{trainingproviderUI.skillsSetList.size() gt 0}">
+				<p:outputLabel value="(#{sp.programmeID}) #{sp.description}"></p:outputLabel>
+				<p:commandLink id="ajaxss" update="companyInsForm:fsSkillsSetQctoSkillsDev" disabled="#{sp.cannotRemove}" process="@this" action="#{trainingproviderUI.removeSkillsSetFromList}">
+					<span class="fa fa-times Fs12 grey"></span>
+					<f:setPropertyActionListener value="#{sp}" target="#{trainingproviderUI.skillsSet}" />
+				</p:commandLink>
+			</p:dataList>
+		</p:outputPanel>
+	</p:fieldset>
+
+	<p:fieldset legend="#{lang['unit.standards']}" rendered="#{trainingproviderUI.doneSMEReg}">
+		<p:outputPanel rendered="#{trainingproviderUI.doneSMEReg}" id="companyUnitStandardsQctoSkillsDev">
+			<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup>
+					<div>
+						<p:outputLabel value="#{lang['unit.standard']}" for="companyUnitStandardsAutoQctoSkillsDev"></p:outputLabel>
+					</div>
+					<div>
+						<p:autoComplete style="width: 100%" id="companyUnitStandardsAutoQctoSkillsDev" value="#{trainingproviderUI.unitStandard}" completeMethod="#{trainingproviderUI.completeUnit}" var="rv" itemLabel="#{rv.title}" itemValue="#{rv}" forceSelection="true" converter="UnitStandardsConvertor"
+							dropdown="true" minQueryLength="3" maxResults="10">
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+							<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.title}</p:column>
+							<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqf}</p:column>
+							<p:ajax event="itemSelect" listener="#{trainingproviderUI.usQualificationValidation}" update="companyUnitStandardsQctoSkillsDev" />
+						</p:autoComplete>
+					</div>
+				</h:panelGroup>
+				<p:commandButton style="float:left;" value="#{lang['add.unit.standard']}" process="companyUnitStandardsQctoSkillsDev" update="companyUnitStandardsQctoSkillsDev pgSkillsProgSCQctoSkillsDev companyInsForm" icon="ui-icon-plus" iconPos="right" styleClass="flat Fright"
+					action="#{trainingproviderUI.addUnitToList}" />
+			</p:panelGrid>
+			<p:dataList value="#{trainingproviderUI.unitStandards}" var="us" rendered="#{trainingproviderUI.unitStandards.size() gt 0}">
+				<p:outputLabel value="(#{us.code}) #{us.title}"></p:outputLabel>
+				<p:commandLink id="ajaxs" update="companyInsForm:companyUnitStandardsQctoSkillsDev companyInsForm:pgSkillsProgSCQctoSkillsDev" disabled="#{us.cannotRemove}" process="@this" action="#{trainingproviderUI.removeUnitFromList}">
+					<span class="fa fa-times Fs12 grey"></span>
+					<f:setPropertyActionListener value="#{us}" target="#{trainingproviderUI.unitStandard}" />
+				</p:commandLink>
+			</p:dataList>
+		</p:outputPanel>
+	</p:fieldset>
+
+	<p:outputPanel id="pgSkillsProgSCQctoSkillsDev">
+		<p:panelGrid columns="2" id="pgSkillsProgQctoSkillsDev" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{trainingproviderUI.unitStandards ne null and trainingproviderUI.unitStandards.size() gt 0 and trainingproviderUI.resultsForSkillsProgramFound ne 0}">
+			<h:panelGroup>
+				<p:outputLabel styleClass="FontBold Fs15" style="font-weight:bold" value="Please indicate if a skills programme route will be used for obtaining the unit standards?" />
+
+				<p:selectOneMenu id="useSkillProgrammeRouteQctoSkillsDev" value="#{trainingproviderUI.trainingProviderApplication.useSkillProgrammeRoute}" style="width:100%" required="true" requiredMessage="#{lang['use.skill.programme.route.error.msg']}">
+					<p:ajax event="itemSelect" update="qualUSGrid" listener="#{trainingproviderUI.populateSkillsProgramByUnitStandardsList}" />
+					<f:selectItem itemLabel="#{lang['select.one']}" itemValue="" noSelectionOption="true" />
+					<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+				</p:selectOneMenu>
+			</h:panelGroup>
+
+			<h:panelGroup style="margin-top: -20px" rendered="#{trainingproviderUI.trainingProviderApplication.useSkillProgrammeRoute eq YesNoEnum.Yes}">
+				<div>
+					<p:outputLabel value="Skills Programme" for="qualSPQctoSkillsDev" />
+				</div>
+				<div>
+					<p:selectOneMenu id="qualSPQctoSkillsDev" value="#{trainingproviderUI.trainingProviderApplication.skillsProgram}" converter="SkillsProgramConvertor" style="width:100%" required="true" requiredMessage="#{lang['select.skills.program']}">
+						<p:ajax />
+						<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" listener="#{trainingproviderUI.populateSkillsProgramByUnitStandardsList}" />
+						<f:selectItems value="#{trainingproviderUI.skillsProgramByUnitStandardsList}" var="rv" itemLabel="(#{rv.programmeID})  #{rv.description}" itemValue="#{rv}" />
+					</p:selectOneMenu>
+				</div>
+			</h:panelGroup>
+		</p:panelGrid>
+	</p:outputPanel>
+
+	<p:panelGrid columns="1" style="width:95%" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{trainingproviderUI.doneSMEReg}">
+		<p:commandButton value="#{lang['continue']}" update="companyInsForm" icon="ui-icon-fast-forward" iconPos="right" action="#{trainingproviderUI.doneQualificationDetails}" />
+	</p:panelGrid>
+
+	<br />
+	<h:panelGroup rendered="#{trainingproviderUI.doneQualification}">
+		<span class="FontBold"> <i class="fa fa-exclamation-circle" aria-hidden="true"></i> #{lang['please.upload.the.following.compulsory.documents']}
+		</span>
+	</h:panelGroup>
+	<p:outputPanel id="pgSupDocsQctoSkillsDev" layout="gride" rendered="#{trainingproviderUI.doneQualification}">
+		<div class="ui-g dashboard">
+			<div class="ui-g-12">
+				<!-- Qualification(s) Supporting Document -->
+				<h:panelGroup rendered="#{trainingproviderUI.qualificationList.size() gt 0}" style="width:100%">
+					<div class="ui-g-12 ui-md-6 ui-lg-3">
+						<div class="ui-g card colorbox #{!trainingproviderUI.qualUplaoaded ? 'colorbox-1' : 'colorbox-5'}">
+							<div class="ui-g-4">
+								<i class="material-icons">#{!trainingproviderUI.qualUplaoaded ? 'cloud_upload' : 'check_circle'}</i>
+							</div>
+							<div class="ui-g-8">
+								<span class="colorbox-name">Qualification(s) Supporting Document</span> <span class="colorbox-count"> <p:commandButton value="#{!trainingproviderUI.qualUplaoaded ? lang['click.to.upload'] : lang['re.upload']}"
+										styleClass="#{!trainingproviderUI.qualUplaoaded ? 'red-btn' : 'green-btn'} flat" process="@this" oncomplete="PF('dlgSupportingDocQctoSkillsDev').show()" update="@form">
+										<f:setPropertyActionListener value="Qualifications" target="#{trainingproviderUI.docFor}" />
+									</p:commandButton>
+								</span>
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+
+				<!-- Unit Standard(s) Supporting Document-->
+				<h:panelGroup rendered="#{trainingproviderUI.unitStandards.size() gt 0}" style="width:100%">
+					<div class="ui-g-12 ui-md-6 ui-lg-3">
+						<div class="ui-g card colorbox #{!trainingproviderUI.usUplaoaded ? 'colorbox-1' : 'colorbox-5'}">
+							<div class="ui-g-4">
+								<i class="material-icons">#{!trainingproviderUI.usUplaoaded ? 'cloud_upload' : 'check_circle'}</i>
+							</div>
+							<div class="ui-g-8">
+								<span class="colorbox-name">Unit Standard(s) Supporting Document</span> <span class="colorbox-count"> <p:commandButton value="#{!trainingproviderUI.usUplaoaded ? lang['click.to.upload'] : lang['re.upload']}"
+										styleClass="#{!trainingproviderUI.usUplaoaded ? 'red-btn' : 'green-btn'} flat" process="@this" oncomplete="PF('dlgSupportingDocQctoSkillsDev').show()" update="@form">
+										<f:setPropertyActionListener value="Unit Standards" target="#{trainingproviderUI.docFor}" />
+									</p:commandButton>
+								</span>
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+
+				<!-- Skills Programme(s) Supporting Document-->
+				<h:panelGroup rendered="#{trainingproviderUI.skillsProgramList.size() gt 0}" style="width:100%">
+					<div class="ui-g-12 ui-md-6 ui-lg-3">
+						<div class="ui-g card colorbox #{!trainingproviderUI.spUplaoaded ? 'colorbox-1' : 'colorbox-5'}">
+							<div class="ui-g-4">
+								<i class="material-icons">#{!trainingproviderUI.spUplaoaded ? 'cloud_upload' : 'check_circle'}</i>
+							</div>
+							<div class="ui-g-8">
+								<span class="colorbox-name">Skills Programme(s) Supporting Document</span> <span class="colorbox-count"> <p:commandButton value="#{!trainingproviderUI.spUplaoaded  ? lang['click.to.upload'] : lang['re.upload']}"
+										styleClass="#{!trainingproviderUI.spUplaoaded  ? 'red-btn' : 'green-btn'} flat" process="@this" oncomplete="PF('dlgSupportingDocQctoSkillsDev').show()" update="@form">
+										<f:setPropertyActionListener value="Skills Programme" target="#{trainingproviderUI.docFor}" />
+									</p:commandButton>
+								</span>
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+
+				<!-- Skills Set(s) Supporting Document-->
+				<h:panelGroup rendered="#{trainingproviderUI.skillsSetList.size() gt 0}" style="width:100%">
+					<div class="ui-g-12 ui-md-6 ui-lg-3">
+						<div class="ui-g card colorbox #{!trainingproviderUI.ssUplaoaded ? 'colorbox-1' : 'colorbox-5'}">
+							<div class="ui-g-4">
+								<i class="material-icons">#{!trainingproviderUI.ssUplaoaded ? 'cloud_upload' : 'check_circle'}</i>
+							</div>
+							<div class="ui-g-8">
+								<span class="colorbox-name">Skills Set(s) Supporting Document</span> <span class="colorbox-count"> <p:commandButton value="#{!trainingproviderUI.ssUplaoaded  ? lang['click.to.upload'] : lang['re.upload']}" styleClass="#{!trainingproviderUI.ssUplaoaded  ? 'red-btn' : 'green-btn'} flat"
+										process="@this" oncomplete="PF('dlgSupportingDocQctoSkillsDev').show()" update="@form">
+										<f:setPropertyActionListener value="Skills Set" target="#{trainingproviderUI.docFor}" />
+									</p:commandButton>
+								</span>
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</div>
+		</div>
+	</p:outputPanel>
+
+	<!-- Supporting Document-->
+	<p:dialog closeOnEscape="true" header="Upload supporting Documents" id="dlgSupportingDocQctoSkillsDev" widgetVar="dlgSupportingDocQctoSkillsDev" resizable="false" hideEffect="clip" showEffect="clip" width="60%" height="40vh" responsive="true" modal="true" position="center">
+		<h:form id="supportingDocFomrQctoSkillsDev">
+			<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank">
+				<p:fieldset legend="Upload Supporting Document *">
+					<h:panelGrid columns="2" style="width: 100%">
+						<p:outputLabel value="#{lang['notes']}:" for="noteQctoSkillsDev" />
+						<p:inputTextarea id="noteQctoSkillsDev" value="#{trainingproviderUI.docNode}" autoResize="false" rows="1" style="width: 100%">
+							<p:ajax />
+						</p:inputTextarea>
+					</h:panelGrid>
+					<div class="TexAlCenter">
+						<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+					</div>
+					<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone();PF('dlgSupportingDocQctoSkillsDev').hide()" fileUploadListener="#{trainingproviderUI.storeSupportingDoc}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}"
+						fileLimitMessage="#{lang['file.to.big.to.upload']}" update="supportingDocFomrQctoSkillsDev companyInsForm:qualUSGrid" multiple="false" fileLimit="1" sizeLimit="#{trainingproviderUI.maxFileSize}" allowTypes="/(\.|\/)(gif|jpe?g|png|pdf|docx|txt)$/" immediate="false" auto="true" />
+
+					<h:panelGrid rendered="#{trainingproviderUI.docParent ne null}">
+						<h1 class="fa fa-check" style="color: green;">Document Uploaded</h1>
+					</h:panelGrid>
+
+				</p:fieldset>
+				<p:commandButton rendered="false" value="#{lang['submit']}" process="supportingDocFomrQctoSkillsDev" icon="ui-icon-save" update="companyInsForm:pgNonSetaQualQctoSkillsDev @form" action="#{trainingproviderUI.saveDocument}" onstart="uploadStart()" oncomplete="uploadDone();PF('dlgSupportingDocQctoSkillsDev').hide()" />
+			</p:panelGrid>
+		</h:form>
+	</p:dialog>
+
+</ui:composition>

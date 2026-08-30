@@ -1,0 +1,42 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+ <p:fieldset >
+	<p:importEnum type="haj.com.entity.enums.AnswerTypeEnum"></p:importEnum>
+
+	<p:selectOneRadio columns="2" layout="responsive"  value="#{question.selectedAnswer}"  rendered="#{question.answerType eq AnswerTypeEnum.RadioButtons}" >
+		<f:selectItems value="#{selectItemsUI.getFormTypeAnswers(question)}" var="rv" itemValue="#{rv}" itemLabel="#{rv.answerDesc}" />
+		
+	</p:selectOneRadio>
+	
+
+
+	<p:selectOneMenu value="#{question.selectedAnswer}" style="width:100%" rendered="#{question.answerType eq AnswerTypeEnum.DropDown}">
+		<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+		<f:selectItems value="#{selectItemsUI.getFormTypeAnswers(question)}" var="rv" itemValue="#{rv}" itemLabel="#{rv.answerDesc}" />
+	</p:selectOneMenu>
+	
+	<p:inputText value="#{question.textAnswer}" style="width: 100%" rendered="#{question.answerType eq AnswerTypeEnum.Text}"></p:inputText>
+
+	<p:inputTextarea value="#{question.textAnswer}" style="width: 100%" rendered="#{question.answerType eq AnswerTypeEnum.TextArea}"></p:inputTextarea>
+
+	<p:calendar value="#{question.dateAnswer}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" readonlyInput="true" rendered="#{question.answerType eq AnswerTypeEnum.Date}" />
+
+
+
+	<p:inplace rendered="#{formtypesectionsUI.editMode and (question.answerType eq AnswerTypeEnum.RadioButtons or question.answerType eq AnswerTypeEnum.DropDown)}" editor="true">
+		<p:ajax event="save" listener="#{formtypesectionsUI.saveNewAnswer(question)}" process="@this" update="@form"></p:ajax>
+		<f:facet name="output">
+		 <br/>
+		  <hr/>
+			<p:outputLabel value="Add New Answer" />
+		</f:facet>
+		
+		<f:facet name="input">
+		<hr/>
+			<p:outputLabel value="Answer" style="width: 100%" styleClass="gray"></p:outputLabel>
+			<br />
+			<p:inputText value="#{formtypesectionsUI.formTypeAnswers.answerDesc}" style="width: 100%"></p:inputText>
+			<br />
+		</f:facet>
+	</p:inplace>
+</p:fieldset>
+</ui:composition>

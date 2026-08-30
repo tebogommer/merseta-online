@@ -1,0 +1,89 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+
+	<ui:define name="content">
+		<div class="ui-g">
+
+
+
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+					    <p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" var="companyStatus"/>
+						<p:tooltip position="left" />
+						<h1>#{lang['sars.status.changed']} : <h:outputText value="#{sarsStatusChangedUI.sarsFiles.forMonth}"><f:convertDateTime pattern="MMMM yyyy"/> </h:outputText> </h1>
+						<p:commandButton value="#{lang['process.all.current.pending.status.companies']}" action="#{sarsStatusChangedUI.procesPending}" update="@form" icon="ui-icon-system-update-alt"/>
+						<h:panelGroup>
+							<div align="right">
+								<h:commandLink id="eExcel">
+									<i class="fa fa-file-excel-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+									<p:dataExporter type="xls" target="sarsfilesList" fileName="SarsStatusChanged" />
+								</h:commandLink>
+								<h:commandLink id="ePdf" rendered="false">
+									<i class="fa fa-file-pdf-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+									<p:dataExporter type="pdf" target="sarsfilesList" fileName="SarsStatusChanged" />
+								</h:commandLink>
+								<h:commandLink id="eCsv">
+									<i class="fa fa-file-text-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+									<p:dataExporter type="csv" target="sarsfilesList" fileName="SarsStatusChanged" />
+								</h:commandLink>
+		
+
+								<p:tooltip for="eExcel" value="#{lang['export.search.results.to.excel']}" position="left" />
+								<p:tooltip for="ePdf" value="#{lang['export.search.results.to.PDF']}" position="left" />
+								<p:tooltip for="eCsv" value="#{lang['export.search.results.as.a.CSV.file']}" position="left" />
+
+							</div>
+						</h:panelGroup>
+						<br />
+						<p:dataTable var="rv" value="#{sarsStatusChangedUI.list}" filteredValue="#{sarsStatusChangedUI.listFiltered}" id="sarsfilesList" rowKey="#{rowVar.id}" paginator="true" rows="24" paginatorPosition="bottom"
+							paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="24,36,48,60,120,180,360" reflow="true" rowStyleClass="#{rv.company.companyStatus eq companyStatus.Active ? 'redRow': (rv.company.companyStatus eq companyStatus.InActive?'greenRow':null)}">
+
+							<p:column  headerText="#{lang['entity.id']}" sortBy="#{rv.company.levyNumber}" width="8%">
+								<h:outputText value="#{rv.company.levyNumber}"/>
+							</p:column>
+
+							<p:column headerText="#{lang['company']}" sortBy="#{rv.company.companyName}">
+								<h:outputText value="#{rv.company.companyName}"/>
+							</p:column>
+
+							<p:column headerText="#{lang['tradingName']}"  sortBy="#{rv.company.tradingName}">
+								<h:outputText value="#{rv.company.tradingName}"/>
+							</p:column>
+
+							<p:column headerText="#{lang['reg.number']}"  >
+								<h:outputText value="#{rv.company.companyRegistrationNumber}"/>
+							</p:column>
+							
+							<p:column headerText="#{lang['company.status']}" width="8%">
+								<h:outputText value="#{rv.company.companyStatus.friendlyName}"/>
+							</p:column>						
+
+							<p:column headerText="#{lang['current.sars.trading.status']}">
+							  <div align="left">
+								<h:outputText value="#{rv.company.sarsTradingStatusDecoded}"/>
+							  </div>
+							</p:column>							
+							<p:column headerText="#{lang['new.sars.trading.status']}">
+							    <div align="left">
+								 <h:outputText value="#{rv.sarsEmployerDetail.status}"/>
+							 	</div>	 
+							</p:column>	
+						</p:dataTable>
+
+
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+<p:dialog closeOnEscape="true" header="GP Integration" widgetVar="gpDialog" hideEffect="clip" showEffect="clip" id="dialogNote" modal="true" responsive="true" width="40%">
+		<h:form id="gpForm">
+
+		</h:form>
+</p:dialog>		
+
+	</ui:define>
+
+</ui:composition>

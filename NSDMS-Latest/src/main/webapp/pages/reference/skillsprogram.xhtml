@@ -1,0 +1,58 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">			
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>merSETA Skills Program</h1>
+					<h:form id="mainForm">
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+						<ui:include src="/pages/includes/download_lazy.xhtml">
+							<ui:param name="file_name" value="Skills_Program" />
+							<ui:param name="target" value="skillsprogramList" />
+						</ui:include>
+
+						<p:dataTable var="rowVar" value="#{skillsprogramUI.dataModelMerseta}" filteredValue="#{skillsprogramUI.skillsProgramfilteredList}" id="skillsprogramList" rowKey="#{rowVar.id}" paginator="true" rows="15" paginatorPosition="bottom"
+							paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="15,20,25" reflow="true" lazy="true">
+							
+							<p:column width="20" exportable="false">
+								<p:rowToggler>
+								</p:rowToggler>
+							</p:column>
+							
+							<p:column headerText="#{lang['programmeID']}" filterBy="#{rowVar.programmeID}" sortBy="#{rowVar.programmeID}" filterStyle="width: 95%" width="15%">
+								<h:outputText value="#{rowVar.programmeID}" />
+							</p:column>
+							
+							<p:column headerText="#{lang['title']}" filterBy="#{rowVar.description}" sortBy="#{rowVar.description}" filterStyle="width: 45%">
+								<h:outputText value="#{rowVar.description}" />
+							</p:column>
+							
+							<p:column headerText="SAQA Link">
+								<h:outputText value="(#{rowVar.qualification.code})" />
+								<h:outputText value=" #{rowVar.qualification.description} " />
+							</p:column>	
+							
+							<p:column headerText="ETQA" sortBy="#{rowVar.etqa}">
+								<h:outputText value="(#{rowVar.etqa.code}) #{rowVar.etqa.description}" />
+							</p:column>
+							
+							<p:rowExpansion>	
+								<p:fieldset legend="Unit Standard Details">
+									<p:dataTable value="#{rowVar.skillsProgramUnitStandards}" var="rv" reflow="true" emptyMessage="#{lang['no.records.found']}">
+										<p:column headerText="#{lang['code']}" style="white-space: nowrap" width="10">#{rv.unitStandards.code}</p:column>
+										<p:column headerText="#{lang['description']}" style="white-space: nowrap" width="70">#{rv.unitStandards.title}</p:column>
+										<p:column headerText="#{lang['credits']}" style="white-space: nowrap" width="10">#{rv.unitStandards.unitstdnumberofcredits}</p:column>
+										<p:column headerText="#{lang['nqf.level']}" style="white-space: nowrap" width="10">#{rv.unitStandards.nqflevelg2description}</p:column>
+									</p:dataTable>
+								</p:fieldset>
+							</p:rowExpansion>	
+
+						</p:dataTable>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+</ui:composition>

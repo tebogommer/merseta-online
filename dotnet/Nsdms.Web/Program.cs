@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
 using Nsdms.Application.Common;
+using Nsdms.Application.Common.Interfaces;
 using Nsdms.Application.Services;
 using Nsdms.Domain.Entities;
 using Nsdms.Infrastructure.Data;
@@ -54,6 +55,12 @@ builder.Services.AddScoped<OrganisationService>(sp => (OrganisationService)sp.Ge
 builder.Services.AddScoped<IIdentityService, IdentityService>();
 builder.Services.AddScoped<IdentityService>(sp => (IdentityService)sp.GetRequiredService<IIdentityService>());
 
+builder.Services.AddScoped<IRolePermissionService, RolePermissionService>();
+builder.Services.AddScoped<RolePermissionService>(sp => (RolePermissionService)sp.GetRequiredService<IRolePermissionService>());
+
+builder.Services.AddScoped<ICaslAbilityService, CaslAbilityService>();
+builder.Services.AddScoped<CaslAbilityService>(sp => (CaslAbilityService)sp.GetRequiredService<ICaslAbilityService>());
+
 builder.Services.AddScoped<IVisitService, VisitService>();
 builder.Services.AddScoped<VisitService>(sp => (VisitService)sp.GetRequiredService<IVisitService>());
 
@@ -92,16 +99,100 @@ builder.Services.AddScoped<StorageService>(sp => (StorageService)sp.GetRequiredS
 builder.Services.AddScoped<IFinanceService, FinanceService>();
 builder.Services.AddScoped<FinanceService>(sp => (FinanceService)sp.GetRequiredService<IFinanceService>());
 
-// SETMIS Compliance & Business Intelligence (Phase 5)
-builder.Services.AddScoped<ISetmisService, SetmisService>();
-builder.Services.AddScoped<SetmisService>(sp => (SetmisService)sp.GetRequiredService<ISetmisService>());
-
+// Executive Skills Business Intelligence & Analytics
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
 builder.Services.AddScoped<AnalyticsService>(sp => (AnalyticsService)sp.GetRequiredService<IAnalyticsService>());
 
 // Developer Documentation & Database Schema Engine
 builder.Services.AddScoped<IDatabaseDocumentationService, DatabaseDocumentationService>();
 builder.Services.AddScoped<DatabaseDocumentationService>(sp => (DatabaseDocumentationService)sp.GetRequiredService<IDatabaseDocumentationService>());
+
+// System Configuration & Feature Flags Engine
+builder.Services.AddScoped<ISystemConfigurationService, SystemConfigurationService>();
+builder.Services.AddScoped<SystemConfigurationService>(sp => (SystemConfigurationService)sp.GetRequiredService<ISystemConfigurationService>());
+
+builder.Services.AddScoped<IFeatureFlagService, FeatureFlagService>();
+builder.Services.AddScoped<FeatureFlagService>(sp => (FeatureFlagService)sp.GetRequiredService<IFeatureFlagService>());
+
+// Configurable Document & File Storage
+builder.Services.AddScoped<IFileStorageService, Nsdms.Infrastructure.Services.LocalFileStorageService>();
+
+// Templated PDF & Certificate Generation (QuestPDF)
+builder.Services.AddScoped<IPdfDocumentService, Nsdms.Infrastructure.Services.QuestPdfDocumentService>();
+
+// Decoupled ERP Integration Adapter (Off by default)
+builder.Services.AddScoped<IErpIntegrationService, Nsdms.Infrastructure.Services.ErpIntegrationService>();
+
+// Advanced Learner Lifecycle Transitions
+builder.Services.AddScoped<ILearnerLifecycleService, LearnerLifecycleService>();
+builder.Services.AddScoped<LearnerLifecycleService>(sp => (LearnerLifecycleService)sp.GetRequiredService<ILearnerLifecycleService>());
+
+// Workplace Monitoring & Inspection Surveys (Cluster 1)
+builder.Services.AddScoped<IWorkplaceMonitoringService, WorkplaceMonitoringService>();
+builder.Services.AddScoped<WorkplaceMonitoringService>(sp => (WorkplaceMonitoringService)sp.GetRequiredService<IWorkplaceMonitoringService>());
+
+// Governance, Review Committees & Accreditation Scope (Cluster 2)
+builder.Services.AddScoped<IReviewCommitteeService, ReviewCommitteeService>();
+builder.Services.AddScoped<ReviewCommitteeService>(sp => (ReviewCommitteeService)sp.GetRequiredService<IReviewCommitteeService>());
+
+// DG Project Implementation Plans & Payment Claims (Cluster 3)
+builder.Services.AddScoped<IDgProjectImplementationService, DgProjectImplementationService>();
+builder.Services.AddScoped<DgProjectImplementationService>(sp => (DgProjectImplementationService)sp.GetRequiredService<IDgProjectImplementationService>());
+
+// Training Committees & WSP Disputes (Cluster 4)
+builder.Services.AddScoped<ITrainingCommitteeAndDisputeService, TrainingCommitteeAndDisputeService>();
+builder.Services.AddScoped<TrainingCommitteeAndDisputeService>(sp => (TrainingCommitteeAndDisputeService)sp.GetRequiredService<ITrainingCommitteeAndDisputeService>());
+
+// Trade Test Administration & ARPL (Area 13)
+builder.Services.AddScoped<ITradeTestAndArplService, TradeTestAndArplService>();
+builder.Services.AddScoped<TradeTestAndArplService>(sp => (TradeTestAndArplService)sp.GetRequiredService<ITradeTestAndArplService>());
+
+// Summative Assessment Reports & Moderation (Area 14)
+builder.Services.AddScoped<ISummativeAssessmentAndModerationService, SummativeAssessmentAndModerationService>();
+builder.Services.AddScoped<SummativeAssessmentAndModerationService>(sp => (SummativeAssessmentAndModerationService)sp.GetRequiredService<ISummativeAssessmentAndModerationService>());
+
+// Qualifications Curriculum Development & QDF (Area 15)
+builder.Services.AddScoped<IQcdAndCurriculumService, QcdAndCurriculumService>();
+builder.Services.AddScoped<QcdAndCurriculumService>(sp => (QcdAndCurriculumService)sp.GetRequiredService<IQcdAndCurriculumService>());
+
+// Non-SETA Qualifications & Provider Verification (Area 16)
+builder.Services.AddScoped<INonSetaVerificationService, NonSetaVerificationService>();
+builder.Services.AddScoped<NonSetaVerificationService>(sp => (NonSetaVerificationService)sp.GetRequiredService<INonSetaVerificationService>());
+
+// Advanced SARS Historical Levy Reconciliation (Area 17)
+builder.Services.AddScoped<ISarsLevyReconAuditService, SarsLevyReconAuditService>();
+builder.Services.AddScoped<SarsLevyReconAuditService>(sp => (SarsLevyReconAuditService)sp.GetRequiredService<ISarsLevyReconAuditService>());
+
+// Auxiliary Enterprise Services (Options A, B, C, D)
+builder.Services.AddScoped<IBankingDetailsService, BankingDetailsService>();
+builder.Services.AddScoped<BankingDetailsService>(sp => (BankingDetailsService)sp.GetRequiredService<IBankingDetailsService>());
+
+builder.Services.AddScoped<ISdfAppointmentService, SdfAppointmentService>();
+builder.Services.AddScoped<SdfAppointmentService>(sp => (SdfAppointmentService)sp.GetRequiredService<ISdfAppointmentService>());
+
+builder.Services.AddScoped<IContractVariationService, ContractVariationService>();
+builder.Services.AddScoped<ContractVariationService>(sp => (ContractVariationService)sp.GetRequiredService<IContractVariationService>());
+
+builder.Services.AddScoped<IExtensionOfScopeService, ExtensionOfScopeService>();
+builder.Services.AddScoped<ExtensionOfScopeService>(sp => (ExtensionOfScopeService)sp.GetRequiredService<IExtensionOfScopeService>());
+
+// Brand Asset Service
+builder.Services.AddScoped<IBrandAssetService, Nsdms.Infrastructure.Services.BrandAssetService>();
+builder.Services.AddScoped<Nsdms.Infrastructure.Services.BrandAssetService>(sp => (Nsdms.Infrastructure.Services.BrandAssetService)sp.GetRequiredService<IBrandAssetService>());
+
+// Enterprise PDF & Excel Report Export Service (QuestPDF)
+builder.Services.AddScoped<IReportExportService, Nsdms.Infrastructure.Services.ReportExportService>();
+builder.Services.AddScoped<Nsdms.Infrastructure.Services.ReportExportService>(sp => (Nsdms.Infrastructure.Services.ReportExportService)sp.GetRequiredService<IReportExportService>());
+
+// Workflow Governance & Delegations Service
+builder.Services.AddScoped<IWorkflowGovernanceService, WorkflowGovernanceService>();
+builder.Services.AddScoped<WorkflowGovernanceService>(sp => (WorkflowGovernanceService)sp.GetRequiredService<IWorkflowGovernanceService>());
+
+// Real-time SignalR Notification Service
+builder.Services.AddSingleton<IRealtimeNotificationService, Nsdms.Web.Services.RealtimeNotificationService>();
+
+// Background Scheduler Hosted Service (Off by default)
+builder.Services.AddHostedService<Nsdms.Infrastructure.Services.BackgroundSchedulerHostedService>();
 
 var app = builder.Build();
 
@@ -121,7 +212,7 @@ app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
-// Auto-create database & seed lookups, sample data, workflow definitions, financial records, and SETMIS compliance
+// Auto-create database & seed lookups, sample data, workflow definitions, financial records, and system governance
 using (var scope = app.Services.CreateScope())
 {
     try
@@ -129,11 +220,18 @@ using (var scope = app.Services.CreateScope())
         var db = scope.ServiceProvider.GetRequiredService<NsdmsDbContext>();
         db.Database.EnsureCreated();
         Phase2SchemaMigrator.EnsurePhase2SchemaAsync(db).GetAwaiter().GetResult();
-        SampleDataSeeder.SeedSampleDataAsync(db).GetAwaiter().GetResult();
         Phase3WorkflowSchemaMigrator.MigrateWorkflowSchemaAsync(app.Services).GetAwaiter().GetResult();
         Phase4FinancialSchemaMigrator.MigrateFinancialSchemaAsync(app.Services).GetAwaiter().GetResult();
-        Phase5SetmisSchemaMigrator.MigrateSetmisSchemaAsync(app.Services).GetAwaiter().GetResult();
-        app.Logger.LogInformation("SQL Server database verified with all entities, lookups, sample data, workflow engine, financial governance & SETMIS compliance.");
+        Phase5GovernanceSchemaMigrator.MigrateGovernanceSchemaAsync(app.Services).GetAwaiter().GetResult();
+        Phase6GovernanceSchemaMigrator.MigrateGovernanceSchemaAsync(app.Services).GetAwaiter().GetResult();
+        Phase7SetmisLookupMigrator.MigrateSetmisLookupsAsync(app.Services).GetAwaiter().GetResult();
+        Phase8SetmisSchemaAlignmentMigrator.MigrateSetmisSchemaAlignmentAsync(app.Services).GetAwaiter().GetResult();
+        SampleDataSeeder.SeedSampleDataAsync(db).GetAwaiter().GetResult();
+        var featureFlags = scope.ServiceProvider.GetRequiredService<IFeatureFlagService>();
+        featureFlags.SeedDefaultFeatureFlagsAsync().GetAwaiter().GetResult();
+        var roleService = scope.ServiceProvider.GetRequiredService<IRolePermissionService>();
+        roleService.SeedDefaultRolePermissionsAsync().GetAwaiter().GetResult();
+        app.Logger.LogInformation("SQL Server database verified with all entities, SETMIS lookups, sample data, workflow engine, financial governance, system configuration & security roles.");
     }
     catch (Exception ex)
     {

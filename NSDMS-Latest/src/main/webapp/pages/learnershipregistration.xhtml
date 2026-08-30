@@ -1,0 +1,124 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<p:importEnum type="haj.com.entity.enums.PivotNonPivotEnum" />
+					<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+					<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+					<p:importEnum type="haj.com.entity.enums.NewExistingLearnershipEnum" />
+					 <h2>Learnership Application Status</h2>
+					<h:form id="learnersInsForm">
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:commandButton value="New Learnership Application" immediate="true" icon="fa fa-plus" title="#{lang['learner.registration']}" action="#{learnershipDevelopementUI.prepNewLearnership}" update="mainForm">
+					    </p:commandButton>
+					    <br/><br/>
+						<p:dataTable var="rowVar"  value="#{learnershipDevelopementUI.userLearnershipDataModel}" id="rejectedModulesList" rowKey="#{rowVar.id}" paginator="true" rows="6"
+							paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+							<p:column width="20">
+								<p:rowToggler>
+								</p:rowToggler>
+							</p:column>
+		
+							<p:column headerText="SAQA qualification ID number and Description">
+								<h:outputText value="(#{rowVar.qualification.code})" />
+								<h:outputText value="#{rowVar.qualification.description}" />
+							</p:column>
+		
+							<p:column headerText="NQF Level">
+								<h:outputText value="#{rowVar.qualification.nqflevel.description}" />
+							</p:column>
+		
+							<p:column headerText="Qualification Code">
+								<h:outputText value="#{rowVar.qualification.codeString}" />
+							</p:column>
+		
+							<p:column headerText="ETQA">
+								<h:outputText value="#{rowVar.qualification.etqaname}" />
+							</p:column>
+		
+							<p:column headerText="Status">
+								<p:outputLabel value="#{rowVar.approvalEnum.friendlyName}" />
+							</p:column>
+		
+							<p:column headerText="Registration Number ">
+								<h:outputText value="#{rowVar.registrationNumber}" />
+							</p:column>
+		
+							<p:rowExpansion>
+		
+								<p:fieldset legend="Learnership Details">
+									<p:panelGrid columns="2" style="width:100%" id="ldeatils" layout="grid" styleClass="ui-panelgrid-blank form-group">
+										
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText disabled="true" value="#{rowVar.createDate}">
+												<f:convertDateTime pattern="dd MMMM yyyy HH:mm:ss" />
+											</p:inputText>
+											<p:outputLabel value="Application Date"></p:outputLabel>
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rowVar.designation}" disabled="true" style="width: 100%"></p:inputText>
+											<p:outputLabel value="Designation"></p:outputLabel>
+										</h:panelGroup>
+										
+										
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rowVar.users.firstName} #{rowVar.users.lastName}" disabled="true" style="width: 95%"></p:inputText>
+											<p:outputLabel value="Name of Applicant"></p:outputLabel>
+										</h:panelGroup>
+										
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rowVar.applicantType.description}" disabled="true" style="width: 100%"></p:inputText>
+											<p:outputLabel value="Type of Application"></p:outputLabel>
+										</h:panelGroup>
+									</p:panelGrid>
+								</p:fieldset>
+							</p:rowExpansion>
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+			
+			
+			<div class="ui-g-12">
+				<h:form id="mainForm">
+					<c:if test="#{learnershipDevelopementUI.learnershipDevelopmentRegistration ne null}">
+						<ui:include src="/pages/includes/learnershipreginclude.xhtml"/>
+					</c:if>
+				</h:form>
+			</div>
+
+
+			<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true">
+				<h:form id="uploadForm">
+					<h:panelGroup id="uploadGroup">
+						<div class="ui-g">
+							<div class="ui-g-12">
+								<div class="card">
+									<h1 style="font-weight: bold; font-size: 25px;">#{learnershipDevelopementUI.doc.configDoc.name}</h1>
+									<p:panel>
+										<h:panelGrid columns="2" style="width: 100%">
+											<p:outputLabel value="#{lang['notes']}:" for="note" />
+											<p:inputTextarea id="note" value="#{learnershipDevelopementUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+												<p:ajax />
+											</p:inputTextarea>
+										</h:panelGrid>
+										<div class="TexAlCenter">
+											<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+										</div>
+										<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{learnershipDevelopementUI.storeNewFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}"
+											update="mainForm uploadForm" multiple="false" fileLimit="1" allowTypes="/(\.|\/)(gif|jpe?g|png|pdf|docx|txt|doc)$/" immediate="false" auto="true" />
+									</p:panel>
+									<div class="EmptyBox10" />
+								</div>
+							</div>
+						</div>
+					</h:panelGroup>
+				</h:form>
+			</p:dialog>
+		</div>
+	</ui:define>
+</ui:composition>

@@ -40,6 +40,7 @@ public class LearnerService : ILearnerService
         var query = db.CompanyLearners
             .Include(l => l.Person)
             .Include(l => l.Organisation)
+            .Include(l => l.OrganisationSite)
             .Include(l => l.TrainingProvider)
             .Include(l => l.TradeTests)
             .AsQueryable();
@@ -51,7 +52,7 @@ public class LearnerService : ILearnerService
 
         if (!string.IsNullOrWhiteSpace(status))
         {
-            query = query.Where(l => l.StatusCode == status);
+            query = query.Where(l => l.EnrolmentStatusCode == status || l.EnrolmentStatusId == status);
         }
 
         if (!string.IsNullOrWhiteSpace(programmeType))
@@ -63,8 +64,10 @@ public class LearnerService : ILearnerService
         {
             var s = search.Trim();
             query = query.Where(l =>
-                l.LearnerContractNumber.Contains(s) ||
-                l.QualificationTitle.Contains(s) ||
+                (l.LearnerContractNumber != null && l.LearnerContractNumber.Contains(s)) ||
+                (l.LearnershipId != null && l.LearnershipId.Contains(s)) ||
+                (l.OfoCode != null && l.OfoCode.Contains(s)) ||
+                (l.QualificationTitle != null && l.QualificationTitle.Contains(s)) ||
                 (l.Person != null && (l.Person.FirstName.Contains(s) || l.Person.LastName.Contains(s) || l.Person.RsaIdNumber.Contains(s))) ||
                 (l.Organisation != null && l.Organisation.CompanyName.Contains(s)));
         }
@@ -80,6 +83,7 @@ public class LearnerService : ILearnerService
         return await db.CompanyLearners
             .Include(l => l.Person)
             .Include(l => l.Organisation)
+            .Include(l => l.OrganisationSite)
             .Include(l => l.TrainingProvider)
             .Include(l => l.TradeTests).ThenInclude(t => t.AssessorPerson)
             .Include(l => l.TradeTests).ThenInclude(t => t.ModeratorPerson)
@@ -105,13 +109,23 @@ public class LearnerService : ILearnerService
 
         if (string.IsNullOrWhiteSpace(learner.LearnerContractNumber))
         {
-            var prefix = learner.LearningProgrammeTypeCode.StartsWith("App", StringComparison.OrdinalIgnoreCase) ? "APP" : "LRN";
+            var prefix = (learner.LearningProgrammeTypeCode ?? "").StartsWith("App", StringComparison.OrdinalIgnoreCase) || learner.LearningProgrammeTypeCode == "01" ? "APP" : "LRN";
             learner.LearnerContractNumber = $"{prefix}-{DateTime.UtcNow.Year}-{learner.OrganisationId}-{Guid.NewGuid().ToString("N")[..4].ToUpper()}";
         }
 
-        if (string.IsNullOrWhiteSpace(learner.StatusCode))
+        if (string.IsNullOrWhiteSpace(learner.EnrolmentStatusCode))
         {
-            learner.StatusCode = "Registered";
+            learner.EnrolmentStatusCode = "Registered";
+        }
+
+        if (string.IsNullOrWhiteSpace(learner.EnrolmentStatusId))
+        {
+            learner.EnrolmentStatusId = "01";
+        }
+
+        if (learner.EnrolmentStatusDate == null)
+        {
+            learner.EnrolmentStatusDate = DateTime.UtcNow;
         }
 
         using var db = await _contextFactory.CreateDbContextAsync();
@@ -132,18 +146,66 @@ public class LearnerService : ILearnerService
         var existing = await db.CompanyLearners.FindAsync(learner.Id);
         if (existing == null) throw new KeyNotFoundException($"CompanyLearner with ID {learner.Id} not found.");
 
-        var beforeState = new { existing.LearnerContractNumber, existing.StatusCode, existing.QualificationTitle, existing.CompletionDate };
+        var beforeState = new
+        {
+            existing.LearnerContractNumber,
+            existing.LearnershipId,
+            existing.NonNqfInterventionCode,
+            existing.PartOfId,
+            existing.EnrolmentTypeId,
+            existing.EnrolmentStatusId,
+            existing.EnrolmentStatusDate,
+            existing.EnrolmentStatusReasonId,
+            existing.AssessorRegistrationNumber,
+            existing.AssessorEtqaId,
+            existing.PracticalProviderCode,
+            existing.PracticalProviderEtqaId,
+            existing.OfoCode,
+            existing.EconomicStatusId,
+            existing.UrbanRuralId,
+            existing.CumulativeSpend,
+            existing.CertificateNumber,
+            existing.PriorQualificationId,
+            existing.PriorQualificationAchievementDate,
+            existing.InternshipStatusId,
+            existing.FundingId,
+            existing.OrganisationSiteId,
+            existing.EnrolmentStatusCode,
+            existing.QualificationTitle,
+            existing.CompletionDate
+        };
 
         existing.QualificationTitle = learner.QualificationTitle;
         existing.SaqaQualificationId = learner.SaqaQualificationId;
         existing.NqfLevel = learner.NqfLevel;
         existing.LearningProgrammeTypeCode = learner.LearningProgrammeTypeCode;
+        existing.LearnershipId = learner.LearnershipId;
+        existing.NonNqfInterventionCode = learner.NonNqfInterventionCode;
+        existing.PartOfId = learner.PartOfId;
+        existing.EnrolmentTypeId = learner.EnrolmentTypeId;
+        existing.EnrolmentStatusId = learner.EnrolmentStatusId;
+        existing.EnrolmentStatusDate = learner.EnrolmentStatusDate;
+        existing.EnrolmentStatusReasonId = learner.EnrolmentStatusReasonId;
+        existing.AssessorRegistrationNumber = learner.AssessorRegistrationNumber;
+        existing.AssessorEtqaId = learner.AssessorEtqaId;
+        existing.PracticalProviderCode = learner.PracticalProviderCode;
+        existing.PracticalProviderEtqaId = learner.PracticalProviderEtqaId;
+        existing.OfoCode = learner.OfoCode;
+        existing.EconomicStatusId = learner.EconomicStatusId;
+        existing.UrbanRuralId = learner.UrbanRuralId;
+        existing.CumulativeSpend = learner.CumulativeSpend;
+        existing.CertificateNumber = learner.CertificateNumber;
+        existing.PriorQualificationId = learner.PriorQualificationId;
+        existing.PriorQualificationAchievementDate = learner.PriorQualificationAchievementDate;
+        existing.InternshipStatusId = learner.InternshipStatusId;
         existing.FundingTypeCode = learner.FundingTypeCode;
+        existing.FundingId = learner.FundingId;
+        existing.OrganisationSiteId = learner.OrganisationSiteId;
         existing.TrainingProviderId = learner.TrainingProviderId;
         existing.CommencementDate = learner.CommencementDate;
         existing.ExpectedCompletionDate = learner.ExpectedCompletionDate;
         existing.CompletionDate = learner.CompletionDate;
-        existing.StatusCode = learner.StatusCode;
+        existing.EnrolmentStatusCode = learner.EnrolmentStatusCode;
         existing.SetaRegion = learner.SetaRegion;
         existing.ChamberCode = learner.ChamberCode;
         existing.IsActive = learner.IsActive;
@@ -197,6 +259,16 @@ public class LearnerService : ILearnerService
             tradeTest.ResultStatusCode = "Scheduled";
         }
 
+        if (string.IsNullOrWhiteSpace(tradeTest.TradeTestResultId))
+        {
+            tradeTest.TradeTestResultId = "01";
+        }
+
+        if (string.IsNullOrWhiteSpace(tradeTest.TradeTestResultReasonId))
+        {
+            tradeTest.TradeTestResultReasonId = "01";
+        }
+
         using var db = await _contextFactory.CreateDbContextAsync();
         tradeTest.CreatedAt = DateTime.UtcNow;
         tradeTest.CreatedBy = currentUsername;
@@ -215,13 +287,14 @@ public class LearnerService : ILearnerService
         var tradeTest = await db.LearnerTradeTests.Include(t => t.CompanyLearner).FirstOrDefaultAsync(t => t.Id == tradeTestId);
         if (tradeTest == null) throw new KeyNotFoundException($"LearnerTradeTest with ID {tradeTestId} not found.");
 
-        var beforeState = new { tradeTest.ResultStatusCode, tradeTest.SerialCertificateNumber };
+        var beforeState = new { tradeTest.ResultStatusCode, tradeTest.TradeTestResultId, tradeTest.SerialCertificateNumber };
 
         tradeTest.ResultStatusCode = resultStatusCode;
         tradeTest.Remarks = remarks;
 
-        if (resultStatusCode.Equals("Competent", StringComparison.OrdinalIgnoreCase))
+        if (resultStatusCode.Equals("Competent", StringComparison.OrdinalIgnoreCase) || resultStatusCode == "01")
         {
+            tradeTest.TradeTestResultId = "01";
             tradeTest.CertificateIssueDate = DateTime.UtcNow;
             if (string.IsNullOrWhiteSpace(certificateNumber))
             {
@@ -234,9 +307,15 @@ public class LearnerService : ILearnerService
 
             if (tradeTest.CompanyLearner != null)
             {
-                tradeTest.CompanyLearner.StatusCode = "Completed";
+                tradeTest.CompanyLearner.EnrolmentStatusCode = "Completed";
+                tradeTest.CompanyLearner.EnrolmentStatusId = "02";
+                tradeTest.CompanyLearner.EnrolmentStatusDate = DateTime.UtcNow;
                 tradeTest.CompanyLearner.CompletionDate = DateTime.UtcNow;
             }
+        }
+        else
+        {
+            tradeTest.TradeTestResultId = "02";
         }
 
         tradeTest.ModifiedAt = DateTime.UtcNow;
@@ -251,8 +330,9 @@ public class LearnerService : ILearnerService
     {
         using var db = await _contextFactory.CreateDbContextAsync();
         return await db.LearnerTradeTests
-            .Include(t => t.CompanyLearner).ThenInclude(l => l.Person)
-            .Include(t => t.CompanyLearner).ThenInclude(l => l.Organisation)
+            .Include(t => t.CompanyLearner!).ThenInclude(l => l.Person)
+            .Include(t => t.CompanyLearner!).ThenInclude(l => l.Organisation)
+            .Include(t => t.TrainingProvider)
             .Include(t => t.AssessorPerson)
             .Include(t => t.ModeratorPerson)
             .FirstOrDefaultAsync(t => t.Id == id);
@@ -262,15 +342,16 @@ public class LearnerService : ILearnerService
     {
         using var db = await _contextFactory.CreateDbContextAsync();
         var query = db.LearnerTradeTests
-            .Include(t => t.CompanyLearner).ThenInclude(l => l.Person)
-            .Include(t => t.CompanyLearner).ThenInclude(l => l.Organisation)
+            .Include(t => t.CompanyLearner!).ThenInclude(l => l.Person)
+            .Include(t => t.CompanyLearner!).ThenInclude(l => l.Organisation)
+            .Include(t => t.TrainingProvider)
             .Include(t => t.AssessorPerson)
             .Include(t => t.ModeratorPerson)
             .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(resultStatus))
         {
-            query = query.Where(t => t.ResultStatusCode == resultStatus);
+            query = query.Where(t => t.ResultStatusCode == resultStatus || t.TradeTestResultId == resultStatus);
         }
 
         if (!string.IsNullOrWhiteSpace(search))
@@ -279,6 +360,8 @@ public class LearnerService : ILearnerService
             query = query.Where(t =>
                 t.TradeTitle.Contains(s) ||
                 t.TestCenterName.Contains(s) ||
+                (t.TradeTestCentreCode != null && t.TradeTestCentreCode.Contains(s)) ||
+                (t.TradeCode != null && t.TradeCode.Contains(s)) ||
                 (t.SerialCertificateNumber != null && t.SerialCertificateNumber.Contains(s)) ||
                 (t.CompanyLearner != null && t.CompanyLearner.Person != null && (t.CompanyLearner.Person.FirstName.Contains(s) || t.CompanyLearner.Person.LastName.Contains(s))));
         }
@@ -293,6 +376,7 @@ public class LearnerService : ILearnerService
         using var db = await _contextFactory.CreateDbContextAsync();
         return await db.LearnerTradeTests
             .Where(t => t.CompanyLearnerId == companyLearnerId)
+            .Include(t => t.TrainingProvider)
             .Include(t => t.AssessorPerson)
             .Include(t => t.ModeratorPerson)
             .OrderByDescending(t => t.TradeTestDate)

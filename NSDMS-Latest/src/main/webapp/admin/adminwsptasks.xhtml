@@ -1,0 +1,106 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Administrator Wsp Tasks</h1>
+					<h:form id="taskForm">
+					
+						<h:panelGroup rendered="false">
+							<div>
+								<p:outputLabel value="Financial Year / Grant Year" />
+							</div>
+							<div>
+								<p:selectOneMenu id="yeartasks" value="#{adminWspTasksUI.selectedYear}" style="width:75%">
+									<p:ajax />
+									<f:selectItems value="#{adminWspTasksUI.financialYears}" />
+								</p:selectOneMenu>
+							</div>
+							<div class="EmptyBox10"/>
+						</h:panelGroup>
+						<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank" rendered="false">
+							<h3>Report To Display Grant Applications Status For The Selected Financial Year</h3>
+							<p:commandButton process="tasksList" update="taskForm" action="#{adminWspTasksUI.populateWspByFinancialYearAndStatus}" value="Generate Report" />
+						</p:panelGrid>
+						
+						<p:importEnum type="haj.com.entity.enums.RagEnum" />
+						<br />
+
+						<ui:include src="/pages/includes/download_lazy.xhtml">
+							<ui:param name="file_name" value="Wsp_Status_report" />
+							<ui:param name="target" value="tasksList" />
+						</ui:include>
+						<br />
+						<p:dataTable var="rowVar" value="#{adminWspTasksUI.dataModel}" filteredValue="#{adminWspTasksUI.tasksfilteredList}" id="tasksList" emptyMessage="#{lang['no.records.found']}" rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom"
+							paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,20,40,80,160,320" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['sdl.number']}" filterBy="#{rowVar.description}" width="7%">
+								<h:outputText value="#{rowVar.wsp.company.levyNumber}" rendered="#{rowVar.wsp.company.levyNumber ne null}"/>
+								<h:outputText value="N/A" rendered="#{rowVar.wsp.company.levyNumber eq null}"/>
+							</p:column>	
+							
+							<p:column headerText="#{lang['companyName']}" filterBy="#{rowVar.description}" width="10%">
+								<h:outputText value="#{rowVar.wsp.company.companyName}" rendered="#{rowVar.wsp.company.companyName ne null}"/>
+								<h:outputText value="N/A" rendered="#{rowVar.wsp.company.companyName eq null}"/>
+							</p:column>	
+							
+							<p:column headerText="#{lang['companyRegistrationNumber']}" width="7%">
+								<h:outputText value="#{rowVar.wsp.company.companyRegistrationNumber}" rendered="#{rowVar.wsp.company.companyRegistrationNumber ne null}"/>
+								<h:outputText value="N/A" rendered="#{rowVar.wsp.company.companyRegistrationNumber eq null}"/>
+							</p:column>	
+							
+							<p:column headerText="#{lang['create.date']}" width="7%">
+								<h:outputText value="#{rowVar.createDate}">
+									<f:convertDateTime pattern="dd MMM yyyy" />
+								</h:outputText>
+							</p:column>
+							
+							<p:column headerText="#{lang['actionDate']}" width="7%">
+								<h:outputText value="#{rowVar.createDate}">
+									<f:convertDateTime pattern="dd MMM yyyy" />
+								</h:outputText>
+							</p:column>
+					
+							<p:column headerText="#{lang['description']}" filterBy="#{rowVar.description}" width="30%">
+								<h:outputText value="#{rowVar.description}" />
+							</p:column>
+
+							<p:column headerText="#{lang['dueDate']}" width="7%">
+								<h:outputText value="#{rowVar.dueDate}">
+									<f:convertDateTime pattern="dd MMM yyyy" />
+								</h:outputText>
+							</p:column>
+							
+							<p:column headerText="#{lang['taskStatus']}" width="7%">
+								<h:outputText value="#{lang[rowVar.taskStatus.registrationName]}" />
+							</p:column>
+							
+							<p:column headerText="#{lang['action.user']}" width="15%">
+								<h:outputText value="#{rowVar.actionUser.firstName} #{rowVar.actionUser.lastName} (#{rowVar.actionUser.email})" rendered="#{rowVar.actionUser ne null}"/>
+								<h:outputText value="N/A" rendered="#{rowVar.actionUser eq null}"/>
+							</p:column>
+							
+							<p:column headerText="#{lang['previous.rejection.reason']}" width="20%">
+								<h:outputText value="#{rowVar.css}" />
+							</p:column>
+						
+							<p:column headerText="#{lang['fin.year']}" width="5%">
+								<h:outputText value="#{rowVar.wsp.finYear}" />
+							</p:column>
+							
+							<p:column headerText="#{lang['wsp.status']}" width="7%">
+								<h:outputText value="#{rowVar.wsp.wspStatusEnum.friendlyName}" />
+							</p:column>
+						
+							<p:column headerText="#{lang['final.rejection.reason']}" width="20%">
+								<h:outputText value="#{rowVar.wsp.rejectionReasons}" />
+							</p:column>
+											
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+</ui:composition>

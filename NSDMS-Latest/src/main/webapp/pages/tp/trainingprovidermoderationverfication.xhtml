@@ -1,0 +1,507 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<p:importEnum type="haj.com.entity.enums.CompanyRegOrSDLEnum" var="regSDL"></p:importEnum>
+			<p:importEnum type="haj.com.entity.enums.YesNoEnum"></p:importEnum>
+			<p:importEnum type="haj.com.entity.enums.PivotNonPivotEnum" />
+			<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+			<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+			<p:importEnum type="haj.com.entity.enums.ConfigDocProcessEnum" />
+			<p:importEnum type="haj.com.entity.enums.GenerateAddEnum" />
+		<p:growl sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<ui:include src="/pages/includes/taskdiagram.xhtml" />
+			</div>
+		</div>		
+		
+		<h:form id="mainForm">			
+			<div class="ui-g ">
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+					
+						<p:fieldset legend="Provider Details">
+						<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="#{lang['companyName']}" fo="acompanyName" styleClass="Fs12 FontLight" />
+								</div>
+								<div>
+									<p:inputText disabled="true" value="#{employeeLearnersVerificationUI.trainingproviderverfication.trainingProvider.companyName}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.company.name']}" />
+								</div>
+							</h:panelGroup>
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="#{lang['tradingName']}" fo="atradingName" styleClass="Fs12 FontLight" />
+								</div>
+								<div>
+									<p:inputText disabled="true" value="#{employeeLearnersVerificationUI.trainingproviderverfication.trainingProvider.tradingName}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.trading.name']}" />
+								</div>
+							</h:panelGroup>
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="#{lang['telNumber']}" fo="atelNumberComp" styleClass="Fs12 FontLight" />
+								</div>
+								<div>
+									<p:inputText disabled="true" value="#{employeeLearnersVerificationUI.trainingproviderverfication.trainingProvider.telNumber}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.tel.number']}" />
+								</div>
+							</h:panelGroup>
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="#{lang['faxNumber']}" fo="afaxNumberComp" styleClass="Fs12 FontLight" />
+								</div>
+								<div>
+									<p:inputText disabled="true" value="#{employeeLearnersVerificationUI.trainingproviderverfication.trainingProvider.faxNumber}" style="width:95%" rendered="#{employeeLearnersVerificationUI.trainingproviderverfication.trainingProvider.faxNumber ne null and company.faxNumber.length() gt 0}" />
+									<p:inputText disabled="true" value="N/A" style="width:95%" rendered="#{employeeLearnersVerificationUI.trainingproviderverfication.trainingProvider.faxNumber eq null or company.faxNumber.length() eq 0}" />
+								</div>
+							</h:panelGroup>
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="#{lang['companyRegistrationNumber']}" fo="acompanyRegistrationNumber" styleClass="Fs12 FontLight" />
+								</div>
+								<div>
+									<p:inputText disabled="true" value="#{employeeLearnersVerificationUI.trainingproviderverfication.trainingProvider.companyRegistrationNumber}" style="width:95%" />
+								</div>
+							</h:panelGroup>
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="#{lang['email']}" fo="aemailComp" styleClass="Fs12 FontLight" />
+								</div>
+								<div>
+									<p:inputText disabled="true" value="#{employeeLearnersVerificationUI.trainingproviderverfication.trainingProvider.email}" style="width:95%" />
+								</div>
+							</h:panelGroup>
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="#{lang['levyNumber']}" fo="alevyNumber" styleClass="Fs12 FontLight" />
+								</div>
+								<div>
+									<p:inputText disabled="true" value="#{employeeLearnersVerificationUI.trainingproviderverfication.trainingProvider.levyNumber}" style="width:95%" />
+								</div>
+							</h:panelGroup>
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="#{lang['numberOfEmployees']}" fo="anumberOfEmployees" styleClass="Fs12 FontLight" />
+								</div>
+								<div>
+									<p:inputText disabled="true" value="#{employeeLearnersVerificationUI.trainingproviderverfication.trainingProvider.numberOfEmployees}" style="width:95%" />
+								</div>
+							</h:panelGroup>
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="#{lang['sicCode']}" fo="asicCode" styleClass="Fs12 FontLight" />
+								</div>
+								<div>
+									<p:inputText disabled="true" value="#{employeeLearnersVerificationUI.trainingproviderverfication.trainingProvider.sicCode.description}" style="width:95%" required="true" requiredMessage="#{lang['enter.sic.code']}" />
+								</div>
+							</h:panelGroup>
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="#{lang['organisation.type']}" fo="aorganisationType" styleClass="Fs12 FontLight" />
+								</div>
+								<div>
+									<p:inputText disabled="true" value="N/A" rendered="#{employeeLearnersVerificationUI.trainingproviderverfication.trainingProvider.organisationType eq null}" />
+									<p:inputText disabled="true" value="#{employeeLearnersVerificationUI.trainingproviderverfication.trainingProvider.organisationType.description}" style="width:95%" rendered="#{employeeLearnersVerificationUI.trainingproviderverfication.trainingProvider.organisationType ne null}" />
+								</div>
+							</h:panelGroup>
+						</p:panelGrid>
+						</p:fieldset>
+						<br />
+						<p:fieldset legend="Provider Contact Person Details">
+						<h1>Provider Contact Person Details</h1>
+						<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="cpName" value="#{employeeLearnersVerificationUI.trainingproviderverfication.trainingProvider.contactPerson.firstName}" style="width:95%" disabled="true" />
+								<p:outputLabel value="#{lang['first.name']}:" for="cpName" styleClass="gray" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="cpsurname" value="#{employeeLearnersVerificationUI.trainingproviderverfication.trainingProvider.contactPerson.lastName}" style="width:95%" disabled="true" />
+								<p:outputLabel value="#{lang['last.name']}" for="cpsurname" styleClass="gray" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="cpEmail" value="#{employeeLearnersVerificationUI.trainingproviderverfication.trainingProvider.contactPerson.email}" style="width:95%" disabled="true" />
+								<p:outputLabel value="#{lang['email']}" for="cpEmail" styleClass="gray" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="cpCell" value="#{employeeLearnersVerificationUI.trainingproviderverfication.trainingProvider.contactPerson.cellNumber}" style="width:95%" disabled="true" />
+								<p:outputLabel value="#{lang['cell.number']}" for="cpCell" styleClass="gray" />
+							</h:panelGroup>
+						</p:panelGrid>
+					</p:fieldset>
+					<br />
+					<p:fieldset legend="Moderation Date">
+						<p:panelGrid columns="2" style="width:100%" id="reviewDateEntryGrid" layout="grid" styleClass="ui-panelgrid-blank" >
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="Moderation Date: " />
+								</div>
+								<div>
+									<p:outputLabel value="#{employeeLearnersVerificationUI.trainingproviderverfication.moderationDate}" rendered="true">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</p:outputLabel>									
+								</div>
+							</h:panelGroup>
+						</p:panelGrid>	
+					</p:fieldset>					
+					<br />
+					<p:fieldset legend="Assessments">
+						<p:dataTable expandedRow="true" var="rowVar" value="#{employeeLearnersVerificationUI.dataModelSummativeAssessmentReport}" id="summativeassessmentreportList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25"
+							reflow="true" lazy="true">
+							<p:column headerText="#{lang['expand.row']}" width="45">
+								<p:rowToggler rendered="#{rowVar.unitStandards.size() gt 0}" />
+							</p:column>
+							<p:column headerText="First Name" style="white-space: nowrap">
+								<h:outputText value="#{rowVar.companyLearners.user.firstName}" />
+							</p:column>
+							<p:column headerText="Last Name" style="white-space: nowrap">
+								<h:outputText value="#{rowVar.companyLearners.user.lastName}" />
+							</p:column>
+							<p:column headerText="#{lang['qualification']}" style="white-space: nowrap" width="20%">
+								<h:outputText value="(#{rowVar.companyLearners.learnership.qualification.code})" rendered="#{rowVar.companyLearners.learnership.qualification.code ne null}"/>
+								<h:outputText value="#{rowVar.companyLearners.learnership.qualification.description}" rendered="#{rowVar.companyLearners.learnership.qualification.description ne null}"/>
+								
+								<h:outputText value="(#{rowVar.companyLearners.skillsSet.programmeID})" rendered="#{rowVar.companyLearners.skillsSet ne null}" />
+								<h:outputText value="#{rowVar.companyLearners.skillsSet.description}" rendered="#{rowVar.companyLearners.skillsSet ne null}" />
+								
+								<h:outputText value="(#{rowVar.companyLearners.skillsProgram.programmeID})" rendered="#{rowVar.companyLearners.skillsProgram ne null}" />
+								<h:outputText value="#{rowVar.companyLearners.skillsProgram.description}" rendered="#{rowVar.companyLearners.skillsProgram ne null}" />
+								
+								<h:outputText value="(#{rowVar.companyLearners.unitStandard.code})" rendered="#{rowVar.companyLearners.unitStandard ne null}" />
+								<h:outputText value="#{rowVar.companyLearners.unitStandard.title}" rendered="#{rowVar.companyLearners.unitStandard ne null}" />
+								
+								<h:outputText value="#{rowVar.companyLearners.nonCredidBearingDescription}" rendered="#{rowVar.companyLearners.nonCredidBearingDescription ne null}" />
+								
+								<h:outputText value="(#{rowVar.companyLearners.qualification.code})" rendered="#{rowVar.companyLearners.qualification ne null}"/>
+								<h:outputText value="#{rowVar.companyLearners.qualification.description}" rendered="#{rowVar.companyLearners.qualification ne null}"/>
+							</p:column>
+							<p:column headerText="#{lang['createDate']}">
+								<h:outputText value="#{rowVar.createDate}">
+									<f:convertDateTime pattern="dd MMMM yyyy HH:mm:ss" />
+								</h:outputText>
+							</p:column>
+							<p:rowExpansion>
+								<p:fieldset legend="Assessment Report">
+									<p:dataTable var="rv2" value="#{rowVar.unitStandards}" rendered="#{rowVar.unitStandards.size() gt 0}">
+										<p:column headerText="Unit Standard Code" style="width: 60px">#{rv2.unitStandards.code}</p:column>
+										<p:column headerText="Unit Standard Description">#{rv2.unitStandards.title}</p:column>
+										<p:column headerText="Unit Standard Type" width="210">#{rv2.unitStandards.unitstdtypedesc}</p:column>
+										<p:column headerText="Unit Standard Credits" style="width: 5%">#{rv2.unitStandards.unitstdnumberofcredits}</p:column>
+										
+										<p:column headerText="Date Assessed" style="width: 10%">
+											<p:calendar value="#{rv2.assesmentDate}" disabled="true" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" readonlyInput="true" maxdate="#{employeeLearnersVerificationUI.now}">
+												<p:ajax event="dateSelect"></p:ajax>
+											</p:calendar>
+										</p:column>
+										
+										<p:column headerText="Assessed By" style="width: 15%">
+											<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" id="rsaIDInputPanel">
+												<h:panelGroup id="rsaIDInput" styleClass="md-inputfield" >
+													<p:inputText id="rsaIdCriteria" value="#{rv2.assessorUser.firstName} #{rv2.assessorUser.lastName}" style="width:95%" disabled="true" rendered="#{rv2.assessorUser ne null}">
+													</p:inputText>
+													<p:inputText id="rsaIdCriteria2" value="#{rv2.legacyAssessorAccreditation.firstName} #{rv2.legacyAssessorAccreditation.surname}" style="width:95%" disabled="true" rendered="#{rv2.legacyAssessorAccreditation ne null}">
+													</p:inputText>
+													<p:outputLabel value="Assessor" for="rsaIdCriteria" />
+												</h:panelGroup>
+											</p:panelGrid>
+										</p:column>
+										
+										<p:column headerText="Date of Moderation" style="width: 10%">
+											<p:calendar value="#{rv2.moderationDate}" disabled="true" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" readonlyInput="true" mindate="#{rv2.assesmentDate}">
+												<p:ajax event="dateSelect"></p:ajax>
+											</p:calendar>
+										</p:column>
+										
+										<p:column headerText="Moderated By" width="250">
+											<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" id="moderatorInputPanel">
+												<h:panelGroup id="moderIDInput" styleClass="md-inputfield" >
+													<p:inputText id="moderatedCriteria" value="#{rv2.moderatorUser.firstName} #{rv2.moderatorUser.lastName}" style="width:95%" disabled="true" rendered="#{rv2.moderatorUser ne null}">
+													</p:inputText>
+													<p:inputText id="moderatedCriteria2" value="#{rv2.legacyModeratorAccreditation.firstName} #{rv2.legacyModeratorAccreditation.surname}" style="width:95%" disabled="true" rendered="#{rv2.legacyModeratorAccreditation ne null}">
+													</p:inputText>
+													<p:outputLabel value="Moderated" for="moderatedCriteria" />
+												</h:panelGroup>
+											</p:panelGrid>
+										</p:column>
+										<p:column headerText="Competence" width="210">
+											<p:selectOneMenu id="competenceEnum" value="#{rv2.competenceEnum}" style="width:95%" disabled="true">
+												<p:ajax />
+												<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+												<f:selectItems value="#{enumUI.competenceEnumDD}" />
+											</p:selectOneMenu>
+										</p:column>
+										
+										<p:column headerText="Assessment Documentation" style="width: 4%" rendered="false">											
+											<p:commandButton ajax="false" icon="fa fa-download" action="#{uploadDocUI.download}" id="dlb" rendered="#{rv2.documents.id ne null}" process="@this" immediate="true" >
+												<f:setPropertyActionListener value="#{rv2.documents}" target="#{uploadDocUI.doc}" />
+											</p:commandButton>
+											<p:tooltip for="dlb" value="#{lang['download.the.file']}" position="left" rendered="#{rv2.doc.id ne null}" />
+										</p:column>
+									</p:dataTable>
+								</p:fieldset>
+							</p:rowExpansion>
+						</p:dataTable>	
+					</p:fieldset>
+					<br />
+					
+					<p:outputPanel styleClass="card"   rendered="#{employeeLearnersVerificationUI.trainingproviderverfication.generateAddEnum eq GenerateAddEnum.GenerateCertificate}">					
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+				 				<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="serial" value="#{employeeLearnersVerificationUI.trainingproviderverfication.serialNumber}" style="width:95%" required="true" requiredMessage="Please provide certificate serial number" disabled="#{!sessionUI.task.firstInProcess}">
+										<p:ajax />
+									</p:inputText>
+									<p:outputLabel value="Certificate serial number" for="serial" styleClass="gray" />
+								</h:panelGroup>
+				 			</p:panelGrid>
+						</p:outputPanel>
+						<br />
+					
+						<p:fieldset legend="Documents">
+							<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" id="docTable">
+								<p:dataTable value="#{employeeLearnersVerificationUI.trainingproviderverfication.docs}" var="rv1" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv1.id}">
+									<p:column headerText="#{lang['type']}" width="18%">#{rv1.configDoc.name}</p:column>
+									<p:column headerText="#{lang['original.file.name']}" priority="4">
+										<p:outputLabel value="#{rv1.originalFname}" styleClass="Fs12" rendered="#{rv1.originalFname ne null}" />
+										<p:outputLabel value="Document Not Uploaded" rendered="#{rv1.originalFname eq null or rv1.originalFname eq ''}" />
+									</p:column>
+									<p:column headerText="#{lang['uploaded.by']}">
+										<p:outputLabel value="#{rv1.users.firstName} #{rv1.users.lastName}" rendered="#{rv1.users ne null}" />
+										<p:outputLabel value="N/A" rendered="#{rv1.users eq null and rv1.originalFname eq null}" />
+										<p:outputLabel value="Awaiting Submission" rendered="#{rv1.users eq null and rv1.originalFname ne null}" />
+									</p:column>
+									<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+										<h:outputText value="#{rv1.createDate}" rendered="#{rv1.createDate ne null}">
+											<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+										</h:outputText>
+										<p:outputLabel value="N/A" rendered="#{rv1.createDate eq null and rv1.originalFname eq null}" />
+										<p:outputLabel value="Awaiting Submission" rendered="#{rv1.createDate eq null and rv1.originalFname ne null}" />
+									</p:column>
+									<p:column headerText="#{lang['version']}" width="11%" priority="4">
+										<h:outputText value="#{rv1.versionNo}" rendered="#{rv1.versionNo ne null}" />
+										<p:outputLabel value="N/A" rendered="#{rv1.versionNo eq null and rv1.originalFname eq null}" />
+										<p:outputLabel value="Awaiting Submission" rendered="#{rv1.versionNo eq null and rv1.originalFname ne null}" />
+									</p:column>
+									<p:column headerText="#{lang['original.required']}">
+										<center>
+											<h:panelGroup rendered="#{rv1.configDoc.originalRequired}" styleClass="green">
+												<i class="fa fa-files-o fa-3x" aria-hidden="true"></i>
+											</h:panelGroup>
+											<h:panelGroup rendered="#{not rv1.configDoc.originalRequired}" styleClass="red">
+												<i class="fa fa-times fa-3x" aria-hidden="true"></i>
+											</h:panelGroup>
+										</center>
+									</p:column>
+									<p:column width="120" headerText="#{lang['view.edit']}">
+										<p:commandButton rendered="#{rv1.enableReupload and (sessionUI.task.processRole eq null or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.UploadApprove)}" icon="fa fa-upload" id="uploadUserDocs" styleClass="#{rv1.originalFname eq null ? 'red-btn' : ''} flat" process="@this" oncomplete="PF('dlgUpload').show()"
+											update=":uploadForm">
+											<f:setPropertyActionListener value="#{rv1}" target="#{employeeLearnersVerificationUI.doc}" />
+										</p:commandButton>
+										<p:spacer width="5" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload}" />
+										<p:commandButton ajax="false" icon="fa fa-download" action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+											<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+										</p:commandButton>
+										
+										<p:commandButton icon="fa fa-bars " id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update="@form :documenttrackeForm" rendered="#{rv1.id ne null}">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="dhistUserDocs" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+										<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+											<p:spacer width="5" />
+											<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+												<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+											</p:commandButton>
+											<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+										</h:panelGroup>
+										<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+											<p:spacer width="5" />
+											<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+												<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+											</p:commandButton>
+											<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+										</h:panelGroup>
+										<p:commandButton rendered="#{(sessionUI.task.processRole.rolePermission eq UserPermissionEnum.UploadApprove and rv1.id eq null and rv.approvalStatus.displayName eq 'Rejected')}"
+											icon="fa fa-upload" id="upload2" styleClass="flat" process="@this" oncomplete="PF('dlgUpload').show()" update=":uploadForm">
+											<f:setPropertyActionListener value="#{rv1}" target="#{employeeLearnersVerificationUI.doc}" />
+											<p:tooltip for="upload" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+										</p:commandButton>
+									</p:column>
+								</p:dataTable>
+							</p:panelGrid>
+						</p:fieldset>
+					
+						<br />
+						<p:outputPanel id="rejectReasons" style="width: 100%" rendered="#{employeeLearnersVerificationUI.rejectReason.size() gt 0 and employeeLearnersVerificationUI.trainingproviderverfication.status eq ApprovalEnum.Rejected}">
+							<h:panelGroup id="rejectReasonsId">
+								<div class="ui-g dashboard">
+									<div class="ui-g-12">
+										<p:fieldset legend="Reject Reasons">
+											<h3>#{employeeLearnersVerificationUI.trainingproviderverfication.status.friendlyName}</h3>
+											<p:dataTable var="rowVar" value="#{employeeLearnersVerificationUI.rejectReason}" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+												<p:column headerText="Create Date">
+													<p:outputLabel value="#{rowVar.createDate}">
+														<f:convertDateTime pattern="dd MMMM yyyy" />
+													</p:outputLabel>
+												</p:column>
+												<p:column headerText="Reason for Rejection">
+													<p:outputLabel value="#{rowVar.description}"></p:outputLabel>
+												</p:column>
+											</p:dataTable>
+										</p:fieldset>
+									</div>
+								</div>
+							</h:panelGroup>
+						</p:outputPanel>
+					
+				</div>
+										
+				<p:outputPanel style="width: 100%" rendered="#{sessionUI.task.workflowProcess eq ConfigDocProcessEnum.ASSESSMENT_VERIFICATION}">		
+					<div class="card card-w-title">
+						
+						<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{!sessionUI.task.firstInProcess}">
+							<p:commandButton value="#{lang['approve']}" icon="ui-icon-save" update="@form" action="#{employeeLearnersVerificationUI.approveModeration}" styleClass="flat green-btn Fs18" style="height: 50px;" >
+							</p:commandButton>
+							<p:commandButton value="#{lang['reject.task']}" icon="ui-icon-save" oncomplete="PF('rejectReason').show()" update="@form" styleClass="flat Fs18" style="height: 50px;" process="@this" >
+							</p:commandButton>
+							
+						</p:panelGrid>
+						
+						<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.firstInProcess}">
+						
+							<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" update="@form" action="#{employeeLearnersVerificationUI.completeWorkflow}" styleClass="flat green-btn Fs18" style="height: 50px;"></p:commandButton>
+						
+						</p:panelGrid>
+						
+					</div>
+				</p:outputPanel>	
+				</div>
+			</div>		
+		</h:form>
+
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true">
+			<h:form id="uploadForm">
+				<h:panelGroup id="uploadGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{employeeLearnersVerificationUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{employeeLearnersVerificationUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{employeeLearnersVerificationUI.storeFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update=":mainForm"
+										multiple="false" fileLimit="1" allowTypes="/(\.|\/)(gif|jpe?g|png|pdf|docx|txt|doc)$/" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+		
+		<p:dialog header="Reject Reasons" widgetVar="rejectReason" hideEffect="clip" showEffect="clip" id="dialogRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{employeeLearnersVerificationUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{employeeLearnersVerificationUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+
+							</p:selectManyMenu>
+
+							<br />
+							<br />
+						</div>
+					</div>
+					<p:commandButton oncomplete="PF('rejectReason').hide()" update="mainForm" value="Reject" action="#{employeeLearnersVerificationUI.rejectWorkflow}">
+					</p:commandButton>
+				</div>
+			</h:form>
+		</p:dialog>
+		
+		<p:dialog header="Reject Reasons" widgetVar="rejectReasonReview" hideEffect="clip" showEffect="clip" id="dialogRejectReasonReview" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonReviewForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{employeeLearnersVerificationUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{employeeLearnersVerificationUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+
+							</p:selectManyMenu>
+
+							<br />
+							<br />
+						</div>
+					</div>
+					<p:commandButton oncomplete="PF('rejectReasonReview').hide()" update="mainForm" value="Reject" action="#{employeeLearnersVerificationUI.finalRejectWorkflow}">
+					</p:commandButton>
+				</div>
+			</h:form>
+		</p:dialog>
+		
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload1" resizable="false" hideEffect="clip" showEffect="clip" id="commonUP" width="80%" responsive="true" modal="true">
+				<h:form id="uploadForm1">
+					<h:panelGroup id="uploadGroup">
+						<div class="ui-g">
+							<div class="ui-g-12">
+								<div class="card">
+									<h1 style="font-weight: bold; font-size: 25px;">#{employeeLearnersVerificationUI.doc.configDoc.name}</h1>
+									<p:panel>
+										<h:panelGrid columns="2" style="width: 100%">
+											<p:outputLabel value="#{lang['notes']}:" for="note" />
+											<p:inputTextarea id="note" value="#{employeeLearnersVerificationUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+												<p:ajax />
+											</p:inputTextarea>
+										</h:panelGrid>
+										<div class="TexAlCenter">
+											<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+										</div>
+										<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{employeeLearnersVerificationUI.storeNewFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}"
+											update="@form uploadForm1" multiple="false" fileLimit="1" allowTypes="/(\.|\/)(gif|jpe?g|png|pdf|docx|txt|doc)$/" immediate="false" auto="true" />
+									</p:panel>
+									<div class="EmptyBox10" />
+								</div>
+							</div>
+						</div>
+					</h:panelGroup>
+				</h:form>
+			</p:dialog>
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+			<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+			<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+		</p:confirmDialog>
+	</ui:define>
+	<!-- 
+docs = docs
+createDate = createDate
+approvalDate = approvalDate
+status = status
+trainingProvider = trainingProvider
+
+-->
+</ui:composition>

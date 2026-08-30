@@ -1,0 +1,267 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="head">
+		<script src="#{request.contextPath}/js/highcharts.js" />
+		<script src="#{request.contextPath}/js/highcharts-3d.js" />
+		<script src="#{request.contextPath}/js/exporting.js" />
+	</ui:define>
+
+	<ui:define name="content">
+		<p:growl sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+		<h:form id="uploadForm">
+
+			<div class="ui-g">
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+						<h1>Grants And Project Expenses From Inception</h1>
+						<c:if test="#{historicalgrantsandprojectsanalysisUI.reportGenerationProperties eq null}">
+							<p:outputLabel value="Report properties not configured. Contact support!" style="font-weight:bold; font-size: 25px; color: red;" />
+						</c:if>
+						<c:if test="#{levyincomebyyearbychamberUI.reportGenerationProperties ne null}">
+							<c:if test="#{!levyincomebyyearbychamberUI.displayGeneration}">
+								<span class="Fs13 gray"><i class="fa fa-info-circle" aria-hidden="true"></i> Generation is already underway.</span>
+							</c:if>
+							<p:panelGrid layout="grid" columns="1" styleClass="ui-panelgrid-blank" rendered="#{levyincomebyyearbychamberUI.displayGeneration}">
+								<span class="Fs13 gray"><i class="fa fa-info-circle" aria-hidden="true"></i> Click to regenerate report.</span>
+								<p:commandButton icon="fa fa-bars" value="Generate Report" action="#{historicalgrantsandprojectsanalysisUI.populatemandatoryGrantsByChamberThread}" update="@form" onstart="uploadStart()" oncomplete="uploadDone()" >
+									<p:confirm header="Confirmation" message="Existing report will be removed, are you sure? You will be notified by email when generation is complete." icon="fa fa-exclamation-triangle" />
+								</p:commandButton>
+							</p:panelGrid>
+						</c:if>
+					</div>
+				</div>
+				<p:outputPanel styleClass="ui-g-12" rendered="#{historicalgrantsandprojectsanalysisUI.displayLevyList.size() gt 0}">
+					<div class="card">
+						<p:panelGrid layout="grid" columns="1" styleClass="ui-panelgrid-blank">
+							<h1>Grants And Project Expenses</h1>
+						</p:panelGrid>
+
+						<div align="right" style="margin-bottom: 10px">
+							<h:commandLink id="eExcel">
+								<i class="fa fa-file-excel-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+								<p:dataExporter type="xls" target="levyIncome" fileName="Grants And Project Expenses" />
+							</h:commandLink>
+							<h:commandLink title="#{lang['export.search.results.as.a.csv']}">
+								<i class="fa fa-file-text-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+								<p:dataExporter type="csv" target="levyIncome" fileName="Grants And Project Expenses" />
+							</h:commandLink>
+						</div>
+
+						<p:outputLabel> Report generated : #{levyincomebyyearbychamberUI.createDate}</p:outputLabel>
+						<p:dataTable var="rowVar" value="#{historicalgrantsandprojectsanalysisUI.historicalGrantsAdProjects}" id="levyIncome" rowKey="#{rowVar.id}" paginator="true" rows="15" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="15,30,45" reflow="true" lazy="true">
+							<f:facet name="header">
+						Grants And Project Expenses
+					</f:facet>
+							<p:columnGroup type="header">
+								<p:row>
+									<p:column rowspan="2" headerText="Year" />
+								</p:row>
+								<p:row>
+									<p:column colspan="1" headerText="Mandatory Grants" />
+									<p:column colspan="1" headerText="Discretionary Grants And Projects" />
+									<p:column colspan="1" headerText="TOTAL" />
+								</p:row>
+
+							</p:columnGroup>
+							<p:column>
+								<p:outputLabel value="#{rowVar.description}" />
+
+							</p:column>
+							<p:column styleClass="number-column">
+								<p:outputLabel value="#{rowVar.man}">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</p:outputLabel>
+							</p:column>
+							<p:column styleClass="number-column">
+								<p:outputLabel value="#{rowVar.dis}">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</p:outputLabel>
+							</p:column>
+							<p:column styleClass="number-column">
+								<p:outputLabel value="#{rowVar.dis + rowVar.man}">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</p:outputLabel>
+							</p:column>
+						</p:dataTable>
+						<p:spacer height="5px" />
+					</div>
+
+
+					<div class="card card-w-title">
+						<div id="container" style="width: 100%; height: 400px;"></div>
+					</div>
+
+
+				</p:outputPanel>
+				<p:outputPanel styleClass="ui-g-12" rendered="#{historicalgrantsandprojectsanalysisUI.displayLevyList.size() gt 0}">
+
+					<div class="card card-w-title">
+						<p:growl>
+							<p:autoUpdate />
+						</p:growl>
+
+						<p:spacer height="5px" />
+						<p:panelGrid layout="grid" columns="1" styleClass="ui-panelgrid-blank">
+							<h1>Mandatory Grants By Chamber</h1>
+						</p:panelGrid>
+						<p:spacer height="5px" />
+
+						<div align="right" style="margin-bottom: 10px">
+							<h:commandLink id="eExcel2">
+								<i class="fa fa-file-excel-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+								<p:dataExporter type="xls" target="levyIncome1" fileName="Mandatory Grants By Chamber" />
+							</h:commandLink>
+							<h:commandLink title="#{lang['export.search.results.as.a.csv']}">
+								<i class="fa fa-file-text-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+								<p:dataExporter type="csv" target="levyIncome" fileName="Mandatory Grants By Chamber" />
+							</h:commandLink>
+						</div>
+						<p:outputLabel> Report generated : #{levyincomebyyearbychamberUI.createDate}</p:outputLabel>
+						<p:dataTable var="rowVar1" value="#{historicalgrantsandprojectsanalysisUI.displayLevyList}" id="levyIncome1" paginator="true" rows="20" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="20,25,30,35,40" reflow="true" lazy="true">
+
+							<f:facet name="header">
+					Mandatory Grants By Chamber
+				</f:facet>
+							<p:columnGroup type="header">
+								<p:row>
+									<p:column rowspan="2" headerText="Year" />
+								</p:row>
+								<p:row>
+									<p:column colspan="1" headerText="Auto" />
+									<p:column colspan="1" headerText="Metal" />
+									<p:column colspan="1" headerText="Motor" />
+									<p:column colspan="1" headerText="New Tyre" />
+									<p:column colspan="1" headerText="Plastics" />
+									<p:column colspan="1" headerText="Unknown" />
+									<p:column colspan="1" headerText="TOTAL" />
+								</p:row>
+
+							</p:columnGroup>
+
+							<p:column>
+								<h:outputText value="#{rowVar1.description}" />
+							</p:column>
+							<p:column styleClass="number-column">
+								<h:outputText value="#{rowVar1.auto}">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</h:outputText>
+							</p:column>
+							<p:column styleClass="number-column">
+								<h:outputText value="#{rowVar1.metal}">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</h:outputText>
+							</p:column>
+							<p:column styleClass="number-column">
+								<h:outputText value="#{rowVar1.motor}">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</h:outputText>
+							</p:column>
+							<p:column styleClass="number-column">
+								<h:outputText value="#{rowVar1.newTyre}">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</h:outputText>
+							</p:column>
+							<p:column styleClass="number-column">
+								<h:outputText value="#{rowVar1.plastic}">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</h:outputText>
+							</p:column>
+							<p:column styleClass="number-column">
+								<h:outputText value="#{rowVar1.unknown}">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</h:outputText>
+							</p:column>
+							<p:column styleClass="number-column">
+								<h:outputText value="#{rowVar1.auto + rowVar1.metal + rowVar1.motor + rowVar1.newTyre + rowVar1.plastic + rowVar1.unknown }">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</h:outputText>
+							</p:column>
+
+						</p:dataTable>
+
+						<p:spacer height="5px" />
+					</div>
+
+				</p:outputPanel>
+
+				<p:outputPanel styleClass="ui-g-12" rendered="#{historicalgrantsandprojectsanalysisUI.displayLevyList.size() gt 0}">
+					<div class="card card-w-title">
+						<div id="levyContainer" style="width: 100%; height: 400px;"></div>
+					</div>
+				</p:outputPanel>
+			</div>
+			<script type="">
+document.addEventListener('DOMContentLoaded', function () {
+        var myChart = Highcharts.chart('levyContainer', {
+            chart: {
+                type: 'column'
+            },
+            title: {
+                text: ''
+            },
+            xAxis: {
+                categories: [#{historicalgrantsandprojectsanalysisUI.levyCategories}]
+            },
+            yAxis: {
+                title: {
+                    text: ''
+                }
+            },
+            series: [{
+                name: 'Auto',
+                data: [#{historicalgrantsandprojectsanalysisUI.autoData}]
+            }, {
+                name: 'Metal',
+                data: [#{historicalgrantsandprojectsanalysisUI.metalData}]
+            }, {
+                name: 'Motor',
+                data: [#{historicalgrantsandprojectsanalysisUI.motorData}]
+            }, {
+                name: 'New Tyre',
+                data: [#{historicalgrantsandprojectsanalysisUI.newtyreData}]
+            }, {
+                name: 'Plastic',
+                data: [#{historicalgrantsandprojectsanalysisUI.plasticData}]
+            }, {
+                name: 'Unknown',
+                data: [#{historicalgrantsandprojectsanalysisUI.unknownData}]
+            }]
+        });
+
+
+ var myChart = Highcharts.chart('container', {
+            chart: {
+                type: 'column'
+            },
+            title: {
+                text: ''
+            },
+            xAxis: {
+                categories: [#{historicalgrantsandprojectsanalysisUI.grantsCategories}]
+            },
+            yAxis: {
+                title: {
+                    text: ''
+                }
+            },
+            series: [{
+                name: 'Mandatory Grants R000s',
+                data: [#{historicalgrantsandprojectsanalysisUI.manData}]
+            }, {
+                name: 'Discretionary Grants R000s',
+                data: [#{historicalgrantsandprojectsanalysisUI.disData}]
+            }]
+        });
+
+
+    });
+</script>
+
+		</h:form>
+	</ui:define>
+
+</ui:composition>

@@ -1,0 +1,86 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:pt="http://xmlns.jcp.org/jsf/passthrough" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	
+				<p:outputPanel id="unitList" rendered="true">
+					  <p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%">
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="SME Type" for="type" />
+							</div>
+							<div>
+								<p:selectOneMenu id="type" value="#{trainingproviderUI.sitesSme.smeType}" style="width:100%" required="true">
+									<p:ajax />
+									<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+									<f:selectItems value="#{enumUI.smeTypeEnumDD}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+		
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText style="width:100%; opacity:1 !important;" value="#{trainingproviderUI.sitesSme.firstName}">
+								<p:ajax />
+							</p:inputText>
+							<p:outputLabel value="First Name" />
+						</h:panelGroup>
+		
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText style="width:100%; opacity:1 !important;" value="#{trainingproviderUI.sitesSme.lastName}">
+								<p:ajax />
+							</p:inputText>
+							<p:outputLabel value="Last Name" />
+						</h:panelGroup>
+		
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText style="width:100%; opacity:1 !important;" value="#{trainingproviderUI.sitesSme.identityNumber}" />
+							<p:outputLabel value="Identity Number" />
+						</h:panelGroup>
+		
+						<h:panelGroup styleClass="md-inputfield" columns="2">
+							<p:autoComplete id="qualificationIdselection" value="#{trainingproviderUI.sitesSme.qualification}" completeMethod="#{autoCompleteUI.completeQualification}" var="rvqs" itemLabel="#{rvqs.codeString} #{rvqs.description}" itemValue="#{rvqs}" forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 100%" style="width: 100%">
+								<p:column headerText="Code" style="white-space: nowrap">#{rvqs.codeString}</p:column>
+								<p:column headerText="Description" style="white-space: nowrap">#{rvqs.description}</p:column>
+								<p:ajax event="itemSelect" />
+							</p:autoComplete>
+							<p:outputLabel value="Qualification" for="qualificationIdselection" />
+						</h:panelGroup>
+		
+					</p:panelGrid>
+					<br/>
+					<h:panelGroup styleClass="md-inputfield">
+						<h:panelGroup styleClass="md-inputfield" columns="1">
+							<p:commandButton update="@form unitList usList qualUSGrid btnDoneSME" value="Add SME" icon="ui-icon-plus" styleClass="flat" action="#{trainingproviderUI.addSiteSME}" process="unitList" />
+							<p:spacer width="10"></p:spacer>
+				            <p:commandButton value="#{lang['clear']}" icon="ui-icon-clear btnDoneSME" process="@this" update="@form cpList" action="#{trainingproviderUI.clearSiteSME}" />
+			            </h:panelGroup>
+					</h:panelGroup>
+				</p:outputPanel>
+				
+				<br/>
+				<p:dataTable var="smeRow" value="#{trainingproviderUI.sitesSmes}" id="usList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+					<p:column headerText="SME Type">
+						<p:outputLabel value="#{smeRow.smeType.friendlyName}"></p:outputLabel>
+					</p:column>
+					<p:column headerText="First Name">
+						<p:outputLabel value="#{smeRow.firstName}"></p:outputLabel>
+					</p:column>
+					<p:column headerText="Last Name">
+						<p:outputLabel value="#{smeRow.lastName}"></p:outputLabel>
+					</p:column>
+					<p:column headerText="Identity Number">
+						<p:outputLabel value="#{smeRow.identityNumber}"></p:outputLabel>
+					</p:column>
+					<p:column headerText="Qualification">
+						<p:outputLabel value="#{smeRow.qualification.saqaQualification}"></p:outputLabel>
+					</p:column>
+					<p:column width="40" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalEdit}">
+						<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update="@form" action="#{trainingproviderUI.removeSME}" process="@this">
+							<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+							<f:setPropertyActionListener value="#{smeRow}" target="#{trainingproviderUI.sitesSme}" />
+						</p:commandButton>
+					</p:column>
+				</p:dataTable>
+				
+				<br/>
+	            <p:commandButton id="btnDoneSME" value="#{lang['continue']}" process="@this" rendered="#{trainingproviderUI.sitesSmes.size() gt  0}" update="qualUSGrid authMainPG" icon="ui-icon-fast-forward" action="#{trainingproviderUI.doneSMERegContinue}" iconPos="right" styleClass="flat" />
+				
+				
+</ui:composition>

@@ -1,0 +1,88 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+
+		<p:growl showDetail="false" sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+		<h:form id="mainForm">
+
+			<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+			<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+
+			<div class="card card-w-title">
+				<h2>#{lang['available.companies']}</h2>
+				<!-- array list load wsp data -->
+				<p:dataTable var="rowVar" value="#{projectimplementationplanUI.dataModelSDFCompany}" selectionMode="single" selection="#{projectimplementationplanUI.sdfCompany}" id="companyList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+					paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+					<p:ajax event="rowSelect" listener="#{projectimplementationplanUI.onRowSelect}" update="mainForm" />
+
+					<p:column headerText="#{lang['companyName']}">
+						<h:outputText value="#{rowVar.company.companyName}" />
+					</p:column>
+					<p:column headerText="#{lang['sdl.number']}">
+						<h:outputText value="#{rowVar.company.levyNumber}" />
+					</p:column>
+					<p:column headerText="#{lang['email']}">
+						<h:outputText value="#{rowVar.company.email}" />
+					</p:column>
+					<p:column headerText="#{lang['status']}">
+						<h:outputText value="#{lang[rowVar.company.companyStatus.registrationName]}" />
+					</p:column>
+
+					<p:column headerText="Size of Company" width="10%">
+						<h:outputText value="#{rowVar.company.sizeOfCompany.detailDescription}" escape="false" />
+					</p:column>
+
+					<p:column headerText="#{lang['levy.paying']}" width="110" style="text-align:center">
+						<p:outputPanel rendered="#{rowVar.company.nonLevyPaying}">
+							<i class="fa fa-times fa-3x red" aria-hidden="true"></i>
+						</p:outputPanel>
+						<p:outputPanel rendered="#{not rowVar.company.nonLevyPaying}">
+							<i class="fa fa-check fa-3x green" aria-hidden="true"></i>
+						</p:outputPanel>
+					</p:column>
+				</p:dataTable>
+			</div>
+			<c:if test="#{projectimplementationplanUI.sdfCompany ne null}">
+				<div class="card card-w-title">
+					<h1>Project Implementation Plan</h1>
+					<p:dataTable var="rowVar" value="#{projectimplementationplanUI.projectimplementationplanList}" filteredValue="#{projectimplementationplanUI.projectImplementationPlanfilteredList}" id="projectimplementationplanList" rowKey="#{rowVar.id}" reflow="true">
+
+						<p:column headerText="#{lang['interventionTypeDescription']}">
+							<h:outputText value="#{rowVar.interventionTypeDescription}" />
+						</p:column>
+
+						<p:column headerText="#{lang['projectedRecruitmentDate']}">
+							<p:calendar value="#{rowVar.projectedRecruitmentDate}" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" readonlyInput="true" />
+						</p:column>
+						<p:column headerText="#{lang['projectedInductionDate']}">
+							<p:calendar value="#{rowVar.projectedInductionDate}" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" readonlyInput="true" />
+						</p:column>
+						<p:column headerText="#{lang['projectedRegistrationDate']}">
+							<p:calendar value="#{rowVar.projectedRegistrationDate}" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" readonlyInput="true" />
+						</p:column>
+						<p:column headerText="#{lang['estimatedProgressDate']}">
+							<p:calendar value="#{rowVar.estimatedProgressDate}" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" readonlyInput="true" />
+						</p:column>
+						<p:column headerText="#{lang['estimatedCompletionDate']}">
+							<p:calendar value="#{rowVar.estimatedCompletionDate}" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" readonlyInput="true" />
+						</p:column>
+						<p:column headerText="#{lang['accreditedProviderIdentified']}">
+							<p:selectOneMenu id="a" value="#{rowVar.accreditedProviderIdentified}" style="width:75%">
+								<p:ajax />
+								<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+								<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+							</p:selectOneMenu>
+						</p:column>
+					</p:dataTable>
+					<br />
+					<br />
+					<p:commandButton value="#{lang['save']}" icon="ui-icon-save" update="@form" action="#{projectimplementationplanUI.saveProjectImplementationPlan}" styleClass="flat green-btn Fs18" style="height: 50px;">
+					</p:commandButton>
+				</div>
+			</c:if>
+		</h:form>
+	</ui:define>
+</ui:composition>

@@ -1,0 +1,38 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card">
+
+					<h:form id="mainForm">
+
+						<p:outputPanel rendered="#{confirmEmailUI.validLink eq false}">
+							<h1 class="BigTopic TexAlCenter">
+								<h:outputText value="Invalid link! Contact support" />
+							</h1>
+						</p:outputPanel>
+
+						<p:outputPanel rendered="#{confirmEmailUI.validLink and not confirmEmailUI.linkExpired}">
+							<h1 class="BigTopic TexAlCenter">
+								<h:outputText value="Email confirmed!" />
+							</h1>
+							<span class="gray">Please <a href="#{request.contextPath}/login.jsf">login</a> to the system.
+							</span>
+						</p:outputPanel>
+						
+						<p:outputPanel rendered="#{confirmEmailUI.validLink and confirmEmailUI.linkExpired}">
+							<h1 class="BigTopic TexAlCenter">
+								<h:outputText value="Link Expired!" />
+							</h1>
+							<p:commandButton value="Send new confirmation Link" styleClass="Fs16" action="#{confirmEmailUI.reRegister}" update="@form" />
+						</p:outputPanel>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+	</ui:define>
+
+</ui:composition>

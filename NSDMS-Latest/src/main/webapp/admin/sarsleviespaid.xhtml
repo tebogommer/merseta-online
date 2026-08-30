@@ -1,0 +1,171 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>#{lang['bank.statements']}</h1>
+					<h:form id="sarsleviespaidInsForm">
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:panelGrid columns="1" style="width:100%" id="sarsleviespaidInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:calendar id="glPostingDate" value="#{sarsleviespaidUI.sarsleviespaid.glPostingDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" readonlyInput="true" />
+								<p:outputLabel value="#{lang['posting.date']}" for="glPostingDate" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputNumber id="checkbookAmount" value="#{sarsleviespaidUI.sarsleviespaid.checkbookAmount}" decimalPlaces="2" decimalSeparator="." style="width:95%" />
+								<p:outputLabel value="#{lang['checkbook.amount']}" for="checkbookAmount" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:calendar id="levyFile" value="#{sarsleviespaidUI.sarsleviespaid.levyFileD}" showOn="button" pattern="MMM-yy" readonlyInput="true" navigator="true" yearRange="c-30:c" />
+								<p:outputLabel value="#{lang['levy.file']}" for="levyFile" />
+							</h:panelGroup>
+
+							<p:panel id="uPanel" rendered="#{sarsleviespaidUI.sarsleviespaid.id eq null}">
+								<h:panelGroup rendered="#{sarsleviespaidUI.doc.data eq null}">
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="noteUser" />
+										<p:inputTextarea id="noteUser" value="#{sarsleviespaidUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span><br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{sarsleviespaidUI.storeFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" multiple="false" fileLimit="1"
+										immediate="false" auto="true" update="uPanel" />
+								</h:panelGroup>
+								<h:panelGroup rendered="#{sarsleviespaidUI.doc.data ne null}">
+									<h4>
+										#{lang['statement.already.uploaded.If.you.need.to.upload.it.again.press.here']}
+										<p:commandButton value="#{lang['upload.again']}" icon="ui-icon-clear-all" update="sarsleviespaidInsGrid" process="@this" action="#{sarsleviespaidUI.prepareNew}">
+											<p:resetInput target="sarsleviespaidInsGrid" />
+										</p:commandButton>
+									</h4>
+								</h:panelGroup>
+							</p:panel>
+
+
+							<p:panel id="uPanel2" rendered="#{sarsleviespaidUI.sarsleviespaid.id ne null}">
+
+								<h:panelGrid columns="2" style="width: 100%">
+									<p:outputLabel value="#{lang['notes']}:" for="noteUser2" />
+									<p:inputTextarea id="noteUser2" value="#{sarsleviespaidUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+										<p:ajax />
+									</p:inputTextarea>
+								</h:panelGrid>
+								<div class="TexAlCenter">
+									<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span><br />
+								</div>
+								<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{sarsleviespaidUI.storeFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" multiple="false" fileLimit="1"
+									immediate="false" auto="true" update="uPanel2" />
+
+
+							</p:panel>
+
+
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:sarsleviespaidList :sarsleviespaidInsForm:sarsleviespaidInsGrid" action="#{sarsleviespaidUI.sarsleviespaidInsert}" />
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="sarsleviespaidInsGrid" process="@this" action="#{sarsleviespaidUI.prepareNew}">
+									<p:resetInput target="sarsleviespaidInsGrid" />
+								</p:commandButton>
+							</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{sarsleviespaidUI.dataModel}" filteredValue="#{sarsleviespaidUI.sarsLeviesPaidfilteredList}" id="sarsleviespaidList" rowKey="#{rowVar.id}" paginator="true" rows="12" paginatorPosition="bottom"
+							paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="12,24,48,60,120,240,360" reflow="true" lazy="true">
+
+
+							<p:column headerText="#{lang['posting.date']}" sortBy="#{rowVar.glPostingDate}">
+								<h:outputText value="#{rowVar.glPostingDate}">
+									<f:convertDateTime pattern="dd MMMM yyyy" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['checkbook.amount']}" width="15%">
+								<h:outputText value="#{rowVar.checkbookAmount}" styleClass="Fright">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['levy.file']}" width="5%" sortBy="#{rowVar.levyFile}">
+								<h:outputText value="#{rowVar.levyFile}" />
+							</p:column>
+
+
+							<p:column width="120">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":sarsleviespaidInsForm:sarsleviespaidInsGrid" action="#{sarsleviespaidUI.prepareUpdate}">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{sarsleviespaidUI.sarsleviespaid}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:sarsleviespaidList" action="#{sarsleviespaidUI.sarsleviespaidDelete}" rendered="false">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{sarsleviespaidUI.sarsleviespaid}" />
+								</p:commandButton>
+
+								<h:panelGroup rendered="#{rowVar.docs.size() gt 0}">
+
+									<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs">
+										<f:setPropertyActionListener value="#{rowVar.docs.get(0)}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+
+									<p:spacer width="5" />
+									<p:commandButton icon="fa fa-bars " id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList">
+										<f:setPropertyActionListener value="#{rowVar.docs.get(0)}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="dhistUserDocs" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+
+									<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rowVar.docs.get(0).note ne null and rowVar.docs.get(0).note.length() gt 0}">
+										<p:spacer width="5" />
+										<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+											<f:setPropertyActionListener value="#{rowVar.docs.get(0)}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+									</h:panelGroup>
+
+									<h:panelGroup id="panelGroupFourUserDocs"
+										rendered="#{rowVar.docs.get(0).extension.toLowerCase() eq 'pdf' or rowVar.docs.get(0).extension.toLowerCase() eq 'png' or rowVar.docs.get(0).extension.toLowerCase() eq 'jpg' or rowVar.docs.get(0).extension.toLowerCase() eq 'jpeg' or rowVar.docs.get(0).extension.toLowerCase() eq 'gif'}">
+										<p:spacer width="5" />
+										<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+											<f:setPropertyActionListener value="#{rowVar.docs.get(0)}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+									</h:panelGroup>
+
+									<h:panelGroup rendered="#{rowVar.docs.get(0).doc ne null}">
+										<p:spacer width="5" />
+										<p:commandButton icon="ui-icon-history" oncomplete="PF('viewVersionsDialog').show()" update=":viewVersionsForm" action="#{uploadDocUI.showVersions}" id="viewVersions">
+											<f:setPropertyActionListener value="#{rowVar.docs.get(0)}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="viewVersions" value="View older versions" position="left" />
+									</h:panelGroup>
+
+								</h:panelGroup>
+
+
+							</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+	</ui:define>
+
+</ui:composition>

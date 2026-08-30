@@ -1,0 +1,186 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+		<h:form id="profileStyleForm">
+			<style>
+.ui-fileupload-content {
+	height: 150px !important;
+	background-image:
+		url("#{request.contextPath}/resources/hls/images/upload.png")
+		!important;
+	background-repeat: no-repeat;
+	background-position: center;
+}
+</style>
+		</h:form>
+
+		<p:growl showDetail="false" sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="hostingCompanyInputform">
+						<h2>#{lang['hostingCompany']}</h2>
+						<div class="ui-g-12 ui-md-6 ">
+							<p:fieldset legend="#{lang['details']}" style="margin-top: 20px">
+								<p:panelGrid columns="1" style="width:100%" id="prof" layout="grid" styleClass="ui-panelgrid-blank">
+
+									<h:panelGroup styleClass="md-inputfield">
+
+										<p:inputText id="companyName" maxlength="#{hostingCompanyProfileUI.MAX_COMPANY_NAME_SIZE}" value="#{hostingCompanyProfileUI.hostingCompany.companyName}" style="width: 90%" required="true" requiredMessage="#{lang['provide.a.company.name']}" />
+										<p:outputLabel value="#{lang['company.name']}" for="companyName" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+
+										<p:inputMask id="companyregNumber" mask="#{hostingCompanyProfileUI.companyRegistrationNumberFormat}" value="#{hostingCompanyProfileUI.hostingCompany.companyRegNumber}" style="width: 90%" required="true" requiredMessage="#{lang['provide.registration.number']}" />
+										<p:outputLabel value="#{lang['company.reg.number']}" for="companyregNumber" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputMask id="vatNumber" mask="#{hostingCompanyProfileUI.companyVatNumberFormat}" value="#{hostingCompanyProfileUI.hostingCompany.vatNumber}" style="width: 90%" />
+										<p:outputLabel value="#{lang['vat.number']}" for="vatNumber" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield">
+
+
+										<p:inputText id="incomeTaxNumber" maxlength="#{hostingCompanyProfileUI.MAX_TAX_NUMBER}" value="#{hostingCompanyProfileUI.hostingCompany.incomeTaxNumber}" style="width: 90%">
+
+										</p:inputText>
+										<p:outputLabel value="#{lang['income.tax.number']}:" for="incomeTaxNumber" />
+									</h:panelGroup>
+
+									<h:panelGroup>
+
+										<p:outputLabel style="color:grey ; margin-left:4px;" value="#{lang['select.theme']} " />
+										<br />
+										<p:selectOneMenu id="colourThemeSelector" value="#{hostingCompanyProfileUI.hostingCompany.theme}" style="width:90% ; color: #000 ; font-size:1">
+											<f:selectItems value="#{hostingCompanyProfileUI.colourThemes}" />
+										</p:selectOneMenu>
+
+
+									</h:panelGroup>
+
+									<div align="center">
+										<p:graphicImage value="#{imageStreamer.image}" style="max-width: 200px;padding:2px; max-height: 160px;" rendered="#{hostingCompanyProfileUI.hostingCompany.profileImage ne null}">
+											<f:param name="imageId" value="#{hostingCompanyProfileUI.hostingCompany.profileImage.id}" />
+										</p:graphicImage>
+									</div>
+
+								</p:panelGrid>
+								<div class="EmptyBox10" />
+							</p:fieldset>
+						</div>
+						<div class="ui-g-12 ui-md-6 ">
+
+							<p:fieldset legend="#{lang['address']}" style="margin-top: 20px">
+								<p:panelGrid columns="1" style="width : 95%" styleClass="ui-panelgrid-blank" id="addrPcode">
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText id="addr1" maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" value="#{hostingCompanyProfileUI.address.addressLine1}" style="width:95%" required="true" requiredMessage="#{lang['provide.residential.address']}" />
+										<p:outputLabel value="#{lang['address.line.1']}" for="addr1" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText id="addr2" maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" style="width:95%" value="#{hostingCompanyProfileUI.address.addressLine2}" />
+										<p:outputLabel value="#{lang['address.line.2']}" for="addr2" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText id="addr3" maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" style="width:95%" value="#{hostingCompanyProfileUI.address.addressLine3}" />
+										<p:outputLabel value="#{lang['address.line.3']}" for="addr3" />
+									</h:panelGroup>
+
+									<h:panelGroup>
+										<div>
+											<h:outputLabel value="#{lang['town']}" for="town" />
+										</div>
+										<div>
+											<p:autoComplete id="town" value="#{hostingCompanyProfileUI.address.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3" maxResults="10"
+												inputStyle="width: 95%" style="width: 95%" required="true" requiredMessage="#{lang['please.select.a.town']}">
+												<p:column headerText="#{lang['town']}" style="white-space: nowrap">
+													#{rv.description}
+												</p:column>
+											</p:autoComplete>
+										</div>
+									</h:panelGroup>
+
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText id="pcode" maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_CODE_SIZE}" style="width:95%" value="#{hostingCompanyProfileUI.address.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}" />
+										<p:outputLabel value="#{lang['post.code']}" for="pcode" />
+									</h:panelGroup>
+
+									<h:panelGroup>
+										<div>
+											<h:outputLabel value="#{lang['municipality']}" for="MunicipalityID" />
+										</div>
+										<div>
+											<p:autoComplete id="MunicipalityID" value="#{hostingCompanyProfileUI.address.municipality}" completeMethod="#{tpDetailUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityProvince}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true"
+												minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true" requiredMessage="#{lang['select.municipality']}">
+												<p:column headerText="#{lang['province']}" style="white-space: nowrap">
+													#{rv.province.provinceDesc}
+												</p:column>
+												<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">
+													#{rv.municipalityDesc}
+												</p:column>
+											</p:autoComplete>
+										</div>
+									</h:panelGroup>
+								</p:panelGrid>
+							</p:fieldset>
+						</div>
+						<div class="EmptyBox10" />
+						<p:fileUpload rendered="#{hostingCompanyProfileUI.hostingCompany.id ne null}" fileUploadListener="#{hostingCompanyProfileUI.saveImage}" mode="advanced" dragDropSupport="true" showButtons="false" sizeLimit="1048576" label="#{lang['select.a.profile.picture']}"
+							fileLimitMessage="#{lang['image.too.big.to.upload']}" allowTypes="/(\.|\/)(gif|jpe?g|png)$/" multiple="false" fileLimit="1" immediate="false" auto="true" update="@form :dataTableHostingCompanyform" process="@form" />
+						<div class="EmptyBox10" />
+						<p:commandButton value="#{lang['update']}" action="#{hostingCompanyProfileUI.updateHostingCompany}" icon="fa fa-database" update="@form :dataTableHostingCompanyform" />
+						<p:spacer width="5" />
+						<p:commandButton value="#{lang['clear']}" action="#{hostingCompanyProfileUI.prepareNewHostingCompany}" icon="fa fa-recycle" update="@form" />
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="dataTableHostingCompanyform">
+						<p:remoteCommand name="rc" update=":hostingCompanyInputform" actionListener="#{hostingCompanyProfileUI.updateHostingCompanyFindAddress}" />
+						<p:dataTable var="rowVar" value="#{hostingCompanyProfileUI.hostingCompanyDataModel}" emptyMessage="#{lang['no.records.found']}" filteredValue="#{hostingCompanyProfileUI.hostingCompanyfilteredList}" id="companyList" rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom"
+							paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,15,20,25" reflow="true" lazy="true">
+
+							<p:column width="100">
+								<p:graphicImage value="#{imageStreamer.image}" style="max-width: 80px;padding:2px; max-height: 80px;" rendered="#{rowVar.profileImage ne null}">
+									<f:param name="imageId" value="#{rowVar.profileImage.id}" />
+								</p:graphicImage>
+							</p:column>
+
+							<p:column headerText="#{lang['company.name']}">
+								<h:outputText value="#{rowVar.companyName}" />
+							</p:column>
+							<p:column headerText="#{lang['reg.number']}">
+								<h:outputText value="#{rowVar.companyRegNumber}" />
+							</p:column>
+							<p:column headerText="#{lang['theme']}">
+								<h:outputText value="#{rowVar.theme}" />
+							</p:column>
+							<p:column width="7%">
+								<p:commandButton icon="fa fa-database" update=":hostingCompanyInputform" oncomplete="rc()">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{hostingCompanyProfileUI.hostingCompany}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-sitemap" action="#{hostingCompanyProfileUI.viewOrgChart}">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{hostingCompanyProfileUI.hostingCompany}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+	</ui:define>
+
+</ui:composition>

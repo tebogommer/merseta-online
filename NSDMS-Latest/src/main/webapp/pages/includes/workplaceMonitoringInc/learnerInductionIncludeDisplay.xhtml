@@ -1,0 +1,50 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+	<c:if test="false">
+		<!--  
+			<ui:include src="/pages/includes/workplaceMonitoringInc/learnerInductionIncludeDisplay.xhtml">
+				<ui:param name="#{LearnerInductionList}" value =" lazy data model of: haj.com.entity.WorkplaceMonitoringLearnerInduction " /> 
+			</ui:include> 
+		-->
+	</c:if>
+	<div class="EmptyBox10" />
+	<ui:include src="/pages/includes/download_lazy.xhtml">
+		<ui:param name="file_name" value="WPM_Learner_Induction_Extracted" />
+		<ui:param name="target" value="learnerInductionIncludeDt" />
+	</ui:include>
+	<div class="EmptyBox10" />
+	<p:dataTable var="rowVarLI" value="#{LearnerInductionList}" id="learnerInductionIncludeDt" rowKey="#{rowVarLI.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+		paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+		<p:column headerText="NSDMS Generated" exportable="false">
+			<center>
+				<p:selectBooleanCheckbox value="#{rowVarLI.systemGenerated}" disabled="true" />
+			</center>
+		</p:column>
+		<p:column headerText="NSDMS Generated" style="display:none">
+			<p:outputLabel value="System generated" rendered="#{rowVarLI.systemGenerated}" />
+			<p:outputLabel value="Manually generated" rendered="#{!rowVarLI.systemGenerated}" />
+		</p:column>
+		<p:column headerText="Qualification Type">
+			<p:outputLabel value="#{rowVarLI.qualificationTypeSelectionEnum.friendlyName}" />
+		</p:column>
+		<p:column headerText="Qualification ID / SAQA ID">
+			<p:outputLabel value="#{rowVarLI.learnership.code}" rendered="#{rowVarLI.learnership ne null}" />
+			<p:outputLabel value="#{rowVarLI.qualification.code}" rendered="#{rowVarLI.qualification ne null}" />
+			<p:outputLabel value="#{rowVarLI.unitStandard.code}" rendered="#{rowVarLI.unitStandard ne null}" />
+			<p:outputLabel value="#{rowVarLI.skillsProgram.programmeID}" rendered="#{rowVarLI.skillsProgram ne null}" />
+			<p:outputLabel value="#{rowVarLI.skillsSet.code}" rendered="#{rowVarLI.skillsSet ne null}" />
+			<p:outputLabel value="#{rowVarLI.nonCreditBearingIntervationTitle.code}" rendered="#{rowVarLI.nonCreditBearingIntervationTitle ne null}" />
+		</p:column>
+		<p:column headerText="Qualification Title">
+			<p:outputLabel value="#{rowVarLI.qualification.description}" rendered="#{rowVarLI.qualification ne null}" />
+			<p:outputLabel value="#{rowVarLI.unitStandard.title}" rendered="#{rowVarLI.unitStandard ne null}" />
+			<p:outputLabel value="#{rowVarLI.skillsProgram.description}" rendered="#{rowVarLI.skillsProgram ne null}" />
+			<p:outputLabel value="#{rowVarLI.skillsSet.description}" rendered="#{rowVarLI.skillsSet ne null}" />
+			<p:outputLabel value="#{rowVarLI.nonCreditBearingIntervationTitle.description}" rendered="#{rowVarLI.nonCreditBearingIntervationTitle ne null}" />
+			<p:outputLabel value="#{rowVarLI.learnership.description}" rendered="#{rowVarLI.learnership ne null}" />
+		</p:column>
+		<p:column headerText="Number Of Attendees">
+			<p:outputLabel value="#{rowVarLI.numberOfAttendees}" />
+		</p:column>
+	</p:dataTable>
+</ui:composition>

@@ -1,0 +1,171 @@
+﻿@page "/monitoring"
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Domain.Entities
+@inject IWorkplaceMonitoringService MonitoringService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>Workplace Monitoring & Site Audits | merSETA NSDMS</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
+    <!-- Top Bar -->
+    <MudCard Elevation="2" Class="mb-4">
+        <MudCardContent Class="d-flex align-center justify-space-between py-3">
+            <div>
+                <MudBreadcrumbs Items="_breadcrumbs" Class="pa-0 mb-1" />
+                <MudText Typo="Typo.h5" Class="fw-bold">Workplace Monitoring &amp; Site Audits</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    Statutory quality assurance, learner safety inspection visits, and compliance action plans.
+                </MudText>
+            </div>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="@(() => Navigation.NavigateTo("/monitoring/create"))">
+                Schedule Monitoring Visit
+            </MudButton>
+        </MudCardContent>
+    </MudCard>
+
+    <!-- Summary Metrics -->
+    <MudGrid Class="mb-4">
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Elevation="1" Class="pa-3 border-l-4 border-l-primary">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">TOTAL MONITORED VISITS</MudText>
+                <MudText Typo="Typo.h4" Class="fw-bold">@_visits.Count</MudText>
+            </MudCard>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Elevation="1" Class="pa-3 border-l-4 border-l-success">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">APPROVED &amp; COMPLIANT</MudText>
+                <MudText Typo="Typo.h4" Color="Color.Success" Class="fw-bold">@_visits.Count(v => v.StatusCode == "Approved")</MudText>
+            </MudCard>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Elevation="1" Class="pa-3 border-l-4 border-l-warning">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">PENDING REVIEW</MudText>
+                <MudText Typo="Typo.h4" Color="Color.Warning" Class="fw-bold">@_visits.Count(v => v.StatusCode == "PendingApproval" || v.StatusCode == "Draft")</MudText>
+            </MudCard>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Elevation="1" Class="pa-3 border-l-4 border-l-error">
+                <MudText Typo="Typo.caption" Color="Color.Secondary">NON-COMPLIANCE FLAGGED</MudText>
+                <MudText Typo="Typo.h4" Color="Color.Error" Class="fw-bold">@_visits.Count(v => v.StatusCode == "NonComplianceIdentified" || v.NonCompliancesIdentified)</MudText>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+
+    <!-- Filter & Table -->
+    <MudCard Elevation="2">
+        <MudTable Items="_visits" Hover="true" Dense="true" Elevation="0" Filter="FilterVisits" OnRowClick="@((TableRowClickEventArgs<WorkplaceMonitoringSiteVisit> args) => Navigation.NavigateTo($"/monitoring/{args.Item.Id}"))" RowClass="cursor-pointer">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Audit Site Visits</MudText>
+                <MudSpacer />
+                <MudSelect T="string" @bind-Value="_statusFilter" Label="Filter Status" Variant="Variant.Outlined" Dense="true" Class="me-4" Style="max-width: 220px;" Clearable="true">
+                    <MudSelectItem Value="@("")">All Statuses</MudSelectItem>
+                    <MudSelectItem Value="@("Draft")">Draft</MudSelectItem>
+                    <MudSelectItem Value="@("PendingApproval")">Pending Approval</MudSelectItem>
+                    <MudSelectItem Value="@("Approved")">Approved</MudSelectItem>
+                    <MudSelectItem Value="@("NonComplianceIdentified")">Non-Compliance Flagged</MudSelectItem>
+                </MudSelect>
+                <MudTextField @bind-Value="_searchString" Placeholder="Search employer, SDL or contact..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" />
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>ID</MudTh>
+                <MudTh>Employer / Organisation</MudTh>
+                <MudTh>Contact Person</MudTh>
+                <MudTh Class="hidden md:table-cell">Monitoring Date</MudTh>
+                <MudTh Class="hidden md:table-cell">CLO Officer</MudTh>
+                <MudTh>Compliance Status</MudTh>
+                <MudTh Style="text-align: right;">Action</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="ID" Class="fw-bold">#@context.Id</MudTd>
+                <MudTd DataLabel="Employer">
+                    <MudText Typo="Typo.body2" Class="fw-bold">@(context.Organisation?.CompanyName ?? "N/A")</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">SDL: @(context.Organisation?.SdlNumber ?? "N/A")</MudText>
+                </MudTd>
+                <MudTd DataLabel="Contact Person">
+                    <MudText Typo="Typo.body2">@(context.ContactPerson?.FullName ?? "Not Assigned")</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@(context.ContactPerson?.Email ?? "")</MudText>
+                </MudTd>
+                <MudTd DataLabel="Date" Class="hidden md:table-cell">@context.MonitoringDate.ToString("yyyy-MM-dd")</MudTd>
+                <MudTd DataLabel="CLO" Class="hidden md:table-cell">@(context.CloUserId ?? "Regional Officer")</MudTd>
+                <MudTd DataLabel="Status">
+                    @if (context.StatusCode == "Approved")
+                    {
+                        <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.CheckCircle">Approved</MudChip>
+                    }
+                    else if (context.StatusCode == "NonComplianceIdentified" || context.NonCompliancesIdentified)
+                    {
+                        <MudChip T="string" Color="Color.Error" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Warning">Non-Compliant</MudChip>
+                    }
+                    else if (context.StatusCode == "PendingApproval")
+                    {
+                        <MudChip T="string" Color="Color.Warning" Size="Size.Small" Variant="Variant.Filled">Pending Approval</MudChip>
+                    }
+                    else
+                    {
+                        <MudChip T="string" Color="Color.Default" Size="Size.Small" Variant="Variant.Outlined">@context.StatusCode</MudChip>
+                    }
+                </MudTd>
+                <MudTd DataLabel="Action" Style="text-align: right;">
+                    <MudIconButton Icon="@Icons.Material.Filled.ArrowForward" Color="Color.Primary" Size="Size.Small" OnClick="@(() => Navigation.NavigateTo($"/monitoring/{context.Id}"))" />
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <div class="pa-4 text-center">
+                    <MudText Typo="Typo.body1" Color="Color.Secondary">No monitoring visits found matching filters.</MudText>
+                </div>
+            </NoRecordsContent>
+        </MudTable>
+    </MudCard>
+</MudContainer>
+
+@code {
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Quality Assurance", href: "/etqa"),
+        new BreadcrumbItem("Workplace Monitoring", href: null, disabled: true)
+    };
+
+    private List<WorkplaceMonitoringSiteVisit> _visits = new();
+    private string _searchString = string.Empty;
+    private string _statusFilter = string.Empty;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadVisitsAsync();
+    }
+
+    private async Task LoadVisitsAsync()
+    {
+        _loading = true;
+        try
+        {
+            _visits = await MonitoringService.GetAllSiteVisitsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading monitoring visits: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private bool FilterVisits(WorkplaceMonitoringSiteVisit visit)
+    {
+        if (!string.IsNullOrWhiteSpace(_statusFilter) && !visit.StatusCode.Equals(_statusFilter, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(_searchString)) return true;
+
+        return (visit.Organisation?.CompanyName != null && visit.Organisation.CompanyName.Contains(_searchString, StringComparison.OrdinalIgnoreCase)) ||
+               (visit.Organisation?.SdlNumber != null && visit.Organisation.SdlNumber.Contains(_searchString, StringComparison.OrdinalIgnoreCase)) ||
+               (visit.ContactPerson?.FullName != null && visit.ContactPerson.FullName.Contains(_searchString, StringComparison.OrdinalIgnoreCase)) ||
+               visit.StatusCode.Contains(_searchString, StringComparison.OrdinalIgnoreCase);
+    }
+}

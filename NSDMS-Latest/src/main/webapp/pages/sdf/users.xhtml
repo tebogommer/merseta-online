@@ -1,0 +1,79 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+				<h1>SDF Users</h1>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+						 <p:tooltip position="left"/>
+						<p:commandButton id="toggler" type="button" style="float:right" icon="ui-icon-menu" />
+						<p:columnToggler datasource="usersList" trigger="toggler" />
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+						<p:dataTable var="rowVar" value="#{sdfUsersUI.dataModel}" filteredValue="#{usersUI.usersfilteredList}" id="usersList" rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,15,20,25,50" reflow="true" lazy="true">
+							<p:column headerText="#{lang['first.name']}">
+								<h:outputText value="#{rowVar.firstName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['surname']}" sortBy="#{rowVar.lastName}" filterBy="#{rowVar.lastName}" filterStyle="width: 98%">
+								<h:outputText value="#{rowVar.lastName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['email']}" filterBy="#{rowVar.email}" filterStyle="width: 98%">
+								<h:outputText value="#{rowVar.email}" />
+							</p:column>
+
+							<p:column headerText="#{lang['rsa.id.number']}" filterStyle="width: 98%" filterBy="#{rowVar.rsaIDNumber}"  width="100">
+								<h:outputText value="#{rowVar.rsaIDNumber}" />
+							</p:column>
+							<p:column headerText="#{lang['passport.number']}"  width="100">
+								<h:outputText value="#{rowVar.passportNumber}" />
+							</p:column>
+							<p:column headerText="#{lang['active']}" width="35" sortBy="#{rowVar.active}">
+							   <div align="center">
+								<p:selectBooleanCheckbox value="#{rowVar.active}" disabled="true" />
+							   </div>
+							</p:column>
+
+							<p:column headerText="#{lang['registration.date']}"  width="100">
+								<h:outputText value="#{rowVar.registrationDate}">
+									<f:convertDateTime pattern="dd-MM-yyyy" />
+								</h:outputText>
+							</p:column>
+
+							<p:column headerText="#{lang['email.confirm.date']}" width="100">
+								<h:outputText value="#{rowVar.emailConfirmDate}">
+									<f:convertDateTime pattern="dd MMM yyyy" />
+								</h:outputText>
+							</p:column>
+
+							<p:column headerText="#{lang['tel.number']}" width="100">
+								<h:outputText value="#{rowVar.telNumber}" />
+							</p:column>
+							<p:column headerText="#{lang['cell.number']}" width="100">
+								<h:outputText value="#{rowVar.cellNumber}" />
+							</p:column>
+							<p:column headerText="#{lang['last.login']}" width="100">
+								<h:outputText value="#{rowVar.lastLogin}">
+									<f:convertDateTime pattern="dd MMM yyyy" />
+								</h:outputText>
+							</p:column>
+
+							<p:column width="30">
+										<p:commandButton icon="ui-icon-play-for-work" title="View sdf tasks" action="#{taskTreeUI.taskForSDF}" oncomplete="PF('tasksForDialog').show()" update="tasksForForm" >
+											<f:setPropertyActionListener value="#{rowVar}" target="#{taskTreeUI.sdf}" />
+										</p:commandButton>
+							</p:column>
+
+						</p:dataTable>
+
+
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+<ui:include src="/pages/includes/tasksFor.xhtml"/>
+	</ui:define>
+</ui:composition>

@@ -1,0 +1,184 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+
+					<h1>NSDP Report Configuration</h1>
+
+					<h:form id="nsdpreportconfigInsForm">
+
+						<p:growl sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+
+						<p:panelGrid columns="1" style="width:100%" id="nsdpreportconfigInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="nsdpOutcomes" value="#{nsdpreportconfigUI.nsdpreportconfig.nsdpOutcomes}" style="width:95%" />
+								<p:outputLabel value="NSDP Outcomes" for="nsdpOutcomes" />
+							</h:panelGroup>
+							
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="nsdpSubOutcomes" value="#{nsdpreportconfigUI.nsdpreportconfig.nsdpSubOutcomes}" style="width:95%" />
+								<p:outputLabel value="NSDP Sub-Outcomes" for="nsdpSubOutcomes" />
+							</h:panelGroup>
+							
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText required="true" id="description" value="#{nsdpreportconfigUI.nsdpreportconfig.description}" style="width:95%" />
+								<p:outputLabel value="Output Indicator" for="description" />
+							</h:panelGroup>
+
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="Financial Year Link" for="finYearSelection" />
+								</div>
+								<div>
+									<p:selectOneMenu id="finYearSelection" value="#{nsdpreportconfigUI.nsdpreportconfig.financialYears}" style="width:95%" required="true" converter="FinancialYearsConvertor">
+										<p:ajax />
+										<f:selectItems value="#{selectItemsUI.financialYears}" var="rvf" itemLabel="#{rvf.description}" itemValue="#{rvf}" />
+									</p:selectOneMenu>
+								</div>
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="targetAmount" value="#{nsdpreportconfigUI.nsdpreportconfig.targetAmount}" style="width:95%" required="true" />
+								<p:outputLabel value="Target Amount" for="targetAmount" />
+							</h:panelGroup>
+
+							<h:panelGroup>
+								<p:selectBooleanCheckbox value="#{nsdpreportconfigUI.nsdpreportconfig.manualCapture}">
+									<p:ajax update="reportRunAutoPanel" />
+								</p:selectBooleanCheckbox>
+								<p:spacer width="5" />
+								<p:outputLabel value="Manully Captured Report?" />
+							</h:panelGroup>
+
+							<p:outputPanel id="reportRunAutoPanel">
+								<c:if test="#{!nsdpreportconfigUI.nsdpreportconfig.manualCapture}">
+									<h:panelGroup>
+										<div>
+											<p:outputLabel value="Report Generation Type" for="typeReport" />
+										</div>
+										<div>
+											<p:selectOneMenu id="typeReport" value="#{nsdpreportconfigUI.nsdpreportconfig.nsdpReportRunType}" style="width:95%" required="true">
+												<p:ajax />
+												<f:selectItems value="#{enumUI.nsdpReportRunTypeEnumDD}" />
+											</p:selectOneMenu>
+										</div>
+									</h:panelGroup>
+								</c:if>
+							</p:outputPanel>
+
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:nsdpreportconfigList :nsdpreportconfigInsForm:nsdpreportconfigInsGrid" action="#{nsdpreportconfigUI.nsdpreportconfigInsert}" />
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="nsdpreportconfigInsGrid" process="@this" action="#{nsdpreportconfigUI.prepareNew}">
+									<p:resetInput target="nsdpreportconfigInsGrid" />
+								</p:commandButton>
+							</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+						<ui:include src="/pages/includes/download_lazy.xhtml">
+							<ui:param name="file_name" value="NSDP Report Configuration" />
+							<ui:param name="target" value="nsdpreportconfigList" />
+						</ui:include>
+						<div class="EmptyBox10" />
+						<p:commandButton value="Re-order Reporting" process="@this" update=":reorderForm :nsdpreportconfigInsForm" action="#{nsdpreportconfigUI.prepReorder}" />
+						<div class="EmptyBox10" />
+						<p:dataTable var="rowVar" value="#{nsdpreportconfigUI.dataModel}" id="nsdpreportconfigList" rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+							<p:column headerText="NSDP Outcomes">
+								<h:outputText value="#{rowVar.nsdpOutcomes}" />
+							</p:column>
+							<p:column headerText="NSDP Sub-Outcomes">
+								<h:outputText value="#{rowVar.nsdpSubOutcomes}" />
+							</p:column>
+							<p:column headerText="Output Indicator">
+								<h:outputText value="#{rowVar.description}" />
+							</p:column>
+							<p:column headerText="Financial Year Link">
+								<h:outputText value="#{rowVar.financialYears.description}" />
+							</p:column>
+							<p:column headerText="Target Amount">
+								<h:outputText value="#{rowVar.targetAmount}" styleClass="Fright">
+									<f:convertNumber pattern="###,###,###,###,##0" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="Manully Captured Report" exportable="false">
+								<p:selectBooleanCheckbox disabled="true" value="#{rowVar.manualCapture}" />
+							</p:column>
+							<p:column headerText="Manully Captured Report" style="display:none">
+								<p:outputLabel value="Yes" rendered="#{rowVar.manualCapture}" />
+								<p:outputLabel value="No" rendered="#{!rowVar.manualCapture}" />
+							</p:column>
+							<p:column headerText="Order Number">
+								<h:outputText value="#{rowVar.orderNumber}" styleClass="Fright">
+									<f:convertNumber pattern="###,###,###,###,##0" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="Report Generation Type" exportable="false">
+								<h:outputText value="N/A" rendered="#{rowVar.manualCapture}" />
+								<h:outputText value="#{rowVar.nsdpReportRunType.friendlyName}" rendered="#{!rowVar.manualCapture}" />
+							</p:column>
+							<p:column width="80" exportable="false">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":nsdpreportconfigInsForm:nsdpreportconfigInsGrid">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{nsdpreportconfigUI.nsdpreportconfig}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:nsdpreportconfigList" action="#{nsdpreportconfigUI.nsdpreportconfigDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{nsdpreportconfigUI.nsdpreportconfig}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+		</div>
+		<p:dialog position="top" header="Re-order Information" dynamic="true" responsive="true" widgetVar="reorderDlg" resizable="false" hideEffect="clip" showEffect="clip" id="reorderDialog" appendTo="@(body)" modal="true" width="70%" height="80vh">
+			<h:form id="reorderForm">
+				<p:commandButton value="Close View" action="#{nsdpreportconfigUI.closeReorderView}" process="@this" update=":reorderForm :nsdpreportconfigInsForm" />
+				<div class="EmptyBox10" />
+				<p:dataTable var="rowVarFinYear" value="#{nsdpreportconfigUI.financialYearsDataModel}" rowKey="#{rowVarFinYear}" id="finYearList" paginator="true" rows="5" paginatorPosition="bottom"
+					paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20,40" lazy="true" reflow="true">
+					<f:facet name="header">Financial Years Selection</f:facet>
+					<p:column headerText="Financial Year">
+						<h:outputText value="#{rowVarFinYear.description}" />
+					</p:column>
+					<p:column width="30" exportable="false">
+						<p:commandButton onstart="uploadStart()" oncomplete="uploadDone()" icon="fa fa-tasks" title="Select Financial Year" action="#{nsdpreportconfigUI.selectfinancialYearsForOrderUpdate}" update=":reorderForm:orderPanel">
+							<f:setPropertyActionListener value="#{rowVarFinYear}" target="#{nsdpreportconfigUI.selectedFinancialYears}" />
+						</p:commandButton>
+					</p:column>
+				</p:dataTable>
+				<div class="EmptyBox10" />
+				<p:outputPanel id="orderPanel">
+					<c:if test="#{nsdpreportconfigUI.nsdpListByFinYear.size() ne 0}">
+						<p:outputLabel value="Drag and drop to the order required." />
+						<p:orderList value="#{nsdpreportconfigUI.nsdpListByFinYear}" var="config" itemValue="#{config}" converter="NsdpReportConfigConvertor" controlsLocation="left" responsive="true" >
+							<p:ajax event="reorder" listener="#{nsdpreportconfigUI.updateOrderListOnAction}" />
+							<p:column>
+								<h:outputText value="#{config.description}" />
+							</p:column>
+						</p:orderList>
+						<div class="EmptyBox10" />
+						<p:commandButton icon="fa fa-database" value="Submit" process="@this" action="#{nsdpreportconfigUI.updateOrderList}" update=":reorderForm :nsdpreportconfigInsForm">
+							<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+						</p:commandButton>
+					</c:if>
+				</p:outputPanel>
+			</h:form>
+		</p:dialog>
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+			<h:form>
+				<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+				<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+			</h:form>
+		</p:confirmDialog>
+	</ui:define>
+</ui:composition>

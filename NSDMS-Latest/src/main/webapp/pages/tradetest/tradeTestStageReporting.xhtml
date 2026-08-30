@@ -1,0 +1,201 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+
+		<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+		<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+		<p:importEnum type="haj.com.entity.enums.LearnerStatusEnum" />
+		<p:importEnum type="haj.com.entity.enums.YesNoEnum" />
+
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+
+					<h1>Trade Test Stages Reporting</h1>
+
+					<p:growl sticky="false">
+						<p:autoUpdate />
+					</p:growl>
+
+					<h:form id="mainGraphForm">
+						<p:barChart model="#{tradeTestStageReportingUI.hbarModel}" style="width: 100%; height: 500px;" />
+						<div class="EmptyBox10" />
+						<p:fieldset legend="Graph Information" toggleable="true" toggleSpeed="500">
+							<p:outputLabel value="Information Relating to the graph" />
+							<ui:include src="/pages/includes/download_lazy.xhtml">
+								<ui:param name="file_name" value="ARPL_Stages_Report_Tally" />
+								<ui:param name="target" value="graphinfoDT" />
+							</ui:include>
+							<h:panelGrid columns="1" cellpadding="5">
+								<p:dataTable var="rvInfo" value="#{tradeTestStageReportingUI.arplReportBeanList}" id="graphinfoDT" paginator="false" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+									reflow="true">
+									<f:facet name="header"> Graph Key / Information </f:facet>
+									<p:column headerText="Date generated" style="display:none">
+										<p:outputLabel value="#{rvInfo.dateGenerated}">
+											<f:convertDateTime pattern="dd MMMM yyyy HH:mm:ss" />
+										</p:outputLabel>
+									</p:column>
+									
+									<p:column headerText="Name">
+										<p:outputLabel value="#{rvInfo.tradeTestProgressReportingEnum.displayNameReport}" />
+									</p:column>
+									<p:column headerText="Additional Information">
+										<p:outputLabel value="#{rvInfo.tradeTestProgressReportingEnum.info}" />
+									</p:column>
+									<p:column headerText="Amount" width="50">
+										<p:outputLabel value="#{rvInfo.count}" />
+									</p:column>
+									<p:column headerText="View" width="7%" exportable="false">
+										<p:commandButton icon="fa fa-search" title="View Information" rendered="#{rvInfo.count > 0}" update="@form" action="#{tradeTestStageReportingUI.viewResults}">
+											<f:setPropertyActionListener value="#{rvInfo.tradeTestProgressReportingEnum}" target="#{tradeTestStageReportingUI.selectedReportingValue}" />
+										</p:commandButton>
+									</p:column>
+								</p:dataTable>
+							</h:panelGrid>
+						</p:fieldset>
+
+						<p:outputPanel id="arplResultsOutputPanel">
+							<c:if test="#{tradeTestStageReportingUI.displayInfo}">
+
+								<div class="EmptyBox10" />
+								<div class="EmptyBox10" />
+								<div class="EmptyBox10" />
+								<p:commandButton icon="fa fa-times" value="Close View" onstart="uploadStart()" oncomplete="uploadDone()" action="#{tradeTestStageReportingUI.closeReport}" update=":mainGraphForm:arplResultsOutputPanel :mainGraphForm:arplInformationPanel" />
+								<div class="EmptyBox10" />
+
+								<ui:include src="/pages/includes/download_lazy.xhtml">
+									<ui:param name="file_name" value="ARPL_Information" />
+									<ui:param name="target" value="arplResultsList" />
+								</ui:include>
+								<p:dataTable var="var" id="arplResultsList" value="#{tradeTestStageReportingUI.companyLearnersTradeTestDataModel}" rowKey="#{var.id}" paginator="true" rows="5" paginatorPosition="bottom"
+									paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20" reflow="true" lazy="true">
+									<f:facet name="header"> #{tradeTestStageReportingUI.selectedReportingValue.displayNameReport} Trade Test Applications </f:facet>
+									<p:column headerText="Reference ID" sortBy="#{var.id}" width="7%">
+										<h:outputText value="#{var.id}" />
+									</p:column>
+									<p:column headerText="Learner" sortBy="#{var.learner}">
+										<h:outputText value="#{var.learner.firstName} #{var.learner.lastName}" />
+									</p:column>
+									<p:column headerText="Initiator">
+										<h:outputText value="#{var.createUser.firstName} #{var.createUser.lastName}" />
+									</p:column>
+									<p:column headerText="Status" sortBy="#{var.status}">
+										<h:outputText value="#{var.status.friendlyName}" />
+									</p:column>
+									<p:column headerText="Qualification" sortBy="#{var.qualification}">
+										<h:outputText value="(#{var.qualification.code}) #{var.qualification.description}" />
+									</p:column>
+									<p:column headerText="Preferred Trade Test Center">
+										<h:outputText value="#{var.preferredTrainingCenter.companyName}" />
+									</p:column>
+									<p:column headerText="Serial Number" filterBy="#{var.serialNumber}">
+										<h:outputText value="#{var.serialNumber}" rendered="#{var.serialNumber ne null}" />
+										<h:outputText value="N/A" rendered="#{var.serialNumber eq null}" />
+									</p:column>
+									<p:column exportable="false" headerText="Actions" rendered="true" width="8%">
+										<p:commandButton icon="fa fa-search" title="View ARPL Information" onstart="uploadStart()" oncomplete="uploadDone()" update=":mainGraphForm:arplInformationPanel" rendered="true" action="#{tradeTestStageReportingUI.prepViewArpl}">
+											<f:setPropertyActionListener value="#{var}" target="#{tradeTestStageReportingUI.viewCompanyLearnersTradeTest}" />
+										</p:commandButton>
+									</p:column>
+								</p:dataTable>
+							</c:if>
+						</p:outputPanel>
+						
+						
+						<p:outputPanel id="arplInformationPanel">
+							<c:if test="#{tradeTestStageReportingUI.viewTradeTest}">
+								<div class="EmptyBox10" />
+								<h2>ARPL Application Selected. Reference ID: #{tradeTestStageReportingUI.viewCompanyLearnersTradeTest.id}</h2>
+								<p:commandButton icon="fa fa-times" value="Close View" update=":mainGraphForm:arplInformationPanel" onstart="uploadStart()" oncomplete="uploadDone()" action="#{tradeTestStageReportingUI.closeViewArpl}" />
+								<div class="EmptyBox10" />
+								<p:tabView dynamic="true" cache="true">
+									<p:tab title="Learner Information">
+										<ui:include src="/pages/includes/arplLearnerInformationDisplay.xhtml">
+											<ui:param name="user" value="#{tradeTestStageReportingUI.viewCompanyLearnersTradeTest.learner}" />
+											<ui:param name="CELLPHONE_FORMAT" value="#{autoCompleteUI.CELLPHONE_FORMAT}" />
+											<ui:param name="FAX_NUMBER_FORMAT" value="#{autoCompleteUI.FAX_NUMBER_FORMAT}" />
+											<ui:param name="TELPHONE_FORMAT" value="#{autoCompleteUI.TELPHONE_FORMAT}" />
+										</ui:include>
+									</p:tab>
+									<p:tab title="Initiator Information">
+										<ui:include src="/pages/includes/arplLearnerInformationDisplay.xhtml">
+											<ui:param name="user" value="#{tradeTestStageReportingUI.viewCompanyLearnersTradeTest.createUser}" />
+											<ui:param name="CELLPHONE_FORMAT" value="#{autoCompleteUI.CELLPHONE_FORMAT}" />
+											<ui:param name="FAX_NUMBER_FORMAT" value="#{autoCompleteUI.FAX_NUMBER_FORMAT}" />
+											<ui:param name="TELPHONE_FORMAT" value="#{autoCompleteUI.TELPHONE_FORMAT}" />
+										</ui:include>
+									</p:tab>
+									<p:tab title="Application Information">
+										<ui:include src="/pages/includes/arplApplicationInformation.xhtml">
+											<ui:param name="companylearnerstradetest" value="#{tradeTestStageReportingUI.viewCompanyLearnersTradeTest}" />
+											<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+											<ui:param name="dataModelDetailsOfExperienceArpl" value="#{tradeTestStageReportingUI.dataModelDetailsOfExperienceArpl}" />
+											<ui:param name="dataModelDetailsOfTrainingArpl" value="#{tradeTestStageReportingUI.dataModelDetailsOfTrainingArpl}" />
+										</ui:include>
+									</p:tab>
+									<p:tab title="Employer Application Information">
+										<ui:include src="/pages/includes/arplEmployerInformation.xhtml">
+											<ui:param name="companylearnerstradetest" value="#{tradeTestStageReportingUI.viewCompanyLearnersTradeTest}" />
+											<ui:param name="companyTradeTestEmployer" value="#{tradeTestStageReportingUI.companyTradeTestEmployer}" />
+											<ui:param name="companyEmployer" value="#{tradeTestStageReportingUI.viewCompanyLearnersTradeTest.companyEmployer}" />
+											<ui:param name="CELLPHONE_FORMAT" value="#{autoCompleteUI.CELLPHONE_FORMAT}" />
+											<ui:param name="FAX_NUMBER_FORMAT" value="#{autoCompleteUI.FAX_NUMBER_FORMAT}" />
+											<ui:param name="TELPHONE_FORMAT" value="#{autoCompleteUI.TELPHONE_FORMAT}" />
+										</ui:include>
+									</p:tab>
+									<p:tab title="Trade Test Results">
+										<ui:include src="/pages/includes/arplTradeTestInformation.xhtml">
+											<ui:param name="companylearnerstradetest" value="#{tradeTestStageReportingUI.viewCompanyLearnersTradeTest}" />
+											<ui:param name="dataModelTradeTestTaskResult" value="#{tradeTestStageReportingUI.dataModelTradeTestTaskResult}" />
+											<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+										</ui:include>
+									</p:tab>
+									<p:tab title="Sign Off Assigned">
+										<ui:include src="/pages/includes/signoffInclude.xhtml">
+											<ui:param name="SignOffList" value="#{tradeTestStageReportingUI.signOffLists}" />
+											<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+											<ui:param name="acknowledge" value="#{lang['tradetest.signoff.declaration.text']} " />
+										</ui:include>
+									</p:tab>
+									<p:tab title="Certificate Collection" rendered="#{tradeTestStageReportingUI.viewCompanyLearnersTradeTest.collectionEnum ne null}">
+										<ui:include src="/pages/includes/arplTradeTestCollectionInformation.xhtml">
+											<ui:param name="companylearnerstradetest" value="#{tradeTestStageReportingUI.viewCompanyLearnersTradeTest}" />
+											<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+										</ui:include> 
+									</p:tab>
+									<p:tab title="Trade Test Documents">
+										<ui:include src="/pages/includes/documents_info_display.xhtml">
+											<ui:param name="docs" value="#{tradeTestStageReportingUI.viewCompanyLearnersTradeTest.docs}" />
+										</ui:include>
+									</p:tab>
+									<p:tab title="NAMB Decision History">
+										<ui:include src="/pages/includes/nambDecisionHistory.xhtml">
+											<ui:param name="dataModelNambDecisionHistory" value="#{tradeTestStageReportingUI.dataModelNambDecisionHistory}" />
+											<ui:param name="Header" value="ARPL NAMB Decision History" />
+											<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+										</ui:include>
+									</p:tab>
+									<p:tab title="Task History">
+										<ui:include src="/pages/includes/taskInformationInclude.xhtml">
+											<ui:param name="TaskList" value="#{tradeTestStageReportingUI.dataModelTasks}" />
+											<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+										</ui:include>
+									</p:tab>
+									<p:tab title="Persons Involved" rendered="false">
+										<ui:include src="/pages/includes/arplTradeTestUsersInformation.xhtml">
+											<ui:param name="companylearnerstradetest" value="#{tradeTestStageReportingUI.viewCompanyLearnersTradeTest}" />
+										</ui:include> 
+									</p:tab>
+								</p:tabView>
+								<div class="EmptyBox10" />
+							</c:if>
+						</p:outputPanel>
+					</h:form>
+				</div>
+			</div>
+		</div>
+		
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+	</ui:define>
+
+</ui:composition>

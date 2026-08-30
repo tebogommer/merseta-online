@@ -1,0 +1,475 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+
+		<p:growl showDetail="false" sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<ui:include src="/pages/includes/taskdiagram.xhtml" />
+			</div>
+		</div>
+
+		<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+		<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+		<p:importEnum type="haj.com.entity.enums.WspTypeEnum" />
+
+		<h:form id="mainForm">
+			<div class="card">
+				<p:fieldset legend="Batch Information">
+					<p:panelGrid columns="3" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText disabled="true" value="#{gpgrantbatchlistUI.gpgrantbatchlist.wspType.friendlyName}" style="width:95%; opacity:1;">
+							</p:inputText>
+							<p:outputLabel value="Batch Type" />
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText disabled="true" value="#{gpgrantbatchlistUI.gpgrantbatchlist.batchDescription}" style="width:95%; opacity:1;">
+							</p:inputText>
+							<p:outputLabel value="Batch Description" />
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText disabled="true" value="#{gpgrantbatchlistUI.gpgrantbatchlist.batchNumber}" style="width:95%; opacity:1;">
+							</p:inputText>
+							<p:outputLabel value="Batch Number" />
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield" rendered="#{gpgrantbatchlistUI.gpgrantbatchlist.originalAmount ne null}">
+							<p:inputText disabled="true" value="#{gpgrantbatchlistUI.gpgrantbatchlist.originalAmount}" style="width:95%; opacity:1;">
+								<f:convertNumber pattern="###,###,###,###,##0.00" />
+							</p:inputText>
+							<p:outputLabel value="Batch Orginal Amount" />
+						</h:panelGroup>
+					</p:panelGrid>
+				</p:fieldset>
+
+				<div class="EmptyBox20" />
+				<div class="EmptyBox20" />
+
+				<c:if test="#{gpgrantbatchlistUI.gpgrantbatchlist.wspType eq WspTypeEnum.Discretionary}">
+					<ui:include src="/pages/includes/download_lazy.xhtml">
+						<ui:param name="file_name" value="Entries_To_Be_Processed_From_Batch" />
+						<ui:param name="target" value="batchEntryList" />
+					</ui:include>
+					<div class="EmptyBox20" />
+					<p:dataTable var="rowVarE" value="#{gpgrantbatchlistUI.dataModelGpGrantBatchEntry}" id="batchEntryList" rowKey="#{rowVarE.id}" paginator="true" rows="10" paginatorPosition="bottom"
+						paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20,40" reflow="true" lazy="true">
+						<f:facet name="header"> Entries To Be Processed </f:facet>
+						<p:column headerText="Creditor ID" sortBy="#{rowVarE.levyNumber}" filterBy="#{rowVarE.levyNumber}">
+							<p:outputLabel value="#{rowVarE.levyNumber}" />
+						</p:column>
+						<p:column headerText="On SARS Employer File" exportable="false">
+							<center>
+								<p:selectBooleanCheckbox disabled="true" value="#{rowVarE.onSarsEmployerRecord}">
+								</p:selectBooleanCheckbox>
+							</center>
+						</p:column>
+						<p:column headerText="On SARS Employer File" style="display:none">
+							<h:outputText value="Yes" rendered="#{rowVarE.onSarsEmployerRecord}" />
+							<h:outputText value="No" rendered="#{!rowVarE.onSarsEmployerRecord}" />
+						</p:column>
+						<p:column headerText="Status On SARS Employer File">
+							<h:outputText value="#{rowVarE.employerRecordsStatus}">
+							</h:outputText>
+						</p:column>
+						<p:column headerText="On NSDMS Employer File" exportable="false">
+							<center>
+								<p:selectBooleanCheckbox disabled="true" value="#{rowVarE.onNsdmsDatabase}">
+								</p:selectBooleanCheckbox>
+							</center>
+						</p:column>
+						<p:column headerText="On NSDMS Employer File" style="display:none">
+							<h:outputText value="Yes" rendered="#{rowVarE.onNsdmsDatabase}" />
+							<h:outputText value="No" rendered="#{!rowVarE.onNsdmsDatabase}" />
+						</p:column>
+						<p:column headerText="Status On NSDMS Employer File">
+							<h:outputText value="#{rowVarE.nsdmdStatus}">
+							</h:outputText>
+						</p:column>
+						<p:column headerText="Description">
+							<h:outputText value="#{rowVarE.description}">
+							</h:outputText>
+						</p:column>
+						<p:column headerText="Batch Number">
+							<h:outputText value="#{rowVarE.gpGrantBatchList.batchNumber}">
+							</h:outputText>
+						</p:column>
+						<p:column headerText="SARS DHET Scheme Year" rendered="false">
+							<h:outputText value="#{rowVarE.schemeYear}">
+							</h:outputText>
+						</p:column>
+						<p:column headerText="Document Type">
+							<h:outputText value="#{rowVarE.documentTypeDiscretionary.friendlyName}">
+							</h:outputText>
+						</p:column>
+						<p:column headerText="Document Number" filterBy="#{rowVarE.documentNumber}">
+							<p:outputLabel value="#{rowVarE.documentNumber}" />
+						</p:column>
+						<p:column headerText="Payments">
+							<p:outputLabel value="#{rowVarE.discretionaryLevy}" styleClass="Fright">
+								<f:convertNumber pattern="###,###,###,###,##0.00" />
+							</p:outputLabel>
+						</p:column>
+						<p:column headerText="Loaded On To GP" exportable="false" sortBy="#{rowVarE.loadedToGp}">
+							<center>
+								<p:selectBooleanCheckbox disabled="true" value="#{rowVarE.loadedToGp}" />
+							</center>
+						</p:column>
+						<p:column headerText="Loaded On To GP" exportable="true" style="display:none">
+							<p:outputLabel value="Yes" rendered="#{rowVarE.loadedToGp}" />
+							<p:outputLabel value="No" rendered="#{rowVarE.loadedToGp}" />
+						</p:column>
+						<p:column headerText="Actions" rendered="#{gpgrantbatchlistUI.canEdit}" exportable="false">
+							<center>
+								<p:commandButton id="removeEntry" icon="fa fa-minus" action="#{gpgrantbatchlistUI.updateEntry}" update="mainForm">
+									<f:setPropertyActionListener value="#{rowVarE}" target="#{gpgrantbatchlistUI.gpGrantBatchEntry}" />
+								</p:commandButton>
+							</center>
+						</p:column>
+					</p:dataTable>
+
+					<div class="EmptyBox20" />
+					<div class="EmptyBox20" />
+
+					<div align="right">
+						<h:commandLink title="#{lang['export.search.results.to.excel']}">
+							<i class="fa fa-file-excel-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+							<p:dataExporter type="xls" target="batchEntryToBeRemovedList" fileName="Entries_To_Be_Removed_From_Batch" pageOnly="false" />
+						</h:commandLink>
+						<h:commandLink rendered="false" title="#{lang['export.search.results.to.pdf']}">
+							<i class="fa fa-file-pdf-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+							<p:dataExporter type="pdf" target="batchEntryToBeRemovedList" fileName="Entries_To_Be_Removed_From_Batch" pageOnly="false" />
+						</h:commandLink>
+
+						<h:commandLink title="#{lang['export.search.results.as.a.csv']}">
+							<i class="fa fa-file-text-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+							<p:dataExporter type="csv" target="batchEntryToBeRemovedList" fileName="Entries_To_Be_Removed_From_Batch" pageOnly="false" />
+						</h:commandLink>
+						<h:commandLink title="#{lang['export.search.results.as.a.xml']}">
+							<i class="fa fa-file-code-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+							<p:dataExporter type="xml" target="batchEntryToBeRemovedList" fileName="Entries_To_Be_Removed_From_Batch" pageOnly="false" />
+						</h:commandLink>
+						<p:tooltip position="left" />
+					</div>
+					<div class="EmptyBox20" />
+
+					<p:dataTable var="rowVarR" value="#{gpgrantbatchlistUI.dataModelGpGrantBatchEntryToBeRemoved}" id="batchEntryToBeRemovedList" rowKey="#{rowVarR.id}" paginator="true" rows="10" paginatorPosition="bottom"
+						paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20,40" reflow="true" lazy="true">
+						<f:facet name="header"> Entries To Be Removed</f:facet>
+						<p:column headerText="Creditor ID" sortBy="#{rowVarR.levyNumber}" filterBy="#{rowVarR.levyNumber}">
+							<p:outputLabel value="#{rowVarR.levyNumber}" />
+						</p:column>
+						<p:column headerText="On SARS Employer File" exportable="false">
+							<center>
+								<p:selectBooleanCheckbox disabled="true" value="#{rowVarR.onSarsEmployerRecord}">
+								</p:selectBooleanCheckbox>
+							</center>
+						</p:column>
+						<p:column headerText="On SARS Employer File" style="display:none">
+							<h:outputText value="Yes" rendered="#{rowVarR.onSarsEmployerRecord}" />
+							<h:outputText value="No" rendered="#{!rowVarR.onSarsEmployerRecord}" />
+						</p:column>
+						<p:column headerText="Status On SARS Employer File">
+							<h:outputText value="#{rowVarR.employerRecordsStatus}">
+							</h:outputText>
+						</p:column>
+						<p:column headerText="On NSDMS Employer File" exportable="false">
+							<center>
+								<p:selectBooleanCheckbox disabled="true" value="#{rowVarR.onNsdmsDatabase}">
+								</p:selectBooleanCheckbox>
+							</center>
+						</p:column>
+						<p:column headerText="On NSDMS Employer File" style="display:none">
+							<h:outputText value="Yes" rendered="#{rowVarR.onNsdmsDatabase}" />
+							<h:outputText value="No" rendered="#{!rowVarR.onNsdmsDatabase}" />
+						</p:column>
+						<p:column headerText="Status On NSDMS Employer File">
+							<h:outputText value="#{rowVarR.nsdmdStatus}">
+							</h:outputText>
+						</p:column>
+						<p:column headerText="Description">
+							<h:outputText value="#{rowVarR.description}">
+							</h:outputText>
+						</p:column>
+						<p:column headerText="Batch Number">
+							<h:outputText value="#{rowVarR.gpGrantBatchList.batchNumber}">
+							</h:outputText>
+						</p:column>
+						<p:column headerText="SARS DHET Scheme Year" rendered="false">
+							<h:outputText value="#{rowVarR.schemeYear}">
+							</h:outputText>
+						</p:column>
+						<p:column headerText="Document Type">
+							<h:outputText value="#{rowVarR.documentTypeDiscretionary.friendlyName}">
+							</h:outputText>
+						</p:column>
+						<p:column headerText="Document Number" filterBy="#{rowVarR.documentNumber}">
+							<p:outputLabel value="#{rowVarR.documentNumber}" />
+						</p:column>
+						<p:column headerText="Payments">
+							<p:outputLabel value="#{rowVarR.discretionaryLevy}" styleClass="Fright">
+								<f:convertNumber pattern="###,###,###,###,##0.00" />
+							</p:outputLabel>
+						</p:column>
+						<p:column headerText="Loaded On To GP" exportable="false" sortBy="#{rowVarR.loadedToGp}">
+							<center>
+								<p:selectBooleanCheckbox disabled="true" value="#{rowVarR.loadedToGp}" />
+							</center>
+						</p:column>
+						<p:column headerText="Loaded On To GP" exportable="true" style="display:none">
+							<p:outputLabel value="Yes" rendered="#{rowVarR.loadedToGp}" />
+							<p:outputLabel value="No" rendered="#{rowVarR.loadedToGp}" />
+						</p:column>
+						<p:column headerText="Actions" rendered="#{gpgrantbatchlistUI.canEdit}" exportable="false">
+							<center>
+								<p:commandButton id="addEntry" icon="fa fa-plus" action="#{gpgrantbatchlistUI.updateEntry}" update="mainForm">
+									<f:setPropertyActionListener value="#{rowVarR}" target="#{gpgrantbatchlistUI.gpGrantBatchEntry}" />
+								</p:commandButton>
+							</center>
+						</p:column>
+					</p:dataTable>
+				</c:if>
+
+
+
+				<c:if test="#{gpgrantbatchlistUI.gpgrantbatchlist.wspType eq WspTypeEnum.Mandatory}">
+					<ui:include src="/pages/includes/download_lazy.xhtml">
+						<ui:param name="file_name" value="Entries_To_Be_Processed_From_Batch" />
+						<ui:param name="target" value="batchEntryList" />
+					</ui:include>
+					<div class="EmptyBox20" />
+					<p:dataTable rendered="#{gpgrantbatchlistUI.gpgrantbatchlist.wspType eq WspTypeEnum.Mandatory}" var="rowVarE" value="#{gpgrantbatchlistUI.dataModelGpGrantBatchEntry}" id="batchEntryList" rowKey="#{rowVarE.id}" paginator="true" rows="10" paginatorPosition="bottom"
+						paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20,40" reflow="true" lazy="true">
+						<f:facet name="header"> Entries To Be Processed </f:facet>
+						<p:column headerText="Creditor ID" filterBy="#{rowVarE.levyNumber}" sortBy="#{rowVarE.levyNumber}">
+							<p:outputLabel value="#{rowVarE.levyNumber}" />
+						</p:column>
+						<p:column headerText="Description" filterBy="#{rowVarE.description}" sortBy="#{rowVarE.description}">
+							<h:outputText value="#{rowVarE.description}">
+							</h:outputText>
+						</p:column>
+						<p:column headerText="Batch Number" sortBy="#{rowVarE.description}">
+							<h:outputText value="#{rowVarE.gpGrantBatchList.batchNumber}">
+							</h:outputText>
+						</p:column>
+						<p:column headerText="Scheme Year">
+							<h:outputText value="#{rowVarE.schemeYear}">
+							</h:outputText>
+						</p:column>
+						<p:column headerText="Document Type" sortBy="#{rowVarE.documentTypeMandatory}">
+							<h:outputText value="#{rowVarE.documentTypeMandatory.friendlyName}">
+							</h:outputText>
+						</p:column>
+						<p:column headerText="SARS DHET Date Received" sortBy="#{rowVarE.arrivalDateFromSars}">
+							<h:outputText value="#{rowVarE.arrivalDateFromSars}">
+								<f:convertDateTime pattern="dd MMMM yyyy" />
+							</h:outputText>
+						</p:column>
+						<p:column headerText="Document Number" filterBy="#{rowVarE.documentNumber}">
+							<p:outputLabel value="#{rowVarE.documentNumber}" />
+						</p:column>
+						<p:column headerText="Mandatory Levy" sortBy="#{rowVarE.mandatoryLevy}">
+							<p:outputLabel value="#{rowVarE.mandatoryLevy}" styleClass="Fright">
+								<f:convertNumber pattern="###,###,###,###,##0.00" />
+							</p:outputLabel>
+						</p:column>
+						<p:column headerText="Loaded On To GP" exportable="false" sortBy="#{rowVarE.loadedToGp}">
+							<center>
+								<p:selectBooleanCheckbox disabled="true" value="#{rowVarE.loadedToGp}" />
+							</center>
+						</p:column>
+						<p:column headerText="Loaded On To GP" exportable="true" style="display:none">
+							<p:outputLabel value="Yes" rendered="#{rowVarE.loadedToGp}" />
+							<p:outputLabel value="No" rendered="#{rowVarE.loadedToGp}" />
+						</p:column>
+						<p:column headerText="Actions" rendered="#{gpgrantbatchlistUI.canEdit}" exportable="false">
+							<center>
+								<p:commandButton id="removeEntry" icon="fa fa-minus" action="#{gpgrantbatchlistUI.updateEntry}" update="mainForm">
+									<f:setPropertyActionListener value="#{rowVarE}" target="#{gpgrantbatchlistUI.gpGrantBatchEntry}" />
+								</p:commandButton>
+							</center>
+						</p:column>
+					</p:dataTable>
+
+					<div class="EmptyBox20" />
+					<div class="EmptyBox20" />
+
+					<div align="right">
+						<h:commandLink title="#{lang['export.search.results.to.excel']}">
+							<i class="fa fa-file-excel-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+							<p:dataExporter type="xls" target="batchEntryToBeRemovedList" fileName="Entries_To_Be_Removed_From_Batch" pageOnly="false" />
+						</h:commandLink>
+						<h:commandLink rendered="false" title="#{lang['export.search.results.to.pdf']}">
+							<i class="fa fa-file-pdf-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+							<p:dataExporter type="pdf" target="batchEntryToBeRemovedList" fileName="Entries_To_Be_Removed_From_Batch" pageOnly="false" />
+						</h:commandLink>
+
+						<h:commandLink title="#{lang['export.search.results.as.a.csv']}">
+							<i class="fa fa-file-text-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+							<p:dataExporter type="csv" target="batchEntryToBeRemovedList" fileName="Entries_To_Be_Removed_From_Batch" pageOnly="false" />
+						</h:commandLink>
+						<h:commandLink title="#{lang['export.search.results.as.a.xml']}">
+							<i class="fa fa-file-code-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+							<p:dataExporter type="xml" target="batchEntryToBeRemovedList" fileName="Entries_To_Be_Removed_From_Batch" pageOnly="false" />
+						</h:commandLink>
+						<p:tooltip position="left" />
+					</div>
+					<div class="EmptyBox20" />
+
+					<p:dataTable var="rowVarR" value="#{gpgrantbatchlistUI.dataModelGpGrantBatchEntryToBeRemoved}" id="batchEntryToBeRemovedList" rowKey="#{rowVarR.id}" paginator="true" rows="10" paginatorPosition="bottom"
+						paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20,40" reflow="true" lazy="true">
+						<f:facet name="header"> Entries To Be Removed</f:facet>
+						<p:column headerText="Creditor ID" filterBy="#{rowVarR.levyNumber}" sortBy="#{rowVarR.levyNumber}">
+							<p:outputLabel value="#{rowVarR.levyNumber}" />
+						</p:column>
+						<p:column headerText="Description" filterBy="#{rowVarR.description}" sortBy="#{rowVarR.description}">
+							<h:outputText value="#{rowVarR.description}">
+							</h:outputText>
+						</p:column>
+						<p:column headerText="Batch Number" sortBy="#{rowVarR.description}">
+							<h:outputText value="#{rowVarR.gpGrantBatchList.batchNumber}">
+							</h:outputText>
+						</p:column>
+						<p:column headerText="Scheme Year">
+							<h:outputText value="#{rowVarR.schemeYear}">
+							</h:outputText>
+						</p:column>
+						<p:column headerText="Document Type" sortBy="#{rowVarR.documentTypeMandatory}">
+							<h:outputText value="#{rowVarR.documentTypeMandatory.friendlyName}">
+							</h:outputText>
+						</p:column>
+						<p:column headerText="SARS Date Received" sortBy="#{rowVarR.arrivalDateFromSars}">
+							<h:outputText value="#{rowVarR.arrivalDateFromSars}">
+								<f:convertDateTime pattern="dd MMMM yyyy" />
+							</h:outputText>
+						</p:column>
+						<p:column headerText="Document Number" filterBy="#{rowVarR.documentNumber}">
+							<p:outputLabel value="#{rowVarR.documentNumber}" />
+						</p:column>
+						<p:column headerText="Mandatory Levy" sortBy="#{rowVarR.mandatoryLevy}">
+							<p:outputLabel value="#{rowVarR.mandatoryLevy}" styleClass="Fright">
+								<f:convertNumber pattern="###,###,###,###,##0.00" />
+							</p:outputLabel>
+						</p:column>
+						<p:column headerText="Loaded On To GP" exportable="false" sortBy="#{rowVarR.loadedToGp}">
+							<center>
+								<p:selectBooleanCheckbox disabled="true" value="#{rowVarR.loadedToGp}" />
+							</center>
+						</p:column>
+						<p:column headerText="Loaded On To GP" exportable="true" style="display:none">
+							<p:outputLabel value="Yes" rendered="#{rowVarR.loadedToGp}" />
+							<p:outputLabel value="No" rendered="#{rowVarR.loadedToGp}" />
+						</p:column>
+						<p:column headerText="Actions" rendered="#{gpgrantbatchlistUI.canEdit}" exportable="false">
+							<center>
+								<p:commandButton id="addEntry" icon="fa fa-plus" action="#{gpgrantbatchlistUI.updateEntry}" update="mainForm">
+									<f:setPropertyActionListener value="#{rowVarR}" target="#{gpgrantbatchlistUI.gpGrantBatchEntry}" />
+								</p:commandButton>
+							</center>
+						</p:column>
+					</p:dataTable>
+				</c:if>
+
+
+				<div class="EmptyBox20" />
+
+				<c:if test="#{gpgrantbatchlistUI.rejectionReasonsAssigned.size() ne 0}">
+					<h2>Rejection Reasons Provided:</h2>
+					<p:repeat var="rowVarRR" value="#{gpgrantbatchlistUI.rejectionReasonsAssigned}">
+						<p:outputLabel value="#{rowVarRR.description}" style="font-weight:bold; font-size: 15px; color: red;" />
+						<br />
+						<p:outputLabel value="#{rowVarRR.howTo}" style="color: grey;" />
+						<br />
+						<br />
+					</p:repeat>
+					<br />
+				</c:if>
+
+				<c:if test="#{sessionUI.task.processRole eq null}">
+					<p:commandButton value="Complete Task" icon="fa fa-check" styleClass="green-btn flat Fs18" style="height: 50px;" action="#{gpgrantbatchlistUI.completeTask}" update="@form" />
+				</c:if>
+
+				<c:if test="#{sessionUI.task.processRole ne null}">
+					<p:panelGrid columns="2" style="width:100%; text-align: center" layout="grid" styleClass="ui-panelgrid-blank form-group"
+						rendered="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Approve and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalApproval and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalEdit}">
+						<p:commandButton value="Complete Task" icon="fa fa-check" styleClass="green-btn flat Fs18" style="height: 50px;" action="#{gpgrantbatchlistUI.completeTask}" update="@form" />
+						<p:commandButton value="Reject" rendered="#{!sessionUI.task.firstInProcess}" icon="fa fa-times" styleClass="red-btn flat Fs18" style="height: 50px;" oncomplete="PF('rejectNormalTaskDlg').show()" update="rejectReasonsForm" />
+					</p:panelGrid>
+					<p:panelGrid columns="2" style="width:100%; text-align: center" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve}">
+						<p:commandButton value="#{lang['approve']}" icon="fa fa-check" styleClass="green-btn flat Fs18" style="height: 50px;" action="#{gpgrantbatchlistUI.approveTask}" update="@form" />
+						<p:commandButton value="Reject" icon="fa fa-times" styleClass="red-btn flat Fs18" style="height: 50px;" oncomplete="PF('rejectNormalTaskDlg').show()" update="rejectReasonsForm" />
+					</p:panelGrid>
+					<p:panelGrid columns="2" style="width:100%; text-align: center" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalEdit}">
+						<p:commandButton value="Final Approve" icon="fa fa-check" styleClass="green-btn flat Fs18" style="height: 50px;" action="#{gpgrantbatchlistUI.finalApproveGpTask}" update="@form">
+							<p:confirm header="Confirmation" message="Are you sure you want to Final Approve? Action May Take Some Time, Please Refer To Main Access Page or GP For Progress." icon="pi pi-exclamation-triangle" />
+						</p:commandButton>
+						<p:commandButton value="Final Reject" icon="fa fa-times" styleClass="red-btn flat Fs18" style="height: 50px;" oncomplete="PF('rejectNormalTask').show()" update="finalRejectReasonsForm">
+							<p:confirm header="Confirmation" message="Are you sure you want to Final Reject?" icon="pi pi-exclamation-triangle" />
+						</p:commandButton>
+						<p:commandButton value="Reject Task" icon="fa fa-times" styleClass="red-btn flat Fs18" style="height: 50px;" oncomplete="PF('rejectNormalTaskDlg').show()" update="rejectReasonsForm">
+						</p:commandButton>
+					</p:panelGrid>
+				</c:if>
+			</div>
+		</h:form>
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+			<h:form>
+				<p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="pi pi-check" />
+				<p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="pi pi-times" />
+			</h:form>
+		</p:confirmDialog>
+
+		<p:dialog header="Reject Reasons" widgetVar="rejectNormalTaskDlg" hideEffect="clip" showEffect="clip" id="dialogRejectTask" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonsForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{gpgrantbatchlistUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{gpgrantbatchlistUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+							</p:selectManyMenu>
+							<br /> <br />
+						</div>
+					</div>
+					<p:commandButton value="Reject" action="#{gpgrantbatchlistUI.rejectTask}" update="@form mainForm">
+					</p:commandButton>
+				</div>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="Final Rejection" widgetVar="finalRejectionDlg" hideEffect="clip" showEffect="clip" id="dialogFinalRejectTask" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="finalRejectReasonsForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{gpgrantbatchlistUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{gpgrantbatchlistUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+							</p:selectManyMenu>
+							<br /> <br />
+						</div>
+					</div>
+					<p:commandButton value="Reject" action="#{gpgrantbatchlistUI.finalRejectTask}" update="@form mainForm">
+					</p:commandButton>
+				</div>
+			</h:form>
+		</p:dialog>
+
+
+
+
+	</ui:define>
+</ui:composition>

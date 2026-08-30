@@ -114,9 +114,9 @@ public class WspService : IWspService
             submission.ReferenceNumber = $"WSP-{submission.FinYear}-{submission.OrganisationId}-{Guid.NewGuid().ToString("N")[..6].ToUpper()}";
         }
 
-        if (string.IsNullOrWhiteSpace(submission.StatusCode))
+        if (string.IsNullOrWhiteSpace(submission.WspApprovalStatusCode))
         {
-            submission.StatusCode = "Draft";
+            submission.WspApprovalStatusCode = "Draft";
         }
 
         using var db = await _contextFactory.CreateDbContextAsync();
@@ -150,7 +150,7 @@ public class WspService : IWspService
         {
             existing.FinYear,
             existing.ReferenceNumber,
-            existing.StatusCode,
+            existing.WspApprovalStatusCode,
             existing.PlannedTrainingBudget,
             existing.EmployeeCount,
             existing.SubmissionDate
@@ -158,7 +158,7 @@ public class WspService : IWspService
 
         existing.FinYear = submission.FinYear;
         existing.ReferenceNumber = submission.ReferenceNumber;
-        existing.StatusCode = submission.StatusCode;
+        existing.WspApprovalStatusCode = submission.WspApprovalStatusCode;
         existing.PlannedTrainingBudget = submission.PlannedTrainingBudget;
         existing.EmployeeCount = submission.EmployeeCount;
         existing.SubmissionDate = submission.SubmissionDate;
@@ -195,9 +195,9 @@ public class WspService : IWspService
             throw new KeyNotFoundException($"WspSubmission with ID {id} was not found.");
         }
 
-        var beforeState = new { existing.StatusCode, existing.SubmissionDate };
+        var beforeState = new { existing.WspApprovalStatusCode, existing.SubmissionDate };
 
-        existing.StatusCode = statusCode;
+        existing.WspApprovalStatusCode = statusCode;
         if (statusCode.Equals("Submitted", StringComparison.OrdinalIgnoreCase) && !existing.SubmissionDate.HasValue)
         {
             existing.SubmissionDate = DateTime.UtcNow;
@@ -227,7 +227,7 @@ public class WspService : IWspService
             submission.OrganisationId,
             submission.FinYear,
             submission.ReferenceNumber,
-            submission.StatusCode
+            submission.WspApprovalStatusCode
         };
 
         db.WspSubmissions.Remove(submission);
@@ -502,8 +502,10 @@ public class WspService : IWspService
             return false;
         }
 
-        var isValidStatus = string.Equals(submission.StatusCode, "Submitted", StringComparison.OrdinalIgnoreCase) ||
-                            string.Equals(submission.StatusCode, "Approved", StringComparison.OrdinalIgnoreCase);
+        var isValidStatus = string.Equals(submission.WspApprovalStatusCode, "Submitted", StringComparison.OrdinalIgnoreCase) ||
+                            string.Equals(submission.WspApprovalStatusCode, "Approved", StringComparison.OrdinalIgnoreCase) ||
+                            string.Equals(submission.WspApprovalStatusCode, "APPROVED", StringComparison.OrdinalIgnoreCase) ||
+                            string.Equals(submission.WspApprovalStatusCode, "SUBMITTED", StringComparison.OrdinalIgnoreCase);
 
         return isValidStatus && submission.EmployeeCount > 0 && submission.PlannedTrainingBudget > 0;
     }

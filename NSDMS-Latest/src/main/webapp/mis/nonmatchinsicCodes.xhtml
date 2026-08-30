@@ -1,0 +1,50 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                template="/WEB-INF/template.xhtml">
+
+    <ui:define name="content">
+        <div class="ui-g">
+            <div class="ui-g-12">
+                <div class="card card-w-title">
+                    <h1>Companies with SIC Codes that does not match SARS Employer Detail</h1>
+                    
+                     <h:form id="mainForm">
+						  <div align="right">
+						    <h:commandLink id="eExcel">
+										<i class="fa fa-file-excel-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+										<p:dataExporter type="xls" target="nonMList" fileName="NonMatchingSICCodes" />
+					       </h:commandLink>
+					      </div> 
+					      <p:tooltip for="eExcel" value="#{lang['export.search.results.to.excel']}" position="left"/>
+							<br/>
+						<p:dataTable var="rv" value="#{nonMatchingSicCodesUI.list}" filteredValue="#{nonMatchingSicCodesUI.listFiltered}" id="nonMList" rowKey="#{rowVar.company.id}" paginator="true" rows="10" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,15,20,25,50" reflow="true">
+                    
+                           <p:column headerText="#{lang['company']}">
+                              <h:outputText value="#{rv.company.companyName}"/>
+                           </p:column>
+                            <p:column headerText="#{lang['companyRegistrationNumber']}">
+                               <h:outputText value="#{rv.company.companyRegistrationNumber}"/>
+                           </p:column>                          
+                           <p:column headerText="Levy Number" width="10%">
+                               <h:outputText value="#{rv.company.levyNumber}"/>
+                           </p:column>   
+                           <p:column headerText="#{lang['company']} #{lang['sic.code']}">
+                               <h:outputText value="#{rv.company.sicCode.code} - #{rv.company.sicCode.description}"/>
+                           </p:column>   
+                           <p:column headerText="#{lang['sars']} #{lang['sic.code']}">
+                               <h:outputText value="#{rv.sicCode.code} - #{rv.sicCode.description}"/>
+                           </p:column>                            
+                                                                      		
+                     	</p:dataTable>
+                    </h:form>
+                </div>
+            </div>
+        </div>
+        
+    </ui:define>
+
+</ui:composition>

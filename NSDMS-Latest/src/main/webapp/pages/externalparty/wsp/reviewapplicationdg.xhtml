@@ -1,0 +1,378 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:pt="http://xmlns.jcp.org/jsf/passthrough" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+		<style type="text/css">
+.error {
+	background-color: #F44336 !important;
+	color: white !important;
+	font-weight: 800;
+}
+
+.ui-tooltip {
+	max-width: calc(200px + 3vw) !important;
+}
+</style>
+		<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+		<p:importEnum type="haj.com.entity.enums.PivotNonPivotEnum" />
+		<p:importEnum type="haj.com.entity.enums.CompletedPlannedEnum" />
+		<p:importEnum type="haj.com.entity.enums.ConfigDocProcessEnum" />
+		<p:importEnum type="haj.com.entity.enums.WspStatusEnum" />
+		<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+		<p:importEnum type="haj.com.entity.enums.WspTypeEnum" />
+		<p:importEnum type="haj.com.entity.enums.IdPassportEnum" var="idpass" />
+		<p:importEnum type="haj.com.entity.enums.DGWindowTypeEnum"></p:importEnum>
+		<p:importConstants type="haj.com.constants.HAJConstants" var="HAJConstants" />
+		<p:growl showDetail="false" sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<ui:include src="/pages/includes/taskdiagram.xhtml" />
+			</div>
+		</div>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+						<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+						<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+					</p:confirmDialog>
+					<p:outputPanel id="wspInfo">
+						<h1>#{initiatewspdgUI.wsp.company.companyName} #{initiatewspdgUI.wsp.company.levyNumber}</h1>
+						<h4>#{initiatewspdgUI.wsp.dgYear.description}</h4>
+						<h4>#{initiatewspdgUI.wsp.dgYear.dgWindowType} #{lang['mandatory.grant.application']} #{sessionUI.wspSession.finYear} [#{sessionUI.wspSession.wspStatusEnum.friendlyName}]</h4>
+						<h4 class="red">
+							Submission deadline:
+							<p:outputLabel value="#{initiatewspdgUI.closeOffDate}">
+								<f:convertDateTime pattern="dd MMMM yyyy HH:mm:ss" />
+							</p:outputLabel>
+						</h4>
+					</p:outputPanel>
+					<h:form id="errorsForm">
+						<p:fieldset rendered="#{initiatewspdgUI.errors ne null}" styleClass="error Fs12" id="exceptions">
+							<h4>#{lang['action.required.message']}</h4>
+							<p:outputLabel value="#{initiatewspdgUI.errors}" escape="false"></p:outputLabel>
+						</p:fieldset>
+						<c:if test="#{initiatewspdgUI.errors ne null}">
+							<br />
+							<br />
+						</c:if>
+					</h:form>
+					<p:commandButton value="View Rejection Reasons" rendered="#{initiatewspdgUI.rejectReasonsChild.size() gt 0}" oncomplete="PF('rejectChildReason').show()">
+					</p:commandButton>
+					<p:tooltip position="left"></p:tooltip>
+					<ui:include src="/pages/includes/tabinfo.xhtml">
+						<ui:param name="showInfoCircle" value="false" />
+						<ui:param name="cssClass" value="secondaryText Fs15" />
+						<ui:param name="helpTxt" value="#{lang['The.system.will.auto-fill.based.selections']}" />
+					</ui:include>
+					<p:tabView id="tabView" cache="false" activeIndex="#{sessionUI.activeIndex}">
+						<p:tab title="#{lang['company.details']}">
+							<div class="EmptyBox10"></div>
+							<ui:include src="/pages/externalparty/wsp/companydetailsdg.xhtml" />
+						</p:tab>
+						<p:tab title="#{lang['company.data']}">
+							<div class="EmptyBox10"></div>
+							<ui:include src="/pages/externalparty/wsp/linkorgdg.xhtml" />
+						</p:tab>
+						<p:tab title="#{lang['discretionary.grant.application']}" rendered="#{initiatewspdgUI.wsp.dgYear.dgWindowType eq DGWindowTypeEnum.Pivitol}">
+							<div class="EmptyBox10"></div>
+							<ui:include src="/pages/externalparty/wsp/discretionarygrantnew.xhtml" />
+						</p:tab>
+						<p:tab title="Key Focus Areas" rendered="#{initiatewspdgUI.wsp.dgYear.dgWindowType eq DGWindowTypeEnum.Project}">
+							<ui:include src="/pages/externalparty/wsp/strategicpriorities.xhtml" />
+						</p:tab>
+						<p:tab title="Project Motivation" rendered="#{initiatewspdgUI.wsp.dgYear.dgWindowType eq DGWindowTypeEnum.Project}">
+							<ui:include src="/pages/externalparty/wsp/projectmotivation.xhtml" />
+						</p:tab>
+						<p:tab title="Provisional Allocation" rendered="#{sessionUI.employee and initiatewspdgUI.wsp.dgYear.dgWindowType ne DGWindowTypeEnum.Project}">
+							<div class="EmptyBox10"></div>
+							<ui:include src="/pages/externalparty/wsp/provisionalallocation.xhtml" />
+						</p:tab>
+						<p:tab title="#{lang['required.documents']}">
+							<div class="EmptyBox10"></div>
+							<ui:include src="/pages/externalparty/wsp/documentsdg.xhtml" />
+						</p:tab>
+						<p:tab title="Project Implementation Plan" rendered="#{(sessionUI.employee or initiatewspdgUI.wsp.wspStatusEnum eq WspStatusEnum.Approved) and initiatewspdgUI.wsp.dgYear.dgWindowType eq DGWindowTypeEnum.Project}">
+							<div class="EmptyBox10"></div>
+							<ui:include src="/pages/externalparty/wsp/projectimplementationplan.xhtml" />
+						</p:tab>
+						<p:tab title="#{lang['sign.off']}">
+							<div class="EmptyBox10"></div>
+							<ui:include src="/pages/externalparty/wsp/signoffdg.xhtml" />
+						</p:tab>
+						<p:tab title="Addenda" rendered="#{(initiatewspdgUI.wsp.wspStatusEnum eq WspStatusEnum.Approved or initiatewspdgUI.wsp.wspStatusEnum eq WspStatusEnum.OpenedForReview) and initiatewspdgUI.wsp.dgYear.dgWindowType eq DGWindowTypeEnum.Project}">
+							<div class="EmptyBox10"></div>
+							<ui:include src="/pages/externalparty/wsp/addenda.xhtml" />
+						</p:tab>
+					</p:tabView>
+				</div>
+			</div>
+		</div>
+		<p:dialog position="top" header="Re-open Grant Application" widgetVar="reopenGrantApplicationDlg" hideEffect="clip" showEffect="clip" id="dialogReopenGrantApplication" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="reopenGrantApplicationForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<c:if test="#{!initiatewspdgUI.canReopen}">
+							<h4>Re-open Grant Application Unavailable</h4>
+							<div class="EmptyBox5" />
+							<p:outputLabel value="Unfortunately the grant application can not be re-opened due to being passed the close off date: " />
+							<p:spacer width="5" />
+							<p:outputLabel style="color:red;" value="#{initiatewspdgUI.closeOffDate}">
+								<f:convertDateTime pattern="dd MMMM yyyy" />
+							</p:outputLabel>
+							<div class="EmptyBox5" />
+							<p:outputLabel value="To Re-open the grant application and send it to the primary SDF: please create a extension request." />
+							<div class="EmptyBox5" />
+							<p:outputLabel value="If extension request created please provide sufficient amount of days for the users to view/alter and sign off the application." />
+						</c:if>
+						<c:if test="#{initiatewspdgUI.canReopen}">
+							<div class="ui-g-12">
+								<h4>Re-open Grant Application Available</h4>
+								<div class="EmptyBox5" />
+								<p:outputLabel value="The grant application can be Re-opened. The close off date for the grant is:" />
+								<p:spacer width="5" />
+								<p:outputLabel style="color:green" value="#{initiatewspdgUI.closeOffDate}">
+									<f:convertDateTime pattern="dd MMMM yyyy" />
+								</p:outputLabel>
+								<div class="EmptyBox5" />
+								<p:outputLabel value="Number of working days remaining till close off date: #{initiatewspdgUI.daysBetweenDays}" />
+								<div class="EmptyBox5" />
+								<p:outputLabel value="Additional Information For Re-opening Grant Application:" />
+								<ul>
+									<li>The grant's status will revert to not-started / in progress and the primary SDF can alter the grant information.</li>
+									<li>
+										The grant will also have to go through the sign off process once again and must be submitted before the close off date:
+										<p:outputLabel style="color:green" value="#{initiatewspdgUI.closeOffDate}">
+											<f:convertDateTime pattern="dd MMMM yyyy" />
+										</p:outputLabel>
+										.
+									</li>
+									<li>If there is a DG verification assigned to the grant application: the DG verification data will be cleared and reset. The data will only be populated after the grant application has been approved.</li>
+								</ul>
+							</div>
+							<div class="ui-g-12">
+								<p:selectManyMenu value="#{initiatewspdgUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="200" style="width:100%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+									<f:selectItems value="#{initiatewspdgUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+									<p:column>
+										<h:outputText value="#{t.description}" />
+										<br />
+										<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+									</p:column>
+								</p:selectManyMenu>
+								<br />
+								<p:commandButton style="width:100%" value="Re-open Grant Application" action="#{initiatewspdgUI.sendBackToSDF}" update=":tabView:signoffGroup :errorsForm :wspInfo">
+								</p:commandButton>
+							</div>
+						</c:if>
+					</div>
+				</div>
+			</h:form>
+		</p:dialog>
+		<p:dialog header="Reject Reasons" widgetVar="rejectReason" hideEffect="clip" showEffect="clip" id="dialogRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{initiatewspdgUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{initiatewspdgUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+							</p:selectManyMenu>
+							<br />
+							<br />
+						</div>
+					</div>
+					<p:commandButton value="Reject" action="#{initiatewspdgUI.sendBackToSDF}" update=":tabView:signoffGroup :errorsForm :wspInfo">
+					</p:commandButton>
+				</div>
+			</h:form>
+		</p:dialog>
+		<p:dialog header="Reject Reasons: Document Rejection" widgetVar="rejectReasonDoc" hideEffect="clip" showEffect="clip" id="dialogRejectReasonDoc" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonDocForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{initiatewspdgUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="tdoc" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{initiatewspdgUI.documentRejectReasons}" var="rvdoc" itemValue="#{rvdoc}" />
+								<p:column>
+									<h:outputText value="#{tdoc.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{tdoc.howTo}" />
+								</p:column>
+							</p:selectManyMenu>
+							<br />
+							<br />
+						</div>
+					</div>
+					<p:commandButton value="Reject" action="#{initiatewspdgUI.sendBackToSDFDocumentRejection}" update=":tabView:signoffGroup :errorsForm :wspInfo">
+					</p:commandButton>
+				</div>
+			</h:form>
+		</p:dialog>
+		<p:dialog header="Reject Reasons" widgetVar="rejectChildReason" hideEffect="clip" showEffect="clip" id="dialogRejectChildReason" appendTo="@(body)" modal="true" closable="true" width="75%" height="60vh" responsive="true" closeOnEscape="true">
+			<h:form id="rejectReasonChildForm">
+				<p:dataTable var="rowVar" value="#{initiatewspdgUI.rejectReasonsChild}" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+					<p:column headerText="Create Date">
+						<p:outputLabel value="#{rowVar.createDate}">
+							<f:convertDateTime pattern="dd MMMM yyyy" />
+						</p:outputLabel>
+					</p:column>
+					<p:column headerText="Reason for Rejection">
+						<p:outputLabel value="#{rowVar.rejectReasons.description}"></p:outputLabel>
+					</p:column>
+					<p:column headerText="How to fix">
+						<p:outputLabel value="#{rowVar.rejectReasons.howTo}"></p:outputLabel>
+					</p:column>
+				</p:dataTable>
+			</h:form>
+		</p:dialog>
+		<p:dialog header="Reject Reasons For Manager" widgetVar="rejectReasonForManager" hideEffect="clip" showEffect="clip" id="dialogRejectReasonForManager" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonForManagerForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{initiatewspdgUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{initiatewspdgUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+							</p:selectManyMenu>
+							<br />
+							<br />
+						</div>
+					</div>
+					<p:commandButton value="Reject" action="#{initiatewspdgUI.rejectToManager}" update="@form :tabView:signoffGroup :errorsForm :wspInfo">
+					</p:commandButton>
+				</div>
+			</h:form>
+		</p:dialog>
+		<p:dialog header="Grant Non-Approval Reasons" widgetVar="rejectReasonFinal" hideEffect="clip" showEffect="clip" id="dialogRejectReasonFinal" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonFinalForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{initiatewspdgUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{initiatewspdgUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+							</p:selectManyMenu>
+							<br />
+							<br />
+						</div>
+					</div>
+					<p:commandButton value="Reject" action="#{initiatewspdgUI.finalRejectWithNoAppeal}" update="@form :tabView:signoffGroup :errorsForm :wspInfo">
+					</p:commandButton>
+				</div>
+			</h:form>
+		</p:dialog>
+		<p:dialog header="Reject Task" widgetVar="rejectTaskReasonsDlg" hideEffect="clip" showEffect="clip" id="rejectTaskReasonsDialog" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectTaskReasonsForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{initiatewspdgUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{initiatewspdgUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+							</p:selectManyMenu>
+							<br />
+							<br />
+						</div>
+					</div>
+					<p:panelGrid columns="2" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{initiatewspdgUI.wsp.wspStatusEnum eq WspStatusEnum.PendingManagerReview and sessionUI.employee}">
+						<p:commandButton value="Reject" icon="ui-icon-close" styleClass="red-btn max-btn" process="submitForm" action="#{initiatewspdgUI.sendToProjectOwner}" update="tabView errorsForm" ajax="false" />
+					</p:panelGrid>
+					<p:panelGrid columns="2" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{initiatewspdgUI.wsp.wspStatusEnum eq WspStatusEnum.ManagerApproved and sessionUI.employee}">
+						<p:commandButton value="Reject" icon="ui-icon-close" styleClass="red-btn max-btn" process="submitForm" action="#{initiatewspdgUI.sendToManagerReject}" update="tabView errorsForm" ajax="false" />
+					</p:panelGrid>
+					<p:panelGrid columns="2" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{initiatewspdgUI.wsp.wspStatusEnum eq WspStatusEnum.PendingCEOApproval and sessionUI.employee}">
+						<p:commandButton value="Reject" icon="ui-icon-close" styleClass="red-btn max-btn" process="submitForm" action="#{initiatewspdgUI.sendToSeniorManagerReject}" update="tabView errorsForm" ajax="false" />
+					</p:panelGrid>
+				</div>
+			</h:form>
+		</p:dialog>
+		<p:dialog header="Final Response: Rejection" widgetVar="finalRejectDlg" hideEffect="clip" showEffect="clip" id="dialogFinalReject" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="finalRejectForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<span style="color: grey">
+								<i class="fa fa-info-circle" aria-hidden="true"></i>
+								Provide final response for rejecting the application.
+							</span>
+							<br />
+							<p:inputTextarea required="true" requiredMessage="Provide Response Before Proceeding" id="finalResponseEntryReject" rows="3" value="#{initiatewspdgUI.wsp.finalResponse}">
+								<p:ajax />
+							</p:inputTextarea>
+						</div>
+					</div>
+					<p:commandButton value="Reject Application" id="finalRejectApplicationBtn" action="#{initiatewspdgUI.finalRejectGrantApplication}" />
+				</div>
+			</h:form>
+		</p:dialog>
+		<p:dialog header="Final Response: Approve" widgetVar="finalApproveDlg" hideEffect="clip" showEffect="clip" id="dialogFinalApprove" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="finalApproveForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<span style="color: grey">
+								<i class="fa fa-info-circle" aria-hidden="true"></i>
+								Provide final response for approving the application.
+							</span>
+							<br />
+							<p:inputTextarea required="true" requiredMessage="Provide Response Before Proceeding" id="finalResponseEntryApprove" rows="3" value="#{initiatewspdgUI.wsp.finalResponse}">
+								<p:ajax />
+							</p:inputTextarea>
+						</div>
+					</div>
+					<p:commandButton value="Approve Application" id="finalApproveApplicationBtn" action="#{initiatewspdgUI.finalApproveGrantApplication}" />
+				</div>
+			</h:form>
+		</p:dialog>
+		<p:dialog position="top" header="Grant Submission With Sign Off" widgetVar="grantSubWithSignOffDlg" hideEffect="clip" showEffect="clip" id="grantSubWithSignOffDIalog" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="submissionSignOffForm">
+				<h4>Submit Grant Application With Sign Off</h4>
+				<div class="EmptyBox5" />
+				<p:outputLabel value="#{lang['i.acknowledge.read.understand.terms.and.conditions.with.Signoff']}" />
+				<div class="EmptyBox5" />
+				<p:outputLabel value="#{lang['sign.off.submission.add.info']}" />
+				<div class="EmptyBox5" />
+				<p:commandButton value="Submit With Sign Off" id="subitWithSignOffBtn" action="#{initiatewspdgUI.saveWSPSignoff}" process="submissionSignOffForm">
+					<p:confirm header="Confirmation" message="Are you sure you want to submit with sign off?" icon="pi pi-exclamation-triangle" />
+				</p:commandButton>
+				<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+					<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+					<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+				</p:confirmDialog>
+			</h:form>
+		</p:dialog>
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="addendadlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="addendacommonUPLOAD" width="80%" responsive="true" modal="true" dynamic="true">
+			<h:form id="addendaUploadForm">
+				<div class="ui-g">
+					<div class="ui-g-12">
+						<h1 style="font-weight: bold; font-size: 25px;">#{activecontractdetailUI.doc.configDoc.name}</h1>
+						<p:panel>
+							<div class="TexAlCenter">
+								<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span>
+								<br />
+							</div>
+							<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{addendaUI.storeFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update="tabView:addendaForm" multiple="false" fileLimit="1" immediate="false" auto="true" />
+						</p:panel>
+					</div>
+				</div>
+			</h:form>
+		</p:dialog>
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+	</ui:define>
+</ui:composition>

@@ -1,0 +1,129 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<p:growl sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>DG Verification Report</h1>
+					<h:form id="mainForm">
+
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="Filter By: Financial Year / Grant Year" for="selectedFinYear" style="width:100%; color:#977949" />
+							</div>
+							<div>
+								<p:selectOneMenu id="selectedFinYear" value="#{dgVerificationReportUI.selectedYear}" style="width:95%">
+									<p:ajax event="itemSelect" update="@form"  />
+									<f:selectItems value="#{dgVerificationReportUI.financialYears}" />
+								</p:selectOneMenu>
+							</div>
+							<div class="EmptyBox10" />
+							<p:commandButton icon="fa fa-database" update="@form" value="Generate Report" action="#{dgVerificationReportUI.generateReport}" onstart="uploadStart()" oncomplete="uploadDone()" />
+						</h:panelGroup>
+
+						<c:if test="#{dgVerificationReportUI.displayReport}">
+							<div class="EmptyBox10" />
+							
+							<ui:include src="/pages/includes/download_lazy.xhtml">
+								<ui:param name="file_name" value="DG_Verification_Report" />
+								<ui:param name="target" value="dgVerificationDT" />
+							</ui:include>
+							
+							<div class="EmptyBox5" />
+
+							<p:dataTable emptyMessage="No Results Found" widgetVar="moaAllocationRegionWR" id="dgVerificationDT" var="rvDgVerReport" value="#{dgVerificationReportUI.dgVerificationReportList}" paginator="true" rows="5" paginatorPosition="bottom"
+								paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25,50,100" reflow="true" lazy="false">
+								<p:column headerText="Entity ID">
+									<p:outputLabel value="#{rvDgVerReport.levyNumber}" />
+								</p:column>
+								<p:column headerText="Organisation Name">
+									<p:outputLabel value="#{rvDgVerReport.organisationName}" />
+								</p:column>
+								<p:column headerText="Trading Name" style="display:none">
+									<p:outputLabel value="#{rvDgVerReport.tradingName}" />
+								</p:column>
+								<p:column headerText="Number Of Employees">
+									<p:outputLabel value="#{rvDgVerReport.numberOfEmployees}" />
+								</p:column>
+								<p:column headerText="Organisation Type" style="display:none">
+									<p:outputLabel value="#{rvDgVerReport.organisationType}" />
+								</p:column>
+								<p:column headerText="Region">
+									<p:outputLabel value="#{rvDgVerReport.region}" />
+								</p:column>
+								<p:column headerText="Date Generated" style="display:none">
+									<p:outputLabel value="#{rvDgVerReport.dateVerificationGenerated}">
+										<f:convertDateTime pattern="dd MMMM yyyy HH:mm:ss" />
+									</p:outputLabel>
+								</p:column>
+								<p:column headerText="Verification Status">
+									<p:outputLabel value="#{rvDgVerReport.dgVerificationStatus}" />
+								</p:column>
+								<p:column headerText="With Primary SDF" style="display:none">
+									<p:outputLabel value="#{rvDgVerReport.dgVerificationWithSdf}" />
+								</p:column>
+								<p:column headerText="CLO Information">
+									<p:outputLabel value="#{rvDgVerReport.cloFirstName} #{rvDgVerReport.cloLastName}" rendered="#{rvDgVerReport.cloFirstNameOnVerification eq null or rvDgVerReport.cloFirstNameOnVerification eq ''}" />
+									<p:outputLabel value="#{rvDgVerReport.cloFirstNameOnVerification} #{rvDgVerReport.cloLastNameOnVerification}" rendered="#{rvDgVerReport.cloFirstNameOnVerification ne null and rvDgVerReport.cloFirstNameOnVerification ne ''}" />
+								</p:column>
+								<p:column headerText="CLO Recommendation">
+									<p:outputLabel value="#{rvDgVerReport.cloRecommendationOnSubmission}" />
+								</p:column>
+								<p:column headerText="CLO Rejection Reasons">
+									<p:outputLabel value="N/A" rendered="#{rvDgVerReport.cloRejectionReasons eq null or rvDgVerReport.cloRejectionReasons eq ''}" />
+									<p:outputLabel value="#{rvDgVerReport.cloRejectionReasons}" rendered="#{rvDgVerReport.cloRejectionReasons ne null and rvDgVerReport.cloRejectionReasons ne ''}" />
+								</p:column>
+								<p:column headerText="CRM Information">
+									<p:outputLabel value="#{rvDgVerReport.crmFirstName} #{rvDgVerReport.crmLastName}" rendered="#{rvDgVerReport.crmFirstNameOnVerification eq null or rvDgVerReport.crmFirstNameOnVerification eq ''}" />
+									<p:outputLabel value="#{rvDgVerReport.crmFirstNameOnVerification} #{rvDgVerReport.crmLastNameOnVerification}" rendered="#{rvDgVerReport.crmFirstNameOnVerification ne null and rvDgVerReport.crmFirstNameOnVerification ne ''}" />
+								</p:column>
+								<p:column headerText="CRM Decision">
+									<p:outputLabel value="N/A" rendered="#{rvDgVerReport.crmDecision eq null or rvDgVerReport.crmDecision eq ''}" />
+									<p:outputLabel value="#{rvDgVerReport.crmDecision}" rendered="#{rvDgVerReport.crmDecision ne null and rvDgVerReport.crmDecision ne ''}" />
+								</p:column>
+								<p:column headerText="CRM Rejection Reasons">
+									<p:outputLabel value="N/A" rendered="#{rvDgVerReport.crmRejectionReasons eq null or rvDgVerReport.crmRejectionReasons eq ''}" />
+									<p:outputLabel value="#{rvDgVerReport.crmRejectionReasons}" rendered="#{rvDgVerReport.crmRejectionReasons ne null and rvDgVerReport.crmRejectionReasons ne ''}" />
+								</p:column>
+								<p:column headerText="Verification Appealed">
+									<p:outputLabel value="#{rvDgVerReport.dgVerificationApplicationAppealed}" />
+								</p:column>
+								<p:column headerText="Verification Appealed Date">
+									<p:outputLabel value="N/A" rendered="#{rvDgVerReport.dateApplicationAppealed eq null}" />
+									<p:outputLabel value="#{rvDgVerReport.dateApplicationAppealed}" rendered="#{rvDgVerReport.dateApplicationAppealed ne null}">
+										<f:convertDateTime pattern="dd MMMM yyyy HH:mm:ss" />
+									</p:outputLabel>
+								</p:column>
+								<p:column headerText="CRM Decision Date">
+									<p:outputLabel value="N/A" rendered="#{rvDgVerReport.crmDecisionDateStamp eq null}" />
+									<p:outputLabel value="#{rvDgVerReport.crmDecisionDateStamp}" rendered="#{rvDgVerReport.crmDecisionDateStamp ne null}">
+										<f:convertDateTime pattern="dd MMMM yyyy HH:mm:ss" />
+									</p:outputLabel>
+								</p:column>
+								<p:column headerText="Final Response">
+									<p:outputLabel value="N/A" rendered="#{rvDgVerReport.finalResponse eq null or rvDgVerReport.finalResponse eq ''}" />
+									<p:outputLabel value="#{rvDgVerReport.finalResponse}" rendered="#{rvDgVerReport.finalResponse ne null and rvDgVerReport.finalResponse ne ''}" />
+								</p:column>
+								<p:column headerText="CRM Appealed Date Approved">
+									<p:outputLabel value="N/A" rendered="#{rvDgVerReport.dateCrmAppealedDateApproved eq null}" />
+									<p:outputLabel value="#{rvDgVerReport.dateCrmAppealedDateApproved}" rendered="#{rvDgVerReport.dateCrmAppealedDateApproved ne null}">
+										<f:convertDateTime pattern="dd MMMM yyyy HH:mm:ss" />
+									</p:outputLabel>
+								</p:column>
+								<p:column headerText="Final Approve Date">
+									<p:outputLabel value="N/A" rendered="#{rvDgVerReport.finalApprovalDate eq null}" />
+									<p:outputLabel value="#{rvDgVerReport.finalApprovalDate}" rendered="#{rvDgVerReport.finalApprovalDate ne null}">
+										<f:convertDateTime pattern="dd MMMM yyyy HH:mm:ss" />
+									</p:outputLabel>
+								</p:column>
+							</p:dataTable>
+						</c:if>
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+</ui:composition>

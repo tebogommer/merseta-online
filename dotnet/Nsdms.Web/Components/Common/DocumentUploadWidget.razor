@@ -1,0 +1,194 @@
+﻿@using Microsoft.AspNetCore.Components.Forms
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Domain.Entities
+@inject IFileStorageService FileStorage
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
+
+<MudCard Elevation="2" Class="mb-4">
+    <MudCardHeader>
+        <CardHeaderAvatar>
+            <MudAvatar Color="Color.Primary" Variant="Variant.Filled">
+                <MudIcon Icon="@Icons.Material.Filled.AttachFile" />
+            </MudAvatar>
+        </CardHeaderAvatar>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">Supporting Documents & Attachments</MudText>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">Upload proof of ID, certified certificates, site photos, or signed contracts</MudText>
+        </CardHeaderContent>
+    </MudCardHeader>
+    <MudCardContent>
+        <MudGrid Class="align-center mb-4">
+            <MudItem xs="12" md="4">
+                <MudSelect @bind-Value="_selectedCategory" Label="Document Category" Variant="Variant.Outlined" Dense="true">
+                    <MudSelectItem Value="@("GENERAL")">General Supporting Document</MudSelectItem>
+                    <MudSelectItem Value="@("ID_DOCUMENT")">Certified ID / Passport</MudSelectItem>
+                    <MudSelectItem Value="@("QUALIFICATION_CERT")">Qualification / Unit Standard Certificate</MudSelectItem>
+                    <MudSelectItem Value="@("SITE_PHOTO")">Workplace Site Inspection Photo</MudSelectItem>
+                    <MudSelectItem Value="@("BANK_CONFIRMATION")">Bank Account Confirmation Letter</MudSelectItem>
+                    <MudSelectItem Value="@("SIGNED_MOA")">Signed Grant Agreement MOA</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="8">
+                <MudFileUpload T="IBrowserFile" FilesChanged="UploadFilesAsync" Accept=".pdf,.png,.jpg,.jpeg,.docx,.xlsx" MaximumFileCount="1">
+                    <ActivatorContent>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CloudUpload" Disabled="@_isUploading">
+                            @if (_isUploading)
+                            {
+                                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                                <MudText Class="ms-2">Uploading...</MudText>
+                            }
+                            else
+                            {
+                                <MudText>Select & Upload File</MudText>
+                            }
+                        </MudButton>
+                    </ActivatorContent>
+                </MudFileUpload>
+            </MudItem>
+        </MudGrid>
+
+        @if (_isLoading)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-3" />
+        }
+        else if (_attachments == null || _attachments.Count == 0)
+        {
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">
+                No attachments uploaded for this record yet.
+            </MudAlert>
+        }
+        else
+        {
+            <MudTable Items="_attachments" Hover="true" Dense="true" Elevation="0" Outlined="true">
+                <HeaderContent>
+                    <MudTh>File Name</MudTh>
+                    <MudTh>Category</MudTh>
+                    <MudTh>Size</MudTh>
+                    <MudTh>Uploaded By</MudTh>
+                    <MudTh>Date</MudTh>
+                    <MudTh Style="text-align: right;">Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="File Name">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                            <MudIcon Icon="@GetFileIcon(context.ContentType)" Color="Color.Primary" Size="Size.Small" />
+                            <MudText Typo="Typo.body2" Class="fw-semibold">@context.FileName</MudText>
+                        </MudStack>
+                    </MudTd>
+                    <MudTd DataLabel="Category">
+                        <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Filled">@context.CategoryCode</MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Size">@FormatBytes(context.FileSizeBytes)</MudTd>
+                    <MudTd DataLabel="Uploaded By">@context.CreatedBy</MudTd>
+                    <MudTd DataLabel="Date">@context.CreatedAt.ToString("yyyy-MM-dd HH:mm")</MudTd>
+                    <MudTd DataLabel="Actions" Style="text-align: right;">
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteAttachmentAsync(context.Id))" />
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+    </MudCardContent>
+</MudCard>
+
+@code {
+    [Parameter, EditorRequired]
+    public string TargetEntityName { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public int TargetEntityId { get; set; }
+
+    private List<DocumentAttachment> _attachments = new();
+    private string _selectedCategory = "GENERAL";
+    private bool _isLoading = true;
+    private bool _isUploading = false;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadAttachmentsAsync();
+    }
+
+    private async Task LoadAttachmentsAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            if (TargetEntityId > 0 && !string.IsNullOrWhiteSpace(TargetEntityName))
+            {
+                _attachments = await FileStorage.GetAttachmentsAsync(TargetEntityName, TargetEntityId);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading attachments: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task UploadFilesAsync(IBrowserFile file)
+    {
+        if (file == null) return;
+        _isUploading = true;
+
+        try
+        {
+            const long maxFileSize = 15 * 1024 * 1024; // 15MB limit
+            using var stream = file.OpenReadStream(maxFileSize);
+            var attachment = await FileStorage.SaveFileAsync(
+                TargetEntityName,
+                TargetEntityId,
+                file.Name,
+                file.ContentType,
+                stream,
+                _selectedCategory,
+                "AdminUser"
+            );
+
+            Snackbar.Add($"File '{file.Name}' uploaded successfully.", Severity.Success);
+            await LoadAttachmentsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Upload failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isUploading = false;
+        }
+    }
+
+    private async Task DeleteAttachmentAsync(int attachmentId)
+    {
+        try
+        {
+            var success = await FileStorage.DeleteAttachmentAsync(attachmentId, "AdminUser");
+            if (success)
+            {
+                Snackbar.Add("Attachment deleted.", Severity.Info);
+                await LoadAttachmentsAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Delete failed: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private static string GetFileIcon(string contentType)
+    {
+        if (contentType.Contains("pdf", StringComparison.OrdinalIgnoreCase)) return Icons.Material.Filled.PictureAsPdf;
+        if (contentType.Contains("image", StringComparison.OrdinalIgnoreCase)) return Icons.Material.Filled.Image;
+        if (contentType.Contains("word", StringComparison.OrdinalIgnoreCase) || contentType.Contains("officedocument", StringComparison.OrdinalIgnoreCase)) return Icons.Material.Filled.Description;
+        return Icons.Material.Filled.InsertDriveFile;
+    }
+
+    private static string FormatBytes(long bytes)
+    {
+        if (bytes >= 1048576) return $"{(bytes / 1048576.0):0.0} MB";
+        if (bytes >= 1024) return $"{(bytes / 1024.0):0.0} KB";
+        return $"{bytes} B";
+    }
+}

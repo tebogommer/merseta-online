@@ -1,0 +1,250 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Grants Reporting Page</h1>
+					<h:form id="mainForm">
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<!-- Reporting Done In Tab View -->
+
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="Financial Year / Grant Year" />
+							</div>
+							<div>
+								<p:selectOneMenu id="yeartasks" value="#{wspReportingUI.selectedYear}" style="width:75%">
+									<p:ajax />
+									<f:selectItems value="#{wspReportingUI.financialYears}" />
+								</p:selectOneMenu>
+							</div>
+							<div class="EmptyBox10"/>
+						</h:panelGroup>
+
+						<p:tabView id="tabView" activeIndex="#{wspReportingUI.index}">
+							<p:ajax event="tabChange" listener="#{wspReportingUI.onTabChange}" update="@form" />
+							<p:tab title="Grants By Financial Year And Status" id="wspByFinYearTab">
+								<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+									<h3>Report To Display Grant Applications Status For The Selected Financial Year</h3>
+									<p:commandButton process="wspByFinYearTab" update=":mainForm:tabView:resultsPanelWspByFinYearTab" action="#{wspReportingUI.populateWspByFinancialYearAndStatus}" value="Generate Report" />
+								</p:panelGrid>
+								<p:outputPanel id="resultsPanelWspByFinYearTab">
+									<c:if test="#{wspReportingUI.displayReport}">
+										<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+											<ui:include src="/pages/includes/download_lazy.xhtml">
+												<ui:param name="file_name" value="Wsp_Status_report" />
+												<ui:param name="target" value="wspByFinYearStatusReportDT" />
+											</ui:include>
+											<p:dataTable rendered="#{wspReportingUI.displayReport}" var="rvWspFinStatus" value="#{wspReportingUI.dataModelWspByFinancialYear}" id="wspByFinYearStatusReportDT" rowKey="#{rvWspFinStatus.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+												paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+												<p:column headerText="Entity ID">
+													<p:outputLabel value="#{rvWspFinStatus.company.levyNumber}" />
+												</p:column>
+												<p:column headerText="Company Name">
+													<p:outputLabel value="#{rvWspFinStatus.company.companyName}" />
+												</p:column>
+												<p:column headerText="Chamber" exportable="true">
+													<p:outputLabel value="#{rvWspFinStatus.company.sicCode.chamber.description}"></p:outputLabel>
+												</p:column>
+												<p:column headerText="Number Of Employees">
+													<p:outputLabel value="#{rvWspFinStatus.company.numberOfEmployees}" />
+												</p:column>
+												<p:column headerText="Grant Year">
+													<p:outputLabel value="#{rvWspFinStatus.finYear}" />
+												</p:column>
+												<p:column headerText="Grant Status">
+													<p:outputLabel value="#{rvWspFinStatus.wspStatusEnum.friendlyName}" />
+												</p:column>
+												<p:column headerText="Submission Date">
+													<p:outputLabel value="#{rvWspFinStatus.submissionDate}">
+														<f:convertDateTime pattern="dd MMMM yyyy HH:mm" />
+													</p:outputLabel>
+												</p:column>
+												<p:column headerText="Approval Date">
+													<p:outputLabel value="#{rvWspFinStatus.approvedDate}">
+														<f:convertDateTime pattern="dd MMMM yyyy HH:mm" />
+													</p:outputLabel>
+												</p:column>
+												<p:column headerText="Training Deviation">
+													<p:outputLabel value="Yes" rendered="#{rvWspFinStatus.grantDeviated ne null and rvWspFinStatus.grantDeviated}" />
+													<p:outputLabel value="No" rendered="#{rvWspFinStatus.grantDeviated ne null and !rvWspFinStatus.grantDeviated}" />
+													<p:outputLabel value="No Data" rendered="#{rvWspFinStatus.grantDeviated eq null}" />
+												</p:column>
+												<p:column headerText="% Of Training Implemented">
+													<p:outputLabel value="#{rvWspFinStatus.percentageCalculatedForDeviationDoubleValue}" rendered="#{rvWspFinStatus.percentageCalculatedForDeviationDoubleValue ne null}" />
+													<p:outputLabel value="No Data" rendered="#{rvWspFinStatus.percentageCalculatedForDeviationDoubleValue eq null}" />
+												</p:column>
+												<p:column headerText="Rejection Reasons">
+													<p:outputLabel value="#{rvWspFinStatus.rejectionReasons}" />
+												</p:column>
+												<p:column headerText="Completed by">
+													<p:outputLabel value="N/A" rendered="#{lastActionUser.firstName eq null and rvWspFinStatus.lastActionUser.lastName eq null}" />
+													<p:outputLabel value="#{rvWspFinStatus.lastActionUser.firstName} #{rvWspFinStatus.lastActionUser.lastName}" />
+												</p:column>
+											</p:dataTable>
+										</p:panelGrid>
+									</c:if>
+								</p:outputPanel>
+							</p:tab>
+							<p:tab title="Tasks For Grants" id="tasksByWsp">
+								<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+									<h3>Report To Display Tasks Completed, Underway And Not Started By merSETA Staff For Selected Financial Year</h3>
+									<p:commandButton update=":mainForm:tabView:resultsPanelTasksByWsp" action="#{wspReportingUI.generateTasksReport}" value="Generate Report" />
+								</p:panelGrid>
+								<p:outputPanel id="resultsPanelTasksByWsp">
+									<c:if test="#{wspReportingUI.displayReport}">
+										<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+											<div align="right">
+												<h:commandLink id="eExcelTsk">
+													<i class="fa fa-file-excel-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+													<p:dataExporter type="xls" target="tasksByWspDT" fileName="Wsp_Task_Report" pageOnly="false" />
+												</h:commandLink>
+												<h:commandLink id="ePdfTsk" rendered="false">
+													<i class="fa fa-file-pdf-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+													<p:dataExporter type="pdf" target="tasksByWspDT" fileName="Wsp_Task_Report" pageOnly="false" />
+												</h:commandLink>
+												<h:commandLink id="eCsvTsk">
+													<i class="fa fa-file-text-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+													<p:dataExporter type="csv" target="tasksByWspDT" fileName="Wsp_Task_Report" pageOnly="false" />
+												</h:commandLink>
+												<h:commandLink id="eXmlTsk">
+													<i class="fa fa-file-code-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+													<p:dataExporter type="xml" target="tasksByWspDT" fileName="Wsp_Task_Report" pageOnly="false" />
+												</h:commandLink>
+												<p:tooltip for="eExcelTsk" value="#{lang['export.search.results.to.excel']}" position="left" />
+												<p:tooltip for="ePdfTsk" value="#{lang['export.search.results.to.pdf']}" position="left" />
+												<p:tooltip for="eCsvTsk" value="#{lang['export.search.results.as.a.csv']}" position="left" />
+												<p:tooltip for="eXmlTsk" value="#{lang['export.search.results.as.a.xml']}" position="left" />
+											</div>
+											<br />
+											<p:dataTable rendered="#{wspReportingUI.displayReport}" var="tvTaskWsp" value="#{wspReportingUI.tasksReportBean}" id="tasksByWspDT" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+												paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+
+												<p:column headerText="First Name">
+													<p:outputLabel value="#{tvTaskWsp.firstName}" />
+												</p:column>
+												<p:column headerText="Last Name">
+													<p:outputLabel value="#{tvTaskWsp.lastName}" />
+												</p:column>
+												<p:column headerText="Email Address">
+													<p:outputLabel value="#{tvTaskWsp.emailAddress}" />
+												</p:column>
+												<p:column headerText="Tasks Completed">
+													<p:outputLabel value="#{tvTaskWsp.completedTasks}" />
+												</p:column>
+												<p:column headerText="Tasks Underway">
+													<p:outputLabel value="#{tvTaskWsp.underwayTasks}" />
+												</p:column>
+												<p:column headerText="Tasks Not Started">
+													<p:outputLabel value="#{tvTaskWsp.notstartedTasks}" />
+												</p:column>
+											</p:dataTable>
+										</p:panelGrid>
+									</c:if>
+								</p:outputPanel>
+							</p:tab>
+							<p:tab title="Status Count Grants" id="statusCountWsp">
+								<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+									<h3>Report To Display Status And Count For The Selected Financial Year</h3>
+									<p:commandButton update=":mainForm:tabView:resultsPanelStatusCountWsp" action="#{wspReportingUI.generateStatusReport}" value="Generate Report" />
+								</p:panelGrid>
+								<p:outputPanel id="resultsPanelStatusCountWsp">
+									<c:if test="#{wspReportingUI.displayReport}">
+										<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+											<div align="right">
+												<h:commandLink id="eExcelStCnt">
+													<i class="fa fa-file-excel-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+													<p:dataExporter type="xls" target="statusCountDT" fileName="Grant_Status_Count_Report" pageOnly="false" />
+												</h:commandLink>
+												<h:commandLink id="ePdfStCnt" rendered="false">
+													<i class="fa fa-file-pdf-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+													<p:dataExporter type="pdf" target="statusCountDT" fileName="Grant_Status_Count_Report" pageOnly="false" />
+												</h:commandLink>
+												<h:commandLink id="eCsvStCnt">
+													<i class="fa fa-file-text-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+													<p:dataExporter type="csv" target="statusCountDT" fileName="Grant_Status_Count_Report" pageOnly="false" />
+												</h:commandLink>
+												<h:commandLink id="eXmlStCnt">
+													<i class="fa fa-file-code-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+													<p:dataExporter type="xml" target="statusCountDT" fileName="Grant_Status_Count_Report" pageOnly="false" />
+												</h:commandLink>
+												<p:tooltip for="eExcelStCnt" value="#{lang['export.search.results.to.excel']}" position="left" />
+												<p:tooltip for="ePdfStCnt" value="#{lang['export.search.results.to.pdf']}" position="left" />
+												<p:tooltip for="eCsvStCnt" value="#{lang['export.search.results.as.a.csv']}" position="left" />
+												<p:tooltip for="eXmlStCnt" value="#{lang['export.search.results.as.a.xml']}" position="left" />
+											</div>
+											<br />
+											<p:dataTable rendered="#{wspReportingUI.displayReport}" var="tvStatusCount" value="#{wspReportingUI.statusReportBean}" id="statusCountDT" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+												paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+												<p:column headerText="Status">
+													<p:outputLabel value="#{tvStatusCount.status}" />
+												</p:column>
+												<p:column headerText="Count">
+													<p:outputLabel value="#{tvStatusCount.count}" />
+												</p:column>
+											</p:dataTable>
+										</p:panelGrid>
+									</c:if>
+								</p:outputPanel>
+							</p:tab>
+							<p:tab title="Monitoring Grants Targets" id="targetReportDG">
+								<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+									<h3>Report To Display Grant Type, Statuses By Company Size</h3>
+									<p:commandButton update=":mainForm:tabView:resultsPanelTargetReportDG" action="#{wspReportingUI.populateGrantsReportByTypeStatusCompanySize}" value="Generate Report" />
+								</p:panelGrid>
+								<p:outputPanel id="resultsPanelTargetReportDG">
+									<c:if test="#{wspReportingUI.displayReport}">
+										<div align="right">
+											<h:commandLink id="eExcelDTSC">
+												<i class="fa fa-file-excel-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+												<p:dataExporter type="xls" target="dtStatusCampyDG" fileName="DG_Report" pageOnly="false" />
+											</h:commandLink>
+											<h:commandLink id="ePdfDTSC" rendered="false">
+												<i class="fa fa-file-pdf-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+												<p:dataExporter type="pdf" target="dtStatusCampyDG" fileName="DG_Report" pageOnly="false" />
+											</h:commandLink>
+											<h:commandLink id="eCsvDTSC">
+												<i class="fa fa-file-text-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+												<p:dataExporter type="csv" target="dtStatusCampyDG" fileName="DG_Report" pageOnly="false" />
+											</h:commandLink>
+											<h:commandLink id="eXmlDTSC">
+												<i class="fa fa-file-code-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+												<p:dataExporter type="xml" target="dtStatusCampyDG" fileName="DG_Report" pageOnly="false" />
+											</h:commandLink>
+											<p:tooltip for="eExcelDTSC" value="#{lang['export.search.results.to.excel']}" position="left" />
+											<p:tooltip for="ePdfDTSC" value="#{lang['export.search.results.to.pdf']}" position="left" />
+											<p:tooltip for="eCsvDTSC" value="#{lang['export.search.results.as.a.csv']}" position="left" />
+											<p:tooltip for="eXmlDTSC" value="#{lang['export.search.results.as.a.xml']}" position="left" />
+										</div>
+										<br />
+										<p:dataTable var="rowVarDTSC" id="dtStatusCampyDG" value="#{wspReportingUI.wspReports}" paginator="true" rows="10" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+											rowsPerPageTemplate="10,15,20,25,50" reflow="true">
+											<p:column headerText="Report">
+												<h:outputText value="#{rowVarDTSC.wspType}" />
+											</p:column>
+											<p:column headerText="Small Companies" width="100">
+												<h:outputText value="#{rowVarDTSC.smallCount}" />
+											</p:column>
+											<p:column headerText="Medium Companies" width="100">
+												<h:outputText value="#{rowVarDTSC.midCount}" />
+											</p:column>
+											<p:column headerText="Large Companies" width="100">
+												<h:outputText value="#{rowVarDTSC.largeCount}" />
+											</p:column>
+											<p:column headerText="Total" width="100">
+												<h:outputText value="#{rowVarDTSC.total}" />
+											</p:column>
+										</p:dataTable>
+									</c:if>
+								</p:outputPanel>
+							</p:tab>
+						</p:tabView>
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+</ui:composition>

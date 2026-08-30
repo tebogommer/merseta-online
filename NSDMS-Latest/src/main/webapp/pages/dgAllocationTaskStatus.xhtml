@@ -1,0 +1,178 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<p:growl sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>PIP TaskTracker</h1>
+					<h:form id="mainForm">
+
+
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="Filter By: Financial Year / Grant Year" for="selectedFinYear" style="width:100%; color:#977949" />
+							</div>
+							<div>
+								<p:selectOneMenu id="selectedFinYear" value="#{pipTaskReportUI.selectedYear}" style="width:95%">
+									<p:ajax event="itemSelect" update="@form" />
+									<f:selectItems value="#{pipTaskReportUI.financialYears}" />
+								</p:selectOneMenu>
+							</div>
+							<div class="EmptyBox10" />
+							<p:commandButton icon="fa fa-database" update="@form" value="Generate Report" action="#{pipTaskReportUI.generateReport}" onstart="uploadStart()" oncomplete="uploadDone()" />
+						</h:panelGroup>
+
+
+						<c:if test="#{pipTaskReportUI.displayReport}">
+							<div class="EmptyBox10"/>
+							<p:panelGrid columns="1" style="width:100%" id="filterdownloadGrid" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{sessionUI.employee or sessionUI.activeUser.admin}">
+								<p:commandButton icon="fa fa-download" value="Download Report" ajax="false" action="#{pipTaskReportUI.downloadPipTaskTrackerReport}" />
+							</p:panelGrid>
+							<ui:include src="/pages/includes/download_lazy_with_page.xhtml">
+								<ui:param name="file_name" value="MoaStatus" />
+								<ui:param name="target" value="activecontractsList" />
+							</ui:include>
+							<ui:include src="/pages/includes/filterGuide.xhtml" />
+							<p:dataTable var="rowVar" value="#{pipTaskReportUI.dataModel}" id="activecontractsList" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+								paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" reflow="true" lazy="true">
+								<p:column headerText="#{lang['entity.id']}" sortBy="#{rowVar.company.levyNumber}" filterBy="#{rowVar.company.levyNumber}">
+									<h:outputText value="#{rowVar.company.levyNumber}" />
+									<h:outputText value="#{rowVar.dgAllocationParent.wsp.company.levyNumber}" />
+								</p:column>
+								<p:column headerText="#{lang['company.name']}" sortBy="#{rowVar.company.companyName}" filterBy="#{rowVar.company.companyName}">
+									<h:outputText value="#{rowVar.company.companyName}" />
+									<h:outputText value="#{rowVar.dgAllocationParent.wsp.company.companyName}" />
+								</p:column>
+								<p:column headerText="Chamber" exportable="true">
+									<p:outputLabel value="#{rowVar.dgAllocationParent.wsp.company.sicCode.chamber.description}"></p:outputLabel>
+								</p:column>
+								<p:column style="width:180px" headerText="#{lang['region']}">
+									<h:outputText value="#{rowVar.dgAllocationParent.wsp.company.regionTown.region.description}" />
+								</p:column>
+								<p:column style="width:150px" headerText="Reference Number">
+									<h:outputText value="#{rowVar.refnoAuto}">
+									</h:outputText>
+								</p:column>
+								<p:column headerText="MOA Type">
+									<h:outputText value="#{rowVar.moaType.friendlyName}">
+									</h:outputText>
+								</p:column>
+								<p:column headerText="#{lang['contractvalue']}">
+									<h:outputText value="#{rowVar.contractvalue}">
+										<f:convertNumber pattern="####################0.00" />
+									</h:outputText>
+								</p:column>
+
+								<p:column headerText="Approved Date" rendered="true">
+									<h:outputText value="#{rowVar.dgAllocationParent.approvalDate}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</h:outputText>
+								</p:column>
+
+								<p:column headerText="MOA Acceptance Date" rendered="true">
+									<h:outputText value="#{rowVar.dgAllocationParent.acceptanceDate}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</h:outputText>
+								</p:column>
+
+								<p:column headerText="SDF Name and Surname">
+									<h:outputText rendered="#{rowVar.sdf.firstName ne null}" value="#{rowVar.sdf.firstName} #{rowVar.sdf.lastName}" />
+									<h:outputText rendered="#{rowVar.sdf.firstName eq null}" value="Not Started" />
+								</p:column>
+
+								<p:column headerText="SDF Sign Date" rendered="true">
+									<h:outputText rendered="#{rowVar.sdfSignDate ne null}" value="#{rowVar.sdfSignDate}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</h:outputText>
+									<h:outputText rendered="#{rowVar.sdfSignDate eq null}" value="Not Started" />
+								</p:column>
+
+								<p:column headerText="CLO Name and Surname">
+									<h:outputText rendered="#{rowVar.clo.firstName ne null}" value="#{rowVar.clo.firstName} #{rowVar.clo.lastName}" />
+									<h:outputText rendered="#{rowVar.clo.firstName eq null}" value="Not Started" />
+								</p:column>
+
+								<p:column headerText="CLO Sign Date" rendered="true">
+									<h:outputText rendered="#{rowVar.cloSignDate ne null}" value="#{rowVar.cloSignDate}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</h:outputText>
+									<h:outputText rendered="#{rowVar.cloSignDate eq null}" value="Not Started" />
+								</p:column>
+
+								<p:column headerText="CRM Name and Surname">
+									<h:outputText rendered="#{rowVar.crm.firstName ne null}" value="#{rowVar.crm.firstName} #{rowVar.crm.lastName}" />
+									<h:outputText rendered="#{rowVar.clo.firstName eq null}" value="Not Started" />
+								</p:column>
+
+								<p:column headerText="CRM Sign Date" rendered="true">
+									<h:outputText rendered="#{rowVar.crmSignDate ne null}" value="#{rowVar.crmSignDate}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</h:outputText>
+									<h:outputText rendered="#{rowVar.crmSignDate eq null}" value="Not Started" />
+								</p:column>
+							</p:dataTable>
+						</c:if>
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+		<p:dialog header="Active Contract Detail" widgetVar="newDetail" resizable="false" hideEffect="clip" showEffect="clip" id="dlgDetailID" width="50%" responsive="true" modal="true" dynamic="true">
+			<h:form id="activecontractdetailInsForm">
+				<p:panelGrid columns="2" style="width:100%" id="activecontractdetailInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<h:panelGroup styleClass="md-inputfield">
+						<p:calendar id="paymentMonth" value="#{activecontractdetailUI.activecontractdetail.paymentMonth}" inputStyle="width:95%" pattern="MMMMM yyyy" required="true" />
+						<p:outputLabel value="#{lang['payment.month']}" for="paymentMonth" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="additions" value="#{activecontractdetailUI.activecontractdetail.additions}" style="width:95%" />
+						<p:outputLabel value="#{lang['additions']}" for="additions" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="addendumsammendments" value="#{activecontractdetailUI.activecontractdetail.addendumsammendments}" style="width:95%" />
+						<p:outputLabel value="#{lang['addendumsammendments']}" for="addendumsammendments" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="correctiontobalances" value="#{activecontractdetailUI.activecontractdetail.correctiontobalances}" style="width:95%" />
+						<p:outputLabel value="#{lang['correctiontobalances']}" for="correctiontobalances" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="accruals" value="#{activecontractdetailUI.activecontractdetail.accruals}" style="width:95%" />
+						<p:outputLabel value="#{lang['accruals']}" for="accruals" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="accrualsreversal" value="#{activecontractdetailUI.activecontractdetail.accrualsreversal}" style="width:95%" />
+						<p:outputLabel value="#{lang['accrualsreversal']}" for="accrualsreversal" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="payments" value="#{activecontractdetailUI.activecontractdetail.payments}" style="width:95%" />
+						<p:outputLabel value="#{lang['payments']}" for="payments" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="noofterminations" value="#{activecontractdetailUI.activecontractdetail.noofterminations}" style="width:95%" />
+						<p:outputLabel value="#{lang['noofterminations']}" for="noofterminations" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="terminationvalue" value="#{activecontractdetailUI.activecontractdetail.terminationvalue}" style="width:95%" />
+						<p:outputLabel value="#{lang['terminationvalue']}" for="terminationvalue" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="writeback" value="#{activecontractdetailUI.activecontractdetail.writeback}" style="width:95%" />
+						<p:outputLabel value="#{lang['writeback']}" for="writeback" />
+					</h:panelGroup>
+					<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+						<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update="mainForm" action="#{activecontractdetailUI.activecontractdetailInsert}" />
+					</p:panelGrid>
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+	</ui:define>
+
+</ui:composition>

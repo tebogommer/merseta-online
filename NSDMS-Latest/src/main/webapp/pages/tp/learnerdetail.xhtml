@@ -1,0 +1,150 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<p:importEnum type="haj.com.entity.enums.PivotNonPivotEnum" />
+					<p:importEnum type="haj.com.entity.enums.LearnerStatusEnum" />
+					<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+					<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+					<p:importEnum type="haj.com.entity.enums.LearnerChangeTypeEnum" />
+					<p:importEnum type="haj.com.entity.enums.YesNoEnum" />
+					<h1>Search Company Learners</h1>
+					<h:form id="learnersInsForm">
+
+						<p:growl sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:dataTable value="#{learnersUI.dataModelUsers}" var="rowVar" emptyMessage="#{lang['no.records.found']}" paginator="true" rows="6" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+
+							<p:column headerText="#{lang['first.name']}" filterBy="#{rowVar.firstName}">
+								<h:outputText value="#{rowVar.firstName}" />
+							</p:column>
+							<p:column headerText="#{lang['last.name']}" filterBy="#{rowVar.lastName}">
+								<h:outputText value="#{rowVar.lastName}" />
+							</p:column>
+							<p:column headerText="RSA ID Number" filterBy="#{rowVar.rsaIDNumber}">
+								<h:outputText value="#{rowVar.rsaIDNumber}" />
+							</p:column>
+							
+							<p:column headerText="Passport Number" filterBy="#{rowVar.passportNumber}">
+								<h:outputText value="#{rowVar.passportNumber}" />
+							</p:column>
+							<p:column width="40" rendered="true" headerText="#{lang['view.edit']}">
+								<p:commandButton icon="fa fa-users" title="View Details" action="#{learnersUI.learnersInfo}" update="mainForm">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{learnersUI.learner}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<h:form id="mainForm">
+					<p:tooltip position="left"></p:tooltip>
+					<c:if test="#{learnersUI.dataModel ne null}">
+						<div class="card card-w-title">
+							<h3>#{learnersUI.learner.firstName} #{learnersUI.learner.lastName} Training</h3>
+
+							<p:dataTable var="rowVar" value="#{learnersUI.dataModel}" filteredValue="#{learnersUI.learnersfilteredList}" id="learnersList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25"
+								reflow="true" lazy="true">
+
+								<p:column headerText="Application Status">
+									<h:outputText value="#{rowVar.learnerStatus.friendlyName}" />
+								</p:column>
+
+								<p:column headerText="Approval Date">
+									<h:outputText value="#{rowVar.approvalDate}" />
+								</p:column>
+								
+								<p:column headerText="#{lang['companyName']}">#{rowVar.company.companyName}</p:column>
+								<p:column headerText="#{lang['companyRegistrationNumber']}">#{rowVar.company.companyRegistrationNumber}</p:column>
+								<p:column headerText="#{lang['entity.id']}">#{rowVar.company.levyNumber}</p:column>
+
+								<p:column width="80" headerText="#{lang['view.edit']}">
+									<p:commandButton icon="fa fa-search" title="View Requests" update="mainForm" action="#{learnersUI.viewCompanyLearnerData}" process="@this">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{learnersUI.companyLearners}" />
+									</p:commandButton>
+									<p:spacer width="5" rendered="#{sessionUI.employee}" />
+									<p:commandButton id="viewLearnerDetails" icon="fa fa-leanpub" title="View Learner Details" update="mainForm" action="#{learnersUI.viewCompanyLearnerDetails}"  process="@this">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{learnersUI.companyLearners}" />
+									</p:commandButton>
+									<p:spacer width="5" rendered="#{sessionUI.employee}" />
+									<p:commandButton icon="fa fa-list" title="View Tasks Assigned" update=":mainForm:tasksAssignedPanel" action="#{learnersUI.viewTasksByWsp}" rendered="#{sessionUI.employee}">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{learnersUI.companyLearners}" />
+									</p:commandButton>
+									<p:commandButton icon="fa fa-clock-o" title="Document Change Request" update="documentsChangeForm" action="#{learnersUI.prepDocumentChange}" oncomplete="PF('dlgDocumentsChange').show()" rendered="#{rowVar.learnerStatus eq LearnerStatusEnum.Registered and sessionUI.employee and rowVar.documentChangeStatus eq null}" process="@this">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{learnersUI.companyLearners}" />
+									</p:commandButton>
+								</p:column>
+							</p:dataTable>
+
+							<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+								<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+								<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+							</p:confirmDialog>
+
+						</div>
+						<c:if test="#{learnersUI.viewLearnerData}">
+							<div class="card card-w-title">
+								<h3>Learner Request</h3>
+								<ui:include src="/pages/tp/includes/learnerrequests.xhtml">
+									<ui:param name="companyLearner" value="#{learnersUI.companyLearners}"></ui:param>
+								</ui:include>
+							</div>
+						</c:if>
+						
+						<!-- <c:if test="#{learnersUI.viewLearnerDetails}">
+							<h:panelGroup id="pageLearnerDetails">
+								<div class="card card-w-title">
+									<ui:include src="/pages/tp/includes/learnerexpansion.xhtml">
+										<ui:param name="companyLearner" value="#{learnersUI.companyLearners}"></ui:param>
+									</ui:include>
+								</div>						
+							</h:panelGroup>
+						</c:if> -->
+						<c:if test="#{learnersUI.viewLearnerDetails}">
+							<h:panelGroup id="pageLearnerDetails">
+								<div class="card card-w-title">
+								<c:set var="varlearnerStatus" value="learnersUI.companyLearners.learnerStatus"/>
+								<c:if test="#{learnersUI.companyLearners.learnerStatus == 'Application' or learnersUI.companyLearners.learnerStatus == 'Registered' or learnersUI.companyLearners.learnerStatus == 'Qualification Obtained' or learnersUI.companyLearners.learnerStatus == 'Completed' or learnersUI.companyLearners.learnerStatus == 'Withdrawn' or learnersUI.companyLearners.learnerStatus == 'Terminated'}">
+									<form id="learnerexpansioneditForm_vh">
+									<ui:include src="/pages/tp/includes/learnerexpansionedit.xhtml">
+										<ui:param name="companyLearner" value="#{learnersUI.companyLearners}"></ui:param>
+									</ui:include>
+									<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+										<p:commandButton id="updateLearnerData_vh1" action="#{learnersUI.companyLearnersUpdate}"  immediate="false" value="#{lang['submit']}" styleClass="green-btn flat Fs18" style="height: 50px;" icon="fa fa-check" >									
+										</p:commandButton>
+									</p:panelGrid>
+									</form>
+								</c:if>
+								<c:if test="#{learnersUI.companyLearners.learnerStatus ne 'Application' and learnersUI.companyLearners.learnerStatus ne 'Registered'}">
+									<ui:include src="/pages/tp/includes/learnerexpansion.xhtml">
+										<ui:param name="companyLearner" value="#{learnersUI.companyLearners}"></ui:param>
+									</ui:include>
+								</c:if>
+								</div>						
+							</h:panelGroup>
+						</c:if>
+						
+						<p:outputPanel id="tasksAssignedPanel">
+							<c:if test="#{learnersUI.companyLearners.id ne null and learnersUI.viewTaskData}">
+								<h3>Task History For Learner</h3>
+								<ui:include src="/pages/includes/taskInformationInclude.xhtml">
+									<ui:param name="TaskList" value="#{learnersUI.dataModelTasks}" />
+									<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</ui:include>
+							</c:if>
+						</p:outputPanel>
+					</c:if>
+				</h:form>
+			</div>
+		</div>
+
+		<ui:include src="/pages/tp/includes/dialogs.xhtml" />
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+	</ui:define>
+
+</ui:composition>

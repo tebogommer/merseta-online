@@ -1,0 +1,87 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>MailingList</h1>
+					<h:form id="mailinglistInsForm">
+					
+						<p:growl sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+
+						<p:panelGrid columns="1" style="width:100%" id="mailinglistInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="description" value="#{mailinglistUI.mailinglist.description}" style="width:95%" />
+								<p:outputLabel value="#{lang['description']}" for="description" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="emailAddress" value="#{mailinglistUI.mailinglist.emailAddress}" style="width:95%" />
+								<p:outputLabel value="Email Address" for="emailAddress" />
+							</h:panelGroup>
+							<h:panelGroup >
+								<div>
+								<p:outputLabel value="Type" for="mailingListTypeEnum" />
+								</div>
+								<div>
+								<p:selectOneMenu id="mailingListTypeEnum" value="#{mailinglistUI.mailinglist.mailingListTypeEnum}" style="width:95%" required="true" requiredMessage="Select Type">
+									<f:selectItems value="#{enumUI.mailingListTypeEnumDD}" itemValue="#{rv}" var="rv" itemLabel="#{rv}" />
+								</p:selectOneMenu>
+								</div>
+							</h:panelGroup>
+
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:mailinglistList :mailinglistInsForm:mailinglistInsGrid" action="#{mailinglistUI.mailinglistInsert}" />
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="mailinglistInsGrid" process="@this" action="#{mailinglistUI.prepareNew}">
+									<p:resetInput target="mailinglistInsGrid" />
+								</p:commandButton>
+							</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+						<p:dataTable var="rowVar" value="#{mailinglistUI.dataModel}" id="mailinglistList" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+							<p:column headerText="#{lang['description']}">
+								<h:outputText value="#{rowVar.description}" />
+							</p:column>
+							<p:column headerText="Email Address">
+								<h:outputText value="#{rowVar.emailAddress}" />
+							</p:column>
+							<p:column headerText="Type">
+								<h:outputText value="#{rowVar.mailingListTypeEnum}" />
+							</p:column>
+							<p:column headerText="Create Date">
+								<h:outputText value="#{rowVar.createDate}" />
+							</p:column>
+							<p:column width="80">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":mailinglistInsForm:mailinglistInsGrid">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{mailinglistUI.mailinglist}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:mailinglistList" action="#{mailinglistUI.mailinglistDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{mailinglistUI.mailinglist}" />
+								</p:commandButton>
+							</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+	<!-- 
+_lang_
+-->
+</ui:composition>

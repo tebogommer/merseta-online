@@ -1,0 +1,970 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<p:growl showDetail="false" sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+		<p:importEnum type="haj.com.entity.enums.PivotNonPivotEnum" />
+		<p:importEnum type="haj.com.entity.enums.LearnerStatusEnum" />
+		<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+		<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+		<p:importEnum type="haj.com.entity.enums.LearnerChangeTypeEnum" />
+		<p:importEnum type="haj.com.entity.enums.YesNoEnum" />
+		<p:importEnum type="haj.com.entity.enums.NewOrLegacyEnum" />
+		<p:importEnum type="haj.com.entity.enums.GenerateAddEnum" />
+		<p:importEnum type="haj.com.entity.enums.CompetenceEnum" />		
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<h:form id="mainForm">
+					<p:tooltip position="left"></p:tooltip>				
+					
+					<c:if test="#{employeeLearnersVerificationUI.showlearners}">
+						<div class="card card-w-title">
+							
+							<ui:include src="/pages/includes/download_lazy.xhtml">
+								<ui:param name="file_name" value="learnersList" />
+								<ui:param name="target" value="learnersList" />
+							</ui:include>
+							<ui:include src="/pages/includes/filterGuide.xhtml" />
+							<p:dataTable var="rowVar" value="#{employeeLearnersVerificationUI.dataModel}"  id="learnersList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25"
+								reflow="true" lazy="true">
+
+								<p:column headerText="#{lang['companyName']}" filterBy="#{rowVar.trainingProvider.companyName}" sortBy="#{rowVar.trainingProvider.companyName}">
+									#{rowVar.trainingProvider.companyName}
+								</p:column>
+								<p:column headerText="#{lang['tradingName']}" filterBy="#{rowVar.trainingProvider.tradingName}" sortBy="#{rowVar.trainingProvider.tradingName}" filterStyle="width: 95%">
+									#{rowVar.trainingProvider.tradingName}
+								</p:column>
+								<p:column headerText="#{lang['companyRegistrationNumber']}" filterBy="#{rowVar.trainingProvider.companyRegistrationNumber}" sortBy="#{rowVar.trainingProvider.companyRegistrationNumber}" rendered="false">
+									#{rowVar.trainingProvider.companyRegistrationNumber}
+								</p:column>
+								<p:column headerText="#{lang['entity.id']}" filterBy="#{rowVar.trainingProvider.levyNumber}" sortBy="#{rowVar.trainingProvider.levyNumber}">
+									#{rowVar.trainingProvider.levyNumber}
+								</p:column>
+								<p:column headerText="#{lang['first.name']}" filterBy="#{rowVar.companyLearners.user.firstName}" sortBy="#{rowVar.companyLearners.user.firstName}">
+									<h:outputText value="#{rowVar.companyLearners.user.firstName}" />
+								</p:column>
+								<p:column headerText="#{lang['last.name']}" filterBy="#{rowVar.companyLearners.user.lastName}" sortBy="#{rowVar.companyLearners.user.lastName}">
+									<h:outputText value="#{rowVar.companyLearners.user.lastName}" />
+								</p:column>
+								<p:column headerText="Identity Number" filterBy="#{rowVar.companyLearners.user.rsaIDNumber}" sortBy="#{rowVar.companyLearners.user.rsaIDNumber}">
+									<h:outputText value="#{rowVar.companyLearners.user.rsaIDNumber}" />
+									<h:outputText rendered="#{rowVar.companyLearners.user.rsaIDNumber.length() lt 1}" value="N/A" />
+								</p:column>
+								<p:column headerText="Passport Number" filterBy="#{rowVar.companyLearners.user.rsaIDNumber}" sortBy="#{rowVar.companyLearners.user.rsaIDNumber}">
+									<h:outputText rendered="#{rowVar.companyLearners.user.passportNumber.length() lt 1}" value="N/A" />
+									<h:outputText value="#{rowVar.companyLearners.user.passportNumber}" />
+								</p:column>
+								<p:column headerText="Employment Status">
+									<h:outputText value="#{rowVar.companyLearners.employmentStatus.friendlyName}" />
+								</p:column>
+								<p:column headerText="Application Status">
+									<h:outputText value="#{rowVar.companyLearners.learnerStatus.friendlyName}" />
+								</p:column>
+								<p:column headerText="Intervention Type" >
+									<h:outputText value="#{rowVar.companyLearners.interventionType.description}" />
+								</p:column>
+								<p:column headerText="Course / Qualification " width="20%">
+									
+									<h:outputText value="(#{rowVar.companyLearners.learnership.code})" rendered="#{rowVar.companyLearners.learnership.code ne null}"/>
+									<h:outputText value="#{rowVar.companyLearners.learnership.description}" rendered="#{rowVar.companyLearners.learnership.description ne null}"/>
+									<p:spacer width="5" rendered="#{rowVar.companyLearners.learnership.description ne null}" />
+									<h:outputText value="(#{rowVar.companyLearners.learnership.qualification.codeString})" rendered="#{rowVar.companyLearners.learnership.qualification.codeString ne null}"/>
+									<h:outputText value="#{rowVar.companyLearners.learnership.qualification.description}" rendered="#{rowVar.companyLearners.learnership.qualification.description ne null}"/>
+									
+									<h:outputText value="(#{rowVar.companyLearners.skillsSet.programmeID})" rendered="#{rowVar.companyLearners.skillsSet ne null}" />
+									<h:outputText value="#{rowVar.companyLearners.skillsSet.description}" rendered="#{rowVar.companyLearners.skillsSet ne null}" />
+									
+									<h:outputText value="(#{rowVar.companyLearners.skillsProgram.programmeID})" rendered="#{rowVar.companyLearners.skillsProgram ne null}" />
+									<h:outputText value="#{rowVar.companyLearners.skillsProgram.description}" rendered="#{rowVar.companyLearners.skillsProgram ne null}" />
+									
+									<h:outputText value="(#{rowVar.companyLearners.unitStandard.code})" rendered="#{rowVar.companyLearners.unitStandard ne null}" />
+									<h:outputText value="#{rowVar.companyLearners.unitStandard.title}" rendered="#{rowVar.companyLearners.unitStandard ne null}" />
+									
+									<h:outputText value="#{rowVar.companyLearners.nonCredidBearingDescription}" rendered="#{rowVar.companyLearners.nonCredidBearingDescription ne null}" />
+									
+									<h:outputText value="(#{rowVar.companyLearners.qualification.code})" rendered="#{rowVar.companyLearners.qualification ne null and rowVar.companyLearners.skillsProgram eq null and rowVar.companyLearners.learnership eq null and rowVar.companyLearners.unitStandard eq null}"/>
+									<h:outputText value="#{rowVar.companyLearners.qualification.description}" rendered="#{rowVar.companyLearners.qualification ne null and rowVar.companyLearners.skillsProgram eq null and rowVar.companyLearners.learnership eq null and rowVar.companyLearners.unitStandard eq null}"/>
+								</p:column>
+
+								<p:column headerText="Created Date" rendered="false">
+									<h:outputText value="#{rowVar.createDate}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</h:outputText>
+								</p:column>
+
+								<p:column headerText="Registered Date" >
+									<h:outputText value="#{rowVar.companyLearners.registeredDate}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</h:outputText>
+								</p:column>
+
+								<p:column headerText="Registered Number">
+									<h:outputText value="#{rowVar.companyLearners.registrationNumber}">
+									</h:outputText>
+								</p:column>
+								
+
+								<p:column width="5%" headerText="#{lang['view.edit']}" exportable="false">									
+									<p:commandButton icon="fa fa-search" title="View Requests" update="mainForm" action="#{employeeLearnersVerificationUI.populateInformation}" process="@this">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{employeeLearnersVerificationUI.trainingproviderverfication}" />
+									</p:commandButton>	
+									<p:spacer width="5" />	
+									<p:commandButton icon="fa fa-leanpub" title="View Learner Details" update="mainForm" action="#{employeeLearnersVerificationUI.populateLearnerInfo}"  process="@this">
+										<f:setPropertyActionListener value="#{rowVar.companyLearners}" target="#{employeeLearnersVerificationUI.companyLearners}" />
+									</p:commandButton>							
+								</p:column>
+							
+							</p:dataTable>
+
+							<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+								<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+								<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+							</p:confirmDialog>
+						</div>
+					</c:if>
+					
+					<c:if test="#{employeeLearnersVerificationUI.show}">
+					
+						<h:outputText value="#{employeeLearnersVerificationUI.trainingproviderverfication.generateAddEnum.friendlyName}" rendered="false"/>
+						
+						
+						<p:fieldset legend="Learner To Assess">
+							<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="firstName" value="#{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.user.firstName}" style="width:95%" disabled="true">
+										<p:ajax />
+									</p:inputText>
+									<p:outputLabel value="#{lang['first.name']}:" for="firstName" styleClass="gray" />
+								</h:panelGroup>
+								
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="lastName" value="#{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.user.lastName}" style="width:95%" disabled="true">
+										<p:ajax />
+									</p:inputText>
+									<p:outputLabel value="#{lang['last.name']}:" for="lastName" styleClass="gray" />
+								</h:panelGroup>
+								
+								<h:panelGroup styleClass="md-inputfield" rendered="#{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.user.rsaIDNumber.length() gt 0}">
+									<p:inputText id="rsaId" value="#{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.user.rsaIDNumber}" style="width:95%" required="true" requiredMessage="#{lang['rsa.id.number']}" disabled="true">
+										<p:ajax />
+									</p:inputText>
+									<p:outputLabel value="#{lang['rsa.id.number']}" for="rsaId" styleClass="gray" />
+								</h:panelGroup>
+		
+								<h:panelGroup styleClass="md-inputfield" rendered="#{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.user.passportNumber.length() gt 0}">
+									<p:inputText id="passPort" value="#{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.user.passportNumber}" style="width:95%" required="true" requiredMessage="#{lang['passport.number']}" disabled="true">
+										<p:ajax />
+									</p:inputText>
+									<p:outputLabel value="#{lang['passport.number']}" for="passPort" styleClass="gray" />
+								</h:panelGroup>
+								
+								<h:panelGroup styleClass="md-inputfield" >
+									<p:inputText id="registrationNumber" value="#{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.registrationNumber}" style="width:95%" required="true" requiredMessage="#{lang['passport.number']}" disabled="true">
+										<p:ajax />
+									</p:inputText>
+									<p:outputLabel value="Registration Number" for="registrationNumber" styleClass="gray" />
+								</h:panelGroup>
+								
+								<h:panelGroup styleClass="md-inputfield" >
+									<h:outputText value="(#{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.learnership.code})" rendered="#{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.learnership.code ne null}"/>
+									<h:outputText value="#{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.learnership.description}" rendered="#{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.learnership.description ne null}"/>
+									<p:spacer width="5" rendered="#{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.learnership.description ne null}" />
+									<h:outputText value="(#{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.learnership.qualification.codeString})" rendered="#{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.learnership.qualification.codeString ne null}"/>
+									<h:outputText value="#{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.learnership.qualification.description}" rendered="#{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.learnership.qualification.description ne null}"/>
+									
+									<h:outputText value="(#{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.skillsSet.programmeID})" rendered="#{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.skillsSet ne null}" />
+									<h:outputText value="#{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.skillsSet.description}" rendered="#{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.skillsSet ne null}" />
+									
+									<h:outputText value="(#{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.skillsProgram.programmeID})" rendered="#{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.skillsProgram ne null}" />
+									<h:outputText value="#{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.skillsProgram.description}" rendered="#{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.skillsProgram ne null}" />
+									
+									<h:outputText value="(#{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.unitStandard.code})" rendered="#{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.unitStandard ne null}" />
+									<h:outputText value="#{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.unitStandard.title}" rendered="#{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.unitStandard ne null}" />
+									
+									<h:outputText value="#{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.nonCredidBearingDescription}" rendered="#{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.nonCredidBearingDescription ne null}" />
+									
+									<h:outputText value="(#{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.qualification.code})" rendered="#{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.qualification ne null and employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.skillsProgram eq null and employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.learnership eq null and employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.unitStandard eq null}"/>
+									<h:outputText value="#{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.qualification.description}" rendered="#{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.qualification ne null and employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.skillsProgram eq null and employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.learnership eq null and employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.unitStandard eq null}"/>
+									
+								</h:panelGroup>
+								
+								<h:panelGroup styleClass="md-inputfield">
+									<h:outputText value="Credits : #{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.skillsSet.credits}" rendered="#{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.skillsSet ne null}" />
+									<h:outputText value="Credits : #{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.skillsProgram.credits}" rendered="#{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.skillsProgram ne null}" />
+									<h:outputText value="Credits : #{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.unitStandard.unitstdnumberofcredits}" rendered="#{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.unitStandard ne null}" />
+									<h:outputText value="Credits : #{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.learnership.qualification.credits}" rendered="#{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.learnership ne null}" />
+									<h:outputText value="Credits : #{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.qualification.credits}" rendered="#{employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.qualification ne null and employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.skillsSet eq null and employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.skillsProgram eq null and employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.learnership eq null and employeeLearnersVerificationUI.trainingproviderverfication.companyLearners.unitStandard eq null}"/>
+								</h:panelGroup>
+							</p:panelGrid>
+						</p:fieldset>
+						
+						<p:fieldset legend="Assessment Report">
+							<p:panelGrid columns="5" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+								<p:commandButton styleClass="flat green-btn Fs18" style="height: 50px;" value="Apply Assessment Date To all"  icon="fa fa-plus" oncomplete="PF('addAsseessorDateApplyAll').show()" update="addAsseessorDateApplyAll"  action="#{employeeLearnersVerificationUI.prepareAssessmentDate}">
+									
+								</p:commandButton>
+								
+								<p:commandButton styleClass="flat green-btn Fs18" style="height: 50px;" value="Apply Assessor To all"  icon="fa fa-plus" oncomplete="PF('addAsseessorApplyAll').show()" update="addAsseessorApplyAll"  action="#{employeeLearnersVerificationUI.prepareDataModelAssessorApplyAll}">
+									
+								</p:commandButton>
+								
+								<p:commandButton styleClass="flat green-btn Fs18" style="height: 50px;" value="Apply Moderation Date To all" icon="fa fa-plus" oncomplete="PF('addModerationDateApplyAll').show()" update="addModerationDateApplyAll"  action="#{employeeLearnersVerificationUI.prepareModerationDate}">
+									
+								</p:commandButton>							
+																
+								<p:commandButton styleClass="flat green-btn Fs18" style="height: 50px;" value="Apply Moderator To all" icon="fa fa-plus" oncomplete="PF('addModeratorApplyAll').show()" update="addModeratorApplyAll"  action="#{employeeLearnersVerificationUI.prepareDataModelModeratorApplyAll}">
+									
+								</p:commandButton>
+								
+								<p:commandButton styleClass="flat green-btn Fs18" style="height: 50px;" value="Apply Competence To all" icon="fa fa-plus" oncomplete="PF('addAsseessmentApplyAll').show()" update="addAsseessmentApplyAll"  action="#{employeeLearnersVerificationUI.prepareCompetence}">
+									
+								</p:commandButton>
+							
+							</p:panelGrid>
+							
+							<p:dataTable var="rv2" value="#{employeeLearnersVerificationUI.assessmentReport.unitStandards}" rendered="#{employeeLearnersVerificationUI.assessmentReport.unitStandards.size() gt 0}">
+								<p:column headerText="Unit Standard Code" style="width: 4%">#{rv2.unitStandards.code}</p:column>
+								<p:column headerText="Unit Standard Description" style="width: 10%">#{rv2.unitStandards.title}</p:column>
+								<p:column headerText="Unit Standard Type" style="width: 4%">#{rv2.unitStandardTypeEnum.friendlyName}</p:column>
+								<p:column headerText="Unit Standard Credits" style="width: 2%">#{rv2.unitStandards.unitstdnumberofcredits}</p:column>
+								
+								<p:column headerText="Date Assessed" style="width: 20%">
+									<p:panelGrid columns="3" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" >
+										<p:calendar value="#{rv2.assesmentDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" readonlyInput="true" maxdate="#{employeeLearnersVerificationUI.now}" disabled="true">
+											<p:ajax event="dateSelect"></p:ajax>
+										</p:calendar>
+										
+										<p:commandButton  icon="fa fa-plus" oncomplete="PF('addAsseessorDate').show()" update="addAsseessorDate"  action="#{employeeLearnersVerificationUI.prepareAssessmentDate}">
+											<f:setPropertyActionListener value="#{rv2}" target="#{employeeLearnersVerificationUI.summativeAssessmentReportUnitStandards}" />
+										</p:commandButton>
+										
+										<p:commandButton  icon="fa fa-trash-o"  update="@form" action="#{employeeLearnersVerificationUI.removeAssesorDate}" rendered="#{rv2.assesmentDate ne null}">
+											<f:setPropertyActionListener value="#{rv2}" target="#{employeeLearnersVerificationUI.summativeAssessmentReportUnitStandards}" />
+											<p:confirm header="#{lang['confirmation']}" message="Are you sure that you want to remove this assessor?" icon="ui-icon-warning" />
+										</p:commandButton>
+										
+									</p:panelGrid>
+								</p:column>
+								<p:column headerText="Assessed By" style="width: 20%">
+									<p:panelGrid columns="3" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" id="rsaIDInputPanel">
+										<h:panelGroup id="rsaIDInput" styleClass="md-inputfield" >
+											<p:inputText id="rsaIdCriteria" value="#{rv2.assessorUser.firstName} #{rv2.assessorUser.lastName}" style="width:95%" disabled="true" rendered="#{rv2.assessorUser ne null}">
+											</p:inputText>
+											<p:inputText id="rsaIdCriteria2" value="#{rv2.legacyAssessorAccreditation.firstName} #{rv2.legacyAssessorAccreditation.surname}" style="width:95%" disabled="true" rendered="#{rv2.legacyAssessorAccreditation ne null}">
+											</p:inputText>
+											<p:outputLabel value="Assessor" for="rsaIdCriteria" />
+										</h:panelGroup>
+										
+										<p:commandButton  icon="fa fa-plus" oncomplete="PF('addAsseessor').show()" update="addAsseessor"  id="saveAssessor" action="#{employeeLearnersVerificationUI.prepareDataModelAssesor}">
+											<f:setPropertyActionListener value="#{rv2}" target="#{employeeLearnersVerificationUI.summativeAssessmentReportUnitStandards}" />
+										</p:commandButton>
+										
+										<p:commandButton  icon="fa fa-trash-o"  update="@form" action="#{employeeLearnersVerificationUI.removeAssesor}" rendered="#{rv2.assessorUser.id ne null or rv2.legacyAssessorAccreditation.id ne null}">
+											<f:setPropertyActionListener value="#{rv2}" target="#{employeeLearnersVerificationUI.summativeAssessmentReportUnitStandards}" />
+											<p:confirm header="#{lang['confirmation']}" message="Are you sure that you want to remove this assessor?" icon="ui-icon-warning" />
+										</p:commandButton>
+										
+									</p:panelGrid>
+								</p:column>
+								
+								<p:column headerText="Date of Moderation" style="width: 20%">
+									<p:panelGrid columns="3" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" >
+										<p:calendar value="#{rv2.moderationDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" readonlyInput="true" mindate="#{rv2.assesmentDate}">
+											<p:ajax event="dateSelect"></p:ajax>
+										</p:calendar>
+										
+										<p:commandButton  icon="fa fa-plus" oncomplete="PF('addAsseessorDate').show()" update="addAsseessorDate" action="#{employeeLearnersVerificationUI.prepareModerationDate}">
+											<f:setPropertyActionListener value="#{rv2}" target="#{employeeLearnersVerificationUI.summativeAssessmentReportUnitStandards}" />
+										</p:commandButton>	
+										
+										<p:commandButton  icon="fa fa-trash-o"  update="@form" action="#{employeeLearnersVerificationUI.removeModerationDate}" rendered="#{rv2.moderationDate ne null}">
+											<f:setPropertyActionListener value="#{rv2}" target="#{employeeLearnersVerificationUI.summativeAssessmentReportUnitStandards}" />
+											<p:confirm header="#{lang['confirmation']}" message="Are you sure that you want to remove this assessor?" icon="ui-icon-warning" />
+										</p:commandButton>										
+									</p:panelGrid>
+								</p:column>
+								<p:column headerText="Moderated By" style="width: 20%">
+									<p:panelGrid columns="3" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" id="moderatorInputPanel">
+										<h:panelGroup id="moderIDInput" styleClass="md-inputfield" >
+											<p:inputText id="moderatedCriteria" value="#{rv2.moderatorUser.firstName} #{rv2.moderatorUser.lastName}" style="width:95%" disabled="true" rendered="#{rv2.moderatorUser ne null}">
+											</p:inputText>
+											<p:inputText id="moderatedCriteria2" value="#{rv2.legacyModeratorAccreditation.firstName} #{rv2.legacyModeratorAccreditation.surname}" style="width:95%" disabled="true" rendered="#{rv2.legacyModeratorAccreditation ne null}">
+											</p:inputText>
+											<p:outputLabel value="Moderated" for="moderatedCriteria" />
+										</h:panelGroup>
+										
+										<p:commandButton  icon="fa fa-plus" oncomplete="PF('addAsseessor').show()" update="addAsseessor"  id="saveModerator" action="#{employeeLearnersVerificationUI.prepareDataModelModerator}">
+											<f:setPropertyActionListener value="#{rv2}" target="#{employeeLearnersVerificationUI.summativeAssessmentReportUnitStandards}" />
+										</p:commandButton>
+										
+										<p:commandButton  icon="fa fa-trash-o"  update="@form" action="#{employeeLearnersVerificationUI.removeModerator}" rendered="#{rv2.moderatorUser.id ne null or rv2.legacyModeratorAccreditation.id ne null}">
+											<f:setPropertyActionListener value="#{rv2}" target="#{employeeLearnersVerificationUI.summativeAssessmentReportUnitStandards}" />
+											<p:confirm header="#{lang['confirmation']}" message="Are you sure that you want to remove this moderator" icon="ui-icon-warning" />
+										</p:commandButton>
+									</p:panelGrid>
+								</p:column>								
+								
+								<p:column headerText="Competence" style="width: 20%">
+									<p:panelGrid columns="3" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" >
+										<p:selectOneMenu id="competenceEnum" value="#{rv2.competenceEnum}" style="width:95%" disabled="true">
+											<p:ajax />
+											<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+											<f:selectItems value="#{enumUI.competenceEnumDD}" />
+										</p:selectOneMenu>
+										
+										<p:commandButton  icon="fa fa-plus" oncomplete="PF('addAsseessment').show()" update="addAsseessment" action="#{employeeLearnersVerificationUI.prepareCompetence}">
+											<f:setPropertyActionListener value="#{rv2}" target="#{employeeLearnersVerificationUI.summativeAssessmentReportUnitStandards}" />
+										</p:commandButton>	
+										<p:commandButton  icon="fa fa-trash-o"  update="@form" action="#{employeeLearnersVerificationUI.removeCompetence}" rendered="#{rv2.competenceEnum ne null}">
+											<f:setPropertyActionListener value="#{rv2}" target="#{employeeLearnersVerificationUI.summativeAssessmentReportUnitStandards}" />
+											<p:confirm header="#{lang['confirmation']}" message="Are you sure that you want to remove this assessor?" icon="ui-icon-warning" />
+										</p:commandButton>
+									</p:panelGrid>
+								</p:column>
+								<p:column headerText="Save" style="width: 0%" rendered="false">
+									<p:commandButton ajax="false" icon="fa fa-save " update="@form" action="#{employeeLearnersVerificationUI.saveUnitStandards}" id="downloadReport" process="@this" >
+										<f:setPropertyActionListener value="#{rv2}" target="#{employeeLearnersVerificationUI.summativeAssessmentReportUnitStandards}" />
+									</p:commandButton>
+								</p:column>
+							</p:dataTable>								
+						</p:fieldset>
+						
+						
+						<h:panelGroup id="docListUser" rendered="#{employeeLearnersVerificationUI.trainingproviderverfication.docs.size() gt 0}">
+							<br />
+							<span class="FontBold"> <i class="fa fa-exclamation-circle" aria-hidden="true"></i> #{lang['please.upload.the.following.compulsory.documents']}
+							</span>
+							<br />
+							<div class="ui-g dashboard">
+								<div class="ui-g-12">
+									<p:repeat var="rc" value="#{employeeLearnersVerificationUI.trainingproviderverfication.docs}" varStatus="x">
+										<div class="ui-g-12 ui-md-6 ui-lg-3">
+											<div class="ui-g card colorbox #{rc.originalFname eq null ? 'colorbox-5' : 'colorbox-1'}">
+												<div class="ui-g-4">
+													<i class="material-icons">#{rc.originalFname eq null ? 'cloud_upload' : 'check_circle'}</i>
+												</div>
+												<div class="ui-g-8">
+													<span class="colorbox-name">#{rc.configDoc.name}</span> <span class="colorbox-count"> <p:commandButton icon="fa fa-download" id="cbDownload1" rendered="#{rc.originalFname ne null}" action="#{employeeLearnersVerificationUI.download(rc)}" ajax="false" value="#{lang['download']}"
+															immediate="true" process="@parent">
+															<p:ajax onevent="oneventFunction" />
+														</p:commandButton> <p:commandButton value="#{rc.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" styleClass="#{rc.originalFname eq null ? 'red-btn' : 'green-btn'} flat" process="@this" oncomplete="PF('dlgUpload').show()" update="mainForm">
+															<f:setPropertyActionListener value="#{rc}" target="#{employeeLearnersVerificationUI.doc}" />
+														</p:commandButton>
+													</span>
+												</div>
+											</div>
+										</div>
+									</p:repeat>
+								</div>
+							</div>
+						</h:panelGroup>
+						
+						<div class="card">
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" >
+								<p:commandButton value="Request External Moderation" icon="ui-icon-save" update="@form" action="#{employeeLearnersVerificationUI.requestExternalModeration}" styleClass="flat green-btn Fs18" style="height: 50px;">
+								<p:confirm header="#{lang['confirmation']}" message="Are you sure that you want to request external moderation" icon="ui-icon-warning" />
+								</p:commandButton>
+							</p:panelGrid>
+						</div>
+					</c:if>
+					
+					<c:if test="#{employeeLearnersVerificationUI.viewLearnerDetails}">
+						<h:panelGroup id="pageLearnerDetails">
+							<div class="card card-w-title">
+								<ui:include src="/pages/tp/includes/learnerexpansion.xhtml">
+									<ui:param name="companyLearner" value="#{employeeLearnersVerificationUI.companyLearners}"></ui:param>
+								</ui:include>
+							</div>						
+						</h:panelGroup>
+					</c:if>
+				</h:form>
+			</div>
+		</div>
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+		
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+			<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+			<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+		</p:confirmDialog>
+		
+		<p:dialog header="Request external moderation" widgetVar="dateSchedule" hideEffect="clip" showEffect="clip" id="dateSchedule" appendTo="@(body)" modal="true" closable="true" width="30%" height="30vh" responsive="true">
+			<h:form id="dialogForm">	
+				<p:panelGrid columns="1" style="width:100%" id="reviewDateEntryGrid" layout="grid" styleClass="ui-panelgrid-blank">
+					<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" id="xxxGcompany">
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText id="companyNamecompany1" value="#{employeeLearnersVerificationUI.selectedCompany.companyName}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.company.name']}" disabled="true" />
+							<p:outputLabel value="Provider Name:" for="companyNamecompany1" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputMask id="companyRegNumbercompany1" value="#{employeeLearnersVerificationUI.selectedCompany.companyRegistrationNumber}" style="width:95%" required="true" requiredMessage="#{lang['enter.company.number']}" disabled="true" />
+							<p:outputLabel value="Registration number:" for="companyRegNumbercompany1" />
+						</h:panelGroup>
+					</p:panelGrid>
+					<p:commandButton update="@form" value="Request Moderation" action="#{employeeLearnersVerificationUI.requestModeration}" oncomplete="PF('dateSchedule').hide()">
+						
+					</p:commandButton>
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+		
+		<p:dialog header="Add Assessment/Moderation Date" widgetVar="addAsseessorDate" hideEffect="clip" showEffect="clip" id="addAsseessorDate" appendTo="@(body)" modal="true" closable="true" width="50%" height="50vh" responsive="true">
+			<h:form id="dialogAsseessorDateForm">
+				<p:panelGrid columns="2" style="width:100%"  layout="grid" styleClass="ui-panelgrid-blank" >
+										
+					<h:panelGroup styleClass="md-inputfield"  rendered="#{employeeLearnersVerificationUI.assessor}">
+						<p:calendar id="glPostingDate" value="#{employeeLearnersVerificationUI.summativeAssessmentReportUnitStandards.assesmentDate}" maxdate="#{employeeLearnersVerificationUI.now}" showOn="button" required="true" requiredMessage="Please select date" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" inputStyle="width:93%" >
+							<p:ajax event="dateSelect"  />
+						</p:calendar>
+						<p:outputLabel value="Assessment Date" for="glPostingDate" styleClass="gray" />
+					</h:panelGroup>
+					
+					<h:panelGroup styleClass="md-inputfield"  rendered="#{!employeeLearnersVerificationUI.assessor}">
+						<p:calendar id="glPostingDate1" value="#{employeeLearnersVerificationUI.summativeAssessmentReportUnitStandards.moderationDate}" maxdate="#{employeeLearnersVerificationUI.now}" showOn="button" required="true" requiredMessage="Please select date" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" inputStyle="width:93%" >
+							<p:ajax event="dateSelect"  />
+						</p:calendar>
+						<p:outputLabel value="Moderation Date" for="glPostingDate1" styleClass="gray" />
+					</h:panelGroup>
+						
+				</p:panelGrid>
+				
+				<p:commandButton icon="fa fa-save" oncomplete="PF('addAsseessorDate').hide()" action="#{employeeLearnersVerificationUI.addAssessmentDate}" value="Save Assessment/Moderation Date" update="mainForm">
+					
+				</p:commandButton>
+				
+			</h:form>
+		</p:dialog>
+		
+		<p:dialog header="Add Assessment" widgetVar="addAsseessment" hideEffect="clip" showEffect="clip" id="addAsseessment" appendTo="@(body)" modal="true" closable="true" width="50%" height="50vh" responsive="true">
+			<h:form id="dialogAsseessmentDateForm">
+				<p:panelGrid columns="2" style="width:100%"  layout="grid" styleClass="ui-panelgrid-blank" >					
+					<p:selectOneMenu id="competenceEnum" value="#{employeeLearnersVerificationUI.summativeAssessmentReportUnitStandards.competenceEnum}" style="width:95%" required="true" requiredMessage="Please select competence">
+						<p:ajax />
+						<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+						<f:selectItems value="#{enumUI.competenceEnumDD}" />
+					</p:selectOneMenu>
+				</p:panelGrid>
+				
+				<p:commandButton icon="fa fa-save" oncomplete="PF('addAsseessment').hide()" action="#{employeeLearnersVerificationUI.addAssessments}" value="Save Assessment" update="mainForm">
+					
+				</p:commandButton>
+				
+			</h:form>
+		</p:dialog>
+				
+		<p:dialog header="Add assessor/Moderators" widgetVar="addAsseessor" hideEffect="clip" showEffect="clip" id="addAsseessor" appendTo="@(body)" modal="true" closable="true" width="50%" height="50vh" responsive="true">
+			<h:form id="dialogAsseessorForm">	
+			
+				<p:selectOneRadio id="passNumID" value="#{employeeLearnersVerificationUI.newOrLegacyEnum}" columns="1" layout="responsive">
+					<p:ajax update="@form" />
+					<f:selectItems value="#{enumUI.newOrLegacyEnumDD}" var="idpassEnum" itemLabel="#{idpassEnum}" itemValue="#{idpassEnum}" />
+				</p:selectOneRadio>
+				
+				<p:panelGrid columns="1" style="width:100%" id="reviewAsseessorGrid" layout="grid" styleClass="ui-panelgrid-blank" rendered="#{employeeLearnersVerificationUI.newOrLegacyEnum eq NewOrLegacyEnum.NewApplication and employeeLearnersVerificationUI.dataModelAssessorModeratorApplication ne null}">
+					<p:dataTable var="rowVar" value="#{employeeLearnersVerificationUI.dataModelAssessorModeratorApplication}"  id="accreCompanyList" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+						paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+						
+						<f:facet name="header"> Assessor/Moderator Accredited For Unit Standard</f:facet>	
+											
+						<p:column headerText="#{lang['first.name']}" filterBy="#{rowVar.user.firstName}">
+							<h:outputText value="#{rowVar.user.firstName}" />
+						</p:column>
+						<p:column headerText="#{lang['last.name']}" filterBy="#{rowVar.user.lastName}">
+							<h:outputText value="#{rowVar.user.lastName}" />
+						</p:column>
+						<p:column headerText="Identity Number" filterBy="#{rowVar.user.rsaIDNumber}" sortBy="#{rowVar.user.rsaIDNumber}">
+							<h:outputText value="#{rowVar.user.rsaIDNumber}" />
+							<h:outputText rendered="#{rowVar.user.rsaIDNumber.length() lt 1}" value="N/A" />
+						</p:column>
+						<p:column headerText="Passport Number" filterBy="#{rowVar.user.rsaIDNumber}" sortBy="#{rowVar.user.rsaIDNumber}">
+							<h:outputText rendered="#{rowVar.user.passportNumber.length() lt 1}" value="N/A" />
+							<h:outputText value="#{rowVar.user.passportNumber}" />
+						</p:column>
+						<p:column headerText="Certificate Number" filterBy="#{rowVar.certificateNumber}">
+							<h:outputText value="#{rowVar.certificateNumber}" />
+						</p:column>
+						
+						<p:column headerText="Start Date" >
+							<h:outputText value="#{rowVar.startDate}" />
+						</p:column>
+						
+						<p:column headerText="End Date" >
+							<h:outputText value="#{rowVar.endDate}" />
+						</p:column>
+												
+						<p:column width="45" headerText="Select" exportable="false">
+							<p:commandButton icon="fa fa-check" oncomplete="PF('addAsseessor').hide()" action="#{employeeLearnersVerificationUI.addAssessorSingle}" title="Select Assessor" update="mainForm">
+								<f:setPropertyActionListener value="#{rowVar}"  target="#{employeeLearnersVerificationUI.assessorModeratorApplication}" />
+							</p:commandButton>
+						</p:column>
+					</p:dataTable>
+				</p:panelGrid>
+				
+				<p:panelGrid columns="1" style="width:100%"  layout="grid" styleClass="ui-panelgrid-blank" rendered="#{employeeLearnersVerificationUI.newOrLegacyEnum eq NewOrLegacyEnum.NewApplication and employeeLearnersVerificationUI.dataModelAssessorModeratorApplicationNew ne null}">
+					
+					<p:dataTable var="rowVar" value="#{employeeLearnersVerificationUI.dataModelAssessorModeratorApplicationNew}"  rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+						paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true"
+						rendered="#{employeeLearnersVerificationUI.dataModelAssessorModeratorApplicationNew ne null}">
+						<f:facet name="header"> Assessor/Moderator Accredited For Full Qualification/Skills Programme/Skills Set </f:facet>
+						<p:column headerText="#{lang['first.name']}" filterBy="#{rowVar.user.firstName}">
+							<h:outputText value="#{rowVar.user.firstName}" />
+						</p:column>
+						<p:column headerText="#{lang['last.name']}" filterBy="#{rowVar.user.lastName}">
+							<h:outputText value="#{rowVar.user.lastName}" />
+						</p:column>
+						<p:column headerText="Identity Number" filterBy="#{rowVar.user.rsaIDNumber}" sortBy="#{rowVar.user.rsaIDNumber}">
+							<h:outputText value="#{rowVar.user.rsaIDNumber}" />
+							<h:outputText rendered="#{rowVar.user.rsaIDNumber.length() lt 1}" value="N/A" />
+						</p:column>
+						<p:column headerText="Passport Number" filterBy="#{rowVar.user.rsaIDNumber}" sortBy="#{rowVar.user.rsaIDNumber}">
+							<h:outputText rendered="#{rowVar.user.passportNumber.length() lt 1}" value="N/A" />
+							<h:outputText value="#{rowVar.user.passportNumber}" />
+						</p:column>
+						<p:column headerText="Certificate Number" filterBy="#{rowVar.certificateNumber}">
+							<h:outputText value="#{rowVar.certificateNumber}" />
+						</p:column>
+						
+						<p:column headerText="Start Date" >
+							<h:outputText value="#{rowVar.startDate}" />
+						</p:column>
+						
+						<p:column headerText="End Date" >
+							<h:outputText value="#{rowVar.endDate}" />
+						</p:column>
+												
+						<p:column width="45" headerText="Select" exportable="false">
+							<p:commandButton icon="fa fa-check" oncomplete="PF('addAsseessor').hide()" action="#{employeeLearnersVerificationUI.addAssessor}" title="Select Assessor" update="mainForm">
+								<f:setPropertyActionListener value="#{rowVar}"  target="#{employeeLearnersVerificationUI.assessorModeratorApplication}" />
+							</p:commandButton>
+						</p:column>
+					</p:dataTable>
+				</p:panelGrid>
+				
+				<p:panelGrid columns="1" style="width:100%" id="reviewAsseessorGrid2" layout="grid" styleClass="ui-panelgrid-blank" rendered="#{employeeLearnersVerificationUI.newOrLegacyEnum eq NewOrLegacyEnum.LegacyApplication and employeeLearnersVerificationUI.assessor}">
+					
+					<p:dataTable var="rowVar" value="#{employeeLearnersVerificationUI.dataModelLegacyAssessorAccreditation}"  id="accreCompanyList2" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+						paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+						<f:facet name="header"> Legacy Assessors Accredited For Unit Standard</f:facet>	
+						<p:column headerText="#{lang['first.name']}" filterBy="#{rowVar.firstName}">
+							<h:outputText value="#{rowVar.firstName}" />
+						</p:column>
+						<p:column headerText="#{lang['last.name']}" filterBy="#{rowVar.surname}">
+							<h:outputText value="#{rowVar.surname}" />
+						</p:column>
+						<p:column headerText="Identity Number" filterBy="#{rowVar.idNo}">
+							<h:outputText value="#{rowVar.idNo}" />
+						</p:column>
+						
+						<p:column headerText="Certificate Number" filterBy="#{rowVar.decisionNumber}">
+							<h:outputText value="#{rowVar.decisionNumber}" />
+						</p:column>
+						
+						<p:column headerText="Start Date" >
+							<h:outputText value="#{rowVar.assessorRegStartDate}" />
+						</p:column>
+						
+						<p:column headerText="End Date" >
+							<h:outputText value="#{rowVar.assessorRegEndDate}" />
+						</p:column>
+												
+						<p:column width="45" headerText="Select" exportable="false">
+							<p:commandButton icon="fa fa-check" oncomplete="PF('addAsseessor').hide()" action="#{employeeLearnersVerificationUI.addLegacyAssessorSingle}" title="Select legacy Assessor" update="mainForm">
+								<f:setPropertyActionListener value="#{rowVar}"  target="#{employeeLearnersVerificationUI.legacyAssessorAccreditation}" />
+							</p:commandButton>
+						</p:column>
+					</p:dataTable>
+				</p:panelGrid>
+				
+				<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank" rendered="#{employeeLearnersVerificationUI.newOrLegacyEnum eq NewOrLegacyEnum.LegacyApplication and employeeLearnersVerificationUI.assessor and employeeLearnersVerificationUI.dataModelLegacyAssessorAccreditationNew ne null}">
+					
+					<p:dataTable var="rowVar" value="#{employeeLearnersVerificationUI.dataModelLegacyAssessorAccreditationNew}" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+						paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+						<f:facet name="header"> Legacy Assessors Accredited For Full qualification</f:facet>	
+						<p:column headerText="#{lang['first.name']}" filterBy="#{rowVar.firstName}">
+							<h:outputText value="#{rowVar.firstName}" />
+						</p:column>
+						<p:column headerText="#{lang['last.name']}" filterBy="#{rowVar.surname}">
+							<h:outputText value="#{rowVar.surname}" />
+						</p:column>
+						<p:column headerText="Identity Number" filterBy="#{rowVar.idNo}">
+							<h:outputText value="#{rowVar.idNo}" />
+						</p:column>
+						
+						<p:column headerText="Certificate Number" filterBy="#{rowVar.decisionNumber}">
+							<h:outputText value="#{rowVar.decisionNumber}" />
+						</p:column>
+						
+						<p:column headerText="Start Date" >
+							<h:outputText value="#{rowVar.assessorRegStartDate}" />
+						</p:column>
+						
+						<p:column headerText="End Date" >
+							<h:outputText value="#{rowVar.assessorRegEndDate}" />
+						</p:column>
+						
+						<p:column width="45" headerText="Select" exportable="false">
+							<p:commandButton icon="fa fa-check" oncomplete="PF('addAsseessor').hide()" action="#{employeeLearnersVerificationUI.addLegacyAssessor}" title="Select legacy Assessor" update="mainForm">
+								<f:setPropertyActionListener value="#{rowVar}"  target="#{employeeLearnersVerificationUI.legacyAssessorAccreditation}" />
+							</p:commandButton>
+						</p:column>
+					</p:dataTable>
+				</p:panelGrid>
+				
+				<p:panelGrid columns="1" style="width:100%" id="reviewAsseessorGrid3" layout="grid" styleClass="ui-panelgrid-blank" rendered="#{employeeLearnersVerificationUI.newOrLegacyEnum eq NewOrLegacyEnum.LegacyApplication and !employeeLearnersVerificationUI.assessor}">
+
+					<p:dataTable var="rowVar" value="#{employeeLearnersVerificationUI.dataModelLegacyModeratorAccreditation}"  id="accreCompanyList3" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+						paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+						
+						<f:facet name="header">Legacy Moderators Accredited For Unit Standard</f:facet>
+						
+						<p:column headerText="#{lang['first.name']}" filterBy="#{rowVar.firstName}">
+							<h:outputText value="#{rowVar.firstName}" />
+						</p:column>
+						<p:column headerText="#{lang['last.name']}" filterBy="#{rowVar.surname}">
+							<h:outputText value="#{rowVar.surname}" />
+						</p:column>
+						<p:column headerText="Identity Number" filterBy="#{rowVar.idNo}">
+							<h:outputText value="#{rowVar.idNo}" />
+						</p:column>
+						
+						<p:column headerText="Certificate Number" filterBy="#{rowVar.decisionNumber}">
+							<h:outputText value="#{rowVar.decisionNumber}" />
+						</p:column>
+						
+						<p:column headerText="Start Date" >
+							<h:outputText value="#{rowVar.moderatorRegStartDate}" />
+						</p:column>
+						
+						<p:column headerText="End Date" >
+							<h:outputText value="#{rowVar.moderatorRegEndDate}" />
+						</p:column>
+												
+						<p:column width="45" headerText="Select" exportable="false">
+							<p:commandButton icon="fa fa-check" oncomplete="PF('addAsseessor').hide()" action="#{employeeLearnersVerificationUI.addLegacyAssessor}" title="Select legacy Assessor" update="mainForm">
+								<f:setPropertyActionListener value="#{rowVar}"  target="#{employeeLearnersVerificationUI.legacyModeratorAccreditation}" />
+							</p:commandButton>
+						</p:column>
+					</p:dataTable>
+				</p:panelGrid>
+				
+				<p:panelGrid columns="1" style="width:100%"  layout="grid" styleClass="ui-panelgrid-blank" rendered="#{employeeLearnersVerificationUI.newOrLegacyEnum eq NewOrLegacyEnum.LegacyApplication and !employeeLearnersVerificationUI.assessor and employeeLearnersVerificationUI.dataModelLegacyModeratorAccreditationNew ne null}">
+				
+					<p:dataTable var="rowVar" value="#{employeeLearnersVerificationUI.dataModelLegacyModeratorAccreditationNew}"  rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+						paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+						
+						<f:facet name="header">Legacy Moderators Accredited For Full Qualification/Skills Programme/Skills Set</f:facet>
+						
+						<p:column headerText="#{lang['first.name']}" filterBy="#{rowVar.firstName}">
+							<h:outputText value="#{rowVar.firstName}" />
+						</p:column>
+						<p:column headerText="#{lang['last.name']}" filterBy="#{rowVar.surname}">
+							<h:outputText value="#{rowVar.surname}" />
+						</p:column>
+						<p:column headerText="Identity Number" filterBy="#{rowVar.idNo}">
+							<h:outputText value="#{rowVar.idNo}" />
+						</p:column>
+						
+						<p:column headerText="Certificate Number" filterBy="#{rowVar.decisionNumber}">
+							<h:outputText value="#{rowVar.decisionNumber}" />
+						</p:column>
+						
+						<p:column headerText="Start Date" >
+							<h:outputText value="#{rowVar.moderatorRegStartDate}" />
+						</p:column>
+						
+						<p:column headerText="End Date" >
+							<h:outputText value="#{rowVar.moderatorRegEndDate}" />
+						</p:column>
+												
+						<p:column width="45" headerText="Select" exportable="false">
+							<p:commandButton icon="fa fa-check" oncomplete="PF('addAsseessor').hide()" action="#{employeeLearnersVerificationUI.addLegacyAssessor}" title="Select legacy Assessor" update="mainForm">
+								<f:setPropertyActionListener value="#{rowVar}"  target="#{employeeLearnersVerificationUI.legacyModeratorAccreditation}" />
+							</p:commandButton>
+						</p:column>
+					</p:dataTable>
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+		
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true">
+				<h:form id="uploadForm">
+					<h:panelGroup id="uploadGroup">
+						<div class="ui-g">
+							<div class="ui-g-12">
+								<div class="card">
+									<h1 style="font-weight: bold; font-size: 25px;">#{employeeLearnersVerificationUI.doc.configDoc.name}</h1>
+									<p:panel>
+										<h:panelGrid columns="2" style="width: 100%">
+											<p:outputLabel value="#{lang['notes']}:" for="note" />
+											<p:inputTextarea id="note" value="#{employeeLearnersVerificationUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+												<p:ajax />
+											</p:inputTextarea>
+										</h:panelGrid>
+										<div class="TexAlCenter">
+											<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+										</div>
+										<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{employeeLearnersVerificationUI.storeAssessmentFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}"
+											update="mainForm uploadForm" multiple="false" fileLimit="1" allowTypes="/(\.|\/)(gif|jpe?g|png|pdf|docx|txt|doc)$/" immediate="false" auto="true" />
+									</p:panel>
+									<div class="EmptyBox10" />
+								</div>
+							</div>
+						</div>
+					</h:panelGroup>
+				</h:form>
+			</p:dialog>
+		
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload1" resizable="false" hideEffect="clip" showEffect="clip" id="commonUP" width="80%" responsive="true" modal="true">
+			<h:form id="uploadForm1">
+				<h:panelGroup id="uploadGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{employeeLearnersVerificationUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{employeeLearnersVerificationUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{employeeLearnersVerificationUI.storeAssessmentFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}"
+										update="mainForm uploadForm1" multiple="false" fileLimit="1" allowTypes="/(\.|\/)(gif|jpe?g|png|pdf|docx|txt|doc)$/" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+		
+		<p:dialog header="Add Assessment" widgetVar="addAsseessorDateApplyAll" hideEffect="clip" showEffect="clip" id="addAsseessorDateApplyAll" appendTo="@(body)" modal="true" closable="true" width="50%" height="50vh" responsive="true">
+			<h:form id="dialogAsseessorDateFormApplyAll">
+				<p:panelGrid columns="2" style="width:100%"  layout="grid" styleClass="ui-panelgrid-blank" >
+					<h:panelGroup styleClass="md-inputfield"  rendered="#{employeeLearnersVerificationUI.assessor}">
+						<p:calendar id="glPostingDate" value="#{employeeLearnersVerificationUI.assesmentDate}" maxdate="#{employeeLearnersVerificationUI.now}" showOn="button" required="true" requiredMessage="Please select date" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" inputStyle="width:93%" >
+							<p:ajax event="dateSelect"  />
+						</p:calendar>
+						<p:outputLabel value="Assessment Date" for="glPostingDate" styleClass="gray" />
+					</h:panelGroup>						
+				</p:panelGrid>
+				
+				<p:commandButton icon="fa fa-save" oncomplete="PF('addAsseessorDateApplyAll').hide()" action="#{employeeLearnersVerificationUI.applyAssessmentDateToAll}" value="Save Assessment Date" update="mainForm">
+					
+				</p:commandButton>				
+			</h:form>
+		</p:dialog>
+		
+		<p:dialog header="Moderation Date" widgetVar="addModerationDateApplyAll" hideEffect="clip" showEffect="clip" id="addModerationDateApplyAll" appendTo="@(body)" modal="true" closable="true" width="50%" height="50vh" responsive="true">
+			<h:form id="dialogModerationDateFormApplyAll">
+				<p:panelGrid columns="2" style="width:100%"  layout="grid" styleClass="ui-panelgrid-blank" >
+					<h:panelGroup styleClass="md-inputfield"  rendered="#{!employeeLearnersVerificationUI.assessor}">
+						<p:calendar id="glPostingDate1" value="#{employeeLearnersVerificationUI.moderationDate}" maxdate="#{employeeLearnersVerificationUI.now}" showOn="button" required="true" requiredMessage="Please select date" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" inputStyle="width:93%" >
+							<p:ajax event="dateSelect"  />
+						</p:calendar>
+						<p:outputLabel value="Moderation Date" for="glPostingDate1" styleClass="gray" />
+					</h:panelGroup>
+						
+				</p:panelGrid>				
+				<p:commandButton icon="fa fa-save" oncomplete="PF('addModerationDateApplyAll').hide()" action="#{employeeLearnersVerificationUI.applyModerationDateToAll}" value="Save Moderation Date" update="mainForm">
+					
+				</p:commandButton>				
+			</h:form>
+		</p:dialog>
+		
+		<p:dialog header="Add Assessment" widgetVar="addAsseessmentApplyAll" hideEffect="clip" showEffect="clip" id="addAsseessmentApplyAll" appendTo="@(body)" modal="true" closable="true" width="50%" height="50vh" responsive="true">
+			<h:form id="dialogAsseessmentDateFormApplyAll">
+				<p:panelGrid columns="2" style="width:100%"  layout="grid" styleClass="ui-panelgrid-blank" >					
+					<p:selectOneMenu id="competenceEnum" value="#{employeeLearnersVerificationUI.competenceEnum}" style="width:95%" required="true" requiredMessage="Please select competence">
+						<p:ajax />
+						<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+						<f:selectItems value="#{enumUI.competenceEnumDD}" />
+					</p:selectOneMenu>
+				</p:panelGrid>
+				
+				<p:commandButton icon="fa fa-save" oncomplete="PF('addAsseessmentApplyAll').hide()" action="#{employeeLearnersVerificationUI.addAssessmentsApplyAll}" value="Save Assessment" update="mainForm">
+					
+				</p:commandButton>
+				
+			</h:form>
+		</p:dialog>
+		
+		<p:dialog header="Add assessor" widgetVar="addAsseessorApplyAll" hideEffect="clip" showEffect="clip" id="addAsseessorApplyAll" appendTo="@(body)" modal="true" closable="true" width="50%" height="50vh" responsive="true">
+			<h:form id="dialogAsseessorFormApplyAll">	
+			
+				<p:selectOneRadio id="passNumID" value="#{employeeLearnersVerificationUI.newOrLegacyEnum}" columns="1" layout="responsive">
+					<p:ajax update="@form" listener="#{employeeLearnersVerificationUI.legacyassessoraccreditationInfoNew}"/>
+					<f:selectItems value="#{enumUI.newOrLegacyEnumDD}" var="idpassEnum" itemLabel="#{idpassEnum}" itemValue="#{idpassEnum}" />
+				</p:selectOneRadio>
+				
+				<p:panelGrid columns="1" style="width:100%"  layout="grid" styleClass="ui-panelgrid-blank" rendered="#{employeeLearnersVerificationUI.newOrLegacyEnum eq NewOrLegacyEnum.NewApplication and employeeLearnersVerificationUI.dataModelAssessorModeratorApplicationNew ne null}">
+					
+					<p:dataTable var="rowVar" value="#{employeeLearnersVerificationUI.dataModelAssessorModeratorApplicationNew}"  rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+						paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true"
+						rendered="#{employeeLearnersVerificationUI.dataModelAssessorModeratorApplicationNew ne null}">
+						<f:facet name="header"> Assessor/Moderator Accredited For Full Qualification/Skills Programme/Skills Set </f:facet>
+						<p:column headerText="#{lang['first.name']}" filterBy="#{rowVar.user.firstName}">
+							<h:outputText value="#{rowVar.user.firstName}" />
+						</p:column>
+						<p:column headerText="#{lang['last.name']}" filterBy="#{rowVar.user.lastName}">
+							<h:outputText value="#{rowVar.user.lastName}" />
+						</p:column>
+						<p:column headerText="Identity Number" filterBy="#{rowVar.user.rsaIDNumber}" sortBy="#{rowVar.user.rsaIDNumber}">
+							<h:outputText value="#{rowVar.user.rsaIDNumber}" />
+							<h:outputText rendered="#{rowVar.user.rsaIDNumber.length() lt 1}" value="N/A" />
+						</p:column>
+						<p:column headerText="Passport Number" filterBy="#{rowVar.user.rsaIDNumber}" sortBy="#{rowVar.user.rsaIDNumber}">
+							<h:outputText rendered="#{rowVar.user.passportNumber.length() lt 1}" value="N/A" />
+							<h:outputText value="#{rowVar.user.passportNumber}" />
+						</p:column>
+						<p:column headerText="Certificate Number" filterBy="#{rowVar.certificateNumber}">
+							<h:outputText value="#{rowVar.certificateNumber}" />
+						</p:column>
+						
+						<p:column headerText="Start Date" >
+							<h:outputText value="#{rowVar.startDate}" />
+						</p:column>
+						
+						<p:column headerText="End Date" >
+							<h:outputText value="#{rowVar.endDate}" />
+						</p:column>
+						
+						
+						<p:column width="45" headerText="Select" exportable="false">
+							<p:commandButton icon="fa fa-check" oncomplete="PF('addAsseessorApplyAll').hide()" action="#{employeeLearnersVerificationUI.applyToAllAssessors}" title="Select Assessor" update="mainForm">
+								<f:setPropertyActionListener value="#{rowVar}"  target="#{employeeLearnersVerificationUI.assessorModeratorApplication}" />
+							</p:commandButton>
+						</p:column>
+					</p:dataTable>
+				</p:panelGrid>
+								
+				<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank" rendered="#{employeeLearnersVerificationUI.newOrLegacyEnum eq NewOrLegacyEnum.LegacyApplication and employeeLearnersVerificationUI.dataModelLegacyAssessorAccreditationNew ne null}">
+					
+					<p:dataTable var="rowVar" value="#{employeeLearnersVerificationUI.dataModelLegacyAssessorAccreditationNew}" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+						paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+						<f:facet name="header"> Legacy Assessors Accredited For Full qualification</f:facet>	
+						<p:column headerText="#{lang['first.name']}" filterBy="#{rowVar.firstName}">
+							<h:outputText value="#{rowVar.firstName}" />
+						</p:column>
+						<p:column headerText="#{lang['last.name']}" filterBy="#{rowVar.surname}">
+							<h:outputText value="#{rowVar.surname}" />
+						</p:column>
+						<p:column headerText="Identity Number" filterBy="#{rowVar.idNo}">
+							<h:outputText value="#{rowVar.idNo}" />
+						</p:column>
+						
+						<p:column headerText="Certificate Number" filterBy="#{rowVar.decisionNumber}">
+							<h:outputText value="#{rowVar.decisionNumber}" />
+						</p:column>
+						
+						<p:column headerText="Start Date" >
+							<h:outputText value="#{rowVar.assessorRegStartDate}" />
+						</p:column>
+						
+						<p:column headerText="End Date" >
+							<h:outputText value="#{rowVar.assessorRegEndDate}" />
+						</p:column>
+												
+						<p:column width="45" headerText="Select" exportable="false">
+							<p:commandButton icon="fa fa-check" oncomplete="PF('addAsseessorApplyAll').hide()" action="#{employeeLearnersVerificationUI.applyToAllLegacyAssessor}" title="Select legacy Assessor" update="mainForm">
+								<f:setPropertyActionListener value="#{rowVar}"  target="#{employeeLearnersVerificationUI.legacyAssessorAccreditation}" />
+							</p:commandButton>
+						</p:column>
+					</p:dataTable>
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+		
+		
+		<p:dialog header="Add Moderator" widgetVar="addModeratorApplyAll" hideEffect="clip" showEffect="clip" id="addModeratorApplyAll" appendTo="@(body)" modal="true" closable="true" width="50%" height="50vh" responsive="true">
+			<h:form id="dialogModeratorFormApplyAll">	
+			
+				<p:selectOneRadio id="passNumID" value="#{employeeLearnersVerificationUI.newOrLegacyEnum}" columns="1" layout="responsive">
+					<p:ajax update="@form" />
+					<f:selectItems value="#{enumUI.newOrLegacyEnumDD}" var="idpassEnum" itemLabel="#{idpassEnum}" itemValue="#{idpassEnum}" />
+				</p:selectOneRadio>
+				
+				<p:panelGrid columns="1" style="width:100%"  layout="grid" styleClass="ui-panelgrid-blank" rendered="#{employeeLearnersVerificationUI.newOrLegacyEnum eq NewOrLegacyEnum.NewApplication and employeeLearnersVerificationUI.dataModelAssessorModeratorApplicationNew ne null}">
+					
+					<p:dataTable var="rowVar" value="#{employeeLearnersVerificationUI.dataModelAssessorModeratorApplicationNew}"  rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+						paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true"
+						rendered="#{employeeLearnersVerificationUI.dataModelAssessorModeratorApplicationNew ne null}">
+						<f:facet name="header"> Assessor/Moderator Accredited For Full Qualification/Skills Programme/Skills Set </f:facet>
+						<p:column headerText="#{lang['first.name']}" filterBy="#{rowVar.user.firstName}">
+							<h:outputText value="#{rowVar.user.firstName}" />
+						</p:column>
+						<p:column headerText="#{lang['last.name']}" filterBy="#{rowVar.user.lastName}">
+							<h:outputText value="#{rowVar.user.lastName}" />
+						</p:column>
+						<p:column headerText="Identity Number" filterBy="#{rowVar.user.rsaIDNumber}" sortBy="#{rowVar.user.rsaIDNumber}">
+							<h:outputText value="#{rowVar.user.rsaIDNumber}" />
+							<h:outputText rendered="#{rowVar.user.rsaIDNumber.length() lt 1}" value="N/A" />
+						</p:column>
+						<p:column headerText="Passport Number" filterBy="#{rowVar.user.rsaIDNumber}" sortBy="#{rowVar.user.rsaIDNumber}">
+							<h:outputText rendered="#{rowVar.user.passportNumber.length() lt 1}" value="N/A" />
+							<h:outputText value="#{rowVar.user.passportNumber}" />
+						</p:column>
+						<p:column headerText="Certificate Number" filterBy="#{rowVar.certificateNumber}">
+							<h:outputText value="#{rowVar.certificateNumber}" />
+						</p:column>
+						
+						<p:column headerText="Start Date" >
+							<h:outputText value="#{rowVar.startDate}" />
+						</p:column>
+						
+						<p:column headerText="End Date" >
+							<h:outputText value="#{rowVar.endDate}" />
+						</p:column>
+												
+						<p:column width="45" headerText="Select" exportable="false">
+							<p:commandButton icon="fa fa-check" oncomplete="PF('addModeratorApplyAll').hide()" action="#{employeeLearnersVerificationUI.applyToAllModerator}" title="Select Assessor" update="mainForm">
+								<f:setPropertyActionListener value="#{rowVar}"  target="#{employeeLearnersVerificationUI.assessorModeratorApplication}" />
+							</p:commandButton>
+						</p:column>
+					</p:dataTable>
+				</p:panelGrid>
+								
+				<p:panelGrid columns="1" style="width:100%"  layout="grid" styleClass="ui-panelgrid-blank" rendered="#{employeeLearnersVerificationUI.newOrLegacyEnum eq NewOrLegacyEnum.LegacyApplication and employeeLearnersVerificationUI.dataModelLegacyModeratorAccreditationNew ne null}">
+				
+					<p:dataTable var="rowVar" value="#{employeeLearnersVerificationUI.dataModelLegacyModeratorAccreditationNew}"  rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+						paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+						
+						<f:facet name="header">Legacy Moderators Accredited For Full Qualification/Skills Programme/Skills Set</f:facet>
+						
+						<p:column headerText="#{lang['first.name']}" filterBy="#{rowVar.firstName}">
+							<h:outputText value="#{rowVar.firstName}" />
+						</p:column>
+						<p:column headerText="#{lang['last.name']}" filterBy="#{rowVar.surname}">
+							<h:outputText value="#{rowVar.surname}" />
+						</p:column>
+						<p:column headerText="Identity Number" filterBy="#{rowVar.idNo}">
+							<h:outputText value="#{rowVar.idNo}" />
+						</p:column>
+						
+						<p:column headerText="Certificate Number" filterBy="#{rowVar.decisionNumber}">
+							<h:outputText value="#{rowVar.decisionNumber}" />
+						</p:column>
+						
+						<p:column headerText="Start Date" >
+							<h:outputText value="#{rowVar.moderatorRegStartDate}" />
+						</p:column>
+						
+						<p:column headerText="End Date" >
+							<h:outputText value="#{rowVar.moderatorRegEndDate}" />
+						</p:column>
+						
+						<p:column width="45" headerText="Select" exportable="false">
+							<p:commandButton icon="fa fa-check" oncomplete="PF('addModeratorApplyAll').hide()" action="#{employeeLearnersVerificationUI.applyToAllLegacyModerators}" title="Select legacy Assessor" update="mainForm">
+								<f:setPropertyActionListener value="#{rowVar}"  target="#{employeeLearnersVerificationUI.legacyModeratorAccreditation}" />
+							</p:commandButton>
+						</p:column>
+					</p:dataTable>
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+	</ui:define>
+</ui:composition>

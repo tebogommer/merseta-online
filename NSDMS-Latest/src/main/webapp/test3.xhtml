@@ -1,0 +1,34 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml" xmlns:pe="http://primefaces.org/ui/extensions" xmlns:pt="http://xmlns.jcp.org/jsf/passthrough">
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card">
+					<h1 id="headerOne">Test Page</h1>
+					<p:growl>
+						<p:autoUpdate/>
+					</p:growl>
+					<h:form id="companyInsForm">
+						<h:panelGroup rendered="false" styleClass="md-inputfield">
+							<p:autoComplete id="company" value="#{workplacemonitoringUI.workplacemonitoring.company}" completeMethod="#{autoCompleteUI.completeCompany}" var="rv" itemLabel="#{rv.companyNameDisplay}" itemValue="#{rv}" forceSelection="true" converter="CompanyConvertor" dropdown="false" minQueryLength="3" maxResults="10">
+								<p:column headerText="#{lang['companyName']}" style="white-space: nowrap">#{rv.companyName}</p:column>
+								<p:column headerText="#{lang['entity.id']}" style="white-space: nowrap">#{rv.levyNumber}</p:column>
+								<p:ajax event="itemSelect" update="@form"></p:ajax>
+							</p:autoComplete>
+							<p:outputLabel value="#{lang['company']}" for="company" />
+						</h:panelGroup>
+						<br />
+						<br />
+						<p:commandButton value="Gen Workplace Monitoringtion" action="#{workplacemonitoringUI.requesteWorkflow}" update="@form" rendered="false"/>
+						<p:commandButton value="Auto calc OFo codes main" action="#{testUI.runOfoCodeMain}" update="@form" />
+						<p:commandButton value="Run Special" action="#{testUI.runOfoCodeSpecial}" update="@form" />
+						<p:commandButton value="Test GP" action="#{testUI.testGPWithLNumber}" update="@form" />
+						<br/>
+						<p:commandButton value="Test SARS Notification" action="#{testUI.sarsNotification}" update="@form" />
+						<br/>
+						<p:commandButton value="Test GP XML" action="#{testUI.test15}" update="@form" />
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+</ui:composition>

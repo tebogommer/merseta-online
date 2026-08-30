@@ -1,0 +1,137 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+	<c:if test="#{!learnerUI.formUser.doneSearch}">
+		<ui:include src="/pages/includes/searchUserPassportOrID.xhtml" />
+	</c:if>
+
+	<h:panelGroup rendered="#{learnerUI.formUser.doneSearch}">
+		<br />
+		<p:fieldset legend="#{!learnerUI.formUser.doneSearch ? 'Enter RSA ID number or Passport number' : lang['your.details'] }">
+			<p:panelGrid columns="2" style="width:100%" id="sdfInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText id="userName" value="#{learnerUI.formUser.firstName}" style="width:95%" required="true" disabled="#{learnerUI.formUser.existingUser or learnerUI.formUser.regFieldsDone}" requiredMessage="#{lang['enter.your.name']}" />
+					<p:outputLabel value="#{lang['first.name']}" for="userName" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText id="userSurname" value="#{learnerUI.formUser.lastName}" style="width:95%" required="true" disabled="#{learnerUI.formUser.existingUser or learnerUI.formUser.regFieldsDone}" requiredMessage="#{lang['enter.your.last.name']}" />
+					<p:outputLabel value="#{lang['surname']}" for="userSurname" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText id="userEmail" value="#{learnerUI.formUser.email}" style="width:95%" required="true" disabled="#{learnerUI.formUser.existingUser or learnerUI.formUser.regFieldsDone}" requiredMessage="#{lang['enter.your.email.address']}" />
+					<p:outputLabel value="#{lang['emails']}" for="userEmail" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield" rendered="#{learnerUI.formUser.rsaIDNumber.length() gt 0}">
+					<p:inputText id="userIdNumber" value="#{learnerUI.formUser.rsaIDNumber}" style="width:95%" disabled="#{learnerUI.formUser.existingUser}" />
+					<p:outputLabel value="#{lang['rsa.id.number']}" for="userIdNumber" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield" rendered="#{learnerUI.formUser.passportNumber.length() gt 0}">
+					<p:inputText id="userPassport" value="#{learnerUI.formUser.passportNumber}" style="width:95%" disabled="true" />
+					<p:outputLabel value="#{lang['passport.number']}" for="userPassport" />
+				</h:panelGroup>
+				<div class="EmptyBox10" />
+				<h:panelGroup id="docList" rendered="#{learnerUI.formUser.docs.size() gt 0}">
+					<br />
+					<span class="FontBold"> <i class="fa fa-exclamation-circle" aria-hidden="true"></i> #{lang['please.upload.the.following.compulsory.documents']}
+					</span>
+					<br />
+					<div class="ui-g dashboard">
+						<div class="ui-g-12">
+							<p:repeat var="rc" value="#{learnerUI.formUser.docs}" varStatus="x">
+								<div class="ui-g-12 ui-md-6 ui-lg-3">
+									<div class="ui-g card colorbox #{rc.originalFname eq null ? 'colorbox-5' : 'colorbox-1'}">
+										<div class="ui-g-4">
+											<i class="material-icons">#{rc.originalFname eq null ? 'cloud_upload' : 'check_circle'}</i>
+										</div>
+										<div class="ui-g-8">
+											<span class="colorbox-name">#{rc.configDoc.name}</span> <span class="colorbox-count"> <p:commandButton value="#{rc.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" styleClass="#{rc.originalFname eq null ? 'red-btn' : 'green-btn'} flat" process="@this"
+													oncomplete="PF('dlgUpload').show()" update=":uploadForm">
+													<f:setPropertyActionListener value="#{rc}" target="#{learnerUI.doc}" />
+												</p:commandButton>
+											</span>
+										</div>
+									</div>
+								</div>
+							</p:repeat>
+						</div>
+					</div>
+				</h:panelGroup>
+				<p:spacer rendered="#{!learnerUI.formUser.regFieldsDone}" />
+				<p:commandButton value="#{lang['continue']}" update="sdfInsGrid companyDetails" icon="ui-icon-fast-forward" iconPos="right" styleClass="flat" action="#{learnerUI.doneUserBit}" rendered="#{!learnerUI.formUser.regFieldsDone}" />
+			</p:panelGrid>
+		</p:fieldset>
+		<br />
+		<h:panelGroup id="companyDetails">
+			<p:fieldset legend="#{lang['company.main.heading']}" rendered="#{learnerUI.formUser.regFieldsDone}">
+				<p:panelGrid id="searchCompanyPnl" columns="3" styleClass="ui-panelgrid-blank" rendered="#{!learnerUI.company.doneSearch or learnerUI.company.id eq null}">
+					<p:outputLabel value="#{lang['companyRegistrationNumber']}" for="scnl" />
+					<p:inputText id="scnl" value="#{searchCompanyUI.criteria}" style="width:95%" requiredMessage="#{lang['enter.company.registration.number']}" maxlength="30" required="true" />
+					<p:commandButton icon="fa fa-search" actionListener="#{searchCompanyUI.find}" update="companyDetails companyInsForm:submitPanel" process="searchCompanyPnl" />
+				</p:panelGrid>
+				<c:if test="#{learnerUI.company.id ne null}">
+					<h:panelGroup id="companyGrid">
+						<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" id="xxxG" rendered="#{learnerUI.company.doneSearch}">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="companyName" value="#{learnerUI.company.companyName}" style="width:95%" required="true" requiredMessage="#{lang['enter.your.company.name']}" disabled="#{learnerUI.company.existingCompany or learnerUI.company.regDone}" />
+								<p:outputLabel value="#{lang['companyName']}" for="companyName" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="companyRegNumber" value="#{learnerUI.company.companyRegistrationNumber}" style="width:95%" required="true" requiredMessage="#{lang['enter.company.number']}" disabled="#{learnerUI.company.existingCompany or learnerUI.company.regDone}" />
+								<p:outputLabel value="#{lang['companyRegistrationNumber']}" for="companyRegNumber" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="companyLevyNumber" value="#{learnerUI.company.levyNumber}" style="width:95%" required="true" requiredMessage="#{lang['enter.levy.number']}" disabled="#{learnerUI.company.existingCompany or learnerUI.company.regDone}" />
+								<p:outputLabel value="#{lang['levyNumber']}" for="companyLevyNumber" />
+							</h:panelGroup>
+						</p:panelGrid>
+						<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" id="xxxGs">
+							<p:spacer></p:spacer>
+							<p:commandButton value="#{lang['continue']}" update="companyDetails trainingDetails" icon="ui-icon-fast-forward" iconPos="right" styleClass="flat" action="#{learnerUI.doneCompanyBit}" rendered="#{learnerUI.company.doneSearch and !learnerUI.trainerBool}" />
+						</p:panelGrid>
+					</h:panelGroup>
+				</c:if>
+				<c:if test="#{learnerUI.company.id eq null and learnerUI.company.doneSearch}">
+					<h2>#{lang['no.company.registered.with.that.company.number']}</h2>
+				</c:if>
+			</p:fieldset>
+		</h:panelGroup>
+	</h:panelGroup>
+
+	<br />
+	<h:panelGroup id="trainingDetails">
+		<p:fieldset legend="#{lang['training.provider.details']}" rendered="#{learnerUI.formUser.regFieldsDone and learnerUI.trainerBool}">
+			<p:panelGrid id="searchTrainingProviderPnl" columns="3" styleClass="ui-panelgrid-blank" rendered="#{!learnerUI.trainingProvider.doneSearch or learnerUI.trainingProvider.id eq null}">
+				<p:outputLabel value="#{lang['companyRegistrationNumber']}" for="scnl1" />
+				<p:inputText id="scnl1" value="#{searchCompanyUI.criteria}" style="width:95%" requiredMessage="#{lang['enter.company.registration.number']}" maxlength="30" required="true" />
+				<p:commandButton icon="fa fa-search" actionListener="#{searchCompanyUI.find}" update="trainingDetails companyInsForm:submitPanel" process="searchTrainingProviderPnl" />
+			</p:panelGrid>
+			<c:if test="#{learnerUI.trainingProvider.id ne null}">
+				<h:panelGroup id="trainingGrid">
+					<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{learnerUI.trainingProvider.doneSearch}">
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText id="companyName1" value="#{learnerUI.trainingProvider.companyName}" style="width:95%" required="true" requiredMessage="#{lang['enter.your.company.name']}" disabled="#{learnerUI.trainingProvider.existingCompany or learnerUI.trainingProvider.regDone}" />
+							<p:outputLabel value="#{lang['companyName']}" for="companyName1" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText id="companyRegNumber1" value="#{learnerUI.trainingProvider.companyRegistrationNumber}" style="width:95%" required="true" requiredMessage="#{lang['enter.company.number']}" disabled="#{learnerUI.trainingProvider.existingCompany or learnerUI.trainingProvider.regDone}" />
+							<p:outputLabel value="#{lang['companyRegistrationNumber']}" for="companyRegNumber1" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText id="companyLevyNumber1" value="#{learnerUI.trainingProvider.levyNumber}" style="width:95%" required="true" requiredMessage="#{lang['enter.levy.number']}" disabled="#{learnerUI.trainingProvider.existingCompany or learnerUI.trainingProvider.regDone}" />
+							<p:outputLabel value="#{lang['levyNumber']}" for="companyLevyNumber1" />
+						</h:panelGroup>
+					</p:panelGrid>
+					<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+						<p:spacer></p:spacer>
+						<p:commandButton value="#{lang['continue']}" update="trainingGrid :companyInsForm:submitPanel" process="@this" icon="ui-icon-fast-forward" iconPos="right" styleClass="flat" action="#{learnerUI.doneTrainerBit}" rendered="#{learnerUI.trainingProvider.doneSearch and !learnerUI.finalBool}" />
+					</p:panelGrid>
+				</h:panelGroup>
+			</c:if>
+			<c:if test="#{learnerUI.trainingProvider.id eq null and learnerUI.trainingProvider.doneSearch}">
+				<h2>#{lang['no.training.provider.registered.with.that.company.number']}</h2>
+			</c:if>
+		</p:fieldset>
+	</h:panelGroup>
+
+
+
+</ui:composition>

@@ -1,0 +1,169 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui">
+	<div class="ui-g-12">
+		<h:form id="filterCoursewareFRM">
+			<div class="card card-w-title">
+				<h1>Total Number Of Requested Learning Material Monthly And Yearly</h1>
+				<p:fieldset>
+					<br/>
+					<p:panelGrid columns="3" style="width:100%" id="bankInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup>
+								 <p:outputLabel value="Select Month: " for="month" />
+       							 <p:datePicker id="month" showIcon="true" style="width:100%"  view="month" value="#{coursewareDistributionReportUI.searchMonth}" pattern="MMMM" yearNavigator="true" yearRange="2017:2060" />
+							</h:panelGroup>
+							<h:panelGroup >
+								<p:outputLabel value="Enter Year: " for="year" />
+								<p:inputText id="year" value="#{coursewareDistributionReportUI.searchYear}" type="number" style="width:100%" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:commandButton value="Search" icon="ui-icon-search" update="@form" action="#{coursewareDistributionReportUI.searchCoursewareByYearOrMon}" />
+								<p:spacer width="20"></p:spacer>
+								<p:commandButton value="Clear" icon="fa fa-recycle" update="@form" action="#{coursewareDistributionReportUI.clearYearAndMon}" />
+							</h:panelGroup>
+					</p:panelGrid>
+				</p:fieldset>
+			<br/>
+			<ui:include src="/pages/includes/download_lazy.xhtml">
+				<ui:param name="file_name" value="Courseware_Distibution_List" />
+				<ui:param name="target" value="ymCoursewaredistibutionList" />
+			</ui:include>
+			<p:dataTable rendered="#{coursewareDistributionReportUI.searching}" var="rowVar"  value="#{coursewareDistributionReportUI.coursewareDataModelByMonthAndYear}" filteredValue="#{coursewaredistibutionUI.coursewareDistibutionfilteredList}" id="ymCoursewaredistibutionList" rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom"
+				paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" emptyMessage="No Courseware distribution information found" rowsPerPageTemplate="10,15,20,25,50,100" reflow="true" sortBy="#{rowVar.approvalEnum}" lazy="true">
+
+				<p:column headerText="Company Name" filterBy="#{rowVar.company.companyName}">
+					<h:outputText value="#{rowVar.company.companyName}" /> 
+				</p:column>
+
+				<p:column headerText="Trading Name" filterBy="#{rowVar.company.tradingName}">
+					<h:outputText value="#{rowVar.company.tradingName}" />
+				</p:column>
+
+				<p:column headerText="#{lang['entity.id']}" filterBy="#{rowVar.company.levyNumber}">
+					<h:outputText value="#{rowVar.company.levyNumber}" />
+				</p:column>
+
+				<p:column headerText="First Name">
+					<h:outputText value="#{rowVar.user.firstName}" />
+				</p:column>
+
+				<p:column headerText="Last Name" filterBy="#{rowVar.user.lastName}">
+					<h:outputText value="#{rowVar.user.lastName}" />
+				</p:column>
+
+				<p:column headerText="Module Title" filterBy="#{rowVar.modules.moduleTitle}">
+					<h:outputText value="#{rowVar.modules.moduleTitle}" />
+				</p:column>
+				<p:column headerText="Module Reference" filterBy="#{rowVar.modules.moduleRef}">
+					<h:outputText value="#{rowVar.modules.moduleRef}" />
+				</p:column>
+				<p:column headerText="Module Topic">
+					<h:outputText value="#{rowVar.modules.moduleTopic}" />
+				</p:column>
+				<p:column headerText="Application Status" filterBy="#{rowVar.approvalEnum.friendlyName}">
+					<h:outputText value="#{rowVar.approvalEnum.friendlyName}" />
+				</p:column>
+				<p:column sortBy="#{rowVar.approvalDate}" headerText="Approval Date">
+					<p:outputLabel  value="#{rowVar.approvalDate}">
+						<f:convertDateTime pattern="dd MMMM yyyy" />
+					</p:outputLabel>
+				</p:column>
+			</p:dataTable>
+				
+			</div>
+		</h:form>
+	</div>
+	<div class="ui-g-12">
+		<h:form id="companytRestFRM">
+			<div class="card card-w-title">
+				<h1>Total Number Of Requested Learning Material By SDPs</h1>
+				<ui:include src="/pages/includes/download_lazy.xhtml">
+					<ui:param name="file_name" value="Courseware_Distibution_List" />
+					<ui:param name="target" value="companyRequestResults" />
+				</ui:include>
+				<p:dataTable var="rowVar" value="#{coursewareDistributionReportUI.dataModeCoursewareDistByCompany}" id="companyRequestResults" rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom"
+					paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,15,20,25,50,100" reflow="true" lazy="true">
+					<p:column headerText="Company Name">
+						<h:outputText value="#{rowVar.companyName}" />
+					</p:column>
+					<p:column headerText="Trading Name">
+						<h:outputText value="#{rowVar.tradingName}" />
+					</p:column>
+					<p:column headerText="#{lang['entity.id']}">
+						<h:outputText value="#{rowVar.levyNumber}" />
+					</p:column>
+					<p:column headerText="Total Request" width="150">
+						<h:outputText value="#{rowVar.totalRequest}" />
+					</p:column>
+					<p:column headerText="View Request" width="45" exportable="false">
+						<p:commandButton icon="fa fa-search" update="companytRestFRM" title="View SDP Requests" action="#{coursewareDistributionReportUI.loadCompanyCoursewareDistribution}">
+							<f:setPropertyActionListener value="#{rowVar}" target="#{coursewareDistributionReportUI.selectedCompany}" />
+					   </p:commandButton>
+					</p:column>
+				</p:dataTable>
+			</div>
+			<h:panelGroup id="pgComprequests" rendered="#{coursewareDistributionReportUI.selectedCompany ne null}">
+				<div class="card card-w-title">
+					<div align="right">
+						<p:commandButton icon="fa fa-close" update="companytRestFRM" title="Close" action="#{coursewareDistributionReportUI.clearSelectCourseware}">
+								
+						 </p:commandButton>
+					</div>
+					<br/>
+					<ui:include src="/pages/includes/download_lazy.xhtml">
+						<ui:param name="file_name" value="Courseware_Distibution_List" />
+						<ui:param name="target" value="reportResults" />
+					</ui:include>
+					<p:dataTable var="rowVar" value="#{coursewareDistributionReportUI.companyCourseWareDataModel}" id="reportResults" rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom"
+						paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,15,20,25,50,100" reflow="true" lazy="true">
+						
+						<f:facet name="header">
+					      #{coursewareDistributionReportUI.selectedCompany.companyName} Learning Material Request(s)
+					    </f:facet>
+						<p:column headerText="Module Title">
+							<h:outputText value="#{rowVar.modules.moduleTitle}" />
+						</p:column>
+						<p:column headerText="Module Reference">
+							<h:outputText value="#{rowVar.modules.moduleRef}" />
+						</p:column>
+						<p:column headerText="Module Topic">
+							<h:outputText value="#{rowVar.modules.moduleTopic}" />
+						</p:column>
+						<p:column headerText="Application Status">
+							<h:outputText value="#{rowVar.approvalEnum.friendlyName}" />
+						</p:column>
+						<p:column headerText="Approval Date">
+							<p:outputLabel value="#{rowVar.approvalDate}">
+								<f:convertDateTime pattern="dd MMMM yyyy" />
+							</p:outputLabel>
+						</p:column>
+					</p:dataTable>
+				</div>
+			</h:panelGroup>
+			
+			<div class="card card-w-title">
+				<h1>Most Common Material Requested</h1>
+				<ui:include src="/pages/includes/download_lazy.xhtml">
+					<ui:param name="file_name" value="Courseware_Distibution_List" />
+					<ui:param name="target" value="mostRequestList" />
+				</ui:include>
+				<p:dataTable var="rowVar" value="#{coursewareDistributionReportUI.mostRequestedCoursewareDataModel}" id="mostRequestList" rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom"
+					paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,15,20,25,50,100" reflow="true" lazy="true">
+					
+					<p:column headerText="Module Title">
+						<h:outputText value="#{rowVar.moduleTitle}" />
+					</p:column>
+					<p:column headerText="Module Reference">
+						<h:outputText value="#{rowVar.moduleRef}" />
+					</p:column>
+					<p:column headerText="Module Topic">
+						<h:outputText value="#{rowVar.moduleTopic}" />
+					</p:column>
+					<p:column headerText="Total Request" width="150">
+						<h:outputText value="#{rowVar.totalRequest}" />
+					</p:column>
+					
+				</p:dataTable>
+			</div>
+		</h:form>
+	</div>
+	
+</ui:composition>

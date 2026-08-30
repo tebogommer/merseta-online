@@ -1,0 +1,397 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<p:importEnum type="haj.com.entity.enums.WspStatusEnum" />
+	<p:importEnum type="haj.com.entity.enums.WspTypeEnum" />
+	<div class="card card-w-title">
+		<p:commandButton title="#{lang['view']}" update="@form" icon="fa fa-times" action="#{initiatewspUI.closeWspLookup}" styleClass="Fright">
+			<f:setPropertyActionListener value="#{null}" target="#{initiatewspUI.selectedCompany}" />
+		</p:commandButton>
+		<h1>#{initiatewspUI.selectedCompany.company.companyName} #{lang['grant.application']}</h1>
+		<p:growl showDetail="false" sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+		<div class="EmptyBox10" />
+
+		<c:if test="#{initiatewspUI.canCreateNewWsp}">
+			<p:commandButton icon="fa fa-plus" value="#{lang['initiate.wsp']}" id="createNewWspbtn" update="dialogRangeWsp" oncomplete="PF('dialogRangeWsp').show()" rendered="#{initiatewspUI.canInitiate and sessionUI.externalParty}">
+				<p:confirm header="Have you double checked all relevant company information?" message="Ensure correct Company Details, Banking Details and Employment Data" icon="ui-icon-warning" />
+			</p:commandButton>
+<!-- 		<p:commandButton icon="fa fa-plus" value="#{lang['initiate.wsp']}" id="createNewWspbtn" update="dialogRangeWsp" oncomplete="PF('dialogRangeWsp').show()" rendered="#{sessionUI.externalParty}" title="Create Grant Application">
+				<p:confirm header="Have you double checked all relevant company information?" message="Ensure correct Company Details, Banking Details and Employment Data" icon="ui-icon-warning" />
+			</p:commandButton>
+-->			<p:commandButton icon="fa fa-plus" value="#{lang['initiate.wsp']}" id="createManualWspbtn" update="dialogManSubDate" oncomplete="PF('dialogManSubDate').show()" rendered="#{sessionUI.allowableInternalUser}" title="Create Manual Grant Application">
+				<p:confirm header="Have you double checked all relevant company information?" message="Ensure correct Company Details, Banking Details and Employment Data" icon="ui-icon-warning" />
+			</p:commandButton>
+		</c:if>
+		
+		<c:if test="#{initiatewspUI.bankingDetails eq null}">
+			<p:outputLabel escape="false" value="Grant applications can only be made once your company profile is up to date and banking details have been entered." class="Fs15 FontBold red" rendered="#{initiatewspUI.bankingDetails eq null}"></p:outputLabel>
+			<div class="EmptyBox10" />
+		</c:if>
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="600">
+			<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+			<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+		</p:confirmDialog>
+
+		
+		<c:if test="#{initiatewspUI.wspList.size() gt 0}">
+			<div class="EmptyBox10" />
+			<p:dataTable var="rowVar" value="#{initiatewspUI.wspList}" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+				paginatorTemplate="#{lang['page']} {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+				<p:column headerText="#{lang['id']}" width="8%">
+					<p:outputLabel value="#{rowVar.id}"></p:outputLabel>
+				</p:column>
+				<p:column headerText="#{lang['from.date']}" rendered="false">
+					<p:outputLabel value="#{rowVar.fromDatePeriod}">
+						<f:convertDateTime pattern="dd-MMM-yyyy" />
+					</p:outputLabel>
+				</p:column>
+				<p:column headerText="#{lang['to.date']}" rendered="false">
+					<p:outputLabel value="#{rowVar.toDatePeriod}">
+						<f:convertDateTime pattern="dd-MMM-yyyy" />
+					</p:outputLabel>
+				</p:column>
+				<p:column headerText="#{lang['fin.year']}" rendered="true">
+					<p:outputLabel value="#{rowVar.dgYear.finYear}" rendered="#{rowVar.finYear eq null}">
+					</p:outputLabel>
+					<p:outputLabel value="#{rowVar.finYear}"  rendered="#{rowVar.finYear ne null}">
+					</p:outputLabel>
+				</p:column>
+				<p:column headerText="Application Type" rendered="true">
+					<p:outputLabel value="Mandatory and Discretionary" rendered="#{rowVar.wspType eq WspTypeEnum.Both}">
+					</p:outputLabel>
+					<p:outputLabel value="#{rowVar.wspType.friendlyName}" rendered="#{rowVar.wspType ne WspTypeEnum.Both}">
+					</p:outputLabel>
+				</p:column>
+				<p:column headerText="Grant #{lang['status']}" rendered="true">
+					<p:outputLabel value="#{rowVar.wspStatusEnum.friendlyName}">
+					</p:outputLabel>
+					<p:outputLabel rendered="#{rowVar.wspStatusEnum.friendlyName eq 'Rejected'}" value=" - #{rowVar.rejectionReasons}">
+					</p:outputLabel>
+				</p:column>
+				<p:column headerText="Appealed" rendered="true">
+					<p:outputLabel value="N/A" rendered="#{!rowVar.grantRejected or rowVar.systemApprovalRejection}" />
+					<p:outputLabel value="Application Rejected, Awaiting Appeal" rendered="#{(rowVar.withSdf and !rowVar.sdfAppealedGrant and rowVar.grantRejected and !rowVar.systemApprovalRejection)}" />
+					<p:outputLabel value="Appeal Submitted" rendered="#{(!rowVar.withSdf and rowVar.sdfAppealedGrant and rowVar.grantRejected and !rowVar.systemApprovalRejection)}" />
+				</p:column>
+				<p:column headerText="#{lang['decision.date']}">
+					<p:outputLabel value="#{rowVar.approvedDate}" rendered="#{rowVar.wspStatusEnum.friendlyName eq 'Rejected' or rowVar.wspStatusEnum.friendlyName eq 'Approved'}">
+						<f:convertDateTime pattern="dd MMMM yyyy" />
+					</p:outputLabel>
+					<p:outputLabel value="N/A" rendered="#{rowVar.wspStatusEnum.friendlyName ne 'Rejected' and rowVar.wspStatusEnum.friendlyName ne 'Approved'}" />
+				</p:column>
+				<p:column headerText="Barcode" width="400" rendered="false">
+					<p:barcode value="#{rowVar.wspGuid}" type="code39" />
+				</p:column>
+				<p:column headerText="Applied for extension" style="text-align:center">
+					<p:outputPanel rendered="#{rowVar.extensionRequests.size() eq 0}">
+						<i class="fa fa-times fa-3x red" aria-hidden="true"></i>
+					</p:outputPanel>
+					<p:outputPanel rendered="#{rowVar.extensionRequests.size() gt 0}">
+						<i class="fa fa-check fa-3x green" aria-hidden="true"></i>
+					</p:outputPanel>
+				</p:column>
+				<p:column headerText="DG Verification Status" rendered="true" exportable="false">
+					<p:outputLabel value="#{rowVar.dgVerificationStatus.friendlyName}" rendered="#{rowVar.dgVerificationStatus ne null}"></p:outputLabel>
+					<p:outputLabel rendered="#{rowVar.dgVerification.status.friendlyName eq 'Rejected'}" value=" - #{rowVar.dgVerification.dgVerificationRejectionReasons}">
+					</p:outputLabel>
+					<p:outputLabel value="N/A" rendered="#{rowVar.dgVerificationStatus eq null}">
+					</p:outputLabel>
+				</p:column>
+				<p:column width="140" headerText="View/Edit" rendered="#{rowVar.wspType eq WspTypeEnum.AdditionalFunding}">
+					<p:commandButton icon="fa fa-download" action="#{initiatewspdgUI.downloadPIM}" ajax="true" title="Download Project Implementation Plan" rendered="false">
+						<f:setPropertyActionListener value="#{rowVar}" target="#{initiatewspdgUI.wsp}" />
+					</p:commandButton>
+					<p:spacer width="5"></p:spacer>
+					<p:commandButton icon="fa fa-download" action="#{initiatewspdgUI.downloadApplicationForm}" ajax="true" title="Download Contract" rendered="false">
+						<f:setPropertyActionListener value="#{rowVar}" target="#{initiatewspdgUI.wsp}" />
+					</p:commandButton>
+					<p:spacer width="5"></p:spacer>
+					<p:commandButton icon="fa fa-download" action="#{initiatewspdgUI.downloadGrantApplication}" ajax="false" title="Download Grant Application" immediate="true">
+						<f:setPropertyActionListener value="#{rowVar}" target="#{initiatewspdgUI.wsp}" />
+					</p:commandButton>
+					<p:spacer width="5"></p:spacer>
+					<p:commandButton icon="fa fa-arrow-right" action="#{initiatewspdgUI.goToWspForCompany}" rendered="#{initiatewspdgUI.primarySDF or !sessionUI.externalParty}" ajax="false" title="View/Edit Grant App" immediate="true">
+						<f:setPropertyActionListener value="#{rowVar}" target="#{initiatewspdgUI.wsp}" />
+					</p:commandButton>
+					<p:spacer width="5" rendered="#{rowVar.wspStatusEnum eq WspStatusEnum.Draft and rowVar.extensionRequests.size() eq 0 and initiatewspdgUI.canInitiate and sessionUI.externalParty}"></p:spacer>
+					<p:commandButton icon="fa fa-calendar" title="#{lang['extension.request']}" rendered="#{rowVar.wspStatusEnum eq WspStatusEnum.Draft and rowVar.extensionRequests.size() eq 0 and initiatewspdgUI.canInitiate and sessionUI.externalParty  and false}" update="extensionrequestInsForm" action="#{extensionrequestUI.prepareNew}" process="@this">
+						<f:setPropertyActionListener value="#{rowVar}" target="#{extensionrequestUI.wsp}" />
+					</p:commandButton>
+					<p:spacer width="5" rendered="#{rowVar.wspStatusEnum eq WspStatusEnum.PendingSignOff and (initiatewspdgUI.primarySDF or !sessionUI.externalParty)}"></p:spacer>
+					<p:commandButton icon="fa fa-pencil" action="#{initiatewspdgUI.fixSignOffs}" title="Check Sign Offs" process="@this" rendered="#{rowVar.wspStatusEnum eq WspStatusEnum.PendingSignOff and (initiatewspdgUI.primarySDF or !sessionUI.externalParty)}">
+						<f:setPropertyActionListener value="#{rowVar}" target="#{initiatewspdgUI.wsp}" />
+					</p:commandButton>
+					<p:spacer width="5" rendered="#{rowVar.extensionRequests.size() ne 0 and !sessionUI.externalParty}"></p:spacer>
+					<p:commandButton icon="fa fa-search" title="View Extension Requests" update="@form" action="#{initiatewspdgUI.viewExtensionRequestsByWsp}" rendered="#{rowVar.extensionRequests.size() ne 0 and !sessionUI.externalParty  and false}">
+						<f:setPropertyActionListener value="#{rowVar}" target="#{initiatewspdgUI.wsp}" />
+					</p:commandButton>
+				</p:column>
+				<p:column width="120" headerText="View/Edit" rendered="#{rowVar.wspType ne WspTypeEnum.AdditionalFunding}">
+					<p:commandButton icon="fa fa-download" action="#{initiatewspUI.downloadPIM}" rendered="false" ajax="true" title="Download Project Implementation Plan">
+						<f:setPropertyActionListener value="#{rowVar}" target="#{initiatewspUI.wsp}" />
+					</p:commandButton>
+					<p:spacer width="5" rendered="false"></p:spacer>
+					<p:commandButton icon="fa fa-download" action="#{initiatewspUI.downloadApplicationForm}" rendered="false" ajax="true" title="Download Contract" >
+						<f:setPropertyActionListener value="#{rowVar}" target="#{initiatewspUI.wsp}" />
+					</p:commandButton>
+					<p:spacer width="5" rendered="false"></p:spacer>
+					<p:commandButton icon="fa fa-download" action="#{initiatewspUI.downloadGrantApplication}"  ajax="false" title="Download Grant Application" immediate="true" rendered="#{rowVarPC.wspType ne WspTypeEnum.IntersetaTransferMandGrant and rowVarPC.wspType ne WspTypeEnum.LegacyLinkedGrantApplication }">
+						<f:setPropertyActionListener value="#{rowVar}" target="#{initiatewspUI.wsp}" />
+					</p:commandButton>
+					<p:spacer width="5" rendered="#{rowVarPC.wspType ne WspTypeEnum.IntersetaTransferMandGrant and rowVarPC.wspType ne WspTypeEnum.LegacyLinkedGrantApplication}"></p:spacer>
+					<p:commandButton icon="fa fa-arrow-right" action="#{initiatewspUI.goToWspForCompany}" rendered="#{(initiatewspUI.primarySDF or !sessionUI.externalParty)}" ajax="false" title="View/Edit Grant App" immediate="true">
+						<f:setPropertyActionListener value="#{rowVar}" target="#{initiatewspUI.wsp}" />
+					</p:commandButton>
+					<p:spacer width="5" rendered="#{rowVar.wspStatusEnum eq WspStatusEnum.Draft and rowVar.extensionRequests.size() eq 0 and initiatewspUI.canInitiate and sessionUI.externalParty and false}"></p:spacer>
+					<p:commandButton icon="fa fa-calendar" title="#{lang['extension.request']}" rendered="#{rowVar.wspStatusEnum eq WspStatusEnum.Draft and rowVar.extensionRequests.size() eq 0 and initiatewspUI.canInitiate and sessionUI.externalParty and false }" update="extensionrequestInsForm"
+						action="#{extensionrequestUI.prepareNew}" process="@this">
+						<f:setPropertyActionListener value="#{rowVar}" target="#{extensionrequestUI.wsp}" />
+					</p:commandButton>
+					<p:spacer width="5" rendered="#{rowVar.applyForExtension and sessionUI.externalParty}"></p:spacer>
+					<p:commandButton icon="fa fa-calendar" title="#{lang['extension.request']}" rendered="#{rowVar.applyForExtension and sessionUI.externalParty and initiatewspUI.checkFinyear(rowVar.finYear)}" update="extensionrequestInsForm"
+						action="#{extensionrequestUI.prepareNew}" process="@this">
+						<f:setPropertyActionListener value="#{rowVar}" target="#{extensionrequestUI.wsp}" />
+					</p:commandButton>
+					<p:spacer width="5" rendered="#{rowVar.wspStatusEnum eq WspStatusEnum.PendingSignOff and (initiatewspUI.primarySDF or !sessionUI.externalParty)}"></p:spacer>
+					<p:commandButton icon="fa fa-pencil" action="#{initiatewspUI.fixSignOffs}" title="Check Sign Offs" process="@this" rendered="#{rowVar.wspStatusEnum eq WspStatusEnum.PendingSignOff and (initiatewspUI.primarySDF or !sessionUI.externalParty) }">
+						<f:setPropertyActionListener value="#{rowVar}" target="#{initiatewspUI.wsp}" />
+					</p:commandButton>
+					<p:spacer width="5" rendered="#{rowVar.extensionRequests.size() ne 0 and !sessionUI.externalParty}"></p:spacer>
+					<p:commandButton icon="fa fa-search" title="View Extension Requests" update="@form" action="#{initiatewspUI.viewExtensionRequestsByWsp}" rendered="#{rowVar.extensionRequests.size() ne 0 and !sessionUI.externalParty }">
+						<f:setPropertyActionListener value="#{rowVar}" target="#{initiatewspUI.wsp}" />
+					</p:commandButton>
+					<p:spacer width="5" rendered="#{sessionUI.employee}" />
+					<p:commandButton icon="fa fa-list" title="View Tasks Assigned" update="@form" action="#{initiatewspUI.viewTasksByWsp}" rendered="#{sessionUI.employee}">
+						<f:setPropertyActionListener value="#{rowVar}" target="#{initiatewspUI.wsp}" />
+					</p:commandButton>
+				</p:column>
+				
+			</p:dataTable>
+			<div class="EmptyBox10" />
+			<p:outputPanel id="tasksAssignedPanel">
+				<c:if test="#{initiatewspUI.viewWspTasks and initiatewspUI.wsp.id ne null}">
+					<h3>Task History For Grant Year: #{initiatewspUI.wsp.finYear} </h3>
+					<ui:include src="/pages/includes/taskInformationInclude.xhtml">
+						<ui:param name="TaskList" value="#{initiatewspUI.dataModelTasks}" />
+						<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+					</ui:include>
+				</c:if>
+			</p:outputPanel>
+			<div class="EmptyBox10" />
+			<p:outputPanel id="extensionRequestListPanel">
+				<c:if test="#{initiatewspUI.viewWspExtensionRequests and initiatewspUI.wsp.id ne null}">
+					<p:commandButton title="Close Extension View" update="extensionRequestListPanel" icon="fa fa-times" action="#{initiatewspUI.closeExtensionRequestsByWsp}" styleClass="Fright">
+					</p:commandButton>
+					<h2>Extension Requests Created For Grant Application: #{initiatewspUI.wsp.finYear}</h2>
+					<p:dataTable var="rowVarER" value="#{initiatewspUI.wsp.extensionRequests}" id="extensionForGrantTable" rowKey="#{rowVarER.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+						paginatorTemplate="#{lang['page']} {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+						<p:column headerText="#{lang['id']}" width="8%">
+							<p:outputLabel value="#{rowVarER.id}"></p:outputLabel>
+						</p:column>
+						<p:column headerText="Create Date">
+							<p:outputLabel value="#{rowVarER.createDate}">
+								<f:convertDateTime pattern="dd MMMM yyyy - HH:mm" />
+							</p:outputLabel>
+						</p:column>
+						<p:column headerText="New Submission Date">
+							<p:outputLabel value="#{rowVarER.newSubmissionDate}">
+								<f:convertDateTime pattern="dd MMMM yyyy" />
+							</p:outputLabel>
+						</p:column>
+						<p:column headerText="Status">
+							<p:outputLabel value="#{rowVarER.status.friendlyName}" rendered="#{rowVarER.status ne null}" />
+							<p:outputLabel value="N/A" rendered="#{rowVarER.status eq null}" />
+						</p:column>
+						<p:column headerText="User">
+							<p:outputLabel value="#{rowVarER.user.firstName} #{rowVarER.user.lastName}" />
+						</p:column>
+						<p:column exportable="false" width="5%">
+							<p:commandButton icon="fa fa-search" title="View Documents" action="#{initiatewspUI.viewSelectedExtensionRequestsDoc}" update="@form">
+								<f:setPropertyActionListener value="#{rowVarER}" target="#{initiatewspUI.selectedExtensionRequest}" />
+							</p:commandButton>
+						</p:column>
+					</p:dataTable>
+				</c:if>
+				<c:if test="#{initiatewspUI.selectedExtensionRequest ne null}">
+					<div class="EmptyBox10" />
+					<h2>Documents For Extension Request ID: #{initiatewspUI.selectedExtensionRequest.id}</h2>
+					<p:dataTable value="#{initiatewspUI.selectedExtensionRequest.docs}" var="rvDoc" emptyMessage="#{lang['no.records.found']}" rowKey="#{rvDoc.id}">
+						<p:column headerText="#{lang['type']}" width="18%">#{rvDoc.configDoc.name}</p:column>
+						<p:column headerText="#{lang['original.file.name']}" priority="4">
+							<p:outputLabel value="#{rvDoc.originalFname}" styleClass="Fs12"></p:outputLabel>
+						</p:column>
+						<p:column headerText="#{lang['uploaded.by']}">#{rvDoc.users.firstName} #{rvDoc.users.lastName}</p:column>
+						<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+							<h:outputText value="#{rvDoc.createDate}">
+								<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+							</h:outputText>
+						</p:column>
+						<p:column headerText="#{lang['version']}" width="10%" priority="4">
+							<h:outputText value="#{rvDoc.versionNo}">
+							</h:outputText>
+						</p:column>
+						<p:column headerText="#{lang['original.required']}">
+							<center>
+								<h:panelGroup rendered="#{rvDoc.configDoc.originalRequired}" styleClass="green">
+									<i class="fa fa-files-o fa-3x" aria-hidden="true"></i>
+								</h:panelGroup>
+								<h:panelGroup rendered="#{not rvDoc.configDoc.originalRequired}" styleClass="red">
+									<i class="fa fa-times fa-3x" aria-hidden="true"></i>
+								</h:panelGroup>
+							</center>
+						</p:column>
+						<p:column width="180">
+							<p:commandButton ajax="false" update="extensionRequestListPanel" icon="fa fa-download" action="#{uploadDocUI.download}" id="dlb" rendered="#{rvDoc.id ne null}" immediate="true">
+								<f:setPropertyActionListener value="#{rvDoc}" target="#{uploadDocUI.doc}" />
+							</p:commandButton>
+							<p:tooltip for="dlb" value="#{lang['download.the.file']}" position="left" rendered="#{rvDoc.id ne null}" />
+						</p:column>
+					</p:dataTable>
+				</c:if>
+			</p:outputPanel>
+
+		</c:if>
+		<c:if test="#{initiatewspUI.wspList.size() le 0 and initiatewspUI.bankingDetails ne null}">
+			<h2>#{lang['no.wsp.created']}</h2>
+		</c:if>
+
+		<c:if test="#{initiatewspUI.previousCompanyFound}">
+		
+			<h2>Previous Transacting Company: #{initiatewspUI.previousCompany.companyName} (#{initiatewspUI.previousCompany.levyNumber}) Grant Applications</h2>
+
+			<c:if test="#{initiatewspUI.previousCompanyWspList.size() eq 0}">
+				<h2>#{lang['no.wsp.created']}</h2>
+			</c:if>
+		
+			<div class="EmptyBox10"/>
+			<p:dataTable var="rowVarPC" value="#{initiatewspUI.previousCompanyWspList}" rendered="#{initiatewspUI.previousCompanyWspList.size() ne 0}" rowKey="#{rowVarPC.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+				paginatorTemplate="#{lang['page']} {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+				<p:column headerText="#{lang['id']}" width="8%">
+					<p:outputLabel value="#{rowVarPC.id}"></p:outputLabel>
+				</p:column>
+				<p:column headerText="#{lang['from.date']}" rendered="false">
+					<p:outputLabel value="#{rowVarPC.fromDatePeriod}">
+						<f:convertDateTime pattern="dd-MMM-yyyy" />
+					</p:outputLabel>
+				</p:column>
+				<p:column headerText="#{lang['to.date']}" rendered="false">
+					<p:outputLabel value="#{rowVarPC.toDatePeriod}">
+						<f:convertDateTime pattern="dd-MMM-yyyy" />
+					</p:outputLabel>
+				</p:column>
+				<p:column headerText="#{lang['fin.year']}" rendered="true">
+					<p:outputLabel value="#{rowVarPC.finYear}">
+					</p:outputLabel>
+				</p:column>
+				<p:column headerText="Application Type" rendered="true">
+					<p:outputLabel value="Mandatory and Discretionary" rendered="#{rowVarPC.wspType eq WspTypeEnum.Both}">
+					</p:outputLabel>
+					<p:outputLabel value="#{rowVarPC.wspType.friendlyName}" rendered="#{rowVarPC.wspType ne WspTypeEnum.Both}">
+					</p:outputLabel>
+				</p:column>
+				<p:column headerText="Grant #{lang['status']}" rendered="true">
+					<p:outputLabel value="#{rowVarPC.wspStatusEnum.friendlyName}">
+					</p:outputLabel>
+					<p:outputLabel rendered="#{rowVarPC.wspStatusEnum.friendlyName eq 'Rejected'}" value=" - #{rowVarPC.rejectionReasons}">
+					</p:outputLabel>
+				</p:column>
+				<p:column headerText="Appealed" rendered="true">
+					<p:outputLabel value="N/A" rendered="#{!rowVarPC.grantRejected or rowVarPC.systemApprovalRejection}" />
+					<p:outputLabel value="Application Rejected, Awaiting Appeal" rendered="#{(rowVarPC.withSdf and !rowVarPC.sdfAppealedGrant and rowVarPC.grantRejected and !rowVarPC.systemApprovalRejection)}" />
+					<p:outputLabel value="Appeal Submitted" rendered="#{(!rowVarPC.withSdf and rowVarPC.sdfAppealedGrant and rowVarPC.grantRejected and !rowVarPC.systemApprovalRejection)}" />
+				</p:column>
+				<p:column headerText="#{lang['decision.date']}">
+					<p:outputLabel value="#{rowVarPC.approvedDate}" rendered="#{rowVarPC.wspStatusEnum.friendlyName eq 'Rejected' or rowVarPC.wspStatusEnum.friendlyName eq 'Approved'}">
+						<f:convertDateTime pattern="dd MMMM yyyy" />
+					</p:outputLabel>
+					<p:outputLabel value="N/A" rendered="#{rowVarPC.wspStatusEnum.friendlyName ne 'Rejected' and rowVarPC.wspStatusEnum.friendlyName ne 'Approved'}" />
+				</p:column>
+				<p:column headerText="Barcode" width="400" rendered="false">
+					<p:barcode value="#{rowVarPC.wspGuid}" type="code39" />
+				</p:column>
+				<p:column headerText="Applied for extension" style="text-align:center">
+					<p:outputPanel rendered="#{rowVarPC.extensionRequests.size() eq 0}">
+						<i class="fa fa-times fa-3x red" aria-hidden="true"></i>
+					</p:outputPanel>
+					<p:outputPanel rendered="#{rowVarPC.extensionRequests.size() gt 0}">
+						<i class="fa fa-check fa-3x green" aria-hidden="true"></i>
+					</p:outputPanel>
+				</p:column>
+				<p:column headerText="DG Verification Status" rendered="true" exportable="false">
+					<p:outputLabel value="#{rowVarPC.dgVerificationStatus.friendlyName}" rendered="#{rowVarPC.dgVerificationStatus ne null}"></p:outputLabel>
+					<p:outputLabel rendered="#{rowVarPC.dgVerification.status.friendlyName eq 'Rejected'}" value=" - #{rowVarPC.dgVerification.dgVerificationRejectionReasons}">
+					</p:outputLabel>
+					<p:outputLabel value="N/A" rendered="#{rowVarPC.dgVerificationStatus eq null}">
+					</p:outputLabel>
+				</p:column>
+				<p:column width="120" headerText="View/Edit">
+					<p:commandButton icon="fa fa-download" action="#{initiatewspUI.downloadGrantApplication}" ajax="false" title="Download Grant Application" immediate="true" rendered="#{rowVarPC.wspType ne WspTypeEnum.IntersetaTransferMandGrant and rowVarPC.wspType ne WspTypeEnum.LegacyLinkedGrantApplication}">
+						<f:setPropertyActionListener value="#{rowVarPC}" target="#{initiatewspUI.wsp}" />
+					</p:commandButton>
+					<p:spacer width="5" rendered="#{rowVarPC.wspType ne WspTypeEnum.IntersetaTransferMandGrant and rowVarPC.wspType ne WspTypeEnum.LegacyLinkedGrantApplication}"></p:spacer>
+					<p:commandButton icon="fa fa-arrow-right" action="#{initiatewspUI.goToWspForCompany}" rendered="#{initiatewspUI.primarySDF or !sessionUI.externalParty}" ajax="false" title="View/Edit Grant App" immediate="true">
+						<f:setPropertyActionListener value="#{rowVarPC}" target="#{initiatewspUI.wsp}" />
+					</p:commandButton>
+				</p:column>
+			</p:dataTable>
+		</c:if>
+
+		<p:dialog id="dialogRangeWsp" widgetVar="dialogRangeWsp" header="#{lang['wsp.and.atr.application']} for #{initiatewspUI.selectedCompany.company.companyName}" modal="true" width="50%" dynamic="true">
+
+		<!--  	<p:panelGrid rendered="#{not initiatewspUI.selectedCompany.company.nonLevyPaying}" columns="1" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup>
+					<div>
+						<p:outputLabel value="Are you a merSETA entity exempt from paying Skills Development Levies (annual payroll of R500 000 and below)?" />
+						<p:spacer width="20"></p:spacer>
+						<p:selectBooleanCheckbox value="#{initiatewspUI.belowThreshold}">
+							<p:ajax update="yearGrid"></p:ajax>
+						</p:selectBooleanCheckbox>
+					</div>
+				</h:panelGroup>
+			</p:panelGrid> -->
+
+			<p:panelGrid rendered="true" columns="2" layout="grid" id="yearGrid">
+
+				<p:outputLabel value="#{lang['financial.year']}" />
+				<p:selectOneMenu value="#{initiatewspUI.createWsp.finYear}">
+					<f:selectItem itemLabel="-- Select Year --" />
+					<f:selectItems value="#{initiatewspUI.prepareFinYear}" />
+					<p:ajax update="enum"></p:ajax>
+				</p:selectOneMenu>
+				<p:outputLabel value="#{lang['wsp.application.type']}"></p:outputLabel>
+				<p:selectOneMenu value="#{initiatewspUI.createWsp.wspType}" id="enum" >
+					<f:selectItem itemLabel="-- Select Grant Type --" />
+					<f:selectItems value="#{initiatewspUI.wspTypeEnumDD}" />
+				</p:selectOneMenu>
+			</p:panelGrid>
+			
+
+			<div class="EmptyBox10" />
+			<p:commandButton value="#{lang['create']}" action="#{initiatewspUI.initiateWspVersionTwo}" update="@form"></p:commandButton>
+			<p:spacer width="5" />
+			<p:commandButton value="#{lang['close']}" oncomplete="PF('dialogRangeWsp').hide()"></p:commandButton>
+		</p:dialog>
+
+		<p:dialog id="dialogManSubDate" widgetVar="dialogManSubDate" header="#{lang['manually.submission.date.type']} for #{initiatewspUI.selectedCompany.company.companyName}" modal="true" width="50%" dynamic="true">
+			<p:panelGrid rendered="#{not initiatewspUI.selectedCompany.company.nonLevyPaying}" columns="2" layout="grid" styleClass="ui-panelgrid-blank form-group" id = "manualSubmitGrid">
+				<p:outputLabel value="#{lang['submission.date']}"></p:outputLabel>
+				<h:panelGroup styleClass="md-inputfield">
+					<p:calendar navigator="true" id="manualSubmissionDate" value="#{initiatewspUI.createWsp.manuallySubmissionDate}" showOn="button" 
+								pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" yearRange="c-100:c" required="true"  requiredMessage="#{lang['provide.manually.submission.date']}">
+								<p:ajax event="dateSelect" />
+					</p:calendar>
+				</h:panelGroup>						
+				<p:outputLabel value="#{lang['manual.wsp.application.type']}"></p:outputLabel>
+				<p:selectOneMenu value="#{initiatewspUI.wspTypeMan}" id="enumMan">
+					<f:selectItem itemLabel="-- Select Grant Type --" />
+					<f:selectItems value="#{initiatewspUI.wspTypeEnumManual}" />
+				</p:selectOneMenu>
+			</p:panelGrid>
+			<div class="EmptyBox10" />
+			<p:commandButton value="#{lang['create']}" action="#{initiatewspUI.initiateManualWsp}"  update="@form"></p:commandButton>
+			<p:spacer width="5" />
+			<p:commandButton value="#{lang['close']}" oncomplete="PF('dialogManSubDate').hide()"></p:commandButton>
+		</p:dialog>
+
+	</div>
+</ui:composition>

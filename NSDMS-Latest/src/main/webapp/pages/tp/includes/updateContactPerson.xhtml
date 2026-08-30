@@ -1,0 +1,97 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui">
+
+		<p:panelGrid rendered="#{tpDetailUI.selectedTPContsctPerson ne null}"  columns="2" style="width:100%"  layout="grid" styleClass="ui-panelgrid-blank form-group">
+			
+			<h:panelGroup style="margin-top: -20px" rendered="#{tpDetailUI.contactPerson.designation ne null}">
+				<div>
+					<p:outputLabel value="#{lang['designation']}" for="designation" />
+				</div>
+				<div>
+					<p:selectOneMenu id="designation" value="#{tpDetailUI.contactPerson.designation}" converter="DesignationConvertor" style="width:95%" required="true" requiredMessage="#{lang['select.designation']}">
+						<p:ajax />
+						<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+						<f:selectItems value="#{selectItemsUI.selectedDesignation}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+					</p:selectOneMenu>
+				</div>
+			</h:panelGroup>
+			
+			<h:panelGroup rendered="#{tpDetailUI.selectedTPContsctPerson.smeTypeEnum ne null}">
+				<div>
+					<p:outputLabel value="SME Type" for="type" />
+				</div>
+				<div>
+					<p:selectOneMenu id="type" value="#{tpDetailUI.selectedTPContsctPerson.smeTypeEnum}" style="width:100%" required="true">
+						<p:ajax />
+						<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+						<f:selectItems value="#{enumUI.smeTypeEnumDD}" />
+					</p:selectOneMenu>
+				</div>
+			</h:panelGroup>
+			
+			<h:panelGroup style="margin-top: -20px">
+				<div>
+					<p:outputLabel value="#{lang['title']}" for="cptitle" />
+				</div>
+				<div>
+					<p:selectOneMenu disabled="#{tpDetailUI.selectedTPContsctPerson.existingUser}" id="cptitle" value="#{tpDetailUI.contactPerson.title}" converter="TitleConvertor" style="width:95%" required="true" requiredMessage="#{lang['select.title']}">
+						<p:ajax />
+						<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+						<f:selectItems value="#{selectItemsUI.selectItemsTitles}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+					</p:selectOneMenu>
+				</div>
+			</h:panelGroup>
+			
+			<h:panelGroup styleClass="md-inputfield">
+				<p:inputText id="cpuserName" value="#{tpDetailUI.contactPerson.firstName}" style="width:95%" required="true" disabled="#{tpDetailUI.selectedTPContsctPerson.existingUser}" requiredMessage="#{lang['enter.your.name']}" />
+				<p:outputLabel value="#{lang['first.name']}" for="cpuserName" />
+			</h:panelGroup>
+			
+			<h:panelGroup styleClass="md-inputfield">
+				<p:inputText id="cpuserSurname" value="#{tpDetailUI.contactPerson.lastName}" style="width:95%" required="true" disabled="#{tpDetailUI.selectedTPContsctPerson.existingUser}" requiredMessage="#{lang['enter.your.last.name']}" />
+				<p:outputLabel value="#{lang['surname']}" for="cpuserSurname" />
+			</h:panelGroup>
+			
+			<h:panelGroup styleClass="md-inputfield">
+				<p:inputText id="cpuserEmail" value="#{tpDetailUI.contactPerson.email}" style="width:95%" required="true" disabled="#{tpDetailUI.selectedTPContsctPerson.existingUser}" requiredMessage="#{lang['enter.your.email.address']}" />
+				<p:outputLabel value="#{lang['emails']}" for="cpuserEmail" />
+			</h:panelGroup>
+			
+			<h:panelGroup styleClass="md-inputfield" rendered="#{tpDetailUI.contactPerson.rsaIDNumber.length() gt 0}">
+				<p:inputText id="cpuserIdNumber" value="#{tpDetailUI.contactPerson.rsaIDNumber}" style="width:95%" disabled="#{tpDetailUI.selectedTPContsctPerson.existingUser}" />
+				<p:outputLabel value="#{lang['rsa.id.number']}" for="cpuserIdNumber" />
+			</h:panelGroup>
+			
+			<h:panelGroup styleClass="md-inputfield" rendered="#{tpDetailUI.contactPerson.passportNumber.length() gt 0}">
+				<p:inputText id="cpuserPassport" value="#{tpDetailUI.contactPerson.passportNumber}" style="width:95%" disabled="#{tpDetailUI.selectedTPContsctPerson.existingUser}" />
+				<p:outputLabel value="#{lang['passport.number']}" for="cpuserPassport" />
+			</h:panelGroup>
+			
+			<h:panelGroup styleClass="md-inputfield">
+				<p:inputMask disabled="#{tpDetailUI.selectedTPContsctPerson.existingUser}" id="cpcellNumber" mask="#{profileUI.CELLPHONE_FORMAT}" value="#{tpDetailUI.contactPerson.cellNumber}" style="width: 95%" label="cellNumber" required="true" requiredMessage="Enter mobile number">
+					<o:validator validatorId="javax.faces.Length" minimum="0" maximum="20" message="#{lang['user.cellnumber.length']}" />
+				</p:inputMask>
+				<p:outputLabel value="#{lang['mobile.number']}" for="cpcellNumber" />
+			</h:panelGroup>
+	
+			<h:panelGroup styleClass="md-inputfield">
+				<p:inputMask disabled="#{tpDetailUI.selectedTPContsctPerson.existingUser}" id="cptelNumber" mask="#{profileUI.TELPHONE_FORMAT}" value="#{tpDetailUI.contactPerson.telNumber}" style="width: 95%" label="telNumber" required="false" requiredMessage="Enter tel number">
+					<o:validator validatorId="javax.faces.Length" minimum="0" maximum="20" message="#{lang['user.tellnumber.length']}" />
+				</p:inputMask>
+				<p:outputLabel value="#{lang['tel.number']}:" for="cptelNumber" />
+			</h:panelGroup>
+			
+			<h:panelGroup styleClass="md-inputfield">
+				<p:inputMask disabled="#{tpDetailUI.selectedTPContsctPerson.existingUser}" id="cpfax" mask="#{profileUI.CELLPHONE_FORMAT}" value="#{tpDetailUI.contactPerson.faxNumber}" style="width: 95%" label="cellNumber" required="true" requiredMessage="Enter fax number">
+					<o:validator validatorId="javax.faces.Length" minimum="0" maximum="20" message="#{lang['user.fax.length']}" />
+				</p:inputMask>
+				<p:outputLabel value="#{lang['fax.number']}" for="cpfax" />
+			</h:panelGroup>
+			
+			<h:panelGroup styleClass="md-inputfield">
+			</h:panelGroup>
+			
+			<h:panelGroup styleClass="md-inputfield">
+				<p:commandButton  action="#{tpDetailUI.updateContactPerson()}" value="#{lang['submit']}" icon="ui-icon-save" update="mainForm:trainingProviderTabView:cpList mainForm:trainingProviderTabView:avList" process="addContactForm"  />
+			</h:panelGroup>
+		</p:panelGrid>
+</ui:composition>

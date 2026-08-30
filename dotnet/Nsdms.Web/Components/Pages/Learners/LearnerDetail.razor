@@ -6,30 +6,31 @@
 @inject IPersonService PersonService
 @inject IOrganisationService OrganisationService
 @inject ITrainingProviderService ProviderService
+@inject LookupService LookupService
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 
 <PageTitle>@(IsNew ? "New Learner Registration" : $"Learner {_learner.LearnerContractNumber}") - NSDMS</PageTitle>
 
 <!-- STICKY TOP BAR -->
-<MudPaper Elevation="2" Class="sticky-top pa-4 mb-4 rounded-lg bg-surface d-flex justify-space-between align-center" Style="top: 0; z-index: 10;">
+<MudPaper Elevation="2" Class="sticky-top pa-4 mb-4 rounded-lg bg-surface d-flex justify-space-between align-center" Style="top: var(--mud-appbar-height, 64px); z-index: 10;">
     <div class="d-flex align-center gap-3">
         <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Default" OnClick="@(() => Navigation.NavigateTo("/learners"))" Title="Back to List" />
         <div>
             <MudBreadcrumbs Items="_breadcrumbItems" Class="pa-0 ma-0" />
             <MudText Typo="Typo.h5" Class="fw-bold">
-                @(IsNew ? "Register New Learner / Apprentice" : $"Learner Contract: {_learner.LearnerContractNumber}")
+                @(IsNew ? "Register New Learner / Apprentice (SETMIS Files 500-506)" : $"Learner Contract: {_learner.LearnerContractNumber}")
             </MudText>
         </div>
     </div>
     <div class="d-flex gap-2 align-center">
         @if (!IsNew)
         {
-            @if (_learner.StatusCode == "Completed")
+            @if (_learner.StatusCode == "Completed" || _learner.EnrolmentStatusId == "02")
             {
                 <MudChip T="string" Color="Color.Success" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Verified">Completed &amp; Certified</MudChip>
             }
-            else if (_learner.StatusCode == "InProgress")
+            else if (_learner.StatusCode == "InProgress" || _learner.EnrolmentStatusId == "01")
             {
                 <MudChip T="string" Color="Color.Info" Variant="Variant.Filled" Icon="@Icons.Material.Filled.PlayArrow">In Progress</MudChip>
             }
@@ -43,6 +44,10 @@
             </MudButton>
         }
 
+        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Cancel" OnClick="@(() => Navigation.NavigateTo("/learners"))">
+            Cancel
+        </MudButton>
+
         <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveAsync" Disabled="_saving">
             @if (_saving)
             {
@@ -51,7 +56,7 @@
             }
             else
             {
-                <span>Save</span>
+                <span>Save Learner</span>
             }
         </MudButton>
     </div>
@@ -59,6 +64,12 @@
 
 @if (!IsNew)
 {
+    <!-- Visual Workflow Step Tracker -->
+    <WorkflowProgressBar ProcessCode="LRN" 
+                         EntityId="@Id" 
+                         EntityTitle="@($"{_learner.QualificationTitle} ({_learner.LearnerContractNumber})")" 
+                         EntityRef="@_learner.LearnerContractNumber" />
+
     <!-- Workflow Action Bridge -->
     <WorkflowActionBridge ProcessCode="LRN" 
                           EntityId="@Id" 
@@ -77,21 +88,27 @@ else
 {
     <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6" Color="Color.Primary">
         <!-- TAB 1: LEARNER & CONTRACT DETAILS -->
-        <MudTabPanel Text="Learner &amp; Programme" Icon="@Icons.Material.Filled.School">
+        <MudTabPanel Text="Learner &amp; Programme (SETMIS 500/501)" Icon="@Icons.Material.Filled.School">
             <MudCard Outlined="true" Class="mb-4">
                 <MudCardHeader>
+                    <CardHeaderAvatar>
+                        <MudAvatar Color="Color.Primary" Variant="Variant.Filled">
+                            <MudIcon Icon="@Icons.Material.Filled.BusinessCenter" />
+                        </MudAvatar>
+                    </CardHeaderAvatar>
                     <CardHeaderContent>
                         <MudText Typo="Typo.h6" Class="fw-bold">Registration &amp; Stakeholder Linkages</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Employer, SDP Provider, Host Site, and Practitioner details</MudText>
                     </CardHeaderContent>
                 </MudCardHeader>
                 <MudCardContent>
                     <MudGrid>
                         <MudItem xs="12" md="6">
-                            <MudSelect T="int" @bind-Value="_learner.PersonId" Label="Learner (Person Demographics)" Variant="Variant.Outlined" Required="true">
+                            <MudSelect T="int" @bind-Value="_learner.PersonId" Label="Learner (Person Registry)" Variant="Variant.Outlined" Required="true">
                                 <MudSelectItem Value="0">-- Select Person --</MudSelectItem>
                                 @foreach (var person in _people)
                                 {
-                                    <MudSelectItem Value="@person.Id">@person.FullName (@person.RsaIdNumber)</MudSelectItem>
+                                    <MudSelectItem Value="@person.Id">@person.FullName (@(!string.IsNullOrWhiteSpace(person.RsaIdNumber) ? person.RsaIdNumber : person.PassportNumber))</MudSelectItem>
                                 }
                             </MudSelect>
                         </MudItem>
@@ -100,7 +117,7 @@ else
                         </MudItem>
 
                         <MudItem xs="12" md="6">
-                            <MudSelect T="int" @bind-Value="_learner.OrganisationId" Label="Host Employer / Lead Company" Variant="Variant.Outlined" Required="true">
+                            <MudSelect T="int" @bind-Value="_learner.OrganisationId" Label="Host Employer / Lead Organisation" Variant="Variant.Outlined" Required="true">
                                 <MudSelectItem Value="0">-- Select Employer --</MudSelectItem>
                                 @foreach (var org in _organisations)
                                 {
@@ -129,31 +146,77 @@ else
                             <MudNumericField @bind-Value="_learner.NqfLevel" Label="NQF Level" Variant="Variant.Outlined" Min="1" Max="10" />
                         </MudItem>
 
+                        <!-- Statutory Learnership, Non-NQF & OFO Codes -->
+                        <MudItem xs="12" md="4">
+                            <MudTextField @bind-Value="_learner.LearnershipId" Label="SAQA Learnership Code" Variant="Variant.Outlined" Placeholder="e.g. 18Q180026241203" HelperText="Required for SETMIS File 500/501" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudTextField @bind-Value="_learner.OfoCode" Label="DHET OFO Occupation Code" Variant="Variant.Outlined" Placeholder="e.g. 651202" HelperText="Organising Framework for Occupations" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudTextField @bind-Value="_learner.NonNqfInterventionCode" Label="Non-NQF Programme Code" Variant="Variant.Outlined" Placeholder="e.g. SKP-001" HelperText="For File 502 Skills Programmes" />
+                        </MudItem>
+
                         <MudItem xs="12" md="4">
                             <MudSelect T="string" @bind-Value="_learner.LearningProgrammeTypeCode" Label="Learning Programme Type" Variant="Variant.Outlined">
-                                <MudSelectItem Value="@("Apprenticeship")">Apprenticeship</MudSelectItem>
-                                <MudSelectItem Value="@("Learnership")">Learnership</MudSelectItem>
-                                <MudSelectItem Value="@("SkillsProgramme")">Skills Programme</MudSelectItem>
-                                <MudSelectItem Value="@("Internship")">Internship</MudSelectItem>
-                                <MudSelectItem Value="@("Bursary")">Bursary</MudSelectItem>
+                                <MudSelectItem Value="@("01")">01 - Apprenticeship</MudSelectItem>
+                                <MudSelectItem Value="@("02")">02 - Learnership</MudSelectItem>
+                                <MudSelectItem Value="@("03")">03 - Skills Programme</MudSelectItem>
+                                <MudSelectItem Value="@("04")">04 - Internship / WIL</MudSelectItem>
+                                <MudSelectItem Value="@("05")">05 - Bursary</MudSelectItem>
                             </MudSelect>
                         </MudItem>
                         <MudItem xs="12" md="4">
-                            <MudSelect T="string" @bind-Value="_learner.FundingTypeCode" Label="Funding Source" Variant="Variant.Outlined">
-                                <MudSelectItem Value="@("DiscretionaryGrant")">Discretionary Grant</MudSelectItem>
-                                <MudSelectItem Value="@("MandatoryGrant")">Mandatory Grant</MudSelectItem>
-                                <MudSelectItem Value="@("SelfFunded")">Employer Self-Funded</MudSelectItem>
+                            <MudSelect T="string" @bind-Value="_learner.FundingId" Label="Funding Source (SETMIS)" Variant="Variant.Outlined">
+                                <MudSelectItem Value="@("01")">01 - SETA Discretionary Grant</MudSelectItem>
+                                <MudSelectItem Value="@("02")">02 - Employer Self-Funded</MudSelectItem>
+                                <MudSelectItem Value="@("03")">03 - National Skills Fund (NSF)</MudSelectItem>
                             </MudSelect>
                         </MudItem>
                         <MudItem xs="12" md="4">
-                            <MudSelect T="string" @bind-Value="_learner.StatusCode" Label="Learner Status" Variant="Variant.Outlined">
-                                <MudSelectItem Value="@("DRAFT")">Draft</MudSelectItem>
-                                <MudSelectItem Value="@("PENDING_QA")">Pending QA Check</MudSelectItem>
-                                <MudSelectItem Value="@("REGISTERED")">Registered</MudSelectItem>
-                                <MudSelectItem Value="@("InProgress")">In Progress</MudSelectItem>
-                                <MudSelectItem Value="@("Completed")">Completed</MudSelectItem>
-                                <MudSelectItem Value="@("Terminated")">Terminated</MudSelectItem>
+                            <MudSelect T="string" @bind-Value="_learner.PartOfId" Label="Part Of Articulation" Variant="Variant.Outlined">
+                                <MudSelectItem Value="@("01")">01 - Stand-alone Intervention</MudSelectItem>
+                                <MudSelectItem Value="@("02")">02 - Part of Qualification</MudSelectItem>
+                                <MudSelectItem Value="@("03")">03 - Part of Learnership</MudSelectItem>
                             </MudSelect>
+                        </MudItem>
+
+                        <MudItem xs="12" md="4">
+                            <MudSelect T="string" @bind-Value="_learner.EnrolmentTypeId" Label="Delivery Mode" Variant="Variant.Outlined">
+                                <MudSelectItem Value="@("01")">01 - Contact / Face-to-Face</MudSelectItem>
+                                <MudSelectItem Value="@("02")">02 - Distance Learning</MudSelectItem>
+                                <MudSelectItem Value="@("03")">03 - Mixed Mode</MudSelectItem>
+                                <MudSelectItem Value="@("04")">04 - Workplace Based</MudSelectItem>
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudSelect T="string" @bind-Value="_learner.EconomicStatusId" Label="Economic Status" Variant="Variant.Outlined">
+                                <MudSelectItem Value="@("01")">01 - Employed (Section 18.1)</MudSelectItem>
+                                <MudSelectItem Value="@("02")">02 - Unemployed (Section 18.2)</MudSelectItem>
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudSelect T="string" @bind-Value="_learner.UrbanRuralId" Label="Urban / Rural Setting" Variant="Variant.Outlined">
+                                <MudSelectItem Value="@("01")">01 - Urban</MudSelectItem>
+                                <MudSelectItem Value="@("02")">02 - Rural</MudSelectItem>
+                                <MudSelectItem Value="@("98")">98 - Unknown</MudSelectItem>
+                            </MudSelect>
+                        </MudItem>
+
+                        <MudItem xs="12" md="4">
+                            <MudSelect T="string" @bind-Value="_learner.EnrolmentStatusId" Label="Statutory Enrolment Status" Variant="Variant.Outlined">
+                                <MudSelectItem Value="@("01")">01 - Enrolled / Registered</MudSelectItem>
+                                <MudSelectItem Value="@("02")">02 - Achieved</MudSelectItem>
+                                <MudSelectItem Value="@("03")">03 - Certificated</MudSelectItem>
+                                <MudSelectItem Value="@("04")">04 - Terminated / Cancelled</MudSelectItem>
+                                <MudSelectItem Value="@("05")">05 - Transferred</MudSelectItem>
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudNumericField @bind-Value="_learner.CumulativeSpend" Label="Cumulative Disbursed Spend (ZAR)" Variant="Variant.Outlined" Format="N2" Adornment="Adornment.Start" AdornmentText="R" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudTextField @bind-Value="_learner.CertificateNumber" Label="National Certificate No" Variant="Variant.Outlined" Placeholder="e.g. CERT-2026-001" />
                         </MudItem>
 
                         <MudItem xs="12" md="4">
@@ -165,17 +228,25 @@ else
                         <MudItem xs="12" md="4">
                             <MudDatePicker @bind-Date="_expectedCompletionDate" Label="Expected Completion Date" Variant="Variant.Outlined" />
                         </MudItem>
+
+                        <!-- Practitioner & Practical Provider details -->
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="_learner.AssessorRegistrationNumber" Label="Assessor Registration No" Variant="Variant.Outlined" Placeholder="e.g. 17/ASS/12345" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="_learner.PracticalProviderCode" Label="Practical Provider Code (Dual Training)" Variant="Variant.Outlined" Placeholder="Secondary SDP Code" />
+                        </MudItem>
                     </MudGrid>
                 </MudCardContent>
             </MudCard>
         </MudTabPanel>
 
         <!-- TAB 2: TRADE TESTS & ASSESSMENTS -->
-        <MudTabPanel Text="Trade Tests &amp; Progression" Icon="@Icons.Material.Filled.FactCheck" Disabled="IsNew">
+        <MudTabPanel Text="Trade Tests &amp; Progression (SETMIS 505)" Icon="@Icons.Material.Filled.FactCheck" Disabled="IsNew">
             <div class="d-flex justify-space-between align-center mb-4">
                 <div>
                     <MudText Typo="Typo.h6" Class="fw-bold">Trade Test History &amp; Certification</MudText>
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">Summative assessment results and NAMB/QCTO trade certificates.</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Summative assessment results and NAMB/QCTO trade certificates (SETMIS File 505).</MudText>
                 </div>
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Schedule" OnClick="OpenScheduleTradeTestDialog">
                     Schedule Trade Test
@@ -185,7 +256,7 @@ else
             <MudTable Items="_learner.TradeTests" Hover="true" Striped="true" Elevation="1" Class="rounded-lg">
                 <HeaderContent>
                     <MudTh>Trade Title</MudTh>
-                    <MudTh>Test Center</MudTh>
+                    <MudTh>TTC Code</MudTh>
                     <MudTh>Attempt</MudTh>
                     <MudTh>Assessment Date</MudTh>
                     <MudTh>Assessor</MudTh>
@@ -196,19 +267,20 @@ else
                 <RowTemplate>
                     <MudTd DataLabel="Trade Title">
                         <div class="fw-bold">@context.TradeTitle</div>
+                        <div class="caption text-muted">Trade Code: @(!string.IsNullOrWhiteSpace(context.TradeCode) ? context.TradeCode : context.QualificationId)</div>
                     </MudTd>
-                    <MudTd DataLabel="Test Center">@context.TestCenterName</MudTd>
+                    <MudTd DataLabel="TTC Code">@(!string.IsNullOrWhiteSpace(context.TradeTestCentreCode) ? context.TradeTestCentreCode : context.TestCenterName)</MudTd>
                     <MudTd DataLabel="Attempt">#@context.AttemptNumber</MudTd>
                     <MudTd DataLabel="Date">@context.TradeTestDate.ToString("yyyy-MM-dd")</MudTd>
-                    <MudTd DataLabel="Assessor">@(context.AssessorPerson?.FullName ?? "Assigned on day")</MudTd>
+                    <MudTd DataLabel="Assessor">@(context.AssessorPerson?.FullName ?? context.AssessorRegistrationNumber ?? "Assigned on day")</MudTd>
                     <MudTd DataLabel="Result">
-                        @if (context.ResultStatusCode == "Competent")
+                        @if (context.ResultStatusCode == "Competent" || context.TradeTestResultId == "01")
                         {
-                            <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Verified">Competent</MudChip>
+                            <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Verified">01 - Competent</MudChip>
                         }
-                        else if (context.ResultStatusCode == "NotYetCompetent")
+                        else if (context.ResultStatusCode == "NotYetCompetent" || context.TradeTestResultId == "02")
                         {
-                            <MudChip T="string" Color="Color.Error" Size="Size.Small" Variant="Variant.Filled">Not Yet Competent</MudChip>
+                            <MudChip T="string" Color="Color.Error" Size="Size.Small" Variant="Variant.Filled">02 - Not Yet Competent</MudChip>
                         }
                         else
                         {
@@ -251,15 +323,21 @@ else
 <!-- SCHEDULE TRADE TEST DIALOG -->
 <MudDialog @bind-Visible="_scheduleTestOpen">
     <TitleContent>
-        <MudText Typo="Typo.h6">Schedule Trade Test</MudText>
+        <MudText Typo="Typo.h6">Schedule Trade Test (SETMIS File 505)</MudText>
     </TitleContent>
     <DialogContent>
         <MudGrid>
             <MudItem xs="12">
                 <MudTextField @bind-Value="_newTradeTest.TradeTitle" Label="Trade Title" Variant="Variant.Outlined" Required="true" Placeholder="e.g. Automotive Motor Mechanic, Boilermaker" />
             </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="_newTradeTest.TradeCode" Label="OFO / SAQA Trade Code" Variant="Variant.Outlined" Placeholder="e.g. 651202" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="_newTradeTest.TradeTestCentreCode" Label="TTC Provider NLRD Code" Variant="Variant.Outlined" Placeholder="e.g. TTC-001" />
+            </MudItem>
             <MudItem xs="12" md="8">
-                <MudTextField @bind-Value="_newTradeTest.TestCenterName" Label="Accredited Trade Test Center" Variant="Variant.Outlined" Required="true" />
+                <MudTextField @bind-Value="_newTradeTest.TestCenterName" Label="Accredited Trade Test Center Name" Variant="Variant.Outlined" Required="true" />
             </MudItem>
             <MudItem xs="12" md="4">
                 <MudNumericField @bind-Value="_newTradeTest.AttemptNumber" Label="Attempt Number" Variant="Variant.Outlined" Min="1" />
@@ -268,13 +346,7 @@ else
                 <MudDatePicker @bind-Date="_tradeTestDate" Label="Trade Test Date" Variant="Variant.Outlined" />
             </MudItem>
             <MudItem xs="12" md="6">
-                <MudSelect T="int?" @bind-Value="_newTradeTest.AssessorPersonId" Label="Assigned Assessor" Variant="Variant.Outlined" Clearable="true">
-                    <MudSelectItem Value="@((int?)null)">-- Select Assessor --</MudSelectItem>
-                    @foreach (var person in _people)
-                    {
-                        <MudSelectItem Value="@((int?)person.Id)">@person.FullName</MudSelectItem>
-                    }
-                </MudSelect>
+                <MudTextField @bind-Value="_newTradeTest.AssessorRegistrationNumber" Label="Assessor Registration No" Variant="Variant.Outlined" Placeholder="e.g. 17/ASS/999" />
             </MudItem>
         </MudGrid>
     </DialogContent>
@@ -287,20 +359,30 @@ else
 <!-- RECORD RESULT DIALOG -->
 <MudDialog @bind-Visible="_recordResultOpen">
     <TitleContent>
-        <MudText Typo="Typo.h6">Record Trade Test Outcome</MudText>
+        <MudText Typo="Typo.h6">Record Trade Test Outcome (SETMIS File 505)</MudText>
     </TitleContent>
     <DialogContent>
         <MudGrid>
             <MudItem xs="12" md="6">
-                <MudSelect T="string" @bind-Value="_selectedResultStatus" Label="Result Outcome" Variant="Variant.Outlined">
-                    <MudSelectItem Value="@("Competent")">Competent (Pass)</MudSelectItem>
-                    <MudSelectItem Value="@("NotYetCompetent")">Not Yet Competent (Fail)</MudSelectItem>
+                <MudSelect T="string" @bind-Value="_selectedResultStatus" Label="Result Outcome (TradeTestResultType)" Variant="Variant.Outlined">
+                    <MudSelectItem Value="@("01")">01 - Competent (Pass)</MudSelectItem>
+                    <MudSelectItem Value="@("02")">02 - Not Yet Competent (Fail)</MudSelectItem>
                     <MudSelectItem Value="@("Absent")">Absent / Deferred</MudSelectItem>
                 </MudSelect>
             </MudItem>
             <MudItem xs="12" md="6">
                 <MudTextField @bind-Value="_customCertificateNumber" Label="Serial Certificate Number" Variant="Variant.Outlined"
                               Placeholder="Leave blank for auto-generated certificate" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="_selectedModeratorRegNumber" Label="Moderator / NAMB Verifier Reg No" Variant="Variant.Outlined" Placeholder="e.g. 17/MOD/1234" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudSelect T="string" @bind-Value="_selectedResultReasonId" Label="Result Reason Code" Variant="Variant.Outlined">
+                    <MudSelectItem Value="@("01")">01 - Assessment Criteria Satisfied</MudSelectItem>
+                    <MudSelectItem Value="@("02")">02 - Practical Re-assessment Required</MudSelectItem>
+                    <MudSelectItem Value="@("03")">03 - Theoretical Re-assessment Required</MudSelectItem>
+                </MudSelect>
             </MudItem>
             <MudItem xs="12">
                 <MudTextField @bind-Value="_testRemarks" Label="Assessor Evaluation Remarks" Variant="Variant.Outlined" Lines="3" />
@@ -335,7 +417,9 @@ else
 
     private bool _recordResultOpen = false;
     private LearnerTradeTest? _selectedTestForOutcome;
-    private string _selectedResultStatus = "Competent";
+    private string _selectedResultStatus = "01";
+    private string _selectedResultReasonId = "01";
+    private string? _selectedModeratorRegNumber;
     private string? _customCertificateNumber;
     private string? _testRemarks;
 
@@ -353,6 +437,22 @@ else
             if (!IsNew)
             {
                 await LoadLearnerDataAsync();
+            }
+            else
+            {
+                _learner = new CompanyLearner
+                {
+                    IsActive = true,
+                    LearningProgrammeTypeCode = "02",
+                    FundingId = "01",
+                    PartOfId = "01",
+                    EnrolmentTypeId = "01",
+                    EnrolmentStatusId = "01",
+                    EconomicStatusId = "01",
+                    UrbanRuralId = "01",
+                    EnrolmentStatusDate = DateTime.UtcNow,
+                    RegistrationDate = DateTime.UtcNow
+                };
             }
 
             UpdateBreadcrumbs();
@@ -396,7 +496,7 @@ else
         {
             new BreadcrumbItem("Dashboard", href: "/"),
             new BreadcrumbItem("Learners", href: "/learners"),
-            new BreadcrumbItem(IsNew ? "Register" : _learner.LearnerContractNumber, href: null, disabled: true)
+            new BreadcrumbItem(IsNew ? "Register" : _learner.LearnerContractNumber ?? $"Learner #{Id}", href: null, disabled: true)
         };
     }
 
@@ -464,9 +564,14 @@ else
         _newTradeTest = new LearnerTradeTest
         {
             CompanyLearnerId = _learner.Id,
-            TradeTitle = _learner.QualificationTitle,
+            TradeTitle = _learner.QualificationTitle ?? "Artisan Trade",
+            TradeCode = _learner.OfoCode ?? "651202",
+            QualificationId = _learner.SaqaQualificationId?.ToString() ?? "651202",
+            TradeTestCentreCode = "TTC-001",
             TestCenterName = "MerSETA Accredited Trade Test Centre",
-            AttemptNumber = _learner.TradeTests.Count + 1
+            AttemptNumber = _learner.TradeTests.Count + 1,
+            TradeTestResultId = "01",
+            TradeTestResultReasonId = "01"
         };
         _tradeTestDate = DateTime.UtcNow.AddMonths(1);
         _scheduleTestOpen = true;
@@ -492,7 +597,9 @@ else
     private void OpenRecordResultDialog(LearnerTradeTest test)
     {
         _selectedTestForOutcome = test;
-        _selectedResultStatus = test.ResultStatusCode == "Scheduled" ? "Competent" : test.ResultStatusCode;
+        _selectedResultStatus = test.TradeTestResultId ?? "01";
+        _selectedResultReasonId = test.TradeTestResultReasonId ?? "01";
+        _selectedModeratorRegNumber = test.ModeratorRegistrationNumber;
         _customCertificateNumber = test.SerialCertificateNumber;
         _testRemarks = test.Remarks;
         _recordResultOpen = true;
@@ -504,6 +611,8 @@ else
 
         try
         {
+            _selectedTestForOutcome.ModeratorRegistrationNumber = _selectedModeratorRegNumber;
+            _selectedTestForOutcome.TradeTestResultReasonId = _selectedResultReasonId;
             await LearnerService.RecordTradeTestResultAsync(_selectedTestForOutcome.Id, _selectedResultStatus, _customCertificateNumber, _testRemarks, "ADMIN");
             var refreshed = await LearnerService.GetLearnerByIdAsync(Id);
             if (refreshed != null) _learner = refreshed;

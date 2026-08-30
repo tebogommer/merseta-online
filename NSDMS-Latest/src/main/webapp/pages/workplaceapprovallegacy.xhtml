@@ -1,0 +1,604 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+		<p:importEnum type="haj.com.entity.enums.IdPassportEnum" var="idPassportEnum" />
+		<p:importEnum type="haj.com.entity.enums.CloRecommendationEnum" />
+		<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+		<p:importEnum type="haj.com.entity.enums.ConfigDocProcessEnum" />
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<h:form id="approvalForm">
+					<p:growl showDetail="false" sticky="false">
+						<p:autoUpdate />
+					</p:growl>
+					<p:importEnum type="haj.com.entity.enums.WpaDocRequirements" />
+					<div class="card card-w-title">
+						<h1>Workplace Approval For #{workplaceapprovallegacyUI.workplaceapproval.qualification.saqaQualification} #{workplaceapprovallegacyUI.workplaceapproval.ofoCodes.ofoDescription}</h1>
+						<f:facet name="header">Company Information</f:facet>
+						<p:panelGrid columns="2" style="width:100%" id="companyInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText disabled="true" id="companyName" value="#{workplaceapprovallegacyUI.workplaceapproval.company.companyName}" style="width:95%;  opacity: 1 !important; color:black !important" required="true" requiredMessage="#{lang['enter.the.company.name']}" />
+								<p:outputLabel value="#{lang['companyName']}" for="companyName" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText disabled="true" id="tradingName" value="#{workplaceapprovallegacyUI.workplaceapproval.company.tradingName}" style="width:95%;  opacity: 1 !important; color:black !important" required="true" requiredMessage="#{lang['enter.the.trading.name']}" />
+								<p:outputLabel value="#{lang['tradingName']}" for="tradingName" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText disabled="true" id="telNumber" value="#{workplaceapprovallegacyUI.workplaceapproval.company.telNumber}" style="width:95%;  opacity: 1 !important; color:black !important" required="true" requiredMessage="#{lang['enter.the.tel.number']}" />
+								<p:outputLabel value="#{lang['telNumber']}" for="telNumber" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText disabled="true" id="faxNumber" value="#{workplaceapprovallegacyUI.workplaceapproval.company.faxNumber}" style="width:95%;  opacity: 1 !important; color:black !important" />
+								<p:outputLabel value="#{lang['faxNumber']}" for="faxNumber" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText disabled="true" id="companyRegistrationNumber" value="#{workplaceapprovallegacyUI.workplaceapproval.company.companyRegistrationNumber}" style="width:95%;  opacity: 1 !important; color:black !important" required="true" requiredMessage="#{lang['enter.company.registration.number']}" />
+								<p:outputLabel value="#{lang['companyRegistrationNumber']}" for="companyRegistrationNumber" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText disabled="true" id="email" value="#{workplaceapprovallegacyUI.workplaceapproval.company.email}" style="width:95%;  opacity: 1 !important; color:black !important" required="true" requiredMessage="#{lang['enter.email.address']}" />
+								<p:outputLabel value="#{lang['email']}" for="email" />
+							</h:panelGroup>
+						</p:panelGrid>
+
+					</div>
+
+					<div class="card card-w-title">
+						<f:facet name="header">Site Information</f:facet>
+						<p:panelGrid columns="1" style="width:100%" id="siteInformationGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText disabled="true" value="#{workplaceapprovallegacyUI.workplaceapproval.sites.companyName}" style="width:95%;  opacity: 1 !important; color:black !important" rendered="#{workplaceapprovallegacyUI.workplaceapproval.sites.companyName.length() ne 0}" />
+								<p:inputText disabled="true" value="#{workplaceapprovallegacyUI.workplaceapproval.company.companyName}" style="width:95%;  opacity: 1 !important; color:black !important" rendered="#{workplaceapprovallegacyUI.workplaceapproval.sites.companyName.length() eq 0}" />
+								<p:outputLabel value="Site" for="companyName" />
+							</h:panelGroup>
+							<ui:include src="/pages/includes/legacywpaddresses.xhtml"/>
+							
+						</p:panelGrid>
+					</div>
+					
+					
+					<c:if test="#{workplaceapprovallegacyUI.workplaceapproval.qualification eq null and workplaceapprovallegacyUI.workplaceapproval.ofoCodes eq null}">
+					<div class="card card-w-title" >
+						<p:panel >
+							<f:facet name="header">Workplace Suitability</f:facet>
+							<h2>Equipment and tools</h2>
+							<p:panelGrid columns="2" style="width:100%" id="WorkplaceSuitability" layout="grid" styleClass="ui-panelgrid-blank">
+								<h:panelGroup style="width:100%">
+									<p:outputLabel value="As per relevant skills area" for="a" />
+									<div class="EmptyBox10" />
+									<p:selectOneRadio value="#{workplaceapprovallegacyUI.workplaceapproval.asPerSkillsArea}" required="true" id="a" converter="YesNoLookupConvertor" columns="2" layout="grid" disabled="#{workplaceapprovallegacyUI.disableAll}">
+										<p:ajax />
+										<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+									</p:selectOneRadio>
+								</h:panelGroup>
+
+								<h:panelGroup style="width:100%">
+									<p:outputLabel value="Relevant for learner ratio" for="b" />
+									<div class="EmptyBox10" />
+									<p:selectOneRadio value="#{workplaceapprovallegacyUI.workplaceapproval.relevantLearnerRatio}" required="true" id="b" converter="YesNoLookupConvertor" columns="2" layout="grid" disabled="#{workplaceapprovallegacyUI.disableAll}">
+										<p:ajax />
+										<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+									</p:selectOneRadio>
+								</h:panelGroup>
+
+								<h:panelGroup style="width:100%">
+									<p:outputLabel value="Relevant to core work" for="c" />
+									<div class="EmptyBox10" />
+									<p:selectOneRadio value="#{workplaceapprovallegacyUI.workplaceapproval.relevantCoreWork}" required="true" id="c" converter="YesNoLookupConvertor" columns="2" layout="grid" disabled="#{workplaceapprovallegacyUI.disableAll}">
+										<p:ajax />
+										<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+									</p:selectOneRadio>
+								</h:panelGroup>
+
+								<h:panelGroup style="width:100%">
+									<p:outputLabel value="Access to material and consumables applicable to the structured workplace learning" for="d" />
+									<div class="EmptyBox10" />
+									<p:selectOneRadio value="#{workplaceapprovallegacyUI.workplaceapproval.accessMaterialConsumable}" required="true" id="d" converter="YesNoLookupConvertor" columns="2" layout="grid" disabled="#{workplaceapprovallegacyUI.disableAll}">
+										<p:ajax />
+										<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+									</p:selectOneRadio>
+								</h:panelGroup>
+
+								<h:panelGroup style="width:100%">
+									<p:outputLabel value="Ability to cover the entire scope and duration of the workplace component." for="e" />
+									<div class="EmptyBox10" />
+									<p:selectOneRadio value="#{workplaceapprovallegacyUI.workplaceapproval.accessCover}" required="true" id="e" converter="YesNoLookupConvertor" columns="2" layout="grid" disabled="#{workplaceapprovallegacyUI.disableAll}">
+										<p:ajax />
+										<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+									</p:selectOneRadio>
+								</h:panelGroup>
+							</p:panelGrid>
+
+							<h2>Record keeping and Mentoring</h2>
+							<p:panelGrid columns="2" style="width:100%" id="WorkplaceSuitability2" layout="grid" styleClass="ui-panelgrid-blank">
+								<h:panelGroup style="width:100%">
+									<p:outputLabel value="Effective Record keeping in place" for="f" />
+									<div class="EmptyBox10" />
+									<p:selectOneRadio value="#{workplaceapprovallegacyUI.workplaceapproval.effectiveRecord}" required="true" id="f" converter="YesNoLookupConvertor" columns="2" layout="grid" disabled="#{workplaceapprovallegacyUI.disableAll}">
+										<p:ajax />
+										<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+									</p:selectOneRadio>
+								</h:panelGroup>
+
+								<h:panelGroup style="width:100%">
+									<p:outputLabel value="Suitable qualified mentors for the trade/s workplace approval is applied for  " for="g" />
+									<div class="EmptyBox10" />
+									<p:selectOneRadio value="#{workplaceapprovallegacyUI.workplaceapproval.suitableQualifiedMentor}" required="true" id="g" converter="YesNoLookupConvertor" columns="2" layout="grid" disabled="#{workplaceapprovallegacyUI.disableAll}">
+										<p:ajax />
+										<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+									</p:selectOneRadio>
+								</h:panelGroup>
+							</p:panelGrid>
+
+							<h2>Safety</h2>
+							<p:panelGrid columns="2" style="width:100%" id="WorkplaceSuitability3" layout="grid" styleClass="ui-panelgrid-blank">
+								<h:panelGroup style="width:100%">
+									<p:outputLabel value="Workplace layout and working environment is safe and conducive to effective workplace learning" for="h" />
+									<div class="EmptyBox10" />
+									<p:selectOneRadio value="#{workplaceapprovallegacyUI.workplaceapproval.workplaceLayout}" required="true" id="h" converter="YesNoLookupConvertor" columns="2" layout="grid" disabled="#{workplaceapprovallegacyUI.disableAll}">
+										<p:ajax />
+										<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+									</p:selectOneRadio>
+								</h:panelGroup>
+
+								<h:panelGroup style="width:100%">
+									<p:outputLabel value="Health and Safety Officer" for="i" />
+									<div class="EmptyBox10" />
+									<p:selectOneRadio value="#{workplaceapprovallegacyUI.workplaceapproval.healthSafetyOfficer}" required="true" id="i" converter="YesNoLookupConvertor" columns="2" layout="grid" disabled="#{workplaceapprovallegacyUI.disableAll}">
+										<p:ajax />
+										<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+									</p:selectOneRadio>
+								</h:panelGroup>
+								
+							</p:panelGrid>
+						</p:panel>
+					</div>
+					</c:if>
+					<div class="card card-w-title">
+						<h1>Mentor Information</h1>
+						<p:panel id="unitList">
+							<p:panelGrid id="entryGird" columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{not workplaceapprovallegacyUI.disableAll}">
+
+								<p:dataTable var="rowVarSme" value="#{workplaceapprovallegacyUI.avalibleSmeDataModel}" rowKey="#{rowVarSme.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="No Avalible Mentor For Selection"
+									paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+									<f:facet name="header">
+									Available Mentor For Selection
+									</f:facet>
+									<p:column style="width:7%" headerText="#{lang['expand.row']}">
+										<p:rowToggler />
+									</p:column>
+									<p:column headerText="Date Added" sortBy="#{rowVarSme.createDate}">
+										<p:outputLabel value="#{rowVarSme.createDate}">
+											<f:convertDateTime pattern="dd MMMM yyyy" />
+										</p:outputLabel>
+									</p:column>
+									<p:column headerText="Site Name" sortBy="#{rowVarSme.sites}">
+										<p:outputLabel value="#{rowVarSme.sites.companyName}" rendered="#{rowVarSme.sites ne null}"/>
+										<p:outputLabel value="#{rowVarSme.company.companyName}" rendered="#{rowVarSme.sites eq null}" />
+									</p:column>
+									<p:column headerText="Address">
+										<p:outputLabel value="#{rowVarSme.sites.registeredAddress.addressLine1}" rendered="#{rowVarSme.sites ne null}" />
+										<p:outputLabel value="#{rowVarSme.residentialAddress.addressLine1}" rendered="#{rowVarSme.residentialAddress ne null}" />
+										<br />
+										<p:outputLabel value="#{rowVarSme.sites.registeredAddress.addressLine2}" rendered="#{rowVarSme.sites ne null}" />
+										<p:outputLabel value="#{rowVarSme.residentialAddress.addressLine2}" rendered="#{rowVarSme.residentialAddress ne null}" />
+										<br />
+										<p:outputLabel value="#{rowVarSme.sites.registeredAddress.addressLine3}" rendered="#{rowVarSme.sites ne null}" />
+										<p:outputLabel value="#{rowVarSme.residentialAddress.addressLine3}" rendered="#{rowVarSme.residentialAddress ne null}"/>
+										<br />
+										<p:outputLabel value="#{rowVarSme.sites.registeredAddress.town.description}" rendered="#{rowVarSme.sites ne null}" />
+										<p:outputLabel value="#{rowVarSme.residentialAddress.town.description}" rendered="#{rowVarSme.residentialAddress ne null}" />
+										<br />
+									</p:column>
+									<p:column headerText="First Name" filterBy="#{rowVarSme.firstName}">
+										<p:outputLabel style="width:95%; opacity:1 !important;" value="#{rowVarSme.firstName}" />
+									</p:column>
+									<p:column headerText="Last Name" filterBy="#{rowVarSme.lastName}">
+										<p:outputLabel style="width:95%; opacity:1 !important;" value="#{rowVarSme.lastName}" />
+									</p:column>
+									<p:column headerText="Identity/Passport Number">
+										<p:outputLabel style="width:95%; opacity:1 !important;" value="#{rowVarSme.identityNumber}" />
+										<p:outputLabel style="width:95%; opacity:1 !important;" value="#{rowVarSme.passportNumber}" />
+									</p:column>
+									<p:column headerText="Active" sortBy="#{rowVarSme.active}" rendered="false">
+										<p:selectBooleanCheckbox value="#{rowVarSme.active}" disabled="true" />
+									</p:column>
+									<p:column headerText="Status" sortBy="{rowVarSme.status}" rendered="false">
+										<p:outputLabel value="#{rowVarSme.status.friendlyName}" />
+									</p:column>
+									
+									<p:column width="30%" headerText="Mentor Qualifications" >
+										<p:repeat value="#{rowVarSme.smeQualificationsList}" var="rvql3">
+											<p:outputLabel value="(#{rvql3.qualification.code}) #{rvql3.qualification.description} "/><br/><p></p>
+										</p:repeat>
+									</p:column>
+									
+									<p:column width="8%" headerText="Add Mentor" >
+										<p:commandButton immediate="true" icon="ui-icon-plus" styleClass="flat" action="#{workplaceapprovallegacyUI.addSiteSmeToWorkplaceApproval}" update="@form">
+											<f:setPropertyActionListener value="#{rowVarSme}" target="#{workplaceapprovallegacyUI.sitesSme}" />
+										</p:commandButton>
+									</p:column>
+									
+									<p:rowExpansion>
+										<p:outputPanel>
+											<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+												<p:dataTable id="smeQualificationDt" value="#{rowVarSme.smeQualificationsList}" var="rvql" rowKey="#{rvql.id}" paginator="true" paginatorPosition="bottom" rows="5" reflow="true">
+													<p:column headerText="SAQA ID" style="width:8%">
+														<p:outputLabel value="#{rvql.qualification.code}" />
+													</p:column>
+													<p:column headerText="Qualification">
+														<p:outputLabel value="#{rvql.qualification.description}" />
+													</p:column>
+													<p:column headerText="NQF Level">
+														<p:outputLabel value="#{rvql.qualification.nqflevelg2description}" />
+													</p:column>
+													<p:column headerText="Learners Registered For Qualification">
+														<p:outputLabel value="#{rvql.learnerAssignedCount}" />
+													</p:column>
+												</p:dataTable>
+											</p:panelGrid>
+										</p:outputPanel>
+									</p:rowExpansion>
+								</p:dataTable>
+							</p:panelGrid>
+
+							<div>
+								<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+									<p:dataTable rendered="#{not workplaceapprovallegacyUI.disableAll or workplaceapprovallegacyUI.sites.size() ne 0}" var="rowVar2" value="#{workplaceapprovallegacyUI.sites}" id="usList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+										paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+										<f:facet name="header">
+									Mentor Selected
+									</f:facet>
+										<p:column style="width:7%" headerText="#{lang['expand.row']}">
+											<p:rowToggler />
+										</p:column>
+										<p:column headerText="Site Name">
+											<p:outputLabel value="#{rowVar2.sites.companyName}" rendered="#{rowVar2.sites ne null}" />
+											<p:outputLabel value="#{workplaceapprovallegacyUI.workplaceapproval.company.companyName}" rendered="#{rowVar2.sites eq null}" />
+										</p:column>
+										<p:column headerText="Address">
+											<p:outputLabel value="#{rowVar2.sites.registeredAddress.addressLine1}" rendered="#{rowVar2.sites ne null}" />
+											<p:outputLabel value="#{rowVar2.residentialAddress.addressLine1}" rendered="#{rowVar2.residentialAddress ne null}" />
+											<br />
+											<p:outputLabel value="#{rowVar2.sites.registeredAddress.addressLine2}" rendered="#{rowVar2.sites ne null}" />
+											<p:outputLabel value="#{rowVar2.residentialAddress.addressLine2}" rendered="#{rowVar2.residentialAddress ne null}" />
+											<br />
+											<p:outputLabel value="#{rowVar2.sites.registeredAddress.addressLine3}" rendered="#{rowVar2.sites ne null}" />
+											<p:outputLabel value="#{rowVar2.residentialAddress.addressLine3}" rendered="#{rowVar2.residentialAddress ne null}" />
+											<br />
+											<p:outputLabel value="#{rowVar2.sites.registeredAddress.town.description}" rendered="#{rowVar2.sites ne null}" />
+											<p:outputLabel value="#{rowVar2.residentialAddress.town.description}" rendered="#{rowVar2.residentialAddress ne null}" />
+											<br />
+										</p:column>
+										<p:column headerText="First Name">
+											<p:outputLabel style="width:95%; opacity:1 !important;" value="#{rowVar2.firstName}" />
+										</p:column>
+										<p:column headerText="Last Name">
+											<p:outputLabel style="width:95%; opacity:1 !important;" value="#{rowVar2.lastName}" />
+										</p:column>
+										<p:column headerText="Identity/Passport Number">
+											<p:outputLabel style="width:95%; opacity:1 !important;" value="#{rowVar2.identityNumber}" rendered="#{rowVar2.identityNumber ne null}" />
+											<p:outputLabel style="width:95%; opacity:1 !important;" value="#{rowVar2.passportNumber}" rendered="#{rowVar2.passportNumber ne null}" />
+										</p:column>
+										<p:column width="65" rendered="#{not workplaceapprovallegacyUI.disableAll}" headerText="Remove" >
+											<p:commandButton immediate="true" icon="fa fa-trash-o" title="#{lang['delete']}" update="@form" action="#{workplaceapprovallegacyUI.deleteWorkPlaceApprovalSitesLinkedToWorkplaceApproval}">
+												<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+												<f:setPropertyActionListener value="#{rowVar2}" target="#{workplaceapprovallegacyUI.site}" />
+											</p:commandButton>
+										</p:column>
+										<p:rowExpansion>
+											<p:outputPanel>
+												<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+													<p:dataTable id="smeselectedQualificationsList" value="#{rowVar2.sitesSme.smeQualificationsList}" var="rvql2" rowKey="#{rvql2.id}" paginator="true" paginatorPosition="bottom" rows="5" reflow="true">
+														<p:column headerText="SAQA ID" style="width:8%">
+															<p:outputLabel value="#{rvql2.qualification.code}" />
+														</p:column>
+														<p:column headerText="Qualification">
+															<p:outputLabel value="#{rvql2.qualification.description}" />
+														</p:column>
+														<p:column headerText="NQF Level">
+														<p:outputLabel value="#{rvql2.qualification.nqflevelg2description}" />
+													</p:column>
+														<p:column headerText="Learners Registered For Qualification" rendered="false">
+															<p:outputLabel value="#{rvql2.learnerAssignedCount}" />
+														</p:column>
+														
+														<p:column headerText="Select" width="60" rendered="false">
+															<center>
+															<p:selectBooleanCheckbox value="#{rvql2.selected}">
+																<p:ajax></p:ajax>
+															</p:selectBooleanCheckbox>
+															</center>
+														</p:column>
+													</p:dataTable>
+												</p:panelGrid>
+											</p:outputPanel>
+										</p:rowExpansion>
+									</p:dataTable>
+								</p:panelGrid>
+							</div>
+						</p:panel>
+					</div>
+
+
+					<div class="card card-w-title">
+						<p:panelGrid columns="3" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval}">
+							
+							<p:commandButton value="Final Approval" icon="ui-icon-save" update="@form" action="#{workplaceapprovallegacyUI.finalApproveRegistration}" styleClass="flat green-btn Fs18" style="height: 50px;">
+							</p:commandButton>
+							
+							<p:commandButton value="#{lang['reject.task']}" icon="ui-icon-save" oncomplete="PF('rejectReasonsDlg').show()" update="@form" styleClass="flat Fs18" style="height: 50px;" process="@this">
+							</p:commandButton>
+							
+							<p:commandButton value="#{lang['final.reject']}" icon="ui-icon-save" oncomplete="PF('finalRejectReasonsDlg').show()" update="@form finalRejectReasonForm" styleClass="flat red-btn Fs18" style="height: 50px;">
+							</p:commandButton>
+							
+						</p:panelGrid>
+					
+						<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload}">
+							<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" update="@form" action="#{workplaceapprovallegacyUI.completeRegistration}" styleClass="flat green-btn Fs18" style="height: 50px;">
+							</p:commandButton>
+						</p:panelGrid>					
+					</div>
+				
+				
+				
+				
+					<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250" dynamic="true">
+						<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" immediate="true" />
+						<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" immediate="true" />
+					</p:confirmDialog>
+				</h:form>
+			</div>
+		</div>
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true">
+			<h:form id="uploadForm">
+				<h:panelGroup id="uploadGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{sdfUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{workplaceapprovallegacyUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{workplaceapprovallegacyUI.storeNewFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update="approvalForm"
+										multiple="false" fileLimit="1" allowTypes="/(\.|\/)(gif|jpe?g|png|pdf|docx|txt)$/" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="Amend Review Date" widgetVar="dlgReviewDate" hideEffect="clip" showEffect="clip" id="dialogReviewDate" modal="true" closable="true" width="50%" responsive="true">
+			<h:form id="reviewDateForm">
+				<div class="ui-g">
+					<div class="ui-g-12">
+						<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+							<h:panelGroup style="width:100%" rendered="false">
+								<div>
+									<p:outputLabel value="Review Date:" for="dateUpdatedSelection" />
+								</div>
+								<div>
+									<p:calendar id="dateUpdatedSelection" value="#{workplaceapprovallegacyUI.workplaceapproval.reviewDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true">
+										<p:ajax event="dateSelect" />
+									</p:calendar>
+								</div>
+							</h:panelGroup>
+							<p:selectManyMenu rendered="true" value="#{workplaceapprovallegacyUI.dateChangeReasonSelectionList}" converter="DateChangeReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{workplaceapprovallegacyUI.dateChangeReasonAvalibleSelectionList}" var="rv" itemValue="#{rv}" />
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value=" t.howTo " rendered="false" />
+								</p:column>
+								<p:ajax />
+							</p:selectManyMenu>
+							<p:commandButton value="Amend" action="#{workplaceapprovallegacyUI.updateVisitDateOnWorkplaceApproval}" update="@form approvalForm" />
+						</p:panelGrid>
+					</div>
+				</div>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="Reject Reasons" widgetVar="rejectReasonsDlg" hideEffect="clip" showEffect="clip" id="dialogRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{workplaceapprovallegacyUI.selectedRejectionReasons}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{workplaceapprovallegacyUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+							</p:selectManyMenu>
+						</div>
+					</div>
+					<p:commandButton value="Reject" action="#{workplaceapprovallegacyUI.cloRejectToSdf}" update="@form" />
+				</div>
+			</h:form>
+		</p:dialog>
+		
+		<p:dialog header="Reject Reasons" widgetVar="rejectReasonsDlgManager" hideEffect="clip" showEffect="clip" id="dialogRejectReasonManager" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonFormManager">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{workplaceapprovallegacyUI.selectedRejectionReasons}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{workplaceapprovallegacyUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+							</p:selectManyMenu>
+							<br />
+							<p:panel>
+							<f:facet name="header">Reject Comment</f:facet>
+							<p:panelGrid columns="1" style="width :80%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+								<p:outputLabel value="Ensure that explanation on the comment is in detail" />
+								<p:inputTextarea style="width:75%" value="#{workplaceapprovallegacyUI.workplaceapproval.rejectMessage}"  required="true" requiredMessage="Please add reject comment"></p:inputTextarea>
+							</p:panelGrid>
+						</p:panel>
+						</div>
+					</div>
+					<p:commandButton value="Reject" action="#{workplaceapprovallegacyUI.managerReject}" update="@form" />
+				</div>
+			</h:form>
+		</p:dialog>
+		
+		<p:dialog header="Reject Reasons" widgetVar="rejectReasonsDlgWithdrawal" hideEffect="clip" showEffect="clip" id="dialogRejectReasonWithdrawal" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonFormWithdrawal">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{workplaceapprovallegacyUI.selectedRejectionReasons}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{workplaceapprovallegacyUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+							</p:selectManyMenu>
+						</div>
+					</div>
+					<p:commandButton value="Reject" action="#{workplaceapprovallegacyUI.rejectWorkPlaceApprovalWithdrawal}" update="@form" />
+				</div>
+			</h:form>
+		</p:dialog>
+		
+		<p:dialog header="Reject Reasons" widgetVar="rejectReasonsDlgWithdrawalFinal" hideEffect="clip" showEffect="clip" id="rejectReasonsDlgWithdrawalFinal" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonFormWithdrawalFinal">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{workplaceapprovallegacyUI.selectedRejectionReasons}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{workplaceapprovallegacyUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+							</p:selectManyMenu>
+						</div>
+					</div>
+					<p:commandButton value="Reject" action="#{workplaceapprovallegacyUI.finalRejectWorkPlaceApprovalWithdrawal}" update="@form" />
+				</div>
+			</h:form>
+		</p:dialog>
+		
+
+		<p:dialog header="Recommend: Rejection Reasons" widgetVar="cloRejectReasonsDlg" hideEffect="clip" showEffect="clip" id="dialogCloRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonCloForm">
+				<!-- Reject Reasons for sending to the sdf -->
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{workplaceapprovallegacyUI.selectedRejectionReasons}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{workplaceapprovallegacyUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+							</p:selectManyMenu>
+						</div>
+					</div>
+					<p:commandButton value="Reject" action="#{workplaceapprovallegacyUI.cloRecommendationRejctionSelection}" update="@form" />
+				</div>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="Final Reject Reasons" widgetVar="finalRejectReasonsDlg" hideEffect="clip" showEffect="clip" id="dialogFinalRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="finalRejectReasonForm">
+				<!-- Final Reject Reasons -->
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{workplaceapprovallegacyUI.selectedRejectionReasons}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{workplaceapprovallegacyUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+							</p:selectManyMenu>
+						</div>
+					</div>
+					<p:commandButton value="Final Reject" action="#{workplaceapprovallegacyUI.finalRejectRegistration}" update="@form" />
+				</div>
+			</h:form>
+		</p:dialog>
+		
+		<p:dialog header="Qualification Selection" widgetVar="QualSelect" hideEffect="clip" showEffect="clip" id="QualSelect" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="quailSel">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:panelGrid columns="3" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText disabled="true" id="smenameId" value="#{workplaceapprovallegacyUI.sitesSme.firstName}" style="width:95%;  opacity: 1 !important; color:black !important" required="true" requiredMessage="#{lang['enter.the.company.name']}" />
+									<p:outputLabel value="First Name"  for="smenameId" />
+								</h:panelGroup>
+									
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText disabled="true" id="smenlastameId" value="#{workplaceapprovallegacyUI.sitesSme.lastName}" style="width:95%;  opacity: 1 !important; color:black !important" required="true" requiredMessage="#{lang['enter.the.company.name']}" />
+									<p:outputLabel value="First Name"  for="smenlastameId" />
+								</h:panelGroup>
+								
+								<h:panelGroup styleClass="md-inputfield" rendered="#{workplaceapprovallegacyUI.sitesSme.identityNumber.length() > 0}">
+									<p:inputText disabled="true" id="smenIdameId" value="#{workplaceapprovallegacyUI.sitesSme.identityNumber}" style="width:95%;  opacity: 1 !important; color:black !important" required="true" requiredMessage="#{lang['enter.the.company.name']}" />
+									<p:outputLabel value="Identity/Passport Number"  for="smenIdameId" />
+								</h:panelGroup>
+								
+								<h:panelGroup styleClass="md-inputfield" rendered="#{workplaceapprovallegacyUI.sitesSme.passportNumber.length() > 0}">
+									<p:inputText disabled="true" id="smepasIdnameId" value="#{workplaceapprovallegacyUI.sitesSme.passportNumber}" style="width:95%;  opacity: 1 !important; color:black !important" required="true" requiredMessage="#{lang['enter.the.company.name']}" />
+									<p:outputLabel value="Identity/Passport Number"  for="smepasIdnameId" />
+								</h:panelGroup>
+								
+							</p:panelGrid>
+							<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+								<p:dataTable id="smeQualificationDt1" value="#{workplaceapprovallegacyUI.sitesSme.smeQualificationsList}" var="rvql" rowKey="#{rvql.id}" paginator="true" paginatorPosition="bottom" rows="5" reflow="true">
+									<p:column headerText="SAQA ID" style="width:8%">
+										<p:outputLabel value="#{rvql.qualification.code}" />
+									</p:column>
+									<p:column headerText="Qualification">
+										<p:outputLabel value="#{rvql.qualification.description}" />
+									</p:column>
+									<p:column headerText="Learners Registered For Qualification">
+										<p:outputLabel value="#{rvql.learnerAssignedCount}" />
+									</p:column>
+									
+									<p:column headerText="Approve" width="60">
+										<center>
+										<p:selectBooleanCheckbox value="#{rvql.selected}">
+											<p:ajax></p:ajax>
+										</p:selectBooleanCheckbox>
+										</center>
+									</p:column>
+									
+								</p:dataTable>
+							</p:panelGrid>
+						</div>
+					</div>
+					<p:commandButton value="Submit" action="#{workplaceapprovallegacyUI.addSiteSmeToWorkplaceApproval}" update="@form" />
+				</div>
+			</h:form>
+		</p:dialog>
+	</ui:define>
+</ui:composition>

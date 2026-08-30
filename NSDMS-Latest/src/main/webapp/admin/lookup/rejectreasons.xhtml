@@ -1,0 +1,141 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Reject Reasons</h1>
+					<h:form id="rejectreasonsInsForm">
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:panelGrid columns="1" style="width:100%" id="rejectreasonsInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="#{lang['process']}" for="forProcess" />
+								</div>
+								<div>
+									<p:selectOneMenu id="forProcess" value="#{rejectreasonsUI.rejectreasons.forProcess}" style="width:75%" required="true" requiredMessage="#{lang['select.process']}">
+										<p:ajax />
+										<f:selectItem itemLabel="#{lang['select.one']}" itemValue="" noSelectionOption="true" />
+										<f:selectItems value="#{enumUI.processEnumDD}" />
+									</p:selectOneMenu>
+								</div>
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="description" value="#{rejectreasonsUI.rejectreasons.description}" style="width:95%" />
+								<p:outputLabel value="#{lang['description']}" for="description" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="code" value="#{rejectreasonsUI.rejectreasons.howTo}" style="width:95%" />
+								<p:outputLabel value="How To" for="code" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="code2" value="#{rejectreasonsUI.rejectreasons.code}" style="width:95%" />
+								<p:outputLabel value="#{lang['code']}" for="code2" />
+							</h:panelGroup>
+							<p:panelGrid columns="5" style="width:100%" id="rejectreasonsInsGrid1" layout="grid" styleClass="ui-panelgrid-blank form-group">
+								<h:panelGroup>
+									<p:outputLabel value="CRM Selection" for="crmSelection" styleClass="gray" />
+									<p:spacer width="10" />
+									<p:selectBooleanCheckbox id="crmSelection" value="#{rejectreasonsUI.rejectreasons.forCrm}" />
+								</h:panelGroup>
+								<h:panelGroup>
+									<p:outputLabel value="Manager Selection" for="mSelection" styleClass="gray" />
+									<p:spacer width="10" />
+									<p:selectBooleanCheckbox id="mSelection" value="#{rejectreasonsUI.rejectreasons.forManager}" />
+								</h:panelGroup>
+								<h:panelGroup>
+									<p:outputLabel value="Executive Selection" for="eSelection" styleClass="gray" />
+									<p:spacer width="10" />
+									<p:selectBooleanCheckbox id="eSelection" value="#{rejectreasonsUI.rejectreasons.forExecutive}" />
+								</h:panelGroup>
+								<h:panelGroup>
+									<p:outputLabel value="CLO Selection" for="cloSelection" styleClass="gray" />
+									<p:spacer width="10" />
+									<p:selectBooleanCheckbox id="cloSelection" value="#{rejectreasonsUI.rejectreasons.forSeniorManager}" />
+								</h:panelGroup>
+								<h:panelGroup>
+									<p:outputLabel value="Senior Manager Selection" for="smSelection" styleClass="gray" />
+									<p:spacer width="10" />
+									<p:selectBooleanCheckbox id="smSelection" value="#{rejectreasonsUI.rejectreasons.forSeniorManager}" />
+								</h:panelGroup>
+							</p:panelGrid>
+
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:rejectreasonsList :rejectreasonsInsForm:rejectreasonsInsGrid" action="#{rejectreasonsUI.rejectreasonsInsert}" />
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="rejectreasonsInsGrid" process="@this" action="#{rejectreasonsUI.prepareNew}">
+									<p:resetInput target="rejectreasonsInsGrid" />
+								</p:commandButton>
+							</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+						<ui:include src="/pages/includes/download_lazy.xhtml">
+								<ui:param name="file_name" value="Rejectreasons List" />
+								<ui:param name="target" value="rejectreasonsList" />
+						 </ui:include>
+						<p:dataTable var="rowVar" value="#{rejectreasonsUI.dataModel}" filteredValue="#{rejectreasonsUI.rejectReasonsfilteredList}" id="rejectreasonsList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['process']}">
+								<h:outputText value="#{lang[rowVar.forProcess.registrationName]}" />
+							</p:column>
+							<p:column headerText="#{lang['description']}">
+								<h:outputText value="#{rowVar.description}" />
+							</p:column>
+							<p:column headerText="Soft Delete" exportable="false" width="100">
+								<p:selectBooleanCheckbox disabled="true" value="#{rowVar.softDeleted}"/>
+							</p:column>
+							<p:column headerText="Soft Delete" style="display:none">
+								<h:outputText value="Soft Deleted" rendered="#{rowVar.softDeleted}"/>
+								<h:outputText value="Active" rendered="#{!rowVar.softDeleted}"/>
+							</p:column>
+
+							<p:column width="80" exportable="false">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":rejectreasonsInsForm:rejectreasonsInsGrid">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{rejectreasonsUI.rejectreasons}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:rejectreasonsList" action="#{rejectreasonsUI.rejectreasonsDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{rejectreasonsUI.rejectreasons}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-ban" title="Soft Delete" update=":mainForm:rejectreasonsList" action="#{rejectreasonsUI.softDeleteEntry}" rendered="#{!rowVar.softDeleted}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{rejectreasonsUI.rejectreasons}" />
+								</p:commandButton>
+								<p:commandButton icon="fa fa-check" title="Remove Soft Delete" update=":mainForm:rejectreasonsList" action="#{rejectreasonsUI.removeSoftDelete}" rendered="#{rowVar.softDeleted}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{rejectreasonsUI.rejectreasons}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+	<!--
+forProcess = forProcess
+description = description
+nlrdCode = nlrdCode
+createDate = createDate
+setmisCode = setmisCode
+qctoCode = qctoCode
+code = code
+
+-->
+</ui:composition>

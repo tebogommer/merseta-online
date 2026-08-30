@@ -1,0 +1,677 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+
+		<p:growl showDetail="false" sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+		<c:if test="false">
+			<div class="ui-g">
+				<div class="ui-g-12">
+					<ui:include src="/pages/includes/taskdiagram.xhtml" />
+				</div>
+			</div>
+		</c:if>
+		<h:panelGroup id="discgrantGroup">
+			<h:form id="discgrantTableForm">
+				<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+				<p:importEnum type="haj.com.entity.enums.PivotNonPivotEnum" />
+				<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+				<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+				<p:importEnum type="haj.com.entity.enums.AllocationStatusEnum" />
+				<c:if test="#{not sessionUI.externalParty}">
+					<div class="card card-w-title">
+						<h1>Discretionary Grant Allocation</h1>
+						<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup>
+								<p:outputLabel value="Total Requested Amount" styleClass="Fs15 FontBold"></p:outputLabel>
+								<p:outputLabel value="#{dgallocationUI.totalRequested}" styleClass="secondaryText Fs20 FontBold Fright">
+									<f:convertNumber type="currency" currencySymbol="R" />
+								</p:outputLabel>
+							</h:panelGroup>
+							<p:spacer></p:spacer>
+							<h:panelGroup>
+								<p:outputLabel value="Max Allocation Amount" styleClass="Fs15 FontBold"></p:outputLabel>
+								<p:outputLabel value="#{dgallocationUI.maxAlloccation}" styleClass="secondaryText Fs20 FontBold Fright">
+									<f:convertNumber type="currency" currencySymbol="R" />
+								</p:outputLabel>
+							</h:panelGroup>
+							<p:spacer></p:spacer>
+
+							<h:panelGroup>
+								<p:outputLabel value="Total Allocation" styleClass="Fs15 FontBold"></p:outputLabel>
+								<p:outputLabel value="#{dgallocationUI.totalAllocated}" styleClass="secondaryText Fs20 FontBold Fright">
+									<f:convertNumber type="currency" currencySymbol="R" />
+								</p:outputLabel>
+							</h:panelGroup>
+							<p:spacer></p:spacer>
+							<h:panelGroup>
+								<p:outputLabel value="Remaining Allocation" styleClass="Fs15 FontBold"></p:outputLabel>
+
+								<p:outputLabel value="#{dgallocationUI.maxAlloccation - dgallocationUI.totalAllocated}" styleClass="secondaryText Fs20 FontBold Fright">
+									<f:convertNumber type="currency" currencySymbol="R" />
+								</p:outputLabel>
+
+							</h:panelGroup>
+						</p:panelGrid>
+					</div>
+				</c:if>
+				<div class="card card-w-title">
+					<h1>Discretionary Grant Allocation Approval</h1>
+					<ui:include src="/pages/includes/download_lazy.xhtml">
+						<ui:param name="file_name" value="DG Allocation" />
+						<ui:param name="target" value="skill4" />
+					</ui:include>
+					<c:if test="#{sessionUI.externalParty}">
+						<p:commandButton rendered="#{not dgallocationUI.dgAllocationParent.alreadyRequested and not dgallocationUI.requestChange}" value="Make Change" icon="fa fa-pencil" action="#{dgallocationUI.switchRequestChangeBool}" update="@form"></p:commandButton>
+
+						<c:if test="#{not dgallocationUI.dgAllocationParent.alreadyRequested and dgallocationUI.requestChange}">
+							<p:commandButton rendered="#{not dgallocationUI.dgAllocationParent.alreadyRequested and dgallocationUI.requestChange}" value="Cancel" icon="fa fa-times" action="#{dgallocationUI.switchRequestChangeBool}" update="@form"></p:commandButton>
+							<br />
+							<br />
+							<p:outputLabel
+								value="IMPORTANT NOTICE: Please note that you MUST make a change (reduce or increase in line with the numbers on the Recommended Learners column) or confirm the allocation award line by line. If you do not make any change or confirm a particular intervention, that line will be set to 0 and will not be considered for allocation."
+								style="font-weight:bold; font-size:20px; color: red;" />
+						</c:if>
+					</c:if>
+					<br /> <br />
+					<p:dataTable var="dgallo" rows="#{dgallocationUI.allocations.size()}" emptyMessage="#{lang['no.records.found']}" value="#{dgallocationUI.allocations}" id="skill4" expandableRowGroups="true" sortBy="#{dgallo.dgAllocationParent.id}">
+						<p:headerRow>
+							<p:column colspan="8" rendered="#{sessionUI.externalParty and not dgallocationUI.dgAllocationParent.alreadyRequested}">
+								<h:outputText value="#{dgallo.mandatoryGrant.wsp.company.companyNameDisplay}" />
+							</p:column>
+							<p:column colspan="7" rendered="#{sessionUI.externalParty and dgallocationUI.dgAllocationParent.alreadyRequested}">
+								<h:outputText value="#{dgallo.mandatoryGrant.wsp.company.companyNameDisplay}" />
+							</p:column>
+							<p:column colspan="3" rendered="#{not sessionUI.externalParty}">
+								<h:outputText value="#{dgallo.mandatoryGrant.wsp.company.companyNameDisplay}" />
+							</p:column>
+							<p:column colspan="2" rendered="#{not sessionUI.externalParty}">
+								<p:outputLabel value="Categorization:"></p:outputLabel>
+								<p:spacer width="10"></p:spacer>
+								<h:outputText value="#{dgallo.dgAllocationParent.companyCategorization}" />
+							</p:column>
+							<p:column colspan="2" groupRow="true" rendered="#{not sessionUI.externalParty}">
+								<p:outputLabel value="DG Levy"></p:outputLabel>
+								<p:spacer width="10"></p:spacer>
+								<p:outputLabel value="#{dgallo.dgAllocationParent.dgLevyAmount}">
+									<f:convertNumber type="currency" currencySymbol="R" />
+								</p:outputLabel>
+							</p:column>
+							<p:column colspan="2" groupRow="true" rendered="#{not sessionUI.externalParty}">
+								<p:outputLabel value="Available Amount"></p:outputLabel>
+								<p:spacer width="10"></p:spacer>
+								<p:outputLabel value="#{dgallo.availableAmount}">
+									<f:convertNumber type="currency" currencySymbol="R" />
+								</p:outputLabel>
+							</p:column>
+							<p:column colspan="2" groupRow="true" rendered="#{not sessionUI.externalParty}">
+								<p:outputLabel value="Partial Funding Amount"></p:outputLabel>
+								<p:spacer width="10"></p:spacer>
+								<p:outputLabel value="#{dgallo.dgAllocationParent.availableCoFundingAmount}">
+									<f:convertNumber type="currency" currencySymbol="R" />
+								</p:outputLabel>
+							</p:column>
+							<p:column colspan="2" groupRow="true" rendered="#{not sessionUI.externalParty}">
+								<p:outputLabel value="Total"></p:outputLabel>
+								<p:spacer width="10"></p:spacer>
+								<p:outputLabel value="#{dgallo.availableAmount + dgallo.dgAllocationParent.availableCoFundingAmount}">
+									<f:convertNumber type="currency" currencySymbol="R" />
+								</p:outputLabel>
+							</p:column>
+							<p:column colspan="1" rendered="#{not sessionUI.externalParty}">
+								<p:commandLink style="color: white;" process="@this" action="#{dgallocationUI.findAllocationReasons}" update="rejectReasonChildForm2" oncomplete="PF('rejectChildReason2').show()">
+									<f:setPropertyActionListener value="#{dgallo.dgAllocationParent}" target="#{dgallocationUI.dgAllocationParent}" />
+									<i class="fa fa-search"></i> View Changes
+								</p:commandLink>
+							</p:column>
+							<p:column colspan="1" rendered="#{not sessionUI.externalParty}">
+								<center>
+									<p:commandLink style="color: white;" process="@this" action="#{dgallocationUI.approveAllocation}" update="skill4" rendered="#{dgallo.dgAllocationParent.allocationStatusEnum eq AllocationStatusEnum.Rejected}">
+										<f:setPropertyActionListener value="#{dgallo.dgAllocationParent}" target="#{dgallocationUI.dgAllocationParent}" />
+										<i class="fa fa-check"></i> Approve Allocation
+									</p:commandLink>
+									<p:commandLink style="color: white;" process="@this" action="#{dgallocationUI.rejectAllocation}" update="skill4" rendered="#{dgallo.dgAllocationParent.allocationStatusEnum eq  null or dgallo.dgAllocationParent.allocationStatusEnum eq AllocationStatusEnum.Approved}">
+										<f:setPropertyActionListener value="#{dgallo.dgAllocationParent}" target="#{dgallocationUI.dgAllocationParent}" />
+										<i class="fa fa-times"></i> Reject Allocation
+									</p:commandLink>
+								</center>
+							</p:column>
+						</p:headerRow>
+						<p:columnGroup type="header">
+							<p:row rendered="#{not sessionUI.externalParty}">
+								<p:column colspan="8" headerText="Learner Information" />
+								<p:column colspan="7" headerText="Total Allocation" />
+							</p:row>
+							<p:row>
+								<p:column colspan="1" headerText="Intervention" />
+								<p:column colspan="1" headerText="Recommended Intervention" />
+								<p:column colspan="1" headerText="Ofo Code" rendered="#{not sessionUI.externalParty}" />
+								<p:column colspan="1" headerText="Requested Learners" />
+								<p:column colspan="1" headerText="Altered Learners" />
+								<p:column colspan="1" headerText="Recommended Learners" />
+								<p:column colspan="1" headerText="Awarded Learners" />
+								<p:column colspan="1" headerText="Partial Funding Awarded Learners" />
+								<p:column colspan="1" headerText="Intervention Cost" rendered="#{not sessionUI.externalParty}" />
+								<p:column colspan="1" headerText="Requested Amount" rendered="#{not sessionUI.externalParty}" />
+								<p:column colspan="1" headerText="Recommended Amount" rendered="#{not sessionUI.externalParty}" />
+								<p:column colspan="1" headerText="Award Amount" rendered="#{not sessionUI.externalParty}" />
+								<p:column colspan="1" headerText="Partial Funding Award Amount" rendered="#{not sessionUI.externalParty}" />
+								<p:column colspan="1" headerText="Disabled Grant Amount" rendered="#{not sessionUI.externalParty}" />
+								<p:column colspan="1" headerText="Total Awarded" />
+								<p:column headerText="Change Allocation" width="60" rendered="#{sessionUI.externalParty and not dgallocationUI.dgAllocationParent.alreadyRequested}" />
+							</p:row>
+						</p:columnGroup>
+						<p:column headerText="Company" style="display: none !important;" exportable="true">
+							<p:outputLabel value="#{dgallo.mandatoryGrant.wsp.company.companyNameDisplay}"></p:outputLabel>
+						</p:column>
+						<p:column headerText="Intervention">
+							<p:outputLabel value="#{dgallo.mandatoryGrant.interventionType.description}"></p:outputLabel>
+						</p:column>
+						<p:column headerText="Recommended Intervention">
+							<p:outputLabel value="#{dgallo.interventionType.description}"></p:outputLabel>
+						</p:column>
+						<p:column headerText="Ofo Code" rendered="#{not sessionUI.externalParty}">
+							<p:outputLabel value="#{dgallo.mandatoryGrant.ofoCodes.ofoDescription}"></p:outputLabel>
+						</p:column>
+						<p:column headerText="Requested Learners">
+							<p:outputLabel value="#{dgallo.totalLearners}"></p:outputLabel>
+						</p:column>
+						<p:column headerText="Altered Learners">
+							<p:outputLabel value="#{dgallo.changeAllocationLearners}"></p:outputLabel>
+						</p:column>
+						<p:column headerText="Recommended Learners">
+							<p:outputLabel value="#{dgallo.numberOfLearners}"></p:outputLabel>
+						</p:column>
+						<p:column headerText="Awarded Learners">
+							<p:outputLabel value="#{dgallo.maxPossibleLearners}" rendered="#{not sessionUI.externalParty}"></p:outputLabel>
+							<p:outputLabel value="#{dgallo.maxPossibleLearners + dgallo.coFundingLearnersAwarded}" rendered="#{sessionUI.externalParty}"></p:outputLabel>
+						</p:column>
+						<p:column headerText="Partial Funding Awarded Learners" >
+							<p:outputLabel value="#{dgallo.coFundingLearnersAwarded}"></p:outputLabel>
+						</p:column>
+						<p:column headerText="Intervention Cost" rendered="#{not sessionUI.externalParty}">
+							<p:outputLabel value="#{dgallo.interventionType.basicGrantAmount}"></p:outputLabel>
+						</p:column>
+						<p:column headerText="Requested Amount" rendered="#{not sessionUI.externalParty}">
+							<p:outputLabel value="#{dgallo.requestedAmount}">
+								<f:convertNumber type="currency" pattern="###,###,###,###,##0.00" />
+							</p:outputLabel>
+						</p:column>
+						<p:column headerText="Recommended Amount" rendered="#{not sessionUI.externalParty}">
+							<p:outputLabel value="#{dgallo.recommendedAmount}">
+								<f:convertNumber type="currency" pattern="###,###,###,###,##0.00" />
+							</p:outputLabel>
+						</p:column>
+						<p:column headerText="Award Amount" rendered="#{not sessionUI.externalParty}">
+							<p:outputLabel value="#{dgallo.awardAmount}" styleClass="FontBold" style="color: #5ecf80" rendered="#{dgallo.awardAmount gt 0}">
+								<f:convertNumber type="currency" pattern="###,###,###,###,##0.00" />
+							</p:outputLabel>
+							<p:outputLabel value="#{dgallo.awardAmount}" styleClass="FontBold" rendered="#{dgallo.awardAmount lt 0.1}">
+								<f:convertNumber type="currency" pattern="###,###,###,###,##0.00" />
+							</p:outputLabel>
+						</p:column>
+						<p:column headerText="Partial Funding Award Amount" styleClass="FontBold" rendered="#{not sessionUI.externalParty}">
+
+
+							<p:outputLabel value="#{dgallo.coFundingAwardAmount}" styleClass="FontBold" style="color: #f7941e" rendered="#{dgallo.coFundingAwardAmount gt 0}">
+								<f:convertNumber type="currency" currencySymbol="R" />
+							</p:outputLabel>
+							<p:outputLabel value="#{dgallo.coFundingAwardAmount}" styleClass="FontBold" rendered="#{dgallo.coFundingAwardAmount lt 0.1}">
+								<f:convertNumber type="currency" currencySymbol="R" />
+							</p:outputLabel>
+						</p:column>
+						<p:column headerText="Disabled Grant Amount" rendered="#{not sessionUI.externalParty}">
+							<p:outputLabel value="#{dgallo.disabledGrantAmount}">
+								<f:convertNumber type="currency" pattern="R###,###,###,###,##0.00" />
+							</p:outputLabel>
+						</p:column>
+						<p:column headerText="Total Awarded" styleClass="FontBold">
+							<p:outputLabel value="#{dgallo.totalAwardAmount}" styleClass="FontBold" style="color: #5ecf80" rendered="#{dgallo.totalAwardAmount gt 0}">
+								<f:convertNumber type="currency" pattern="R###,###,###,###,##0.00" />
+							</p:outputLabel>
+							<p:outputLabel value="#{dgallo.totalAwardAmount}" styleClass="FontBold" rendered="#{dgallo.totalAwardAmount lt 0.1}">
+								<f:convertNumber type="currency" pattern="R###,###,###,###,##0.00" />
+							</p:outputLabel>
+						</p:column>
+						<p:column headerText="#{lang['RAG']}" width="37" exportable="false" rendered="false">
+							<h:graphicImage value="/resources/hls/images/red.svg" rendered="#{dgallo.awardAmount.doubleValue() eq 0 and dgallo.coFundingAwardAmount.doubleValue() eq 0}" width="40" styleClass="animated pulse infinite" />
+							<h:graphicImage value="/resources/hls/images/amber.svg" rendered="#{dgallo.coFundingAwardAmount.doubleValue() ne 0}" width="35" />
+							<h:graphicImage value="/resources/hls/images/green.svg" rendered="#{dgallo.awardAmount.doubleValue() ne 0 and dgallo.coFundingAwardAmount.doubleValue() eq 0}" width="30" />
+						</p:column>
+						<p:column width="40" rendered="#{sessionUI.externalParty and dgallocationUI.requestChange}">
+							<p:commandLink style="color: black;" process="@this" update="ChangeAllocationForm" oncomplete="PF('dlgChangeAllocation').show()">
+								<f:setPropertyActionListener value="#{dgallo}" target="#{dgallocationUI.allocation}" />
+								<i class="fa fa-pencil"></i>
+							</p:commandLink>
+						</p:column>
+						<p:summaryRow listener="#{dgallocationUI.onSummaryRow}" rendered="#{not sessionUI.externalParty}">
+							<p:column colspan="7"></p:column>
+							<p:column colspan="1">
+								<h:outputText value="Total:" />
+							</p:column>
+							<p:column colspan="1">
+								<p:outputLabel value="#{dgallocationUI.totalRequestedAmount}">
+									<f:convertNumber type="currency" pattern="R###,###,###,###,##0.00" />
+								</p:outputLabel>
+							</p:column>
+							<p:column colspan="1">
+								<p:outputLabel value="#{dgallocationUI.totalRecommendedAmount}">
+									<f:convertNumber type="currency" pattern="R###,###,###,###,##0.00" />
+								</p:outputLabel>
+							</p:column>
+							<p:column colspan="3">
+							</p:column>
+							<p:column colspan="1" style="text-align:right">
+								<p:outputLabel value="#{dgallocationUI.totalAwardAmountDisabled}">
+									<f:convertNumber type="currency" pattern="R###,###,###,###,##0.00" />
+								</p:outputLabel>
+							</p:column>
+							<p:column>
+								<p:outputLabel value="#{dgallocationUI.total}">
+									<f:convertNumber type="currency" pattern="R###,###,###,###,##0.00" />
+								</p:outputLabel>
+							</p:column>
+						</p:summaryRow>
+					</p:dataTable>
+				</div>
+				<c:if test="#{dgallocationUI.dgAllocationParent.docs.size() gt 0}">
+					<div class="card card-w-title">
+						<p:dataTable value="#{dgallocationUI.dgAllocationParent.docs}" var="rv1" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv1.id}">
+							<p:column headerText="#{lang['type']}" width="18%">#{rv1.configDoc.name}</p:column>
+							<p:column headerText="#{lang['original.file.name']}" priority="4">
+								<p:outputLabel value="#{rv1.originalFname}" styleClass="Fs12" rendered="#{rv1.originalFname ne null}" />
+								<p:outputLabel value="Document Not Uploaded" rendered="#{rv1.originalFname eq null or rv1.originalFname eq ''}" />
+							</p:column>
+							<p:column headerText="#{lang['uploaded.by']}">
+								<p:outputLabel value="#{rv1.users.firstName} #{rv1.users.lastName}" rendered="#{rv1.users ne null}" />
+								<p:outputLabel value="N/A" rendered="#{rv1.users eq null and rv1.originalFname eq null}" />
+								<p:outputLabel value="Awaiting Submission" rendered="#{rv1.users eq null and rv1.originalFname ne null}" />
+							</p:column>
+							<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+								<h:outputText value="#{rv1.createDate}" rendered="#{rv1.createDate ne null}">
+									<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+								</h:outputText>
+								<p:outputLabel value="N/A" rendered="#{rv1.createDate eq null and rv1.originalFname eq null}" />
+								<p:outputLabel value="Awaiting Submission" rendered="#{rv1.createDate eq null and rv1.originalFname ne null}" />
+							</p:column>
+							<p:column headerText="#{lang['version']}" width="11%" priority="4">
+								<h:outputText value="#{rv1.versionNo}" rendered="#{rv1.versionNo ne null}" />
+								<p:outputLabel value="N/A" rendered="#{rv1.versionNo eq null and rv1.originalFname eq null}" />
+								<p:outputLabel value="Awaiting Submission" rendered="#{rv1.versionNo eq null and rv1.originalFname ne null}" />
+							</p:column>
+							<p:column headerText="#{lang['original.required']}">
+								<center>
+									<h:panelGroup rendered="#{rv1.configDoc.originalRequired}" styleClass="green">
+										<i class="fa fa-files-o fa-3x" aria-hidden="true"></i>
+									</h:panelGroup>
+									<h:panelGroup rendered="#{not rv1.configDoc.originalRequired}" styleClass="red">
+										<i class="fa fa-times fa-3x" aria-hidden="true"></i>
+									</h:panelGroup>
+								</center>
+							</p:column>
+							<p:column width="180" headerText="#{lang['view.edit']}">
+								<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}">
+									<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+								</p:commandButton>
+								<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+								<p:spacer width="5" rendered="#{rv1.id ne null}" />
+								<p:commandButton icon="fa fa-bars " id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}">
+									<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+								</p:commandButton>
+								<p:tooltip for="dhistUserDocs" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+								<p:commandButton
+									rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalUploadApproval or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalUpload}"
+									icon="fa fa-upload" id="uploadUserDocs" styleClass="#{rv1.originalFname eq null ? 'red-btn' : ''} flat" process="@this" oncomplete="PF('dlgUpload').show()" update=":uploadForm">
+									<f:setPropertyActionListener value="#{rv1}" target="#{dgallocationUI.doc}" />
+								</p:commandButton>
+								<p:tooltip for="uploadUserDocs" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+								<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+									<p:spacer width="5" />
+									<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+										<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+								</h:panelGroup>
+								<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+									<p:spacer width="5" />
+									<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+										<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+								</h:panelGroup>
+							</p:column>
+						</p:dataTable>
+					</div>
+				</c:if>
+
+				<div class="card card-w-title">
+					<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve}">
+						<p:commandButton value="#{lang['approve']}" onstart="uploadStart()" oncomplete="uploadDone()" icon="ui-icon-save" update="@form" action="#{dgallocationUI.approveWorkflow}" styleClass="flat green-btn Fs18" style="height: 50px;">
+						</p:commandButton>
+						<p:commandButton value="#{lang['reject.task']}" icon="ui-icon-save" update="@form" oncomplete="PF('rejectReason').show()" styleClass="flat red-btn Fs18" style="height: 50px;" process="@this">
+						</p:commandButton>
+					</p:panelGrid>
+					<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval}">
+						<p:commandButton value="Final Approve" onstart="uploadStart()" oncomplete="uploadDone()" icon="ui-icon-save" update="@form" action="#{dgallocationUI.finalApproveWorkflow}" styleClass="flat green-btn Fs18" style="height: 50px;">
+						</p:commandButton>
+					</p:panelGrid>
+					<p:panelGrid columns="3" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Approve and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalApproval}">
+						<c:if test="#{sessionUI.activeUser ne dgallocationUI.dgAllocationParent.submissionUser}">
+							<c:if test="#{dgallocationUI.requestChange}">
+								<p:commandButton id="updateDGVerification4" value="Submit Change Request" icon="fa fa-pencil" oncomplete="PF('dlgAllocationChange').show()" update="allocationChangeForm" styleClass="Fs18 secondary flat" style="height: 50px; width: 100%"
+									rendered="#{sessionUI.task.processRole eq null and not dgallocationUI.dgAllocationParent.alreadyRequested}" />
+							</c:if>
+							<c:if test="#{not dgallocationUI.requestChange}">
+								<p:commandButton value="Accept and Email MOA for Electronic Sign Off" icon="ui-icon-save" update="@form acceptMoaForm" action="#{dgallocationUI.prepAcceptMoa}" styleClass="flat green-btn Fs18" style="height: 50px; width: 100%">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+								</p:commandButton>
+								<p:commandButton rendered="false" value="Accept and Email MOA" onstart="uploadStart()" oncomplete="uploadDone()" icon="ui-icon-save" update="@form" action="#{dgallocationUI.completeWorkflow}" styleClass="flat green-btn Fs18" style="height: 50px;; width: 100%">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+								</p:commandButton>
+								<p:commandButton id="updateDGVerification5" value="Request Higher Allocation" icon="fa fa-arrow-up" oncomplete="PF('dlgIncreaseAllocation').show()" update="increaseAllocationForm" styleClass="Fs18 flat" style="height: 50px; width: 100%" rendered="#{sessionUI.task.processRole eq null and false}" />
+								<p:commandButton id="updateDGVerification7ES" value="Request Higher Allocation" icon="fa fa-arrow-up" oncomplete="PF('acceptMoaHiggerAllDlg').show()" update="acceptMoaAllForm" action="#{dgallocationUI.prepAcceptMoaHigherAllocation}" styleClass="Fs18 flat" style="height: 50px; width: 100%" rendered="#{sessionUI.task.processRole eq null}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+								</p:commandButton> 
+								<p:commandButton id="updateDGVerification3" value="Withdraw Application" icon="fa fa-user-times" oncomplete="PF('dlgSelectReasonWithdrawal').show()" update="@form" styleClass="Fs18 red-btn flat" style="height: 50px; width: 100%" rendered="#{sessionUI.task.processRole eq null}" />
+								<p:commandButton value="Reject" icon="ui-icon-save" update="@form" action="#{dgallocationUI.rejectWorkflow}" styleClass="flat red-btn Fs18" style="height: 50px;" rendered="#{sessionUI.task.processRole ne null}">
+								</p:commandButton>
+							</c:if>
+						</c:if>
+						<c:if test="#{sessionUI.activeUser eq dgallocationUI.dgAllocationParent.submissionUser}">
+							<p:commandButton value="#{lang['approve']}" icon="fa fa-check" update="@form" action="#{dgallocationUI.approveChangeAllocation}" styleClass="flat green-btn Fs18" style="height: 50px;" process="@this">
+							</p:commandButton>
+							<p:commandButton value="#{lang['reject']}" icon="fa fa-times" update="@form" oncomplete="PF('rejectReason3').show()" styleClass="flat red-btn Fs18" style="height: 50px;" process="@this">
+							</p:commandButton>
+							<c:if test="true">
+								<br />
+								<p:commandButton value="Send Back For Alteration" icon="fa fa-times" action="#{dgallocationUI.sendBackToSDFToChangeAlteredLearners}" update="@form" styleClass="flat red-btn Fs18" style="height: 50px;" process="@this">
+								</p:commandButton>
+							</c:if>
+						</c:if>
+					</p:panelGrid>
+				</div>
+			</h:form>
+		</h:panelGroup>
+
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true">
+			<h:form id="uploadForm">
+				<h:panelGroup id="uploadGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{dgallocationUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{dgallocationUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{dgallocationUI.storeFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update="@form" multiple="false"
+										fileLimit="1" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+		<p:dialog header="Withdraw Application" widgetVar="dlgSelectReasonWithdrawal" resizable="false" hideEffect="clip" showEffect="clip" id="selectReasonWithdrawal" width="40%" responsive="true" modal="true" dynamic="true">
+			<h:form id="selectReasonWithdrawalForm">
+				<h:panelGroup>
+					<h:panelGroup id="typeofApp">
+						<div>
+							<p:outputLabel value="Reason for withdrawal" for="sipsas"></p:outputLabel>
+						</div>
+						<div>
+							<p:selectOneMenu style="width:100%" id="sipsas" required="true" value="#{dgallocationUI.dgAllocationParent.discretionalWithdrawalAppealEnum}">
+								<f:selectItem itemLabel="---Select One---" noSelectionOption="true" />
+								<f:selectItems value="#{enumUI.discretionalWithdrawalEnumDD}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+				</h:panelGroup>
+				<br />
+				<br />
+				<p:commandButton id="updateDGVerification3" value="Withdraw Application" icon="fa fa-user-times" action="#{dgallocationUI.finalRejectWorkflow}" update="@form">
+					<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+				</p:commandButton>
+			</h:form>
+		</p:dialog>
+		<p:dialog header="Request Change" widgetVar="dlgAllocationChange" resizable="false" hideEffect="clip" showEffect="clip" id="allocationChange" width="40%" responsive="true" modal="true" dynamic="true">
+			<h:form id="allocationChangeForm">
+				<h:panelGroup>
+					<div>
+						<p:outputLabel value="Reason for change" for="allocationChange" />
+					</div>
+					<div>
+						<p:selectOneMenu id="allocationChange" value="#{dgallocationUI.allocationChange}" converter="AllocationChangeConvertor" style="width:75%" required="true">
+							<p:ajax></p:ajax>
+							<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+							<f:selectItems value="#{selectItemsUI.allocationChangeRequestChange}" var="il" itemLabel="#{il.description}" />
+						</p:selectOneMenu>
+					</div>
+				</h:panelGroup>
+				<br />
+				<br />
+				<p:commandButton id="updateDGVerification3" value="Submit" icon="fa fa-check" action="#{dgallocationUI.changeAllocation}" update="@form" />
+			</h:form>
+		</p:dialog>
+		<p:dialog header="Request Higher Allocation" widgetVar="dlgIncreaseAllocation" resizable="false" hideEffect="clip" showEffect="clip" id="increaseAllocation" width="40%" responsive="true" modal="true" dynamic="true">
+			<h:form id="increaseAllocationForm">
+				<h:panelGroup>
+					<div>
+						<p:outputLabel value="Reason for higher allocation" for="allocationChange" />
+					</div>
+					<div>
+						<p:selectOneMenu id="allocationChange" value="#{dgallocationUI.allocationChange}" converter="AllocationChangeConvertor" style="width:75%" required="true">
+							<p:ajax />
+							<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+							<f:selectItems value="#{selectItemsUI.allocationChangeRequestHigherAllocation}" var="il" itemLabel="#{il.description}" />
+						</p:selectOneMenu>
+					</div>
+				</h:panelGroup>
+				<br />
+				<br />
+				<p:commandButton id="updateDGVerification3" value="Submit" icon="fa fa-check" action="#{dgallocationUI.requestHigherallocation}" update="@form" ajax="false" />
+			</h:form>
+		</p:dialog>
+		<p:dialog header="Change Allocation" widgetVar="dlgChangeAllocation" resizable="false" hideEffect="clip" showEffect="clip" id="allocationChange2" width="30%" responsive="true" modal="true" dynamic="true">
+			<h:form id="ChangeAllocationForm">
+				<p:panelGrid columns="1" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="Change requested amount:" for="allocationChange" />
+						</div>
+						<div>
+							<p:inputNumber value="#{dgallocationUI.allocation.changeAllocationLearners}" maxValue="#{dgallocationUI.allocation.initialLearners != null ? dgallocationUI.allocation.initialLearners : dgallocationUI.allocation.numberOfLearners}" minValue="0" decimalPlaces="0"></p:inputNumber>
+						</div>
+					</h:panelGroup>
+				</p:panelGrid>
+				<p:commandButton value="#{lang['submit']}" icon="fa fa-check" styleClass="flat" update="discgrantTableForm" oncomplete="PF('dlgChangeAllocation').hide()" />
+			</h:form>
+		</p:dialog>
+		<p:dialog header="Change and Reject Reasons" widgetVar="rejectChildReason2" hideEffect="clip" showEffect="clip" id="dialogRejectChildReason2" appendTo="@(body)" modal="true" closable="true" width="75%" height="60vh" responsive="true" closeOnEscape="true">
+			<h:form id="rejectReasonChildForm2">
+				<c:if test="#{dgallocationUI.reasons.size() gt 0}">
+					<h3>Allocation Change Reasons</h3>
+					<p:dataTable var="rowVar" value="#{dgallocationUI.reasons}" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+						rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+						<p:column headerText="Create Date">
+							<p:outputLabel value="#{rowVar.createDate}">
+								<f:convertDateTime pattern="dd MMMM yyyy" />
+							</p:outputLabel>
+						</p:column>
+						<p:column headerText="Change Reason">
+							<p:outputLabel value="#{rowVar.allocationChange.description}"></p:outputLabel>
+						</p:column>
+						<p:column headerText="Change Type]">
+							<p:outputLabel value="#{rowVar.allocationChange.allocationChangeTypeEnum.friendlyName}"></p:outputLabel>
+						</p:column>
+					</p:dataTable>
+				</c:if>
+				<c:if test="#{dgallocationUI.rejectReasonsChild.size() gt 0}">
+					<h3>Reject Reasons</h3>
+					<p:dataTable var="rowVar" value="#{dgallocationUI.rejectReasonsChild}" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+						rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+						<p:column headerText="Create Date">
+							<p:outputLabel value="#{rowVar.createDate}">
+								<f:convertDateTime pattern="dd MMMM yyyy" />
+							</p:outputLabel>
+						</p:column>
+						<p:column headerText="Reason for Rejection">
+							<p:outputLabel value="#{rowVar.rejectReasons.description}"></p:outputLabel>
+						</p:column>
+						<p:column headerText="How to fix">
+							<p:outputLabel value="#{rowVar.rejectReasons.howTo}"></p:outputLabel>
+						</p:column>
+					</p:dataTable>
+				</c:if>
+			</h:form>
+		</p:dialog>
+		<p:dialog header="Reject Reasons" widgetVar="rejectReason" hideEffect="clip" showEffect="clip" id="dialogRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{dgallocationUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{dgallocationUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+							</p:selectManyMenu>
+							<br />
+						</div>
+					</div>
+					<p:commandButton value="Reject" action="#{dgallocationUI.rejectWorkflow}">
+					</p:commandButton>
+				</div>
+			</h:form>
+		</p:dialog>
+		<p:dialog header="Reject Change" widgetVar="rejectReason3" hideEffect="clip" showEffect="clip" id="dialogRejectReason3" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonForm3">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{dgallocationUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{dgallocationUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+							</p:selectManyMenu>
+							<br />
+						</div>
+					</div>
+					<p:commandButton value="Reject" action="#{dgallocationUI.rejectChange}">
+					</p:commandButton>
+				</div>
+			</h:form>
+		</p:dialog>
+		<p:dialog position="top" header="Accept MOA" widgetVar="acceptMoaDlg" hideEffect="clip" showEffect="clip" id="acceptMoaDialog" modal="true" closable="true" width="50%" responsive="true">
+			<h:form id="acceptMoaForm">
+				
+				<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+					<h:panelGroup>
+						<p:outputLabel style="color:red; font-weight: bold;" value="You are advised that, if it is established that the selected user is not duly authorised to sign the MOA, the said action may constitute fraud and be subject to the full penalty of the law."/>
+						<br/>
+					</h:panelGroup>
+					<h:panelGroup>
+						<br/>
+						<p:outputLabel style="color:red; font-weight: bold;" value="Please note that if the duly authorised person is not on this list, please go to Company Contacts and add." />
+					</h:panelGroup>
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="User Responsible For MOA Sign off" for="userSignOffSelection" />
+						</div>
+						<div>
+							<p:selectOneMenu id="userSignOffSelection" value="#{dgallocationUI.userSelectionForMoaSignOff}" converter="UsersConvertor" style="width:95%" required="true" requiredMessage="#{lang['provide.type.of.id']}">
+								<f:selectItems value="#{dgallocationUI.userSelectionList}" var="rvu" itemValue="#{rvu}" itemLabel="#{rvu.firstName} #{rvu.lastName} (#{rvu.email} - Status: #{rvu.status.friendlyName})" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					<div class="EmptyBox10" />
+					<h:panelGroup>
+						<p:commandButton value="Accept and Email MOA" onstart="uploadStart()" oncomplete="uploadDone()" icon="ui-icon-save" update="@form" action="#{dgallocationUI.completeWorkflowVersionTwo}" styleClass="flat green-btn Fs18" style="height: 50px; width: 100%">
+							<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+						</p:commandButton>
+					</h:panelGroup>
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog position="top" header="Accept MOA" widgetVar="acceptMoaHiggerAllDlg" hideEffect="clip" showEffect="clip" id="acceptMoaAllDialog" modal="true" closable="true" width="50%" responsive="true">
+			<h:form id="acceptMoaAllForm">
+				<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="Reason for higher allocation" for="allocationChange" />
+						</div>
+						<div>
+							<p:selectOneMenu id="allocationChange" value="#{dgallocationUI.allocationChange}" converter="AllocationChangeConvertor" style="width:75%" required="true">
+								<p:ajax />
+								<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.allocationChangeRequestHigherAllocation}" var="il" itemLabel="#{il.description}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup>
+						<br/>
+						<p:outputLabel style="color:red; font-weight: bold;" value="You are advised that, if it is established that the selected user is not duly authorised to sign the MOA, the said action may constitute fraud and be subject to the full penalty of the law."/>
+						<br/>
+					</h:panelGroup>
+					<h:panelGroup>
+						<br/>
+						<p:outputLabel style="color:red; font-weight: bold;" value="Please note that if the duly authorised person is not on this list, please go to Company Contacts and add." />
+					</h:panelGroup>
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="User Responsible For MOA Sign off" for="userSignOffAllSelection" />
+						</div>
+						<div>
+							<p:selectOneMenu id="userSignOffAllSelection" value="#{dgallocationUI.userSelectionForMoaSignOff}" converter="UsersConvertor" style="width:95%" required="true" requiredMessage="#{lang['provide.type.of.id']}">
+								<f:selectItems value="#{dgallocationUI.userSelectionList}" var="rvu" itemValue="#{rvu}" itemLabel="#{rvu.firstName} #{rvu.lastName} (#{rvu.email} - Status: #{rvu.status.friendlyName})" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					<div class="EmptyBox10" />
+					<h:panelGroup>
+						<p:commandButton value="Accept and Email MOA: Request Higher Allocation" onstart="uploadStart()" oncomplete="uploadDone()" icon="ui-icon-save" update="@form" action="#{dgallocationUI.requestHigherallocationVersionTwo}" styleClass="flat green-btn Fs18" style="height: 50px; width: 100%">
+							<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+						</p:commandButton>
+					</h:panelGroup>
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+			<h:form>
+				<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" ajax="false" />
+				<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+			</h:form>
+		</p:confirmDialog>
+		<script>
+	$( document ).ready(function() {
+		/* toggleAllTabs(); */
+	});
+
+	function toggleAllTabs(){
+		toggleAll('discgrantTableForm:skill4');
+	}
+
+	function toggleAll(type){
+		$(PrimeFaces.escapeClientId(type)).find('a').each(function() {
+			this.click();
+		});
+	}
+	
+	</script>
+	</ui:define>
+</ui:composition>

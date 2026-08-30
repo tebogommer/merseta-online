@@ -1,0 +1,181 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui">
+	
+	<!-- disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" -->
+	<p:panelGrid columns="2" style="width:100%" id="companyInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText disabled="true" id="companyName" value="#{company.companyName}" style="width:100%" required="true" requiredMessage="#{lang['enter.the.company.name']}">
+			</p:inputText>
+			<p:outputLabel value="#{lang['companyName']}" for="companyName" />
+		</h:panelGroup>
+
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText disabled="true"  id="tradingName" value="#{company.tradingName}" style="width:100%" required="true" requiredMessage="#{lang['enter.the.trading.name']}">
+			</p:inputText>
+			<p:outputLabel value="#{lang['tradingName']}" for="tradingName" />
+		</h:panelGroup>
+
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputMask disabled="true"  id="telNumber" value="#{company.telNumber}" style="width:100%" required="true" requiredMessage="#{lang['enter.the.tel.number']}">
+			</p:inputMask>
+			<p:outputLabel value="#{lang['telNumber']}" for="telNumber" />
+		</h:panelGroup>
+
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputMask id="faxNumber"  validatorMessage="#{lang['user.faxnumber.length']}" value="#{company.faxNumber}" maxlength="#{sdfUI.MAX_FAX_NUMBER}" style="width:100%" required="false" requiredMessage="#{lang['fax.number']}"
+				disabled="true" >
+			</p:inputMask>
+			<p:outputLabel value="#{lang['faxNumber']}" for="faxNumber" />
+		</h:panelGroup>
+		
+		<h:panelGroup styleClass="md-inputfield" rendered="#{not company.nonLevyPaying}">
+			<p:inputMask mask="#{companyRegistrationNumberFormat}" disabled="true" id="companyRegistrationNumber" value="#{company.companyRegistrationNumber}" style="width:100%" required="true"
+				requiredMessage="#{lang['enter.company.registration.number']}">
+			</p:inputMask>
+			<p:outputLabel value="#{lang['companyRegistrationNumber']}" for="companyRegistrationNumber" />
+		</h:panelGroup>
+
+		<h:panelGroup styleClass="md-inputfield" rendered="#{company.nonLevyPaying}">
+			<p:inputMask disabled="true" id="companyRegistrationNumbera" value="#{company.companyRegistrationNumber}" style="width:100%" required="true" requiredMessage="#{lang['enter.company.registration.number']}">
+			</p:inputMask>
+			<p:outputLabel value="#{lang['companyRegistrationNumber']}" for="companyRegistrationNumbera" />
+		</h:panelGroup>
+
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText disabled="true" id="email" value="#{company.email}" style="width:100%" required="true" requiredMessage="#{lang['enter.email.address']}">
+			</p:inputText>
+			<p:outputLabel value="#{lang['email']}" for="email" />
+		</h:panelGroup>
+
+		<p:fieldset legend="#{lang['residentialAddress']}" style="margin-top: 20px">
+			<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank" id="addrPcode">
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText disabled="true"  id="addr1" value="#{company.residentialAddress.addressLine1}" style="width:100%" />
+					<p:outputLabel value="#{lang['address.line.1']}" for="addr1" />
+				</h:panelGroup>
+				
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText disabled="true" id="addr2" style="width:100%" value="#{company.residentialAddress.addressLine2}"/>
+					<p:outputLabel value="#{lang['address.line.2']}" for="addr2" />
+				</h:panelGroup>
+				
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText disabled="true"  id="addr3" style="width:100%" value="#{company.residentialAddress.addressLine3}"/>
+					<p:outputLabel value="#{lang['address.line.3']}" for="addr3" />
+				</h:panelGroup>
+				
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText disabled="true" style="width:100%" value="#{company.residentialAddress.town.description}" />
+					<p:outputLabel value="#{lang['town']}" />
+				</h:panelGroup>
+				
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText disabled="true" id="pcode" style="width:100%" value="#{company.residentialAddress.postcode}">
+					</p:inputText>
+					<p:outputLabel value="#{lang['post.code']}" for="pcode" />
+				</h:panelGroup>
+				
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText disabled="true" style="width:100%" value="#{company.residentialAddress.municipality.municipalityDesc}" />
+					<p:outputLabel value="#{lang['municipality']}" />
+				</h:panelGroup>
+				
+				<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank" >
+				<h:panelGroup styleClass="md-inputfield" rendered="false">
+					<!-- NOT IN USE -->
+					<p:inputText type="number" id="longitude1" value="#{company.residentialAddress.longitude}" style="opacity: 1 !important; color: black; width:100%" required="true" requiredMessage="#{lang['enter.longitude']}">
+					</p:inputText>
+					<p:outputLabel value="#{lang['longitude']}" for="longitude1" />
+				</h:panelGroup>
+				
+				<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank">
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText type="number" rendered="true" disabled="#{company.residentialAddress.longitudeDegrees ne null}" id="longitudeDegrees" style="opacity: 1 !important; color: black; width:100%" value="#{company.residentialAddress.longitudeDegrees}" required="true" requiredMessage="Enter #{lang['longitude']}: Degrees">
+						</p:inputText>
+						<p:outputLabel value="#{lang['longitude']}: Degrees" for="longitudeDegrees" />
+					</h:panelGroup>
+	
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText type="number" disabled="#{company.residentialAddress.longitudeMinutes ne null}" id="longitudeMinutes" value="#{company.residentialAddress.longitudeMinutes}" style="opacity: 1 !important; color: black; width:100%" required="true" requiredMessage="Enter #{lang['longitude']}: Minutes">
+						</p:inputText>
+						<p:outputLabel value="#{lang['longitude']}: Minutes" for="longitudeMinutes" />
+					</h:panelGroup>
+	
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText type="number" disabled="#{company.residentialAddress.longitudeSeconds ne null}" id="longitudeSeconds" value="#{company.residentialAddress.longitudeSeconds}" style="opacity: 1 !important; color: black; width:100%" required="true" requiredMessage="Enter #{lang['longitude']}: Seconds">
+						</p:inputText>
+						<p:outputLabel value="#{lang['longitude']}: Seconds" for="longitudeSeconds" />
+					</h:panelGroup>
+				</p:panelGrid>
+				
+				<h:panelGroup styleClass="md-inputfield" rendered="false">
+					<!-- NOT IN USE -->
+					<p:inputText type="number" rendered="true" id="latitude1" style="opacity: 1 !important; color: black; width:100%" value="#{company.residentialAddress.latitude}">
+						<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['enter.latitude']}" />
+					</p:inputText>
+					<p:outputLabel value="#{lang['latitude']}" for="latitude1" />
+				</h:panelGroup>
+				
+				<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank">
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText type="number" rendered="true" disabled="#{company.residentialAddress.latitudeDegrees ne null}" id="latitudeDegrees" style="opacity: 1 !important; color: black; width:100%" value="#{company.residentialAddress.latitudeDegrees}" required="true" requiredMessage="Enter #{lang['latitude']}: Degrees">
+						</p:inputText>
+						<p:outputLabel value="#{lang['latitude']}: Degrees" for="latitudeDegrees" />
+					</h:panelGroup>
+	
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText type="number" disabled="#{company.residentialAddress.latitudeMinutes ne null}" id="latitudeMinutes" value="#{company.residentialAddress.latitudeMinutes}" style="opacity: 1 !important; color: black; width:100%" required="true" requiredMessage="Enter #{lang['latitude']}: Minutes">
+						</p:inputText>
+						<p:outputLabel value="#{lang['latitude']}: Minutes" for="latitudeMinutes" />
+					</h:panelGroup>
+	
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText type="number" disabled="#{company.residentialAddress.latitudeSeconds ne null}" id="latitudeSeconds" value="#{company.residentialAddress.latitudeSeconds}" style="opacity: 1 !important; color: black; width:100%" required="true" requiredMessage="Enter #{lang['latitude']}: Seconds">
+						</p:inputText>
+						<p:outputLabel value="#{lang['latitude']}: Seconds" for="latitudeSeconds" />
+					</h:panelGroup>
+				</p:panelGrid>
+				
+			</p:panelGrid>
+				
+			</p:panelGrid>
+		</p:fieldset>
+
+		<p:fieldset legend="#{lang['postalAddress']}" style="margin-top: 20px">
+			<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank" id="postalAddress">
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText disabled="true"  id="postalAddressaddr1" style="width:100%"/>
+					<p:outputLabel value="#{lang['address.line.1']}" for="postalAddressaddr1" />
+				</h:panelGroup>
+				
+				<h:panelGroup styleClass="md-inputfield" >
+					<p:inputText disabled="true" id="postalAddressaddr2" style="width:100%" value="#{company.postalAddress.addressLine2}"/>
+					<p:outputLabel value="#{lang['address.line.2']}" for="postalAddressaddr2" />
+				</h:panelGroup>
+				
+				<h:panelGroup styleClass="md-inputfield" >
+					<p:inputText disabled="true"  id="postalAddressaddr3" style="width:100%" value="#{company.postalAddress.addressLine3}"/>
+					<p:outputLabel value="#{lang['address.line.3']}" for="postalAddressaddr3" />
+				</h:panelGroup>
+				
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText disabled="true" style="width:100%" value="#{company.postalAddress.town.description}" />
+					<p:outputLabel value="#{lang['town']}" />
+				</h:panelGroup>
+				
+				<h:panelGroup styleClass="md-inputfield" >
+					<p:inputText disabled="true"  id="postalAddressPcode" style="width:100%" value="#{company.postalAddress.postcode}"/>
+					<p:outputLabel value="#{lang['post.code']}" for="postalAddressPcode" />
+				</h:panelGroup>
+				
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText disabled="true" style="width:100%" value="#{company.postalAddress.municipality.municipalityDesc}" />
+					<p:outputLabel value="#{lang['municipality']}" />
+				</h:panelGroup>
+			</p:panelGrid>
+		</p:fieldset>
+		
+
+	</p:panelGrid>
+	
+
+</ui:composition>

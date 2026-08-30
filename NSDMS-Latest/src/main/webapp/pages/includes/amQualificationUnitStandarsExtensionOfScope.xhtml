@@ -1,0 +1,110 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui">
+<p:panelGrid columns="1" style="width:100%">
+	<h:outputText value="Accredited Qualification(s) And Unit Standard(s)" styleClass="FontBold Fs15" />
+	<p:fieldset legend="View" collapsed="true" toggleable="true">
+		<p:dataTable var="var" value="#{assesorModiratorUI.userQualifications}"  paginator="true"
+		                paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+		                rowsPerPageTemplate="5,10,15" paginatorPosition="bottom">
+			<p:column headerText="#{lang['qualifications']}">
+				<h:outputText value="#{var.qualification.description}" />
+			</p:column>
+		
+			<p:column headerText="#{lang['saqa.id']}">
+				<h:outputText value="#{var.qualification.code}" />
+			</p:column>
+		
+			<p:column headerText="#{lang['nqf.level']}">
+				<h:outputText value="#{var.qualification.nqflevel.description}" />
+			</p:column>
+			<p:column headerText="Approve" width="60">
+				<center>
+					<p:selectBooleanCheckbox value="#{var.accept}" disabled="true"/>
+				</center>
+			</p:column>
+		</p:dataTable>
+		<br/>
+		
+		<p:dataTable var="var" value="#{assesorModiratorUI.userUnitStandards}"
+						paginator="true"
+		                paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+		                rowsPerPageTemplate="5,10,15" paginatorPosition="bottom">
+			<p:column headerText="#{lang['name.of.unit.standard(s)']}">
+				<h:outputText value="#{var.unitStandard.title}" />
+			</p:column>
+	
+			<p:column headerText="#{lang['code']}">
+				<h:outputText value="#{var.unitStandard.code}" />
+			</p:column>
+	
+			<p:column headerText="#{lang['nqf.level']}">
+				<h:outputText value="#{var.unitStandard.nqf}" />
+			</p:column>
+			
+			<p:column headerText="Approve" width="60">
+				<center>
+					<p:selectBooleanCheckbox value="#{var.accept}" disabled="true"/>
+				</center>
+			</p:column>
+	
+		</p:dataTable>
+	</p:fieldset>
+</p:panelGrid>
+<br/>
+<p:panelGrid columns="1" style="width:100%">
+	<h:panelGroup>
+		<h:outputText value="#{lang['ass.mod.app.desc']}" styleClass="FontBold Fs15" />
+	</h:panelGroup>
+	<p:fieldset legend="#{lang['am.qualification.reg.desc']}" id="companyQualifications">
+		<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+			<h:panelGroup>
+				<div>
+					<p:outputLabel value="#{lang['qualification']}" for="qualificationAuto"></p:outputLabel>
+				</div>
+				<div>
+					<p:autoComplete style="width:100%" inputStyle="width:50%" id="qualificationAuto" value="#{assesorModiratorUI.qualification}" completeMethod="#{assesorModiratorUI.completeMersetaQualification}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+						 <p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+						 <p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+						 <p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+					</p:autoComplete>
+				</div>
+			</h:panelGroup>
+			<p:commandButton value="#{lang['add.qualification']}" update="companyQualifications companyUnitStandards" process="@this companyQualifications" icon="ui-icon-plus" iconPos="right" styleClass="flat" action="#{assesorModiratorUI.addQualificationToList}" />
+		</p:panelGrid>
+		<p:dataList value="#{assesorModiratorUI.qualificationList}" var="qual" rendered="#{assesorModiratorUI.qualificationList.size() gt 0}">
+			<p:outputLabel value="(#{qual.code}) #{qual.description}"></p:outputLabel>
+			<p:commandLink id="ajaxs" update="extOFScopeForm:companyQualifications" process="@this" action="#{assesorModiratorUI.removeQualificationFromList}">
+				<span class="fa fa-times Fs12 grey"></span>
+				<f:setPropertyActionListener value="#{qual}" target="#{assesorModiratorUI.qualification}" />
+			</p:commandLink>
+		</p:dataList>
+	</p:fieldset>
+	
+	
+	
+	<p:fieldset legend="#{lang['am.unit.standard.reg.desc']}" id="companyUnitStandards">
+		<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+			<h:panelGroup>
+				<div>
+					<p:outputLabel value="#{lang['unit.standard']}" for="companyUnitStandardsAuto"></p:outputLabel>
+				</div>
+				<div>
+					<p:autoComplete style="width:100%" inputStyle="width:50%" id="companyUnitStandardsAuto" value="#{assesorModiratorUI.unitStandard}" completeMethod="#{assesorModiratorUI.completeUnit}" var="rv" itemLabel="#{rv.title}" itemValue="#{rv}" forceSelection="true" converter="UnitStandardsConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+						 <p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+						 <p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.title}</p:column>
+						 <p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqf}</p:column> 
+					</p:autoComplete>
+				</div>
+			</h:panelGroup>
+			<p:commandButton value="#{lang['add.unit.standard']}" process="companyUnitStandards" update="companyUnitStandards" icon="ui-icon-plus" iconPos="right" styleClass="flat" action="#{assesorModiratorUI.addUnitToList}" />
+		</p:panelGrid>
+		<p:dataList value="#{assesorModiratorUI.unitStandards}" var="us" rendered="#{assesorModiratorUI.unitStandards.size() gt 0}">
+			<p:outputLabel value="(#{us.code}) #{us.title}"></p:outputLabel>
+			<p:commandLink id="ajaxs" update="extOFScopeForm:companyUnitStandards" process="@this" action="#{assesorModiratorUI.removeUnitFromList}">
+				<span class="fa fa-times Fs12 grey"></span>
+				<f:setPropertyActionListener value="#{us}" target="#{assesorModiratorUI.unitStandard}" />
+			</p:commandLink>
+		</p:dataList>
+	</p:fieldset>
+</p:panelGrid>
+
+</ui:composition>

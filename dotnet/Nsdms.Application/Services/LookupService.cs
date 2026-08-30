@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Nsdms.Application.Common;
 using Nsdms.Domain.Common;
+using Nsdms.Domain.Lookups;
 
 namespace Nsdms.Application.Services;
 
@@ -17,8 +18,17 @@ public class LookupItemDto
 public interface ILookupService
 {
     Task<List<LookupCategoryMetadata>> GetAllLookupMetadataAsync(string? search = null, string? category = null);
-    Task<List<LookupItemDto>> GetLookupItemsAsync(string tableName, string? search = null);
+    Task<List<LookupItemDto>> GetLookupItemsAsync(string tableName, string? search = null, int skip = 0, int take = 100);
+    Task<int> GetLookupItemsCountAsync(string tableName, string? search = null);
     Task<bool> SaveLookupItemAsync(string tableName, LookupItemDto item, string currentUser = "Admin");
+
+    // Specialized high-frequency queries
+    Task<List<LookupItemDto>> GetOfoCodesAsync(string? search = null, int limit = 50);
+    Task<List<LookupItemDto>> GetSicCodesAsync(string? search = null, int limit = 50);
+    Task<List<LookupItemDto>> GetStatssaAreaCodesAsync(string? search = null, int limit = 50);
+    Task<List<LookupItemDto>> GetSetasAsync();
+    Task<List<LookupItemDto>> GetAlternateIdTypesAsync();
+    Task<List<LookupItemDto>> GetCountriesAsync(string? search = null, int limit = 100);
 }
 
 public class LookupService : ILookupService
@@ -34,41 +44,71 @@ public class LookupService : ILookupService
 
     private static readonly List<LookupCategoryMetadata> _lookupRegistry = new()
     {
-        // Core & Demographics
-        new("GenderType", "Gender Types", "Core & Demographics", "Gender identity codes (M, F, Other)", 4),
-        new("EquityType", "Employment Equity Types", "Core & Demographics", "South African EE classification codes (BA, BC, BI, WH)", 5),
-        new("CitizenStatusType", "Citizen & Resident Status", "Core & Demographics", "Citizenship and residency status classifications", 4),
-        new("NationalityType", "Nationalities / Countries", "Core & Demographics", "ISO standard country and nationality codes", 8),
-        new("HomeLanguageType", "Home Languages", "Core & Demographics", "11 Official SA languages plus Sign Language (SASL)", 12),
-        new("ProvinceType", "Provinces", "Core & Demographics", "9 South African provinces (GP, KZN, WC, EC, etc.)", 9),
-        new("DisabilityType", "Disability Classifications", "Core & Demographics", "Standard disability codes and impairment types", 6),
+        // 1. Core & Demographics
+        new("GenderType", "Gender Classifications", "Core & Demographics", "Statutory gender identity reference codes (Female, Male, Unknown)", 2),
+        new("EquityType", "Employment Equity Classifications", "Core & Demographics", "Statutory Employment Equity racial demographic classifications (African, Coloured, Indian, White)", 5),
+        new("CitizenStatusType", "Citizenship & Residency Status", "Core & Demographics", "SETMIS citizenship & permanent residency classifications (SA, PR, Dual, Other)", 5),
+        new("AlternateIdType", "Alternate Identification Types", "Core & Demographics", "SETMIS alternate identification document types (Passport, Birth Certificate, Work Permit)", 13),
+        new("NationalityType", "Regional Nationalities", "Core & Demographics", "SETMIS regional nationality classification codes (23 Southern African & International regions)", 23),
+        new("CountryType", "Global Countries (ISO-3166)", "Core & Demographics", "ISO-3166 2-Letter Alpha codes covering 249 sovereign countries and territories", 249),
+        new("HomeLanguageType", "Home Languages", "Core & Demographics", "11 Official SA languages plus South African Sign Language (SASL) and dialects", 14),
+        new("ProvinceType", "Provinces & Jurisdictions", "Core & Demographics", "9 South African provincial regions plus National and Outside SA classifications", 11),
+        new("DisabilityType", "Disability Impairment Categories", "Core & Demographics", "Statutory Employment Equity disability categories and physical/sensory impairment types", 6),
+        new("EconomicStatusType", "Economic Employment Statuses", "Core & Demographics", "Learner and employee economic activity standing (Employed, Unemployed, Student)", 4),
+        new("PopiActStatusType", "POPIA Consent Statuses", "Core & Demographics", "Protection of Personal Information Act statutory data processing consent status", 3),
 
-        // Organisations & Sector
-        new("CategoryType", "Organisation Categories", "Organisations & Sector", "Employer, Skills Development Provider (SDP), Assessment Centre", 4),
-        new("OrganisationType", "Organisation Types", "Organisations & Sector", "Legal organisation structures and levy payer types", 4),
-        new("CompanySizeType", "Company Size Categories", "Organisations & Sector", "Micro (0-9), Small (10-49), Medium (50-149), Large (150+)", 4),
-        new("SectorType", "SETA Industry Sectors", "Organisations & Sector", "Automotive, Metal & Engineering, Motor Retail, Plastics, Tyre", 5),
-        new("ChamberType", "SETA Chambers", "Organisations & Sector", "MerSETA governance chambers", 4),
-        new("SicCodeType", "Standard Industrial Classification (SIC)", "Organisations & Sector", "Stats SA standard economic industry codes", 6),
-        new("StatusType", "Universal Record Statuses", "Organisations & Sector", "Active, Inactive, Pending, Approved, Rejected, Suspended", 6),
+        // 2. Washington Group Functioning Disability Ratings
+        new("CommunicatingRatingType", "WG: Communication Functioning", "Washington Group Functioning", "Washington Group Communication difficulty rating (1: None to 6: Cannot determine)", 6),
+        new("HearingRatingType", "WG: Hearing Functioning", "Washington Group Functioning", "Washington Group Hearing difficulty rating (1: None to 6: Cannot determine)", 6),
+        new("RememberingRatingType", "WG: Memory & Cognitive Functioning", "Washington Group Functioning", "Washington Group Remembering and Concentrating difficulty rating (1 to 6)", 6),
+        new("SeeingRatingType", "WG: Visual Functioning", "Washington Group Functioning", "Washington Group Seeing functional difficulty rating (1 to 6)", 6),
+        new("SelfCareRatingType", "WG: Self-Care Functioning", "Washington Group Functioning", "Washington Group Self-care and Hygiene functional difficulty rating (1 to 6)", 6),
+        new("WalkingRatingType", "WG: Mobility & Walking Functioning", "Washington Group Functioning", "Washington Group Mobility and Walking functional difficulty rating (1 to 6)", 6),
 
-        // Learning & ETQA
-        new("LearningProgrammeType", "Learning Programme Types", "Learning & ETQA", "Learnership, Apprenticeship, Skills Programme, Internship, Bursary", 5),
-        new("EnrolmentType", "Learner Enrolment Types", "Learning & ETQA", "New entry, progression, repeat, credit accumulation", 4),
-        new("EnrolmentStatusType", "Enrolment Status Types", "Learning & ETQA", "Registered, Completed/Certified, Terminated, Transferred", 4),
-        new("ProviderType", "Provider Accreditation Types", "Learning & ETQA", "Primary accredited, secondary, satellite, assessment centre", 4),
-        new("ProviderStatusType", "Provider Statuses", "Learning & ETQA", "Fully accredited, provisionally accredited, expired, suspended", 4),
-        new("LearnerEvidenceType", "Learner Portfolio Evidence", "Learning & ETQA", "Portfolio of evidence, assessment sheet, logbook, trade test", 4),
+        // 3. Learning & ETQA Lookups
+        new("LearningProgrammeType", "Learning Programme Types", "Learning & ETQA", "Intervention modalities (Learnership, Apprenticeship, Skills Programme, Internship, Bursary)", 11),
+        new("EnrolmentType", "Learner Enrolment Delivery Modalities", "Learning & ETQA", "Learning delivery modes (Contact, Distance, Mixed Mode, Workplace)", 8),
+        new("EnrolmentStatusType", "Learner Agreement Enrolment Statuses", "Learning & ETQA", "SETMIS learner lifecycle milestones (Enrolled, Achieved, Certificated, Discontinued)", 8),
+        new("EnrolmentStatusReasonType", "Enrolment Transition Reasons", "Learning & ETQA", "Statutory reasons for learner agreement terminations or status changes", 13),
+        new("InternshipStatusType", "Internship / WIL Statuses", "Learning & ETQA", "Work Integrated Learning and graduate internship progress statuses", 3),
+        new("NonNqfInterventionStatusType", "Non-NQF Intervention Statuses", "Learning & ETQA", "Non-NQF accredited skills programme registration and approval statuses", 3),
+        new("PartOfType", "Programme Hierarchy & Articulation", "Learning & ETQA", "Programme qualification hierarchy (Stand-alone, Part of Learnership, Part of Qualification)", 5),
+        new("ProviderClassType", "Provider Institutional Classifications", "Learning & ETQA", "Skills Development Provider legal class (Public, Private, NGO/CBO, Foreign)", 7),
+        new("ProviderType", "Provider Functional Entity Types", "Learning & ETQA", "Provider functional operational type (Education, Training, Employer, NGO)", 5),
+        new("ProviderStatusType", "Provider ETQA Accreditation Standing", "Learning & ETQA", "ETQA accreditation standing (Accredited, Provisional, De-accredited, Closed)", 11),
+        new("DesignationType", "Assessor & Moderator Designations", "Learning & ETQA", "Statutory designations for ETQA practitioners (Assessor, Moderator)", 2),
+        new("DesignationStructureStatusType", "Practitioner Registration Standing", "Learning & ETQA", "Assessor and moderator registration standing codes (Registered, Deregistered, etc.)", 6),
+        new("SubfieldType", "NQF Subfields", "Learning & ETQA", "SAQA National Qualifications Framework subfields for curriculum development", 68),
+        new("TradeTestResultType", "Trade Test Competency Outcomes", "Learning & ETQA", "Artisan practical trade test assessment outcomes (Competent, Not yet competent)", 2),
+        new("TradeTestResultReasonType", "Trade Test Outcome Reasons", "Learning & ETQA", "Artisan practical trade test assessment reason codes", 1),
+        new("LearnerEvidenceType", "Learner Portfolio Evidence Types", "Learning & ETQA", "Portfolio of Evidence, Assessment Sheet, Logbook, Trade Test Certificate", 4),
 
-        // Grants & Finance
-        new("GrantTypeType", "Grant Allocation Types", "Grants & Finance", "Discretionary PIVOTAL, Non-PIVOTAL, Mandatory Grant (MG)", 4),
-        new("InterventionType", "Grant Intervention Types", "Grants & Finance", "Apprenticeship artisan grant, bursary, work placement", 4),
-        new("OfoCodeType", "Organising Framework for Occupations (OFO)", "Grants & Finance", "DHET OFO occupation codes for skills planning", 5),
+        // 4. Occupations & Industries
+        new("OfoCodeType", "Organising Framework for Occupations (OFO)", "Occupations & Industries", "DHET Organising Framework for Occupations statutory occupation codes", 1454),
+        new("SicCodeType", "Standard Industrial Classification (SIC)", "Occupations & Industries", "Stats SA Standard Industrial Classification economic activity codes", 815),
 
-        // Visits & Governance
+        // 5. Stats SA & Geolocation
+        new("StatssaAreaCodeType", "Stats SA Spatial Sub-Place Areas", "Stats SA & Geolocation", "Official Statistics South Africa spatial sub-place and municipal area codes", 22108),
+        new("UrbanRuralType", "Urban vs Rural Classifications", "Stats SA & Geolocation", "Geographic intervention area classification (Urban, Rural, Unknown)", 3),
+
+        // 6. Organisations & Sector
+        new("CategoryType", "Organisation Levy Categories", "Organisations & Sector", "Employer, Skills Development Provider (SDP), Assessment Centre, Trade Test Centre", 4),
+        new("OrganisationType", "Organisation Legal Types", "Organisations & Sector", "Enterprise legal constitution (Pty Ltd, Close Corporation, Public Entity, NGO)", 4),
+        new("CompanySizeType", "Company Size Bands", "Organisations & Sector", "Headcount bands (Micro: 0-9, Small: 10-49, Medium: 50-149, Large: 150+)", 4),
+        new("SectorType", "SETA Industrial Sectors", "Organisations & Sector", "MerSETA economic chambers (Automotive, Metal & Engineering, Motor, Plastics, Tyre)", 5),
+        new("ChamberType", "MerSETA Chambers", "Organisations & Sector", "MerSETA statutory chamber sub-committees", 4),
+        new("SetaType", "Sector Education & Training Authorities", "Organisations & Sector", "21 South African statutory Sector Education & Training Authorities (SETAs)", 21),
+        new("StatusType", "Universal Record Statuses", "Organisations & Sector", "Universal operational statuses (Active, Inactive, Pending, Approved, Rejected, Suspended)", 6),
+
+        // 7. Grants & Finance
+        new("FundingType", "Intervention Funding Sources", "Grants & Finance", "Learning funding origin (SETA funded, Employer funded, Learner funded)", 5),
+        new("GrantTypeType", "Grant Allocation Types", "Grants & Finance", "Discretionary PIVOTAL, Non-PIVOTAL, Mandatory Grant (MG), Special Projects", 4),
+        new("InterventionType", "Grant Intervention Categories", "Grants & Finance", "Apprenticeship, Learnership, Skills Programme, Internship, Bursary", 5),
+
+        // 8. Visits & Governance
         new("VisitTypeType", "Site & Monitoring Visit Types", "Visits & Governance", "Routine Monitoring, Workplace Approval, QA Audit, Trade Assessment", 4),
         new("SiteVisitApprovalStatusType", "Site Visit Approval Statuses", "Visits & Governance", "Recommended, Deferred, Not Recommended, Re-inspection Required", 4),
-        new("EmployerApprovalStatusType", "Employer Workplace Approvals", "Visits & Governance", "Full workplace approval, conditional, unapproved", 3)
+        new("EmployerApprovalStatusType", "Employer Workplace Approvals", "Visits & Governance", "Full workplace approval, conditional, unapproved, legacy", 3)
     };
 
     public Task<List<LookupCategoryMetadata>> GetAllLookupMetadataAsync(string? search = null, string? category = null)
@@ -90,46 +130,41 @@ public class LookupService : ILookupService
         return Task.FromResult(query.ToList());
     }
 
-    public async Task<List<LookupItemDto>> GetLookupItemsAsync(string tableName, string? search = null)
+    public async Task<List<LookupItemDto>> GetLookupItemsAsync(string tableName, string? search = null, int skip = 0, int take = 100)
     {
         using var db = await _contextFactory.CreateDbContextAsync();
-        var items = tableName switch
-        {
-            "StatusType" => await db.StatusTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "GenderType" => await db.GenderTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "EquityType" => await db.EquityTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "CitizenStatusType" => await db.CitizenStatusTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "NationalityType" => await db.NationalityTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "HomeLanguageType" => await db.HomeLanguageTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "ProvinceType" => await db.ProvinceTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "DisabilityType" => await db.DisabilityTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "CategoryType" => await db.CategoryTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "OrganisationType" => await db.OrganisationTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "CompanySizeType" => await db.CompanySizeTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "SectorType" => await db.SectorTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "ChamberType" => await db.ChamberTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "SicCodeType" => await db.SicCodeTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "LearningProgrammeType" => await db.LearningProgrammeTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "EnrolmentType" => await db.EnrolmentTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "EnrolmentStatusType" => await db.EnrolmentStatusTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "ProviderType" => await db.ProviderTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "ProviderStatusType" => await db.ProviderStatusTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "GrantTypeType" => await db.GrantTypeTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "InterventionType" => await db.InterventionTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "OfoCodeType" => await db.OfoCodeTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "VisitTypeType" => await db.VisitTypeTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "SiteVisitApprovalStatusType" => await db.SiteVisitApprovalStatusTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "EmployerApprovalStatusType" => await db.EmployerApprovalStatusTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            _ => await db.StatusTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync()
-        };
+        var query = GetQueryableForTable(db, tableName);
 
         if (!string.IsNullOrWhiteSpace(search))
         {
-            items = items.Where(x => x.Code.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                                     x.Name.Contains(search, StringComparison.OrdinalIgnoreCase)).ToList();
+            query = query.Where(x => x.Code.Contains(search) || x.Name.Contains(search) || (x.Description != null && x.Description.Contains(search)));
         }
 
-        return items;
+        return await query
+            .OrderBy(x => x.Name)
+            .Skip(skip)
+            .Take(take)
+            .Select(x => new LookupItemDto
+            {
+                Code = x.Code,
+                Name = x.Name,
+                Description = x.Description,
+                Active = x.Active
+            })
+            .ToListAsync();
+    }
+
+    public async Task<int> GetLookupItemsCountAsync(string tableName, string? search = null)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var query = GetQueryableForTable(db, tableName);
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(x => x.Code.Contains(search) || x.Name.Contains(search) || (x.Description != null && x.Description.Contains(search)));
+        }
+
+        return await query.CountAsync();
     }
 
     public async Task<bool> SaveLookupItemAsync(string tableName, LookupItemDto item, string currentUser = "Admin")
@@ -139,61 +174,177 @@ public class LookupService : ILookupService
             throw new ArgumentException("Code and Name are mandatory for lookup items.");
         }
 
-        item.Code = item.Code.Trim().ToUpperInvariant();
+        item.Code = item.Code.Trim();
 
         using var db = await _contextFactory.CreateDbContextAsync();
+        var entityType = GetEntityTypeForTable(tableName);
 
-        // Save into respective DbSet
-        if (tableName == "ProvinceType")
+        if (entityType == null)
         {
-            var existing = await db.ProvinceTypes.FindAsync(item.Code);
-            if (existing == null)
-            {
-                db.ProvinceTypes.Add(new() { Code = item.Code, Name = item.Name, Description = item.Description, Active = item.Active });
-                _audit.LogAction(db, "lookup.ProvinceType", 0, "Create", currentUser, null, item);
-            }
-            else
-            {
-                existing.Name = item.Name;
-                existing.Description = item.Description;
-                existing.Active = item.Active;
-                _audit.LogAction(db, "lookup.ProvinceType", 0, "Update", currentUser, null, item);
-            }
+            throw new InvalidOperationException($"Lookup table {tableName} is not recognized.");
         }
-        else if (tableName == "CategoryType")
+
+        var entry = await db.FindAsync(entityType, item.Code);
+        if (entry == null)
         {
-            var existing = await db.CategoryTypes.FindAsync(item.Code);
-            if (existing == null)
+            var newObj = Activator.CreateInstance(entityType) as BaseLookupType;
+            if (newObj != null)
             {
-                db.CategoryTypes.Add(new() { Code = item.Code, Name = item.Name, Description = item.Description, Active = item.Active });
-                _audit.LogAction(db, "lookup.CategoryType", 0, "Create", currentUser, null, item);
-            }
-            else
-            {
-                existing.Name = item.Name;
-                existing.Description = item.Description;
-                existing.Active = item.Active;
-                _audit.LogAction(db, "lookup.CategoryType", 0, "Update", currentUser, null, item);
-            }
-        }
-        else
-        {
-            var existing = await db.StatusTypes.FindAsync(item.Code);
-            if (existing == null)
-            {
-                db.StatusTypes.Add(new() { Code = item.Code, Name = item.Name, Description = item.Description, Active = item.Active });
+                newObj.Code = item.Code;
+                newObj.Name = item.Name;
+                newObj.Description = item.Description;
+                newObj.Active = item.Active;
+                newObj.CreatedAt = DateTime.UtcNow;
+                newObj.CreatedBy = currentUser;
+                db.Add(newObj);
                 _audit.LogAction(db, $"lookup.{tableName}", 0, "Create", currentUser, null, item);
             }
-            else
-            {
-                existing.Name = item.Name;
-                existing.Description = item.Description;
-                existing.Active = item.Active;
-                _audit.LogAction(db, $"lookup.{tableName}", 0, "Update", currentUser, null, item);
-            }
+        }
+        else if (entry is BaseLookupType existing)
+        {
+            existing.Name = item.Name;
+            existing.Description = item.Description;
+            existing.Active = item.Active;
+            existing.ModifiedAt = DateTime.UtcNow;
+            existing.ModifiedBy = currentUser;
+            _audit.LogAction(db, $"lookup.{tableName}", 0, "Update", currentUser, null, item);
         }
 
         await db.SaveChangesAsync();
         return true;
+    }
+
+    public async Task<List<LookupItemDto>> GetOfoCodesAsync(string? search = null, int limit = 50) =>
+        await GetLookupItemsAsync("OfoCodeType", search, 0, limit);
+
+    public async Task<List<LookupItemDto>> GetSicCodesAsync(string? search = null, int limit = 50) =>
+        await GetLookupItemsAsync("SicCodeType", search, 0, limit);
+
+    public async Task<List<LookupItemDto>> GetStatssaAreaCodesAsync(string? search = null, int limit = 50) =>
+        await GetLookupItemsAsync("StatssaAreaCodeType", search, 0, limit);
+
+    public async Task<List<LookupItemDto>> GetSetasAsync() =>
+        await GetLookupItemsAsync("SetaType", null, 0, 100);
+
+    public async Task<List<LookupItemDto>> GetAlternateIdTypesAsync() =>
+        await GetLookupItemsAsync("AlternateIdType", null, 0, 100);
+
+    public async Task<List<LookupItemDto>> GetCountriesAsync(string? search = null, int limit = 100) =>
+        await GetLookupItemsAsync("CountryType", search, 0, limit);
+
+    private static IQueryable<BaseLookupType> GetQueryableForTable(INsdmsDbContext db, string tableName)
+    {
+        return tableName switch
+        {
+            "AlternateIdType" => db.AlternateIdTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "CitizenStatusType" => db.CitizenStatusTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "CountryType" => db.CountryTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "NationalityType" => db.NationalityTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "HomeLanguageType" => db.HomeLanguageTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "ProvinceType" => db.ProvinceTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "EquityType" => db.EquityTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "GenderType" => db.GenderTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "DisabilityType" => db.DisabilityTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "EconomicStatusType" => db.EconomicStatusTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "PopiActStatusType" => db.PopiActStatusTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "CommunicatingRatingType" => db.CommunicatingRatingTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "HearingRatingType" => db.HearingRatingTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "RememberingRatingType" => db.RememberingRatingTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "SeeingRatingType" => db.SeeingRatingTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "SelfCareRatingType" => db.SelfCareRatingTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "WalkingRatingType" => db.WalkingRatingTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "DesignationType" => db.DesignationTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "DesignationStructureStatusType" => db.DesignationStructureStatusTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "LearningProgrammeType" => db.LearningProgrammeTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "EnrolmentType" => db.EnrolmentTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "EnrolmentStatusType" => db.EnrolmentStatusTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "EnrolmentStatusReasonType" => db.EnrolmentStatusReasonTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "InternshipStatusType" => db.InternshipStatusTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "NonNqfInterventionStatusType" => db.NonNqfInterventionStatusTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "PartOfType" => db.PartOfTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "ProviderClassType" => db.ProviderClassTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "ProviderType" => db.ProviderTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "ProviderStatusType" => db.ProviderStatusTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "SubfieldType" => db.SubfieldTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "TradeTestResultType" => db.TradeTestResultTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "TradeTestResultReasonType" => db.TradeTestResultReasonTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "LearnerEvidenceType" => db.LearnerEvidenceTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "OfoCodeType" => db.OfoCodeTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "SicCodeType" => db.SicCodeTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "StatssaAreaCodeType" => db.StatssaAreaCodeTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "UrbanRuralType" => db.UrbanRuralTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "CategoryType" => db.CategoryTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "OrganisationType" => db.OrganisationTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "CompanySizeType" => db.CompanySizeTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "SectorType" => db.SectorTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "ChamberType" => db.ChamberTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "SetaType" => db.SetaTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "StatusType" => db.StatusTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "FundingType" => db.FundingTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "GrantTypeType" => db.GrantTypeTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "InterventionType" => db.InterventionTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "VisitTypeType" => db.VisitTypeTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "SiteVisitApprovalStatusType" => db.SiteVisitApprovalStatusTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "EmployerApprovalStatusType" => db.EmployerApprovalStatusTypes.AsNoTracking().Cast<BaseLookupType>(),
+            _ => db.StatusTypes.AsNoTracking().Cast<BaseLookupType>()
+        };
+    }
+
+    private static Type? GetEntityTypeForTable(string tableName)
+    {
+        return tableName switch
+        {
+            "AlternateIdType" => typeof(AlternateIdType),
+            "CitizenStatusType" => typeof(CitizenStatusType),
+            "CountryType" => typeof(CountryType),
+            "NationalityType" => typeof(NationalityType),
+            "HomeLanguageType" => typeof(HomeLanguageType),
+            "ProvinceType" => typeof(ProvinceType),
+            "EquityType" => typeof(EquityType),
+            "GenderType" => typeof(GenderType),
+            "DisabilityType" => typeof(DisabilityType),
+            "EconomicStatusType" => typeof(EconomicStatusType),
+            "PopiActStatusType" => typeof(PopiActStatusType),
+            "CommunicatingRatingType" => typeof(CommunicatingRatingType),
+            "HearingRatingType" => typeof(HearingRatingType),
+            "RememberingRatingType" => typeof(RememberingRatingType),
+            "SeeingRatingType" => typeof(SeeingRatingType),
+            "SelfCareRatingType" => typeof(SelfCareRatingType),
+            "WalkingRatingType" => typeof(WalkingRatingType),
+            "DesignationType" => typeof(DesignationType),
+            "DesignationStructureStatusType" => typeof(DesignationStructureStatusType),
+            "LearningProgrammeType" => typeof(LearningProgrammeType),
+            "EnrolmentType" => typeof(EnrolmentType),
+            "EnrolmentStatusType" => typeof(EnrolmentStatusType),
+            "EnrolmentStatusReasonType" => typeof(EnrolmentStatusReasonType),
+            "InternshipStatusType" => typeof(InternshipStatusType),
+            "NonNqfInterventionStatusType" => typeof(NonNqfInterventionStatusType),
+            "PartOfType" => typeof(PartOfType),
+            "ProviderClassType" => typeof(ProviderClassType),
+            "ProviderType" => typeof(ProviderType),
+            "ProviderStatusType" => typeof(ProviderStatusType),
+            "SubfieldType" => typeof(SubfieldType),
+            "TradeTestResultType" => typeof(TradeTestResultType),
+            "TradeTestResultReasonType" => typeof(TradeTestResultReasonType),
+            "LearnerEvidenceType" => typeof(LearnerEvidenceType),
+            "OfoCodeType" => typeof(OfoCodeType),
+            "SicCodeType" => typeof(SicCodeType),
+            "StatssaAreaCodeType" => typeof(StatssaAreaCodeType),
+            "UrbanRuralType" => typeof(UrbanRuralType),
+            "CategoryType" => typeof(CategoryType),
+            "OrganisationType" => typeof(OrganisationType),
+            "CompanySizeType" => typeof(CompanySizeType),
+            "SectorType" => typeof(SectorType),
+            "ChamberType" => typeof(ChamberType),
+            "SetaType" => typeof(SetaType),
+            "StatusType" => typeof(StatusType),
+            "FundingType" => typeof(FundingType),
+            "GrantTypeType" => typeof(GrantTypeType),
+            "InterventionType" => typeof(InterventionType),
+            "VisitTypeType" => typeof(VisitTypeType),
+            "SiteVisitApprovalStatusType" => typeof(SiteVisitApprovalStatusType),
+            "EmployerApprovalStatusType" => typeof(EmployerApprovalStatusType),
+            _ => null
+        };
     }
 }

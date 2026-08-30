@@ -1,0 +1,111 @@
+﻿@page "/governance/meetings"
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Domain.Entities
+@inject IReviewCommitteeService CommitteeService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>Review Committee &amp; MANCO Meetings | merSETA NSDMS</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
+    <MudCard Elevation="2" Class="mb-4">
+        <MudCardContent Class="d-flex align-center justify-space-between py-3">
+            <div>
+                <MudBreadcrumbs Items="_breadcrumbs" Class="pa-0 mb-1" />
+                <MudText Typo="Typo.h5" Class="fw-bold">Review Committee &amp; MANCO Governance</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    Adjudication agendas, accreditation resolutions, and committee voting records.
+                </MudText>
+            </div>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="ScheduleMeetingAsync">
+                Schedule Committee Meeting
+            </MudButton>
+        </MudCardContent>
+    </MudCard>
+
+    <MudCard Elevation="2">
+        <MudTable Items="_meetings" Hover="true" Dense="true" Elevation="0" OnRowClick="@((TableRowClickEventArgs<ReviewCommitteeMeeting> args) => Navigation.NavigateTo($"/governance/meetings/{args.Item.Id}"))" RowClass="cursor-pointer">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Scheduled Meetings</MudText>
+                <MudSpacer />
+                <MudTextField @bind-Value="_searchString" Placeholder="Search meeting title, number or venue..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" />
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>Meeting #</MudTh>
+                <MudTh>Title &amp; Type</MudTh>
+                <MudTh Class="hidden md:table-cell">Date &amp; Time</MudTh>
+                <MudTh Class="hidden md:table-cell">Venue</MudTh>
+                <MudTh>Agendas</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh Style="text-align: right;">Action</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Meeting #" Class="fw-bold">@context.MeetingNumber</MudTd>
+                <MudTd DataLabel="Title">
+                    <MudText Typo="Typo.body2" Class="fw-bold">@context.Title</MudText>
+                    <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Text">@context.MeetingTypeCode</MudChip>
+                </MudTd>
+                <MudTd DataLabel="Date" Class="hidden md:table-cell">@context.FromDateTime.ToString("yyyy-MM-dd HH:mm")</MudTd>
+                <MudTd DataLabel="Venue" Class="hidden md:table-cell">@context.Venue</MudTd>
+                <MudTd DataLabel="Agendas">@context.Agendas.Count Items</MudTd>
+                <MudTd DataLabel="Status">
+                    @if (context.StatusCode == "Concluded")
+                    {
+                        <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled">Concluded</MudChip>
+                    }
+                    else
+                    {
+                        <MudChip T="string" Color="Color.Info" Size="Size.Small" Variant="Variant.Filled">@context.StatusCode</MudChip>
+                    }
+                </MudTd>
+                <MudTd DataLabel="Action" Style="text-align: right;">
+                    <MudIconButton Icon="@Icons.Material.Filled.ArrowForward" Color="Color.Primary" Size="Size.Small" OnClick="@(() => Navigation.NavigateTo($"/governance/meetings/{context.Id}"))" />
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    </MudCard>
+</MudContainer>
+
+@code {
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Governance", href: null, disabled: true),
+        new BreadcrumbItem("Review Committee Meetings", href: null, disabled: true)
+    };
+
+    private List<ReviewCommitteeMeeting> _meetings = new();
+    private string _searchString = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMeetingsAsync();
+    }
+
+    private async Task LoadMeetingsAsync()
+    {
+        try
+        {
+            _meetings = await CommitteeService.GetAllMeetingsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading meetings: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task ScheduleMeetingAsync()
+    {
+        var newMeeting = new ReviewCommitteeMeeting
+        {
+            Title = "ETQA & Accreditation Review Committee Session",
+            MeetingTypeCode = "EtqaReviewCommittee",
+            FromDateTime = DateTime.UtcNow.AddDays(7),
+            ToDateTime = DateTime.UtcNow.AddDays(7).AddHours(3),
+            Venue = "merSETA Head Office - Boardroom A"
+        };
+        var created = await CommitteeService.ScheduleMeetingAsync(newMeeting, "AdminUser");
+        Snackbar.Add("Committee meeting scheduled.", Severity.Success);
+        Navigation.NavigateTo($"/governance/meetings/{created.Id}");
+    }
+}

@@ -1,0 +1,1033 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.6.0.final using JasperReports Library version 6.6.0  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="LPM-TP-003-Learning-Programme-Termination-Letter" pageWidth="595" pageHeight="842" columnWidth="515" leftMargin="40" rightMargin="40" topMargin="20" bottomMargin="20" uuid="ee556205-51af-4cdb-8e09-5df93bb14bf1">
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="MerSetaDataAdapter.xml"/>
+	<property name="com.jaspersoft.studio.property.dataset.dialog.DatasetDialog.sash.w1" value="454"/>
+	<property name="com.jaspersoft.studio.property.dataset.dialog.DatasetDialog.sash.w2" value="536"/>
+	<subDataset name="Dataset1" uuid="428da169-f144-47be-a56a-664b17616e5c">
+		<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+		<property name="com.jaspersoft.studio.data.defaultdataadapter" value="src\main\webapp\reports\DataAdapter.xml"/>
+		<queryString language="SQL">
+			<![CDATA[SELECT merseta.saqa_qualification.fielddescription 
+FROM merseta.saqa_qualification
+WHERE merseta.saqa_qualification.id <5]]>
+		</queryString>
+		<field name="fielddescription" class="java.lang.String">
+			<property name="com.jaspersoft.studio.field.label" value="fielddescription"/>
+			<property name="com.jaspersoft.studio.field.tree.path" value="saqa_qualification"/>
+		</field>
+		<group name="fielddescription">
+			<groupExpression><![CDATA[$F{fielddescription}]]></groupExpression>
+		</group>
+	</subDataset>
+	<parameter name="logo" class="java.awt.Image"/>
+	<parameter name="backround_image" class="java.awt.Image"/>
+	<parameter name="company_id" class="java.lang.Long"/>
+	<parameter name="user_id" class="java.lang.Long"/>
+	<parameter name="decision_number" class="java.lang.String"/>
+	<parameter name="learner_agreement_no" class="java.lang.String"/>
+	<parameter name="review_date" class="java.lang.String"/>
+	<parameter name="manager" class="java.lang.String">
+		<defaultValueExpression><![CDATA["Mr Xolisa Njikelana"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="chief_executive_officer" class="java.lang.String">
+		<defaultValueExpression><![CDATA["Dr Raymond Patel"]]></defaultValueExpression>
+	</parameter>
+	<queryString language="SQL">
+		<![CDATA[SELECT  user.first_name,user.last_name,title.description AS title,
+company.company_name,company.levy_number,postalAddress.address_line_1,
+postalAddress.address_line_2,postalAddress.address_line_3,postalAddress.address_line_4,postalAddress.postcode,
+company.company_guid AS guid,town.description AS postal_add_town,saqa_qualification.qualificationtitle
+
+FROM merseta.users AS user
+
+LEFT JOIN merseta.company AS company
+ON company.id=$P{company_id}
+
+LEFT JOIN merseta.title AS title
+ON title.id=user.title_id
+
+LEFT JOIN merseta.address AS postalAddress
+ON postalAddress.id=company.postal_address_id
+
+LEFT JOIN merseta.towns AS town
+ON town.id=postalAddress.town_id
+
+LEFT JOIN merseta.user_qualifications AS userQual
+ON userQual.user_id=$P{user_id}
+
+LEFT JOIN merseta.saqa_qualification AS saqa_qualification
+ON saqa_qualification.id=userQual.qualification_id
+
+
+
+WHERE user.id=$P{user_id};]]>
+	</queryString>
+	<field name="first_name" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="first_name"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="users"/>
+	</field>
+	<field name="last_name" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="last_name"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="users"/>
+	</field>
+	<field name="title" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="title"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="title"/>
+	</field>
+	<field name="company_name" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="company_name"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="company"/>
+	</field>
+	<field name="levy_number" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="levy_number"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="company"/>
+	</field>
+	<field name="address_line_1" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="address_line_1"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="address_line_2" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="address_line_2"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="address_line_3" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="address_line_3"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="address_line_4" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="address_line_4"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="postcode" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="postcode"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="guid" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="guid"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="company"/>
+	</field>
+	<field name="postal_add_town" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="postal_add_town"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="towns"/>
+	</field>
+	<field name="qualificationtitle" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="qualificationtitle"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="saqa_qualification"/>
+	</field>
+	<group name="Group1">
+		<groupHeader>
+			<band height="249">
+				<textField>
+					<reportElement x="0" y="146" width="516" height="20" uuid="133e9816-5f11-45ce-90d5-2604e390bc15"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Dear "+$F{title}+" "+$F{last_name}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="0" y="166" width="516" height="10" uuid="5cbba224-6977-4642-b696-6a8790a0259c">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<text><![CDATA[]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="0" y="136" width="516" height="10" uuid="9d44344a-655b-4b3c-bd31-8c6d9e73b743">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<text><![CDATA[]]></text>
+				</staticText>
+				<textField isStretchWithOverflow="true">
+					<reportElement x="0" y="206" width="516" height="40" uuid="393f7afc-9fb5-4292-ae8e-b7cc8d29db36"/>
+					<textElement textAlignment="Justified" markup="html">
+						<font size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA["In terms of the documented evidence and the recommendations from the Regional Office, the Learner Agreement of "+ "<b>"+$F{first_name}+ " " + $F{last_name}+"</b>"+ " Agreement No. <b>"+ $P{learner_agreement_no}+"</b> is herewith terminated by the review committee held on <b>"+$P{review_date}+"</b> based on the following:"]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="-1" y="196" width="517" height="10" uuid="b63cf246-ba65-44f8-90b4-56f4856807b9">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<text><![CDATA[]]></text>
+				</staticText>
+				<textField isBlankWhenNull="true">
+					<reportElement x="1" y="48" width="280" height="13" uuid="10cd889b-acb9-4663-af05-942f0569d33e"/>
+					<textElement verticalAlignment="Bottom">
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{company_name}  +" (" + $F{levy_number} + ")"]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="1" y="61" width="280" height="10" uuid="c4cfb9db-e176-407a-bd91-4b8924bb62cd">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<textElement verticalAlignment="Bottom">
+						<font fontName="Arial" size="11"/>
+					</textElement>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="1" y="71" width="280" height="13" uuid="709d0435-bee1-475c-987f-5ee0aced8ec6"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{address_line_1}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="1" y="84" width="280" height="13" uuid="f550570d-ed73-443e-97ff-a0388e838c95"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{address_line_2}]]></textFieldExpression>
+				</textField>
+				<textField pattern="dd  MMMMM  yyyy">
+					<reportElement x="1" y="23" width="280" height="13" uuid="d952b86d-54e1-4827-a9e3-bb22b25eec7f"/>
+					<textElement verticalAlignment="Bottom">
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="1" y="38" width="515" height="10" uuid="6344e62f-8a12-4f40-b637-d6275f75879a">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<text><![CDATA[]]></text>
+				</staticText>
+				<textField isBlankWhenNull="true">
+					<reportElement x="1" y="110" width="280" height="13" uuid="182af4c4-8b90-4dd6-9c4b-654b1025f381"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{postal_add_town}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="1" y="123" width="280" height="13" uuid="1a832d3f-7b5e-4e90-9c31-1a0cc27a6609"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{postcode}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="0" y="176" width="516" height="20" uuid="def0f861-51b3-4f13-8494-a89cb89971eb"/>
+					<textElement verticalAlignment="Middle" markup="html">
+						<font fontName="Arial" size="11" isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression><![CDATA["RE: TERMINATION OF A LEARNER AGREEMENT"]]></textFieldExpression>
+				</textField>
+				<textField pattern="dd  MMMMM  yyyy" isBlankWhenNull="true">
+					<reportElement x="0" y="0" width="514" height="23" uuid="17eb853d-e634-4e9f-a7a3-660fe7626a30"/>
+					<textElement verticalAlignment="Middle" markup="html">
+						<font fontName="SansSerif" size="11" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Reference No: " +$P{decision_number}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="1" y="97" width="280" height="13" uuid="eeb7c608-a38e-491d-94db-f27d02b249a2"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{address_line_3}]]></textFieldExpression>
+				</textField>
+			</band>
+			<band height="87">
+				<textField>
+					<reportElement x="0" y="3" width="516" height="20" uuid="5900b89e-9dae-40d5-b83f-1a04f5af087e">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="11" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Reasons for termination are an extract from Skills Development Act:"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+					<reportElement x="25" y="26" width="489" height="30" uuid="22b9ff6a-782a-4b91-8cd2-775fdc645026">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement verticalAlignment="Middle" markup="html">
+						<font fontName="SansSerif" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA["A <b>SETA</b> may approve the termination of a learner agreement in terms of <b>Section 17(4) (a) (b) & (c) of the Act:</b>"]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="0" y="26" width="25" height="20" uuid="ca20d228-d88c-486e-82a8-9c74c1a374f9">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="11" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression><![CDATA["1."]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="25" y="62" width="490" height="20" uuid="708b5420-7087-4b0f-9fa8-4edbc6c7915f">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="11" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Select the correct sub regulation /ACT"]]></textFieldExpression>
+				</textField>
+			</band>
+			<band height="184">
+				<staticText>
+					<reportElement x="25" y="3" width="435" height="20" forecolor="#000000" uuid="8595b7fa-75d6-4021-ae6d-c45377a3c7af">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+						<property name="com.jaspersoft.studio.unit.firstLineIndent" value="px"/>
+						<property name="com.jaspersoft.studio.unit.rightIndent" value="px"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#404040"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#404040"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#404040"/>
+						<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#404040"/>
+					</box>
+					<textElement verticalAlignment="Middle" markup="html">
+						<font fontName="Arial" size="9" isBold="true"/>
+						<paragraph firstLineIndent="0" leftIndent="3" rightIndent="0"/>
+					</textElement>
+					<text><![CDATA[The employer and the learner have agreed in writing to terminate the agreement]]></text>
+				</staticText>
+				<textField isBlankWhenNull="true">
+					<reportElement x="460" y="3" width="54" height="20" uuid="87fc1c70-f818-420d-a30a-c5080f5768d0">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement>
+						<font fontName="Arial" size="11"/>
+					</textElement>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="460" y="23" width="54" height="32" uuid="0ab117e1-e6b6-4b21-a5e9-9515cf6adb34">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement>
+						<font fontName="Arial" size="11"/>
+					</textElement>
+				</textField>
+				<staticText>
+					<reportElement x="25" y="23" width="435" height="32" forecolor="#000000" uuid="bb980913-e149-4cf8-970a-e686d4f716fc">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+						<property name="com.jaspersoft.studio.unit.firstLineIndent" value="px"/>
+						<property name="com.jaspersoft.studio.unit.rightIndent" value="px"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#404040"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#404040"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#404040"/>
+						<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#404040"/>
+					</box>
+					<textElement verticalAlignment="Top" markup="html">
+						<font fontName="Arial" size="9" isBold="true"/>
+						<paragraph firstLineIndent="0" leftIndent="3" rightIndent="0"/>
+					</textElement>
+					<text><![CDATA[The employer or employee has requested, for good cause, to terminate the agreement and the other parties to the learner agreement have had the opportunity to make representations as to why the agreement should or should not be terminated;]]></text>
+				</staticText>
+				<textField isBlankWhenNull="true">
+					<reportElement x="460" y="55" width="54" height="20" uuid="911e9b34-6f29-4b42-9252-d47078f02aa0">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement>
+						<font fontName="Arial" size="11"/>
+					</textElement>
+				</textField>
+				<staticText>
+					<reportElement x="25" y="55" width="435" height="20" forecolor="#000000" uuid="86671d5a-3414-4deb-a6fe-ca6569b03f79">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+						<property name="com.jaspersoft.studio.unit.firstLineIndent" value="px"/>
+						<property name="com.jaspersoft.studio.unit.rightIndent" value="px"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#404040"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#404040"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#404040"/>
+						<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#404040"/>
+					</box>
+					<textElement verticalAlignment="Middle" markup="html">
+						<font fontName="Arial" size="9" isBold="true"/>
+						<paragraph firstLineIndent="0" leftIndent="3" rightIndent="0"/>
+					</textElement>
+					<text><![CDATA[The learner died, and death certificate is attached]]></text>
+				</staticText>
+				<textField isBlankWhenNull="true">
+					<reportElement x="460" y="75" width="54" height="20" uuid="7d6ee18b-59db-4d78-99b9-4188dac8b8fc">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement>
+						<font fontName="Arial" size="11"/>
+					</textElement>
+				</textField>
+				<staticText>
+					<reportElement x="25" y="75" width="435" height="20" forecolor="#000000" uuid="ed32b2ca-03d7-40b8-bd2e-375733ae5312">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+						<property name="com.jaspersoft.studio.unit.firstLineIndent" value="px"/>
+						<property name="com.jaspersoft.studio.unit.rightIndent" value="px"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#404040"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#404040"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#404040"/>
+						<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#404040"/>
+					</box>
+					<textElement verticalAlignment="Middle" markup="html">
+						<font fontName="Arial" size="9" isBold="true"/>
+						<paragraph firstLineIndent="0" leftIndent="3" rightIndent="0"/>
+					</textElement>
+					<text><![CDATA[The agreement is terminated as an outcome of a disciplinary action;]]></text>
+				</staticText>
+				<textField isBlankWhenNull="true">
+					<reportElement x="460" y="95" width="54" height="20" uuid="1df2c18f-e94f-486d-968e-8006749568ce">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement>
+						<font fontName="Arial" size="11"/>
+					</textElement>
+				</textField>
+				<staticText>
+					<reportElement x="25" y="95" width="435" height="20" forecolor="#000000" uuid="37e58c0d-f152-4cc9-9e39-e43357c361d8">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+						<property name="com.jaspersoft.studio.unit.firstLineIndent" value="px"/>
+						<property name="com.jaspersoft.studio.unit.rightIndent" value="px"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#404040"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#404040"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#404040"/>
+						<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#404040"/>
+					</box>
+					<textElement verticalAlignment="Middle" markup="html">
+						<font fontName="Arial" size="9" isBold="true"/>
+						<paragraph firstLineIndent="0" leftIndent="3" rightIndent="0"/>
+					</textElement>
+					<text><![CDATA[The training provider has requested for good cause to terminate the agreement and;]]></text>
+				</staticText>
+				<textField>
+					<reportElement x="0" y="3" width="25" height="20" forecolor="#000000" uuid="002d9149-132a-40dd-ba36-d6f472511551">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle" markup="html">
+						<font fontName="SansSerif" size="11" isBold="false" pdfEncoding=""/>
+						<paragraph lineSpacing="1_1_2"/>
+					</textElement>
+					<textFieldExpression><![CDATA["(a)"]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="0" y="23" width="25" height="32" forecolor="#000000" uuid="f4db6a26-c6b4-47bc-bf86-62f9630549ab">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" markup="html">
+						<font fontName="SansSerif" size="11" isBold="false" pdfEncoding=""/>
+						<paragraph lineSpacing="1_1_2"/>
+					</textElement>
+					<textFieldExpression><![CDATA["(b)"]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="0" y="55" width="25" height="20" forecolor="#000000" uuid="accecb1f-631f-4b52-b4a2-f009fa51b217">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle" markup="html">
+						<font fontName="SansSerif" size="11" isBold="false" pdfEncoding=""/>
+						<paragraph lineSpacing="1_1_2"/>
+					</textElement>
+					<textFieldExpression><![CDATA["(c)"]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="0" y="75" width="25" height="20" forecolor="#000000" uuid="933f2ae7-10b3-49fd-8838-42726410110c">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle" markup="html">
+						<font fontName="SansSerif" size="11" isBold="false" pdfEncoding=""/>
+						<paragraph lineSpacing="1_1_2"/>
+					</textElement>
+					<textFieldExpression><![CDATA["(d)"]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="0" y="95" width="25" height="20" forecolor="#000000" uuid="e6ae24ef-3339-4e66-81d5-bfad44273c6d">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle" markup="html">
+						<font fontName="SansSerif" size="11" isBold="false" pdfEncoding=""/>
+						<paragraph lineSpacing="1_1_2"/>
+					</textElement>
+					<textFieldExpression><![CDATA["(e)"]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="0" y="115" width="50" height="20" forecolor="#000000" uuid="f3f6c7b7-abef-4884-80b2-2c4cb506b68f">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+						<property name="com.jaspersoft.studio.unit.rightIndent" value="px"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle" markup="html">
+						<font fontName="SansSerif" size="11" pdfEncoding=""/>
+						<paragraph lineSpacing="1_1_2" rightIndent="6"/>
+					</textElement>
+					<textFieldExpression><![CDATA["(i)"]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="50" y="115" width="410" height="20" forecolor="#000000" uuid="fb1f3324-42c9-4469-961d-6d44fffe0a41">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+						<property name="com.jaspersoft.studio.unit.firstLineIndent" value="px"/>
+						<property name="com.jaspersoft.studio.unit.rightIndent" value="px"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#404040"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#404040"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#404040"/>
+						<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#404040"/>
+					</box>
+					<textElement verticalAlignment="Middle" markup="html">
+						<font fontName="Arial" size="9" isBold="true"/>
+						<paragraph firstLineIndent="0" leftIndent="3" rightIndent="0"/>
+					</textElement>
+					<text><![CDATA[The other parties to the agreement have had the opportunity to make representations;]]></text>
+				</staticText>
+				<textField isBlankWhenNull="true">
+					<reportElement x="460" y="115" width="54" height="20" uuid="a72f7f8e-8490-4f36-8f98-13ef61ff8527">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement>
+						<font fontName="Arial" size="11"/>
+					</textElement>
+				</textField>
+				<textField>
+					<reportElement x="0" y="135" width="50" height="25" forecolor="#000000" uuid="60ca95e6-c225-4100-a57d-f02244dd7f5d">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+						<property name="com.jaspersoft.studio.unit.rightIndent" value="px"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Top" markup="html">
+						<font fontName="SansSerif" size="11" pdfEncoding=""/>
+						<paragraph lineSpacing="1_1_2" rightIndent="6"/>
+					</textElement>
+					<textFieldExpression><![CDATA["(ii)"]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="50" y="135" width="410" height="25" forecolor="#000000" uuid="6803f790-404c-4232-91fd-d37fbed17fb2">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+						<property name="com.jaspersoft.studio.unit.firstLineIndent" value="px"/>
+						<property name="com.jaspersoft.studio.unit.rightIndent" value="px"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#404040"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#404040"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#404040"/>
+						<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#404040"/>
+					</box>
+					<textElement verticalAlignment="Top" markup="html">
+						<font fontName="Arial" size="9" isBold="true"/>
+						<paragraph firstLineIndent="0" leftIndent="3" rightIndent="0"/>
+					</textElement>
+					<text><![CDATA[The SETA and the employer have been unable to arrange for a new training provider to be substituted for the previous training provider in accordance with regulation 5 (1).]]></text>
+				</staticText>
+				<textField isBlankWhenNull="true">
+					<reportElement x="460" y="135" width="54" height="25" uuid="dd3eee82-808b-4480-aa9d-543dcc0e9db5">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement>
+						<font fontName="Arial" size="11"/>
+					</textElement>
+				</textField>
+				<textField>
+					<reportElement x="0" y="160" width="25" height="20" forecolor="#000000" uuid="a168825b-318b-4f78-b8e2-50f8869bdaba">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle" markup="html">
+						<font fontName="SansSerif" size="11" isBold="false" pdfEncoding=""/>
+						<paragraph lineSpacing="1_1_2"/>
+					</textElement>
+					<textFieldExpression><![CDATA["(f)"]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="25" y="160" width="435" height="20" forecolor="#000000" uuid="20456ab4-ff99-42d3-9f3e-fe29b21d36a6">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+						<property name="com.jaspersoft.studio.unit.firstLineIndent" value="px"/>
+						<property name="com.jaspersoft.studio.unit.rightIndent" value="px"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#404040"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#404040"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#404040"/>
+						<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#404040"/>
+					</box>
+					<textElement verticalAlignment="Middle" markup="html">
+						<font fontName="Arial" size="9" isBold="true"/>
+						<paragraph firstLineIndent="0" leftIndent="3" rightIndent="0"/>
+					</textElement>
+					<text><![CDATA[Learner has completed training and found competent]]></text>
+				</staticText>
+				<textField isBlankWhenNull="true">
+					<reportElement x="460" y="160" width="54" height="20" uuid="f830bf14-2652-4179-ae95-1c50b4648f10">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement>
+						<font fontName="Arial" size="11"/>
+					</textElement>
+				</textField>
+			</band>
+			<band height="101">
+				<textField>
+					<reportElement x="25" y="22" width="490" height="18" uuid="42995765-ba31-4904-b38c-8d7caabd895f">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement>
+						<font fontName="Arial" size="11" isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression><![CDATA["DISPUTES as determined by section 19(1) (a) (b) &(c) of the Act."]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="25" y="41" width="15" height="31" uuid="c4badc14-fa17-4fa5-ab8b-a21152772a26">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement>
+						<font fontName="Arial" size="11" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA["•	"]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="40" y="40" width="474" height="33" uuid="84f31b4b-d2b9-448a-aa2c-8cafea7c45b6"/>
+					<textElement>
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Disputes may be referred to the Commission for Conciliation, Mediation and Arbitration (CCMA) as per the section 19 subsections (2); (3); (4);(5) and (6) of the act"]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="25" y="73" width="15" height="22" uuid="16d078f1-3b20-44fe-bb65-796aba56c6a9">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement>
+						<font fontName="Arial" size="11" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA["•	"]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="40" y="73" width="474" height="22" uuid="9688787c-f3fe-4fe8-8d79-7f67f12c31a9"/>
+					<textElement>
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Please inform all parties involved of this decision immediately on receipt of this letter."]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="0" y="22" width="25" height="18" uuid="b968b7d1-6d1f-4800-875b-2e208b0d9bea">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement>
+						<font fontName="Arial" size="11" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression><![CDATA["2."]]></textFieldExpression>
+				</textField>
+			</band>
+			<band height="123">
+				<textField>
+					<reportElement x="-1" y="40" width="211" height="45" uuid="a2e74cc8-1f3f-484b-982a-96a5cb9d8728"/>
+					<box>
+						<pen lineStyle="Dotted"/>
+						<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" markup="html">
+						<font fontName="SansSerif" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$P{manager}+"<br/>"+
+"<b>Manager: Curriculum and Learning Programmes Development</b>"]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="303" y="40" width="211" height="45" uuid="328463f6-403a-4fa6-9bea-7ef29da52395"/>
+					<box>
+						<pen lineStyle="Dotted"/>
+						<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" markup="html">
+						<font fontName="SansSerif" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$P{chief_executive_officer}+"<br/>"+"<b>Chief Executive Officer</b>"]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="-1" y="100" width="41" height="18" uuid="ebce5958-4e1c-4fea-ae5c-3a4de98c6639">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement verticalAlignment="Bottom">
+						<font fontName="Arial" size="11" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Date:"]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="40" y="100" width="170" height="18" uuid="e276981c-d10f-4d0e-8369-9ba34a96fd3c">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineWidth="0.5"/>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement>
+						<font fontName="Arial" size="11" isBold="true"/>
+					</textElement>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="303" y="101" width="41" height="18" uuid="a5fe583b-75ce-47f7-96a5-5ad9d4cc56d9">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement verticalAlignment="Bottom">
+						<font fontName="Arial" size="11" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Date:"]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="344" y="101" width="170" height="18" uuid="08851938-cbcf-4f21-b044-cfa0f8a8cc65">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<box>
+						<pen lineWidth="0.5"/>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement>
+						<font fontName="Arial" size="11" isBold="true"/>
+					</textElement>
+				</textField>
+			</band>
+		</groupHeader>
+	</group>
+	<group name="Group2"/>
+	<background>
+		<band height="802" splitType="Stretch">
+			<image>
+				<reportElement x="247" y="183" width="270" height="450" uuid="2ddcdeb6-398e-46bd-bf23-f3a5b1173424"/>
+				<imageExpression><![CDATA[$P{backround_image}]]></imageExpression>
+			</image>
+		</band>
+	</background>
+	<title>
+		<band height="181" splitType="Stretch">
+			<image scaleImage="RetainShape">
+				<reportElement stretchType="ElementGroupHeight" x="180" y="0" width="160" height="160" uuid="5e634197-bb82-40ad-a65f-15b6ad9d496b"/>
+				<graphicElement fill="Solid"/>
+				<imageExpression><![CDATA[$P{logo}]]></imageExpression>
+			</image>
+		</band>
+	</title>
+	<pageFooter>
+		<band height="90" splitType="Stretch">
+			<staticText>
+				<reportElement x="47" y="40" width="117" height="15" forecolor="#404040" uuid="307aded6-832d-49f8-9338-b19f8381218e"/>
+				<box>
+					<topPen lineWidth="0.5" lineColor="#505050"/>
+					<leftPen lineWidth="0.5" lineColor="#505050"/>
+					<bottomPen lineWidth="0.5" lineColor="#505050"/>
+					<rightPen lineWidth="0.5" lineColor="#505050"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[Document Title]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="47" y="55" width="117" height="15" forecolor="#404040" uuid="ffcaf344-dfea-4b6b-9a96-dfb72e258a8e"/>
+				<box>
+					<topPen lineWidth="0.5" lineColor="#505050"/>
+					<leftPen lineWidth="0.5" lineColor="#505050"/>
+					<bottomPen lineWidth="0.5" lineColor="#505050"/>
+					<rightPen lineWidth="0.5" lineColor="#505050"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[Page Number]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="281" y="55" width="117" height="15" forecolor="#404040" uuid="1deb1c66-abf8-4642-9e09-86ffdf0d1cc0"/>
+				<box>
+					<topPen lineWidth="0.5" lineColor="#505050"/>
+					<leftPen lineWidth="0.5" lineColor="#505050"/>
+					<bottomPen lineWidth="0.5" lineColor="#505050"/>
+					<rightPen lineWidth="0.5" lineColor="#505050"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[Submission Date & Time]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="47" y="70" width="117" height="16" forecolor="#404040" uuid="ddfb3799-f081-4557-9765-d2f94c81528a"/>
+				<box>
+					<topPen lineWidth="0.5" lineColor="#505050"/>
+					<leftPen lineWidth="0.5" lineColor="#505050"/>
+					<bottomPen lineWidth="0.5" lineColor="#505050"/>
+					<rightPen lineWidth="0.5" lineColor="#505050"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[Document Number]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="281" y="70" width="117" height="16" forecolor="#404040" uuid="7c89df8d-30b1-49c3-b562-c6f1106b9bc8"/>
+				<box>
+					<topPen lineWidth="0.5" lineColor="#505050"/>
+					<leftPen lineWidth="0.5" lineColor="#505050"/>
+					<bottomPen lineWidth="0.5" lineColor="#505050"/>
+					<rightPen lineWidth="0.5" lineColor="#505050"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[Access]]></text>
+			</staticText>
+			<textField>
+				<reportElement mode="Opaque" x="164" y="55" width="117" height="15" forecolor="#404040" uuid="5ae9b104-d4ff-4c1c-abea-35c4d30936be"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Page " + $V{PAGE_NUMBER}+ " of  2"]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd MMMMM yyyy H:mm:ss">
+				<reportElement x="398" y="55" width="117" height="15" forecolor="#404040" uuid="d813ec36-8372-46c7-b44a-a638a0c9eac7"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement>
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="0" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="164" y="40" width="351" height="15" forecolor="#404040" uuid="a3f6d064-de84-4837-9e8d-4b39a70dff09"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle" markup="html">
+					<font fontName="Arial" size="9" isBold="true"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[<b>Learning Programme Termination Letter</b>]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="164" y="70" width="117" height="16" forecolor="#404040" uuid="9409d653-1778-4b3f-9d59-1754db72a936"/>
+				<box>
+					<topPen lineWidth="0.5" lineColor="#505050"/>
+					<leftPen lineWidth="0.5" lineColor="#505050"/>
+					<bottomPen lineWidth="0.5" lineColor="#505050"/>
+					<rightPen lineWidth="0.5" lineColor="#505050"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA["LPM-TP-003"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="398" y="70" width="117" height="16" forecolor="#404040" uuid="4981833e-b944-4c0f-9d1d-05b8531edaa2"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Controlled"]]></textFieldExpression>
+			</textField>
+			<frame>
+				<reportElement x="1" y="40" width="46" height="46" uuid="561f24b2-8db6-40cf-8c91-8be5875bb252"/>
+				<box>
+					<pen lineColor="#404040"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<componentElement>
+					<reportElement x="3" y="2" width="42" height="42" uuid="017a0d0b-5598-463e-9fb0-5cfa72439a0e"/>
+					<jr:QRCode xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
+						<jr:codeExpression><![CDATA[$F{guid}]]></jr:codeExpression>
+					</jr:QRCode>
+				</componentElement>
+			</frame>
+			<textField>
+				<reportElement x="60" y="7" width="400" height="33" uuid="f526c520-f04f-4380-b298-4e652c614543"/>
+				<textElement textAlignment="Center" markup="html">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA["8 Hillside Road, Metropolitan Park, Block C Parktown, 2193 "+"<br/>"+"Telephone No: 0861 637 738 Website: <u>www.merseta.org.za</u>"]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+</jasperReport>

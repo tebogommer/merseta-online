@@ -1,0 +1,71 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:f="http://java.sun.com/jsf/core" xmlns:h="http://java.sun.com/jsf/html" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui">
+
+
+	<h:form prependId="false">
+		<p:idleMonitor timeout="#{session.maxInactiveInterval * 1000 - 125000}">
+		 	 <p:ajax event="idle"  listener="#{logonUI.onIdle}" />
+			<p:ajax event="active" listener="#{logonUI.onActive}" />
+		</p:idleMonitor>
+
+		<p:dialog id="timeoutSession" header="Session about to expire" widgetVar="timeoutDialog" showEffect="fade" hideEffect="fade" modal="true" width="40%" appendTo="@(body)" closable="false" draggable="false" resizable="false" onHide="stopCount()" onShow="doTimer()">
+			<div class="ui-g">
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+						<p>
+							<i class="Fs20 fa fa-exclamation-triangle red" aria-hidden="true" style="float: left; margin: 8px 8px 0;" />
+							 <p:panel>
+               					<span class="Fs16 FontLight">Your are about to logged off in</span>
+               					<span id="dialog-countdown" class="Fs18" style="font-weight: bold;"></span>
+               					<span class="Fs16 FontLight">seconds</span>
+            				</p:panel>
+						</p>
+						<br />
+						<h2 style="font-weight: bold;">Move your cursor.....</h2>
+						<br />
+					</div>
+				</div>
+			</div>
+		</p:dialog>
+		<p:remoteCommand name="keepAlive" actionListener="#{logonUI.logoff}" />
+	</h:form>
+	<script type="text/javascript">
+      var TIME = 20; // in seconds
+      var countTimer = TIME;
+      var processTimer;
+      var timer_is_on = 0;
+      var redirectPage = "#{request.contextPath}/login.jsf";
+ 
+      var countDownDiv = "dialog-countdown";
+      var txtCountDown = null;
+      if (!txtCountDown)
+        txtCountDown = document.getElementById(countDownDiv);
+ 
+      function startIdleMonitor() {
+        countTimer = TIME;
+        txtCountDown.innerHTML = countTimer;
+        PF('timeoutDialog').show();
+      }
+      function timedCount() {
+        txtCountDown.innerHTML = countTimer;
+        if (countTimer == 0) {
+            stopCount();
+            window.location.href = redirectPage;
+            return;
+        }
+        countTimer = countTimer - 1;
+        processTimer = setTimeout("timedCount()", 1000);
+      }
+      function doTimer() {
+        if (!timer_is_on) {
+            timer_is_on = 1;
+            timedCount();
+        }
+      }
+      function stopCount() {
+        clearTimeout(processTimer);
+        timer_is_on = 0;
+        //keepAlive();
+      }
+      </script>
+
+</ui:composition>

@@ -1,0 +1,219 @@
+@page "/audit-logs"
+@using Microsoft.EntityFrameworkCore
+@using Nsdms.Application.Common
+@using Nsdms.Domain.Entities
+@inject INsdmsDbContextFactory DbFactory
+@inject ISnackbar Snackbar
+
+<PageTitle>Audit Trail Logs - MerSETA NSDMS</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4 mb-8">
+    <!-- Header Banner -->
+    <MudPaper Elevation="1" Class="pa-6 mb-6 rounded-lg" Style="border-left: 6px solid var(--mud-palette-primary);">
+        <div class="d-flex flex-wrap justify-space-between align-center gap-4">
+            <div>
+                <MudText Typo="Typo.h4" Class="font-weight-bold" Color="Color.Primary">
+                    <MudIcon Icon="@Icons.Material.Filled.History" Class="mr-2" Size="Size.Large" />
+                    System Audit Trail &amp; Governance
+                </MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-1">
+                    Immutable enterprise audit records tracking entity mutations, actor activity, timestamps, and before/after JSON snapshots.
+                </MudText>
+            </div>
+            <div class="d-flex gap-2">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadAuditLogsAsync">
+                    Refresh Logs
+                </MudButton>
+            </div>
+        </div>
+    </MudPaper>
+
+    <!-- Filter & Search Toolbar -->
+    <MudPaper Elevation="1" Class="pa-4 mb-4 rounded-lg">
+        <MudGrid Spacing="2" Class="align-center">
+            <MudItem xs="12" md="4">
+                <MudTextField @bind-Value="_searchQuery"
+                              Placeholder="Search by Entity, Action, Actor or Record ID..."
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              Immediate="true"
+                              DebounceInterval="300"
+                              OnDebounceIntervalElapsed="ApplyFilters"
+                              Clearable="true"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudSelect T="string" @bind-Value="_selectedEntity" Label="Filter Entity" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" SelectedValuesChanged="ApplyFilters">
+                    <MudSelectItem Value="@("")">All Entities</MudSelectItem>
+                    @foreach (var entity in _distinctEntities)
+                    {
+                        <MudSelectItem Value="@entity">@entity</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudSelect T="string" @bind-Value="_selectedAction" Label="Filter Action" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" SelectedValuesChanged="ApplyFilters">
+                    <MudSelectItem Value="@("")">All Actions</MudSelectItem>
+                    @foreach (var action in _distinctActions)
+                    {
+                        <MudSelectItem Value="@action">@action</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="2" Class="d-flex justify-end">
+                <MudChip T="string" Color="Color.Info" Variant="Variant.Text">
+                    Total Logs: @_filteredLogs.Count
+                </MudChip>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    <!-- Audit Logs DataTable -->
+    <MudPaper Elevation="1" Class="rounded-lg overflow-hidden">
+        <MudTable Items="@_filteredLogs" Hover="true" Striped="true" Dense="true" Loading="@_isLoading" LoadingProgressColor="Color.Primary" RowsPerPage="25">
+            <HeaderContent>
+                <MudTh>Timestamp (UTC)</MudTh>
+                <MudTh>Entity</MudTh>
+                <MudTh>Record ID</MudTh>
+                <MudTh>Action</MudTh>
+                <MudTh>Actor</MudTh>
+                <MudTh>Metadata Snapshot</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Timestamp">
+                    <MudText Typo="Typo.body2" Class="font-mono">
+                        @context.Timestamp.ToString("yyyy-MM-dd HH:mm:ss")
+                    </MudText>
+                </MudTd>
+                <MudTd DataLabel="Entity">
+                    <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">
+                        @context.EntityName
+                    </MudChip>
+                </MudTd>
+                <MudTd DataLabel="Record ID">
+                    <MudText Typo="Typo.body2" Class="font-weight-bold">
+                        #@context.RecordId
+                    </MudText>
+                </MudTd>
+                <MudTd DataLabel="Action">
+                    <MudChip T="string" Size="Size.Small" Color="@GetActionColor(context.ActionName)" Variant="Variant.Filled">
+                        @context.ActionName
+                    </MudChip>
+                </MudTd>
+                <MudTd DataLabel="Actor">
+                    <div class="d-flex align-center gap-1">
+                        <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Small" Color="Color.Secondary" />
+                        <MudText Typo="Typo.body2">@context.Actor</MudText>
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="Metadata">
+                    @if (!string.IsNullOrEmpty(context.MetadataJson))
+                    {
+                        <MudTooltip Text="@context.MetadataJson">
+                            <MudText Typo="Typo.caption" Class="font-mono" Style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block;">
+                                @context.MetadataJson
+                            </MudText>
+                        </MudTooltip>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">No metadata</MudText>
+                    }
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
+            </PagerContent>
+            <NoRecordsContent>
+                <div class="pa-8 text-center">
+                    <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" Color="Color.Secondary" Class="mb-2" />
+                    <MudText Typo="Typo.h6" Color="Color.Secondary">No audit log records found matching your filters</MudText>
+                </div>
+            </NoRecordsContent>
+        </MudTable>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private List<AuditLog> _logs = new();
+    private List<AuditLog> _filteredLogs = new();
+    private List<string> _distinctEntities = new();
+    private List<string> _distinctActions = new();
+    private string _searchQuery = string.Empty;
+    private string? _selectedEntity;
+    private string? _selectedAction;
+    private bool _isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAuditLogsAsync();
+    }
+
+    private async Task LoadAuditLogsAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            await using var db = await DbFactory.CreateDbContextAsync();
+            _logs = await db.AuditLogs
+                .OrderByDescending(a => a.Timestamp)
+                .Take(500)
+                .ToListAsync();
+
+            _distinctEntities = _logs.Select(l => l.EntityName).Where(e => !string.IsNullOrEmpty(e)).Distinct().OrderBy(e => e).ToList();
+            _distinctActions = _logs.Select(l => l.ActionName).Where(a => !string.IsNullOrEmpty(a)).Distinct().OrderBy(a => a).ToList();
+
+            ApplyFilters();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading audit trail: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void ApplyFilters()
+    {
+        var query = _logs.AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(_searchQuery))
+        {
+            var q = _searchQuery.Trim().ToLowerInvariant();
+            query = query.Where(l =>
+                (l.EntityName?.ToLowerInvariant().Contains(q) ?? false) ||
+                (l.ActionName?.ToLowerInvariant().Contains(q) ?? false) ||
+                (l.Actor?.ToLowerInvariant().Contains(q) ?? false) ||
+                (l.MetadataJson?.ToLowerInvariant().Contains(q) ?? false) ||
+                l.RecordId.ToString().Contains(q));
+        }
+
+        if (!string.IsNullOrWhiteSpace(_selectedEntity))
+        {
+            query = query.Where(l => l.EntityName == _selectedEntity);
+        }
+
+        if (!string.IsNullOrWhiteSpace(_selectedAction))
+        {
+            query = query.Where(l => l.ActionName == _selectedAction);
+        }
+
+        _filteredLogs = query.ToList();
+    }
+
+    private Color GetActionColor(string action)
+    {
+        return action?.ToLowerInvariant() switch
+        {
+            "create" or "created" or "inserted" => Color.Success,
+            "update" or "updated" or "modified" or "statuschanged" => Color.Info,
+            "delete" or "deleted" or "removed" => Color.Error,
+            "disbursed" or "approved" => Color.Primary,
+            "rejected" or "cancelled" => Color.Warning,
+            _ => Color.Secondary
+        };
+    }
+}

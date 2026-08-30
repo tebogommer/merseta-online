@@ -1,0 +1,164 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>OFO Codes</h1>
+					<h:form id="ofocodesInsForm">
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:panelGrid columns="2" style="width:50%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<p:outputLabel value="Specialisations" for="spez" />
+							<p:selectBooleanCheckbox id="spez" value="#{ofocodesUI.specialization}" style="width:95%">
+								<p:ajax update="@form"></p:ajax>
+							</p:selectBooleanCheckbox>
+						</p:panelGrid>
+						
+						<p:panelGrid columns="1" style="width:100%" id="ofocodesInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							
+							
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="description" value="#{ofocodesUI.ofocodes.description}" style="width:95%" />
+								<p:outputLabel value="#{lang['description']}" for="description" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield" rendered="#{not ofocodesUI.specialization}">
+								<p:inputText id="ofoCode" value="#{ofocodesUI.ofocodes.ofoCode}" style="width:95%" />
+								<p:outputLabel value="#{lang['ofo.code']}" for="ofoCode" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield" rendered="false">
+								<p:inputText id="minorGroup" value="#{ofocodesUI.ofocodes.minorGroup}" style="width:95%" />
+								<p:outputLabel value="#{lang['minor.group']}" for="minorGroup" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield" rendered="#{not ofocodesUI.specialization}">
+								<p:inputText id="fm" value="#{ofocodesUI.ofocodes.fm}" style="width:95%" />
+								<p:outputLabel value="Specialisations" for="fm" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield" rendered="false">
+								<p:inputText id="majorGroup" value="#{ofocodesUI.ofocodes.majorGroup}" style="width:95%" />
+								<p:outputLabel value="#{lang['major.group']}" for="majorGroup" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield" rendered="false">
+								<p:inputText id="subMajorGroup" value="#{ofocodesUI.ofocodes.subMajorGroup}" style="width:95%" />
+								<p:outputLabel value="#{lang['sub.major.group']}" for="subMajorGroup" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield" rendered="false">
+								<p:inputText id="unitGroup" value="#{ofocodesUI.ofocodes.unitGroup}" style="width:95%" />
+								<p:outputLabel value="#{lang['unit.group']}" for="unitGroup" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:autoComplete id="aofoCode" value="#{ofocodesUI.ofocodes.ofoCodes}" completeMethod="#{autoCompleteUI.completeOfoCodesNoSpes}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="OfoCodesConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+									<p:column headerText="OfoCodes" style="white-space: nowrap">
+										<p:outputLabel value="#{rv.ofoCodes.ofoCode}" rendered="#{rv.ofoCode eq null}"></p:outputLabel>
+										<p:outputLabel value="#{rv.ofoCode}" rendered="#{rv.ofoCode ne null}"></p:outputLabel>
+									</p:column>
+									<p:column headerText="Description" style="white-space: nowrap">#{rv.description}</p:column>
+								</p:autoComplete>
+								<p:outputLabel value="#{lang['ofo.code']}" for="aofoCode" />
+							</h:panelGroup>
+
+							<h:panelGroup>
+								<p:outputLabel value="Trade:" for="activeCheck" />
+								<p:spacer width="10"></p:spacer>
+								<p:selectBooleanCheckbox id="activeCheck" value="#{ofocodesUI.ofocodes.trade}">
+									<p:ajax update="tradeTypeoutput"></p:ajax>
+								</p:selectBooleanCheckbox>
+							</h:panelGroup>
+							<p:outputPanel id="tradeTypeoutput">
+								<h:panelGroup rendered="#{ofocodesUI.ofocodes.trade}">
+									<div>
+										<p:outputLabel value="Trade Type" for="tradeType" />
+									</div>
+									<div>
+										<p:selectOneMenu id="tradeType" value="#{ofocodesUI.ofocodes.tradeTypeEnum}" style="width:75%">
+											<p:ajax />
+											<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+											<f:selectItems value="#{enumUI.tradeTypeEnumDD}" />
+										</p:selectOneMenu>
+									</div>
+								</h:panelGroup>
+							</p:outputPanel>
+							
+							<h:panelGroup>
+								<p:outputLabel value="Active:" for="act" />
+								<p:spacer width="10"></p:spacer>
+								<p:selectBooleanCheckbox id="act" value="#{ofocodesUI.ofocodes.active}" style="width:95%">
+								</p:selectBooleanCheckbox>
+							</h:panelGroup>
+
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:ofocodesList :ofocodesInsForm:ofocodesInsGrid" action="#{ofocodesUI.ofocodesInsert}" />
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="ofocodesInsGrid" process="@this" action="#{ofocodesUI.prepareNew}">
+									<p:resetInput target="ofocodesInsGrid" />
+								</p:commandButton>
+							</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+
+						<ui:include src="/pages/includes/download_lazy.xhtml">
+							<ui:param name="file_name" value="OFO_Codes" />
+							<ui:param name="target" value="ofocodesList" />
+						</ui:include>
+
+						<p:dataTable var="rowVar" value="#{ofocodesUI.dataModel}" filteredValue="#{ofocodesUI.ofoCodesfilteredList}" id="ofocodesList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['description']}" filterBy="#{rowVar.description}">
+								<h:outputText value="#{rowVar.description}" />
+							</p:column>
+
+							<p:column headerText="#{lang['ofo.codes']}" filterBy="#{rowVar.ofoCode}" sortBy="#{rowVar.ofoCode}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.ofoCodeParent}" />
+							</p:column>
+
+							<p:column headerText="Specialisation Codes" filterBy="#{rowVar.specialisationCode}" sortBy="#{rowVar.specialisationCode}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.specialisationCode}" />
+							</p:column>
+
+							<p:column headerText="Trade" sortBy="#{rowVar.trade}">
+								<p:selectBooleanCheckbox disabled="true" value="#{rowVar.trade}"></p:selectBooleanCheckbox>
+							</p:column>
+							
+							<p:column headerText="Active" sortBy="#{rowVar.active}">
+								<p:selectBooleanCheckbox disabled="true" value="#{rowVar.active}"></p:selectBooleanCheckbox>
+							</p:column>
+
+							<p:column width="80" exportable="false">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":ofocodesInsForm:ofocodesInsGrid">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{ofocodesUI.ofocodes}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:ofocodesList" action="#{ofocodesUI.ofocodesDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{ofocodesUI.ofocodes}" />
+								</p:commandButton>
+							</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+
+</ui:composition>

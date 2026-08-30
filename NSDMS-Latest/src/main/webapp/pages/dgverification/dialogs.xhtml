@@ -1,0 +1,448 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<p:dialog header="Workplace Approval: Subject Matter Expert (SME) Information" width="95%" widgetVar="dlgSiteInfo" resizable="false" hideEffect="clip" showEffect="clip" id="dialogSiteInfo" appendTo="@(body)" modal="true" closeOnEscape="true">
+		<h:form id="siteInfoForm">
+			<p:panelGrid columns="2" style="width:100%" id="s" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{not discretionarygrantverificationUI.disableAll}">
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText style="width:95%; opacity:1 !important;" value="#{discretionarygrantverificationUI.dgVerificationSites.learnershipRegistrationNumber}" />
+					<p:outputLabel value="Learnership Registration Number" />
+				</h:panelGroup>
+				<h:panelGroup>
+					<div>
+						<p:outputLabel value="Discretionary Grant Application Intervention" for="proc" styleClass="gray" />
+					</div>
+					<div>
+						<p:selectOneMenu id="proc" value="#{discretionarygrantverificationUI.dgVerificationSites.mandatoryGrant}" converter="MandatoryGrantConvertor" style="width:75%" required="true" requiredMessage="Select Discretionary Grant Data">
+							<p:ajax />
+							<f:selectItem itemLabel="---#{lang['select.one']}---" itemValue="" noSelectionOption="true" />
+							<f:selectItems value="#{discretionarygrantverificationUI.mandatoryGrants}" var="rv" itemLabel="#{rv.qualification.description}" itemValue="#{rv}" />
+						</p:selectOneMenu>
+					</div>
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText style="width:95%; opacity:1 !important;" value="#{discretionarygrantverificationUI.dgVerificationSites.firstName}" />
+					<p:outputLabel value="First Name" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText style="width:95%; opacity:1 !important;" value="#{discretionarygrantverificationUI.dgVerificationSites.lastName}" />
+					<p:outputLabel value="Last Name" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText style="width:95%; opacity:1 !important;" value="#{discretionarygrantverificationUI.dgVerificationSites.identityNumber}" />
+					<p:outputLabel value="Identity Number" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText style="width:95%; opacity:1 !important;" value="#{discretionarygrantverificationUI.dgVerificationSites.numberOfArtisans}" />
+					<p:outputLabel value="Number of Artisans/SME Within Specified Trade/Learning Area" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText style="width:95%; opacity:1 !important;" value="#{discretionarygrantverificationUI.dgVerificationSites.numberOfLearners}" />
+					<p:outputLabel value="Number of Learners in System against Specified Trade/Learning Area" />
+				</h:panelGroup>
+			</p:panelGrid>
+			<p:panelGrid columns="1" style="width:100%" id="sa" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{not discretionarygrantverificationUI.disableAll}">
+				<p:commandButton id="updateDGVerification" value="#{lang['submit']}" process="@form" action="#{discretionarygrantverificationUI.saveVerificationSite}" update="@form" styleClass="Fs18 flat" style="height: 50px" />
+			</p:panelGrid>
+			<p:dataTable var="rowVar1" value="#{discretionarygrantverificationUI.dgVerificationSitesList}" rowKey="#{rowVar1.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+				<f:facet name="header">#{discretionarygrantverificationUI.site.companyName} Training Data</f:facet>
+				<p:column headerText="Learnership Registration Number">
+						#{rowVar1.learnershipRegistrationNumber}
+					</p:column>
+				<p:column headerText="NQF Level">
+						#{rowVar1.mandatoryGrant.qualification.nqflevel.description}
+					</p:column>
+				<p:column headerText="OFO Code">
+						#{rowVar1.mandatoryGrant.ofoCodes.description}
+					</p:column>
+				<p:column headerText="Trade/Programme/Qualification (Specialisation) Title">
+						#{rowVar1.mandatoryGrant.qualification.description}
+					</p:column>
+				<p:column headerText="SME First Name">
+						#{rowVar1.firstName}
+					</p:column>
+				<p:column headerText="SME Last Name">
+						#{rowVar1.lastName}
+					</p:column>
+				<p:column headerText="SME Identity Number">
+						#{rowVar1.identityNumber}
+					</p:column>
+				<p:column headerText="Trade/Qualification">
+						#{rowVar1.mandatoryGrant.qualification.description}
+					</p:column>
+				<p:column headerText="Number of Artisans/SME Within Specified Trade/Learning Area">
+						#{rowVar1.numberOfArtisans}
+					</p:column>
+				<p:column headerText="Number of Learners in System against Specified Trade/Learning Area">
+						#{rowVar1.numberOfLearners}
+					</p:column>
+			</p:dataTable>
+		</h:form>
+	</p:dialog>
+	<p:dialog header="Recommendations" position="top" widgetVar="dlgRecommend" resizable="false" hideEffect="clip" showEffect="clip" id="recommendDLG" width="80%" responsive="true" modal="true" dynamic="true" closeOnEscape="true">
+		<h:form id="recommendForm">
+			<ui:include src="/pages/includes/tabinfo.xhtml">
+				<ui:param name="showInfoCircle" value="true" />
+				<ui:param name="cssClass" value="secondaryText Fs15" />
+				<ui:param name="helpTxt" value="#{lang['The.system.will.auto-fill.based.selections']}" />
+			</ui:include>
+			<p:panelGrid columns="1" style="width:100%" id="s" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<p:fieldset legend="Original #{lang['discretionary.data']}">
+					<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText style="width:95%; opacity:1 !important;" value="#{discretionarygrantverificationUI.mandatoryGrant.interventionType.description}" disabled="true" />
+							<p:outputLabel value="#{lang['intervention.type']}" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText style="width:95%; opacity:1 !important;" value="#{discretionarygrantverificationUI.mandatoryGrant.amount}" disabled="true" />
+							<p:outputLabel value="#{lang['number.of.learners']}" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText style="width:95%; opacity:1 !important;" value="#{discretionarygrantverificationUI.mandatoryGrant.nqfAligned.yesNoName}" disabled="true" />
+							<p:outputLabel value="#{lang['nqf.aligned']}" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield" rendered="#{discretionarygrantverificationUI.mandatoryGrant.qualification ne null}">
+							<p:inputText style="width:95%; opacity:1 !important;" value="#{discretionarygrantverificationUI.mandatoryGrant.qualification.code}" disabled="true" />
+							<p:outputLabel value="#{lang['saqa.id']}" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield" rendered="#{discretionarygrantverificationUI.mandatoryGrant.unitStandard ne null}">
+							<p:inputText style="width:95%; opacity:1 !important;" value="#{discretionarygrantverificationUI.mandatoryGrant.unitStandard.code}" disabled="true" />
+							<p:outputLabel value="#{lang['unit.standard']} Code" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield" rendered="#{discretionarygrantverificationUI.mandatoryGrant.skillsSet ne null}">
+							<p:inputText style="width:95%; opacity:1 !important;" value="#{discretionarygrantverificationUI.mandatoryGrant.skillsSet.code}" disabled="true" />
+							<p:outputLabel value="#{lang['skills.program']}" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield" rendered="#{discretionarygrantverificationUI.mandatoryGrant.skillsProgram ne null}">
+							<p:inputText style="width:95%; opacity:1 !important;" value="#{discretionarygrantverificationUI.mandatoryGrant.skillsProgram.programmeID}" disabled="true" />
+							<p:outputLabel value="#{lang['skills.set']}" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield" rendered="#{discretionarygrantverificationUI.mandatoryGrant.nonCreditBearingIntervationTitle ne null}">
+							<p:inputText style="width:95%; opacity:1 !important;" value="#{discretionarygrantverificationUI.mandatoryGrant.nonCreditBearingIntervationTitle.code}" disabled="true" />
+							<p:outputLabel value="Non-Credit Bearing Intervation Title" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText style="width:95%; opacity:1 !important;" disabled="true" decimalPlaces="0" value="#{discretionarygrantverificationUI.mandatoryGrant.qualification.description}" rendered="#{discretionarygrantverificationUI.mandatoryGrant.qualification ne null}" />
+							<p:inputText style="width:95%; opacity:1 !important;" disabled="true" decimalPlaces="0" value="#{discretionarygrantverificationUI.mandatoryGrant.unitStandard.title}" rendered="#{discretionarygrantverificationUI.mandatoryGrant.unitStandard ne null}" />
+							<p:inputText style="width:95%; opacity:1 !important;" disabled="true" decimalPlaces="0" value="#{discretionarygrantverificationUI.mandatoryGrant.skillsProgram.description}" rendered="#{discretionarygrantverificationUI.mandatoryGrant.skillsProgram ne null}" />
+							<p:inputText style="width:95%; opacity:1 !important;" disabled="true" decimalPlaces="0" value="#{discretionarygrantverificationUI.mandatoryGrant.skillsSet.description}" rendered="#{discretionarygrantverificationUI.mandatoryGrant.skillsSet ne null}" />
+							<p:inputText style="width:95%; opacity:1 !important;" disabled="true" decimalPlaces="0" value="#{discretionarygrantverificationUI.mandatoryGrant.nonCreditBearingIntervationTitle.description}" rendered="#{discretionarygrantverificationUI.mandatoryGrant.nonCreditBearingIntervationTitle ne null}" />
+							<p:outputLabel value="#{lang['intervention.title']}" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText style="width:95%; opacity:1 !important;" minValue="0" value="#{discretionarygrantverificationUI.mandatoryGrant.nqfLevels.description}" decimalPlaces="0" disabled="true" />
+							<p:outputLabel value=" #{lang['nqf.level']}" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText style="width:95%; opacity:1 !important;" value="#{discretionarygrantverificationUI.mandatoryGrant.interventionLevel.description}" decimalPlaces="0" disabled="true" />
+							<p:outputLabel value="#{lang['level.of.training']}" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield" rendered="#{discretionarygrantverificationUI.mandatoryGrant.etqa ne null}">
+							<p:inputText style="width:95%; opacity:1 !important;" minValue="0" value="#{discretionarygrantverificationUI.mandatoryGrant.etqa.description}" decimalPlaces="0" disabled="true" />
+							<p:outputLabel value="#{lang['etqa']}" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText style="width:95%; opacity:1 !important;" value="#{discretionarygrantverificationUI.mandatoryGrant.providerType.description}" decimalPlaces="0" disabled="true" />
+							<p:outputLabel value="#{lang['provider.type']}" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputNumber inputStyle="width:95%; opacity:1 !important;" minValue="0" value="#{discretionarygrantverificationUI.mandatoryGrant.interventionType.basicGrantAmount*discretionarygrantverificationUI.mandatoryGrant.amount}" decimalPlaces="2" disabled="true" symbol="R" />
+							<p:outputLabel value=" #{lang['estimated.cost']}" />
+						</h:panelGroup>
+					</p:panelGrid>
+				</p:fieldset>
+			</p:panelGrid>
+			<p:panelGrid columns="2" style="width:100%" id="sawas" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{not discretionarygrantverificationUI.disableAll}">
+				<h:panelGroup style="width:100%" id="interventionTypeSelectionId" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{not discretionarygrantverificationUI.disableAll}">
+					<div>
+						<p:outputLabel value="Intervention Type" for="proc2" styleClass="gray" />
+					</div>
+					<div>
+						<p:selectOneMenu id="proc2" value="#{discretionarygrantverificationUI.mandatoryGrantRecommendation.interventionType}" style="width:100%" required="false" var="v" requiredMessage="Please select an intervention type" converter="InterventionTypeConvertor">
+							<p:ajax event="itemSelect" listener="#{discretionarygrantverificationUI.applyInterventionDataSelection}" update="interventionTypeSelectionPanel" />
+							<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+							<f:selectItems value="#{discretionarygrantverificationUI.interventionType}" var="rv" itemLabel="#{rv.description}" />
+							<p:column>
+								<h:outputText value="#{v.description}" />
+							</p:column>
+						</p:selectOneMenu>
+					</div>
+				</h:panelGroup>
+				<h:panelGroup style="width:100%" id="reasonForChangeId" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{not discretionarygrantverificationUI.disableAll}">
+					<div>
+						<p:outputLabel value="Reason for Change" for="proc" styleClass="gray" />
+					</div>
+					<div>
+						<p:selectOneMenu id="proc" value="#{discretionarygrantverificationUI.mandatoryGrantRecommendation.rejectReasons}" style="width:100%" required="false" var="t" requiredMessage="Please select a reason" converter="RejectReasonsConvertor">
+							<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+							<f:selectItems value="#{discretionarygrantverificationUI.rejectReasonsCLO}" var="rv" itemLabel="#{rv.description}" />
+							<p:column>
+								<h:outputText value="#{t.description}" />
+								<br />
+								<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+							</p:column>
+						</p:selectOneMenu>
+					</div>
+				</h:panelGroup>
+				<p:outputPanel id="interventionTypeSelectionPanel">
+					<h:panelGroup styleClass="md-inputfield" rendered="#{discretionarygrantverificationUI.mandatoryGrantRecommendation.interventionType ne null and not discretionarygrantverificationUI.skillsSet and not discretionarygrantverificationUI.skillsProgram and not discretionarygrantverificationUI.shortCreditBearing and not discretionarygrantverificationUI.nonCreditBearing}">
+						<p:autoComplete required="true" style="width: 100%" id="qualificationAuto" value="#{discretionarygrantverificationUI.mandatoryGrantRecommendation.qualification}" completeMethod="#{autoCompleteUI.completeQualification}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+							<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+							<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+						</p:autoComplete>
+						<p:outputLabel value="#{lang['saqa.id']}" for="qualificationAuto" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield" rendered="#{discretionarygrantverificationUI.mandatoryGrantRecommendation.interventionType ne null and discretionarygrantverificationUI.shortCreditBearing}">
+						<p:autoComplete required="true" id="unitStandard" value="#{discretionarygrantverificationUI.mandatoryGrantRecommendation.unitStandards}" completeMethod="#{autoCompleteUI.completeUnitStandards}" var="rv" itemLabel="#{rv.title}" itemValue="#{rv}" forceSelection="true" converter="UnitStandardsConvertor" dropdown="true" minQueryLength="3" maxResults="10"
+							inputStyle="width: 95%; opacity:1 !important;" style="width: 100%">
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+							<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.title}</p:column>
+						</p:autoComplete>
+						<p:outputLabel value="#{lang['unit.standard']}" for="unitStandard" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield" rendered="#{discretionarygrantverificationUI.mandatoryGrantRecommendation.interventionType ne null and discretionarygrantverificationUI.skillsProgram}">
+						<p:autoComplete required="true" id="skillsProgram" value="#{discretionarygrantverificationUI.mandatoryGrantRecommendation.skillsProgram}" completeMethod="#{autoCompleteUI.completeSkillsProgram}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SkillsProgramConvertor" dropdown="true" minQueryLength="3" maxResults="10"
+							inputStyle="width: 95%; opacity:1 !important;" style="width: 100%">
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+							<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+						</p:autoComplete>
+						<p:outputLabel value="#{lang['skills.program']}" for="skillsProgram" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield" rendered="#{discretionarygrantverificationUI.mandatoryGrantRecommendation.interventionType ne null and discretionarygrantverificationUI.skillsSet}">
+						<p:autoComplete required="true" id="skillsSet" value="#{discretionarygrantverificationUI.mandatoryGrantRecommendation.skillsSet}" completeMethod="#{autoCompleteUI.completeSkillsSet}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SkillsSetConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;"
+							style="width: 100%">
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+							<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+						</p:autoComplete>
+						<p:outputLabel value="#{lang['skills.set']}" for="skillsSet" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield" rendered="#{discretionarygrantverificationUI.mandatoryGrantRecommendation.interventionType ne null and discretionarygrantverificationUI.nonCreditBearing}">
+						<p:autoComplete required="true" id="ncbit" value="#{discretionarygrantverificationUI.mandatoryGrantRecommendation.nonCreditBearingIntervationTitle}" completeMethod="#{autoCompleteUI.completeNonCreditBearingIntervationTitle}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="NonCreditBearingIntervationTitleConvertor" dropdown="true" minQueryLength="1"
+							maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 100%">
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+							<p:column headerText="Description" style="white-space: nowrap">#{rv.description}</p:column>
+						</p:autoComplete>
+						<p:outputLabel value="Non-Credit Bearing Intervation Title" for="ncbit" />
+					</h:panelGroup>
+				</p:outputPanel>
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputNumber value="#{discretionarygrantverificationUI.mandatoryGrantRecommendation.quantity}" maxValue="#{discretionarygrantverificationUI.mandatoryGrant.amount}" minValue="0" decimalPlaces="0" inputStyle="width:100%"></p:inputNumber>
+					<p:outputLabel value="#{lang['number.of.learners']}" />
+				</h:panelGroup>
+			</p:panelGrid>
+			<p:panelGrid columns="2" style="width:100%" id="sa" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{not discretionarygrantverificationUI.disableAll}">
+				<p:commandButton value="#{lang['submit']}" process="@form" action="#{discretionarygrantverificationUI.saveRecommendation}" update="@form discgrantTableForm:tabView:employeesimportList" styleClass="Fs18 flat" style="height: 50px" />
+				<p:commandButton rendered="false" value="Recommend Company Request" process="@this" action="#{discretionarygrantverificationUI.useGrantDataForRecommendation}" update="@form discgrantTableForm:tabView:employeesimportList" styleClass="Fs18 flat" style="height: 50px" oncomplete="PF('dlgRecommend').hide()" />
+			</p:panelGrid>
+		</h:form>
+	</p:dialog>
+	<p:dialog header="Workplace Approval" widgetVar="dlgApproval" resizable="false" hideEffect="clip" showEffect="clip" id="approvalDLG" width="80%" height="90vh" responsive="true" modal="true" dynamic="true" closeOnEscape="true">
+		<ui:include src="/pages/includes/tabinfo.xhtml">
+			<ui:param name="showInfoCircle" value="true" />
+			<ui:param name="cssClass" value="secondaryText Fs15" />
+			<ui:param name="helpTxt" value="#{lang['The.system.will.auto-fill.based.selections']}" />
+		</ui:include>
+		<h:form id="approvalForm">
+			<p:panel>
+				<p:panelGrid columns="2" style="width:100%" id="workApproval" layout="grid" styleClass="ui-panelgrid-blank">
+					<h:panelGroup style="width:100%">
+						<p:outputLabel value="New Application?" for="plannedTrainingInlineEEP" />
+						<div class="EmptyBox10" />
+						<p:selectOneRadio value="#{discretionarygrantverificationUI.workPlaceApproval.newApplication}" required="true" id="plannedTrainingInlineEEP" converter="YesNoLookupConvertor" columns="2" layout="grid" disabled="#{discretionarygrantverificationUI.disableAll}">
+							<p:ajax />
+							<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+						</p:selectOneRadio>
+					</h:panelGroup>
+					<h:panelGroup style="width:100%">
+						<p:outputLabel value="Extension of scope/range?" for="extRange" />
+						<div class="EmptyBox10" />
+						<p:selectOneRadio value="#{discretionarygrantverificationUI.workPlaceApproval.extensionOfScope}" required="true" id="extRange" converter="YesNoLookupConvertor" columns="2" layout="grid" disabled="#{discretionarygrantverificationUI.disableAll}">
+							<p:ajax />
+							<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+						</p:selectOneRadio>
+					</h:panelGroup>
+				</p:panelGrid>
+				<p:panelGrid columns="2" style="width:100%" id="workApproval2" layout="grid" styleClass="ui-panelgrid-blank">
+					<h:panelGroup style="width:100%">
+						<p:outputLabel value="Previously approved as a workplace for artisan Training?" for="previousApproved" />
+						<div class="EmptyBox10" />
+						<p:selectOneRadio value="#{discretionarygrantverificationUI.workPlaceApproval.previouslyApproved}" required="true" id="previousApproved" converter="YesNoLookupConvertor" columns="2" layout="grid" disabled="#{discretionarygrantverificationUI.disableAll}">
+							<p:ajax />
+							<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+						</p:selectOneRadio>
+					</h:panelGroup>
+					<h:panelGroup style="width:100%">
+						<p:outputLabel value="Approval by which SETA(s)" for="whichSeta" />
+						<div class="EmptyBox10" />
+						<p:selectOneMenu id="whichSeta" value="#{discretionarygrantverificationUI.workPlaceApproval.approvedBySeta}" converter="EtqaConvertor" style="width:75%" requiredMessage="Select ETQA" required="true" disabled="#{discretionarygrantverificationUI.disableAll}">
+							<p:ajax></p:ajax>
+							<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+							<f:selectItems value="#{selectItemsUI.selectItemsEtqa}" var="il" itemLabel="#{il.description}" />
+						</p:selectOneMenu>
+					</h:panelGroup>
+				</p:panelGrid>
+			</p:panel>
+			<br />
+			<br />
+			<p:dataTable var="rowVar2" value="#{discretionarygrantverificationUI.sites}" rowKey="#{rowVar2.id}" paginator="true" rows="5" paginatorPosition="bottom" rendered="#{discretionarygrantverificationUI.sites ne null and discretionarygrantverificationUI.sites.size() gt 0}"
+				paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+				<f:facet name="header">
+					<div style="text-align: left">Sites Linked to Employer</div>
+				</f:facet>
+				<p:column headerText="Site Name">
+					<p:outputLabel value="#{rowVar2.companyName}" />
+				</p:column>
+				<p:column headerText="Address">
+					<p:outputLabel value="#{rowVar2.registeredAddress.addressLine1}" />
+					<br />
+					<p:outputLabel value="#{rowVar2.registeredAddress.addressLine2}" />
+					<br />
+					<p:outputLabel value="#{rowVar2.registeredAddress.addressLine3}" />
+					<br />
+					<p:outputLabel value="#{rowVar2.registeredAddress.town.description}" />
+					<br />
+				</p:column>
+				<p:column width="40">
+					<p:commandButton icon="fa fa-search" title="#{lang['view.discretionary.grant.data']}" update="siteInfoForm" action="#{discretionarygrantverificationUI.prepVerificationSite}" oncomplete="PF('dlgSiteInfo').show()" process="@this">
+						<f:setPropertyActionListener value="#{rowVar2}" target="#{discretionarygrantverificationUI.site}" />
+					</p:commandButton>
+				</p:column>
+			</p:dataTable>
+			<br />
+			<br />
+			<p:panel>
+				<f:facet name="header">Workplace Suitability</f:facet>
+				<h2>Equipment and tools</h2>
+				<p:panelGrid columns="2" style="width:100%" id="WorkplaceSuitability" layout="grid" styleClass="ui-panelgrid-blank">
+					<h:panelGroup style="width:100%">
+						<p:outputLabel value="As per relevant skills area" for="a" />
+						<div class="EmptyBox10" />
+						<p:selectOneRadio value="#{discretionarygrantverificationUI.workPlaceApproval.asPerSkillsArea}" required="true" id="a" converter="YesNoLookupConvertor" columns="2" layout="grid" disabled="#{discretionarygrantverificationUI.disableAll}">
+							<p:ajax />
+							<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+						</p:selectOneRadio>
+					</h:panelGroup>
+					<h:panelGroup style="width:100%">
+						<p:outputLabel value="Relevant for learner ratio" for="b" />
+						<div class="EmptyBox10" />
+						<p:selectOneRadio value="#{discretionarygrantverificationUI.workPlaceApproval.relevantLearnerRatio}" required="true" id="b" converter="YesNoLookupConvertor" columns="2" layout="grid" disabled="#{discretionarygrantverificationUI.disableAll}">
+							<p:ajax />
+							<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+						</p:selectOneRadio>
+					</h:panelGroup>
+					<h:panelGroup style="width:100%">
+						<p:outputLabel value="Relevant to core work" for="c" />
+						<div class="EmptyBox10" />
+						<p:selectOneRadio value="#{discretionarygrantverificationUI.workPlaceApproval.relevantCoreWork}" required="true" id="c" converter="YesNoLookupConvertor" columns="2" layout="grid" disabled="#{discretionarygrantverificationUI.disableAll}">
+							<p:ajax />
+							<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+						</p:selectOneRadio>
+					</h:panelGroup>
+					<h:panelGroup style="width:100%">
+						<p:outputLabel value="Access to material and consumables applicable to the structured workplace learning in the trade/s workplace is applied for" for="d" />
+						<div class="EmptyBox10" />
+						<p:selectOneRadio value="#{discretionarygrantverificationUI.workPlaceApproval.accessMaterialConsumable}" required="true" id="d" converter="YesNoLookupConvertor" columns="2" layout="grid" disabled="#{discretionarygrantverificationUI.disableAll}">
+							<p:ajax />
+							<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+						</p:selectOneRadio>
+					</h:panelGroup>
+					<h:panelGroup style="width:100%">
+						<p:outputLabel value="Ability to cover the entire scope and duration of the workplace component." for="e" />
+						<div class="EmptyBox10" />
+						<p:selectOneRadio value="#{discretionarygrantverificationUI.workPlaceApproval.accessCover}" required="true" id="e" converter="YesNoLookupConvertor" columns="2" layout="grid" disabled="#{discretionarygrantverificationUI.disableAll}">
+							<p:ajax />
+							<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+						</p:selectOneRadio>
+					</h:panelGroup>
+				</p:panelGrid>
+				<h2>Record keeping and Mentoring</h2>
+				<p:panelGrid columns="2" style="width:100%" id="WorkplaceSuitability2" layout="grid" styleClass="ui-panelgrid-blank">
+					<h:panelGroup style="width:100%">
+						<p:outputLabel value="Effective Record keeping in place" for="f" />
+						<div class="EmptyBox10" />
+						<p:selectOneRadio value="#{discretionarygrantverificationUI.workPlaceApproval.effectiveRecord}" required="true" id="f" converter="YesNoLookupConvertor" columns="2" layout="grid" disabled="#{discretionarygrantverificationUI.disableAll}">
+							<p:ajax />
+							<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+						</p:selectOneRadio>
+					</h:panelGroup>
+					<h:panelGroup style="width:100%">
+						<p:outputLabel value="Suitable qualified mentors for the trade/s workplace approval is applied for  " for="g" />
+						<div class="EmptyBox10" />
+						<p:selectOneRadio value="#{discretionarygrantverificationUI.workPlaceApproval.suitableQualifiedMentor}" required="true" id="g" converter="YesNoLookupConvertor" columns="2" layout="grid" disabled="#{discretionarygrantverificationUI.disableAll}">
+							<p:ajax />
+							<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+						</p:selectOneRadio>
+					</h:panelGroup>
+				</p:panelGrid>
+				<h2>Safety</h2>
+				<p:panelGrid columns="2" style="width:100%" id="WorkplaceSuitability3" layout="grid" styleClass="ui-panelgrid-blank">
+					<h:panelGroup style="width:100%">
+						<p:outputLabel value="Workplace layout and working environment is safe and conducive to effective workplace learning" for="h" />
+						<div class="EmptyBox10" />
+						<p:selectOneRadio value="#{discretionarygrantverificationUI.workPlaceApproval.workplaceLayout}" required="true" id="h" converter="YesNoLookupConvertor" columns="2" layout="grid" disabled="#{discretionarygrantverificationUI.disableAll}">
+							<p:ajax />
+							<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+						</p:selectOneRadio>
+					</h:panelGroup>
+					<h:panelGroup style="width:100%">
+						<p:outputLabel value="Health and Safety Officer" for="i" />
+						<div class="EmptyBox10" />
+						<p:selectOneRadio value="#{discretionarygrantverificationUI.workPlaceApproval.healthSafetyOfficer}" required="true" id="i" converter="YesNoLookupConvertor" columns="2" layout="grid" disabled="#{discretionarygrantverificationUI.disableAll}">
+							<p:ajax />
+							<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+						</p:selectOneRadio>
+					</h:panelGroup>
+					<h:panelGroup style="width:100%">
+						<p:outputLabel value="Protective wear available/issued" for="j" />
+						<div class="EmptyBox10" />
+						<p:selectOneRadio value="#{discretionarygrantverificationUI.workPlaceApproval.pretectiveWear}" required="true" id="j" converter="YesNoLookupConvertor" columns="2" layout="grid" disabled="#{discretionarygrantverificationUI.disableAll}">
+							<p:ajax />
+							<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+						</p:selectOneRadio>
+					</h:panelGroup>
+				</p:panelGrid>
+			</p:panel>
+			<br />
+			<br />
+			<p:panel>
+				<f:facet name="header">Summary and action to take place after site visit</f:facet>
+				<p:panelGrid columns="1" style="width :100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<p:outputLabel value="Ensure that explanation on the visit is in detail support of SME, NGO, CBO etc needs to be explained in detail and the wayforward" />
+					<p:inputTextarea style="width:95%" value="#{discretionarygrantverificationUI.workPlaceApproval.ensureExplanation}" disabled="#{discretionarygrantverificationUI.disableAll}"></p:inputTextarea>
+				</p:panelGrid>
+			</p:panel>
+			<br />
+			<br />
+			<p:commandButton value="Save" process="@form" action="#{discretionarygrantverificationUI.updateApproval}" update="@form" styleClass="Fs18 flat" style="height: 50px" rendered="#{not discretionarygrantverificationUI.disableAll}" />
+			<br />
+			<br />
+		</h:form>
+	</p:dialog>
+	<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true" dynamic="true">
+		<h:form id="uploadForm">
+			<h:panelGroup id="uploadGroup">
+				<div class="ui-g">
+					<div class="ui-g-12">
+						<div class="card">
+							<h1 style="font-weight: bold; font-size: 25px;">#{discretionarygrantverificationUI.doc.configDoc.name}</h1>
+							<p:panel>
+								<h:panelGrid columns="2" style="width: 100%">
+									<p:outputLabel value="#{lang['notes']}:" for="note" />
+									<p:inputTextarea id="note" value="#{discretionarygrantverificationUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+										<p:ajax />
+									</p:inputTextarea>
+								</h:panelGrid>
+								<div class="TexAlCenter">
+									<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span>
+									<br />
+								</div>
+								<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{discretionarygrantverificationUI.storeNewFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update="discgrantTableForm:tabView:docTable" multiple="false" fileLimit="1"
+									allowTypes="/(\.|\/)(gif|jpe?g|png|pdf|docx|txt)$/" immediate="false" auto="true" />
+							</p:panel>
+							<div class="EmptyBox10" />
+						</div>
+					</div>
+				</div>
+			</h:panelGroup>
+		</h:form>
+	</p:dialog>
+</ui:composition>

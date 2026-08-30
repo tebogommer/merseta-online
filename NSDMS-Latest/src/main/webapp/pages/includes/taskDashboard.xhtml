@@ -1,0 +1,139 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<div class="ui-g">
+		<div class="ui-g-12">
+			<div class="card card-w-title">
+				<h3>#{lang['outstanding.tasks']}</h3>
+				<h:form id="mainForm5">
+					<p:importEnum type="haj.com.entity.enums.RagEnum" />
+					<p:importEnum type="haj.com.entity.enums.TaskStatusEnum" />
+					<p:dataTable var="rowVar" value="#{usersTaskUI.tasks}" id="tasksList" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}" paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+
+						<p:column headerText="#{lang['process.name']}" sortBy="#{rowVar.workflowProcess.registrationName}">
+							<h:outputText value="#{lang[rowVar.workflowProcess.registrationName]}" />
+						</p:column>
+
+						<p:column headerText="#{lang['description']}" width="40%" filterBy="#{rowVar.description}" filterMatchMode="contains" sortBy="#{rowVar.description}">
+							<h:outputText value="#{rowVar.description}" />
+						</p:column>
+
+
+						<p:column headerText="#{lang['status']}" width="120">
+							<h:outputText value="#{lang[rowVar.taskStatus.registrationName]}" />
+						</p:column>
+
+
+						<p:column headerText="#{lang['last.action.user']}" filterBy="#{rowVar.actionUser.firstName} #{rowVar.actionUser.lastName}" filterMatchMode="contains" sortBy="#{rowVar.actionUser.firstName}">
+							<h:outputText value="#{rowVar.actionUser.firstName} #{rowVar.actionUser.lastName}" />
+						</p:column>
+						<!--        				<p:column headerText="#{lang['actionDate']}">
+                        			<h:outputText value="#{rowVar.actionDate}" />
+            					</p:column>
+              					<p:column headerText="#{lang['startDate']}">
+                        			<h:outputText value="#{rowVar.startDate}" />
+            					</p:column>  -->
+						<p:column headerText="#{lang['dueDate']}" width="120">
+							<h:outputText value="#{rowVar.dueDate}">
+								<f:convertDateTime pattern="dd MMM yyyy" />
+							</h:outputText>
+						</p:column>
+
+
+						<p:column headerText="#{lang['RAG']}" exportable="false" width="5%" styleClass="Fs13">
+							<center>
+								<h:graphicImage value="/resources/hls/images/red.svg" rendered="#{rowVar.rag eq RagEnum.Red}" width="33" styleClass="animated pulse infinite" />
+								<h:graphicImage value="/resources/hls/images/amber.svg" rendered="#{rowVar.rag eq RagEnum.Amber}" width="31" />
+								<h:graphicImage value="/resources/hls/images/green.svg" rendered="#{rowVar.rag eq RagEnum.Green}" width="22" />
+							</center>
+						</p:column>
+						<p:column exportable="false" width="120" headerText="#{lang['view.edit']}">
+							<p:commandButton id="directTask" ajax="false" icon="fa fa-arrow-right" action="#{usersTaskUI.taskRedirect}">
+								<f:setPropertyActionListener value="#{rowVar}" target="#{usersTaskUI.task}" />
+							</p:commandButton>
+							<p:spacer width="5"></p:spacer>
+							<p:commandButton id="historyTask" icon="fa fa-history" action="#{usersTaskUI.findtaskHistory}" oncomplete="PF('taskHistoryVar').show()" update="taskHistoryForm">
+								<f:setPropertyActionListener value="#{rowVar}" target="#{usersTaskUI.task}" />
+							</p:commandButton>
+							<p:spacer width="5" rendered="#{rowVar.taskStatus ne TaskStatusEnum.NotStarted}" />
+							<p:commandButton oncomplete="PF('taskTreeDialog').show()" update="taskTreeForm" title="View Task tree" icon="fa fa-sitemap" action="#{taskTreeUI.buildTree}" rendered="#{rowVar.taskStatus ne TaskStatusEnum.NotStarted}">
+								<f:setPropertyActionListener value="#{rowVar}" target="#{taskTreeUI.task}" />
+							</p:commandButton>
+							<p:spacer width="5"></p:spacer>
+							<p:commandButton icon="fa fa-search" title="View Current Process Step" update="currentProcessStepForm" action="#{taskDiagramUI.doDiagram(rowVar)}" oncomplete="PF('currentProcessStep').show()">
+								<f:setPropertyActionListener value="#{rowVar}" target="#{taskDiagramUI.task}"></f:setPropertyActionListener>
+							</p:commandButton>
+							<p:tooltip for="directTask" value="#{lang['view.task.detail']}" position="left" />
+							<p:tooltip for="historyTask" value="#{lang['view.task.history']}" position="left" />
+						</p:column>
+
+					</p:dataTable>
+
+				</h:form>
+			</div>
+		</div>
+
+		<ui:include src="/pages/includes/taskTree.xhtml" />
+
+		<p:dialog header="#{lang['task.history']}" width="70%" widgetVar="taskHistoryVar" resizable="false" hideEffect="clip" showEffect="clip" id="dialogTaskHistory" appendTo="@(body)" modal="true">
+			<h:form id="taskHistoryForm">
+				<p:dataTable emptyMessage="#{lang['no.records.found']}" var="rowVar" value="#{usersTaskUI.tasksHistory}" id="tasksList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25"
+					reflow="true">
+
+					<p:column headerText="#{lang['description']}" width="40%">
+						<h:outputText value="#{rowVar.description}" />
+					</p:column>
+
+					<p:column headerText="#{lang['status']}" width="15%">
+						<h:outputText value="#{lang[rowVar.taskStatus.registrationName]}" />
+					</p:column>
+
+					<p:column headerText="#{lang['last.action.user']}" width="20%">
+						<h:outputText value="#{rowVar.actionUser.firstName} #{rowVar.actionUser.lastName}" />
+					</p:column>
+
+					<p:column headerText="#{lang['dueDate']}" width="15%">
+						<h:outputText value="#{rowVar.dueDate}">
+							<f:convertDateTime pattern="dd MMM yyyy" />
+						</h:outputText>
+					</p:column>
+					<p:column headerText="#{lang['RAG']}" exportable="false" width="10%" styleClass="Fs13">
+						<center>
+							<h:graphicImage value="/resources/hls/images/red.svg" rendered="#{rowVar.rag eq RagEnum.Red}" width="33" styleClass="animated pulse infinite" />
+							<h:graphicImage value="/resources/hls/images/amber.svg" rendered="#{rowVar.rag eq RagEnum.Amber}" width="31" />
+							<h:graphicImage value="/resources/hls/images/green.svg" rendered="#{rowVar.rag eq RagEnum.Green}" width="22" />
+						</center>
+					</p:column>
+				</p:dataTable>
+
+			</h:form>
+		</p:dialog>
+		<p:dialog header="Current Process Step" closeOnEscape="true" onShow="changeColor()" widgetVar="currentProcessStep" resizable="false" hideEffect="clip" showEffect="clip" id="dlgID" width="50%" responsive="true" modal="true" dynamic="true">
+			<h:form id="currentProcessStepForm">
+				<h:outputText value="#{lang['task']}: " styleClass="FontBold Fs15" />
+				<h:outputText value="#{taskDiagramUI.task.description}" styleClass="FontLight Fs15" />
+				<div class="EmptyBox5" />
+				<p:tree value="#{taskDiagramUI.root}" var="node" orientation="horizontal">
+					<p:treeNode type="notstarted">
+						<h:outputText value="#{node.roles.description} (Days To Complete #{node.numberOfDays != null ? node.numberOfDays : 5})" rendered="#{node.roles.description ne null}" />
+						<h:outputText value="#{lang[node.companyUserType.type]} (Days To Complete #{node.numberOfDays != null ? node.numberOfDays : 5})" rendered="#{node.roles.description eq null}" />
+					</p:treeNode>
+					<p:treeNode type="underway">
+						<h:outputText value="#{node.roles.description} (Days To Complete #{node.numberOfDays != null ? node.numberOfDays : 5})" rendered="#{node.roles.description ne null}" />
+						<h:outputText value="#{lang[node.companyUserType.type]} (Days To Complete #{node.numberOfDays != null ? node.numberOfDays : 5})" rendered="#{node.roles.description eq null}" />
+					</p:treeNode>
+					<p:treeNode type="completed">
+						<h:outputText value="#{node.roles.description} (Days To Complete #{node.numberOfDays != null ? node.numberOfDays : 5})" rendered="#{node.roles.description ne null}" />
+						<h:outputText value="#{lang[node.companyUserType.type]} (Days To Complete #{node.numberOfDays != null ? node.numberOfDays : 5})" rendered="#{node.roles.description eq null}" />
+					</p:treeNode>
+					<p:treeNode type="none">
+						<h:outputText value="#{node.roles.description}" rendered="#{node.roles.description ne null}" />
+						<h:outputText value="#{lang[node.companyUserType.type]}" rendered="#{node.roles.description eq null}" />
+					</p:treeNode>
+					<p:treeNode>
+						<h:outputText value="#{node.roles.description} (Days To Complete #{node.numberOfDays != null ? node.numberOfDays : 5})" rendered="#{node.roles.description ne null}" />
+						<h:outputText value="#{lang[node.companyUserType.type]} (Days To Complete #{node.numberOfDays != null ? node.numberOfDays : 5})" rendered="#{node.roles.description eq null}" />
+					</p:treeNode>
+				</p:tree>
+			</h:form>
+		</p:dialog>
+	</div>
+</ui:composition>

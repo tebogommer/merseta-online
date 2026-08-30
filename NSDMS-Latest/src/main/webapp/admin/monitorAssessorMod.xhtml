@@ -1,0 +1,204 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum"></p:importEnum>
+					<p:importEnum type="haj.com.entity.enums.UsersStatusEnum" />
+					<p:growl showDetail="false" sticky="false" id="msg">
+						<p:autoUpdate />
+					</p:growl>
+					<h1>Monitor Assessor / Moderator Details</h1>
+					<h:form id="mainForm">
+
+
+						<h2>Assessor Applications</h2>
+						<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<p:outputLabel value="Display only final approved assessor applications:" />
+							<p:selectBooleanCheckbox value="#{monitorAssessorModUI.filterByApprovedAssessorApplications}">
+								<p:ajax update="mainForm"/>
+							</p:selectBooleanCheckbox>
+						</p:panelGrid>
+						
+						<div class="EmptyBox10" />
+						
+						<p:commandButton onstart="uploadStart()" oncomplete="uploadDone()" value="Re-send Statment of Qualification To Approved Assessor Applications" styleClass="red-btn" action="#{monitorAssessorModUI.reSendStatementOfQualToAllApprovedAssessorApplications}" icon="fa fa-envelope" update="@form" title="Resend statement of qualification">
+							<p:confirm header="Confirmation" message="Are you sure you wish to re-send statement of qualification" icon="fa fa-exclamation-triangle" />
+						</p:commandButton>
+
+						<div class="EmptyBox10" />
+
+						<p:dataTable var="rowVar" value="#{monitorAssessorModUI.assessorApplicationsDataModel}" id="assessorList" rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,20,40" reflow="true" lazy="true">
+							
+							<f:facet name="header"> Assessor Applications </f:facet>
+							
+							<p:column headerText="#{lang['first.name']}" filterBy="#{rowVar.user.firstName}" sortBy="#{rowVar.user.firstName}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.user.firstName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['last.name']}" filterBy="#{rowVar.user.lastName}" sortBy="#{rowVar.user.lastName}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.user.lastName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['rsa.id.number']}" filterBy="#{rowVar.user.rsaIDNumber}" sortBy="#{rowVar.user.rsaIDNumber}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.user.rsaIDNumber}" />
+								<h:outputText value="N/A" rendered="#{rowVar.user.rsaIDNumber.length() lt 1}" />
+							</p:column>
+
+							<p:column headerText="#{lang['passport.number']}" filterBy="#{rowVar.user.passportNumber}" sortBy="#{rowVar.user.passportNumber}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.user.passportNumber}" />
+								<h:outputText value="N/A" rendered="#{rowVar.user.passportNumber.length() lt 1}" />
+							</p:column>
+
+							<p:column headerText="#{lang['type.of.application']}" sortBy="#{rowVar.applicationType}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.applicationType.displayName}" />
+							</p:column>
+
+
+							<p:column headerText="#{lang['status']}" sortBy="#{rowVar.status}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.status.friendlyName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['registration.number']}" filterBy="#{rowVar.certificateNumber}" sortBy="#{rowVar.certificateNumber}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.certificateNumber}" />
+								<h:outputText rendered="#{rowVar.certificateNumber eq null or rowVar.certificateNumber eq ''}" value="N/A" />
+							</p:column>
+
+							<p:column headerText="#{lang['start.date']}" sortBy="#{rowVar.startDate}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.startDate}">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</h:outputText>
+								<h:outputText rendered="#{rowVar.startDate eq null}" value="N/A" />
+							</p:column>
+
+							<p:column headerText="#{lang['end.date']}" sortBy="#{rowVar.endDate}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.endDate}">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</h:outputText>
+								<h:outputText rendered="#{rowVar.endDate eq null}" value="N/A" />
+							</p:column>
+
+							<p:column headerText="#{lang['review.committee.date']}" sortBy="#{rvwpa.approvalDate}">
+								<h:outputText value="#{rowVar.reviewCommitteeMeeting.fromDateTime}">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</h:outputText>
+								<h:outputText rendered="#{rowVar.reviewCommitteeMeeting.fromDateTime eq null}" value="N/A" />
+
+							</p:column>
+
+							<p:column headerText="#{lang['decision.number']}" sortBy="#{rowVar.reviewCommitteeMeetingAgenda.decisionNumber}">
+								<h:outputText rendered="#{rowVar.reviewCommitteeMeetingAgenda ne null}" value="#{rowVar.reviewCommitteeMeetingAgenda.decisionNumber}" />
+								<h:outputText rendered="#{rowVar.reviewCommitteeMeetingAgenda eq null}" value="N/A" />
+							</p:column>
+
+							<p:column width="45">
+								<p:commandButton onstart="uploadStart()" oncomplete="uploadDone()" rendered="#{rowVar.finalApproved}" styleClass="red-btn" action="#{monitorAssessorModUI.reSendStatementOfQual}" icon="fa fa-envelope" update="@form" title="Resend statement of qualification">
+									<p:confirm header="Confirmation" message="Are you sure you wish to re-send statement of qualification" icon="fa fa-exclamation-triangle" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{monitorAssessorModUI.assessorModeratorApplication}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+						
+						<h2>Moderator Applications</h2>
+						<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<p:outputLabel value="Display only final approved moderator applications:" />
+							<p:selectBooleanCheckbox value="#{monitorAssessorModUI.filterByApprovedModeratorApplications}">
+								<p:ajax update="mainForm"/>
+							</p:selectBooleanCheckbox>
+						</p:panelGrid>
+						
+						<div class="EmptyBox10" />
+						
+						<p:commandButton onstart="uploadStart()" oncomplete="uploadDone()" value="Re-send Statment of Qualification To Approved Moderator Applications" styleClass="red-btn" action="#{monitorAssessorModUI.reSendStatementOfQualToAllApprovedModeratorApplications}" icon="fa fa-envelope" update="@form" title="Resend statement of qualification">
+							<p:confirm header="Confirmation" message="Are you sure you wish to re-send statement of qualification" icon="fa fa-exclamation-triangle" />
+						</p:commandButton>
+
+						<div class="EmptyBox10" />
+
+						<p:dataTable var="rowVarM" value="#{monitorAssessorModUI.moderatorApplicationsDataModel}" id="moderatorList" rowKey="#{rowVarM.id}" paginator="true" rows="10" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,20,40" reflow="true" lazy="true">
+							
+							<f:facet name="header"> Moderator Applications </f:facet>
+							
+							<p:column headerText="#{lang['first.name']}" filterBy="#{rowVarM.user.firstName}" sortBy="#{rowVarM.user.firstName}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVarM.user.firstName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['last.name']}" filterBy="#{rowVarM.user.lastName}" sortBy="#{rowVarM.user.lastName}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVarM.user.lastName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['rsa.id.number']}" filterBy="#{rowVarM.user.rsaIDNumber}" sortBy="#{rowVarM.user.rsaIDNumber}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVarM.user.rsaIDNumber}" />
+								<h:outputText value="N/A" rendered="#{rowVarM.user.rsaIDNumber.length() lt 1}" />
+							</p:column>
+
+							<p:column headerText="#{lang['passport.number']}" filterBy="#{rowVarM.user.passportNumber}" sortBy="#{rowVarM.user.passportNumber}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVarM.user.passportNumber}" />
+								<h:outputText value="N/A" rendered="#{rowVarM.user.passportNumber.length() lt 1}" />
+							</p:column>
+
+							<p:column headerText="#{lang['type.of.application']}" sortBy="#{rowVarM.applicationType}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVarM.applicationType.displayName}" />
+							</p:column>
+
+
+							<p:column headerText="#{lang['status']}" sortBy="#{rowVarM.status}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVarM.status.friendlyName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['registration.number']}" filterBy="#{rowVarM.certificateNumber}" sortBy="#{rowVarM.certificateNumber}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVarM.certificateNumber}" />
+								<h:outputText rendered="#{rowVarM.certificateNumber eq null or rowVarM.certificateNumber eq ''}" value="N/A" />
+							</p:column>
+
+							<p:column headerText="#{lang['start.date']}" sortBy="#{rowVarM.startDate}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVarM.startDate}">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</h:outputText>
+								<h:outputText rendered="#{rowVarM.startDate eq null}" value="N/A" />
+							</p:column>
+
+							<p:column headerText="#{lang['end.date']}" sortBy="#{rowVarM.endDate}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVarM.endDate}">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</h:outputText>
+								<h:outputText rendered="#{rowVarM.endDate eq null}" value="N/A" />
+							</p:column>
+
+							<p:column headerText="#{lang['review.committee.date']}" sortBy="#{rvwpa.approvalDate}">
+								<h:outputText value="#{rowVarM.reviewCommitteeMeeting.fromDateTime}">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</h:outputText>
+								<h:outputText rendered="#{rowVarM.reviewCommitteeMeeting.fromDateTime eq null}" value="N/A" />
+
+							</p:column>
+
+							<p:column headerText="#{lang['decision.number']}" sortBy="#{rowVarM.reviewCommitteeMeetingAgenda.decisionNumber}">
+								<h:outputText rendered="#{rowVarM.reviewCommitteeMeetingAgenda ne null}" value="#{rowVarM.reviewCommitteeMeetingAgenda.decisionNumber}" />
+								<h:outputText rendered="#{rowVarM.reviewCommitteeMeetingAgenda eq null}" value="N/A" />
+							</p:column>
+
+							<p:column width="45">
+								<p:commandButton rendered="#{rowVarM.finalApproved}" styleClass="red-btn" action="#{monitorAssessorModUI.reSendStatementOfQual}" icon="fa fa-envelope" update="@form" title="Resend statement of qualification">
+									<p:confirm header="Confirmation" message="Are you sure you wish to re-send statement of qualification" icon="fa fa-exclamation-triangle" />
+									<f:setPropertyActionListener value="#{rowVarM}" target="#{monitorAssessorModUI.assessorModeratorApplication}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+			<h:form>
+				<p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="fa fa-check" />
+				<p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="fa fa-times" />
+			</h:form>
+		</p:confirmDialog>
+
+	</ui:define>
+</ui:composition>

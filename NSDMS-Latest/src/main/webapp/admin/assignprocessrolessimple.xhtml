@@ -1,0 +1,300 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<style>
+div.ui-treenode-children {
+	padding-left: 0px !important
+}
+
+tr {
+	
+}
+
+.smallCol {
+	width: 20%;
+}
+
+.largeCol {
+	width: 80%;
+}
+
+#processrolesInsForm:demoprocessRole .ui-tree.ui-tree-horizontal .ui-tree-toggler
+	{
+	visibility: hidden;
+}
+
+div#processrolesInsForm\:demoHostingCompanyProcessContext, div#processrolesInsForm\:demoHostingCompanyEmployeesContext,
+	div#processrolesInsForm\:demoProcessRolesContext, div#processrolesInsForm\:demoHostingContext
+	{
+	display: block !important;
+	opacity: 1 !important;
+	z-index: 100 !important;
+}
+
+body .ui-state-disabled {
+	opacity: 1;
+}
+
+.no-padding {
+	padding: 0px !important;
+}
+
+.ex-info {
+	height: 60px;
+	height: 60px;
+	overflow-y: scroll;
+	font-size: 12px !important;
+	color: #666 !important;
+}
+</style>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>#{lang['processRoles']}</h1>
+					<h:form id="processrolesInsForm">
+						<p:importEnum type="haj.com.entity.enums.ConfigDocProcessEnum"></p:importEnum>
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="#{lang['hostingCompany']}" styleClass="gray" />
+							</div>
+							<div>
+								<p:autoComplete id="hostCompanyAutoComplete" value="#{processrolesUI.hostingCompany}" completeMethod="#{hostingCompanyEmployeesUI.completeHostingCompany}" converter="HostingCompanyConvertor" var="rv" itemLabel="#{rv.companyName}" itemValue="#{rv}" forceSelection="true" dropdown="true"
+									minQueryLength="1" maxResults="10" required="true" requiredMessage="#{lang['select.host.company']}">
+									<p:ajax event="itemSelect" update="@form" process="@this" listener="#{processrolesUI.findCurrentProcesses}" />
+								</p:autoComplete>
+							</div>
+						</h:panelGroup>
+
+						<div class="EmptyBox15"></div>
+						<c:if test="#{processrolesUI.root ne null}">
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="#{lang['expand.all']}" styleClass="gray" />
+									<p:spacer width="20"></p:spacer>
+									<p:selectBooleanCheckbox value="#{processrolesUI.expandAll}">
+										<p:ajax update="processRole" event="change" listener="#{processrolesUI.findCurrentProcesses}"></p:ajax>
+									</p:selectBooleanCheckbox>
+								</div>
+							</h:panelGroup>
+							<div class="EmptyBox10"></div>
+							<span class="Fs13 gray"><i class="fa fa-info-circle" aria-hidden="true"></i> #{lang['changes.can.only.be.made.to.the.administrator.roles']}</span>
+							<div class="EmptyBox5" />
+							<p:tree value="#{processrolesUI.root}" var="doc" selectionMode="single" selection="#{processrolesUI.selectedNode}" orientation="horizontal" id="processRole">
+
+								<p:treeNode expandedIcon="ui-icon-folder-open" collapsedIcon="ui-icon-folder-collapsed">
+									<h:outputText value="#{doc.name}" />
+								</p:treeNode>
+								<p:treeNode type="HostingCompany">
+									<h:outputText value="#{doc.companyName}" />
+								</p:treeNode>
+								<p:treeNode type="HostingCompanyProcess">
+									<h:outputText value="#{lang[doc.workflowProcess.registrationName]}" />
+								</p:treeNode>
+								<p:treeNode type="HostingCompanyProcessLast">
+									<h:outputText value="#{lang[doc.workflowProcess.registrationName]}" />
+								</p:treeNode>
+								<p:treeNode type="HostingCompanyProcessChild">
+									<h:outputText value="#{doc.note}" />
+								</p:treeNode>
+								<p:treeNode type="HostingCompanyProcessChildLast">
+									<h:outputText value="#{doc.note}" />
+								</p:treeNode>
+								<p:treeNode type="ProcessRoles">
+									<h:outputText value="#{doc.roles.description} (#{doc.rolePermission})" />
+								</p:treeNode>
+								<p:treeNode type="ProcessRolesCompany">
+									<h:outputText value="#{lang[doc.companyUserType.type]} (#{doc.rolePermission})" />
+								</p:treeNode>
+								<p:treeNode type="HostingCompanyEmployees">
+									<h:outputText value="#{doc.users.firstName} #{doc.users.lastName}" />
+								</p:treeNode>
+								<p:treeNode type="NONE">
+								</p:treeNode>
+							</p:tree>
+
+							<p:contextMenu for="processRole" nodeType="ProcessRoles">
+								<p:menuitem value="#{lang['add.new.user']}" actionListener="#{processrolesUI.displaySelectedSingle}" icon="ui-icon-person" update="@form" />
+							</p:contextMenu>
+
+
+							<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+								<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+								<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+							</p:confirmDialog>
+
+							<div class="EmptyBox10"></div>
+
+							<h1>#{lang['how.to.use']}</h1>
+							<div>
+								<p:spacer width="5px"></p:spacer>
+								<span class="gray"><i class="fa fa-info-circle"></i> <p:spacer width="5px"></p:spacer>#{lang['right.click.on.any.color.node.to.display.the.appropriate.menu']}</span>
+							</div>
+							<p:tree value="#{processrolesUI.demoRoot}" var="doc" orientation="horizontal" id="demoprocessRole">
+
+								<p:treeNode expandedIcon="ui-icon-folder-open" collapsedIcon="ui-icon-folder-collapsed">
+									<h:outputText value="#{doc.name}" />
+								</p:treeNode>
+
+								<p:treeNode type="HostingCompanyDemo">
+									<h:outputText value="#{doc}" />
+								</p:treeNode>
+								<p:treeNode type="HostingCompanyProcessDemo">
+									<h:outputText value="#{doc}" />
+								</p:treeNode>
+								<p:treeNode type="ProcessRolesDemo">
+									<h:outputText value="#{doc} (Role Permission)" />
+								</p:treeNode>
+								<p:treeNode type="HostingCompanyEmployeesDemo">
+									<h:outputText value="#{doc}" />
+								</p:treeNode>
+							</p:tree>
+
+							<p:contextMenu for="demoprocessRole" nodeType="HostingCompanyDemo" id="demoHostingContext" rendered="false">
+								<p:menuitem value="#{lang['add.new.process']}" icon="ui-icon-assignment" disabled="true" />
+								<p:menuitem styleClass="ex-info" value="#{lang['click.here.to.add.a.new.process.to.the.SETA']}" disabled="true" />
+							</p:contextMenu>
+
+							<p:contextMenu for="demoprocessRole" nodeType="ProcessRoles" id="demoProcessRolesContext">
+								<p:menuitem value="#{lang['remove.role']}" icon="ui-icon-trash" disabled="true" rendered="false" />
+								<p:menuitem styleClass="ex-info" value="#{lang['click.here.to.add.remove.the.role.if.no.users.are.assigned']}" disabled="true" rendered="false" />
+								<p:menuitem value="#{lang['add.new.user']}" icon="ui-icon-person" disabled="true" />
+								<p:menuitem styleClass="ex-info" value="#{lang['click.here.to.add.a.new.user.to.the.role']}" disabled="true" />
+							</p:contextMenu>
+
+							<p:contextMenu for="demoprocessRole" nodeType="HostingCompanyProcess" id="demoHostingCompanyProcessContext" rendered="false">
+								<p:menuitem value="#{lang['add.new.role']}" icon="ui-icon-class" disabled="true" />
+								<p:menuitem styleClass="ex-info" value="#{lang['click.here.to.add.a.new.role.to.the.process']}" disabled="true" />
+							</p:contextMenu>
+
+							<p:contextMenu for="demoprocessRole" nodeType="HostingCompanyEmployees" id="demoHostingCompanyEmployeesContext" rendered="false">
+								<p:menuitem value="#{lang['remove.user']}" icon="ui-icon-trash" disabled="true" />
+								<p:menuitem styleClass="ex-info" value="#{lang['click.here.to.remove.the.user.from.the.role']}" disabled="true" />
+							</p:contextMenu>
+						</c:if>
+					</h:form>
+				</div>
+			</div>
+
+		</div>
+
+
+		<p:dialog header="#{lang['new.role.user']}" width="50%" widgetVar="ProcessRoles" resizable="false" hideEffect="clip" showEffect="clip" id="dialogProcessRoles" appendTo="@(body)" modal="true">
+			<h:form id="ProcessRolesForm">
+				<p:panelGrid columns="1" style="width:100%" id="configdocInsGrid" layout="grid" styleClass="ui-panelgrid-blank" rendered="#{processrolesUI.canAddManager}">
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="#{lang['hc.employees']}" for="proc" styleClass="gray" />
+						</div>
+						<div>
+							<p:selectOneMenu id="proc" value="#{processrolesUI.hostinCompanyEmployee}" style="width:75%" required="true" requiredMessage="#{lang['please.select.the.hosting.company.employees']}" converter="HostingCompanyEmployeesConvertor">
+								<p:ajax />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{processrolesUI.hostingCompanyEmployees}" var="rv" itemLabel="#{rv.users.firstName} #{rv.users.lastName}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+				</p:panelGrid>
+				<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update="ProcessRolesForm :processrolesInsForm" action="#{processrolesUI.usersInsert}" rendered="#{processrolesUI.canAddManager}" />
+				<c:if test="#{not processrolesUI.canAddManager}">
+					<h2>You don't have permission to make changes to this to this role</h2>
+				</c:if>
+			</h:form>
+		</p:dialog>
+
+		<script>
+
+  $( document ).ready(function() {
+	    console.log( "ready!" );
+	    /* changeColor(); */
+	});
+
+  function changeColor() {
+	  	$('[data-nodetype="HostingCompany"]').children().css( {"background-color": "#572b00 !important", "color": "white"}  );
+	    $('[data-nodetype="HostingCompany"]  .ui-tree-toggler').css( "color", "white" );
+	    $('[data-nodetype="HostingCompanyProcess"]').children().css( {"background-color": "#7d7008", "color": "white"} );
+	    $('[data-nodetype="HostingCompanyProcess"]  .ui-tree-toggler').css( "color", "white" );
+	    $('[data-nodetype="HostingCompanyProcessLast"]').children().css( {"background-color": "#7d7008", "color": "white"} );
+	    $('[data-nodetype="HostingCompanyProcessLast"]  .ui-tree-toggler').css( "color", "white" );
+	    $('[data-nodetype="HostingCompanyProcessChild"]').children().css( {"background-color": "#666666", "color": "white"} );
+	    $('[data-nodetype="HostingCompanyProcessChild"]  .ui-tree-toggler').css( "color", "white" );
+	    $('[data-nodetype="HostingCompanyProcessChildLast"]').children().css( {"background-color": "#004B9B", "color": "white"} );
+	    $('[data-nodetype="HostingCompanyProcessChildLast"]  .ui-tree-toggler').css( "color", "white" );
+	    $('[data-nodetype="ProcessRoles"]').children().css( {"background-color": "#cc851f", "color": "white"} );
+	    $('[data-nodetype="ProcessRoles"]  .ui-tree-toggler').css( "color", "white" );
+	    $('[data-nodetype="ProcessRolesCompany"]').children().css( {"background-color": "#cc851f", "color": "white"} );
+	    $('[data-nodetype="ProcessRolesCompany"]  .ui-tree-toggler').css( "color", "white" );
+	    $('[data-nodetype="HostingCompanyEmployees"]').children().css( {"background-color": "#ee3124", "color": "white"} );
+	    $('[data-nodetype="HostingCompanyEmployees"]  .ui-tree-toggler').css( "color", "white" );
+		removeToggle();
+	}
+
+  function removeToggle() {
+	  	$('[data-nodetype="HostingCompanyDemo"] .ui-treenode-content').css( {"background-color": "#572b00 !important", "color": "white", "padding-left": "15px", "margin-left": "90px"}  );
+	    $('[data-nodetype="HostingCompanyDemo"]  .ui-tree-toggler').css( "display", "none" );
+	    $('[data-nodetype="HostingCompanyProcessDemo"] .ui-treenode-content').css( {"background-color": "#7D7008", "color": "white", "padding-left": "15px", "margin-left": "90px"} );
+	    $('[data-nodetype="HostingCompanyProcessDemo"]  .ui-tree-toggler').css( "display", "none" );
+	    $('[data-nodetype="HostingCompanyProcessLastDemo"].ui-treenode-content').css( {"background-color": "#7D7008", "color": "white", "padding-left": "15px", "margin-left": "90px"} );
+	    $('[data-nodetype="HostingCompanyProcessLastDemo"]  .ui-tree-toggler').css( "display", "none" );
+	    $('[data-nodetype="HostingCompanyProcessChildDemo"] .ui-treenode-content').css( {"background-color": "#666666", "color": "white", "padding-left": "15px", "margin-left": "90px"} );
+	    $('[data-nodetype="HostingCompanyProcessChildDemo"]  .ui-tree-toggler').css( "display", "none" );
+	    $('[data-nodetype="HostingCompanyProcessChildLastDemo"] .ui-treenode-content').css( {"background-color": "#cc8500", "color": "white", "padding-left": "15px", "margin-left": "90px"} );
+	    $('[data-nodetype="HostingCompanyProcessChildLastDemo"]  .ui-tree-toggler').css( "display", "none" );
+	    $('[data-nodetype="ProcessRolesDemo"] .ui-treenode-content').css( {"background-color": "#CC851F", "color": "white", "padding-left": "15px", "margin-left": "90px"} );
+	    $('[data-nodetype="ProcessRolesDemo"]  .ui-tree-toggler').css( "display", "none" );
+	    $('[data-nodetype="HostingCompanyEmployeesDemo"] .ui-treenode-content').css( {"background-color": "#ee3124", "color": "white", "padding-left": "15px", "margin-left": "90px"} );
+	    $('[data-nodetype="HostingCompanyEmployeesDemo"]  .ui-tree-toggler').css( "display", "none" );
+
+		    
+	    
+	    var tree = $('[id="processrolesInsForm:demoprocessRole"]');
+	    tree.css( "padding-bottom", "120px" );
+
+	    var node = $('[data-nodetype="HostingCompanyDemo"]');
+	    $(PrimeFaces.escapeClientId('processrolesInsForm:demoHostingContext')).css({
+	       top: node.height() + 10 +'px',
+	       left: node.position().left + node.width() +'px',   
+	       display: "block !important"                     
+		}).show();
+
+	    node.prepend($(PrimeFaces.escapeClientId('processrolesInsForm:demoHostingContext')));
+		
+	    node = $('[data-nodetype="HostingCompanyProcessDemo"]');
+	    	    $(PrimeFaces.escapeClientId('processrolesInsForm:demoHostingCompanyProcessContext')).css({
+	       top:  node.height() + 10 +'px',
+	       left: node.position().left + node.width() +'px'                        
+		}).show();
+	    node.prepend($(PrimeFaces.escapeClientId('processrolesInsForm:demoHostingCompanyProcessContext')));
+		
+	    node = $('[data-nodetype="ProcessRolesDemo"]');
+	    $(PrimeFaces.escapeClientId('processrolesInsForm:demoProcessRolesContext')).css({
+	       top: node.height() + 10 +'px',
+	       left: node.position().left + node.width() +'px'                        
+		}).show();
+		
+	    node.prepend($(PrimeFaces.escapeClientId('processrolesInsForm:demoProcessRolesContext')));
+
+
+	    node = $('[data-nodetype="HostingCompanyEmployeesDemo"]');
+	    $(PrimeFaces.escapeClientId('processrolesInsForm:demoHostingCompanyEmployeesContext')).css({
+	       top: node.height() + 10 +'px',
+	       left: node.position().left + node.width() +'px'                        
+		}).show();
+	    node.prepend($(PrimeFaces.escapeClientId('processrolesInsForm:demoHostingCompanyEmployeesContext')));
+  }
+
+		
+  </script>
+	</ui:define>
+	<!-- 
+	 left: 449px;
+	    top: 293px;
+	    z-index: 1002;
+	    display: block; -->
+
+</ui:composition>
+<!-- <p:ajax event="select" listener="#{orderListView.onSelect}" update="msgs" />
+					<p:ajax event="unselect" listener="#{orderListView.onUnselect}" update="msgs" />
+					<p:ajax event="reorder" listener="#{orderListView.onReorder}" update="msgs" /> -->

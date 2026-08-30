@@ -1,0 +1,519 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                template="/WEB-INF/template.xhtml"
+                xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+    <ui:define name="content">
+        <div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card">
+                <h:form id="mainForm">
+                    <h1>ETQA Review Committee</h1>    
+                    	<ui:include src="/pages/includes/filterGuide.xhtml" />	
+	                   		
+	                  
+						<ui:include src="/pages/includes/download_lazy.xhtml">
+								<ui:param name="file_name" value="skillsType" />
+								<ui:param name="target" value="amList" />
+						 </ui:include>                	
+						
+	                     <p:dataTable var="var" id="amList" value="#{skillsregistrationUI.dataModel}" rowKey="#{var.id}" paginator="true" rows="5" paginatorPosition="bottom"
+									 paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" 
+									 rowsPerPageTemplate="10,20,30,40,50,60,70,80,90,100" reflow="true" lazy="true" selectionMode="single" selection="#{skillsregistrationUI.selectedSkillsregistration}">
+	                    	
+	                    	 		<p:ajax event="rowSelect" update=":detailInfoForm" listener="#{skillsregistrationUI.getRegistrationInfo()}" />
+					        
+					         <p:column headerText="Skills Type">
+								 <h:outputText value="#{var.skillsType.friendlyName}" />
+					         </p:column>
+					         
+					         <p:column headerText="Original Title">
+								 <h:outputText value="#{var.proposedTitle}" />
+					         </p:column>
+					         
+					          <p:column headerText="Amended Title">
+								 <h:outputText rendered="#{var.amendedTitle ne null}" value="#{var.amendedTitle}" />
+								 <h:outputText rendered="#{var.amendedTitle eq null}" value="N/A" />
+					         </p:column>
+					         
+					         <p:column headerText="#{lang['qualification']}">
+								 <h:outputText value="#{var.qualification.description}" />
+					         </p:column>
+					         
+					         <p:column headerText="OFO Code Description">
+					        	 <h:outputText value="(#{var.ofoCodes.ofoCode})" rendered="#{var.ofoCodes.ofoCode ne null}"/>
+								 <h:outputText value="#{var.ofoCodes.description}" rendered="#{var.ofoCodes.description ne null}"/>
+					         </p:column>
+						    
+						    
+						   	<p:column headerText="#{lang['status']}">
+								 <h:outputText value="#{var.approvalEnum.friendlyName}" />
+					         </p:column>
+					         
+					         <p:column headerText="#{lang['view']}" style="width:50px"   exportable="false" >
+								 <p:commandButton  icon="fa fa-search" action="#{skillsregistrationUI.getRegistrationInfo}" update=":detailInfoForm">
+								 	<f:setPropertyActionListener value="#{var}" target="#{skillsregistrationUI.selectedSkillsregistration}" />
+								 </p:commandButton>
+					         </p:column>
+					         
+					         <p:column style="width:230px"   exportable="false" rendered="false" headerText="ETQA Review Committee Outcome">
+					     
+						        <p:commandButton value="#{lang['approve']}" icon="ui-icon-check" update="@form detailInfoForm" action="#{skillsregistrationUI.createApprovalForReviewCommite}" styleClass="flat green-btn Fs18" rendered="#{var.show eq true}">
+									
+									<f:setPropertyActionListener value="#{var}" target="#{skillsregistrationUI.skillsregistration}" />
+								</p:commandButton>
+								<p:spacer width="5"></p:spacer>
+								<p:commandButton value="#{lang['reject.am']}" icon="ui-icon-circle-close" update="@form :detailInfoForm" oncomplete="PF('rejectReason').show()" process="@this" styleClass="flat red-btn Fs18" rendered="#{var.show eq true}">
+									<f:setPropertyActionListener value="#{var}" target="#{skillsregistrationUI.skillsregistration}" />
+								</p:commandButton>
+						    </p:column>					
+						</p:dataTable>
+						<br/>
+                  </h:form>
+                  
+                  <br />
+                  
+					<h:form id="detailInfoForm" >
+						<p:tabView  rendered="#{skillsregistrationUI.selected eq true}">
+							
+							<p:tab title="#{lang['company.info']}" rendered="#{skillsregistrationUI.selectedSkillsregistration.company ne null}">
+							<p:outputLabel style="color: #FF6600;" value="#{skillsregistrationUI.selectedSkillsregistration.meetingMessage}"/>
+								<p:fieldset legend="#{lang['company.info']}" id="companyInfo">
+									<p:panelGrid columns="2" style="width:100%" id="companyInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText disabled="true" id="companyName" value="#{skillsregistrationUI.selectedSkillsregistration.company.companyName}" style="width:100%" required="true" requiredMessage="#{lang['enter.the.company.name']}" />
+											<p:outputLabel value="#{lang['companyName']}" for="companyName" styleClass="gray"/>
+										</h:panelGroup>
+		
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText disabled="true" id="tradingName" value="#{skillsregistrationUI.selectedSkillsregistration.company.tradingName}" style="width:100%" required="true" requiredMessage="#{lang['enter.the.trading.name']}" />
+											<p:outputLabel value="#{lang['tradingName']}" for="tradingName" styleClass="gray"/>
+										</h:panelGroup>
+		
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText disabled="true" id="telNumber" value="#{skillsregistrationUI.selectedSkillsregistration.company.telNumber}" style="width:100%" required="true" requiredMessage="#{lang['enter.the.tel.number']}" />
+											<p:outputLabel value="#{lang['telNumber']}" for="telNumber" styleClass="gray"/>
+										</h:panelGroup>
+		
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText disabled="true" id="faxNumber" value="#{skillsregistrationUI.selectedSkillsregistration.company.faxNumber}" style="width:100%" />
+											<p:outputLabel value="#{lang['faxNumber']}" for="faxNumber" styleClass="gray"/>
+										</h:panelGroup>
+		
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText disabled="true" id="companyRegistrationNumber" value="#{skillsregistrationUI.selectedSkillsregistration.company.companyRegistrationNumber}" style="width:100%" required="true" requiredMessage="#{lang['enter.company.registration.number']}" />
+											<p:outputLabel value="#{lang['companyRegistrationNumber']}" for="companyRegistrationNumber" styleClass="gray"/>
+										</h:panelGroup>
+		
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText disabled="true" id="email" value="#{skillsregistrationUI.selectedSkillsregistration.company.email}" style="width:100%" required="true" requiredMessage="#{lang['enter.email.address']}" />
+											<p:outputLabel value="#{lang['email']}" for="email" styleClass="gray"/>
+										</h:panelGroup>
+		
+									</p:panelGrid>
+								</p:fieldset>
+							</p:tab>
+							<p:tab title="#{lang['applicant.details']}">
+							<p:outputLabel style="color: #FF6600;" value="#{skillsregistrationUI.selectedSkillsregistration.meetingMessage}"/>
+								<p:fieldset legend="#{lang['applicant.details']}" id="userInfoFs">			  			
+										<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText disabled="true" style="width:100%" value="#{skillsregistrationUI.selectedSkillsregistration.user.title.description}" />
+												<p:outputLabel value="#{lang['title']}" styleClass="gray"/>
+											</h:panelGroup>
+											
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText disabled="true" style="width:100%" value="#{skillsregistrationUI.selectedSkillsregistration.user.firstName}" />
+												<p:outputLabel value="#{lang['name']}" styleClass="gray"/>
+											</h:panelGroup>
+											
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText disabled="true" style="width:100%" value="#{skillsregistrationUI.selectedSkillsregistration.user.lastName}" />
+												<p:outputLabel value="#{lang['surname']}" styleClass="gray"/>
+											</h:panelGroup>
+											
+											<h:panelGroup styleClass="md-inputfield"  rendered="#{var.user.passportNumber.length() gt 0}">
+												<p:inputText disabled="true" style="width:100%" value="#{skillsregistrationUI.selectedSkillsregistration.user.lastName}" />
+												<p:outputLabel value="#{lang['passport.number']}" styleClass="gray"/>
+											</h:panelGroup>
+											
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText disabled="true" style="width:100%" value="#{skillsregistrationUI.selectedSkillsregistration.user.email}" />
+												<p:outputLabel value="#{lang['email']}" styleClass="gray"/>
+											</h:panelGroup>
+											
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText disabled="true" style="width:100%" value="#{skillsregistrationUI.selectedSkillsregistration.user.cellNumber}" />
+												<p:outputLabel value="#{lang['cell.number']}" styleClass="gray"/>
+											</h:panelGroup>
+											
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText disabled="true" style="width:100%" value="#{skillsregistrationUI.selectedSkillsregistration.user.telNumber}" />
+												<p:outputLabel value="#{lang['tel.number']}" styleClass="gray"/>
+											</h:panelGroup>
+											
+											
+										</p:panelGrid>
+									</p:fieldset>
+							</p:tab>
+							<p:tab title="Skills Programme / Skills Set Information">
+							<p:outputLabel style="color: #FF6600;" value="#{skillsregistrationUI.selectedSkillsregistration.meetingMessage}"/>
+								<p:fieldset legend="Skills Programme / Skills Set Information" id="skillSrtProgInfoFs">	
+										<p:panelGrid columns="2" style="width:100%" id="skillsregistrationInsGridas" layout="grid" styleClass="ui-panelgrid-blank form-group">
+											<h:panelGroup>
+												<div>
+													<p:outputLabel value="How did you identify the need for this skills programme?" for="proc" styleClass="gray" />
+												</div>
+												<div>
+			
+													<p:selectOneMenu  id="proc" value="#{skillsregistrationUI.selectedSkillsregistration.skillsIdentification}" style="width:100%" required="true" requiredMessage="#{lang['please.select.a.skills.identification']}" converter="SkillsIdentificationConvertor" disabled="true">
+														<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+														<f:selectItems value="#{selectItemsUI.skillsIdentification}" var="rv" itemLabel="#{rv.description}" />
+														<p:ajax></p:ajax>
+													</p:selectOneMenu>
+												</div>
+											</h:panelGroup>
+											
+											<h:panelGroup styleClass="md-inputfield" style="margin-top:20px !important">
+												<p:inputText  id="researchSummary" value="#{skillsregistrationUI.selectedSkillsregistration.researchSummary}" style="width:100%" disabled="true" />
+												<p:outputLabel value="#{lang['researchSummary']}" for="researchSummary" styleClass="gray"/>
+											</h:panelGroup>
+											
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText  id="fitCareer" value="#{skillsregistrationUI.selectedSkillsregistration.fitCareer}" style="width:100%" disabled="true" />
+												<p:outputLabel value="#{lang['fitCareer']}" for="fitCareer" styleClass="gray"/>
+											</h:panelGroup>
+											
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText id="proposedTitle" value="#{skillsregistrationUI.selectedSkillsregistration.proposedTitle}" style="width:100%" disabled="true" />
+												<p:outputLabel value="#{lang['proposedTitle']}" for="proposedTitle" styleClass="gray"/>
+											</h:panelGroup>
+											
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText disabled="true"  id="howWillAssist" value="#{skillsregistrationUI.selectedSkillsregistration.howWillAssist}" style="width:100%"/>
+												<p:outputLabel value="#{lang['howWillAssist']}" for="howWillAssist" styleClass="gray"/>
+											</h:panelGroup>
+											
+											<h:panelGroup styleClass="md-inputfield" rendered="#{skillsregistrationUI.selectedSkillsregistration.qualification ne null}">
+												<p:autoComplete  id="qualification" value="#{skillsregistrationUI.selectedSkillsregistration.qualification}" inputStyle="width:100%" style="width:100%" completeMethod="#{autoCompleteUI.completeQualification}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true"
+													converter="QualificationConvertor" dropdown="true" minQueryLength="1" maxResults="10" disabled="true">
+													<p:column headerText="#{lang['description']}" style="white-space: nowrap">#{rv.description}</p:column>
+												</p:autoComplete>
+												<p:outputLabel value="#{lang['qualification']}" for="qualification" styleClass="gray"/>
+											</h:panelGroup>
+											
+											
+											
+											<h:panelGroup >
+												<div><p:outputLabel value="#{lang['ofo.code']}" for="ofoCode" styleClass="gray"/></div>
+												<div>
+												<p:autoComplete disabled="true" id="ofoCode" value="#{skillsregistrationUI.selectedSkillsregistration.ofoCodes}" completeMethod="#{autoCompleteUI.completeOfoCodes}" var="rv" itemLabel="#{rv.ofoDescription}" itemValue="#{rv}" forceSelection="true" converter="OfoCodesConvertor" dropdown="true" minQueryLength="3"
+													maxResults="10" inputStyle="width: 100%" style="width: 100%" required="true" requiredMessage="#{lang['select.ofo.code']}" >
+													<p:column headerText="OfoCodes" style="white-space: nowrap">#{rv.ofoCodeParent}</p:column>
+													<p:column headerText="Description" style="white-space: nowrap">#{rv.description}</p:column>
+													<p:ajax event="itemSelect" />
+												</p:autoComplete>
+												</div>
+											</h:panelGroup>
+											
+											<h:panelGroup >
+												<div><p:outputLabel value="#{lang['skillsType']}" for="skillsType" styleClass="gray" /></div>
+												<div>
+												<p:selectOneMenu disabled="true" id="skillsType" value="#{skillsregistrationUI.selectedSkillsregistration.skillsType}" style="width:100%" required="true" requiredMessage="#{lang['please.select.a.skills.identification']}" >
+													<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+													<f:selectItems value="#{enumUI.skillsTypeEnumDD}" var="rv" itemLabel="#{rv.description}" />
+													<p:ajax></p:ajax>
+												</p:selectOneMenu>
+												</div>
+											</h:panelGroup>
+											
+											<h:panelGroup styleClass="md-inputfield" rendered="#{skillsregistrationUI.selectedSkillsregistration.lastDateForEnrolment ne null}" >
+												<p:inputText disabled="true" id="lstDateOfenrolment" value="#{skillsregistrationUI.selectedSkillsregistration.lastDateForEnrolment}" style="width:100%">
+													<f:convertDateTime pattern="dd MMMM yyyy" />
+												</p:inputText>
+												<p:outputLabel value="#{lang['last.date.of.enrolment']}" for="lstDateOfenrolment" styleClass="gray"/>
+											</h:panelGroup>
+											
+										</p:panelGrid>
+										
+										<p:panelGrid columns="1" style="width:100%" id="skillsregistrationInsGrid3" layout="grid" styleClass="ui-panelgrid-blank form-group">
+											<p:dataTable rendered="#{skillsregistrationUI.unitStandards.size() gt 0}" var="t" value="#{skillsregistrationUI.unitStandards}" id="usList" rowKey="#{rowVar.id}" 
+													paginator="true" rows="6" paginatorPosition="bottom" 
+													paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" 
+													rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+													<p:column headerText="Qualification Code">
+														<h:outputText value="#{t.saqadecisionnumber}" />
+													</p:column>												
+													<p:column headerText="Qualification Title">
+														<h:outputText value="#{t.field}" />
+													</p:column>
+													
+													<p:column headerText="Unit Standard Code">
+														<h:outputText value="#{t.code}" />
+													</p:column>
+													
+													<p:column headerText="Unit Standard Title">
+														<h:outputText value="#{t.title}" />
+													</p:column>
+													
+													<p:column headerText="NQF Level">
+														<h:outputText value="#{t.nqf}" />
+													</p:column>
+													<p:column headerText="Credits">
+														<h:outputText value="#{t.unitstdnumberofcredits}" />
+													</p:column>
+											</p:dataTable>
+									
+											<p:dataTable rendered="#{skillsregistrationUI.skillsRegistrationQualificationUnitStandardsList.size() gt 0}"  var="t" value="#{skillsregistrationUI.skillsRegistrationQualificationUnitStandardsList}" id="usLists" 
+												 rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+												 paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" 
+												 rowsPerPageTemplate="5,10,15,20,25" reflow="true" >
+												 
+												<p:column headerText="Qualification Code">
+													<h:outputText value="#{t.qualification.code}" />
+												</p:column>												
+												<p:column headerText="Qualification Title">
+													<h:outputText value="#{t.qualification.description}" />
+												</p:column>
+												
+												<p:column headerText="Unit Standard Code">
+													<h:outputText value="#{t.unitStandards.code}" />
+												</p:column>
+												
+												<p:column headerText="Unit Standard Title">
+													<h:outputText value="#{t.unitStandards.title}" />
+												</p:column>
+												
+												<p:column headerText="NQF Level">
+													<h:outputText value="#{t.unitStandards.nqflevelg2description}" />
+												</p:column>
+												<p:column headerText="Credits">
+													<h:outputText value="#{t.unitStandards.unitstdnumberofcredits}" />
+												</p:column>												
+											</p:dataTable>
+											
+											<p:fieldset legend="Document(s)">
+								    			<ui:include src="/pages/includes/documents_info_display.xhtml">
+														<ui:param name="docs" value="#{skillsregistrationUI.selectedSkillsregistration.docs}" />
+											    </ui:include>
+								    		</p:fieldset>
+										</p:panelGrid>
+										
+										
+									</p:fieldset>
+							</p:tab>
+							
+							<p:tab title="Questions Answered">
+							<p:outputLabel style="color: #FF6600;" value="#{skillsregistrationUI.selectedSkillsregistration.meetingMessage}"/>
+								<p:fieldset legend="Questions Answered" id="questionAnswers">	
+									<p:panelGrid columns="2" style="width:100%" id="skillsregistrationInsGrid21" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+											<h:panelGroup>
+												<div>
+													<p:outputLabel styleClass="gray" style="font-weight:bold" value="Are the unit standards populating the Skills Programme or Skills Set part of a registered qualification the National Qualifications Framework?" for="usPartOFNQF" />
+												</div>
+												<br/>
+												<div>
+													<p:selectOneMenu id="usPartOFNQF" value="#{skillsregistrationUI.selectedSkillsregistration.usPartOFNQF}" style="width:75%" required="true" disabled="true">
+														<p:ajax />
+														<f:selectItem itemLabel="#{lang['select.one']}" itemValue="" noSelectionOption="true" />
+														<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+													</p:selectOneMenu>
+												</div>
+											</h:panelGroup>
+			
+											<h:panelGroup>
+												<div>
+													<p:outputLabel styleClass="gray" style="font-weight:bold" value="Is the learning assumed to be in place and entry requirements in line with the qualification/s requirements?" for="learningAssumedToBeInPlace" />
+												</div>
+												<br/>
+												<div>
+													<p:selectOneMenu id="learningAssumedToBeInPlace" value="#{skillsregistrationUI.selectedSkillsregistration.learningAssumedToBeInPlace}" style="width:75%" required="true" disabled="true">
+														<p:ajax />
+														<f:selectItem itemLabel="#{lang['select.one']}" itemValue="" noSelectionOption="true" />
+														<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+													</p:selectOneMenu>
+												</div>
+											</h:panelGroup>
+											
+											<h:panelGroup>
+												<div>
+													<p:outputLabel styleClass="gray" style="font-weight:bold" value="Is the sequence in which the unit standards are to be presented addressed?" for="sequenceOfUSAddressed" />
+												</div>
+												<br/>
+												<div>
+													<p:selectOneMenu id="sequenceOfUSAddressed" value="#{skillsregistrationUI.selectedSkillsregistration.sequenceOfUSAddressed}" style="width:75%" required="true" disabled="true">
+														<p:ajax />
+														<f:selectItem itemLabel="#{lang['select.one']}" itemValue="" noSelectionOption="true" />
+														<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+													</p:selectOneMenu>
+												</div>
+											</h:panelGroup>
+			
+											<h:panelGroup>
+												<div>
+													<p:outputLabel styleClass="gray" style="font-weight:bold" value="Is the sequencing of the unit standards address the integrated summative assessment?" for="intergratedSummativeAssesment" />
+												</div>
+												<br/>
+												<div>
+													<p:selectOneMenu id="intergratedSummativeAssesment" value="#{skillsregistrationUI.selectedSkillsregistration.intergratedSummativeAssesment}" style="width:75%" required="true" disabled="true">
+														<p:ajax />
+														<f:selectItem itemLabel="#{lang['select.one']}" itemValue="" noSelectionOption="true" />
+														<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+													</p:selectOneMenu>
+												</div>
+											</h:panelGroup>
+			
+											<h:panelGroup>
+												<div>
+													<p:outputLabel styleClass="gray" style="font-weight:bold" value="Have the organisations, sectors or special projects needing this Skills Programmes/Skills Set been identified?" for="sectorsIdentified" />
+												</div>
+												<br/>
+												<div>
+													<p:selectOneMenu id="sectorsIdentified" value="#{skillsregistrationUI.selectedSkillsregistration.sectorsIdentified}" style="width:75%" required="true" disabled="true">
+														<p:ajax />
+														<f:selectItem itemLabel="#{lang['select.one']}" itemValue="" noSelectionOption="true" />
+														<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+													</p:selectOneMenu>
+												</div>
+											</h:panelGroup>
+			
+											<h:panelGroup>
+												<div>
+													<p:outputLabel styleClass="gray" style="font-weight:bold " value="Will the learner, on completion have employable skill or the ability to perform a certain task?" for="learnerOnCompletionhaveEmployableSkill" />
+												</div>
+												<br/>
+												<div>
+													<p:selectOneMenu id="learnerOnCompletionhaveEmployableSkill" value="#{skillsregistrationUI.selectedSkillsregistration.learnerOnCompletionhaveEmployableSkill}" style="width:75%" required="true" disabled="true">
+														<p:ajax />
+														<f:selectItem itemLabel="#{lang['select.one']}" itemValue="" noSelectionOption="true" />
+														<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+													</p:selectOneMenu>
+												</div>
+											</h:panelGroup>
+			
+											<h:panelGroup>
+												<div>
+													<p:outputLabel styleClass="gray" style="font-weight:bold" value="Is the title of the Skills Programme or Skills Set addressing the skills to be achieved in the outcomes of the unit standard or combination of unit standards?" for="titleOfTheSkillsProgrammeSkillsSetAddressing" />
+												</div>
+												<br/>
+												<div>
+													<p:selectOneMenu id="titleOfTheSkillsProgrammeSkillsSetAddressing" value="#{skillsregistrationUI.selectedSkillsregistration.titleOfTheSkillsProgrammeSkillsSetAddressing}" style="width:75%" required="true" disabled="true">
+														<p:ajax />
+														<f:selectItem itemLabel="#{lang['select.one']}" itemValue="" noSelectionOption="true" />
+														<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+													</p:selectOneMenu>
+												</div>
+											</h:panelGroup>
+			
+											<h:panelGroup>
+												<div>
+			
+													<p:outputLabel styleClass="gray" style="font-weight:bold" value="Does the Skills Programmes articulate with the qualification/s from which it is derived?" for="skillsProgrammesArticulate" />
+												</div>
+												<br/>
+												<div>
+													<p:selectOneMenu id="skillsProgrammesArticulate" value="#{skillsregistrationUI.selectedSkillsregistration.skillsProgrammesArticulate}" style="width:75%" required="true" disabled="true">
+														<p:ajax />
+														<f:selectItem itemLabel="#{lang['select.one']}" itemValue="" noSelectionOption="true" />
+														<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+													</p:selectOneMenu>
+												</div>
+											</h:panelGroup>
+			
+											<h:panelGroup>
+												<div>
+													<p:outputLabel styleClass="gray" style="font-weight:bold" value="Is the Skills Programme/Skills Set aligned to an existing organizing framework for occupations (OFO) code?" for="alignedToAnExistingOrganizingFramework" />
+												</div>
+												<br/>
+												<div>
+													<p:selectOneMenu id="alignedToAnExistingOrganizingFramework" value="#{skillsregistrationUI.selectedSkillsregistration.alignedToAnExistingOrganizingFramework}" style="width:75%" required="true" disabled="true">
+														<p:ajax />
+														<f:selectItem itemLabel="#{lang['select.one']}" itemValue="" noSelectionOption="true" />
+														<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+													</p:selectOneMenu>
+												</div>
+											</h:panelGroup>
+			
+											<h:panelGroup>
+												<div>
+													<p:outputLabel styleClass="gray" style="font-weight:bold" value="Has the National Qualifications Framework (NQF) level been determined?" for="hasNQFBeenDetermined" />
+												</div>
+												<br/>
+												<div>
+													<p:selectOneMenu id="hasNQFBeenDetermined" value="#{skillsregistrationUI.selectedSkillsregistration.hasNQFBeenDetermined}" style="width:75%" required="true" disabled="true">
+														<p:ajax />
+														<f:selectItem itemLabel="#{lang['select.one']}" itemValue="" noSelectionOption="true" />
+														<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+													</p:selectOneMenu>
+												</div>
+											</h:panelGroup>
+			
+											<h:panelGroup>
+												<div>
+													<p:outputLabel styleClass="gray" style="font-weight:bold" value="Is the Skills Programme or Skills Set above NQF level 1?" for="aboveNQFlevel1" />
+												</div>
+												<br/>
+												<div>
+													<p:selectOneMenu id="aboveNQFlevel1" value="#{skillsregistrationUI.selectedSkillsregistration.aboveNQFlevel1}" style="width:75%" required="true" disabled="true">
+														<p:ajax />
+														<f:selectItem itemLabel="#{lang['select.one']}" itemValue="" noSelectionOption="true" />
+														<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+													</p:selectOneMenu>
+												</div>
+											</h:panelGroup>
+				
+											</p:panelGrid>
+									</p:fieldset>
+							</p:tab>
+						</p:tabView>
+						<br />
+						<p:panelGrid  columns="2" layout="grid" rendered="#{skillsregistrationUI.selectedSkillsregistration.show eq true and skillsregistrationUI.selectedSkillsregistration ne null}">
+						<p:commandButton value="#{lang['approve']}" icon="ui-icon-check" update="mainForm :detailInfoForm" action="#{skillsregistrationUI.createApprovalForReviewCommite}" styleClass="flat green-btn Fs18" rendered="#{skillsregistrationUI.selectedSkillsregistration.show eq true}">
+									
+							<f:setPropertyActionListener value="#{skillsregistrationUI.selectedSkillsregistration}" target="#{skillsregistrationUI.skillsregistration}" />
+						</p:commandButton>
+
+						<p:commandButton value="#{lang['reject.am']}" icon="ui-icon-circle-close" update="@form" oncomplete="PF('rejectReason').show()" process="@this" styleClass="flat red-btn Fs18" rendered="#{skillsregistrationUI.selectedSkillsregistration.show eq true}">
+							<f:setPropertyActionListener value="#{skillsregistrationUI.selectedSkillsregistration}" target="#{skillsregistrationUI.skillsregistration}" />
+						</p:commandButton>
+						</p:panelGrid>
+					</h:form>
+                  
+                </div>
+            </div>
+        </div>
+        
+     
+		<p:dialog header="Reject Reasons" widgetVar="rejectReason" hideEffect="clip" showEffect="clip" id="dialogRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{skillsregistrationUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:100%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{skillsregistrationUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+
+							</p:selectManyMenu>
+							
+							<br />
+							<br />
+						</div>
+					</div>
+					<p:commandButton oncomplete="PF('rejectReason').hide()" update="mainForm :detailInfoForm"  value="Reject" action="#{skillsregistrationUI.createSeniorManagerRejectionTask}">
+					</p:commandButton>
+				</div>
+			</h:form>
+		</p:dialog>
+        
+	<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+    </ui:define>
+</ui:composition>

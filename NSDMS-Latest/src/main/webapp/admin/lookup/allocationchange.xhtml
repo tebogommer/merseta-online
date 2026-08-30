@@ -1,0 +1,87 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Allocation Change</h1>
+					<h:form id="allocationchangeInsForm">
+						<p:growl sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+
+						<p:panelGrid columns="1" style="width:100%" id="allocationchangeInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="description" value="#{allocationchangeUI.allocationchange.description}" style="width:95%" />
+								<p:outputLabel value="#{lang['description']}" for="description" />
+							</h:panelGroup>
+
+
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="Type of Change Reason" for="allocationChangeTypeEnumDD" />
+								</div>
+								<div>
+									<p:selectOneMenu id="allocationChangeTypeEnumDD" value="#{allocationchangeUI.allocationchange.allocationChangeTypeEnum}" style="width:75%" required="true">
+										<p:ajax></p:ajax>
+										<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+										<f:selectItems value="#{enumUI.allocationChangeTypeEnumDD	}" var="il" itemLabel="#{il.description}" />
+									</p:selectOneMenu>
+								</div>
+							</h:panelGroup>
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:allocationchangeList :allocationchangeInsForm:allocationchangeInsGrid" action="#{allocationchangeUI.allocationchangeInsert}" />
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="allocationchangeInsGrid" process="@this" action="#{allocationchangeUI.prepareNew}">
+									<p:resetInput target="allocationchangeInsGrid" />
+								</p:commandButton>
+							</p:panelGrid>
+						</p:panelGrid>
+
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+						<p:dataTable var="rowVar" value="#{allocationchangeUI.dataModel}" filteredValue="#{allocationchangeUI.allocationChangefilteredList}" id="allocationchangeList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+							rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+							<p:column headerText="#{lang['description']}">
+								<h:outputText value="#{rowVar.description}" />
+							</p:column>
+							<p:column headerText="Type of Change">
+								<h:outputText value="#{rowVar.allocationChangeTypeEnum.friendlyName}" />
+							</p:column>
+							<p:column headerText="#{lang['createDate']}">
+								<h:outputText value="#{rowVar.createDate}" />
+							</p:column>
+							<p:column width="80">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":allocationchangeInsForm:allocationchangeInsGrid">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{allocationchangeUI.allocationchange}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:allocationchangeList" action="#{allocationchangeUI.allocationchangeDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{allocationchangeUI.allocationchange}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+	<!-- 
+description = description
+code = code
+createDate = createDate
+setmisCode = setmisCode
+qctoCode = qctoCode
+nlrdCode = nlrdCode
+smsCode = smsCode
+
+-->
+</ui:composition>

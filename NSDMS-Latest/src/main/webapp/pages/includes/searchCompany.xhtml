@@ -1,0 +1,25 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:o="http://omnifaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:p="http://primefaces.org/ui">
+	<p:importEnum type="haj.com.entity.enums.CompanyRegOrSDLEnum" var="regSDL"></p:importEnum>
+	<p:fieldset id="searchREGSDL" legend="#{lang['enter.Reg.number.or.SDL.number']}">
+		<p:panelGrid id="searchRsaIdOrPassportPnl" columns="3" styleClass="ui-panelgrid-blank form-group">
+
+			<p:selectOneRadio value="#{searchCompanyUI.companyRegOrSDLEnum}" columns="1" layout="responsive">
+				<p:ajax update="searchRsaIdOrPassportPnl" />
+				<f:selectItems value="#{enumUI.companyRegOrSDLEnumDD}" var="idpassEnum" itemLabel="#{idpassEnum}" itemValue="#{idpassEnum}" />
+			</p:selectOneRadio>
+
+			<h:panelGroup id="regNumInput" styleClass="md-inputfield" rendered="#{searchCompanyUI.companyRegOrSDLEnum eq regSDL.REG}">
+				<p:inputText id="regNumCriteria" value="#{searchCompanyUI.criteria}" style="width:95%" requiredMessage="#{lang['enter.reg.number']}" required="true" />
+				<p:outputLabel value="#{lang['company.reg.number']}" for="regNumCriteria" />
+			</h:panelGroup>
+			
+			<h:panelGroup id="sdlNumInput" styleClass="md-inputfield" rendered="#{searchCompanyUI.companyRegOrSDLEnum eq regSDL.SDLNumber}">
+				<p:inputText id="sdlNumCriteria" value="#{searchCompanyUI.criteria}" style="width:95%" requiredMessage="#{lang['enter.sdl.number']}" required="true" />
+				<p:outputLabel value="#{lang['sdl.number']}" for="sdlNumCriteria" />
+			</h:panelGroup>
+
+			<p:commandButton id="idSearch" icon="fa fa-search" process="searchREGSDL" actionListener="#{searchCompanyUI.find}" update="@form" rendered="#{searchCompanyUI.companyRegOrSDLEnum eq regSDL.REG}" />
+			<p:commandButton id="idSearch2" icon="fa fa-search" process="searchREGSDL" actionListener="#{searchCompanyUI.findBySDL}" update="@form" rendered="#{searchCompanyUI.companyRegOrSDLEnum eq regSDL.SDLNumber}" />
+		</p:panelGrid>
+	</p:fieldset>
+</ui:composition>

@@ -1,0 +1,365 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<h:panelGroup id="empData" rendered="#{employeesUI.company ne null}">
+
+		<h1>#{lang['employee.capture.for']} #{employeesimportUI.company.companyName} (#{employeesimportUI.company.levyNumber})</h1>
+
+		<p:fieldset legend="#{lang['employees']}" id="fsID" toggleable="true" collapsed="true">
+			<p:panelGrid layout="grid" columns="3" styleClass="ui-panelgrid-blank">
+				<p:commandButton value="#{lang['delete.all']} Employees" icon="ui-icon-delete-forever" styleClass="secondary Fs18 flat" style="height: 50px" process="@this" update=":companyForm:tabView:empData" action="#{employeesimportUI.deleteAllEmployees}"
+					rendered="#{not companyinfoUI.sdfCompany.company.locked and false}">
+					<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure.you.want.to.delete.all.the.employees']}" icon="ui-icon-warning" />
+				</p:commandButton>
+				
+				<p:commandButton value="#{lang['delete.all']} Employees" update="deleteAllEmployeesForm" icon="ui-icon-delete-forever" styleClass="secondary Fs18 flat" style="height: 50px" process="@this" rendered="#{not companyinfoUI.sdfCompany.company.locked}"  oncomplete="PF('deleteAllEmployeesDlg').show()">
+				</p:commandButton>	
+			</p:panelGrid>
+			<ui:include src="/pages/companychanges/includes/employeescapture.xhtml" />
+		</p:fieldset>
+
+		<p:fieldset legend="#{lang['csv.upload']}" toggleable="true" collapsed="#{employeesimportUI.noRows eq 0}" rendered="#{not companyinfoUI.sdfCompany.company.locked}">
+			<p:growl />
+
+			<p:panelGrid columns="1" style="width:100%" id="empInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<p:fileUpload fileUploadListener="#{employeesimportUI.handleFileUpload}" dragDropSupport="true" showButtons="false" label="#{lang['select.file.to.upload']}" onstart="uploadStart()" oncomplete="uploadDone()" fileLimitMessage="File too big to upload" multiple="false"
+					allowTypes="/(\.|\/)(csv|CSV)$/" fileLimit="1" immediate="false" auto="true" update="@form" rendered="#{employeesimportUI.noRows eq 0}" />
+			</p:panelGrid>
+			<br />
+
+			<ui:include src="/pages/companychanges/includes/employeeimportupdate.xhtml" />
+			<p:growl />
+			<h:panelGroup rendered="#{employeesimportUI.noRows gt 0}">
+				<p:panelGrid layout="grid" columns="3" styleClass="ui-panelgrid-blank">
+
+					<p:commandButton value="#{lang['delete.all']} Imports" icon="ui-icon-delete-forever" styleClass="secondary Fs18 flat" style="height: 50px" process="@this" update=":companyForm:tabView:empData" action="#{employeesimportUI.deleteAll}">
+						<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure.you.want.to.delete.all.the.employees']}" icon="ui-icon-warning" />
+					</p:commandButton>
+				</p:panelGrid>
+
+				<ui:include src="/pages/includes/filterGuide.xhtml" />
+				<p:dataTable var="rowVar" value="#{employeesimportUI.dataModel}" filteredValue="#{employeesimportUI.employeesfilteredList}" id="employeesimportList" rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+					paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,15,20,25,50,100" reflow="true" lazy="true">
+
+					<p:column width="40" headerText="#{lang['RAG']}">
+						<div align="center">
+							<!-- <h:graphicImage value="/resources/hls/images/red.svg" rendered="#{rowVar.error ne null}" width="33" styleClass="animated pulse infinite" /> -->
+							<h:graphicImage value="/resources/hls/images/amber.svg" rendered="#{rowVar.error eq null and !rowVar.imported}" width="31" />
+							<h:graphicImage value="/resources/hls/images/green.svg" rendered="#{rowVar.imported}" width="22" />
+
+							<p:commandButton icon="ui-icon-error-outline" title="Click to view errors" type="button" rendered="#{rowVar.error ne null}" id="errorRag" styleClass="red-btn flat" />
+						</div>
+						<p:overlayPanel for="errorRag" hideEffect="fade">
+
+							<p:fieldset styleClass="error Fs14">
+								<ul>
+									<h:outputText value="#{rowVar.error}" escape="false" />
+								</ul>
+							</p:fieldset>
+
+						</p:overlayPanel>
+					</p:column>
+					<p:column headerText="#{lang['sid']}" width="3%">
+						<h:outputText value="#{rowVar.uniqueId}" />
+					</p:column>
+					<p:column headerText="#{lang['sdl.number']}">
+						<h:outputText value="#{rowVar.sdlNumber}" />
+					</p:column>
+
+					<p:column headerText="#{lang['id.type']}">
+						<h:outputText value="#{rowVar.idType}" />
+					</p:column>
+
+					<p:column headerText="#{lang['employee.id']}" filterBy="#{rowVar.employeeID}" filterStyle="width: 98%">
+						<h:outputText value="#{rowVar.employeeID}" />
+					</p:column>
+
+					<p:column headerText="#{lang['first.name']}">
+						<h:outputText value="#{rowVar.firstName}" />
+					</p:column>
+
+					<p:column headerText="#{lang['last.name']}" filterBy="#{rowVar.lastName}" filterStyle="width: 98%" sortBy="#{rowVar.lastName}">
+						<h:outputText value="#{rowVar.lastName}" />
+					</p:column>
+
+					<p:column headerText="#{lang['date.of.birth']}">
+						<h:outputText value="#{rowVar.dateOfBirth}">
+							<f:convertDateTime pattern="yyyy-MM-dd" />
+						</h:outputText>
+					</p:column>
+
+					<p:column headerText="#{lang['gender']}">
+						<h:outputText value="#{rowVar.gender}" />
+					</p:column>
+
+					<p:column headerText="#{lang['equity']}">
+						<h:outputText value="#{rowVar.equity}" />
+					</p:column>
+
+
+					<p:column headerText="#{lang['nationality']}">
+						<h:outputText value="#{rowVar.nationality}" />
+					</p:column>
+
+					<p:column width="80" headerText="#{lang['view.edit']}" rendered="#{not companyinfoUI.sdfCompany.company.locked}">
+						<p:commandButton icon="fa fa-database" title="#{lang['update']}" update="@form" process="@this">
+							<f:setPropertyActionListener value="#{rowVar}" target="#{employeesimportUI.employees}" />
+						</p:commandButton>
+						<p:spacer width="5" />
+						<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" action="#{employeesimportUI.employeesDelete}" process="@this" update="@form" rendered="false">
+							<f:setPropertyActionListener value="#{rowVar}" target="#{employeesimportUI.employees}" />
+							<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure.you.want.to.delete.the.employees']}" icon="ui-icon-warning" />
+						</p:commandButton>
+						<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" oncomplete="PF('deleteEmployeesDlg').show()" process="@this" update="deleteEmployeesForm" >
+							<f:setPropertyActionListener value="#{rowVar}" target="#{employeesimportUI.employees}" />
+						</p:commandButton>
+					</p:column>
+
+				</p:dataTable>
+				<h:panelGrid columns="6" styleClass="ui-panelgrid-blank form-group">
+					<p:commandButton icon="ui-icon-error-outline" type="button" styleClass="red-btn flat" />
+					<h:outputText styleClass=" gray" value="= #{lang['errors.in.data']}" />
+					<h:graphicImage value="/resources/hls/images/amber.svg" width="31" />
+					<h:outputText styleClass=" gray" value="= #{lang['ready.to.import']}" />
+					<h:graphicImage value="/resources/hls/images/green.svg" width="22" />
+					<h:outputText styleClass=" gray" value="= #{lang['already.imported']}" />
+				</h:panelGrid>
+			</h:panelGroup>
+
+		</p:fieldset>
+
+	</h:panelGroup>
+
+	<p:dialog header="Confirm: Delete All Employees" position="top" widgetVar="deleteAllEmployeesDlg" resizable="false" hideEffect="clip" showEffect="clip" width="60%" responsive="true" modal="true" dynamic="true">
+		<h:form id="deleteAllEmployeesForm">
+
+			<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<p:outputLabel value="#{lang['are.you.sure.you.want.to.delete.all.the.employees']}" />
+
+				<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<p:commandButton icon="fa fa-check" value="Yes"  update=":companyForm:tabView:empData" action="#{employeesimportUI.deleteAllEmployees}" oncomplete="PF('deleteAllEmployeesDlg').hide()" />
+					<p:commandButton icon="fa fa-times" value="No"  oncomplete="PF('deleteAllEmployeesDlg').hide()" />
+				</p:panelGrid>
+			</p:panelGrid>
+		</h:form>
+	</p:dialog>
+	
+	<p:dialog header="Confirm: Delete Employee" position="top" widgetVar="deleteEmployeesDlg" resizable="false" hideEffect="clip" showEffect="clip" width="60%" responsive="true" modal="true" dynamic="true">
+		<h:form id="deleteEmployeesForm">
+
+			<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<p:outputLabel value="#{lang['are.you.sure.you.want.to.delete.the.employees']}" />
+
+				<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<p:commandButton icon="fa fa-check" value="Yes"  update=":companyForm:tabView:empData" action="#{employeesimportUI.employeesDelete}" oncomplete="PF('deleteEmployeesDlg').hide()" />
+					<p:commandButton icon="fa fa-times" value="No"  oncomplete="PF('deleteEmployeesDlg').hide()" />
+				</p:panelGrid>
+			</p:panelGrid>
+		</h:form>
+	</p:dialog>
+
+
+	<p:dialog modal="true" appendTo="@(body)" fitViewport="true" width="75%" widgetVar="trainingUploadDialog" responsive="true" header="#{lang['upload.employee.training.data']}">
+		<h:form id="uploadTrainingForm">
+			<p:panelGrid layout="grid" columns="4" styleClass="ui-panelgrid-blank">
+				<p:outputLabel value="#{lang['completed.planned.trainig']}" styleClass="gray" />
+				<p:selectOneMenu value="#{employeesimportUI.completedPlanned}" style="width:75%">
+					<p:ajax update="@form" />
+					<f:selectItem itemLabel="--- #{lang['select.one']} ---" itemValue="" styleClass="FontLight gray" noSelectionOption="true" />
+					<f:selectItems value="#{enumUI.completedPlannedlDD}" />
+				</p:selectOneMenu>
+				<p:outputLabel value="#{lang['pivotal.non.pivotal.trainig']}" styleClass="gray" />
+				<p:selectOneMenu value="#{employeesimportUI.pivotalNonpivotal}" style="width:75%">
+					<p:ajax update="@form" />
+					<f:selectItem itemLabel="--- #{lang['select.one']} ---" itemValue="" styleClass="FontLight gray" noSelectionOption="true" />
+					<f:selectItems value="#{enumUI.pivotalNonPivotalDD}" />
+				</p:selectOneMenu>
+			</p:panelGrid>
+			<br />
+			<p:fileUpload fileUploadListener="#{employeesimportUI.handleTraingFileUpload}" dragDropSupport="true" showButtons="false" label="#{lang['select.file.to.upload']}" fileLimitMessage="File too big to upload" multiple="false" allowTypes="/(\.|\/)(csv|CSV)$/" fileLimit="1" immediate="false"
+				auto="true" rendered="#{employeesimportUI.completedPlanned ne null and employeesimportUI.pivotalNonpivotal ne null}" update="@form" oncomplete="PF('trainingUploadDialog').hide()" />
+			<br />
+		</h:form>
+	</p:dialog>
+
+
+	<p:dialog modal="true" appendTo="@(body)" fitViewport="true" width="95%" widgetVar="trainingDialog" position="top" responsive="true" closeOnEscape="true">
+		<p:ajax event="close" listener="#{employeesUI.prepareNew}" update="@form"></p:ajax>
+		<h:form id="trainingForm">
+			<h2>#{employeesUI.employees.firstName} #{employeesUI.employees.lastName} - #{employeesUI.employees.rsaIDNumber} #{employeesUI.employees.passportNumber}</h2>
+			<p:panelGrid layout="grid" columns="4">
+				<p:outputLabel value="#{lang['pivotal.non.pivotal.trainig']}:" styleClass="gray" />
+				<p:outputLabel value="#{lang[employeesUI.employeesTraining.pivotNonPivot.registrationName]}" styleClass="Fs18 FontBold" />
+			</p:panelGrid>
+			<br />
+			<p:panelGrid layout="grid" columns="4" styleClass="ui-panelgrid-blank">
+
+				<p:outputLabel value="#{lang['completed.planned.trainig']}" styleClass="gray" />
+				<p:selectOneMenu value="#{employeesUI.employeesTraining.completedPlanned}" style="width:75%" requiredMessage="Select Completed/Planned Trainig" required="true">
+					<p:ajax></p:ajax>
+					<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+					<f:selectItems value="#{enumUI.completedPlannedlDD}" />
+				</p:selectOneMenu>
+
+				<p:outputLabel value="#{lang['intervention.level']}:" styleClass="gray" rendered="#{employeesUI.employeesTraining.pivotNonPivot eq PivotNonPivotEnum.NonPivotal}" />
+				<p:selectOneMenu id="idType" value="#{employeesUI.employeesTraining.interventionLevel}" converter="InterventionLevelConvertor" style="width:75%" requiredMessage="#{lang['select.intervention.level']}" required="true"
+					rendered="#{employeesUI.employeesTraining.pivotNonPivot eq PivotNonPivotEnum.NonPivotal}">
+					<p:ajax></p:ajax>
+					<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+					<f:selectItems value="#{selectItemsUI.selectItemsInterventionLevel}" var="il" itemLabel="#{il.description}" />
+				</p:selectOneMenu>
+
+				<p:outputLabel value="#{lang['intervention.title']}:" styleClass="gray" rendered="#{employeesUI.employeesTraining.pivotNonPivot eq PivotNonPivotEnum.NonPivotal}" />
+				<p:inputText value="#{employeesUI.employeesTraining.interventionTitle}" style="width: 98%" rendered="#{employeesUI.employeesTraining.pivotNonPivot eq PivotNonPivotEnum.NonPivotal}">
+					<p:ajax />
+				</p:inputText>
+
+				<p:outputLabel value="#{lang['qualification']}" styleClass="gray" rendered="#{employeesUI.employeesTraining.pivotNonPivot eq PivotNonPivotEnum.Pivotal}" />
+				<p:autoComplete style="width: 100%" id="qualificationAuto" rendered="#{employeesUI.employeesTraining.pivotNonPivot eq PivotNonPivotEnum.Pivotal}" value="#{employeesUI.employeesTraining.qualification}" completeMethod="#{autoCompleteUI.completeQualification}" var="rv" itemLabel="#{rv.description}"
+					itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+					<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+					<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+					<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+				</p:autoComplete>
+
+				<p:outputLabel value="#{lang['provider.name']}" styleClass="gray" />
+				<p:inputText value="#{employeesUI.employeesTraining.providerName}" style="width: 98%">
+					<p:ajax />
+				</p:inputText>
+
+				<p:outputLabel value="#{lang['etqa']}:" styleClass="gray" rendered="#{employeesUI.employeesTraining.pivotNonPivot eq PivotNonPivotEnum.Pivotal}" />
+				<p:selectOneMenu id="etqa" value="#{employeesUI.employeesTraining.etqa}" converter="EtqaConvertor" style="width:75%" requiredMessage="#{lang['select.intervention.level']}" required="true" rendered="#{employeesUI.employeesTraining.pivotNonPivot eq PivotNonPivotEnum.Pivotal}">
+					<p:ajax></p:ajax>
+					<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+					<f:selectItems value="#{selectItemsUI.selectItemsEtqa}" var="il" itemLabel="#{il.description}" />
+				</p:selectOneMenu>
+
+
+				<p:outputLabel value="#{lang['accreditation.number']}:" styleClass="gray" rendered="#{employeesUI.employeesTraining.pivotNonPivot eq PivotNonPivotEnum.Pivotal}" />
+				<p:inputText value="#{employeesUI.employeesTraining.accreditationNumber}" style="width: 98%" rendered="#{employeesUI.employeesTraining.pivotNonPivot eq PivotNonPivotEnum.Pivotal}">
+					<p:ajax />
+				</p:inputText>
+
+				<p:outputLabel value="#{lang['intervention.cost']}" styleClass="gray" />
+				<p:inputText value="#{employeesUI.employeesTraining.interventionCost}" style="width: 98%">
+					<p:ajax />
+				</p:inputText>
+
+				<p:outputLabel value="#{lang['source.of.funding']}" styleClass="gray" />
+				<p:selectOneMenu id="funding" value="#{employeesUI.employeesTraining.sourceOfFunding}" converter="FundingConvertor" style="width:75%" requiredMessage="#{lang['select.intervention.level']}" required="true">
+					<p:ajax></p:ajax>
+					<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+					<f:selectItems value="#{selectItemsUI.selectItemsFunding}" var="il" itemLabel="#{il.description}" />
+				</p:selectOneMenu>
+
+				<f:facet name="footer">
+					<div align="center">
+						<br />
+						<p:commandButton value="#{lang['update']}" icon="fa fa-database" title="#{lang['update']}" update="@form" process="@form" actionListener="#{employeesUI.employeesTrainingUpdate}" />
+					</div>
+				</f:facet>
+			</p:panelGrid>
+
+			<br />
+			<br />
+
+			<p:dataTable rendered="#{employeesUI.employeesTraining.pivotNonPivot eq PivotNonPivotEnum.Pivotal}" var="rv" value="#{employeesUI.employees.pivotalTrainingDone}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv.id}"
+				paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+				<f:facet name="header">#{lang['completed.pivotal.training']}</f:facet>
+				<p:column headerText="#{lang['qualification']}">#{rv.qualification.description}</p:column>
+				<p:column headerText="#{lang['provider.name']}">#{rv.providerName}</p:column>
+				<p:column headerText="#{lang['etqa']}">#{rv.etqa.description}</p:column>
+				<p:column headerText="#{lang['accreditation.number']}">#{rv.accreditationNumber}</p:column>
+				<p:column headerText="#{lang['intervention.cost']}">
+					<h:outputText value="#{rv.interventionCost}" styleClass="Fright">
+						<f:convertNumber pattern="###,###,##0.00" />
+					</h:outputText>
+				</p:column>
+				<p:column headerText="#{lang['source.of.funding']}">#{rv.sourceOfFunding.description}</p:column>
+				<p:column width="80">
+					<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":trainingForm" process="@this">
+						<f:setPropertyActionListener value="#{rv}" target="#{employeesUI.employeesTraining}" />
+					</p:commandButton>
+					<p:spacer width="3" />
+					<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":trainingForm" process="@this" action="#{employeesUI.employeesDeleteTraining}">
+						<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure.you.want.to.delete.the.training']}" icon="ui-icon-warning" />
+						<f:setPropertyActionListener value="#{rv}" target="#{employeesUI.employeesTraining}" />
+					</p:commandButton>
+				</p:column>
+			</p:dataTable>
+
+			<p:dataTable rendered="#{employeesUI.employeesTraining.pivotNonPivot eq PivotNonPivotEnum.NonPivotal}" var="rv" value="#{employeesUI.employees.nonpivotalTrainingDone}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv.id}"
+				paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+				<f:facet name="header">#{lang['completed.non.pivotal.training']}</f:facet>
+				<p:column headerText="#{lang['intervention.level']}">#{rv.interventionLevel.description}</p:column>
+				<p:column headerText="#{lang['intervention.title']}">#{rv.interventionTitle}</p:column>
+				<p:column headerText="#{lang['provider.name']}">#{rv.providerName}</p:column>
+				<p:column headerText="#{lang['intervention.cost']}">
+					<h:outputText value="#{rv.interventionCost}" styleClass="Fright">
+						<f:convertNumber pattern="###,###,##0.00" />
+					</h:outputText>
+				</p:column>
+				<p:column headerText="#{lang['source.of.funding']}">#{rv.sourceOfFunding.description}</p:column>
+				<p:column width="80">
+					<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":trainingForm" process="@this">
+						<f:setPropertyActionListener value="#{rv}" target="#{employeesUI.employeesTraining}" />
+					</p:commandButton>
+					<p:spacer width="3" />
+					<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":trainingForm" process="@this" action="#{employeesUI.employeesDeleteTraining}">
+						<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure.you.want.to.delete.the.training']}" icon="ui-icon-warning" />
+						<f:setPropertyActionListener value="#{rv}" target="#{employeesUI.employeesTraining}" />
+					</p:commandButton>
+				</p:column>
+			</p:dataTable>
+			<br />
+			<br />
+			<p:dataTable rendered="#{employeesUI.employeesTraining.pivotNonPivot eq PivotNonPivotEnum.Pivotal}" var="rv" value="#{employeesUI.employees.pivotalTrainingPlanned}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv.id}"
+				paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+				<f:facet name="header">#{lang['planned.pivotal.training']}</f:facet>
+				<p:column headerText="#{lang['qualification']}">#{rv.qualification.description}</p:column>
+				<p:column headerText="#{lang['provider.name']}">#{rv.providerName}</p:column>
+				<p:column headerText="#{lang['etqa']}">#{rv.etqa.description}</p:column>
+				<p:column headerText="#{lang['accreditation.number']}">#{rv.accreditationNumber}</p:column>
+				<p:column headerText="#{lang['intervention.cost']}">
+					<h:outputText value="#{rv.interventionCost}" styleClass="Fright">
+						<f:convertNumber pattern="###,###,##0.00" />
+					</h:outputText>
+				</p:column>
+				<p:column headerText="#{lang['source.of.funding']}">#{rv.sourceOfFunding.description}</p:column>
+				<p:column width="80">
+					<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":trainingForm" process="@this">
+						<f:setPropertyActionListener value="#{rv}" target="#{employeesUI.employeesTraining}" />
+					</p:commandButton>
+					<p:spacer width="3" />
+					<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":trainingForm" process="@this" action="#{employeesUI.employeesDeleteTraining}">
+						<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure.you.want.to.delete.the.training']}" icon="ui-icon-warning" />
+						<f:setPropertyActionListener value="#{rv}" target="#{employeesUI.employeesTraining}" />
+					</p:commandButton>
+				</p:column>
+			</p:dataTable>
+
+			<p:dataTable rendered="#{employeesUI.employeesTraining.pivotNonPivot eq PivotNonPivotEnum.NonPivotal}" var="rv" value="#{employeesUI.employees.nonpivotalTrainingPlanned}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv.id}"
+				paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+				<f:facet name="header">#{lang['planned.non.pivotal.training']}</f:facet>
+				<p:column headerText="#{lang['intervention.level']}">#{rv.interventionLevel.description}</p:column>
+				<p:column headerText="#{lang['intervention.title']}">#{rv.interventionTitle}</p:column>
+				<p:column headerText="#{lang['provider.name']}">#{rv.providerName}</p:column>
+				<p:column headerText="#{lang['intervention.cost']}">
+					<h:outputText value="#{rv.interventionCost}" styleClass="Fright">
+						<f:convertNumber pattern="###,###,##0.00" />
+					</h:outputText>
+				</p:column>
+				<p:column headerText="#{lang['source.of.funding']}">#{rv.sourceOfFunding.description}</p:column>
+				<p:column width="80">
+					<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":trainingForm" process="@this">
+						<f:setPropertyActionListener value="#{rv}" target="#{employeesUI.employeesTraining}" />
+					</p:commandButton>
+					<p:spacer width="3" />
+					<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":trainingForm" process="@this" action="#{employeesUI.employeesDeleteTraining}">
+						<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure.you.want.to.remove.the.training']}" icon="ui-icon-warning" />
+						<f:setPropertyActionListener value="#{rv}" target="#{employeesUI.employeesTraining}" />
+					</p:commandButton>
+				</p:column>
+			</p:dataTable>
+		</h:form>
+	</p:dialog>
+
+</ui:composition>

@@ -1,16 +1,18 @@
 @page "/sdp/{id:int}"
 @page "/sdp/create"
+@using Nsdms.Application.Services
 @using Nsdms.Web.Components.Shared
 @inject ITrainingProviderService ProviderService
 @inject IOrganisationService OrgService
 @inject IPersonService PersonService
+@inject IBrandAssetService BrandAssetService
 @inject LookupService LookupService
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
 @rendermode InteractiveServer
 
 <!-- Sticky Top Bar with Breadcrumbs and Action Buttons -->
-<div class="sticky-top bg-white pa-4 mb-4 border-bottom elevation-1 d-flex flex-wrap justify-space-between align-center gap-3">
+<MudPaper Elevation="1" Class="sticky-top pa-4 mb-4 rounded-lg d-flex flex-wrap justify-space-between align-center gap-3" Style="top: var(--mud-appbar-height, 64px); z-index: 10;">
     <div class="d-flex align-center gap-3">
         <MudButton Variant="Variant.Text"
                    StartIcon="@Icons.Material.Filled.ArrowBack"
@@ -19,6 +21,16 @@
             Back to SDP Registry
         </MudButton>
         <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-2" />
+        @if (!string.IsNullOrEmpty(_logoDataUri))
+        {
+            <img src="@_logoDataUri" alt="SDP Logo" style="height: 38px; width: 38px; object-fit: cover; border-radius: 4px; border: 1px solid var(--mud-palette-lines-default);" />
+        }
+        else
+        {
+            <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Small">
+                <MudIcon Icon="@Icons.Material.Filled.School" Size="Size.Small" />
+            </MudAvatar>
+        }
         <div>
             <MudBreadcrumbs Items="_breadcrumbItems" Separator=">" Class="pa-0 ma-0" />
             <MudText Typo="Typo.h6" Class="font-weight-bold">
@@ -49,11 +61,17 @@
             @(_isSaving ? "Saving..." : "Save Provider")
         </MudButton>
     </div>
-</div>
+</MudPaper>
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-0">
     @if (Id > 0)
     {
+        <!-- Visual Workflow Step Tracker -->
+        <WorkflowProgressBar ProcessCode="PROVIDER" 
+                             EntityId="@Id" 
+                             EntityTitle="@($"{_provider.AccreditationNumber} - {_provider.Organisation?.CompanyName ?? "Provider"}")" 
+                             EntityRef="@_provider.AccreditationNumber" />
+
         <!-- Action Bridge for Workflow Transitions -->
         <WorkflowActionBridge ProcessCode="PROVIDER" 
                               EntityId="@Id" 
@@ -464,12 +482,15 @@
         };
     }
 
+    private string? _logoDataUri;
+
     private async Task LoadProviderData()
     {
         var p = await ProviderService.GetByIdAsync(Id);
         if (p != null)
         {
             _provider = p;
+            _logoDataUri = await BrandAssetService.GetLogoDataUriAsync(Id, "TrainingProvider");
             _startDate = p.AccreditationStartDate;
             _endDate = p.AccreditationEndDate;
             _qualifications = await ProviderService.GetQualificationsAsync(Id);

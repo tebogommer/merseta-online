@@ -1,0 +1,439 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<p:growl showDetail="false" sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				
+				<h:form id="mainForm">
+					<p:tooltip position="left"></p:tooltip>
+					
+						<div class="card card-w-title">
+							<H1>Learner List</H1>							
+							<ui:include src="/pages/includes/filterGuide.xhtml" />
+							<p:dataTable var="rowVar" value="#{companyLearnersMonitorUI.dataModel}" filteredValue="#{companyLearnersMonitorUI.learnersfilteredList}" id="learnersList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25"
+								reflow="true" lazy="true">
+
+								<p:column headerText="#{lang['first.name']}" filterBy="#{rowVar.user.firstName}" sortBy="#{rowVar.user.firstName}">
+									<h:outputText value="#{rowVar.user.firstName}" />
+								</p:column>
+								<p:column headerText="#{lang['last.name']}" filterBy="#{rowVar.user.lastName}" sortBy="#{rowVar.user.lastName}">
+									<h:outputText value="#{rowVar.user.lastName}" />
+								</p:column>
+								<p:column headerText="Identity Number" filterBy="#{rowVar.user.rsaIDNumber}" sortBy="#{rowVar.user.rsaIDNumber}">
+									<h:outputText value="#{rowVar.user.rsaIDNumber}" />
+									<h:outputText rendered="#{rowVar.user.rsaIDNumber.length() lt 1}" value="N/A" />
+								</p:column>
+								<p:column headerText="Passport Number" filterBy="#{rowVar.user.rsaIDNumber}" sortBy="#{rowVar.user.rsaIDNumber}">
+									<h:outputText rendered="#{rowVar.user.passportNumber.length() lt 1}" value="N/A" />
+									<h:outputText value="#{rowVar.user.passportNumber}" />
+								</p:column>
+								<p:column headerText="Employment Status" >
+									<h:outputText value="#{rowVar.employmentStatus.friendlyName}" />
+								</p:column>
+								<p:column headerText="Status">
+									<h:outputText value="#{rowVar.learnerStatus.friendlyName}" />
+								</p:column>
+								<p:column headerText="Intervention Type" filterBy="#{rowVar.interventionType.description}" sortBy="#{rowVar.interventionType.description}">
+									<h:outputText value="#{rowVar.interventionType.description}" />
+								</p:column>
+								<p:column headerText="Course / Qualification ">
+									<h:outputText value="(#{rowVar.learnership.learnershipCode})" rendered="#{rowVar.learnership ne null}"/>
+									<h:outputText value="(#{rowVar.qualification.code})" rendered="#{rowVar.qualification ne null}"/>
+									<h:outputText value="#{rowVar.qualification.description}" rendered="#{rowVar.qualification ne null}"/>
+									<h:outputText value="(#{rowVar.qualification.nqflevelg2description})" rendered="#{rowVar.qualification ne null}"/>
+									<h:outputText value="#{rowVar.skillsSet.description}" rendered="#{rowVar.skillsSet ne null}" />
+									<h:outputText value="#{rowVar.skillsProgram.description}" rendered="#{rowVar.skillsProgram ne null}" />
+									<h:outputText value="(#{rowVar.unitStandard.code})" rendered="#{rowVar.unitStandard ne null}" />
+									<h:outputText value="#{rowVar.unitStandard.title}" rendered="#{rowVar.unitStandard ne null}" />
+									<h:outputText value="#{rowVar.nonCredidBearingDescription}" rendered="#{rowVar.nonCredidBearingDescription ne null}" />
+								</p:column>
+								<p:column headerText="Completion Date" rendered="false">
+									<h:outputText value="#{rowVar.completionDate}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</h:outputText>
+								</p:column>
+
+								<p:column headerText="Registration Status Date">
+									<h:outputText value="#{rowVar.registeredDate}" rendered="#{rowVar.legacyRegistrationDate eq null}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</h:outputText>
+									<h:outputText value="#{rowVar.legacyRegistrationDate}" rendered="#{rowVar.legacyRegistrationDate ne null}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</h:outputText>
+								</p:column>
+								
+								<p:column headerText="Agreement End Date">
+									<h:outputText value="#{rowVar.completionDate}" rendered="#{rowVar.completionDate ne null}">
+									<f:convertDateTime pattern="dd MMMM yyyy" />
+									</h:outputText>
+								</p:column>
+
+								<p:column headerText="Agreement Number">
+									<h:outputText value="#{rowVar.registrationNumber}">
+									</h:outputText>
+								</p:column>
+								
+								<p:column headerText="Employer" filterBy="#{rowVar.employer.companyName}" sortBy="#{rowVar.employer.companyName}">
+									<h:outputText value="#{rowVar.employer.companyName}" rendered="#{rowVar.employer ne null}">
+									</h:outputText>
+								</p:column>
+								
+								<p:column headerText="Entity ID" filterBy="#{rowVar.employer.levyNumber}" sortBy="#{rowVar.employer.levyNumber}">
+									<h:outputText value="#{rowVar.employer.levyNumber}">
+									</h:outputText>
+								</p:column>
+
+								<p:column headerText="Provider" filterBy="#{rowVar.company.companyName}" sortBy="#{rowVar.company.companyName}">
+									<h:outputText value="#{rowVar.company.companyName}" rendered="#{rowVar.company ne null}">
+									</h:outputText>
+								</p:column>
+								
+								<p:column headerText="Accreditation Number" filterBy="#{rowVar.company.accreditationNumber}" sortBy="#{rowVar.company.accreditationNumber}">
+									<h:outputText value="#{rowVar.company.accreditationNumber}">
+									</h:outputText>
+								</p:column>
+								
+								<p:column headerText="OFO CODES">
+									<h:outputText value="(#{rowVar.ofoCodes.ofoCode})" rendered="#{rowVar.ofoCodes.ofoCode ne null}">
+									</h:outputText>
+									<h:outputText value="#{rowVar.ofoCodes.description}">
+									</h:outputText>
+								</p:column>
+								
+								<p:column headerText="Commencement Date">
+									<h:outputText value="#{rowVar.commencementDate}">
+									<f:convertDateTime pattern="dd MMMM yyyy" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Completion Date">
+									<h:outputText value="#{rowVar.completionDate}">
+									<f:convertDateTime pattern="dd MMMM yyyy" />
+									</h:outputText>
+								</p:column>
+								<p:column width="30">
+									<p:commandButton icon="fa fa-database" title="#{lang['update']} Learner" update="updateForm" oncomplete="PF('updateDialog').show()" action="#{companyLearnersMonitorUI.prepareCompanyLearners}" immediate="true">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{companyLearnersMonitorUI.companyLearners}" />
+									</p:commandButton>
+									
+									<p:commandButton icon="fa fa-database" title="#{lang['update']} Learner Language" update="updateFormLanguage" oncomplete="PF('updateDialogLanguage').show()" action="#{companyLearnersMonitorUI.prepareCompanyLearnersLanguage}" immediate="true">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{companyLearnersMonitorUI.companyLearners}" />
+									</p:commandButton>
+									
+									<p:commandButton icon="fa fa-bars" title="#{lang['update']} Documents" update="updateFormDocs" oncomplete="PF('updateDialogDocs').show()" action="#{companyLearnersMonitorUI.prepareCompanyLearnersDocuments}" immediate="true">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{companyLearnersMonitorUI.companyLearners}" />
+									</p:commandButton>
+								</p:column>
+								
+							</p:dataTable>
+							<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+								<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+								<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+							</p:confirmDialog>
+						</div>
+				</h:form>
+			</div>
+		</div>
+
+		<ui:include src="/pages/tp/includes/dialogs.xhtml" />
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+		
+		<p:dialog header="Update Learner" widgetVar="updateDialog" resizable="false" hideEffect="clip" showEffect="clip" id="dlgID" width="70%" responsive="true" modal="true" dynamic="true">
+			<h:form id="updateForm">
+				<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" id="updateFormDialog">
+				
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText value="#{companyLearnersMonitorUI.companyLearners.user.firstName}" style="width:95%" disabled="true" />
+						<p:outputLabel value="#{lang['first.name']}" />
+					</h:panelGroup>
+					
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText value="#{companyLearnersMonitorUI.companyLearners.user.lastName}" style="width:95%" disabled="true" />
+						<p:outputLabel value="#{lang['last.name']}" />
+					</h:panelGroup>
+					
+					<h:panelGroup styleClass="md-inputfield" rendered="#{companyLearnersMonitorUI.companyLearners.user.rsaIDNumber.length() gt 1}">
+						<p:inputText value="#{companyLearnersMonitorUI.companyLearners.user.rsaIDNumber}" style="width:95%" disabled="true" />
+						<p:outputLabel value="Identity Number" />
+					</h:panelGroup>
+					
+					<h:panelGroup styleClass="md-inputfield" rendered="#{companyLearnersMonitorUI.companyLearners.user.passportNumber.length() gt 1}">
+						<p:inputText value="#{companyLearnersMonitorUI.companyLearners.user.passportNumber}" style="width:95%" disabled="true" />
+						<p:outputLabel value="Passport Number" />
+					</h:panelGroup>
+					
+					<h:panelGroup class="md-inputfield" >
+						<p:autoComplete id="ofoCode" value="#{companyLearnersMonitorUI.companyLearners.ofoCodes}" completeMethod="#{autoCompleteUI.completeOfoCodes}" var="rv" 
+										itemLabel="#{rv.ofoDescription}" itemValue="#{rv}" forceSelection="true" converter="OfoCodesConvertor" dropdown="true" minQueryLength="3" 
+										maxResults="10" inputStyle="opacity: 1 !important; color: black; width: 95%"
+									style="opacity: 1 !important; color: black; width: 95%" required="false" requiredMessage="#{lang['select.ofo.code']}">
+							<p:column headerText="OfoCodes" style="white-space: nowrap">#{rv.ofoCodeParent}</p:column>
+							<p:column headerText="Description" style="white-space: nowrap">#{rv.description}</p:column>
+							<p:ajax event="itemSelect" />
+						</p:autoComplete>
+						<p:outputLabel value="OFO Code" for="ofoCode" />
+					</h:panelGroup>
+					
+					<h:panelGroup styleClass="md-inputfield">
+						<p:outputLabel value="Commencement Date" for="commDate" styleClass="gray" />
+						<br />
+						<p:calendar inputStyle="width:calc(99% - 40px);" navigator="true" id="commDate" 
+							value="#{companyLearnersMonitorUI.companyLearners.commencementDate}" size="19" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" 
+							mask="true" readonlyInput="true"  requiredMessage="Select Commencement Date" required="true" 
+							disabled="#{disableFields}" maxdate="#{companyLearnersMonitorUI.now}">
+							<p:ajax event="dateSelect" listener="#{companyLearnersMonitorUI.startDateFilterData}" update="updateFormDialog" />
+							<p:ajax event="change" listener="#{companyLearnersMonitorUI.startDateFilterData}" update="updateFormDialog" />
+						</p:calendar>
+					</h:panelGroup>
+					
+					<h:panelGroup styleClass="md-inputfield">
+						<p:outputLabel value="Projected End Date" for="completionDate" styleClass="gray" />
+						<br />
+						<p:calendar inputStyle="width:calc(99% - 40px);" navigator="true" id="completionDate" 
+							value="#{companyLearnersMonitorUI.companyLearners.completionDate}" size="19" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" 
+							mask="true" readonlyInput="true"  requiredMessage="Select Commencement Date" required="true">
+							<p:ajax event="dateSelect"/>
+						</p:calendar>
+					</h:panelGroup>
+					
+					<h:panelGroup styleClass="md-inputfield">
+						<p:outputLabel value="Actual Completion Date" for="dateLearnerCompleted" styleClass="gray" />
+						<br />
+						<p:calendar inputStyle="width:calc(99% - 40px);" navigator="true" id="dateLearnerCompleted" 
+							value="#{companyLearnersMonitorUI.companyLearners.dateLearnerCompleted}" size="19" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" 
+							mask="true" readonlyInput="true"  requiredMessage="Select Commencement Date" required="false">
+							<p:ajax event="dateSelect"/>
+						</p:calendar>
+					</h:panelGroup>
+										
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="#{lang['employment.status']}" for="proc" styleClass="gray" />
+						</div>
+						<div>
+							<p:selectOneMenu id="proc" value="#{companyLearnersMonitorUI.companyLearners.employmentStatus}" style="width:95%" required="true" requiredMessage="#{lang['select.employment.status']}" >
+								<p:ajax />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" itemValue="" noSelectionOption="true" />
+								<f:selectItems value="#{enumUI.employmentStatusFilteredEnumDD}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+				</p:panelGrid>
+				<p:commandButton value="#{lang['submit']}" icon="fa fa-check" styleClass="flat" action="#{companyLearnersMonitorUI.companyLearnersUpdate}" update="mainForm" oncomplete="PF('updateDialog').hide()" />
+			</h:form>
+		</p:dialog>
+		
+		<p:dialog header="Update Learner" widgetVar="updateDialogDocs" resizable="false" hideEffect="clip" showEffect="clip" id="dlgDodcID" width="70%" responsive="true" modal="true" dynamic="true">
+			<h:form id="updateFormDocs">
+				<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" id="updateFormDialog">
+				
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText value="#{companyLearnersMonitorUI.companyLearners.user.firstName}" style="width:95%" disabled="true" />
+						<p:outputLabel value="#{lang['first.name']}" />
+					</h:panelGroup>
+					
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText value="#{companyLearnersMonitorUI.companyLearners.user.lastName}" style="width:95%" disabled="true" />
+						<p:outputLabel value="#{lang['last.name']}" />
+					</h:panelGroup>
+					
+					<h:panelGroup styleClass="md-inputfield" rendered="#{companyLearnersMonitorUI.companyLearners.user.rsaIDNumber.length() gt 1}">
+						<p:inputText value="#{companyLearnersMonitorUI.companyLearners.user.rsaIDNumber}" style="width:95%" disabled="true" />
+						<p:outputLabel value="Identity Number" />
+					</h:panelGroup>
+					
+					<h:panelGroup styleClass="md-inputfield" rendered="#{companyLearnersMonitorUI.companyLearners.user.passportNumber.length() gt 1}">
+						<p:inputText value="#{companyLearnersMonitorUI.companyLearners.user.passportNumber}" style="width:95%" disabled="true" />
+						<p:outputLabel value="Passport Number" />
+					</h:panelGroup>
+				</p:panelGrid>
+				
+				<h:panelGroup id="docList">
+					<p:fieldset legend="#{lang['documents']}" id="userDocs" rendered="#{companyLearnersMonitorUI.companyLearners.docs.size() gt 0}">
+						<p:dataTable value="#{companyLearnersMonitorUI.companyLearners.docs}" var="rv1" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+							<p:column headerText="#{lang['type']}" width="20%">
+								<p:outputLabel value="#{rv1.configDoc.name} #{rv1.configDoc.requiredDocument ? '*' : ''}"></p:outputLabel>
+							</p:column>
+							<p:column headerText="#{lang['uploaded.by']}">
+								<p:outputLabel value="#{rv1.users.firstName} #{rv1.users.lastName}"></p:outputLabel>
+							</p:column>
+							<p:column headerText="#{lang['uploaded']}" width="15%">
+								<h:outputText value="#{rv1.createDate}">
+									<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['version']}" width="15%">
+								<h:outputText value="#{rv1.versionNo}">
+								</h:outputText>
+							</p:column>
+
+							<p:column width="180" headerText="#{lang['view.edit']}">
+								<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null and rv1.originalFname ne null}">
+									<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+								</p:commandButton>
+								<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null and rv1.originalFname ne null}" />
+
+								<p:spacer width="5" rendered="#{rv1.id ne null}" />
+								<p:commandButton icon="fa fa-bars " id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null and rv1.originalFname ne null}">
+									<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+								</p:commandButton>
+								<p:tooltip for="dhistUserDocs" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null and rv1.originalFname ne null}" />
+
+								<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+									<p:spacer width="5" />
+									<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+										<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+								</h:panelGroup>
+
+								<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+									<p:spacer width="5" />
+									<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+										<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+								</h:panelGroup>
+
+							</p:column>
+							
+							<p:column width="180" headerText="#{lang['delete']}">
+								<p:commandButton update="@form" icon="fa fa-remove" action="#{companyLearnersMonitorUI.companyLearnersUpdateDocument}" rendered="#{rv1.id ne null}">
+									<f:setPropertyActionListener value="#{rv1}" target="#{companyLearnersMonitorUI.doc}" />
+									<p:confirm header="Confirmation" message="Are You Sure You Want To Remove This Document?" icon="fa fa-exclamation-triangle" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+					</p:fieldset>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+		
+		<p:dialog header="Update Language" widgetVar="updateDialogLanguage" resizable="false" hideEffect="clip" showEffect="clip" id="dlgIDLanguage" width="70%" responsive="true" modal="true" dynamic="true">
+			<h:form id="updateFormLanguage">
+				<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" id="updateFormDialog">
+				
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText value="#{companyLearnersMonitorUI.companyLearners.user.firstName}" style="width:95%" disabled="true" />
+						<p:outputLabel value="#{lang['first.name']}" />
+					</h:panelGroup>
+					
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText value="#{companyLearnersMonitorUI.companyLearners.user.lastName}" style="width:95%" disabled="true" />
+						<p:outputLabel value="#{lang['last.name']}" />
+					</h:panelGroup>
+					
+					<h:panelGroup styleClass="md-inputfield" rendered="#{companyLearnersMonitorUI.companyLearners.user.rsaIDNumber.length() gt 1}">
+						<p:inputText value="#{companyLearnersMonitorUI.companyLearners.user.rsaIDNumber}" style="width:95%" disabled="true" />
+						<p:outputLabel value="Identity Number" />
+					</h:panelGroup>
+					
+					<h:panelGroup styleClass="md-inputfield" rendered="#{companyLearnersMonitorUI.companyLearners.user.passportNumber.length() gt 1}">
+						<p:inputText value="#{companyLearnersMonitorUI.companyLearners.user.passportNumber}" style="width:95%" disabled="true" />
+						<p:outputLabel value="Passport Number" />
+					</h:panelGroup>
+				
+				</p:panelGrid>
+				<p:panelGrid columns="6" id="pgLanguages" style="width:100%" rendered="#{!disableFields}">			
+					<h:panelGroup styleClass="md-inputfield">
+						<br />
+						<p:outputLabel value="#{lang['language']}" for="language" />
+						<p:autoComplete value="#{companyLearnersMonitorUI.usersLanguage.language}" style="width:100%" id="language" required="#{param['amInsForm:addLanguage'] !=null}" completeMethod="#{autoCompleteUI.completeLanguage}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="LanguageConvertor" dropdown="true" minQueryLength="3" maxResults="20">
+							<p:column headerText="#{lang['language']}" style="white-space: nowrap">#{rv.description}</p:column>
+							<p:ajax />
+						</p:autoComplete>
+
+					</h:panelGroup>
+
+					<h:panelGroup rendered="true">
+						<div>
+							<p:outputLabel value="Speak?" for="speak" styleClass="FontLight" />
+						</div>
+						<div>
+							<p:selectOneButton value="#{companyLearnersMonitorUI.usersLanguage.speark}" style="width:100%" converter="YesNoLookupConvertor" id="speak" required="#{param['amInsForm:addLanguage'] !=null}">
+
+								<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+							</p:selectOneButton>
+						</div>
+					</h:panelGroup>
+
+					<h:panelGroup rendered="true">
+						<div>
+							<p:outputLabel value="Read?" for="read" styleClass="FontLight" />
+						</div>
+						<div>
+							<p:selectOneButton value="#{companyLearnersMonitorUI.usersLanguage.read}" style="width:100%" converter="YesNoLookupConvertor" id="read" required="#{param['amInsForm:addLanguage'] !=null}">
+
+								<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+							</p:selectOneButton>
+						</div>
+					</h:panelGroup>
+
+					<h:panelGroup rendered="true">
+						<div>
+							<p:outputLabel value="Write?" for="write" styleClass="FontLight" />
+						</div>
+						<div>
+							<p:selectOneButton value="#{companyLearnersMonitorUI.usersLanguage.write}" style="width:100%" converter="YesNoLookupConvertor" id="write" required="#{param['amInsForm:addLanguage'] !=null}">
+
+								<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+							</p:selectOneButton>
+						</div>
+					</h:panelGroup>
+
+					<h:panelGroup rendered="true">
+						<div>
+							<p:outputLabel value="Home Language?" for="homeL" styleClass="FontLight" />
+						</div>
+						<div>
+							<p:selectBooleanCheckbox disabled="#{companyLearnersMonitorUI.homeLanguageSelected}" value="#{companyLearnersMonitorUI.usersLanguage.homeLanguage}" id="homeL" />
+						</div>
+					</h:panelGroup>
+
+					<h:panelGroup rendered="true">
+						<p:commandButton process="pgLanguages" update="pgLanguages languageTable" value="#{lang['add']}" id="addLanguage" styleClass="Fright" icon="ui-icon-plus" action="#{companyLearnersMonitorUI.addLanguage()}" />
+					</h:panelGroup>
+				</p:panelGrid>
+							
+				<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" id="updateFormDialogLanguage">
+					<p:fieldset id="languagesFs" collapsed="false" legend="#{lang['languages']}">
+						<p:dataTable id="languageTable" var="var" value="#{companyLearnersMonitorUI.usersLanguageList}">
+							<p:column headerText="#{lang['language']}">
+								<h:outputText value="#{var.language.description}" />
+							</p:column>
+		
+							<p:column headerText="#{lang['speak']}">
+								<h:outputText value="#{var.speark.yesNoName}" />
+							</p:column>
+		
+							<p:column headerText="#{lang['read']}">
+								<h:outputText value="#{var.read.yesNoName}" />
+							</p:column>
+		
+							<p:column headerText="#{lang['write']}">
+								<h:outputText value="#{var.write.yesNoName}" />
+							</p:column>
+		
+							<p:column headerText="#{lang['home.language']}">
+								<p:selectBooleanCheckbox disabled="false" value="#{var.homeLanguage}" >									
+									<p:ajax  event="change" update="@form"/>
+								</p:selectBooleanCheckbox>
+							</p:column>
+							
+							<p:column width="70">
+								<p:commandButton  icon="fa fa-trash-o" title="#{lang['delete']}" action="#{companyLearnersMonitorUI.removeLanguageFromList()}" process="@this" update="@form" >
+									 <f:setPropertyActionListener value="#{var}" target="#{companyLearnersMonitorUI.usersLanguage}" />
+									 <p:confirm header="Confirmation" message="Are you sure you want to remove this language from the list?" icon="fa fa-exclamation-triangle" />
+								</p:commandButton>
+							</p:column>
+		
+						</p:dataTable>				
+					</p:fieldset>				
+				</p:panelGrid>
+				<p:commandButton value="#{lang['submit']}" icon="fa fa-check" styleClass="flat" action="#{companyLearnersMonitorUI.companyLearnersUpdateLanguage}" update="mainForm" oncomplete="PF('updateDialogLanguage').hide()" />
+			</h:form>
+		</p:dialog>
+	</ui:define>
+</ui:composition>

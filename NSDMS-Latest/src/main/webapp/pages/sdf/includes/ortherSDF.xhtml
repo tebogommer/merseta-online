@@ -1,0 +1,119 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui">
+	<h:form id="sdfForm">
+		<c:if test="#{!sdfcompanyUI.newSDF.doneSearch and sdfcompanyUI.sdfTypes.size() gt 0 and sdfcompanyUI.newSDF.id eq null and (sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Edit or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload or enableAddContactAndSDF)}">
+			<ui:include src="/pages/includes/searchUserPassportOrID.xhtml" />
+		</c:if>
+		<p:fieldset legend="#{!sdfcompanyUI.newSDF.doneSearch ? 'Enter RSA ID number or Passport number' : lang['your.details']}" rendered="#{sdfcompanyUI.newSDF.doneSearch or sdfcompanyUI.newSDF.id ne null}">
+			<p:panelGrid columns="2" style="width:100%" id="userGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText id="userName" maxlength="#{sdfcompanyUI.MAX_FIRST_NAME_SIZE}" value="#{sdfcompanyUI.newSDF.firstName}" style="width:95%" required="true" requiredMessage="#{lang['enter.your.name']}">
+					</p:inputText>
+					<p:outputLabel value="#{lang['first.name']}" for="userName" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText id="userSurname" maxlength="#{sdfcompanyUI.MAX_LAST_NAME_SIZE}" value="#{sdfcompanyUI.newSDF.lastName}" style="width:95%" required="true" requiredMessage="#{lang['enter.your.last.name']}">
+					</p:inputText>
+					<p:outputLabel value="#{lang['surname']}" for="userSurname" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText id="userEmail" maxlength="#{sdfcompanyUI.MAX_EMAIL_SIZE}" value="#{sdfcompanyUI.newSDF.email}" style="width:95%" required="true" requiredMessage="#{lang['enter.your.email.address']}">
+					</p:inputText>
+					<p:outputLabel value="#{lang['emails']}" for="userEmail" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputMask id="telNumber" mask="#{sdfcompanyUI.TELPHONE_FORMAT}" value="#{sdfcompanyUI.newSDF.telNumber}" style="width:95%" required="true" requiredMessage="#{lang['tel.number.error']}">
+					</p:inputMask>
+					<p:outputLabel value="#{lang['tel.number']}:" for="telNumber" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputMask id="cellPhone" mask="#{sdfcompanyUI.CELLPHONE_FORMAT}" value="#{sdfcompanyUI.newSDF.cellNumber}" style="width:95%" required="true" requiredMessage="#{lang['cell.number']}">
+					</p:inputMask>
+					<p:outputLabel value="#{lang['cell.number']}:" for="cellPhone" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText id="faxNumber" validatorMessage="#{lang['user.faxnumber.length']}" maxlength="#{sdfcompanyUI.MAX_FAX_NUMBER}" value="#{sdfcompanyUI.newSDF.faxNumber}" style="width:95%">
+					</p:inputText>
+					<p:outputLabel value="#{lang['fax.number']}:" for="faxNumber" />
+				</h:panelGroup>
+
+				<p:panelGrid layout="grid" columns="2">
+					<p:outputLabel value="#{lang['add.sdf.training.comittee']}" />
+					<p:selectBooleanCheckbox value="#{sdfcompanyUI.addSdfToTrainingCommitte}">
+						<p:ajax />
+					</p:selectBooleanCheckbox>
+				</p:panelGrid>
+
+				<h:panelGroup styleClass="md-inputfield" rendered="#{sdfcompanyUI.newSDF.rsaIDNumber.length() gt 0}">
+					<p:inputText id="userIdNumber" value="#{sdfcompanyUI.newSDF.rsaIDNumber}" style="width:95%" disabled="#{sdfcompanyUI.newSDF.existingUser}" />
+					<p:outputLabel value="#{lang['rsa.id.number']}" for="userIdNumber" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield" rendered="#{sdfcompanyUI.newSDF.passportNumber.length() gt 0}">
+					<p:inputText id="userPassport" value="#{sdfcompanyUI.newSDF.passportNumber}" style="width:95%" disabled="true">
+						<o:validator validatorId="javax.faces.Length" minimum="0" maximum="20" message="#{lang['user.passport.length']} " />
+					</p:inputText>
+					<p:outputLabel value="#{lang['passport.number']}" for="userPassport" />
+				</h:panelGroup>
+			</p:panelGrid>
+		</p:fieldset>
+
+		<p:fieldset legend="#{lang['select.sdf.type']}" rendered="#{sdfcompanyUI.newSDF.doneSearch or sdfcompanyUI.newSDF.id ne null}">
+			<p:panelGrid columns="2" style="width:100%" id="sdfGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup>
+					<div>
+						<p:outputLabel value="#{lang['sdf.type']}" for="SDFTypeId" />
+					</div>
+					<div>
+						<p:selectOneMenu id="SDFTypeId" value="#{sdfcompanyUI.sdfType}" converter="SDFTypeConvertor" style="width:95%" required="true">
+							<c:if test="#{sdfcompanyUI.sdfType eq null}">
+								<f:selectItem itemLabel="-- #{lang['select.one']} --" noSelectionOption="true" />
+							</c:if>
+							<c:if test="#{sdfcompanyUI.sdfType ne null}">
+								<f:selectItem itemLabel="#{sdfcompanyUI.sdfType.description}" itemValue="#{sdfcompanyUI.sdfType}" />
+							</c:if>
+							<f:selectItems value="#{sdfcompanyUI.sdfTypes}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+						</p:selectOneMenu>
+					</div>
+				</h:panelGroup>
+			</p:panelGrid>
+		</p:fieldset>
+		
+		<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+			<p:outputPanel id="userErrorsSdf">
+				<p:fieldset rendered="#{sdfcompanyUI.validiationErrors ne null and sdfcompanyUI.validiationErrors ne ''}">
+					<p:outputLabel escape="false" value="#{sdfcompanyUI.validiationErrors}" />
+				</p:fieldset>
+			</p:outputPanel>
+		</p:panelGrid>
+
+		<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+			<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update="sdfForm" action="#{sdfcompanyUI.saveSDFAndCreatetask}" rendered="#{sdfcompanyUI.newSDF.doneSearch or sdfcompanyUI.newSDF.id ne null}" />
+			<c:if test="#{!sdfcompanyUI.newSDF.doneSearch}">
+				<div class="EmptyBox15"></div>
+			</c:if>
+		</p:panelGrid>
+
+		<p:dataTable var="rowVar" value="#{sdfcompanyUI.usersDataModel}" id="userList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}" paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25"
+			reflow="true" lazy="true">
+
+			<p:column headerText="#{lang['first.name']}">
+				<h:outputText value="#{rowVar.sdf.firstName}" />
+			</p:column>
+
+			<p:column headerText="#{lang['surname']}">
+				<h:outputText value="#{rowVar.sdf.lastName}" />
+			</p:column>
+
+			<p:column headerText="#{lang['email']}">
+				<h:outputText value="#{rowVar.sdf.email}" />
+			</p:column>
+
+			<p:column headerText="#{lang['sdf.type']}">
+				<h:outputText value="#{rowVar.sdfType.description}" />
+			</p:column>
+		</p:dataTable>
+	</h:form>
+
+
+</ui:composition>

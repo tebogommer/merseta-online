@@ -1,0 +1,91 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:pt="http://xmlns.jcp.org/jsf/passthrough" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	
+	<p:dialog position="top" header="CLO Review Date" widgetVar="eventDialog" hideEffect="clip" showEffect="clip" id="eventDialog"  modal="true" closable="true" height="50%" width="35%" responsive="true">
+		
+		<p:growl showDetail="false" sticky="false" escape="false">
+			<p:autoUpdate />
+		</p:growl>
+		
+		<p:panelGrid columns="1" id="eventNoDetails" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{cloDateScheduleUI.workPlaceApproval eq null}">
+		<h1>No review on this date </h1>
+		</p:panelGrid>
+			
+		<p:panelGrid columns="1" id="eventDetails" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{cloDateScheduleUI.workPlaceApproval ne null}">
+           
+			<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup styleClass="md-inputfield">
+				 	 <p:calendar id="from" required="true" disabled="true"  value="#{cloDateScheduleUI.workPlaceApproval.reviewDate}" showOn="button" requiredMessage="#{lang['select.from.date']}"  pattern="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME}" mask="true" style="width:100%"/>
+                   	 <p:outputLabel value="Review Date" for="from" style="width:95%" />
+				 </h:panelGroup> 	
+			</p:panelGrid>
+			
+			<p:fieldset legend="#{lang['qualification']}" id="qualificationInfo" rendered="#{cloDateScheduleUI.workPlaceApproval.qualification ne null}">
+				<p:panelGrid columns="2" style="width:100%" id="qualInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				 	<h:panelGroup styleClass="md-inputfield">
+	           			<p:inputText id="desc" value="#{cloDateScheduleUI.workPlaceApproval.qualification.description}"  style="width:100%" required="true" disabled="true"/>
+					 	<p:outputLabel for="desc" value="#{lang['description']}" />
+				 	</h:panelGroup>
+				 	<h:panelGroup styleClass="md-inputfield">
+	           			<p:inputText id="codeString" value="#{cloDateScheduleUI.workPlaceApproval.qualification.codeString}"  style="width:100%" required="true" disabled="true"/>
+					 	<p:outputLabel for="codeString" value="#{lang['code']}" />
+				 	</h:panelGroup>
+				 	<h:panelGroup styleClass="md-inputfield">
+	           			<p:inputText id="nqf" value="#{cloDateScheduleUI.workPlaceApproval.qualification.nqflevel.description}"  style="width:100%" required="true" disabled="true"/>
+					 	<p:outputLabel for="nqf" value="#{lang['nqf.level']}" />
+				 	</h:panelGroup>
+			 	</p:panelGrid>
+			</p:fieldset>
+			
+			<p:fieldset legend="#{lang['trade']}" id="tradeInfo" rendered="#{cloDateScheduleUI.workPlaceApproval.ofoCodes ne null}">
+				<p:panelGrid columns="2" style="width:100%" id="ofoInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				 	<h:panelGroup styleClass="md-inputfield">
+	           			<p:inputText id="ofoCodes" value="#{cloDateScheduleUI.workPlaceApproval.ofoCodes.description}"  style="width:100%" required="true" disabled="true"/>
+					 	<p:outputLabel for="ofoCodes" value="#{lang['description']}" />
+				 	</h:panelGroup>
+				 	<h:panelGroup styleClass="md-inputfield">
+	           			<p:inputText id="ofoCodeParent" value="#{cloDateScheduleUI.workPlaceApproval.ofoCodes.ofoCodeParent}"  style="width:100%" required="true" disabled="true"/>
+					 	<p:outputLabel for="ofoCodeParent" value="#{lang['code']}" />
+				 	</h:panelGroup>
+			 	</p:panelGrid>
+			</p:fieldset>
+			
+			<p:fieldset legend="#{lang['company.info']}" id="companyInfo">
+				<p:panelGrid columns="2" style="width:100%" id="companyInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText disabled="true" id="companyName" value="#{cloDateScheduleUI.workPlaceApproval.company.companyName}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.company.name']}" />
+						<p:outputLabel value="#{lang['companyName']}" for="companyName" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText disabled="true" id="tradingName" value="#{cloDateScheduleUI.workPlaceApproval.company.tradingName}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.trading.name']}" />
+						<p:outputLabel value="#{lang['tradingName']}" for="tradingName" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText disabled="true" id="telNumber" value="#{cloDateScheduleUI.workPlaceApproval.company.telNumber}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.tel.number']}" />
+						<p:outputLabel value="#{lang['telNumber']}" for="telNumber" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText disabled="true" id="faxNumber" value="#{cloDateScheduleUI.workPlaceApproval.company.faxNumber}" style="width:95%" />
+						<p:outputLabel value="#{lang['faxNumber']}" for="faxNumber" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText disabled="true" id="companyRegistrationNumber" value="#{cloDateScheduleUI.workPlaceApproval.company.companyRegistrationNumber}" style="width:95%" required="true" requiredMessage="#{lang['enter.company.registration.number']}" />
+						<p:outputLabel value="#{lang['companyRegistrationNumber']}" for="companyRegistrationNumber" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText disabled="true" id="email" value="#{cloDateScheduleUI.workPlaceApproval.company.email}" style="width:95%" required="true" requiredMessage="#{lang['enter.email.address']}" />
+						<p:outputLabel value="#{lang['email']}" for="email" />
+					</h:panelGroup>
+
+				</p:panelGrid>
+			</p:fieldset>
+			
+			
+		</p:panelGrid>
+	 	<p:ajax event="close" update="@form"/>	
+    </p:dialog>   	    
+</ui:composition>

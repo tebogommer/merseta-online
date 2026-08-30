@@ -1,0 +1,132 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<p:panelGrid columns="1" style="width:100%" id="sa3" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{companylearnersUI.selectedCompanyLearnerHistory.interventionType ne null}">
+			<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" id="xxxGa">
+				<h:panelGroup>
+					<p:outputLabel value="Commencement Date" for="comDate" styleClass="Fs12 FontLight" />
+					<br />
+					<p:outputLabel id="comDate" value="#{companylearnersUI.selectedCompanyLearnerHistory.commencementDate}" style="width:95%" />
+				</h:panelGroup>
+				
+				<h:panelGroup>
+					<p:outputLabel value="#{lang['intervention.type']}"  for="interventionType" styleClass="Fs12 FontLight" />
+					<br />
+					<p:outputLabel id="interventionType" value="#{companylearnersUI.selectedCompanyLearnerHistory.interventionType.description}" style="width:95%" />
+				</h:panelGroup>
+				
+				<h:panelGroup>
+					<p:outputLabel value="#{lang['pivotal.non.pivotal.trainig']}"  for="pivotNonPivot" styleClass="Fs12 FontLight" />
+					<br />
+					<p:outputLabel id="pivotNonPivot" value="#{companylearnersUI.selectedCompanyLearnerHistory.pivotNonPivot.friendlyName}" style="width:95%" />
+				</h:panelGroup>
+				
+				<h:panelGroup>
+					<p:outputLabel value="#{lang['nqf.aligned']}"  for="nqf" styleClass="Fs12 FontLight" />
+					<br />
+					<p:outputLabel id="nqf" value="#{companylearnersUI.selectedCompanyLearnerHistory.nqfAligned.yesNoName}" style="width:95%" />
+				</h:panelGroup>
+				
+				<h:panelGroup  rendered="#{companylearnersUI.selectedCompanyLearnerHistory.qualification ne null}">
+					<p:outputLabel value="#{lang['nqf.aligned']}"  for="qual" styleClass="Fs12 FontLight" />
+					<br />
+					<p:outputLabel id="qual" value="#{companylearnersUI.selectedCompanyLearnerHistory.qualification.description}" style="width:95%" />
+				</h:panelGroup>
+				
+				<h:panelGroup  rendered="#{companylearnersUI.selectedCompanyLearnerHistory.skillsProgram ne null}">
+					<p:outputLabel value="Skills Program"  for="sProgram" styleClass="Fs12 FontLight" />
+					<br />
+					<p:outputLabel id="sProgram" value="#{companylearnersUI.selectedCompanyLearnerHistory.skillsProgram.description}" style="width:95%" />
+				</h:panelGroup>
+				
+				<h:panelGroup  rendered="#{companylearnersUI.selectedCompanyLearnerHistory.unitStandard ne null}">
+					<p:outputLabel value="#{lang['unit.standard']}"   for="us" styleClass="Fs12 FontLight" />
+					<br />
+					<p:outputLabel id="us" value="#{companylearnersUI.selectedCompanyLearnerHistory.unitStandard.title}" style="width:95%" />
+				</h:panelGroup>
+				
+				<h:panelGroup  rendered="#{companylearnersUI.selectedCompanyLearnerHistory.skillsSet ne null}">
+					<p:outputLabel value="Skills Set"   for="skillSet" styleClass="Fs12 FontLight" />
+					<br />
+					<p:outputLabel id="skillSet" value="#{companylearnersUI.selectedCompanyLearnerHistory.skillsSet.description}" style="width:95%" />
+				</h:panelGroup>
+			
+			</p:panelGrid>
+		</p:panelGrid>
+		
+		<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" var="companyStatusEnum" />
+		<p:fieldset legend="#{lang['employee.details']}">
+			<h:graphicImage value="/resources/hls/images/green.svg" rendered="#{companylearnersUI.selectedCompanyLearnerHistory.employer.companyStatus eq CompanyStatusEnum.Approved or companylearnersUI.selectedCompanyLearnerHistory.employer.companyStatus eq CompanyStatusEnum.Active}" width="40" />
+			<h:graphicImage value="/resources/hls/images/red.svg" rendered="#{companylearnersUI.selectedCompanyLearnerHistory.employer.companyStatus eq CompanyStatusEnum.Rejected or companylearnersUI.selectedCompanyLearnerHistory.employer.companyStatus eq CompanyStatusEnum.InActive}" width="40" styleClass="animated pulse infinite" />
+			<h:graphicImage value="/resources/hls/images/orange.svg" rendered="#{companylearnersUI.selectedCompanyLearnerHistory.employer.companyStatus eq CompanyStatusEnum.Pending}" width="40" styleClass="animated pulse infinite" />
+			<h:graphicImage value="/resources/hls/images/amber.svg" rendered="#{companylearnersUI.selectedCompanyLearnerHistory.employer.companyStatus eq CompanyStatusEnum.PendingChangeApproval}" width="40" styleClass="animated pulse infinite" />
+			<br />
+			<label>Status : #{lang[companylearnersUI.selectedCompanyLearnerHistory.company.companyStatus.registrationName]}</label>
+			<hr />
+
+			<p:panelGrid columns="4" style="width : 95%" styleClass="ui-panelgrid-blank" id="companyInfo">
+				<h:panelGroup>
+					<p:outputLabel value="#{lang['company.name']}" for="companyName" styleClass="Fs12 FontLight" />
+					<br />
+					<p:outputLabel id="companyName" value="#{companylearnersUI.selectedCompanyLearnerHistory.employer.companyName}" style="width:95%" />
+				</h:panelGroup>
+				<h:panelGroup>
+					<p:outputLabel value="#{lang['tradingName']}" for="tradingName" styleClass="Fs12 FontLight" />
+					<br />
+					<p:outputLabel id="tradingName" value="#{companylearnersUI.selectedCompanyLearnerHistory.employer.tradingName}" style="width:95%" />
+				</h:panelGroup>
+				<h:panelGroup>
+					<p:outputLabel value="#{lang['reg.number']}" for="regNumber" styleClass="Fs12 FontLight" />
+					<br />
+					<p:outputLabel id="regNumber" value="#{companylearnersUI.selectedCompanyLearnerHistory.employer.companyRegistrationNumber}" style="width:95%" />
+				</h:panelGroup>
+				<h:panelGroup>
+					<p:outputLabel value="#{lang['levy.number']}" for="levyNum" styleClass="Fs12 FontLight" />
+					<br />
+					<p:outputLabel id="levyNum" value="#{companylearnersUI.selectedCompanyLearnerHistory.employer.levyNumber}" style="width:95%" />
+				</h:panelGroup>
+	
+				<h:panelGroup>
+					<p:outputLabel value="#{lang['tel.number']}" for="tel" styleClass="Fs12 FontLight" />
+					<br />
+					<p:outputLabel id="tel" value="#{companylearnersUI.selectedCompanyLearnerHistory.employer.telNumber}" style="width:95%" />
+				</h:panelGroup>
+				<h:panelGroup>
+					<p:outputLabel value="#{lang['fax.number']}" for="fax" styleClass="Fs12 FontLight" />
+					<br />
+					<p:outputLabel id="fax" value="#{companylearnersUI.selectedCompanyLearnerHistory.employer.faxNumber}" style="width:95%" />
+				</h:panelGroup>
+				<h:panelGroup>
+					<p:outputLabel value="#{lang['email.address']}" for="email" styleClass="Fs12 FontLight" />
+					<br />
+					<p:outputLabel id="email" value="#{companylearnersUI.selectedCompanyLearnerHistory.employer.email}" style="width:95%" />
+				</h:panelGroup>
+				<h:panelGroup>
+					<p:outputLabel value="#{lang['sic.code']}" for="sicCode" styleClass="Fs12 FontLight" />
+					<br />
+					<p:outputLabel id="sicCode" value="#{companylearnersUI.selectedCompanyLearnerHistory.employer.sicCode.description}" style="width:95%" />
+				</h:panelGroup>
+	
+				<h:panelGroup>
+					<p:outputLabel value="#{lang['organisation.type']}" for="orgType" styleClass="Fs12 FontLight" />
+					<br />
+					<p:outputLabel id="orgType" value="#{companylearnersUI.selectedCompanyLearnerHistory.employer.organisationType.description}" style="width:95%" />
+				</h:panelGroup>
+	
+				<h:panelGroup>
+	
+					<p:outputLabel value="#{lang['numberOfEmployees']}" for="orgTypea" styleClass="Fs12 FontLight" />
+					<br />
+					<p:outputLabel id="orgTypea" value="#{companylearnersUI.selectedCompanyLearnerHistory.employer.numberOfEmployees}" style="width:95%" />
+				</h:panelGroup>
+	
+				<h:panelGroup>
+					<p:outputLabel value="#{lang['recognition.agreement']}" for="recAgr" />
+	
+					<br />
+					<p:outputLabel id="recAgr" value="#{companylearnersUI.selectedCompanyLearnerHistory.employer.recognitionAgreement.yesNoName}" style="width:95%" />
+				</h:panelGroup>
+				<p:spacer />
+				<p:spacer />
+		</p:panelGrid>
+	</p:fieldset>
+		
+</ui:composition>

@@ -1,0 +1,468 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<p:importEnum type="haj.com.entity.enums.PivotNonPivotEnum" />
+		<p:importEnum type="haj.com.entity.enums.LearnerStatusEnum" />
+		<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+		<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+		<p:importEnum type="haj.com.entity.enums.LearnerChangeTypeEnum" />
+		<p:importEnum type="haj.com.entity.enums.YesNoEnum" />
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<h:form id="mainForm">
+					<p:growl sticky="false">
+						<p:autoUpdate />
+					</p:growl>
+					<p:tooltip position="left"></p:tooltip>
+					
+						<div class="card card-w-title">
+							<c:if test="false">
+								<ui:include src="/pages/includes/download_lazy.xhtml">
+									<ui:param name="file_name" value="learnersList" />
+									<ui:param name="target" value="learnersList" />
+								</ui:include>
+							</c:if>
+							<ui:include src="/pages/includes/filterGuide.xhtml" />
+							<p:dataTable var="rowVar" value="#{generateResultsUI.dataModel}"  id="learnersList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25"
+								reflow="true" lazy="true">
+
+								<p:column headerText="#{lang['expand.row']}" width="45">
+									<p:rowToggler></p:rowToggler>
+								</p:column>
+								<p:column headerText="#{lang['companyName']}" filterBy="#{rowVar.trainingProvider.companyName}" sortBy="#{rowVar.trainingProvider.companyName}">
+									#{rowVar.trainingProvider.companyName}
+								</p:column>
+								<p:column headerText="#{lang['tradingName']}" filterBy="#{rowVar.trainingProvider.tradingName}" sortBy="#{rowVar.trainingProvider.tradingName}" filterStyle="width: 95%">
+									#{rowVar.trainingProvider.tradingName}
+								</p:column>
+								<p:column headerText="#{lang['companyRegistrationNumber']}" filterBy="#{rowVar.trainingProvider.companyRegistrationNumber}" sortBy="#{rowVar.trainingProvider.companyRegistrationNumber}" rendered="false">
+									#{rowVar.trainingProvider.companyRegistrationNumber}
+								</p:column>
+								<p:column headerText="#{lang['entity.id']}" filterBy="#{rowVar.trainingProvider.levyNumber}" sortBy="#{rowVar.trainingProvider.levyNumber}">
+									#{rowVar.trainingProvider.levyNumber}
+								</p:column>
+								<p:column headerText="#{lang['first.name']}" filterBy="#{rowVar.companyLearners.user.firstName}" sortBy="#{rowVar.companyLearners.user.firstName}">
+									<h:outputText value="#{rowVar.companyLearners.user.firstName}" />
+								</p:column>
+								<p:column headerText="#{lang['last.name']}" filterBy="#{rowVar.companyLearners.user.lastName}" sortBy="#{rowVar.companyLearners.user.lastName}">
+									<h:outputText value="#{rowVar.companyLearners.user.lastName}" />
+								</p:column>
+								<p:column headerText="Identity Number" filterBy="#{rowVar.companyLearners.user.rsaIDNumber}" sortBy="#{rowVar.companyLearners.user.rsaIDNumber}">
+									<h:outputText value="#{rowVar.companyLearners.user.rsaIDNumber}" />
+									<h:outputText rendered="#{rowVar.companyLearners.user.rsaIDNumber.length() lt 1}" value="N/A" />
+								</p:column>
+								<p:column headerText="Passport Number" filterBy="#{rowVar.companyLearners.user.rsaIDNumber}" sortBy="#{rowVar.companyLearners.user.rsaIDNumber}">
+									<h:outputText rendered="#{rowVar.companyLearners.user.passportNumber.length() lt 1}" value="N/A" />
+									<h:outputText value="#{rowVar.companyLearners.user.passportNumber}" />
+								</p:column>
+								<p:column headerText="Employment Status">
+									<h:outputText value="#{rowVar.companyLearners.employmentStatus.friendlyName}" />
+								</p:column>
+								<p:column headerText="Application Status">
+									<h:outputText value="#{rowVar.companyLearners.learnerStatus.friendlyName}" />
+								</p:column>
+								<p:column headerText="Intervention Type">
+									<h:outputText value="#{rowVar.companyLearners.interventionType.description}" />
+								</p:column>
+								<p:column headerText="#{lang['qualification']}" style="white-space: nowrap" width="20%">
+								<h:outputText value="(#{rowVar.companyLearners.learnership.qualification.code})" rendered="#{rowVar.companyLearners.learnership.qualification.code ne null}"/>
+								<h:outputText value="#{rowVar.companyLearners.learnership.qualification.description}" rendered="#{rowVar.companyLearners.learnership.qualification.description ne null}"/>
+								
+								<h:outputText value="(#{rowVar.companyLearners.skillsSet.programmeID})" rendered="#{rowVar.companyLearners.skillsSet ne null}" />
+								<h:outputText value="#{rowVar.companyLearners.skillsSet.description}" rendered="#{rowVar.companyLearners.skillsSet ne null}" />
+								
+								<h:outputText value="(#{rowVar.companyLearners.skillsProgram.programmeID})" rendered="#{rowVar.companyLearners.skillsProgram ne null}" />
+								<h:outputText value="#{rowVar.companyLearners.skillsProgram.description}" rendered="#{rowVar.companyLearners.skillsProgram ne null}" />
+								
+								<h:outputText value="(#{rowVar.companyLearners.unitStandard.code})" rendered="#{rowVar.companyLearners.unitStandard ne null}" />
+								<h:outputText value="#{rowVar.companyLearners.unitStandard.title}" rendered="#{rowVar.companyLearners.unitStandard ne null}" />
+								
+								<h:outputText value="#{rowVar.companyLearners.nonCredidBearingDescription}" rendered="#{rowVar.companyLearners.nonCredidBearingDescription ne null}" />
+								
+								<h:outputText value="(#{rowVar.companyLearners.qualification.code})" rendered="#{rowVar.companyLearners.qualification ne null}"/>
+								<h:outputText value="#{rowVar.companyLearners.qualification.description}" rendered="#{rowVar.companyLearners.qualification ne null}"/>
+							</p:column>
+
+								<p:column headerText="Created Date" rendered="false">
+									<h:outputText value="#{rowVar.createDate}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</h:outputText>
+								</p:column>
+
+								<p:column headerText="Registered Date" rendered="false">
+									<h:outputText value="#{rowVar.companyLearners.registeredDate}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</h:outputText>
+								</p:column>
+
+								<p:column headerText="Registered Number" >
+									<h:outputText value="#{rowVar.companyLearners.registrationNumber}">
+									</h:outputText>
+								</p:column>
+								
+								<p:column headerText="Certificate Date" sortBy="#{rowVar.cetificateGeneratedDate}">
+									<h:outputText value="#{rowVar.cetificateGeneratedDate}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</h:outputText>
+								</p:column>
+
+								<p:column headerText="Certificate Number" sortBy="#{rowVar.certificateNumber}">
+									<h:outputText value="#{rowVar.certificateNumber}">
+									</h:outputText>
+								</p:column>
+								
+
+								<p:column width="70" headerText="#{lang['view.edit']}" exportable="false">									
+									<p:commandButton icon="fa fa-search" title="View Requests" update="mainForm" action="#{generateResultsUI.summativeassessmentreportInfo}" process="@this">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{generateResultsUI.trainingproviderverfication}" />
+									</p:commandButton>
+									<p:commandButton onstart="uploadStart()" oncomplete="uploadDone()" styleClass="red-btn" action="#{generateResultsUI.sendApprovalEmalAndLetters}" icon="fa fa-envelope" update="@form" title="Resend statement of results and letter">
+										<p:confirm header="Confirmation" message="Are you sure you wish to re-send statement of results and letter" icon="fa fa-exclamation-triangle" />
+										<f:setPropertyActionListener value="#{rowVar}" target="#{generateResultsUI.trainingproviderverfication}" />
+									</p:commandButton>								
+								</p:column>
+								<p:rowExpansion>
+									<p:fieldset legend="Learner Details">
+										<p:panelGrid columns="2" style="width:100%" id="ldeatils" layout="grid" styleClass="ui-panelgrid-blank form-group">
+											<h:panelGroup styleClass="md-inputfield">
+												<p:calendar value="#{rowVar.companyLearners.user.dateOfBirth}" disabled="true" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" style="width: 95%"></p:calendar>
+												<p:outputLabel value="#{lang['date.of.birth']}"></p:outputLabel>
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText value="#{rowVar.companyLearners.user.gender.genderName}" disabled="true" style="width: 95%"></p:inputText>
+												<p:outputLabel value="#{lang['gender']}"></p:outputLabel>
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText value="#{rowVar.companyLearners.user.nationality.description}" disabled="true" style="width: 95%"></p:inputText>
+												<p:outputLabel value="#{lang['nationality']}"></p:outputLabel>
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText value="#{rowVar.companyLearners.user.disabilityStatus.description}" disabled="true" style="width: 95%"></p:inputText>
+												<p:outputLabel value="#{lang['disability.status']}"></p:outputLabel>
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText value="#{rowVar.companyLearners.user.equity.description}" disabled="true" style="width: 95%"></p:inputText>
+												<p:outputLabel value="#{lang['equity']}"></p:outputLabel>
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText value="#{rowVar.companyLearners.user.cellNumber}" disabled="true" style="width: 95%"></p:inputText>
+												<p:outputLabel value="#{lang['cell.number']}"></p:outputLabel>
+											</h:panelGroup>
+										</p:panelGrid>
+									</p:fieldset>
+								
+									<p:fieldset legend="Training Information">
+										<p:panelGrid columns="1" style="width:100%" id="sa3" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{rowVar.companyLearners.interventionType ne null}">
+											<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" id="xxxGa">
+												<h:panelGroup styleClass="md-inputfield">
+													<p:calendar value="#{rowVar.companyLearners.commencementDate}" disabled="true" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" style="width: 95%"></p:calendar>
+													<p:outputLabel value="Commencement Date"></p:outputLabel>
+												</h:panelGroup>
+												<h:panelGroup>
+													<div>
+														<p:outputLabel value="#{lang['intervention.type']}" for="intType" styleClass="gray" />
+													</div>
+													<div>
+														<p:selectOneMenu id="intType" value="#{rowVar.companyLearners.interventionType}" style="width:95%" required="true" requiredMessage="#{lang['select.planned']}" converter="InterventionTypeConvertor" disabled="true">
+															<p:ajax event="itemSelect" listener="#{learnerRegistrationFormUI.applyInterventionData}" update="@form" />
+															<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+															<f:selectItems value="#{selectItemsUI.selectItemsInterventionType}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+														</p:selectOneMenu>
+													</div>
+												</h:panelGroup>
+												<h:panelGroup>
+													<div>
+														<p:outputLabel value="#{lang['pivotal.non.pivotal.trainig']}" styleClass="gray" />
+													</div>
+													<div>
+														<p:selectOneMenu value="#{rowVar.companyLearners.pivotNonPivot}" style="width:75%" disabled="true">
+															<p:ajax update="@form" />
+															<f:selectItem itemLabel="--- #{lang['select.one']} ---" itemValue="" styleClass="FontLight gray" noSelectionOption="true" />
+															<f:selectItems value="#{enumUI.pivotalNonPivotalDD}" />
+														</p:selectOneMenu>
+													</div>
+												</h:panelGroup>
+												<h:panelGroup>
+													<div>
+														<p:outputLabel value="#{lang['nqf.aligned']}" for="nqf" styleClass="gray" />
+													</div>
+													<div>
+														<p:selectOneMenu id="nqf" value="#{rowVar.companyLearners.nqfAligned}" style="width:95%" required="true" requiredMessage="#{lang['select.planned']}" converter="YesNoLookupConvertor" disabled="true">
+															<p:ajax />
+															<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+															<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="rv" itemLabel="#{rv.yesNoName}" itemValue="#{rv}" />
+														</p:selectOneMenu>
+													</div>
+												</h:panelGroup>
+												<h:panelGroup styleClass="md-inputfield" style="margin-top: 19px" rendered="#{rowVar.companyLearners.qualification ne null}">
+													<p:autoComplete id="highestQualTitle" value="#{rowVar.companyLearners.qualification}" completeMethod="#{autoCompleteUI.completeQualification}" var="rv" itemLabel="#{rv.saqaQualification}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%" disabled="true">
+														<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+														<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+														<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+													</p:autoComplete>
+													<p:outputLabel value="#{lang['saqa.id']}" for="highestQualTitle" />
+												</h:panelGroup>
+												<h:panelGroup styleClass="md-inputfield" style="margin-top: 19px" rendered="#{rowVar.companyLearners.skillsProgram ne null}">
+													<p:autoComplete id="skillsProgram" value="#{rowVar.companyLearners.skillsProgram}" completeMethod="#{autoCompleteUI.completeSkillsProgram}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SkillsProgramConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%" disabled="true">
+														<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+														<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+													</p:autoComplete>
+													<p:outputLabel value="Skills Program" for="skillsProgram" />
+												</h:panelGroup>
+												<h:panelGroup styleClass="md-inputfield" style="margin-top: 19px" rendered="#{rowVar.companyLearners.unitStandard ne null}">
+													<p:autoComplete id="unitStandard" value="#{rowVar.companyLearners.unitStandard}" completeMethod="#{autoCompleteUI.completeUnitStandards}" var="rv" itemLabel="#{rv.title}" itemValue="#{rv}" forceSelection="true" converter="UnitStandardsConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%" disabled="true">
+														<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+														<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.title}</p:column>
+													</p:autoComplete>
+													<p:outputLabel value="#{lang['unit.standard']}" for="unitStandard" />
+												</h:panelGroup>
+												<h:panelGroup styleClass="md-inputfield" style="margin-top: 19px" rendered="#{rowVar.companyLearners.skillsSet ne null}">
+													<p:autoComplete id="skillsSet" value="#{rowVar.companyLearners.skillsSet}" completeMethod="#{autoCompleteUI.completeSkillsSet}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SkillsSetConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%" disabled="true">
+														<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+														<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+													</p:autoComplete>
+													<p:outputLabel value="Skills Set" for="skillsSet" />
+												</h:panelGroup>
+											</p:panelGrid>
+										</p:panelGrid>
+									</p:fieldset>
+									<p:fieldset legend="Employer">
+										<p:panelGrid columns="1" style="width:100%" id="sa2" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{rowVar.companyLearners.employer ne null}">
+											<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" id="xxxG">
+												<h:panelGroup styleClass="md-inputfield">
+													<p:inputText id="companyName" value="#{rowVar.companyLearners.employer.companyName}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.company.name']}" disabled="true" />
+													<p:outputLabel value="#{lang['companyName']}:" for="companyName" />
+												</h:panelGroup>
+												<h:panelGroup styleClass="md-inputfield">
+													<p:inputMask id="companyRegNumber" value="#{rowVar.companyLearners.employer.companyRegistrationNumber}" mask="#{searchCompanyUI.companyRegistrationNumberFormat}" style="width:95%" required="true" requiredMessage="#{lang['enter.company.number']}" disabled="true" />
+													<p:outputLabel value="#{lang['companyRegistrationNumber']}:" for="companyRegNumber" />
+												</h:panelGroup>
+												<h:panelGroup styleClass="md-inputfield">
+													<p:inputText id="companyLevyNumber" value="#{rowVar.companyLearners.employer.levyNumber}" style="width:95%" required="true" requiredMessage="#{lang['enter.levy.number']}" disabled="true" />
+													<p:outputLabel value="#{lang['levyNumber']}:" for="companyLevyNumber" />
+												</h:panelGroup>
+											</p:panelGrid>
+										</p:panelGrid>
+									</p:fieldset>
+									
+									<p:fieldset legend="Provider">
+										<p:panelGrid columns="1" style="width:100%" id="sa2company" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{rowVar.trainingProvider ne null}">
+											<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" id="xxxGcompany">
+												<h:panelGroup styleClass="md-inputfield">
+													<p:inputText id="companyNamecompany" value="#{rowVar.trainingProvider.companyName}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.company.name']}" disabled="true" />
+													<p:outputLabel value="Provider Name:" for="companyNamecompany" />
+												</h:panelGroup>
+												<h:panelGroup styleClass="md-inputfield">
+													<p:inputMask id="companyRegNumbercompany" value="#{rowVar.trainingProvider.trainingProviderApplication.certificateNumber}" style="width:95%" required="true" requiredMessage="#{lang['enter.company.number']}" disabled="true" />
+													<p:outputLabel value="Accreditation number:" for="companyRegNumbercompany" />
+												</h:panelGroup>
+												<h:panelGroup styleClass="md-inputfield">
+													<p:inputText id="companyLevyNumbercompany" value="#{rowVar.trainingProvider.trainingProviderApplication.accreditationApplicationTypeEnum.friendlyName}" style="width:95%" required="true" requiredMessage="#{lang['enter.levy.number']}" disabled="true" />
+													<p:outputLabel value="Accreditation type:" for="companyLevyNumbercompany" />
+												</h:panelGroup>
+												
+												<h:panelGroup styleClass="md-inputfield">
+													<p:inputText id="companyLevyNumbercompany1" value="#{rowVar.trainingProvider.trainingProviderApplication.approvalStatus.friendlyName}" style="width:95%" required="true" requiredMessage="#{lang['enter.levy.number']}" disabled="true" />
+													<p:outputLabel value="Accreditation status:" for="companyLevyNumbercompany1" />
+												</h:panelGroup>
+											</p:panelGrid>
+										</p:panelGrid>
+									</p:fieldset>
+								</p:rowExpansion>
+							</p:dataTable>
+
+							<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+								<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+								<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+							</p:confirmDialog>
+						</div>
+					
+					<c:if test="#{generateResultsUI.showList}">
+					<div class="card card-w-title">
+						<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank" rendered="false">
+							<p:commandButton icon="fa fa-book" value="Generate Certificates" update="@form" action="#{generateResultsUI.generateAllCertificate}"  process="@this">
+								<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />										
+							</p:commandButton>	
+						</p:panelGrid>
+						<br />
+						<p:dataTable var="rowVar" value="#{generateResultsUI.trainingproviderverficationList}" rendered="#{generateResultsUI.trainingproviderverficationList.size() gt 0}">
+							<p:column headerText="#{lang['companyName']}" >
+								#{rowVar.trainingProvider.companyName}
+							</p:column>
+							<p:column headerText="#{lang['tradingName']}"  filterStyle="width: 95%">
+								#{rowVar.trainingProvider.tradingName}
+							</p:column>
+							<p:column headerText="#{lang['companyRegistrationNumber']}" rendered="false">
+								#{rowVar.trainingProvider.companyRegistrationNumber}
+							</p:column>
+							<p:column headerText="#{lang['entity.id']}" >
+								#{rowVar.trainingProvider.levyNumber}
+							</p:column>
+							<p:column headerText="#{lang['first.name']}">
+								<h:outputText value="#{rowVar.companyLearners.user.firstName}" />
+							</p:column>
+							<p:column headerText="#{lang['last.name']}" >
+								<h:outputText value="#{rowVar.companyLearners.user.lastName}" />
+							</p:column>
+							<p:column headerText="Identity Number" >
+								<h:outputText value="#{rowVar.companyLearners.user.rsaIDNumber}" />
+								<h:outputText rendered="#{rowVar.companyLearners.user.rsaIDNumber.length() lt 1}" value="N/A" />
+							</p:column>
+							<p:column headerText="Passport Number">
+								<h:outputText rendered="#{rowVar.companyLearners.user.passportNumber.length() lt 1}" value="N/A" />
+								<h:outputText value="#{rowVar.companyLearners.user.passportNumber}" />
+							</p:column>
+							<p:column headerText="Employment Status">
+								<h:outputText value="#{rowVar.companyLearners.employmentStatus.friendlyName}" />
+							</p:column>
+							<p:column headerText="Application Status">
+								<h:outputText value="#{rowVar.companyLearners.learnerStatus.friendlyName}" />
+							</p:column>
+							<p:column headerText="Intervention Type">
+								<h:outputText value="#{rowVar.companyLearners.interventionType.description}" />
+							</p:column>
+							<p:column headerText="Course / Qualification ">
+								<h:outputText value="(#{rowVar.companyLearners.qualification.code})" rendered="#{rowVar.companyLearners.qualification ne null}"/>
+								<h:outputText value="#{rowVar.companyLearners.qualification.description}" rendered="#{rowVar.companyLearners.qualification ne null}"/>
+								<h:outputText value="(#{rowVar.companyLearners.qualification.nqflevelg2description})" rendered="#{rowVar.companyLearners.qualification ne null}"/>
+								<h:outputText value="#{rowVar.companyLearners.skillsSet.description}" rendered="#{rowVar.companyLearners.skillsSet ne null}" />
+								<h:outputText value="#{rowVar.companyLearners.skillsProgram.description}" rendered="#{rowVar.companyLearners.skillsProgram ne null}" />
+								<h:outputText value="#{rowVar.companyLearners.unitStandard.title}" rendered="#{rowVar.companyLearners.unitStandard ne null}" />
+								<h:outputText value="#{rowVar.companyLearners.nonCredidBearingDescription}" rendered="#{rowVar.companyLearners.nonCredidBearingDescription ne null}" />
+								<h:outputText value="#{rowVar.companyLearners.learnership.description}" rendered="#{rowVar.companyLearners.learnership ne null}" />
+							</p:column>
+
+							<p:column headerText="Created Date" rendered="false">
+								<h:outputText value="#{rowVar.createDate}">
+									<f:convertDateTime pattern="dd MMMM yyyy" />
+								</h:outputText>
+							</p:column>
+
+							<p:column headerText="Registered Date">
+								<h:outputText value="#{rowVar.companyLearners.registeredDate}">
+									<f:convertDateTime pattern="dd MMMM yyyy" />
+								</h:outputText>
+							</p:column>
+
+							<p:column headerText="Registered Number">
+								<h:outputText value="#{rowVar.companyLearners.registrationNumber}">
+								</h:outputText>
+							</p:column>
+						
+						</p:dataTable>
+					</div>
+					</c:if>
+				
+					<c:if test="#{generateResultsUI.show}">
+						<br />
+						<h:panelGroup >
+							<p:commandButton immediate="true" ajax="false" icon="fa fa-download " value="Download Assessment Results" update="@form" action="#{generateResultsUI.downloadReport}" id="downloadReport" rendered="true" process="@this">
+						
+							</p:commandButton>
+						</h:panelGroup>
+						<br /><br />
+						<p:dataTable expandedRow="true" var="rowVar" value="#{generateResultsUI.dataModelSummativeAssessmentReport}" id="summativeassessmentreportList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25"
+							reflow="true" lazy="true">
+							<p:column headerText="#{lang['expand.row']}" width="45">
+								<p:rowToggler rendered="#{rowVar.unitStandards.size() gt 0}" />
+							</p:column>
+							<p:column headerText="First Name" style="white-space: nowrap">
+								<h:outputText value="#{rowVar.companyLearners.user.firstName}" />
+							</p:column>
+							<p:column headerText="Last Name" style="white-space: nowrap">
+								<h:outputText value="#{rowVar.companyLearners.user.lastName}" />
+							</p:column>
+							<p:column headerText="Course / Qualification ">
+								<h:outputText value="(#{rowVar.companyLearners.qualification.code})" rendered="#{rowVar.companyLearners.qualification ne null}"/>
+								<h:outputText value="#{rowVar.companyLearners.qualification.description}" rendered="#{rowVar.companyLearners.qualification ne null}"/>
+								<h:outputText value="(#{rowVar.companyLearners.qualification.nqflevelg2description})" rendered="#{rowVar.companyLearners.qualification ne null}"/>
+								<h:outputText value="#{rowVar.companyLearners.skillsSet.description}" rendered="#{rowVar.companyLearners.skillsSet ne null}" />
+								<h:outputText value="#{rowVar.companyLearners.skillsProgram.description}" rendered="#{rowVar.companyLearners.skillsProgram ne null}" />
+								<h:outputText value="#{rowVar.companyLearners.unitStandard.title}" rendered="#{rowVar.companyLearners.unitStandard ne null}" />
+								<h:outputText value="#{rowVar.companyLearners.nonCredidBearingDescription}" rendered="#{rowVar.companyLearners.nonCredidBearingDescription ne null}" />
+								<h:outputText value="#{rowVar.companyLearners.learnership.description}" rendered="#{rowVar.companyLearners.learnership ne null}" />
+							</p:column>
+							<p:column headerText="#{lang['createDate']}">
+								<h:outputText value="#{rowVar.createDate}">
+									<f:convertDateTime pattern="dd MMMM yyyy HH:mm:ss" />
+								</h:outputText>
+							</p:column>
+							
+							
+							<p:rowExpansion>
+								<p:fieldset legend="Assessment Report">
+									<p:dataTable var="rv2" value="#{rowVar.unitStandards}" rendered="#{rowVar.unitStandards.size() gt 0}">
+										<p:column headerText="Unit Standard Code" style="width: 5%">#{rv2.unitStandards.code}</p:column>
+										<p:column headerText="Unit Standard Description" style="width: 10%">#{rv2.unitStandards.title}</p:column>
+										<p:column headerText="Unit Standard Type" style="width: 5%">#{rv2.unitStandardTypeEnum.friendlyName}</p:column>
+										<p:column headerText="Unit Standard Credits" style="width: 5%">#{rv2.unitStandards.unitstdnumberofcredits}</p:column>
+										<p:column headerText="Date Assessed" style="width: 10%">
+											<p:calendar value="#{rv2.assesmentDate}" disabled="true" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" readonlyInput="true" maxdate="#{employeeLearnersVerificationUI.now}">
+												<p:ajax event="dateSelect"></p:ajax>
+											</p:calendar>
+										</p:column>
+										
+										<p:column headerText="Assessed By" style="width: 15%">
+											<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" id="rsaIDInputPanel">
+												<h:panelGroup id="rsaIDInput" styleClass="md-inputfield" >
+													<p:inputText id="rsaIdCriteria" value="#{rv2.assessorUser.firstName} #{rv2.assessorUser.lastName}" style="width:95%" disabled="true" rendered="#{rv2.assessorUser ne null}">
+													</p:inputText>
+													<p:inputText id="rsaIdCriteria2" value="#{rv2.legacyAssessorAccreditation.firstName} #{rv2.legacyAssessorAccreditation.surname}" style="width:95%" disabled="true" rendered="#{rv2.legacyAssessorAccreditation ne null}">
+													</p:inputText>
+													<p:outputLabel value="Assessor" for="rsaIdCriteria" />
+												</h:panelGroup>
+											</p:panelGrid>
+										</p:column>
+										
+										<p:column headerText="Date of Moderation" style="width: 10%">
+											<p:calendar value="#{rv2.moderationDate}" disabled="true" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" readonlyInput="true" mindate="#{rv2.assesmentDate}">
+												<p:ajax event="dateSelect"></p:ajax>
+											</p:calendar>
+										</p:column>
+										
+										<p:column headerText="Moderated By" width="250">
+											<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" id="moderatorInputPanel">
+												<h:panelGroup id="moderIDInput" styleClass="md-inputfield" >
+													<p:inputText id="moderatedCriteria" value="#{rv2.moderatorUser.firstName} #{rv2.moderatorUser.lastName}" style="width:95%" disabled="true" rendered="#{rv2.moderatorUser ne null}">
+													</p:inputText>
+													<p:inputText id="moderatedCriteria2" value="#{rv2.legacyModeratorAccreditation.firstName} #{rv2.legacyModeratorAccreditation.surname}" style="width:95%" disabled="true" rendered="#{rv2.legacyModeratorAccreditation ne null}">
+													</p:inputText>
+													<p:outputLabel value="Moderated" for="moderatedCriteria" />
+												</h:panelGroup>
+											</p:panelGrid>
+										</p:column>
+										<p:column headerText="Competence" width="210">
+											<p:selectOneMenu id="competenceEnum" value="#{rv2.competenceEnum}" style="width:95%" disabled="true">
+												<p:ajax />
+												<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+												<f:selectItems value="#{enumUI.competenceEnumDD}" />
+											</p:selectOneMenu>
+										</p:column>
+										
+										<p:column headerText="Assessment Documentation" style="width: 4%" rendered="false">											
+											<p:commandButton ajax="false" icon="fa fa-download" action="#{uploadDocUI.download}" id="dlb" rendered="#{rv2.documents.id ne null}" process="@this" immediate="true" >
+												<f:setPropertyActionListener value="#{rv2.documents}" target="#{uploadDocUI.doc}" />
+											</p:commandButton>
+											<p:tooltip for="dlb" value="#{lang['download.the.file']}" position="left" rendered="#{rv2.doc.id ne null}" />
+										</p:column>
+									</p:dataTable>
+									
+								</p:fieldset>
+							</p:rowExpansion>
+						</p:dataTable>
+						
+						
+					</c:if>
+				</h:form>
+			</div>
+		</div>
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+		
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+			<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+			<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+		</p:confirmDialog>
+		
+		
+	</ui:define>
+</ui:composition>

@@ -1,0 +1,145 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+	<p:dialog header="#{lang['training.comittee']}" width="75%" widgetVar="dlgtrainingComittee" resizable="false" hideEffect="clip" showEffect="clip" id="dialogtrainingComittee" appendTo="@(body)" modal="true">
+
+		<h:form id="trainingComitteeForm">
+			<p:fieldset legend="#{bankingdetailsUI.company.companyName} #{lang['training.comittee']}" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Edit or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload}">
+				<p:panelGrid columns="2" style="width:100%" id="trainingcomitteeInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="email" value="#{trainingcomitteeUI.trainingcomittee.email}" style="width:95%" required="true" requiredMessage="#{lang['provide.email']}"/>
+						<p:outputLabel value="#{lang['email']}" for="email" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="rsaIDNumber" value="#{trainingcomitteeUI.trainingcomittee.rsaIDNumber}" style="width:95%" />
+						<p:outputLabel value="#{lang['rsa.id.number']}" for="rsaIDNumber" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="passportNumber" value="#{trainingcomitteeUI.trainingcomittee.passportNumber}" style="width:95%" />
+						<p:outputLabel value="#{lang['passport.number']}" for="passportNumber" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="firstName" value="#{trainingcomitteeUI.trainingcomittee.firstName}" style="width:95%" required="true" requiredMessage="#{lang['provide.first.name']}"/>
+						<p:outputLabel value="#{lang['first.name']}" for="firstName" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="lastName" value="#{trainingcomitteeUI.trainingcomittee.lastName}" style="width:95%" required="true" requiredMessage="#{lang['provide.last.name']}"/>
+						<p:outputLabel value="#{lang['last.name']}" for="lastName" />
+					</h:panelGroup>
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="#{lang['gender']}" for="gender" />
+						</div>
+						<div>
+							<p:selectOneMenu id="gender" value="#{trainingcomitteeUI.trainingcomittee.gender}" converter="GenderConvertor" style="width:75%" required="true" requiredMessage="#{lang['select.gender']}">
+								<p:ajax />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsGender}" var="rv" itemLabel="#{rv.genderName}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="telNumber" value="#{trainingcomitteeUI.trainingcomittee.telNumber}" style="width:95%" required="true" requiredMessage="#{lang['provide.tel.number']}"/>
+						<p:outputLabel value="#{lang['telNumber']}" for="telNumber" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="cellNumber" value="#{trainingcomitteeUI.trainingcomittee.cellNumber}" style="width:95%" required="true" requiredMessage="#{lang['provide.cell.number']}"/>
+						<p:outputLabel value="#{lang['cell.number']}" for="cellNumber" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="faxNumber" value="#{trainingcomitteeUI.trainingcomittee.faxNumber}" style="width:95%" />
+						<p:outputLabel value="#{lang['fax.number']}" for="faxNumber" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="unionName" value="#{trainingcomitteeUI.trainingcomittee.unionName}" style="width:95%" required="true" requiredMessage="#{lang['provide.union.name']}"/>
+						<p:outputLabel value="#{lang['union.name']}" for="unionName" />
+					</h:panelGroup>
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="#{lang['title']}" for="title" />
+						</div>
+						<div>
+							<p:selectOneMenu id="title" value="#{trainingcomitteeUI.trainingcomittee.title}" converter="TitleConvertor" style="width:75%" required="true" requiredMessage="#{lang['select.title']}">
+								<p:ajax />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsTitles}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="#{lang['equity']}" for="equity" />
+						</div>
+						<div>
+							<p:selectOneMenu id="equity" value="#{trainingcomitteeUI.trainingcomittee.equity}" converter="EquityConvertor" style="width:75%" required="true" requiredMessage="#{lang['select.equity']}">
+								<p:ajax />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsEquity}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+						<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update="trainingComitteeForm trainingComitteeTableForm" action="#{trainingcomitteeUI.trainingcomitteeInsert}" />
+						<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="trainingComitteeForm trainingComitteeTableForm" process="@this" action="#{trainingcomitteeUI.prepareNew}">
+							<p:resetInput target="trainingcomitteeInsGrid" />
+						</p:commandButton>
+					</p:panelGrid>
+				</p:panelGrid>
+			</p:fieldset>
+		</h:form>
+		<br />
+		<h:form id="trainingComitteeTableForm">
+			<p:dataTable var="rowVar" value="#{trainingcomitteeUI.dataModel}" filteredValue="#{trainingcomitteeUI.trainingComitteefilteredList}" id="trainingcomitteeList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+				paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+				<p:column headerText="#{lang['title']}">
+					<h:outputText value="#{rowVar.title.description}" />
+				</p:column>
+				<p:column headerText="#{lang['email']}">
+					<h:outputText value="#{rowVar.email}" />
+				</p:column>
+				<p:column headerText="#{lang['rsa.id.number']}">
+					<h:outputText value="#{rowVar.rsaIDNumber}" />
+				</p:column>
+				<p:column headerText="#{lang['passport.number']}">
+					<h:outputText value="#{rowVar.passportNumber}" />
+				</p:column>
+				<p:column headerText="#{lang['first.name']}">
+					<h:outputText value="#{rowVar.firstName}" />
+				</p:column>
+				<p:column headerText="#{lang['last.name']}">
+					<h:outputText value="#{rowVar.lastName}" />
+				</p:column>
+				<p:column headerText="#{lang['gender']}">
+					<h:outputText value="#{rowVar.gender.genderName}" />
+				</p:column>
+				<p:column headerText="#{lang['equity']}">
+					<h:outputText value="#{rowVar.equity.description}" />
+				</p:column>
+				<p:column headerText="#{lang['tel.number']}">
+					<h:outputText value="#{rowVar.telNumber}" />
+				</p:column>
+				<p:column headerText="#{lang['cell.number']}">
+					<h:outputText value="#{rowVar.cellNumber}" />
+				</p:column>
+				<p:column headerText="#{lang['fax.number']}">
+					<h:outputText value="#{rowVar.faxNumber}" />
+				</p:column>
+				<p:column headerText="#{lang['union.name']}">
+					<h:outputText value="#{rowVar.unionName}" />
+				</p:column>
+				<p:column width="80">
+					<p:commandButton icon="fa fa-database" title="#{lang['update']}" update="@form trainingComitteeForm">
+						<f:setPropertyActionListener value="#{rowVar}" target="#{trainingcomitteeUI.trainingcomittee}" />
+					</p:commandButton>
+					<p:spacer width="5" />
+					<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update="@form" action="#{trainingcomitteeUI.trainingcomitteeDelete}">
+						<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure.you.want.to.delete.the.training.comittee']}" icon="ui-icon-warning" />
+						<f:setPropertyActionListener value="#{rowVar}" target="#{trainingcomitteeUI.trainingcomittee}" />
+					</p:commandButton>
+				</p:column>
+
+			</p:dataTable>
+		</h:form>
+	</p:dialog>
+
+</ui:composition>

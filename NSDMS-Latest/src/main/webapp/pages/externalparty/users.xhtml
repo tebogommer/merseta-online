@@ -1,0 +1,202 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<div class="card card-w-title">
+		<p:commandButton title="#{lang['view']}" update="@form" icon="fa fa-times" styleClass="Fright">
+			<f:setPropertyActionListener value="#{null}" target="#{initiatewspUI.companyUsers}" />
+		</p:commandButton>
+
+		<h1>#{initiatewspUI.selectedCompany.company.companyName} #{lang['users']}</h1>
+		<p:growl showDetail="false" sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+
+		<p:dataTable var="rowVar" value="#{initiatewspUI.companyUsers}" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+			paginatorTemplate="#{lang['page']} {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+			<p:column headerText="#{lang['user.select']}">
+				<p:outputLabel value="#{rowVar.user.firstName} #{rowVar.user.lastName}"></p:outputLabel>
+			</p:column>
+
+			<p:column headerText="#{lang['email']}">
+				<p:outputLabel value="#{rowVar.user.email}"></p:outputLabel>
+			</p:column>
+
+			<p:column headerText="#{lang['users.type']}">
+				<p:outputLabel value="#{lang[rowVar.companyUserType.type]}" rendered="#{rowVar.companyUserType ne null}"></p:outputLabel>
+				<p:outputLabel value="#{rowVar.position.description}" rendered="#{rowVar.position ne null}"></p:outputLabel>
+			</p:column>
+		</p:dataTable>
+		<div class="EmptyBox20"></div>
+		<c:if test="#{initiatewspUI.companyUser eq null or !initiatewspUI.companyUser.user.doneSearch}">
+			<ui:include src="/pages/includes/searchUserPassportOrID.xhtml" />
+		</c:if>
+		<h:panelGroup rendered="#{initiatewspUI.companyUser.user.doneSearch}">
+			<p:fieldset legend="#{lang['user.details']}" rendered="#{initiatewspUI.companyUser ne null}">
+				<p:panelGrid columns="2" style="width:100%" id="usersInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{initiatewspUI.companyUser ne null}">
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="firstName" value="#{initiatewspUI.companyUser.user.firstName}" style="width:95%" disabled="#{initiatewspUI.companyUser.id ne null}" required="true" requiredMessage="#{lang['enter.your.name']}" />
+						<p:outputLabel value="#{lang['first.name']}" for="firstName" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="lastName" value="#{initiatewspUI.companyUser.user.lastName}" style="width:95%" disabled="#{initiatewspUI.companyUser.id ne null}" required="true" requiredMessage="#{lang['enter.your.last.name']}" />
+						<p:outputLabel value="#{lang['surname']}" for="lastName" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="email" value="#{initiatewspUI.companyUser.user.email}" style="width:95%" disabled="#{initiatewspUI.companyUser.id ne null}" required="true" requiredMessage="#{lang['enter.your.email.address']}" />
+						<p:outputLabel value="#{lang['email']}" for="email" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield" rendered="#{initiatewspUI.companyUser.user.rsaIDNumber.length() gt 0}">
+						<p:inputText id="idNumber" value="#{initiatewspUI.companyUser.user.rsaIDNumber}" maxlength="13" style="width:95%" disabled="#{initiatewspUI.companyUser.id ne null}" required="true" />
+						<p:outputLabel value="#{lang['rsa.id.number']}" for="idNumber" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield" rendered="#{initiatewspUI.companyUser.user.passportNumber.length() gt 0}">
+						<p:inputText id="passportNumber" value="#{initiatewspUI.companyUser.user.passportNumber}" style="width:95%" disabled="#{initiatewspUI.companyUser.id ne null}" required="true" />
+						<p:outputLabel value="#{lang['passport.number']}" for="passportNumber" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="telNumber" value="#{initiatewspUI.companyUser.user.telNumber}" style="width:95%" disabled="#{initiatewspUI.companyUser.id ne null}" required="true" />
+						<p:outputLabel value="#{lang['tel.number']}" for="telNumber" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="cellNumber" value="#{initiatewspUI.companyUser.user.cellNumber}" style="width:95%" disabled="#{initiatewspUI.companyUser.id ne null}" required="true" />
+						<p:outputLabel value="#{lang['cell.number']}" for="cellNumber" />
+					</h:panelGroup>
+
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="#{lang['users.type']}" for="proc" styleClass="gray" />
+						</div>
+						<div>
+							<p:selectOneMenu id="proc" value="#{initiatewspUI.companyUser.position}" style="width:75%" required="true" requiredMessage="#{lang['please.select.a.type']}" converter="CompanyUserPositionConvertor">
+								<p:ajax />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsCompanyUserPosition}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					<p:fieldset legend="#{lang['residentialAddress']}" style="margin-top: 20px" rendered="false">
+						<p:panelGrid columns="1" style="width : 95%" styleClass="ui-panelgrid-blank" id="useraddrPcode">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="addr1user" value="#{initiatewspUI.companyUser.user.residentialAddress.addressLine1}" style="width:95%" required="true" requiredMessage="#{lang['enter.residential.address']}" />
+								<p:outputLabel value="#{lang['address.line.1']}" for="addr1user" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="addr2user" style="width:95%" value="#{initiatewspUI.companyUser.user.residentialAddress.addressLine2}" />
+								<p:outputLabel value="#{lang['address.line.2']}" for="addr2user" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="addr3user" style="width:95%" value="#{initiatewspUI.companyUser.user.residentialAddress.addressLine3}" />
+								<p:outputLabel value="#{lang['address.line.3']}" for="addr3user" />
+							</h:panelGroup>
+
+
+							<h:panelGroup>
+								<div>
+									<h:outputLabel value="#{lang['town']}" for="theTown" />
+								</div>
+								<div>
+									<p:autoComplete id="theTown" value="#{initiatewspUI.companyUser.user.residentialAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3"
+										maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true" requiredMessage="#{lang['please.select.a.town']}">
+										<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+									</p:autoComplete>
+								</div>
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="pcodeuser" style="width:95%" value="#{initiatewspUI.companyUser.user.residentialAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}" />
+								<p:outputLabel value="#{lang['post.code']}" for="pcodeuser" />
+							</h:panelGroup>
+
+							<h:panelGroup>
+								<div>
+									<h:outputLabel value="#{lang['municipality']}" for="MunicipalityID" />
+								</div>
+								<div>
+									<p:autoComplete id="MunicipalityIDUser" completeMethod="#{autoCompleteUI.completeMunicipality}" value="#{initiatewspUI.companyUser.user.residentialAddress.municipality}" var="rv" itemLabel="#{rv.municipalityProvince}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor"
+										dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true" requiredMessage="#{lang['select.municipality']}">
+										<p:column headerText="#{lang['province']}" style="white-space: nowrap">
+											#{rv.province.provinceDesc}
+										</p:column>
+										<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">
+											#{rv.municipalityDesc}
+										</p:column>
+									</p:autoComplete>
+								</div>
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<div class="EmptyBox40"></div>
+							</h:panelGroup>
+						</p:panelGrid>
+					</p:fieldset>
+					<p:fieldset legend="#{lang['postalAddress']}" style="margin-top: 20px" rendered="false">
+						<p:panelGrid columns="1" style="width : 95%" styleClass="ui-panelgrid-blank" id="userpostalAddress">
+							<h:panelGroup styleClass="md-inputfield" rendered="#{not initiatewspUI.copyAddress}">
+								<p:inputText id="postalAddressaddr1user" value="#{initiatewspUI.companyUser.user.postalAddress.addressLine1}" style="width:95%" required="true" requiredMessage="#{lang['enter.postal.address']}" />
+								<p:outputLabel value="#{lang['address.line.1']}" for="postalAddressaddr1user" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield" rendered="#{not initiatewspUI.copyAddress}">
+								<p:inputText id="postalAddressaddr2user" style="width:95%" value="#{initiatewspUI.companyUser.user.postalAddress.addressLine2}" />
+								<p:outputLabel value="#{lang['address.line.2']}" for="postalAddressaddr2user" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield" rendered="#{not initiatewspUI.copyAddress}">
+								<p:inputText id="postalAddressaddr3user" style="width:95%" value="#{initiatewspUI.companyUser.user.postalAddress.addressLine3}" />
+								<p:outputLabel value="#{lang['address.line.3']}" for="postalAddressaddr3user" />
+							</h:panelGroup>
+
+							<h:panelGroup>
+								<div>
+									<h:outputLabel value="#{lang['town']}" for="theTown2" />
+								</div>
+								<div>
+									<p:autoComplete id="theTown2" value="#{initiatewspUI.companyUser.user.postalAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3"
+										maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true" requiredMessage="#{lang['please.select.a.town']}">
+										<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+									</p:autoComplete>
+								</div>
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield" rendered="#{not initiatewspUI.copyAddress}">
+								<p:inputText id="postalAddressPcodeuser" style="width:95%" value="#{initiatewspUI.companyUser.user.postalAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}" />
+								<p:outputLabel value="#{lang['post.code']}" for="postalAddressPcodeuser" />
+							</h:panelGroup>
+
+							<h:panelGroup rendered="#{not initiatewspUI.copyAddress}">
+								<div>
+									<h:outputLabel value="#{lang['municipality']}" for="postalAddressMunicipalityIDUser" />
+								</div>
+								<div>
+									<p:autoComplete id="postalAddressMunicipalityIDUser" value="#{initiatewspUI.companyUser.user.postalAddress.municipality}" completeMethod="#{autoCompleteUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityProvince}" itemValue="#{rv}" forceSelection="true"
+										converter="MunicipalityConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true" requiredMessage="#{lang['select.municipality']}">
+										<p:column headerText="#{lang['province']}" style="white-space: nowrap">
+											#{rv.province.provinceDesc}
+										</p:column>
+										<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">
+											#{rv.municipalityDesc}
+										</p:column>
+									</p:autoComplete>
+								</div>
+							</h:panelGroup>
+
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="#{lang['same.as.my.address']}" styleClass="FontLight" />
+								</div>
+								<div>
+									<p:selectBooleanCheckbox value="#{initiatewspUI.copyAddress}">
+										<p:ajax update="userpostalAddress" listener="#{initiatewspUI.clearPostal}" />
+									</p:selectBooleanCheckbox>
+								</div>
+							</h:panelGroup>
+						</p:panelGrid>
+					</p:fieldset>
+					<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+						<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update="@form" action="#{initiatewspUI.usersInsert}" />
+						<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="@form" process="@this" action="#{initiatewspUI.prepUsers}">
+							<p:resetInput target="usersInsGrid" />
+						</p:commandButton>
+					</p:panelGrid>
+				</p:panelGrid>
+			</p:fieldset>
+		</h:panelGroup>
+	</div>
+</ui:composition>

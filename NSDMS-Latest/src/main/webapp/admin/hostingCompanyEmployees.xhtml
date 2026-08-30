@@ -1,0 +1,533 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:fn="http://java.sun.com/jsp/jstl/functions" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml" xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:o="http://omnifaces.org/ui">
+	<ui:define name="content">
+		<h:form id="hostCompanyEmployee">
+			<p:importEnum type="haj.com.entity.enums.IdPassportEnum" var="idpass" />
+			<p:growl showDetail="false" sticky="false">
+				<p:autoUpdate />
+			</p:growl>
+
+			<p:outputPanel styleClass="ui-g card">
+				<div class="ui-g-12">
+					<h1>#{lang['employees']}</h1>
+					<c:if test="1 eq 0">
+						<!-- IE NEVER RENDER -->
+						<div class="ui-g-12 ui-md-4">
+							<p:panelGrid columns="1" style="width :100%" layout="grid" styleClass="ui-panelgrid-blank">
+								<p:autoComplete size="90" id="hostCompanyAutoComplete" placeholder="#{lang['company.name']}" value="#{hostingCompanyEmployeesUI.hostingCompany}" completeMethod="#{hostingCompanyEmployeesUI.completeHostingCompany}" converter="HostingCompanyConvertor" var="rv" itemLabel="#{rv.companyName}"
+									itemValue="#{rv}" forceSelection="true" dropdown="true" minQueryLength="1" maxResults="10" required="true" requiredMessage="#{lang['select.host.company']}">
+									<p:ajax event="itemSelect" update="@form" />#{hostingCompanyEmployeesUI.hostingCompany.companyName}<p:ajax event="change" update="@form" />
+									<p:column headerText="#{lang['company.name']}" style="white-space: nowrap">#{rv.companyName}</p:column>
+									<p:column headerText="#{lang['company.reg.number']}" style="white-space: nowrap">#{rv.companyRegNumber}</p:column>
+								</p:autoComplete>
+								<p:fieldset legend="#{lang['details']}" style="margin-top: 20px" rendered="#{hostingCompanyEmployeesUI.hostingCompany.id ne null}">
+									<p:outputLabel value="#{hostingCompanyEmployeesUI.hostingCompany.companyName}" />
+									<div class="EmptyBox10" />
+									<p:outputLabel value="#{hostingCompanyEmployeesUI.hostingCompany.companyRegNumber}" />
+									<div class="EmptyBox10" />
+									<c:if test="#{hostingCompanyEmployeesUI.hostingCompany.profileImage.id ne null}">
+										<p:graphicImage value="#{imageStreamer.image}" style="max-width: 200px;padding:2px; max-height: 160px;">
+											<f:param name="imageId" value="#{hostingCompanyEmployeesUI.hostingCompany.profileImage.id}" />
+										</p:graphicImage>
+									</c:if>
+									<c:if test="#{hostingCompanyEmployeesUI.hostingCompany.profileImage.id eq null}">
+										<div class="logo"></div>
+									</c:if>
+								</p:fieldset>
+							</p:panelGrid>
+						</div>
+					</c:if>
+					<div class="ui-g-12 ui-md-12">
+						<p:panelGrid columns="1" style="width :100%" layout="grid" styleClass="ui-panelgrid-blank">
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="firstName" value="#{hostingCompanyEmployeesUI.user.firstName}" maxlength="#{hostingCompanyEmployeesUI.MAX_FIRST_NAME_SIZE}" style="width:95%" required="true" requiredMessage="#{lang['provide.first.name']}" />
+								<p:outputLabel value="#{lang['first.name']}" for="firstName" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="lastName" value="#{hostingCompanyEmployeesUI.user.lastName}" maxlength="#{hostingCompanyEmployeesUI.MAX_LAST_NAME_SIZE}" style="width:95%" required="true" requiredMessage="#{lang['provide.last.name']}" />
+								<p:outputLabel value="#{lang['last.name']}" for="lastName" />
+							</h:panelGroup>
+
+							<h:panelGroup>
+								<p:selectOneMenu id="idType" value="#{hostingCompanyEmployeesUI.idPass}" style="width:75%" requiredMessage="#{lang['provide.type.of.id']}" required="false">
+									<p:ajax update="hostCompanyEmployee:idInput" />
+									<f:selectItem itemLabel="---#{lang['select.id.type']}---" itemValue="" styleClass="FontLight gray" noSelectionOption="true" />
+									<f:selectItems value="#{enumUI.idPassportEnumDD}" />
+								</p:selectOneMenu>
+							</h:panelGroup>
+							<p:outputPanel id="idInput">
+								<h:panelGroup id="rsaPnl" styleClass="md-inputfield" rendered="#{hostingCompanyEmployeesUI.idPass eq idpass.RsaId}">
+									<p:inputText id="rsaIDNumber" value="#{hostingCompanyEmployeesUI.user.rsaIDNumber}" maxlength="#{hostingCompanyEmployeesUI.MAX_RSA_ID_NUMBER}" style="width:95%" required="true" requiredMessage="#{lang['provide.id.number']}" />
+									<p:outputLabel value="#{lang['rsa.id.number']}" for="rsaIDNumber" />
+
+								</h:panelGroup>
+								<h:panelGroup id="passPnl" styleClass="md-inputfield" rendered="#{hostingCompanyEmployeesUI.idPass eq idpass.Passport}">
+									<p:inputText id="passportNumber" validatorMessage="#{lang['user.passport.length']}" value="#{hostingCompanyEmployeesUI.user.passportNumber}" maxlength="#{hostingCompanyEmployeesUI.MAX_PASSPORT_NUMBER}" style="width:95%" required="true" requiredMessage="#{lang['provide.passport.number']}">
+										<f:validateRegex pattern="#{searchUserPassportOrIdUI.passportNumberFormat}" />
+									</p:inputText>
+									<h:message for="passportNumber" />
+									<p:outputLabel value="#{lang['passport.number']}" for="passportNumber" />
+								</h:panelGroup>
+							</p:outputPanel>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="email" value="#{hostingCompanyEmployeesUI.user.email}" type="email" style="width:95%" required="false" requiredMessage="#{lang['provide.email']}">
+
+								</p:inputText>
+								<p:outputLabel value="#{lang['email']}" for="email">
+								</p:outputLabel>
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputMask id="telNumber" mask="#{hostingCompanyEmployeesUI.TELPHONE_FORMAT}" value="#{hostingCompanyEmployeesUI.user.telNumber}" style="width: 90%" label="telNumber" required="false" requiredMessage="#{lang['provide.tell.number']}">
+									<o:validator validatorId="javax.faces.Length" minimum="0" maximum="20" message="#{lang['user.tellnumber.length']}" />
+								</p:inputMask>
+								<p:outputLabel value="#{lang['tel.number']}" for="telNumber" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputMask id="cellNumber" mask="#{hostingCompanyEmployeesUI.CELLPHONE_FORMAT}" value="#{hostingCompanyEmployeesUI.user.cellNumber}" style="width: 90%" label="cellNumber" required="false" requiredMessage="#{lang['provide.mobile.number']}">
+									<o:validator validatorId="javax.faces.Length" minimum="0" maximum="20" message="#{lang['user.cellnumber.length']}" />
+								</p:inputMask>
+								<p:outputLabel value="#{lang['cell.number']}" for="cellNumber" />
+							</h:panelGroup>
+
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="Job Title" for="jt" />
+								</div>
+								<div>
+									<p:selectOneMenu id="jt" value="#{hostingCompanyEmployeesUI.hcEmployee.jobTitle}" converter="JobTitleConvertor" style="width:95%">
+										<f:selectItem itemLabel="---#{lang['select.one']}---" itemValue="" noSelectionOption="true" />
+										<f:selectItems value="#{selectItemsUI.jobTitle}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+										<p:ajax update="hostCompanyEmployee:idJobtitle" />
+									</p:selectOneMenu>
+								</div>
+							</h:panelGroup>
+							<p:outputPanel id="idJobtitle">
+							<p:outputLabel value="Office" for="office" />
+								<c:set var="theString" value="Administrator"/>
+								
+								<!-- <h:panelGroup id="multiPnl" styleClass="md-inputfield" rendered="#{hostingCompanyEmployeesUI.hcEmployee.jobTitle eq idpass.RsaId}"> -->
+								<h:panelGroup id="multiSelectPnl" styleClass="md-inputfield" rendered="#{hostingCompanyEmployeesUI.checkIfAdmin()}">
+										<!-- <p:selectManyMenu id="office" value="#{hostingCompanyEmployeesUI.user.office}" converter="OfficeConvertor" style="width:95%" > -->
+										<p:selectManyMenu id="office" converter="OfficeConvertor" style="width:95%" >
+										<f:selectItem itemLabel="---#{lang['select.one']}---" itemValue="#{hostingCompanyEmployeesUI.user.office}"/>
+										<f:selectItems value="#{selectItemsUI.office}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+										<p:ajax />
+										</p:selectManyMenu>	
+										
+								</h:panelGroup>
+								<!-- <h:panelGroup id="singlePnl" styleClass="md-inputfield" rendered="#{hostingCompanyEmployeesUI.hcEmployee.jobTitle eq idpass.Passport}"> -->
+								<h:panelGroup id="singalSelectPnl" styleClass="md-inputfield" rendered="#{!hostingCompanyEmployeesUI.checkIfAdmin()}">
+									<p:selectOneMenu id="office2" value="#{hostingCompanyEmployeesUI.user.office}" converter="OfficeConvertor" style="width:95%" >
+										<f:selectItem itemLabel="---#{lang['select.one']}---" itemValue="" noSelectionOption="true" />
+										<f:selectItems value="#{selectItemsUI.office}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+										<p:ajax />
+									</p:selectOneMenu>
+									
+								</h:panelGroup>
+							</p:outputPanel>
+							
+
+							<p:panelGrid columns="6" id="pgOptions" style="width :100%" styleClass="ui-panelgrid-blank">
+
+								<h:panelGroup id="projectCreation">
+									<p:selectBooleanCheckbox id="projectCreationChk" value="#{hostingCompanyEmployeesUI.user.projectCreation}" />
+									<p:spacer width="" />
+									<p:outputLabel value="Manage Projects" for="projectCreationChk" />
+								</h:panelGroup>
+
+								<h:panelGroup>
+									<p:selectBooleanCheckbox id="projectTermination" value="#{hostingCompanyEmployeesUI.user.projectTermination}" disabled="false" />
+									<p:spacer width="5" />
+									<p:outputLabel value="Project Termination" for="projectTermination" />
+								</h:panelGroup>
+
+								<h:panelGroup>
+									<p:selectBooleanCheckbox id="activeCheck" value="#{hostingCompanyEmployeesUI.user.active}" disabled="false" />
+									<p:spacer width="5" />
+									<p:outputLabel value="#{lang['active']}" for="activeCheck" />
+								</h:panelGroup>
+
+								<h:panelGroup>
+									<p:selectBooleanCheckbox id="financeCheck" value="#{hostingCompanyEmployeesUI.user.finance}" />
+									<p:spacer width="5" />
+									<p:outputLabel value="Finance" for="financeCheck" />
+								</h:panelGroup>
+
+								<h:panelGroup>
+									<p:selectBooleanCheckbox id="viewBugs" value="#{hostingCompanyEmployeesUI.user.viewBugs}" />
+									<p:spacer width="5" />
+									<p:outputLabel value="View Bugs" for="viewBugs" />
+								</h:panelGroup>
+
+								<h:panelGroup>
+									<p:selectBooleanCheckbox id="viewupData" value="#{hostingCompanyEmployeesUI.user.viewUploadData}" />
+									<p:spacer width="5" />
+									<p:outputLabel value="View Upload Data" for="viewupData" />
+								</h:panelGroup>
+
+								<h:panelGroup>
+									<p:selectBooleanCheckbox id="upData" value="#{hostingCompanyEmployeesUI.user.uploadData}" />
+									<p:spacer width="5" />
+									<p:outputLabel value="Upload Data" for="upData" />
+								</h:panelGroup>
+
+								<h:panelGroup>
+									<p:selectBooleanCheckbox id="upDataa" value="#{hostingCompanyEmployeesUI.user.viewExtensionRequest}" />
+									<p:spacer width="5" />
+									<p:outputLabel value="Create Extension" for="upDataa" />
+								</h:panelGroup>
+
+								<h:panelGroup>
+									<p:selectBooleanCheckbox id="wpdView" value="#{hostingCompanyEmployeesUI.user.qualWorkplaceAssignment}" />
+									<p:spacer width="5" />
+									<p:outputLabel value="WPA Designation" for="wpdView" />
+								</h:panelGroup>
+
+								<h:panelGroup id="pgDgAllocation">
+									<p:selectBooleanCheckbox id="dgAllocation" value="#{hostingCompanyEmployeesUI.user.allocateDG}" />
+									<p:spacer width="5" />
+									<p:outputLabel value="Allocate DG" for="dgAllocation" />
+								</h:panelGroup>
+
+								<h:panelGroup>
+									<p:selectBooleanCheckbox id="tempRep" value="#{hostingCompanyEmployeesUI.user.tempReporting}" />
+									<p:spacer width="5" />
+									<p:outputLabel value="Temp Reporting Page" for="tempRep" />
+								</h:panelGroup>
+
+								<h:panelGroup>
+									<p:selectBooleanCheckbox id="rcMember" value="#{hostingCompanyEmployeesUI.user.reviewCommitteeMember}">
+										<p:ajax update="pgOptions" process="pgOptions" />
+									</p:selectBooleanCheckbox>
+									<p:spacer width="5" />
+									<p:outputLabel value="Review Committee Member" for="rcMember" />
+								</h:panelGroup>
+
+								<h:panelGroup>
+									<p:selectBooleanCheckbox id="macoMember" value="#{hostingCompanyEmployeesUI.user.mancoMember}">
+										<p:ajax update="pgOptions" process="pgOptions" />
+									</p:selectBooleanCheckbox>
+									<p:spacer width="5" />
+									<p:outputLabel value="MANCO Review" for="macoMember" />
+								</h:panelGroup>
+
+								<h:panelGroup>
+									<p:selectBooleanCheckbox id="learnerReviewMember" value="#{hostingCompanyEmployeesUI.user.learnerReviewMember}">
+										<p:ajax update="learnerReviewMember" process="learnerReviewMember" />
+									</p:selectBooleanCheckbox>
+									<p:spacer width="5" />
+									<p:outputLabel value="Learner Review Member" for="learnerReviewMember" />
+								</h:panelGroup>
+
+								<h:panelGroup id="pgPrecessAMApp" rendered="#{hostingCompanyEmployeesUI.user.reviewCommitteeMember}">
+									<p:selectBooleanCheckbox id="precessAMApp" value="#{hostingCompanyEmployeesUI.user.processAssessorModApplication}" />
+									<p:spacer width="" />
+									<p:outputLabel value="Process Assessor/Mod Application" for="precessAMApp" />
+								</h:panelGroup>
+
+
+
+
+								<h:panelGroup id="coursewareDistroSub">
+									<p:selectBooleanCheckbox id="coursewareDistroSubChk" value="#{hostingCompanyEmployeesUI.user.coursewareDistroSub}" />
+									<p:spacer width="" />
+									<p:outputLabel value="Courseware Distribution Sub Report" for="coursewareDistroSubChk" />
+								</h:panelGroup>
+
+								<h:panelGroup id="mancoGrantAppGrid">
+									<p:selectBooleanCheckbox id="mangrantApp" value="#{hostingCompanyEmployeesUI.user.mancoGrantApproval}" />
+									<p:spacer width="" />
+									<p:outputLabel value="Manco Grant Approval" for="mangrantApp" />
+								</h:panelGroup>
+
+								<h:panelGroup id="dgContractingBulkApproval">
+									<p:selectBooleanCheckbox id="dgContractingBulkEntry" value="#{hostingCompanyEmployeesUI.user.dgContractingBulkApproval}" />
+									<p:spacer width="" />
+									<p:outputLabel value="DG Contracting Bulk" for="dgContractingBulkEntry" />
+								</h:panelGroup>
+
+								<h:panelGroup id="registerLearnerPanel">
+									<p:selectBooleanCheckbox id="registerLearner" value="#{hostingCompanyEmployeesUI.user.registerLearner}" />
+									<p:spacer width="" />
+									<p:outputLabel value="Register Learners" for="registerLearner" />
+								</h:panelGroup>
+
+								<h:panelGroup id="dataExtractsPanel">
+									<p:selectBooleanCheckbox id="dataExtracts" value="#{hostingCompanyEmployeesUI.user.dataExtracts}" />
+									<p:spacer width="" />
+									<p:outputLabel value="Data Extracts" for="dataExtracts" />
+								</h:panelGroup>
+
+								<h:panelGroup id="wspManagmentPanel">
+									<p:selectBooleanCheckbox id="wspManagment" value="#{hostingCompanyEmployeesUI.user.wspManagment}" />
+									<p:spacer width="" />
+									<p:outputLabel value="Grant Application Management" for="wspManagment" />
+								</h:panelGroup>
+
+								<h:panelGroup id="gpTransactionsManagementPanel">
+									<p:selectBooleanCheckbox id="gpTransactionsManagement" value="#{hostingCompanyEmployeesUI.user.gpTransactionsManagement}" />
+									<p:spacer width="" />
+									<p:outputLabel value="GP Transactions Management" for="gpTransactionsManagement" />
+								</h:panelGroup>
+
+								<h:panelGroup id="addAssessmentpanel">
+									<p:selectBooleanCheckbox id="addAssessment" value="#{hostingCompanyEmployeesUI.user.addAssessment}" />
+									<p:spacer width="" />
+									<p:outputLabel value="Add Assessment" for="addAssessment" />
+								</h:panelGroup>
+
+								<h:panelGroup id="generateCertificatespanel">
+									<p:selectBooleanCheckbox id="generateCertificates" value="#{hostingCompanyEmployeesUI.user.generateCertificates}" />
+									<p:spacer width="" />
+									<p:outputLabel value="Generate Certificates" for="generateCertificates" />
+								</h:panelGroup>
+
+								<h:panelGroup id="sarsLevyDetailCalcPanel">
+									<p:selectBooleanCheckbox id="sarsLevyDetailCalc" value="#{hostingCompanyEmployeesUI.user.sarsLevyDetailCalc}" />
+									<p:spacer width="" />
+									<p:outputLabel value="SARS Levy Calculation Information" for="sarsLevyDetailCalc" />
+								</h:panelGroup>
+
+								<h:panelGroup id="sarsLevyMandInvoicesUpdatePanel">
+									<p:selectBooleanCheckbox id="sarsLevyMandInvoicesUpdate" value="#{hostingCompanyEmployeesUI.user.sarsLevyMandInvoicesUpdate}" />
+									<p:spacer width="" />
+									<p:outputLabel value="SARS Scheme Year Returns and Invoices" for="sarsLevyMandInvoicesUpdate" />
+								</h:panelGroup>
+
+								<h:panelGroup id="gpBankingDetailsPanel">
+									<p:selectBooleanCheckbox id="gpBankingDetailsUpdate" value="#{hostingCompanyEmployeesUI.user.gpBankingDetails}" />
+									<p:spacer width="" />
+									<p:outputLabel value="GP Banking Details" for="gpBankingDetailsUpdate" />
+								</h:panelGroup>
+
+								<h:panelGroup id="levyDetailMgTransactionsPanel">
+									<p:selectBooleanCheckbox id="levyDetailMgTransactionsUpdate" value="#{hostingCompanyEmployeesUI.user.levyDetailMgTransactions}" />
+									<p:spacer width="" />
+									<p:outputLabel value="Levy Detail Payment Management" for="levyDetailMgTransactionsUpdate" />
+								</h:panelGroup>
+
+								<h:panelGroup id="alterLegacyApplicationsPanel">
+									<p:selectBooleanCheckbox id="alterLegacyApplicationsUpdate" value="#{hostingCompanyEmployeesUI.user.alterLegacyApplications}" />
+									<p:spacer width="" />
+									<p:outputLabel value="Legacy Provider Accreditations Monitoring" for="alterLegacyApplicationsUpdate" />
+								</h:panelGroup>
+
+								<h:panelGroup id="qmrAccessPanel">
+									<p:selectBooleanCheckbox id="qmrAccess" value="#{hostingCompanyEmployeesUI.user.qmrAccess}" />
+									<p:spacer width="" />
+									<p:outputLabel value="QMR Reporting" for="qmrAccess" />
+								</h:panelGroup>
+
+								<h:panelGroup id="moaRegisterAccessPanel">
+									<p:selectBooleanCheckbox id="moaRegisterAccess" value="#{hostingCompanyEmployeesUI.user.moaRegisterAccess}" />
+									<p:spacer width="" />
+									<p:outputLabel value="MOA Management View" for="moaRegisterAccess" />
+								</h:panelGroup>
+
+								<h:panelGroup id="taskReportingPanel">
+									<p:selectBooleanCheckbox id="taskReporting" value="#{hostingCompanyEmployeesUI.user.taskReporting}" />
+									<p:spacer width="" />
+									<p:outputLabel value="Task Reporting" for="taskReporting" />
+								</h:panelGroup>
+
+								<h:panelGroup id="grantTrendAnylsisPanel">
+									<p:selectBooleanCheckbox id="grantTrendAnylsis" value="#{hostingCompanyEmployeesUI.user.grantTrendAnylsis}" />
+									<p:spacer width="" />
+									<p:outputLabel value="Grant Submission Reports" for="grantTrendAnylsis" />
+								</h:panelGroup>
+
+								<h:panelGroup id="prioirtySkillsReportPanel" rendered="false">
+									<p:selectBooleanCheckbox id="prioirtySkillsReport" value="#{hostingCompanyEmployeesUI.user.prioirtySkillsReport}" />
+									<p:spacer width="" />
+									<p:outputLabel value="Prioirty Skills Report" for="prioirtySkillsReport" />
+								</h:panelGroup>
+
+								<h:panelGroup id="companyRegisterReportPanel">
+									<p:selectBooleanCheckbox id="companyRegisterReport" value="#{hostingCompanyEmployeesUI.user.companyRegisterReport}" />
+									<p:spacer width="" />
+									<p:outputLabel value="Company Status Report" for="companyRegisterReport" />
+								</h:panelGroup>
+
+								<h:panelGroup id="mgVerificationReportPanel">
+									<p:selectBooleanCheckbox id="mgVerificationReport" value="#{hostingCompanyEmployeesUI.user.mgVerificationReport}" />
+									<p:spacer width="" />
+									<p:outputLabel value="MG Verification Report" for="mgVerificationReport" />
+								</h:panelGroup>
+
+								<h:panelGroup id="dgVerificationReportPanel">
+									<p:selectBooleanCheckbox id="dgVerificationReport" value="#{hostingCompanyEmployeesUI.user.dgVerificationReport}" />
+									<p:spacer width="" />
+									<p:outputLabel value="DG Verification Status Report" for="dgVerificationReport" />
+								</h:panelGroup>
+
+								<h:panelGroup id="nsdpReportConfigGroup">
+									<p:selectBooleanCheckbox id="nsdpReportConfig" value="#{hostingCompanyEmployeesUI.user.nsdpReportConfig}" />
+									<p:spacer width="" />
+									<p:outputLabel value="NSDP Reporting: Configuration " for="nsdpReportConfig" />
+								</h:panelGroup>
+
+								<h:panelGroup id="nsdpReportViewGroup">
+									<p:selectBooleanCheckbox id="nsdpReportView" value="#{hostingCompanyEmployeesUI.user.nsdpReportView}" />
+									<p:spacer width="" />
+									<p:outputLabel value="NSDP Reporting: View" for="nsdpReportView" />
+								</h:panelGroup>
+
+								<h:panelGroup id="nsdpReportEditGroup">
+									<p:selectBooleanCheckbox id="nsdpReportEdit" value="#{hostingCompanyEmployeesUI.user.nsdpReportEdit}" />
+									<p:spacer width="" />
+									<p:outputLabel value="NSDP Reporting: Edit" for="nsdpReportEdit" />
+								</h:panelGroup>
+
+								<h:panelGroup id="withdrawContractsGroup">
+									<p:selectBooleanCheckbox id="withdrawContracts" value="#{hostingCompanyEmployeesUI.user.withdrawContracts}" />
+									<p:spacer width="" />
+									<p:outputLabel value="Allocation Register: Withdraw MOA" for="withdrawContracts" />
+								</h:panelGroup>
+
+								<h:panelGroup id="sspReportingGroup">
+									<p:selectBooleanCheckbox id="sspReporting" value="#{hostingCompanyEmployeesUI.user.sspReporting}" />
+									<p:spacer width="" />
+									<p:outputLabel value="SSP Reporting" for="sspReporting" />
+								</h:panelGroup>
+
+								<h:panelGroup >
+									<p:selectBooleanCheckbox id="fundingWindow" value="#{hostingCompanyEmployeesUI.user.fundingWindow}" />
+									<p:spacer width="" />
+									<p:outputLabel value="Edit Funding Window" for="fundingWindow" />
+								</h:panelGroup>
+
+								<h:panelGroup >
+									<p:selectBooleanCheckbox id="holdingRoom" value="#{hostingCompanyEmployeesUI.user.holdingRoom}" />
+									<p:spacer width="" />
+									<p:outputLabel value="Edit Holding Room" for="holdingRoom" />
+								</h:panelGroup>
+
+								<h:panelGroup >
+									<p:selectBooleanCheckbox id="strategicPriorities" value="#{hostingCompanyEmployeesUI.user.strategicPriorities}" />
+									<p:spacer width="" />
+									<p:outputLabel value="Edit Key Focus Areas" for="strategicPriorities" />
+								</h:panelGroup>
+
+							</p:panelGrid>
+						</p:panelGrid>
+					</div>
+					<div class="EmptyBox20" />
+					<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":dataTableForm @form" action="#{hostingCompanyEmployeesUI.addEmployeeToHostCompany}" />
+					<p:spacer width="5" />
+					<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" action="#{hostingCompanyEmployeesUI.clearForm}" update="@form" process="@this" />
+				</div>
+			</p:outputPanel>
+		</h:form>
+
+		<h:form id="dataTableForm">
+			<p:outputPanel styleClass="ui-g card">
+
+				<ui:include src="/pages/includes/download_lazy.xhtml">
+					<ui:param name="file_name" value="Seta_Employess_Extract" />
+					<ui:param name="target" value="hcEmployeeDataTable" />
+				</ui:include>
+				<div class="EmptyBox10" />
+				<ui:include src="/pages/includes/filterGuide.xhtml" />
+				<p:dataTable var="rowVar" value="#{hostingCompanyEmployeesUI.hcEmployeeDataModel}" filteredValue="#{hostingCompanyEmployeesUI.hcEmployeeFilteredList}" id="hcEmployeeDataTable" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+					paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+					<p:column headerText="#{lang['hosting.company.name']}" groupRow="true" rendered="false">
+						<h:outputText value="#{rowVar.hostingCompany.companyName}" />
+					</p:column>
+					<p:column headerText="#{lang['employee.name']}" sortBy="#{rowVar.users.lastName}" filterBy="#{rowVar.users.lastName}" filterStyle="width: 98%">
+						<h:outputText value="#{rowVar.users.firstName} #{rowVar.users.lastName}" />
+					</p:column>
+					<p:column headerText="#{lang['email']}" sortBy="#{rowVar.users.email}" filterBy="#{rowVar.email}" filterStyle="width: 98%">
+						<h:outputText value="#{rowVar.users.email}" />
+					</p:column>
+					<p:column headerText="#{lang['rsa.id.number']}" width="100">
+						<h:outputText value="#{rowVar.users.rsaIDNumber}" />
+					</p:column>
+					<p:column headerText="#{lang['passport.number']}" width="100">
+						<h:outputText value="#{rowVar.users.passportNumber}" />
+					</p:column>
+					<p:column headerText="Temp ID" width="100">
+						<h:outputText value="#{rowVar.users.tempRasIdOrPassportNumber}" />
+					</p:column>
+					<p:column headerText="Job Titile">
+						<h:outputText value="#{rowVar.jobTitle.description}" />
+					</p:column>
+					<p:column headerText="Office">
+						<h:outputText value="#{rowVar.users.office.description}" />
+					</p:column>
+					<p:column headerText="#{lang['active']}" width="55" sortBy="#{rowVar.users.active}" exportable="false">
+						<div align="center">
+							<p:selectBooleanCheckbox value="#{rowVar.active}" disabled="true" />
+						</div>
+					</p:column>
+					<p:column headerText="#{lang['active']}" width="55" sortBy="#{rowVar.users.active}" exportable="true" style="display:none">
+						<p:outputLabel value="Active" rendered="#{rowVar.active}" />
+						<p:outputLabel value="In-Active" rendered="#{!rowVar.active}" />
+					</p:column>
+					<p:column width="120" exportable="false">
+						<p:commandButton icon="fa fa-database" title="#{lang['update']}" action="#{hostingCompanyEmployeesUI.updateHCEmployee}" update=":hostCompanyEmployee">
+							<f:setPropertyActionListener value="#{rowVar}" target="#{hostingCompanyEmployeesUI.hcEmployee}" />
+						</p:commandButton>
+						<p:spacer width="5" />
+						<p:commandButton icon="ui-icon-send" title="Resend Confirmation" action="#{hostingCompanyEmployeesUI.reregister}" update="@form">
+							<f:setPropertyActionListener value="#{rowVar}" target="#{hostingCompanyEmployeesUI.hcEmployee}" />
+						</p:commandButton>
+						<p:spacer width="5" />
+						<p:commandButton rendered="#{rowVar.active}" icon="fa fa-times-circle" styleClass="red-btn" title="Deactivate Employee" update="@form" action="#{hostingCompanyEmployeesUI.deactivateEmployee}">
+							<f:setPropertyActionListener value="#{rowVar}" target="#{hostingCompanyEmployeesUI.hcEmployee}" />
+						</p:commandButton>
+
+						<p:commandButton rendered="#{!rowVar.active}" icon="fa fa-check-circle" styleClass="green-btn" title="Activate Employee" update="@form" action="#{hostingCompanyEmployeesUI.activateEmployee}">
+							<f:setPropertyActionListener value="#{rowVar}" target="#{hostingCompanyEmployeesUI.hcEmployee}" />
+						</p:commandButton>
+						<p:spacer width="5" />
+						<p:commandButton process="@this" icon="fa fa-address-card" title="User Permissions" update=":userPermissionsForm" action="#{hostingCompanyEmployeesUI.selectEmployeeForPermissions}">
+							<f:setPropertyActionListener value="#{rowVar.users}" target="#{hostingCompanyEmployeesUI.selectedEmployee}" />
+						</p:commandButton>
+					</p:column>
+				</p:dataTable>
+			</p:outputPanel>
+		</h:form>
+
+		<p:dialog position="top" header="Update: User Permissions" dynamic="true" responsive="true" widgetVar="userPermissionsDlg" resizable="false" hideEffect="clip" showEffect="clip" id="userPermissionsDialog" appendTo="@(body)" modal="true" width="70%" height="80vh">
+			<h:form id="userPermissionsForm">
+				<h3>#{hostingCompanyEmployeesUI.selectedEmployee.firstName} #{hostingCompanyEmployeesUI.selectedEmployee.lastName} (#{hostingCompanyEmployeesUI.selectedEmployee.email}) Selected.</h3>
+				<p:fieldset legend="User Permissions" style="width:95%">
+					<p:panelGrid columns="2" style="width :100%" layout="grid" styleClass="ui-panelgrid-blank">
+					
+						<h:panelGroup id="providerPermissionsViewPg">
+							<p:selectBooleanCheckbox id="providerPermissionsView" value="#{hostingCompanyEmployeesUI.userPermissions.providerSuspension}" />
+							<p:spacer width="" />
+							<p:outputLabel value="Provider Suspension / De-activated: View" for="providerPermissionsView" />
+						</h:panelGroup>
+						
+						<h:panelGroup id="providerPermissionsAlterPg">
+							<p:selectBooleanCheckbox id="providerPermissionsAlter" value="#{hostingCompanyEmployeesUI.userPermissions.providerSuspensionAlter}" />
+							<p:spacer width="" />
+							<p:outputLabel value="Provider Suspension / De-activated: Alter" for="providerPermissionsAlter" />
+						</h:panelGroup>
+						
+						<h:panelGroup id="legacySiteAllocationPg">
+							<p:selectBooleanCheckbox id="legacySiteAllocation" value="#{hostingCompanyEmployeesUI.userPermissions.legacySiteAllocation}" />
+							<p:spacer width="" />
+							<p:outputLabel value="Legacy Provider Application: Site Allocation View" for="legacySiteAllocation" />
+						</h:panelGroup>
+						
+						<h:panelGroup id="legacySiteAllocationAlterPg">
+							<p:selectBooleanCheckbox id="legacySiteAllocationAlter" value="#{hostingCompanyEmployeesUI.userPermissions.legacySiteAllocationAlter}" />
+							<p:spacer width="" />
+							<p:outputLabel value="Legacy Provider Application: Site Allocation Alter" for="legacySiteAllocationAlter" />
+						</h:panelGroup>
+						
+					</p:panelGrid>
+				</p:fieldset>
+				
+				<div class="EmptyBox10" />
+				
+				<p:commandButton icon="fa fa-database" value="Submit" action="#{hostingCompanyEmployeesUI.updateUserPermissions}" update="@form" />
+			</h:form>
+		</p:dialog>
+	</ui:define>
+</ui:composition>

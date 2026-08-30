@@ -1,0 +1,68 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<h:panelGroup id="reportGroup">
+
+		<style>
+.reportBadge {
+	border-radius: 4px;
+	background: #C94135;
+	display: inline;
+	padding: 2px 5px 2px 5px;
+	text-align: center;
+	color: white;
+	text-align: center;
+}
+</style>
+		<h:form id="reportTypeForma">
+			<!-- START REPORTS -->
+			<p:fieldset style="margin-bottom: 10px">
+				<p:panelGrid columns="2" style="width:100%" id="wspGridTop" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<p:outputLabel value="#{lang['indicate.planned.training.inline.employment.equity.plan']}?"></p:outputLabel>
+					<p:selectOneRadio disabled="#{initiatewspUI.wsp.wspStatusEnum ne WspStatusEnum.Draft}" value="#{reportUI.wsp.employmentEquityPlanInline}" converter="YesNoLookupConvertor" columns="2" layout="grid">
+						<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+					</p:selectOneRadio>
+					<p:outputLabel value="#{lang['where.pivotal.program.fund.wsp.sentence']}"></p:outputLabel>
+					<p:selectOneRadio disabled="#{initiatewspUI.wsp.wspStatusEnum ne WspStatusEnum.Draft}" value="#{reportUI.wsp.coFundingPartnership}" converter="YesNoLookupConvertor" columns="2" layout="grid">
+						<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+					</p:selectOneRadio>
+				</p:panelGrid>
+				<p:commandButton value="#{lang['submit']}" icon="fa fa-save" action="#{reportUI.captureReports}" rendered="#{initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.Draft}"></p:commandButton>
+			</p:fieldset>
+		</h:form>
+		<p:fieldset style="margin-top: 10px" legend="#{lang['report.type']}">
+			<h:form id="reportTypeForm">
+				<h:panelGroup>
+					<div>
+						<p:selectOneButton id="sips" required="true" requiredMessage="#{lang['select.process']}" layout="grid" columns="2" value="#{reportUI.wspRepot}">
+							<p:ajax update=":tabView:reportForm"></p:ajax>
+							<f:selectItems value="#{enumUI.wspReportEnumDD}" />
+						</p:selectOneButton>
+						<p:commandButton title="#{lang['refresh.report']}" icon="fa fa-refresh" action="#{reportUI.runReports}" update=":tabView:reportForm" styleClass="Fright"></p:commandButton>
+					</div>
+				</h:panelGroup>
+			</h:form>
+			<h:form id="reportForm">
+				<p:importEnum type="haj.com.entity.enums.WspReportEnum"></p:importEnum>
+				<h:panelGroup rendered="#{reportUI.wspRepot eq WspReportEnum.WSP}">
+					<div class="EmptyBox10"></div>
+					<ui:include src="/pages/externalparty/wsp/wsp.xhtml" />
+				</h:panelGroup>
+				<h:panelGroup rendered="#{reportUI.wspRepot eq WspReportEnum.PIVITOLPLANDG}">
+					<div class="EmptyBox10"></div>
+					<ui:include src="/pages/externalparty/wsp/pivitolplan.xhtml" />
+				</h:panelGroup>
+				<h:panelGroup rendered="#{reportUI.wspRepot eq WspReportEnum.ATR}">
+					<div class="EmptyBox10"></div>
+					<ui:include src="/pages/externalparty/wsp/atr.xhtml" />
+				</h:panelGroup>
+				<h:panelGroup rendered="#{reportUI.wspRepot eq WspReportEnum.PIVITOLTRAININGREPORT}">
+					<div class="EmptyBox10"></div>
+					<ui:include src="/pages/externalparty/wsp/pivitoltraining.xhtml" />
+				</h:panelGroup>
+				<h:panelGroup rendered="#{reportUI.wspRepot eq WspReportEnum.TRAININGDONEWITHOTHERETAS}">
+					<div class="EmptyBox10"></div>
+					<ui:include src="/pages/externalparty/wsp/trainingwithseta.xhtml" />
+				</h:panelGroup>
+			</h:form>
+		</p:fieldset>
+	</h:panelGroup>
+</ui:composition>

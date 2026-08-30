@@ -1,0 +1,120 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="head">
+
+		<script src="#{request.contextPath}/js/exporting.js" />
+	</ui:define>
+
+	<ui:define name="content">
+		<h:form id="uploadForm">
+			<div class="ui-g">
+
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+						<p:outputLabel>A count of levies received within selected year by chamber</p:outputLabel>
+						<h1>Levies By Scheme Year</h1>
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:panelGrid layout="grid" columns="1" styleClass="ui-panelgrid-blank">
+							<h:panelGroup>
+								<p:outputLabel value="Scheme Year :" styleClass="FontBold" />
+								<p:spacer width="5px" />
+								<p:selectOneMenu id="sarsDateF" value="#{leviesbyschemeyearbylevymonthsplitintochambersUI.dateSelected}" style="width: 110px !important;">
+									<f:selectItems value="#{leviesbyschemeyearbylevymonthsplitintochambersUI.sarsYears}" var="sars" itemLabel="#{sars.year}" itemValue="#{sars.year}" />
+								</p:selectOneMenu>
+							</h:panelGroup>
+							<p:commandButton value="#{lang['submit']}" action="#{leviesbyschemeyearbylevymonthsplitintochambersUI.populateBean}" update="@form" />
+						</p:panelGrid>
+					</div>
+				</div>
+			</div>
+
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<p:panelGrid layout="grid" columns="1" styleClass="ui-panelgrid-blank">
+						<p:outputLabel style="font-size: 18px;" value="Reporting Year - #{leviesbyschemeyearbylevymonthsplitintochambersUI.dateSelected}" styleClass="FontBold" />
+					</p:panelGrid>
+					<p:spacer height="5px" />
+
+					<div align="right" style="margin-bottom: 10px">
+						<h:commandLink id="eExcel1">
+							<i class="fa fa-file-excel-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+							<p:dataExporter type="xls" target="levyIncome" fileName="Grant List Generation Table 1" />
+						</h:commandLink>
+						<h:commandLink title="#{lang['export.search.results.as.a.csv']}">
+							<i class="fa fa-file-text-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+							<p:dataExporter type="csv" target="levyIncome" fileName="Grant List Generation Table 1" />
+						</h:commandLink>
+					</div>
+
+					<p:dataTable value="#{leviesbyschemeyearbylevymonthsplitintochambersUI.leviesbyschemeyearbylevymonthsplitintochambers}" var="rowVar" id="levyIncome" rowKey="#{rowVar.description}" paginator="true" rows="15" paginatorPosition="bottom"
+						paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="15,30,45," reflow="true" lazy="true">
+						<p:columnGroup type="header">
+							<p:row>
+								<p:column colspan="1" headerText="Levy Year #{leviesbyschemeyearbylevymonthsplitintochambersUI.fromDateText}" width="25%"/>
+
+							</p:row>
+							<p:row>
+								<p:column colspan="1" headerText="Total Levy Recieved (80%)" width="25%" />
+								<p:column colspan="7" headerText=" Chamber" />
+							</p:row>
+							<p:row>
+								<p:column headerText="" />
+								<p:column headerText="#{lang['auto']}" />
+								<p:column headerText="#{lang['metal']}" />
+								<p:column headerText="#{lang['motor']}" />
+								<p:column headerText="#{lang['new.tyre']}" />
+								<p:column headerText="#{lang['plastics']}" />
+								<p:column headerText="#{lang['unknown']}" />
+								<p:column headerText="#{lang['grand.total']}" />
+							</p:row>
+						</p:columnGroup>
+
+						<p:column>
+							<h:outputText value="#{rowVar.description}" />
+						</p:column>
+						<p:column styleClass="number-column">
+							<h:outputText value="#{rowVar.bdAuto}">
+								<f:convertNumber pattern="###,###,###,###,##0.00" />
+							</h:outputText>
+						</p:column>
+						<p:column styleClass="number-column">
+							<h:outputText value="#{rowVar.bdMetal}">
+								<f:convertNumber pattern="###,###,###,###,##0.00" />
+							</h:outputText>
+						</p:column>
+						<p:column styleClass="number-column">
+							<h:outputText value="#{rowVar.bdMotor}">
+								<f:convertNumber pattern="###,###,###,###,##0.00" />
+							</h:outputText>
+						</p:column>
+						<p:column styleClass="number-column">
+							<h:outputText value="#{rowVar.bdNewTyre}">
+								<f:convertNumber pattern="###,###,###,###,##0.00" />
+							</h:outputText>
+						</p:column>
+						<p:column styleClass="number-column">
+							<h:outputText value="#{rowVar.bdPlastic}">
+								<f:convertNumber pattern="###,###,###,###,##0.00" />
+							</h:outputText>
+						</p:column>
+						<p:column styleClass="number-column">
+							<h:outputText value="#{rowVar.bdUnknown}">
+								<f:convertNumber pattern="###,###,###,###,##0.00" />
+							</h:outputText>
+						</p:column>
+						<p:column styleClass="number-column">
+							<h:outputText value="#{rowVar.bdAuto + rowVar.bdMetal + rowVar.bdMotor + rowVar.bdNewTyre + rowVar.bdPlastic + rowVar.bdUnknown}">
+								<f:convertNumber pattern="###,###,###,###,##0.00" />
+							</h:outputText>
+						</p:column>
+					</p:dataTable>
+					<p:spacer height="5px" />
+				</div>
+			</div>
+		</h:form>
+
+	</ui:define>
+
+</ui:composition>

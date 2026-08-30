@@ -1,0 +1,70 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<p:growl sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+						<h1>Legacy Data: DTTC Qualification</h1>
+						<p:outputLabel value="Data Source: DTTC.xlsx" />
+						<br />
+						<p:outputLabel value="Tab: Qualification" />
+						<div class="EmptyBox10" />
+
+						<c:if test="#{legacyapprenticeshipUI.displayDownload}">
+							<ui:include src="/pages/includes/download_lazy.xhtml">
+								<ui:param name="file_name" value="legacydttcqualificationList_dataextract" />
+								<ui:param name="target" value="legacydttcqualificationList" />
+							</ui:include>
+							<div class="EmptyBox10" />
+						</c:if>
+
+						<p:dataTable var="rowVar" value="#{legacydttcqualificationUI.dataModel}" filteredValue="#{legacydttcqualificationUI.legacyDTTCQualificationfilteredList}" id="legacydttcqualificationList" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+							<p:column headerText="NSDMS REF ID">
+								<h:outputText value="#{rowVar.id}" />
+							</p:column>
+							<p:column headerText="Linked_SDL">
+								<h:outputText value="#{rowVar.linkedSdl}" />
+							</p:column>
+							<p:column headerText="SDLNo">
+								<h:outputText value="#{rowVar.sdlNo}" />
+							</p:column>
+							<p:column headerText="OrganisationNameLegal">
+								<h:outputText value="#{rowVar.organisationNameLegal}" />
+							</p:column>
+							<p:column headerText="OrganisationNameTrade">
+								<h:outputText value="#{rowVar.organisationNameTrade}" />
+							</p:column>
+							<p:column headerText="DTTCStatus">
+								<h:outputText value="#{rowVar.dttcStatus}" />
+							</p:column>
+							<p:column headerText="AccreditationStartDate">
+								<h:outputText value="#{rowVar.accreditationStartDate}" />
+							</p:column>
+							<p:column headerText="AccreditationEndDate">
+								<h:outputText value="#{rowVar.accreditationEndDate}" />
+							</p:column>
+							<p:column headerText="QualCode">
+								<h:outputText value="#{rowVar.qualCode}" />
+							</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+	<!-- 
+_lang_
+-->
+</ui:composition>

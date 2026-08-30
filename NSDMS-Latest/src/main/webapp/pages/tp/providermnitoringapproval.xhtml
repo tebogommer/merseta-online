@@ -1,0 +1,552 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<ui:include src="/pages/includes/taskdiagram.xhtml" />
+			</div>
+		</div>
+		<h:form id="learnersInsForm">
+			<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+			<p:importEnum type="haj.com.entity.enums.YesNoEnum" />
+			<p:growl sticky="false">
+				<p:autoUpdate />
+			</p:growl>
+			<div class="ui-g">
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+						<c:if test="#{trainingProviderMonitoringWorkflowUI.trainingprovidermonitoring.audit}">
+							<h1>Provider Audit</h1>
+						</c:if>
+						<c:if test="#{!trainingProviderMonitoringWorkflowUI.trainingprovidermonitoring.audit}">
+							<h1>Provider Monitoring</h1>
+						</c:if>
+						<ui:include src="/pages/tp/includes/company.xhtml">
+							<ui:param name="title" value="Provider Information" />
+							<ui:param name="company" value="#{trainingProviderMonitoringWorkflowUI.trainingprovidermonitoring.company}" />
+						</ui:include>
+						<c:if test="#{trainingProviderMonitoringWorkflowUI.trainingprovidermonitoring.trainingProviderApplication ne null and trainingProviderMonitoringWorkflowUI.trainingprovidermonitoring.trainingProviderApplication.trainingSite ne null}">
+							<div class="EmptyBox10" />
+							<p:panel header="Training Site Information">
+								<div class="EmptyBox10"></div>
+								<ui:include src="/pages/includes/training_site_info_display.xhtml">
+									<ui:param name="trainingSite" value="#{trainingProviderMonitoringWorkflowUI.trainingprovidermonitoring.trainingProviderApplication.trainingSite}" />
+								</ui:include>
+								<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+									<p:outputPanel rendered="#{trainingProviderMonitoringWorkflowUI.trainingprovidermonitoring.trainingProviderApplication.trainingSite.residentialAddress ne null}">
+										<ui:include src="/pages/includes/addressInformation.xhtml">
+											<ui:param name="header" value="#{lang['residentialAddress']}" />
+											<ui:param name="address" value="#{trainingProviderMonitoringWorkflowUI.trainingprovidermonitoring.trainingProviderApplication.trainingSite.residentialAddress}" />
+										</ui:include>
+									</p:outputPanel>
+									<p:outputPanel rendered="#{trainingProviderMonitoringWorkflowUI.trainingprovidermonitoring.trainingProviderApplication.trainingSite.postalAddress ne null}">
+										<ui:include src="/pages/includes/addressInformation.xhtml">
+											<ui:param name="header" value="Postal Address" />
+											<ui:param name="address" value="#{trainingProviderMonitoringWorkflowUI.trainingprovidermonitoring.trainingProviderApplication.trainingSite.postalAddress}" />
+										</ui:include>
+									</p:outputPanel>
+								</p:panelGrid>
+							</p:panel>
+						</c:if>
+					</div>
+				</div>
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+						<h1>Quality Assuror Information</h1>
+						<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="firstName" value="#{trainingProviderMonitoringWorkflowUI.trainingprovidermonitoring.initiatingQA.firstName}" style="width:95%; opacitiy: 1; color: black;" required="true" requiredMessage="#{lang['provide.first.name']}" disabled="true" />
+								<p:outputLabel value="#{lang['first.name']}:" for="firstName" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="lastName" value="#{trainingProviderMonitoringWorkflowUI.trainingprovidermonitoring.initiatingQA.lastName}" style="width:95%; opacitiy: 1; color: black;" required="true" requiredMessage="#{lang['provide.last.name']}" disabled="true" />
+								<p:outputLabel value="#{lang['last.name']}:" for="lastName" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="middleName" value="#{trainingProviderMonitoringWorkflowUI.trainingprovidermonitoring.initiatingQA.middleName}" style="width:95%; opacitiy: 1; color: black;" required="true" requiredMessage="Provide Middle Name" disabled="true" />
+								<p:outputLabel value="#{lang['middle.name']}" for="middleName" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield" rendered="#{trainingProviderMonitoringWorkflowUI.trainingprovidermonitoring.initiatingQA.rsaIDNumber.length() gt 0}">
+								<p:inputText id="rsaId" value="#{trainingProviderMonitoringWorkflowUI.trainingprovidermonitoring.initiatingQA.rsaIDNumber}" style="width:95%; opacitiy: 1; color: black;" required="true" requiredMessage="#{lang['rsa.id.number']}" disabled="true" />
+								<p:outputLabel value="#{lang['rsa.id.number']}" for="rsaId" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:calendar id="glPostingDate" value="#{trainingProviderMonitoringWorkflowUI.trainingprovidermonitoring.monitoringDate}" disabled="true" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME}" mask="true" readonlyInput="true" inputStyle="width: 50%" />
+								<p:outputLabel value="Monitoring Date" for="glPostingDate" />
+							</h:panelGroup>
+						</p:panelGrid>
+						<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+							<!-- #{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit} -->
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit}" requiredMessage="Provide Comments" required="true" id="com" value="#{trainingProviderMonitoringWorkflowUI.trainingprovidermonitoring.qaComments}" style="width:95%">
+									<p:ajax />
+								</p:inputText>
+								<p:outputLabel value="Comments" for="com" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit}" requiredMessage="Provide Recommendation" required="true" id="rec" value="#{trainingProviderMonitoringWorkflowUI.trainingprovidermonitoring.qaRecommendation}" style="width:95%">
+									<p:ajax />
+								</p:inputText>
+								<p:outputLabel value="Recommendation" for="rec" />
+							</h:panelGroup>
+
+						</p:panelGrid>
+					</div>
+				</div>
+				<p:outputPanel rendered="false">
+					<div class="ui-g-12">
+						<div class="card card-w-title">
+							<p:outputPanel id="learnerRegUploadForm" style="width: 100%">
+								<h:panelGroup id="docList">
+									<div class="ui-g dashboard">
+										<div class="ui-g-12">
+											<p:fieldset legend="#{lang['documents']}" id="userDocs">
+												<p:dataTable value="#{trainingProviderMonitoringWorkflowUI.trainingprovidermonitoring.docs}" var="rv1" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+													<p:column headerText="#{lang['type']}" width="20%">#{rv1.configDoc.name}</p:column>
+													<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+													<p:column headerText="#{lang['uploaded']}" width="15%">
+														<h:outputText value="#{rv1.createDate}">
+															<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+														</h:outputText>
+													</p:column>
+													<p:column headerText="#{lang['version']}" width="15%">
+														<h:outputText value="#{rv1.versionNo}">
+														</h:outputText>
+													</p:column>
+
+													<p:column width="180" headerText="#{lang['view.edit']}">
+														<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}">
+															<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+														</p:commandButton>
+														<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+
+														<p:spacer width="5" rendered="#{rv1.id ne null}" />
+														<p:commandButton icon="fa fa-bars " id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}">
+															<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+														</p:commandButton>
+														<p:tooltip for="dhistUserDocs" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+
+														<!-- only with permission to upload can upload a new version -->
+														<p:commandButton rendered="#{sessionUI.task.processRole eq null or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload}" icon="fa fa-upload" id="uploadUserDocs"
+															styleClass="#{rv1.originalFname eq null ? 'red-btn' : ''} flat" process="@this" oncomplete="PF('dlgUpload').show()" update=":uploadForm">
+															<f:setPropertyActionListener value="#{rv1}" target="#{trainingProviderMonitoringWorkflowUI.doc}" />
+														</p:commandButton>
+														<p:tooltip for="uploadUserDocs" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+
+														<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+															<p:spacer width="5" />
+															<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+																<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+															</p:commandButton>
+															<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+														</h:panelGroup>
+
+														<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+															<p:spacer width="5" />
+															<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+																<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+															</p:commandButton>
+															<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+														</h:panelGroup>
+
+													</p:column>
+												</p:dataTable>
+											</p:fieldset>
+										</div>
+									</div>
+								</h:panelGroup>
+							</p:outputPanel>
+						</div>
+					</div>
+				</p:outputPanel>
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+						<c:if test="#{trainingProviderMonitoringWorkflowUI.trainingprovidermonitoring.audit}">
+							<h1>Provider Audit</h1>
+						</c:if>
+						<c:if test="#{!trainingProviderMonitoringWorkflowUI.trainingprovidermonitoring.audit}">
+							<h1>Provider Monitoring</h1>
+						</c:if>
+						<p:panelGrid columns="1" layout="grid" styleClass="ui-panelgrid-blank">
+							<div style="margin-left: 14px">
+								<ui:include src="/pages/includes/tabinfo.xhtml">
+									<ui:param name="showInfoCircle" value="false" />
+									<ui:param name="cssClass" value="secondaryText FontBold" />
+									<ui:param name="helpTxt" value="Please note the following:" />
+								</ui:include>
+
+								<ui:include src="/pages/includes/tabinfo.xhtml">
+									<ui:param name="showInfoCircle" value="false" />
+									<ui:param name="cssClass" value="secondaryText FontBold" />
+									<ui:param name="helpTxt" value="Yes = Evidence Acceptable" />
+								</ui:include>
+
+								<ui:include src="/pages/includes/tabinfo.xhtml">
+									<ui:param name="showInfoCircle" value="false" />
+									<ui:param name="cssClass" value="secondaryText FontBold" />
+									<ui:param name="helpTxt" value="No = Evidence Not Acceptable" />
+								</ui:include>
+							</div>
+						</p:panelGrid>
+						<c:if test="false">
+							<!-- Lazy Load Code -->
+							<!-- <p:dataTable var="rowVar" value=" trainingProviderMonitoringWorkflowUI.auditorMonitorReviewDataModelListDataModel " id="auditormonitorreviewList" rowKey="#{rowVar.id}" reflow="true"  lazy="true"
+							paginator="true" rows="6" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25"> -->
+						</c:if>
+						<p:dataTable var="rowVar" value="#{trainingProviderMonitoringWorkflowUI.auditorMonitorReviewDataModelList}" id="auditormonitorreviewList" rowKey="#{rowVar.id}" reflow="true" sortBy="#{rowVar.section}">
+
+							<p:column headerText="#{lang['expand.row']}" width="45">
+								<p:rowToggler rendered="#{rowVar.docs.size() gt 0}"></p:rowToggler>
+							</p:column>
+
+							<p:column headerText="Evidence Requirements">
+								<h:outputText value="#{rowVar.evidenceRequirements}" escape="false" />
+							</p:column>
+							<p:column headerText="Comment">
+								<p:inputText disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit}" requiredMessage="Comment Compulsory" required="true" id="companyName" value="#{rowVar.comment}" style="width:95%">
+									<p:ajax></p:ajax>
+								</p:inputText>
+							</p:column>
+
+							<p:column headerText="Evidence Available" width="160">
+								<center>
+									<p:selectOneButton id="evidenceRequired" value="#{rowVar.evidenceRequired}" layout="grid" columns="2" required="true" requiredMessage="State If Evidence Required" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit}">
+										<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+										<p:ajax></p:ajax>
+									</p:selectOneButton>
+								</center>
+							</p:column>
+
+							<p:column headerText="Update Entry" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Edit and false}" width="160">
+								<p:outputPanel id="updatePanel">
+									<center>
+										<p:commandButton icon="fa fa-database" id="updEntry" value="Save" process="updatePanel" update="@form" action="#{trainingProviderMonitoringWorkflowUI.updateAuditorMonitorReviewEntry}">
+											<f:setPropertyActionListener value="#{rowVar}" target="#{trainingProviderMonitoringWorkflowUI.auditorMonitorReviewUpdate}" />
+										</p:commandButton>
+									</center>
+								</p:outputPanel>
+							</p:column>
+							<p:column headerText="Information Provided" rendered="#{sessionUI.employee and false}" width="160">
+								<center>
+									<p:outputPanel rendered="#{rowVar.evidenceRequired eq null or rowVar.comment eq null}">
+										<i class="fa fa-times fa-3x red" aria-hidden="true"></i>
+									</p:outputPanel>
+									<p:outputPanel rendered="#{rowVar.evidenceRequired ne null and rowVar.comment ne null}">
+										<i class="fa fa-check fa-3x green" aria-hidden="true"></i>
+									</p:outputPanel>
+								</center>
+							</p:column>
+
+							<p:column headerText="Upload Evidence" width="60" rendered="#{sessionUI.task.processRole eq null or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload}">
+								<!-- only with permission to upload can upload a new version -->
+								<p:commandButton rendered="#{rowVar.docs.size() eq 0 and rowVar.evidenceRequired eq YesNoEnum.No}" icon="fa fa-upload" id="uploadUserDocs" styleClass="#{rv1.originalFname eq null ? 'red-btn' : ''} flat" process="@this" oncomplete="PF('dlgUpload').show()" update=":uploadForm">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{trainingProviderMonitoringWorkflowUI.auditorMonitorReview}" />
+								</p:commandButton>
+								<p:tooltip for="uploadUserDocs" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+							</p:column>
+
+							<p:rowExpansion>
+								<p:dataTable value="#{rowVar.docs}" var="rv1" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+									<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+									<p:column headerText="#{lang['uploaded']}" width="15%">
+										<h:outputText value="#{rv1.createDate}">
+											<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+										</h:outputText>
+									</p:column>
+									<p:column headerText="#{lang['version']}" width="15%">
+										<h:outputText value="#{rv1.versionNo}">
+										</h:outputText>
+									</p:column>
+									<p:column headerText="Upload Evidence" width="180">
+										<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+
+										<p:spacer width="5" rendered="#{rv1.id ne null}" />
+										<p:commandButton icon="fa fa-bars " id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="dhistUserDocs" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+
+										<!-- only with permission to upload can upload a new version -->
+										<p:commandButton rendered="#{rowVar.evidenceRequired eq YesNoEnum.No and (sessionUI.task.processRole eq null or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload)}" icon="fa fa-upload"
+											id="uploadUserDocs" styleClass="#{rv1.originalFname eq null ? 'red-btn' : ''} flat" process="@this" oncomplete="PF('dlgUpload').show()" update=":uploadForm">
+											<f:setPropertyActionListener value="#{rv1}" target="#{trainingProviderMonitoringWorkflowUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="uploadUserDocs" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+
+										<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+											<p:spacer width="5" />
+											<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+												<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+											</p:commandButton>
+											<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+										</h:panelGroup>
+
+										<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+											<p:spacer width="5" />
+											<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+												<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+											</p:commandButton>
+											<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+										</h:panelGroup>
+									</p:column>
+								</p:dataTable>
+							</p:rowExpansion>
+						</p:dataTable>
+					</div>
+				</div>
+
+				<c:if test="#{trainingProviderMonitoringWorkflowUI.signOffRequired}">
+					<div class="ui-g-12">
+						<div class="card card-w-title">
+							<h1>Sign Offs:</h1>
+							<p:dataTable var="rv" value="#{trainingProviderMonitoringWorkflowUI.signOffLists}" id="signOffList" rowKey="#{rowVar.id}" reflow="true">
+								<p:column headerText="#{lang['signed.off.by']}">
+									<p:outputLabel value="#{rv.user.firstName} #{rv.user.lastName}" rendered="#{rv.user ne null}" />
+									<p:outputLabel value="Awaiting Assignment" rendered="#{rv.user eq null}" />
+								</p:column>
+								<p:column headerText="#{lang['date']}">
+									<p:outputLabel value="Pending Sign Off" rendered="#{rv.signOffDate eq null}" />
+									<p:outputLabel value="#{rv.signOffDate}" rendered="#{rv.signOffDate ne null}">
+										<f:convertDateTime pattern="dd/MM/yyyy HH:MM" />
+									</p:outputLabel>
+								</p:column>
+								<p:column headerText="#{lang['acknowledge']}" rendered="true">
+									<div>
+										<p:selectBooleanCheckbox style="width:100%" value="#{rv.accept}" disabled="true">
+										</p:selectBooleanCheckbox>
+									</div>
+									<div>
+										<p:outputLabel value="#{lang['site.visit.report.declaration.text']}"></p:outputLabel>
+									</div>
+								</p:column>
+								<p:column headerText="Actions" exportable="false" style="width:5%">
+									<p:commandButton disabled="#{trainingProviderMonitoringWorkflowUI.disableCauseDateBeforeScheduledDate}" rendered="#{rv.user.id eq sessionUI.activeUser.id and (rv.accept eq null or !rv.accept) and !sessionUI.task.firstInProcess}" title="Sign Off" icon="fa fa-pencil"
+										action="#{trainingProviderMonitoringWorkflowUI.prepSignOff}" update=":signOffForm" process="signOffList">
+										<f:setPropertyActionListener value="#{rv}" target="#{trainingProviderMonitoringWorkflowUI.signOffSelected}" />
+									</p:commandButton>
+									<p:commandButton rendered="#{rv.externalUserSignoff and rv.user eq null and sessionUI.task.firstInProcess}" title="Assign Sign Off User" icon="fa fa-user-plus" update=":signOffUserForm" action="#{trainingProviderMonitoringWorkflowUI.prepUserAssignment}" process="signOffList">
+										<f:setPropertyActionListener value="#{rv}" target="#{trainingProviderMonitoringWorkflowUI.signOffSelected}" />
+									</p:commandButton>
+									<p:commandButton rendered="#{rv.externalUserSignoff and rv.user ne null and sessionUI.task.firstInProcess}" title="Alter Sign Off User" icon="fa fa-users" update=":signOffUserForm" action="#{trainingProviderMonitoringWorkflowUI.prepUserAssignment}" process="signOffList">
+										<f:setPropertyActionListener value="#{rv}" target="#{trainingProviderMonitoringWorkflowUI.signOffSelected}" />
+									</p:commandButton>
+								</p:column>
+							</p:dataTable>
+						</div>
+					</div>
+				</c:if>
+
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+
+						<c:if test="#{trainingProviderMonitoringWorkflowUI.rejectionReasons.size() ne 0}">
+							<h1>Rejection Reasons Provided:</h1>
+							<p:repeat var="rowVarRR" value="#{trainingProviderMonitoringWorkflowUI.rejectionReasons}">
+								<p:outputLabel value="#{rowVarRR.description}" style="font-weight:bold; font-size: 20px; color: red;" />
+								<br />
+								<p:outputLabel value="#{rowVarRR.howTo}" style="color: grey;" />
+								<br />
+								<br />
+							</p:repeat>
+							<br />
+						</c:if>
+
+						<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve}">
+							<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" update="@form" action="#{trainingProviderMonitoringWorkflowUI.approveCompanyLearners}" styleClass="flat green-btn Fs18" style="height: 50px;" onstart="uploadStart()" oncomplete="uploadDone()">
+							</p:commandButton>
+							<p:commandButton oncomplete="PF('rejectReason').show()" value="#{lang['reject.task']}" icon="ui-icon-save" update="rejectReasonForm" styleClass="flat red-btn Fs18" style="height: 50px;" process="@this">
+							</p:commandButton>
+						</p:panelGrid>
+
+						<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Edit and sessionUI.task.firstInProcess}">
+							<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" update="@form" action="#{trainingProviderMonitoringWorkflowUI.completeCompanyLearners}" styleClass="flat green-btn Fs18" style="height: 50px;" onstart="uploadStart()" oncomplete="uploadDone()"
+								disabled="#{trainingProviderMonitoringWorkflowUI.disableCauseDateBeforeScheduledDate}">
+							</p:commandButton>
+						</p:panelGrid>
+
+						<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Edit and !sessionUI.task.firstInProcess}">
+							<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" update="@form" action="#{trainingProviderMonitoringWorkflowUI.approveCompanyLearners}" styleClass="flat green-btn Fs18" style="height: 50px;" onstart="uploadStart()" oncomplete="uploadDone()">
+							</p:commandButton>
+							<p:commandButton oncomplete="PF('rejectReasonSdp').show()" value="#{lang['reject.task']}" icon="ui-icon-save" update="rejectReasonSDPForm" styleClass="flat red-btn Fs18" style="height: 50px;" process="@this">
+							</p:commandButton>
+						</p:panelGrid>
+						<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval}">
+							<p:commandButton value="Final #{lang['approve']}" icon="ui-icon-save" update="@form" action="#{trainingProviderMonitoringWorkflowUI.finalApproveCompanyLearners}" styleClass="flat green-btn Fs18" style="height: 50px;" onstart="uploadStart()" oncomplete="uploadDone()">
+							</p:commandButton>
+							<p:commandButton value="Final Reject" icon="ui-icon-save" update="finalRejectReasonForm" styleClass="flat red-btn Fs18" oncomplete="PF('rejectReasonFinal').show()" style="height: 50px;" process="@this">
+							</p:commandButton>
+							<p:commandButton value="#{lang['reject.task']}" oncomplete="PF('rejectReason').show()" styleClass="flat Fs18" icon="ui-icon-save" update="rejectReasonForm" style="height: 50px;" process="@this">
+							</p:commandButton>
+						</p:panelGrid>
+						<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid"
+							rendered="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Approve and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalApproval and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit}">
+							<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" update="@form" action="#{trainingProviderMonitoringWorkflowUI.completeCompanyLearners}" styleClass="flat green-btn Fs18" style="height: 50px;" onstart="uploadStart()" oncomplete="uploadDone()"
+								disabled="#{trainingProviderMonitoringWorkflowUI.disableCauseDateBeforeScheduledDate}">
+							</p:commandButton>
+						</p:panelGrid>
+					</div>
+				</div>
+			</div>
+		</h:form>
+
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+			<h:form>
+				<p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="fa fa-check" />
+				<p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="fa fa-times" />
+			</h:form>
+		</p:confirmDialog>
+
+		<p:dialog position="top" header="Sign Off" widgetVar="signOffUserDlg" resizable="false" hideEffect="clip" showEffect="clip" id="signOffUserDialog" width="80%" responsive="true" modal="true" dynamic="true">
+			<h:form id="signOffUserForm">
+				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="Avalaible Users To Assign" for="userAssign" />
+						</div>
+						<div>
+							<p:selectOneMenu id="userAssign" value="#{trainingProviderMonitoringWorkflowUI.signOffSelected.user}" converter="UsersConvertor" style="width:95%" required="true">
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{trainingProviderMonitoringWorkflowUI.signOffUserSelectionList}" var="rv" itemLabel="#{rv.firstName} #{rv.lastName}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup>
+						<p:commandButton title="Assign User" action="#{trainingProviderMonitoringWorkflowUI.saveSignOffUser}" icon="fa fa-pencil" value="Assign User" update=":learnersInsForm:signOffList :signOffForm" process="signOffUserForm">
+							<p:confirm header="Confirmation" message="Are You Sure?" icon="fa fa-exclamation-triangle" />
+						</p:commandButton>
+					</h:panelGroup>
+
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+		<p:dialog position="top" header="Sign Off" widgetVar="signOffDlg" resizable="false" hideEffect="clip" showEffect="clip" id="signOffDialog" width="80%" responsive="true" modal="true" dynamic="true">
+			<h:form id="signOffForm">
+				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+					<h:panelGroup styleClass="md-inputfield" style="margin-top:19px;">
+						<p:inputText value="#{trainingProviderMonitoringWorkflowUI.signOffSelected.user.firstName} #{trainingProviderMonitoringWorkflowUI.signOffSelected.user.lastName}" readonly="true" />
+						<p:outputLabel value="Sign Off User" />
+					</h:panelGroup>
+					<h:panelGroup>
+					</h:panelGroup>
+					<h:panelGroup>
+						<div>
+							<p:selectBooleanCheckbox value="#{trainingProviderMonitoringWorkflowUI.signOffSelected.accept}" disabled="false">
+							</p:selectBooleanCheckbox>
+						</div>
+						<div>
+							<p:outputLabel value="#{lang['site.visit.report.declaration.text']}"></p:outputLabel>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup>
+						<p:commandButton title="Sign Off" icon="fa fa-pencil" value="Sign Off" action="#{trainingProviderMonitoringWorkflowUI.signOff}" update=":learnersInsForm:signOffList :signOffForm" process="signOffForm">
+							<p:confirm header="Confirmation" message="Are You Sure?" icon="fa fa-exclamation-triangle" />
+						</p:commandButton>
+					</h:panelGroup>
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true" dynamic="true">
+			<h:form id="uploadForm">
+				<h:panelGroup id="uploadGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{trainingProviderMonitoringWorkflowUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{trainingProviderMonitoringWorkflowUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{trainingProviderMonitoringWorkflowUI.storeFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}"
+										update="learnersInsForm" multiple="false" fileLimit="1" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+		<p:dialog header="Reject Reasons" position="top" widgetVar="rejectReasonSdp" hideEffect="clip" showEffect="clip" id="dialogSdpRejectReason" modal="true" closable="true" width="50%" responsive="true">
+			<h:form id="rejectReasonSDPForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{trainingProviderMonitoringWorkflowUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{trainingProviderMonitoringWorkflowUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+							</p:selectManyMenu>
+							<br /> <br />
+						</div>
+					</div>
+					<p:commandButton process="rejectReasonSDPForm" update="rejectReasonSDPForm" value="Reject" action="#{trainingProviderMonitoringWorkflowUI.rejectCompanyLearnersSDP}" onstart="uploadStart()" oncomplete="uploadDone()">
+					</p:commandButton>
+				</div>
+			</h:form>
+		</p:dialog>
+		<p:dialog header="Reject Reasons" position="top" widgetVar="rejectReason" hideEffect="clip" showEffect="clip" id="dialogRejectReason" modal="true" closable="true" width="50%" responsive="true">
+			<h:form id="rejectReasonForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{trainingProviderMonitoringWorkflowUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{trainingProviderMonitoringWorkflowUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+							</p:selectManyMenu>
+							<br /> <br />
+						</div>
+					</div>
+					<p:commandButton process="rejectReasonForm" update="rejectReasonForm" value="Reject" action="#{trainingProviderMonitoringWorkflowUI.rejectCompanyLearners}">
+					</p:commandButton>
+				</div>
+			</h:form>
+		</p:dialog>
+		<p:dialog header="Final Reject Reasons" position="top" widgetVar="rejectReasonFinal" hideEffect="clip" showEffect="clip" id="dialogRejectReasonasd" modal="true" closable="true" width="50%" responsive="true">
+			<h:form id="finalRejectReasonForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{trainingProviderMonitoringWorkflowUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{trainingProviderMonitoringWorkflowUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+							</p:selectManyMenu>
+							<br /> <br />
+						</div>
+					</div>
+					<p:commandButton process="finalRejectReasonForm" update="finalRejectReasonForm" value="Reject" action="#{trainingProviderMonitoringWorkflowUI.finalRejectCompanyLearners}">
+					</p:commandButton>
+				</div>
+			</h:form>
+		</p:dialog>
+	</ui:define>
+</ui:composition>

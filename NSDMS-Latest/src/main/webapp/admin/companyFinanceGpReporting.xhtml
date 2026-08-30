@@ -1,0 +1,279 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+					<p:importEnum type="haj.com.entity.enums.UsersStatusEnum" />
+					<p:growl showDetail="false" sticky="false" id="msg">
+						<p:autoUpdate />
+					</p:growl>
+					<h1>Remittance Advice and Financial Transactions</h1>
+					<h:form id="mainForm">
+						<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank" rendered="false">
+							<p:outputLabel value="Enable Auto Calls On Company Selection: " />
+							<p:selectBooleanCheckbox value="#{companyFinanceGpReportingUI.autoRunCalls}">
+								<p:ajax update="@form" listener="#{companyFinanceGpReportingUI.enableDisableAutoRunCalls}" />
+							</p:selectBooleanCheckbox>
+						</p:panelGrid>
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+						<p:dataTable var="rowVar" value="#{companyFinanceGpReportingUI.dataModelComapny}" id="companyList" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20,40" reflow="true" lazy="true">
+							<p:column headerText="#{lang['company.name']}" filterBy="#{rowVar.companyName}" sortBy="#{rowVar.companyName}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.companyName}" />
+							</p:column>
+							<p:column headerText="#{lang['tradingName']}" filterBy="#{rowVar.tradingName}" sortBy="#{rowVar.tradingName}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.tradingName}" />
+							</p:column>
+							<p:column headerText="#{lang['entity.id']}" filterBy="#{rowVar.levyNumber}" sortBy="#{rowVar.levyNumber}" filterStyle="width: 95%" width="10%">
+								<h:outputText value="#{rowVar.levyNumber}" />
+							</p:column>
+							<p:column headerText="#{lang['status']}" sortBy="#{rowVar.companyStatus}" width="10%">
+								<h:outputText value="#{lang[rowVar.companyStatus.registrationName]}" />
+							</p:column>
+							<p:column width="30">
+								<p:commandButton icon="fa fa-bars" title="View Report" action="#{companyFinanceGpReportingUI.selectCompanySdfReport}" update="@form" onstart="uploadStart()" oncomplete="uploadDone()">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{companyFinanceGpReportingUI.selectedCompanySdfReport}" />
+								</p:commandButton>
+								<p:commandButton icon="fa fa-download" title="Download Report" action="#{companyFinanceGpReportingUI.downloadReport}" ajax="false" update="@form" onstart="uploadStart()" oncomplete="uploadDone()">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{companyFinanceGpReportingUI.selectedCompany}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+
+						<p:outputPanel rendered="#{companyFinanceGpReportingUI.selectedCompany ne null and companyFinanceGpReportingUI.selectedCompany.id ne null and false}">
+							<p:panel header="GP Information" rendered="false">
+								<c:if test="#{companyFinanceGpReportingUI.vendor eq null}">
+									<h4>Not Found On GP: #{companyFinanceGpReportingUI.selectedCompany.levyNumber}</h4>
+								</c:if>
+								<c:if test="#{companyFinanceGpReportingUI.vendor ne null}">
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['bankAccNumber']}" for="bankAccNumberID"
+											styleClass="#{companyFinanceGpReportingUI.vendor eq null or companyFinanceGpReportingUI.vendor.taxRegistrationNumber eq '' ? 'FontBold Fs20 orange' : companyFinanceGpReportingUI.bankingDetails.bankAccNumber ne companyFinanceGpReportingUI.vendor.taxRegistrationNumber ? 'FontBold Fs20 red': 'FontBold Fs20 green'}" />
+										<br />
+										<p:outputLabel id="bankAccNumberID" value="#{companyFinanceGpReportingUI.bankingDetails.maskedBankAccNumber}" style="width:95%"
+											styleClass="#{companyFinanceGpReportingUI.vendor eq null or companyFinanceGpReportingUI.vendor.taxRegistrationNumber eq '' ? 'FontBold Fs20 orange' : companyFinanceGpReportingUI.bankingDetails.bankAccNumber ne companyFinanceGpReportingUI.vendor.taxRegistrationNumber ?'FontBold Fs20 red':'FontBold Fs20 green'}" />
+									</h:panelGroup>
+									<br />
+									<br />
+									<h:panelGroup>
+										<p:outputLabel value="GP #{lang['bankAccNumber']}"
+											styleClass="#{companyFinanceGpReportingUI.vendor eq null or companyFinanceGpReportingUI.vendor.taxRegistrationNumber eq '' ? 'FontBold Fs20 orange' : companyFinanceGpReportingUI.bankingDetails.bankAccNumber ne companyFinanceGpReportingUI.vendor.taxRegistrationNumber ? 'FontBold Fs20 red': 'FontBold Fs20 green'}" />
+										<br />
+										<c:if test="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve or (sessionUI.task.processRole.rolePermission eq UserPermissionEnum.View and !sessionUI.task.firstInProcess)}">
+											<p:outputLabel id="gpbankAccNumberIDDisplay" value="#{companyFinanceGpReportingUI.vendor.taxRegistrationNumber}" style="width:95%"
+												styleClass="#{companyFinanceGpReportingUI.bankingDetails.bankAccNumber ne companyFinanceGpReportingUI.vendor.taxRegistrationNumber ?'FontBold Fs20 red': 'FontBold Fs20 green'}" />
+											<p:outputLabel id="gpbankAccNumberID2Display" value="N/A" style="width:95%" styleClass="FontBold Fs20 orange" rendered="#{companyFinanceGpReportingUI.vendor eq null or companyFinanceGpReportingUI.vendor.taxRegistrationNumber eq ''}" />
+										</c:if>
+										<c:if test="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalApproval and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Approve and (sessionUI.task.processRole.rolePermission eq UserPermissionEnum.View and sessionUI.task.firstInProcess)}">
+											<p:outputLabel id="gpbankAccNumberID" value="#{companyFinanceGpReportingUI.vendor.maskedBankAccNumber}" style="width:95%"
+												styleClass="#{companyFinanceGpReportingUI.bankingDetails.bankAccNumber ne companyFinanceGpReportingUI.vendor.taxRegistrationNumber ?'FontBold Fs20 red': 'FontBold Fs20 green'}" />
+											<p:outputLabel id="gpbankAccNumberID2" value="N/A" style="width:95%" styleClass="FontBold Fs20 orange" rendered="#{companyFinanceGpReportingUI.vendor eq null or companyFinanceGpReportingUI.vendor.taxRegistrationNumber eq ''}" />
+										</c:if>
+									</h:panelGroup>
+									<br />
+									<br />
+									<h:panelGroup>
+										<p:outputLabel value="Status: On Hold" rendered="#{companyFinanceGpReportingUI.vendor.detailsOnHold}" styleClass="FontBold Fs20 red" />
+										<p:outputLabel value="Status: Not On Hold" rendered="#{!companyFinanceGpReportingUI.vendor.detailsOnHold}" styleClass="FontBold Fs20 green" />
+										<br />
+										<br />
+										<p:outputLabel value="Reason: #{companyFinanceGpReportingUI.vendor.userDefined1}" rendered="#{companyFinanceGpReportingUI.vendor.detailsOnHold}" styleClass="FontBold Fs20 red" />
+										<p:outputLabel value="Reason: #{companyFinanceGpReportingUI.vendor.userDefined1}" rendered="#{!companyFinanceGpReportingUI.vendor.detailsOnHold}" styleClass="FontBold Fs20 green" />
+									</h:panelGroup>
+								</c:if>
+							</p:panel>
+						</p:outputPanel>
+
+						<div class="EmptyBox10" />
+
+						<c:if test="#{companyFinanceGpReportingUI.selectedCompanySdfReport ne null and companyFinanceGpReportingUI.selectedCompanySdfReport.id ne null}">
+							<h2>#{companyFinanceGpReportingUI.selectedCompanySdfReport.companyName} (#{companyFinanceGpReportingUI.selectedCompanySdfReport.levyNumber}) Selected.</h2>
+							<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+
+								<p:fieldset legend="NSDMS Organisation Details" style="margin-bottom:20px">
+									<ui:include src="/pages/includes/fullCompanyInformationWithAddressInformation.xhtml">
+										<ui:param name="company" value="#{companyFinanceGpReportingUI.selectedCompanySdfReport}" />
+										<ui:param name="CELLPHONE_FORMAT" value="#{companyFinanceGpReportingUI.cellphoneFormat}" />
+										<ui:param name="FAX_NUMBER_FORMAT" value="#{companyFinanceGpReportingUI.faxNumberFormat}" />
+										<ui:param name="TELPHONE_FORMAT" value="#{companyFinanceGpReportingUI.telephoneFormat}" />
+									</ui:include>
+								</p:fieldset>
+
+
+								<p:fieldset legend="NSDMS Organisation Banking Details" style="margin-bottom:20px">
+									<ui:include src="/pages/includes/download_lazy.xhtml">
+										<ui:param name="file_name" value="NSDMS Organisation Banking Details" />
+										<ui:param name="target" value="dtBankingDetails" />
+									</ui:include>
+									<p:dataTable id="dtBankingDetails" var="rowVarBD" value="#{companyFinanceGpReportingUI.bankingDetailsList}" rowKey="#{rowVarBD.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+										paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+										<f:facet name="header">Banking Details Status</f:facet>
+										<p:column headerText="#{lang['bank']}">
+											<h:outputText value="#{rowVarBD.bank.description}" />
+										</p:column>
+										<p:column headerText="#{lang['createDate']}">
+											<h:outputText value="#{rowVarBD.createDate}">
+												<f:convertDateTime pattern="dd MMMM yyyy (HH:mm:ss)" />
+											</h:outputText>
+										</p:column>
+										<p:column headerText="#{lang['bankAccNumber']}">
+											<h:outputText value="#{rowVarBD.maskedBankAccNumber}" />
+										</p:column>
+										<p:column headerText="#{lang['branchCode']}">
+											<h:outputText value="#{rowVarBD.branchCode}" />
+										</p:column>
+										<p:column headerText="#{lang['bankHolder']}">
+											<h:outputText value="#{rowVarBD.bankHolder}" />
+										</p:column>
+										<p:column headerText="#{lang['status']}">
+											<p:outputLabel value="#{rowVarBD.status.friendlyName}"></p:outputLabel>
+										</p:column>
+										<p:column headerText="Approved Date" sortBy="#{rowVarBD.approvalDate}">
+											<p:outputLabel value="#{rowVarBD.approvalDate}">
+												<f:convertDateTime pattern="dd MMMM yyyy HH:mm:ss" />
+											</p:outputLabel>
+										</p:column>
+									</p:dataTable>
+								</p:fieldset>
+
+								<p:fieldset legend="GP Organisation status" style="margin-bottom:20px">
+									<p:panelGrid columns="3" style="width:100%" id="gpInfo" layout="grid" styleClass="ui-panelgrid-blank">
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText rendered="#{companyFinanceGpReportingUI.vendor eq null}" value="No" style="width:95%" disabled="true" />
+											<p:inputText rendered="#{companyFinanceGpReportingUI.vendor ne null}" value="Yes" style="width:95%" disabled="true" />
+											<p:outputLabel value="Entity On GP" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText rendered="#{companyFinanceGpReportingUI.vendor eq null}" value="N/A" style="width:95%" disabled="true" />
+											<p:inputText rendered="#{companyFinanceGpReportingUI.vendor ne null}" value="#{companyFinanceGpReportingUI.vendor.name}" style="width:95%" disabled="true" />
+											<p:outputLabel value="Name" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText rendered="#{companyFinanceGpReportingUI.vendor eq null or companyFinanceGpReportingUI.vendor.taxRegistrationNumber eq ''}" value="N/A" styleClass="FontBold orange" style="width:95%" disabled="true" />
+											<p:inputText rendered="#{companyFinanceGpReportingUI.vendor ne null and companyFinanceGpReportingUI.vendor.taxRegistrationNumber ne ''}" value="#{companyFinanceGpReportingUI.vendor.maskedBankAccNumber}" style="width:95%" disabled="true" />
+											<p:outputLabel value="GP #{lang['bankAccNumber']}" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="On Hold" rendered="#{companyFinanceGpReportingUI.vendor ne null and companyFinanceGpReportingUI.vendor.detailsOnHold}" style="width:95%" disabled="true" />
+											<p:inputText value="Not On Hold" rendered="#{companyFinanceGpReportingUI.vendor ne null and !companyFinanceGpReportingUI.vendor.detailsOnHold}" style="width:95%" disabled="true" />
+											<p:inputText value="N/A" rendered="#{companyFinanceGpReportingUI.vendor eq null}" style="width:95%" disabled="true" />
+											<p:outputLabel value="Status" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{companyFinanceGpReportingUI.vendor.userDefined1}" rendered="#{companyFinanceGpReportingUI.vendor ne null and companyFinanceGpReportingUI.vendor.userDefined1 ne ''}" style="width:95%" disabled="true" />
+											<p:inputText value="No Reason Found" rendered="#{companyFinanceGpReportingUI.vendor ne null and companyFinanceGpReportingUI.vendor.userDefined1 eq ''}" style="width:95%" disabled="true" />
+											<p:inputText value="N/A" rendered="#{companyFinanceGpReportingUI.vendor eq null}" style="width:95%" disabled="true" />
+											<p:outputLabel value="Hold Reason" />
+										</h:panelGroup>
+									</p:panelGrid>
+								</p:fieldset>
+
+								<p:fieldset legend="Outstanding Transactions" style="margin-bottom:20px">
+									<ui:include src="/pages/includes/download_lazy.xhtml">
+										<ui:param name="file_name" value="Outstanding Transactions" />
+										<ui:param name="target" value="dtOutTransInfo" />
+									</ui:include>
+									<p:dataTable id="dtOutTransInfo" var="rowVarInfo" value="#{companyFinanceGpReportingUI.infoList}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+										<f:facet name="header">Outstanding Transactions</f:facet>
+										<p:column headerText="vendID" rendered="false">
+											<p:outputLabel value="#{rowVarInfo.vendID}" />
+										</p:column>
+										<p:column headerText="vendname" rendered="false">
+											<p:outputLabel value="#{rowVarInfo.vendname}" />
+										</p:column>
+										<p:column headerText="Voucher Number">
+											<p:outputLabel value="#{rowVarInfo.voucherNumber}" />
+										</p:column>
+										<p:column headerText="Type">
+											<p:outputLabel value="#{rowVarInfo.docType}" />
+										</p:column>
+										<p:column headerText="Date">
+											<p:outputLabel value="#{rowVarInfo.docDate}" styleClass="Fright">
+												<f:convertDateTime pattern="dd-MM-yyyy" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="Number">
+											<p:outputLabel value="#{rowVarInfo.docNumber}" />
+										</p:column>
+										<p:column headerText="Description">
+											<p:outputLabel value="#{rowVarInfo.docDescription}" />
+										</p:column>
+										<p:column headerText="Document Amount">
+											<p:outputLabel value="#{rowVarInfo.docFunctionalAmount}" styleClass="Fright">
+												<f:convertNumber type="currency" currencySymbol="R" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="Balance">
+											<p:outputLabel value="#{rowVarInfo.dockBalance1}" styleClass="Fright">
+												<f:convertNumber type="currency" currencySymbol="R" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="Hold">
+											<p:outputLabel value="No" rendered="#{rowVarInfo.docHold1 eq '0'}" />
+											<p:outputLabel value="Yes" rendered="#{rowVarInfo.docHold1 eq '1'}" />
+										</p:column>
+										<p:column headerText="Hold Reason">
+											<p:outputLabel value="#{rowVarInfo.docHoldReason1}" />
+										</p:column>
+									</p:dataTable>
+								</p:fieldset>
+
+								<p:fieldset legend="Transactions" style="margin-bottom:20px">
+									<ui:include src="/pages/includes/download_lazy.xhtml">
+										<ui:param name="file_name" value="Transactions" />
+										<ui:param name="target" value="dtPayments" />
+									</ui:include>
+									<p:dataTable id="dtPayments" var="rowVarRP" value="#{companyFinanceGpReportingUI.paymentsList}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+										<f:facet name="header">Transactions</f:facet>
+										<p:column headerText="Type" style="display:none;">
+											<p:outputLabel value="#{rowVarRP.type}" />
+										</p:column>
+										<p:column headerText="Type" exportable="false">
+											<p:spacer width="5" rendered="#{!rowVarRP.displaySpacer}" />
+											<p:outputLabel value="#{rowVarRP.type}" />
+										</p:column>
+										<p:column headerText="Date">
+											<p:outputLabel value="#{rowVarRP.date}" styleClass="Fright">
+												<f:convertDateTime pattern="dd-MM-yyyy" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="Number">
+											<p:outputLabel value="#{rowVarRP.number}" />
+										</p:column>
+										<p:column headerText="Description">
+											<p:outputLabel value="#{rowVarRP.description}" />
+										</p:column>
+										<p:column headerText="Document Amount" >
+											<p:outputLabel value="#{rowVarRP.amount}" styleClass="Fright">
+												<f:convertNumber type="currency" currencySymbol="R" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="Applied Amount">
+											<p:outputLabel value="#{rowVarRP.appliedAmount}" styleClass="Fright">
+												<f:convertNumber type="currency" currencySymbol="R" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="Remaining Amount">
+											<p:outputLabel value="#{rowVarRP.balance}" styleClass="Fright">
+												<f:convertNumber type="currency" currencySymbol="R" />
+											</p:outputLabel>
+										</p:column>
+									</p:dataTable>
+								</p:fieldset>
+							</p:panelGrid>
+						</c:if>
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+			<h:form>
+				<p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="pi pi-check" />
+				<p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="pi pi-times" />
+			</h:form>
+		</p:confirmDialog>
+
+	</ui:define>
+</ui:composition>

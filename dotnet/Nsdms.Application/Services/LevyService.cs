@@ -323,7 +323,7 @@ public class LevyService : ILevyService
             ImportDate = DateTime.UtcNow,
             TotalRecords = parsedLines.Count,
             TotalAmount = parsedLines.Sum(l => l.TotalLevyAmount > 0 ? l.TotalLevyAmount : (l.MandatoryLevyAmount + l.DiscretionaryLevyAmount + l.AdminLevyAmount + l.QctoLevyAmount + l.InterestAmount + l.PenaltyAmount)),
-            StatusCode = "Imported",
+            ImportStatusCode = "Imported",
             CreatedAt = DateTime.UtcNow,
             CreatedBy = currentUsername,
             LineItems = parsedLines
@@ -376,7 +376,7 @@ public class LevyService : ILevyService
             query = query.Where(f =>
                 f.FileName.Contains(s) ||
                 f.FileRef.Contains(s) ||
-                (f.StatusCode != null && f.StatusCode.Contains(s)));
+                (f.ImportStatusCode != null && f.ImportStatusCode.Contains(s)));
         }
 
         return await query
@@ -411,10 +411,10 @@ public class LevyService : ILevyService
         var existing = await db.LevyFiles.FindAsync(file.Id);
         if (existing == null) throw new KeyNotFoundException($"LevyFile with ID {file.Id} not found.");
 
-        var beforeState = new { existing.FileName, existing.StatusCode, existing.TotalAmount, existing.TotalRecords };
+        var beforeState = new { existing.FileName, existing.ImportStatusCode, existing.TotalAmount, existing.TotalRecords };
 
         existing.FileName = file.FileName;
-        existing.StatusCode = file.StatusCode;
+        existing.ImportStatusCode = file.ImportStatusCode;
         existing.TotalAmount = file.TotalAmount;
         existing.TotalRecords = file.TotalRecords;
         existing.ModifiedAt = DateTime.UtcNow;
@@ -552,17 +552,18 @@ public class LevyService : ILevyService
             throw new KeyNotFoundException($"LevyFile with ID {levyFileId} was not found.");
         }
 
-        var activeSdlNumbers = await db.Organisations
+        var activeSdlList = await db.Organisations
             .Where(o => o.IsActive)
             .Select(o => o.SdlNumber)
-            .ToHashSetAsync();
+            .ToListAsync();
+        var activeSdlNumbers = new HashSet<string>(activeSdlList.Select(s => s.Trim().ToUpperInvariant()), StringComparer.OrdinalIgnoreCase);
 
         int reconciledCount = 0;
         decimal reconciledAmount = 0m;
 
         foreach (var line in file.LineItems)
         {
-            if (activeSdlNumbers.Contains(line.SdlNumber))
+            if (activeSdlNumbers.Contains(line.SdlNumber.Trim().ToUpperInvariant()))
             {
                 line.IsReconciled = true;
                 line.ModifiedAt = DateTime.UtcNow;
@@ -576,8 +577,8 @@ public class LevyService : ILevyService
         var status = (reconciledCount == file.LineItems.Count && file.LineItems.Count > 0) ? "FullyReconciled" :
                      (reconciledCount > 0) ? "PartiallyReconciled" : "Unreconciled";
 
-        var beforeState = new { file.StatusCode };
-        file.StatusCode = status;
+        var beforeState = new { file.ImportStatusCode };
+        file.ImportStatusCode = status;
         file.ModifiedAt = DateTime.UtcNow;
         file.ModifiedBy = currentUsername;
 

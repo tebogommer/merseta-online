@@ -1,0 +1,668 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<h:panelGroup id="discretionaryGrantGroup">
+		<h:form id="unemployedDiscretionaryGrantForm">
+			<p:fieldset legend="Discretionary Grant Training" style="margin-top: 10px">
+				<p:panelGrid columns="2" style="width:100%" id="discretionaryGrantGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<h:panelGroup rendered="false">
+						<div>
+							<p:outputLabel value="#{lang['funding.method']}" for="fund" styleClass="gray" />
+						</div>
+						<div>
+							<p:selectOneMenu id="fund" value="#{discretionarygrantdgUI.mandatoryGrant.funding}" style="width:95%" required="true" requiredMessage="#{lang['select.planned']}" converter="FundingConvertor">
+								<p:ajax event="itemSelect" listener="#{discretionarygrantdgUI.checkDateLimits}" update="startDate endDate estimatedOutput" />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsFundingWSP}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="#{lang['intervention.type']}" for="intType" styleClass="gray" />
+						</div>
+						<div>
+							<p:selectOneMenu id="intType" value="#{discretionarygrantdgUI.mandatoryGrant.interventionType}" style="width:95%" required="true" requiredMessage="#{lang['select.planned']}" converter="InterventionTypeConvertor">
+								<p:ajax event="itemSelect" listener="#{discretionarygrantdgUI.applyInterventionData}" update="@form" />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{initiatewspdgUI.interventionTypes}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup rendered="#{discretionarygrantdgUI.mandatoryGrant.interventionType ne null}">
+						<div>
+							<p:outputLabel value="#{lang['pivotal.non.pivotal.trainig']}" styleClass="gray" />
+						</div>
+						<div>
+							<p:selectOneMenu id="pivotalTraining" value="#{discretionarygrantdgUI.mandatoryGrant.pivotNonPivot}" style="width:95%" disabled="true">
+								<p:ajax update="@form" listener="#{discretionarygrantdgUI.genNQFAligned}" />
+								<f:selectItem itemLabel="--- #{lang['select.one']} ---" itemValue="" styleClass="FontLight gray" noSelectionOption="true" />
+								<f:selectItems value="#{enumUI.pivotalNonPivotalDD}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup rendered="#{discretionarygrantdgUI.mandatoryGrant.pivotNonPivot ne null}">
+						<div>
+							<p:outputLabel value="#{lang['nqf.aligned']}" for="nqf" styleClass="gray" />
+						</div>
+						<div>
+							<p:selectOneMenu id="nqf" value="#{discretionarygrantdgUI.mandatoryGrant.nqfAligned}" style="width:95%" required="true" requiredMessage="#{lang['select.planned']}" converter="YesNoLookupConvertor" disabled="true">
+								<p:ajax />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="rv" itemLabel="#{rv.yesNoName}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup rendered="#{discretionarygrantdgUI.mandatoryGrant.pivotNonPivot eq PivotNonPivotEnum.Pivotal and not discretionarygrantdgUI.skillsSet and not discretionarygrantdgUI.skillsProgram and not discretionarygrantdgUI.shortCreditBearing and !discretionarygrantdgUI.showShortProgrammeUnemployedPanel and !discretionarygrantdgUI.showLearnership}" style="margin-top: 19px">
+						<div>
+							<p:outputLabel value="#{lang['saqa.id']}" for="highestQualTitle" styleClass="gray" />
+						</div>
+						<div>
+							<p:autoComplete required="true" id="highestQualTitle" value="#{discretionarygrantdgUI.mandatoryGrant.qualification}" completeMethod="#{autoCompleteUI.completeQualification}" var="rv" itemLabel="#{rv.saqaQualification}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;"
+								style="width: 95%">
+								<p:ajax event="itemSelect" listener="#{discretionarygrantdgUI.applySaqaData}" update="@form" />
+								<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+								<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+								<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+							</p:autoComplete>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup rendered="#{(discretionarygrantdgUI.mandatoryGrant.pivotNonPivot eq PivotNonPivotEnum.Pivotal and discretionarygrantdgUI.showLearnership) and not discretionarygrantdgUI.skillsSet and not discretionarygrantdgUI.skillsProgram and not discretionarygrantdgUI.shortCreditBearing and !discretionarygrantdgUI.showShortProgrammeUnemployedPanel}" style="margin-top: 19px">
+						<div>
+							<p:outputLabel value="Learnership" for="learnership" styleClass="gray" />
+						</div>
+						<div>
+							<p:autoComplete required="true" id="learnership" value="#{discretionarygrantdgUI.mandatoryGrant.learnership}" completeMethod="#{autoCompleteUI.completeLearnership}" var="rv" itemLabel="(#{rv.code}) - #{rv.description} - #{rv.learnershipCode}" itemValue="#{rv}" forceSelection="true" converter="LearnershipConvertor" dropdown="true" minQueryLength="3" maxResults="10"
+								inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+								<p:ajax event="itemSelect" listener="#{discretionarygrantdgUI.applySaqaData}" update="@form" />
+								<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+								<p:column headerText="#{lang['title']}" style="white-space: nowrap">#{rv.description}</p:column>
+								<p:column headerText="Learnership Code" style="white-space: nowrap">#{rv.learnershipCode}</p:column>
+							</p:autoComplete>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup rendered="#{discretionarygrantdgUI.mandatoryGrant.pivotNonPivot eq PivotNonPivotEnum.Pivotal and discretionarygrantdgUI.shortCreditBearing and !discretionarygrantdgUI.showShortProgrammeUnemployedPanel}" style="margin-top: 19px">
+						<div>
+							<p:outputLabel value="#{lang['unit.standard']}" for="unitStandard" styleClass="gray" />
+						</div>
+						<div>
+							<p:autoComplete required="true" id="unitStandard" value="#{discretionarygrantdgUI.mandatoryGrant.unitStandard}" completeMethod="#{autoCompleteUI.completeUnitStandards}" var="rv" itemLabel="#{rv.title}" itemValue="#{rv}" forceSelection="true" converter="UnitStandardsConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+								<p:ajax event="itemSelect" listener="#{discretionarygrantdgUI.applySaqaData}" update="@form" />
+								<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+								<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.title}</p:column>
+							</p:autoComplete>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup rendered="#{discretionarygrantdgUI.mandatoryGrant.pivotNonPivot eq PivotNonPivotEnum.Pivotal and not discretionarygrantdgUI.skillsSet and discretionarygrantdgUI.skillsProgram and !discretionarygrantdgUI.showShortProgrammeUnemployedPanel}" style="margin-top: 19px">
+						<div>
+							<p:outputLabel value="Skills Program" for="skillsProgram12" styleClass="gray" />
+						</div>
+						<div>
+							<p:autoComplete required="true" id="skillsProgram12" value="#{discretionarygrantdgUI.mandatoryGrant.skillsProgram}" completeMethod="#{autoCompleteUI.completeSkillsProgram}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SkillsProgramConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;"
+								style="width: 95%">
+								<p:ajax event="itemSelect" listener="#{discretionarygrantdgUI.applySaqaData}" update="@form" />
+								<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+								<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+								<p:ajax event="itemSelect" listener="#{discretionarygrantdgUI.calcAllocationAmount}" update="estimated" />
+							</p:autoComplete>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup rendered="#{discretionarygrantdgUI.mandatoryGrant.pivotNonPivot eq PivotNonPivotEnum.NonPivotal}">
+						<div>
+							<p:outputLabel value="#{lang['intervention.title']}" for="intTitle" styleClass="gray" />
+						</div>
+						<div>
+							<p:inputText value="#{discretionarygrantdgUI.mandatoryGrant.interventionTitle}" id="intTitle" required="true" requiredMessage="Intervention title is Required" style="width: 95%">
+								<p:ajax></p:ajax>
+							</p:inputText>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup rendered="#{discretionarygrantdgUI.mandatoryGrant.pivotNonPivot eq PivotNonPivotEnum.Pivotal and !discretionarygrantdgUI.showShortProgrammeUnemployedPanel}">
+						<div>
+							<p:outputLabel value="#{lang['nqf.level']}" for="nqflevel" styleClass="gray" />
+						</div>
+						<div>
+							<p:selectOneMenu id="nqflevel" value="#{discretionarygrantdgUI.mandatoryGrant.nqfLevels}" style="width:95%" required="true" requiredMessage="Select NQF LEVEL" converter="NqfLevelsConvertor" disabled="#{discretionarygrantdgUI.mandatoryGrant.qualification ne null}">
+								<p:ajax update="interventionLvl" listener="#{discretionarygrantdgUI.applyNQFData}" />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsNqfLevels}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup id="interventionLvl" rendered="#{discretionarygrantdgUI.mandatoryGrant.pivotNonPivot eq PivotNonPivotEnum.Pivotal and !discretionarygrantdgUI.showShortProgrammeUnemployedPanel}">
+						<div>
+							<p:outputLabel value="#{lang['level.of.training']}" for="intlevel" styleClass="gray" />
+						</div>
+						<div>
+							<p:selectOneMenu id="intlevel" value="#{discretionarygrantdgUI.mandatoryGrant.interventionLevel}" style="width:95%" required="true" requiredMessage="Select Level of training" converter="InterventionLevelConvertor" disabled="#{discretionarygrantdgUI.mandatoryGrant.nqfLevels ne null and discretionarygrantdgUI.mandatoryGrant.nqfLevels.interventionLevel ne null}">
+								<p:ajax />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsInterventionLevel}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup rendered="#{discretionarygrantdgUI.mandatoryGrant.pivotNonPivot eq PivotNonPivotEnum.Pivotal and !discretionarygrantdgUI.showShortProgrammeUnemployedPanel}">
+						<div>
+							<p:outputLabel value="#{lang['etqa']}" for="etqa" styleClass="gray" />
+						</div>
+						<div>
+							<p:selectOneMenu id="etqa" value="#{discretionarygrantdgUI.mandatoryGrant.etqa}" disabled="#{discretionarygrantdgUI.mandatoryGrant.qualification.etqaid ne null or discretionarygrantdgUI.mandatoryGrant.skillsProgram ne null or discretionarygrantdgUI.mandatoryGrant.skillsSet ne null}" style="width:95%" required="true" requiredMessage="Select Etqa" converter="EtqaConvertor">
+								<p:ajax />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsEtqa}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup style="margin-top: 19px" rendered="true">
+						<div>
+							<p:outputLabel value="#{lang['municipality']}" for="muni" styleClass="gray" />
+						</div>
+						<div>
+							<p:autoComplete id="muni" value="#{discretionarygrantdgUI.mandatoryGrant.municipality}" completeMethod="#{autoCompleteUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityDesc}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%"
+								required="true" requiredMessage="Select Municipality">
+								<p:ajax event="itemSelect" update="resProvincePG" />
+								<p:column headerText="Municipality" style="white-space: nowrap">#{rv.municipalityDesc}</p:column>
+							</p:autoComplete>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup id="resProvincePG">
+						<h:panelGroup>
+							<p:outputLabel value="Province" for="resProvince" />
+							<br />
+							<p:spacer height="5px" />
+							<p:inputText disabled="true" id="resProvince" value="#{discretionarygrantdgUI.mandatoryGrant.municipality.province.provinceDesc}" style="opacity: 1 !important; color: black; width:95%">
+								<p:ajax />
+							</p:inputText>
+						</h:panelGroup>
+					</h:panelGroup>
+					<h:panelGroup>
+						<p:outputLabel value="#{lang['ofo.code']}" for="ofoCode" styleClass="gray" />
+						<p:autoComplete id="ofoCode" value="#{discretionarygrantdgUI.mandatoryGrant.ofoCodes}" completeMethod="#{autoCompleteUI.completeOfoCodes}" var="rv" itemLabel="#{rv.ofoDescription}" itemValue="#{rv}" forceSelection="true" converter="OfoCodesConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true"
+							requiredMessage="#{lang['select.ofo.code']}">
+							<p:column headerText="OfoCodes" style="white-space: nowrap">#{rv.ofoCodeParent}</p:column>
+							<p:column headerText="Description" style="white-space: nowrap">#{rv.description}</p:column>
+							<p:ajax event="itemSelect" />
+						</p:autoComplete>
+					</h:panelGroup>
+					<h:panelGroup>
+						<p:outputLabel value="#{lang['estimated.start.date']}" for="startDate" styleClass="gray" />
+						<p:calendar id="startDate" value="#{discretionarygrantdgUI.mandatoryGrant.startDate}" showOn="button" navigator="true" mindate="#{discretionarygrantdgUI.minDate}" pattern="#{autoCompleteUI.CALENDER_PATTERN}" inputStyle="width:calc(100% - 40px)" style="width:100%" mask="true" required="true" requiredMessage="#{'estimated.start.date'}">
+							<p:ajax update="duration" event="dateSelect"></p:ajax>
+						</p:calendar>
+					</h:panelGroup>
+					<h:panelGroup>
+						<p:outputLabel value="#{lang['estimated.end.date']}" for="endDate" styleClass="gray" />
+						<p:calendar id="endDate" value="#{discretionarygrantdgUI.mandatoryGrant.endDate}" showOn="button" navigator="true" pattern="#{autoCompleteUI.CALENDER_PATTERN}" inputStyle="width:calc(100% - 40px)" style="width:100%" mask="true" required="true" requiredMessage="#{'estimated.end.date'}">
+							<p:ajax update="duration" event="dateSelect"></p:ajax>
+						</p:calendar>
+					</h:panelGroup>
+					<h:panelGroup id="agender" rendered="false">
+						<div>
+							<p:outputLabel value="Gender" for="gen" styleClass="gray" />
+						</div>
+						<div>
+							<p:selectOneMenu id="gen" value="#{discretionarygrantdgUI.mandatoryGrant.gender}" style="width:95%" required="true" requiredMessage="#{lang['select.gender']}" converter="GenderConvertor">
+								<p:ajax />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsGender}" var="rv" itemLabel="#{rv.genderName}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup rendered="false">
+						<div>
+							<p:outputLabel value="#{lang['equity']}" for="eq" styleClass="gray" />
+						</div>
+						<div>
+							<p:autoComplete id="eq" value="#{discretionarygrantdgUI.mandatoryGrant.equity}" style="width:95%" completeMethod="#{autoCompleteUI.completeEquityExcludeOtherAndUnkown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="EquityConvertor" dropdown="true" minQueryLength="3" maxResults="10" requiredMessage="#{lang['provide.equity']}" required="true">
+								<p:ajax event="itemSelect" />
+								<p:column headerText="#{lang['equity']}" style="white-space: nowrap">#{rv.description}</p:column>
+							</p:autoComplete>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup rendered="false">
+						<div>
+							<p:outputLabel value="Enrolment Status" for="es" styleClass="gray" />
+						</div>
+						<div>
+							<p:selectOneMenu id="es" value="#{discretionarygrantdgUI.mandatoryGrant.enrolmentStatus}" style="width:95%" required="true" requiredMessage="Select Enrolment Status" converter="EnrolmentStatusConvertor">
+								<p:ajax />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.enrolmentStatusWSP}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup rendered="false">
+						<div>
+							<p:outputLabel value="#{lang['employment.status']}" for="proc" styleClass="gray" />
+						</div>
+						<div>
+							<p:selectOneMenu id="proc" value="#{discretionarygrantdgUI.mandatoryGrant.employmentStatus}" style="width:95%" required="true" requiredMessage="#{lang['select.employment.status']}">
+								<p:ajax listener="#{discretionarygrantdgUI.calcEmploymentData}" />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" itemValue="" noSelectionOption="true" />
+								<f:selectItems value="#{enumUI.employmentStatusEnumDD}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup rendered="false">
+						<p:outputLabel value="#{lang['intervention.title']}" for="s" styleClass="gray" />
+						<p:inputText value="#{discretionarygrantdgUI.mandatoryGrant.interventionTitle}" id="s" required="true" requiredMessage="Intervention title is Required" style="width: 95%">
+							<p:ajax></p:ajax>
+						</p:inputText>
+					</h:panelGroup>
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="#{lang['provider.type']}" for="provType" styleClass="gray" />
+						</div>
+						<div>
+							<p:selectOneMenu id="provType" value="#{discretionarygrantdgUI.mandatoryGrant.providerType}" style="width:95%" required="true" requiredMessage="Select Provider Type" converter="ProviderTypeConvertor">
+								<p:ajax />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsProviderType}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:autoComplete id="disability" value="#{discretionarygrantdgUI.mandatoryGrant.disability}" completeMethod="#{autoCompleteUI.completeDisabilityStatusCanSelect}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="DisabilityStatusConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true"
+							requiredMessage="Please Select Disability">
+							<p:column headerText="Description" style="white-space: nowrap">#{rv.description}</p:column>
+							<p:ajax event="itemSelect" />
+						</p:autoComplete>
+						<p:outputLabel value="#{lang['disability']}" for="disability" />
+					</h:panelGroup>
+					<p:outputPanel id="duration" rendered="false">
+						<h:panelGroup>
+							<p:outputLabel value="#{lang['duration']}" styleClass="gray" />
+							<p:inputText value="#{discretionarygrantdgUI.mandatoryGrant.duration} Days" disabled="true" style="width:95%; opacity:1 !important;" />
+						</h:panelGroup>
+					</p:outputPanel>
+				</p:panelGrid>
+				<br />
+				<br />
+				<p:fieldset collapsed="false">
+					<p:panelGrid columns="6" style="width:100%" id="discretionaryGrantGrid2" layout="grid" styleClass="ui-panelgrid-blank form-group">
+						<h:panelGroup>
+							<p:outputLabel value="Number of Learners" styleClass="gray"></p:outputLabel>
+							<p:inputNumber value="#{discretionarygrantdgUI.mandatoryGrant.amount}" decimalPlaces="0" inputStyle="width: 95%" required="true" requiredMessage="#{lang['provide.quantity']}">
+								<p:ajax event="valueChange" listener="#{discretionarygrantdgUI.calcAllocationAmount}" update="estimated" />
+							</p:inputNumber>
+						</h:panelGroup>
+						<p:outputPanel id="estimatedOutput">
+							<h:panelGroup>
+								<p:outputLabel value="#{lang['estimated.cost']}" for="estimated" styleClass="gray" />
+								<p:inputNumber id="estimated" minValue="0" value="#{discretionarygrantdgUI.mandatoryGrant.estimatedCost}" readonly="true" decimalPlaces="0" inputStyle="width: 95%; opacity:1 !important;" required="true" requiredMessage="Estimated Cost is required">
+								</p:inputNumber>
+							</h:panelGroup>
+						</p:outputPanel>
+						<h:panelGroup>
+							<p:outputLabel value="Black Female" styleClass="gray"></p:outputLabel>
+							<p:inputNumber value="#{discretionarygrantdgUI.mandatoryGrant.africanFemale}" decimalPlaces="0" inputStyle="width: 95%" required="false" requiredMessage="#{lang['provide.quantity']}">
+								<p:ajax event="valueChange" listener="#{discretionarygrantdgUI.calcAllocationAmount}" update="estimated" />
+							</p:inputNumber>
+						</h:panelGroup>
+						<h:panelGroup>
+							<p:outputLabel value="Black Male" styleClass="gray"></p:outputLabel>
+							<p:inputNumber value="#{discretionarygrantdgUI.mandatoryGrant.africanMale}" decimalPlaces="0" inputStyle="width: 95%" required="false" requiredMessage="#{lang['provide.quantity']}">
+								<p:ajax event="valueChange" listener="#{discretionarygrantdgUI.calcAllocationAmount}" update="estimated" />
+							</p:inputNumber>
+						</h:panelGroup>
+						<h:panelGroup>
+							<p:outputLabel value="Coloured Female" styleClass="gray"></p:outputLabel>
+							<p:inputNumber value="#{discretionarygrantdgUI.mandatoryGrant.colouredFemale}" decimalPlaces="0" inputStyle="width: 95%" required="false" requiredMessage="#{lang['provide.quantity']}">
+								<p:ajax event="valueChange" listener="#{discretionarygrantdgUI.calcAllocationAmount}" update="estimated" />
+							</p:inputNumber>
+						</h:panelGroup>
+						<h:panelGroup>
+							<p:outputLabel value="Coloured Male" styleClass="gray"></p:outputLabel>
+							<p:inputNumber value="#{discretionarygrantdgUI.mandatoryGrant.colouredMale}" decimalPlaces="0" inputStyle="width: 95%" required="false" requiredMessage="#{lang['provide.quantity']}">
+								<p:ajax event="valueChange" listener="#{discretionarygrantdgUI.calcAllocationAmount}" update="estimated" />
+							</p:inputNumber>
+						</h:panelGroup>
+						<h:panelGroup>
+							<p:outputLabel value="Asian Female" styleClass="gray"></p:outputLabel>
+							<p:inputNumber value="#{discretionarygrantdgUI.mandatoryGrant.indianFemale}" decimalPlaces="0" inputStyle="width: 95%" required="false" requiredMessage="#{lang['provide.quantity']}">
+								<p:ajax event="valueChange" listener="#{discretionarygrantdgUI.calcAllocationAmount}" update="estimated" />
+							</p:inputNumber>
+						</h:panelGroup>
+						<h:panelGroup>
+							<p:outputLabel value="Asian Male" styleClass="gray"></p:outputLabel>
+							<p:inputNumber value="#{discretionarygrantdgUI.mandatoryGrant.indianMale}" decimalPlaces="0" inputStyle="width: 95%" required="false" requiredMessage="#{lang['provide.quantity']}">
+								<p:ajax event="valueChange" listener="#{discretionarygrantdgUI.calcAllocationAmount}" update="estimated" />
+							</p:inputNumber>
+						</h:panelGroup>
+						<h:panelGroup>
+							<p:outputLabel value="White Female" styleClass="gray"></p:outputLabel>
+							<p:inputNumber value="#{discretionarygrantdgUI.mandatoryGrant.whiteFemale}" decimalPlaces="0" inputStyle="width: 95%" required="false" requiredMessage="#{lang['provide.quantity']}">
+								<p:ajax event="valueChange" listener="#{discretionarygrantdgUI.calcAllocationAmount}" update="estimated" />
+							</p:inputNumber>
+						</h:panelGroup>
+						<h:panelGroup>
+							<p:outputLabel value="White Male" styleClass="gray"></p:outputLabel>
+							<p:inputNumber value="#{discretionarygrantdgUI.mandatoryGrant.whiteMale}" decimalPlaces="0" inputStyle="width: 95%" required="false" requiredMessage="#{lang['provide.quantity']}">
+								<p:ajax event="valueChange" listener="#{discretionarygrantdgUI.calcAllocationAmount}" update="estimated" />
+							</p:inputNumber>
+						</h:panelGroup>
+					</p:panelGrid>
+				</p:fieldset>
+				<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<p:commandButton styleClass="green-btn" value="#{lang['submit']}" icon="fa fa-check" update="@form" action="#{discretionarygrantdgUI.generateEmployeesEmployed}" process="@form" />
+				</p:panelGrid>
+			</p:fieldset>
+			<br />
+			<br />
+			<h2>Discretionary Grant Training</h2>
+			<p:dataTable var="rowVar" value="#{discretionarygrantdgUI.mandatoryGrants}" id="employeesimportList" rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}" paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+				rowsPerPageTemplate="10,15,20,25,50,100" reflow="true">
+				<p:column headerText="#{lang['expand.row']}" width="45">
+					<p:rowToggler></p:rowToggler>
+				</p:column>
+				<p:column headerText="#{lang['number.of.learners']}" sortBy="#{rowVar.amount}">
+					<p:outputLabel value="#{rowVar.amount}" style="width:95%" />
+				</p:column>
+				<p:column headerText="#{lang['ofo.codes']}" sortBy="#{rowVar.ofoCodes}" filterBy="#{rowVar.ofoCodes.ofoCode}" filterMatchMode="contains">
+					<p:outputLabel value="#{rowVar.ofoCodes.ofoDescription}" style="width:95%" />
+				</p:column>
+				<p:column headerText="#{lang['intervention.type']}" sortBy="#{rowVar.interventionType.description}">
+					<p:outputLabel value="#{rowVar.interventionType.description}" style="width:95%" />
+				</p:column>
+				<p:column headerText="#{lang['intervention.title']}" rendered="false">
+					<p:outputLabel value="(#{rowVar.qualification.code}) #{rowVar.qualification.description}" decimalPlaces="0" disabled="true" rendered="#{rowVar.qualification ne null}" />
+					<p:outputLabel value="(#{rowVar.skillsProgram.programmeID}) #{rowVar.skillsProgram.description}" decimalPlaces="0" disabled="true" rendered="#{rowVar.skillsProgram ne null}" />
+					<p:outputLabel value="(#{rowVar.skillsSet.programmeID}) #{rowVar.skillsSet.description}" decimalPlaces="0" disabled="true" rendered="#{rowVar.skillsSet ne null}" />
+					<p:outputLabel value="(#{rowVar.unitStandard.code}) #{rowVar.unitStandard.title}" rendered="#{rowVar.unitStandard ne null}" />
+					<p:outputLabel value="(#{rowVar.nonCreditBearingIntervationTitle.code}) #{rowVar.nonCreditBearingIntervationTitle.description}" rendered="#{rowVar.nonCreditBearingIntervationTitle ne null}" />
+				</p:column>
+				<p:column headerText="#{lang['nqf.level']}">
+					<p:outputLabel minValue="0" value="#{rowVar.nqfLevels.description}" decimalPlaces="0" disabled="true" />
+				</p:column>
+				<p:column headerText="Provider Type">
+					<p:outputLabel minValue="0" value="#{rowVar.providerType.description}" disabled="true" />
+				</p:column>
+				<p:column headerText="Province">
+					<p:outputLabel minValue="0" value="#{rowVar.municipality.province.provinceDesc}" disabled="true" />
+				</p:column>
+				<p:column width="120" rendered="#{initiatewspdgUI.wsp.wspStatusEnum eq WspStatusEnum.Draft}" headerText="View/Edit">
+					<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":tabView:unemployedDiscretionaryGrantForm" process="@this">
+						<f:setPropertyActionListener value="#{rowVar}" target="#{discretionarygrantdgUI.mandatoryGrant}" />
+					</p:commandButton>
+					<p:spacer width="3" />
+					<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update="@form" process="@this" action="#{discretionarygrantdgUI.deleteMandatory}" oncomplete="updatePIP()">
+						<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure.you.want.to.delete.employed.training']}" icon="ui-icon-warning" />
+						<f:setPropertyActionListener value="#{rowVar}" target="#{discretionarygrantdgUI.mandatoryGrant}" />
+					</p:commandButton>
+					<p:spacer width="3" />
+					<p:commandButton icon="fa fa-building" title="Add Workplace" update="tabView:workplaceForm" process="@this" oncomplete="PF('dlgWorkplace').show()" action="#{mandatorygrantworkpalceUI.prepareNew}">
+						<f:setPropertyActionListener value="#{rowVar}" target="#{mandatorygrantworkpalceUI.mandatorygrant}" />
+					</p:commandButton>
+				</p:column>
+				<p:column width="60" rendered="#{sessionUI.task.firstInProcess and sessionUI.employee}" headerText="View/Edit">
+					<p:commandButton icon="fa fa-database" title="Qualification Alignment" update="tabView:AlignMentForm" oncomplete="PF('dlgAlignment').show()" process="@this">
+						<f:setPropertyActionListener value="#{rowVar}" target="#{discretionarygrantdgUI.mandatoryGrant}" />
+					</p:commandButton>
+				</p:column>
+				<p:column width="60" rendered="#{!sessionUI.employee}" headerText="View/Edit">
+					<p:commandButton icon="fa fa-download" action="#{discretionarygrantdgUI.downloadAllocationLetter}" ajax="false" title="Download Allocation Letter">
+						<f:setPropertyActionListener value="#{rowVar}" target="#{discretionarygrantdgUI.mandatoryGrant}" />
+					</p:commandButton>
+				</p:column>
+				<p:rowExpansion>
+					<p:outputPanel rendered="#{rowVar.grantRecommendations.size() gt 0}">
+						<h3>Recommendations</h3>
+						<p:dataTable value="#{rowVar.grantRecommendations}" var="rv4" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv4.id}">
+							<p:column headerText="#{lang['first.name']}">
+								<h:outputText value="#{rv4.recommendingUser.firstName}" />
+							</p:column>
+							<p:column headerText="#{lang['last.name']}">
+								<h:outputText value="#{rv4.recommendingUser.lastName}" />
+							</p:column>
+							<p:column headerText="#{lang['intervention.type']}">
+								<p:outputLabel value="#{rv4.interventionType.description}" />
+							</p:column>
+							<p:column headerText="#{lang['qualification.id']}">
+								<h:outputText value="#{rv4.qualification.code}" rendered="#{rv4.qualification ne null}" />
+								<h:outputText value="#{rv4.unitStandards.code}" rendered="#{rv4.unitStandards ne null}" />
+								<h:outputText value="#{rv4.skillsSet.code}" rendered="#{rv4.skillsSet ne null}" />
+								<h:outputText value="#{rv4.skillsProgram.programmeID}" rendered="#{rv4.skillsProgram ne null}" />
+								<h:outputText value="#{rv4.nonCreditBearingIntervationTitle.code}" rendered="#{rv4.nonCreditBearingIntervationTitle ne null}" />
+							</p:column>
+							<p:column headerText="#{lang['intervention.title']}">
+								<h:outputText value="#{rv4.qualification.description}" rendered="#{rv4.qualification ne null}" />
+								<h:outputText value="#{rv4.unitStandards.title}" rendered="#{rv4.unitStandards ne null}" />
+								<h:outputText value="#{rv4.skillsProgram.description}" rendered="#{rv4.skillsProgram ne null}" />
+								<h:outputText value="#{rv4.skillsSet.description}" rendered="#{rv4.skillsSet ne null}" />
+								<h:outputText value="#{rv4.nonCreditBearingIntervationTitle.description}" rendered="#{rv4.nonCreditBearingIntervationTitle ne null}" />
+							</p:column>
+							<p:column headerText="#{lang['nqf.level']}">
+								<h:outputText value="#{rv4.qualification.nqflevel.description}" rendered="#{rv4.qualification ne null}" />
+								<h:outputText value="#{rv4.unitStandards.nqflevelg2description}" rendered="#{rv4.unitStandards ne null}" />
+								<h:outputText value="#{rv4.skillsProgram.qualification.nqflevel.description}" rendered="#{rv4.skillsProgram ne null}" />
+								<h:outputText value="#{rv4.skillsSet.qualification.nqflevel.description}" rendered="#{rv4.skillsSet ne null}" />
+								<h:outputText value="N/A" rendered="#{rv4.nonCreditBearingIntervationTitle ne null}" />
+							</p:column>
+							<p:column headerText="#{lang['number.of.learners']}">
+								<h:outputText value="#{rv4.quantity}" />
+							</p:column>
+							<p:column headerText="Reason for Recommendation">
+								<h:outputText value="N/A" rendered="#{rv4.rejectReasons eq null}" />
+								<h:outputText value="#{rv4.rejectReasons.description}" rendered="#{rv4.rejectReasons ne null}" />
+								<br />
+								<h:outputText styleClass="Fs12 gray" value="#{rv4.rejectReasons.howTo}" rendered="#{rv4.rejectReasons ne null}" />
+							</p:column>
+						</p:dataTable>
+						<br />
+					</p:outputPanel>
+					<p:panelGrid columns="1" style="width:100%" id="s" layout="grid" styleClass="ui-panelgrid-blank form-group">
+						<p:fieldset legend="Original #{lang['discretionary.data']}" rendered="#{rowVar.pivotNonPivot eq PivotNonPivotEnum.Pivotal}">
+							<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar.nqfAligned.yesNoName}" disabled="true" />
+									<p:outputLabel value="#{lang['nqf.aligned']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" minValue="0" value="#{rowVar.municipality.municipalityDesc}" decimalPlaces="0" disabled="true" />
+									<p:outputLabel value="Municipality" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" minValue="0" value="#{rowVar.nqfLevels.description}" decimalPlaces="0" disabled="true" />
+									<p:outputLabel value="#{lang['nqf.level']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar.interventionLevel.description}" decimalPlaces="0" disabled="true" />
+									<p:outputLabel value="#{lang['level.of.training']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield" rendered="#{rowVar.etqa ne null}">
+									<p:inputText style="width:95%; opacity:1 !important;" minValue="0" value="#{rowVar.etqa.description}" decimalPlaces="0" disabled="true" />
+									<p:outputLabel value="#{lang['etqa']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar.providerType.description}" decimalPlaces="0" disabled="true" />
+									<p:outputLabel value="#{lang['provider.type']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield" rendered="#{rowVar.startDate ne null}">
+									<p:calendar navigator="true" id="interventionstartdate" value="#{rowVar.startDate}" size="19" showOn="button" 
+										pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" yearRange="c-100:c" required="true"  requiredMessage="#{lang['provide.start.date']}">
+										<p:ajax event="dateSelect" />
+									</p:calendar>
+<!-- 								<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar.startDate}" decimalPlaces="0" disabled="true">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</p:inputText>
+ -->									<p:outputLabel value="#{lang['start.date']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield" rendered="#{rowVar.endDate ne null}">
+									<p:calendar navigator="true" id="interventionenddate" value="#{rowVar.endDate}" size="19" showOn="button" 
+										pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" yearRange="c-100:c" required="true"  requiredMessage="#{lang['provide.end.date']}">
+										<p:ajax event="dateSelect" />
+									</p:calendar>
+<!--								<p:inputText style="width:95%; opacity:1 !important;" minValue="0" value="#{rowVar.endDate}" decimalPlaces="0" disabled="true">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+								</p:inputText>
+ -->									<p:outputLabel value=" #{lang['end.date']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText disabled="true" value="#{rowVar.qualification.description}" rendered="#{rowVar.qualification ne null}" style="width:95%; opacity:1 !important;" />
+									<p:inputText disabled="true" value="#{rowVar.unitStandard.title}" rendered="#{rowVar.unitStandard ne null}" style="width:95%; opacity:1 !important;" />
+									<p:inputText disabled="true" value="#{rowVar.skillsProgram.description}" rendered="#{rowVar.skillsProgram ne null}" style="width:95%; opacity:1 !important;" />
+									<p:inputText disabled="true" value="#{rowVar.skillsSet.description}" rendered="#{rowVar.skillsSet ne null}" style="width:95%; opacity:1 !important;" />
+									<p:inputText disabled="true" value="#{rowVar.nonCreditBearingIntervationTitle.description}" rendered="#{rowVar.nonCreditBearingIntervationTitle ne null}" style="width:95%; opacity:1 !important;" />
+									<p:outputLabel value="Qualification" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText disabled="true" value="#{rowVar.qualification.code}" rendered="#{rowVar.qualification ne null}" style="width:95%; opacity:1 !important;" />
+									<p:inputText disabled="true" value="#{rowVar.unitStandard.code}" rendered="#{rowVar.unitStandard ne null}" style="width:95%; opacity:1 !important;" />
+									<p:inputText disabled="true" value="#{rowVar.skillsSet.code}" rendered="#{rowVar.skillsSet ne null}" style="width:95%; opacity:1 !important;" />
+									<p:inputText disabled="true" value="#{rowVar.skillsProgram.programmeID}" rendered="#{rowVar.skillsProgram ne null}" style="width:95%; opacity:1 !important;" />
+									<p:inputText disabled="true" value="#{rowVar.nonCreditBearingIntervationTitle.code}" rendered="#{rowVar.nonCreditBearingIntervationTitle ne null}" style="width:95%; opacity:1 !important;" />
+									<p:outputLabel value="#{lang['qualification.id']}" />
+								</h:panelGroup>
+							</p:panelGrid>
+						</p:fieldset>
+						<p:fieldset collapsed="false">
+							<p:panelGrid columns="6" style="width:100%" id="discretionaryGrantGrid2" layout="grid" styleClass="ui-panelgrid-blank form-group">
+								<h:panelGroup>
+									<p:outputLabel value="Number of Learners" styleClass="gray"></p:outputLabel>
+									<p:inputNumber value="#{rowVar.amount}" decimalPlaces="0" disabled="true" inputStyle="width: 95%" required="true" requiredMessage="#{lang['provide.quantity']}">
+									</p:inputNumber>
+								</h:panelGroup>
+								<p:outputPanel id="estimatedOutput">
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['estimated.cost']}" for="estimated" styleClass="gray" />
+										<p:inputNumber id="estimated" minValue="0" value="#{rowVar.estimatedCost}" readonly="true" decimalPlaces="0" inputStyle="width: 95%; opacity:1 !important;" required="true" requiredMessage="Estimated Cost is required">
+										</p:inputNumber>
+									</h:panelGroup>
+								</p:outputPanel>
+								<h:panelGroup>
+									<p:outputLabel value="Black Female" styleClass="gray"></p:outputLabel>
+									<p:inputNumber value="#{rowVar.africanFemale}" disabled="true" decimalPlaces="0" inputStyle="width: 95%" required="true" requiredMessage="#{lang['provide.quantity']}">
+									</p:inputNumber>
+								</h:panelGroup>
+								<h:panelGroup>
+									<p:outputLabel value="Black Male" styleClass="gray"></p:outputLabel>
+									<p:inputNumber value="#{rowVar.africanMale}" disabled="true" decimalPlaces="0" inputStyle="width: 95%" required="true" requiredMessage="#{lang['provide.quantity']}">
+									</p:inputNumber>
+								</h:panelGroup>
+								<h:panelGroup>
+									<p:outputLabel value="Coloured Female" styleClass="gray"></p:outputLabel>
+									<p:inputNumber value="#{rowVar.colouredFemale}" disabled="true" decimalPlaces="0" inputStyle="width: 95%" required="true" requiredMessage="#{lang['provide.quantity']}">
+									</p:inputNumber>
+								</h:panelGroup>
+								<h:panelGroup>
+									<p:outputLabel value="Coloured Male" styleClass="gray"></p:outputLabel>
+									<p:inputNumber value="#{rowVar.colouredMale}" disabled="true" decimalPlaces="0" inputStyle="width: 95%" required="true" requiredMessage="#{lang['provide.quantity']}">
+									</p:inputNumber>
+								</h:panelGroup>
+								<h:panelGroup>
+									<p:outputLabel value="Asian Female" styleClass="gray"></p:outputLabel>
+									<p:inputNumber value="#{rowVar.indianFemale}" disabled="true" decimalPlaces="0" inputStyle="width: 95%" required="true" requiredMessage="#{lang['provide.quantity']}">
+									</p:inputNumber>
+								</h:panelGroup>
+								<h:panelGroup>
+									<p:outputLabel value="Asian Male" styleClass="gray"></p:outputLabel>
+									<p:inputNumber value="#{rowVar.indianMale}" disabled="true" decimalPlaces="0" inputStyle="width: 95%" required="true" requiredMessage="#{lang['provide.quantity']}">
+									</p:inputNumber>
+								</h:panelGroup>
+								<h:panelGroup>
+									<p:outputLabel value="White Female" styleClass="gray"></p:outputLabel>
+									<p:inputNumber value="#{rowVar.whiteFemale}" disabled="true" decimalPlaces="0" inputStyle="width: 95%" required="true" requiredMessage="#{lang['provide.quantity']}">
+									</p:inputNumber>
+								</h:panelGroup>
+								<h:panelGroup>
+									<p:outputLabel value="White Male" styleClass="gray"></p:outputLabel>
+									<p:inputNumber value="#{rowVar.whiteMale}" disabled="true" decimalPlaces="0" inputStyle="width: 95%" required="true" requiredMessage="#{lang['provide.quantity']}">
+									</p:inputNumber>
+								</h:panelGroup>
+							</p:panelGrid>
+						</p:fieldset>
+					</p:panelGrid>
+					<p:fieldset legend="Qualification Alignment" id="qAlignment" rendered="#{sessionUI.employee}">
+						<p:panelGrid columns="2" style="width:100%" id="qualificationalignmentGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="Is the Qualification Aligned to Cathssetas Occupational Shortages and Skills Gaps?" for="qualificationaligned" styleClass="gray" />
+								</div>
+								<div>
+									<p:selectOneMenu id="qualificationaligned" value="#{rowVar.qualificationAligned.qualificationAligned}" immediate="true" disabled="true" style="width:95%" required="true" requiredMessage="Is the Qualification Aligned" converter="YesNoLookupConvertor">
+										<p:ajax update=":tabView:unemployedDiscretionaryGrantForm:employeesimportList:qAlignment" />
+										<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+										<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="rv" itemLabel="#{rv.yesNoName}" itemValue="#{rv}" />
+									</p:selectOneMenu>
+								</div>
+							</h:panelGroup>
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="Sub-Sector" for="chamber" />
+								</div>
+								<div>
+									<p:selectOneMenu id="chamber" value="#{rowVar.qualificationAligned.chamber}" disabled="true" converter="ChamberConvertor" style="width:75%" required="true">
+										<p:ajax></p:ajax>
+										<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+										<f:selectItems value="#{selectItemsUI.chambers}" var="il" itemLabel="#{il.description}" />
+									</p:selectOneMenu>
+								</div>
+							</h:panelGroup>
+							<h:panelGroup rendered="#{rowVar.qualificationAligned.qualificationAligned.id eq HAJConstants.NO_ID}">
+								<div>
+									<p:outputLabel value="Is the application aligned to the Key Imperative?" for="imperativeAligned" styleClass="gray" />
+								</div>
+								<div>
+									<p:selectOneMenu id="imperativeAligned" value="#{rowVar.qualificationAligned.imperativeAligned}" disabled="true" style="width:95%" required="true" requiredMessage="Is the application aligned to the Key Imperative?" converter="YesNoLookupConvertor">
+										<p:ajax />
+										<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+										<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="rv" itemLabel="#{rv.yesNoName}" itemValue="#{rv}" />
+									</p:selectOneMenu>
+								</div>
+							</h:panelGroup>
+						</p:panelGrid>
+					</p:fieldset>
+					<div class="EmptyBox10" />
+					<p:dataTable var="rv" value="#{rowVar.workplaces}" rowKey="#{rowVar.id}" reflow="true">
+						<p:column headerText="Number of Learners">
+							<h:outputText value="#{rv.amount}" />
+						</p:column>
+						<p:column headerText="#{lang['sites']}">
+							<h:outputText value="#{rv.sites.companyName}" />
+						</p:column>
+						<p:column width="80" rendered="#{initiatewspdgUI.wsp.wspStatusEnum eq WspStatusEnum.Draft}">
+							<p:commandButton icon="fa fa-database" title="#{lang['update']}" update="tabView:workplaceForm" action="#{mandatorygrantworkpalceUI.findSites}" process="@this" oncomplete="PF('dlgWorkplace').show()">
+								<f:setPropertyActionListener value="#{rv}" target="#{mandatorygrantworkpalceUI.mandatorygrantworkpalce}" />
+								<f:setPropertyActionListener value="#{rowVar}" target="#{mandatorygrantworkpalceUI.mandatorygrant}" />
+							</p:commandButton>
+							<p:spacer width="5" />
+							<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update="@form" action="#{mandatorygrantworkpalceUI.mandatorygrantworkpalceDelete}">
+								<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+								<f:setPropertyActionListener value="#{rv}" target="#{mandatorygrantworkpalceUI.mandatorygrantworkpalce}" />
+							</p:commandButton>
+						</p:column>
+					</p:dataTable>
+				</p:rowExpansion>
+			</p:dataTable>
+		</h:form>
+	</h:panelGroup>
+	<p:dialog modal="true" appendTo="@(body)" fitViewport="true" width="40%" widgetVar="dlgWorkplace" position="center" responsive="true">
+		<h:form id="workplaceForm">
+			<p:panelGrid columns="1" style="width:100%" id="mandatorygrantworkpalceInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputNumber inputStyle="width: 95%; opacity:1 !important;" maxValue="#{mandatorygrantworkpalceUI.mandatorygrant.amount}" id="id" value="#{mandatorygrantworkpalceUI.mandatorygrantworkpalce.amount}" minValue="0" required="true">
+					</p:inputNumber>
+					<p:outputLabel value="Number of Learners" for="id" />
+				</h:panelGroup>
+				<h:panelGroup>
+					<div>
+						<p:outputLabel value="Workplace" for="workplace" />
+					</div>
+					<div>
+						<p:selectOneMenu id="workplace" value="#{mandatorygrantworkpalceUI.mandatorygrantworkpalce.sites}" converter="SitesConvertor" style="width:95%" required="true">
+							<p:ajax></p:ajax>
+							<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+							<f:selectItems value="#{mandatorygrantworkpalceUI.trainingsites}" var="il" itemLabel="#{il.companyName}" />
+						</p:selectOneMenu>
+					</div>
+				</h:panelGroup>
+				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+					<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" oncomplete="PF('dlgWorkplace').hide()" update=":tabView:unemployedDiscretionaryGrantForm:employeesimportList" action="#{mandatorygrantworkpalceUI.mandatorygrantworkpalceInsert}">
+					</p:commandButton>
+					<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="workplaceForm" process="@this" action="#{mandatorygrantworkpalceUI.prepareNew}">
+						<p:resetInput target="mandatorygrantworkpalceInsGrid" />
+					</p:commandButton>
+				</p:panelGrid>
+			</p:panelGrid>
+		</h:form>
+		<p:ajax event="close" listener="#{discretionarygrantdgUI.grantsInfo}" update=":tabView:unemployedDiscretionaryGrantForm:employeesimportList" />
+	</p:dialog>
+</ui:composition>

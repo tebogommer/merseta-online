@@ -1,0 +1,1019 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui">
+
+	<ui:define name="content">
+		<style>
+			.borderless .ui-datalist-content {
+				border: none;
+			}
+			
+			.error {
+				background-color: #F44336 !important;
+				color: white !important;
+				font-weight: bold;
+			}
+		</style>
+
+		<c:if test="#{!amDetailUI.enableEdit}">
+			<div class="ui-g">
+				<div class="ui-g-12" >
+					<ui:include src="/pages/includes/taskdiagram.xhtml" />
+				</div>
+			</div>
+		</c:if>
+
+		<p:growl showDetail="false" sticky="false" globalOnly="true">
+			<p:autoUpdate />
+		</p:growl>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card">
+					<h:form id="mainForm">
+						<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+						<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+						<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+
+						<!-- If error accrued or information not provided -->
+						<p:fieldset rendered="#{amDetailUI.exceptions ne null}" styleClass="error Fs12">
+							<h4>#{lang['action.required.message']}:</h4>
+							<p:outputLabel value="#{amDetailUI.exceptions}" escape="false"></p:outputLabel>
+						</p:fieldset>
+						
+						<p:fieldset legend="#{lang['rejection.reason']}" rendered="#{amDetailUI.rejectReasonList.size() gt 0 and amDetailUI.assessorModExtensionOfScope.status eq ApprovalEnum.Rejected}">
+							<p:commandButton value="View Rejections" rendered="#{amDetailUI.rejectReasonList.size() gt 0}" oncomplete="PF('rejectChildReason').show()">
+							</p:commandButton>
+						</p:fieldset>
+						
+
+						<div class="EmptyBox10" />
+
+						<!-- Assessor Moderator Information -->
+						<p:tabView style="width: 100%" id="assessorModTabView">
+							<p:ajax event="tabChange" listener="#{amDetailUI.onTabChange}" update=":companyInsForm" />
+							<p:tab title="#{lang['am.information']}" id="amInfomation">
+								<br />
+
+								<p:panelGrid columns="4" style="width:100%">
+									<h:outputText value="#{lang['type.of.application']}:" styleClass="FontBold Fs15" />
+									<h:outputText value=" #{amDetailUI.extensionOfScopeTitle}" />
+									<h:outputText value="#{lang['status']}:" styleClass="FontBold Fs15" />
+									<h:outputText value=" #{amDetailUI.assessorModExtensionOfScope.status.friendlyName}" />
+								</p:panelGrid>
+								
+								
+								
+								<br/>
+								
+								<!-- User information -->
+								<p:fieldset legend="#{lang['user.info']}" id="userInfoFs">
+								
+								 <p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank" rendered="false">
+											<p:panelGrid columns="1" style="width:100%" id="pdAppType" layout="grid" styleClass="ui-panelgrid-blank form-group">
+												<h:panelGroup rendered="true">
+													<p:outputLabel value="#{lang['type.of.application']}" for="appType" />
+													<br />
+													<p:selectOneMenu required="true" id="appType" value="#{amDetailUI.amApplication.applicationType}" requiredMessage="#{lang['select.type.of.application']}" style="width:45%">
+														<f:selectItem itemLabel="---#{lang['select.one']}---" itemValue="" noSelectionOption="true" />
+														<f:selectItems value="#{enumUI.assessorModeratorAppTypeEnumDD}" var="rv" itemLabel="#{amAppType}" itemValue="#{rv}" />
+													</p:selectOneMenu>
+												</h:panelGroup>							
+											</p:panelGrid>
+									</p:panelGrid>
+
+									<p:panelGrid columns="2" style="width:100%" id="sdfInsGridUser" layout="grid" styleClass="ui-panelgrid-blank">
+										
+										<h:panelGroup class="md-inputfield" style="margin-top:19px;">
+											<p:autoComplete id="ofoCode" value="#{amDetailUI.assessorModerator.ofoCodes}" completeMethod="#{autoCompleteUI.completeOfoCodes}" var="rv" itemLabel="#{rv.ofoDescription}" itemValue="#{rv}" forceSelection="true" converter="OfoCodesConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="opacity: 1 !important; color: black; width: 95%"
+												style="opacity: 1 !important; color: black; width: 95%" required="true" requiredMessage="#{lang['select.ofo.code']}" disabled="true">
+												<p:column headerText="OfoCodes" style="white-space: nowrap">#{rv.ofoCodeParent}</p:column>
+												<p:column headerText="Description" style="white-space: nowrap">#{rv.description}</p:column>
+												<p:ajax event="itemSelect" />
+											</p:autoComplete>
+											<p:outputLabel value="#{lang['ofo.code']}" for="ofoCode" />
+										</h:panelGroup>
+
+										<h:panelGroup>
+											<div>
+												<p:outputLabel value="#{lang['title']}" for="title" />
+											</div>
+											<div>
+												<p:selectOneMenu disabled="true" id="title" value="#{amDetailUI.assessorModerator.title}" converter="TitleConvertor" style="opacity: 1 !important; color: black; width:100%" required="true" requiredMessage="#{lang['select.title']}">
+													<p:ajax />
+													<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+													<f:selectItems value="#{selectItemsUI.selectItemsTitles}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+												</p:selectOneMenu>
+											</div>
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{amDetailUI.assessorModerator.firstName}" id="name" />
+											<p:outputLabel for="name" value="#{lang['name']}" />
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{amDetailUI.assessorModerator.lastName}" id="surname" />
+											<p:outputLabel for="surname" value="#{lang['surname']}" />
+										</h:panelGroup>
+
+
+										<h:panelGroup styleClass="md-inputfield" rendered="#{amDetailUI.assessorModerator.rsaIDNumber.length() gt 0}">
+											<p:inputText id="userIdNumber" value="#{amDetailUI.assessorModerator.rsaIDNumber}" style="opacity: 1 !important; color: black; width:100%" disabled="true" />
+											<p:outputLabel value="#{lang['rsa.id.number']}" for="userIdNumber" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield" rendered="#{amDetailUI.assessorModerator.passportNumber.length() gt 0}">
+											<p:inputText id="userPassport" value="#{amDetailUI.assessorModerator.passportNumber}" style="opacity: 1 !important; color: black; width:100%" disabled="true" />
+											<p:outputLabel value="#{lang['passport.number']}" for="userPassport" />
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{amDetailUI.assessorModerator.email}" id="email" />
+											<p:outputLabel for="email" value="#{lang['email']}" />
+										</h:panelGroup>
+
+										<h:panelGroup rendered="true" styleClass="md-inputfield">
+											<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{amDetailUI.assessorModerator.cellNumber}" id="cel" />
+											<p:outputLabel for="cel" value="#{lang['cell.number']}" />
+										</h:panelGroup>
+
+										<h:panelGroup rendered="false" styleClass="md-inputfield">
+											<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{amDetailUI.assessorModerator.telNumber}" id="tel" />
+											<p:outputLabel for="tel" value="#{lang['tel.number']}" />
+										</h:panelGroup>
+
+										<h:panelGroup rendered="true" styleClass="md-inputfield">
+											<p:autoComplete disabled="true" id="gender" inputStyle="opacity: 1 !important; color: black;" style="opacity: 1 !important; color: black; width:100%" value="#{amDetailUI.assessorModerator.gender}" completeMethod="#{autoCompleteUI.completeGender}" var="rv" itemLabel="#{rv.genderName}" itemValue="#{rv}" forceSelection="true" converter="GenderConvertor" dropdown="true" minQueryLength="3"
+												maxResults="10" requiredMessage="#{lang['provide.gender']}" required="true">
+												<p:column headerText="#{lang['gender']}" style="white-space: nowrap">#{rv.genderName}</p:column>
+											</p:autoComplete>
+											<p:outputLabel value="#{lang['gender']}:" for="gender" />
+										</h:panelGroup>
+
+										<h:panelGroup rendered="true" styleClass="md-inputfield">
+											<p:autoComplete disabled="true" id="equity" inputStyle="opacity: 1 !important; color: black;" style="width:100%" value="#{amDetailUI.assessorModerator.equity}" completeMethod="#{autoCompleteUI.completeEquity}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="EquityConvertor" dropdown="true" minQueryLength="3" maxResults="10"
+												requiredMessage="#{lang['provide.equity']}" required="true">
+												<p:column headerText="#{lang['equity']}" style="white-space: nowrap">#{rv.description}</p:column>
+											</p:autoComplete>
+											<p:outputLabel value="#{lang['equity']}:" for="equity" />
+										</h:panelGroup>
+
+										<h:panelGroup rendered="true" styleClass="md-inputfield">
+											<p:autoComplete disabled="true" id="nationality" inputStyle="opacity: 1 !important; color: black;" style="width:100%" value="#{amDetailUI.assessorModerator.nationality}" required="true" requiredMessage="#{lang['nationality.required']}" completeMethod="#{autoCompleteUI.completeNationality}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true"
+												converter="NationalityConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+												<p:column headerText="#{lang['nationality']}" style="white-space: nowrap">#{rv.description}</p:column>
+											</p:autoComplete>
+											<p:outputLabel value="#{lang['nationality']}:" for="nationality" />
+										</h:panelGroup>
+
+										<h:panelGroup rendered="true" styleClass="md-inputfield">
+											<p:autoComplete disabled="true" id="disability" inputStyle="opacity: 1 !important; color: black;" style="width:100%" value="#{amDetailUI.assessorModerator.disabilityStatus}" completeMethod="#{autoCompleteUI.completeDisabilityStatus}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="DisabilityStatusConvertor" dropdown="true" minQueryLength="3"
+												maxResults="10">
+												<p:column headerText="#{lang['disability']}" style="white-space: nowrap">#{rv.description}</p:column>
+											</p:autoComplete>
+											<p:outputLabel value="#{lang['disability']}:" for="disability" />
+										</h:panelGroup>
+										
+										<h:panelGroup>
+											<div>
+												<p:outputLabel value="#{lang['employment.status']}" for="proc" styleClass="gray" />
+											</div>
+											<div>
+												<p:selectOneMenu disabled="true" id="proc" value="#{amDetailUI.assessorModerator.employmentStatus}" style="width:100%" required="true" requiredMessage="#{lang['select.employment.status']}">
+													<p:ajax />
+													<f:selectItem itemLabel="---#{lang['select.one']}---" itemValue="" noSelectionOption="true" />
+													<f:selectItems value="#{enumUI.employmentStatusEnumDD}" />
+												</p:selectOneMenu>
+											</div>
+										</h:panelGroup>
+
+										<h:panelGroup rendered="true" styleClass="md-inputfield">
+											<p:calendar disabled="true" id="button" inputStyle="opacity: 1 !important; color: black; width:100%" style="opacity: 1 !important; color: black; width:100%" value="#{amDetailUI.assessorModerator.dateOfBirth}" mask="true" pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+											<p:outputLabel for="button" value="Date Of Birth" />
+										</h:panelGroup>
+									</p:panelGrid>
+									
+								<!-- Not in use -->
+								 <p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank" rendered="false">
+									<p:fieldset legend="#{lang['residentialAddress']}">
+										<p:panelGrid columns="1" style="width : 95%" styleClass="ui-panelgrid-blank">
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText disabled="#{!amDetailUI.enableEdit}" id="empAddr1" value="#{amDetailUI.assessorModerator.residentialAddress.addressLine1}" style="opacity: 1 !important; color: black; width:100%" required="true" requiredMessage="#{lang['enter.residential.address']}">
+													<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['residentialAddress.lineone.length.error']}" />
+												</p:inputText>
+												<p:outputLabel value="#{lang['address.line.1']}" for="empAddr1" />
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText disabled="#{!amDetailUI.enableEdit}" id="empAaddr2" style="opacity: 1 !important; color: black; width:100%" value="#{amDetailUI.assessorModerator.residentialAddress.addressLine2}">
+													<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['residentialAddress.linetwo.length.error']}" />
+												</p:inputText>
+												<p:outputLabel value="#{lang['address.line.2']}" for="empAaddr2" />
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText disabled="#{!amDetailUI.enableEdit}" id="empAddr3" style="opacity: 1 !important; color: black; width:100%" value="#{amDetailUI.assessorModerator.residentialAddress.addressLine3}">
+													<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['residentialAddress.linethree.length.error']}" />
+												</p:inputText>
+												<p:outputLabel value="#{lang['address.line.3']}" for="empAddr3" />
+											</h:panelGroup>
+
+
+											<h:panelGroup>
+												<div>
+													<h:outputLabel value="#{lang['town']}" for="empTown" />
+												</div>
+												<div>
+													<p:autoComplete id="empTown" value="#{amDetailUI.assessorModerator.residentialAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true"
+														requiredMessage="#{lang['please.select.a.town']}" disabled="#{!amDetailUI.enableEdit}">
+														<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+													</p:autoComplete>
+												</div>
+											</h:panelGroup>
+
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText disabled="#{!amDetailUI.enableEdit}" id="empPcode" style="opacity: 1 !important; color: black; width:100%" value="#{amDetailUI.assessorModerator.residentialAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}">
+													<o:validator validatorId="javax.faces.Length" minimum="0" maximum="4" message="#{lang['residentialAddress.code.length.error']}" />
+												</p:inputText>
+												<p:outputLabel value="#{lang['post.code']}" for="empPcode" />
+											</h:panelGroup>
+
+											<h:panelGroup>
+												<div>
+													<h:outputLabel value="#{lang['municipality']}" for="empMunicipalityID" />
+												</div>
+												<div>
+													<p:autoComplete disabled="#{!amDetailUI.enableEdit}" id="empMunicipalityID" value="#{amDetailUI.assessorModerator.residentialAddress.municipality}" completeMethod="#{sdfDetailUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityDesc}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true" minQueryLength="3" maxResults="10"
+														inputstyle="opacity: 1 !important; color: black; width: 100%" style="opacity: 1 !important; color: black; width: 95%" required="true" requiredMessage="#{lang['select.municipality']}">
+														<p:column headerText="#{lang['province']}" style="white-space: nowrap">#{rv.province.provinceDesc}</p:column>
+														<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">#{rv.municipalityDesc}</p:column>
+													</p:autoComplete>
+												</div>
+											</h:panelGroup>
+
+										</p:panelGrid>
+									</p:fieldset>
+									
+									<p:fieldset legend="#{lang['postalAddress']}">
+										<p:panelGrid columns="1" style="width : 95%" styleClass="ui-panelgrid-blank">
+											<h:panelGroup styleClass="md-inputfield" rendered="#{not amDetailUI.assessorModerator.postalAddress.sameAddress}">
+												<p:inputText disabled="#{!amDetailUI.enableEdit}" id="empAddr11" value="#{amDetailUI.assessorModerator.postalAddress.addressLine1}" style="opacity: 1 !important; color: black; width:100%" required="true" requiredMessage="#{lang['enter.residential.address']}">
+													<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['postalAddress.lineone.length.error']}" />
+												</p:inputText>
+												<p:outputLabel value="#{lang['address.line.1']}" for="empAddr11" />
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield" rendered="#{not amDetailUI.assessorModerator.postalAddress.sameAddress}">
+												<p:inputText disabled="#{!amDetailUI.enableEdit}" id="empAaddr21" style="opacity: 1 !important; color: black; width:100%" value="#{amDetailUI.assessorModerator.postalAddress.addressLine2}">
+													<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['postalAddress.linetwo.length.error']}" />
+												</p:inputText>
+												<p:outputLabel value="#{lang['address.line.2']}" for="empAaddr21" />
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield" rendered="#{not amDetailUI.assessorModerator.postalAddress.sameAddress}">
+												<p:inputText disabled="#{!amDetailUI.enableEdit}" id="empAddr31" style="opacity: 1 !important; color: black; width:100%" value="#{amDetailUI.assessorModerator.postalAddress.addressLine3}">
+													<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['postalAddress.linethree.length.error']}" />
+												</p:inputText>
+												<p:outputLabel value="#{lang['address.line.3']}" for="empAddr31" />
+											</h:panelGroup>
+
+
+											<h:panelGroup rendered="#{not amDetailUI.assessorModerator.postalAddress.sameAddress}">
+												<div>
+													<h:outputLabel value="#{lang['town']}" for="empTown1" />
+												</div>
+												<div>
+													<p:autoComplete id="empTown1" value="#{amDetailUI.assessorModerator.postalAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true"
+														requiredMessage="#{lang['please.select.a.town']}" disabled="#{!amDetailUI.enableEdit}">
+														<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+													</p:autoComplete>
+												</div>
+											</h:panelGroup>
+
+											<h:panelGroup styleClass="md-inputfield" rendered="#{not amDetailUI.assessorModerator.postalAddress.sameAddress}">
+												<p:inputText disabled="#{!amDetailUI.enableEdit}" id="empPcode1" style="opacity: 1 !important; color: black; width:100%" value="#{amDetailUI.assessorModerator.postalAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}">
+													<o:validator validatorId="javax.faces.Length" minimum="0" maximum="4" message="#{lang['postalAddress.code.length.error']}" />
+												</p:inputText>
+												<p:outputLabel value="#{lang['post.code']}" for="empPcode1" />
+											</h:panelGroup>
+
+											<h:panelGroup rendered="#{not amDetailUI.assessorModerator.postalAddress.sameAddress}">
+												<div>
+													<h:outputLabel value="#{lang['municipality']}" for="empMunicipalityID1" />
+												</div>
+												<div>
+													<p:autoComplete disabled="#{!amDetailUI.enableEdit}" id="empMunicipalityID1" value="#{amDetailUI.assessorModerator.postalAddress.municipality}" completeMethod="#{sdfDetailUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityDesc}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true" minQueryLength="3" maxResults="10"
+														inputstyle="opacity: 1 !important; color: black; width: 100%" style="opacity: 1 !important; color: black; width: 95%" required="true" requiredMessage="#{lang['select.municipality']}">
+														<p:column headerText="#{lang['province']}" style="white-space: nowrap">#{rv.province.provinceDesc}</p:column>
+														<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">#{rv.municipalityDesc}</p:column>
+													</p:autoComplete>
+												</div>
+											</h:panelGroup>
+											<h:panelGroup>
+												<div>
+													<p:outputLabel value="#{lang['same.as.my.address']}" styleClass="FontLight" />
+												</div>
+												<div>
+													<p:selectBooleanCheckbox disabled="#{!amDetailUI.enableEdit}" value="#{amDetailUI.assessorModerator.postalAddress.sameAddress}">
+														<p:ajax update="userInfoFs"/>
+													</p:selectBooleanCheckbox>
+												</div>
+											</h:panelGroup>
+										</p:panelGrid>
+									</p:fieldset>
+								</p:panelGrid>
+								
+								<p:panelGrid rendered="false" columns="2" styleClass="ui-panelgrid-blank" >
+									<p:commandButton  update="userInfoFs" value="#{lang['save']} #{lang['user.info']}" id="saveUserInfo" styleClass="Fright" icon="ui-icon-save" action="#{amDetailUI.saveUserInfo}" />
+								</p:panelGrid>
+									
+								</p:fieldset>
+								
+								<!-- User Languages -->
+								<h3>#{lang['languages']}</h3>
+									<p:panelGrid columns="6" id="pgLanguages" style="width:100%" rendered="#{amDetailUI.enableEdit}">
+					                    <h:panelGroup styleClass="md-inputfield">
+											<br />
+											<p:outputLabel value="#{lang['language']}" for="language" />
+											<p:autoComplete value="#{amDetailUI.usersLanguage.language}" style="width:95%" id="language" required="#{param['mainForm:addLanguage'] != null}" completeMethod="#{autoCompleteUI.completeLanguage}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="LanguageConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+												<p:column headerText="#{lang['language']}" style="white-space: nowrap">#{rv.description}</p:column>
+											</p:autoComplete>
+					
+										</h:panelGroup>
+					
+										<h:panelGroup rendered="true">
+											<div>
+												<p:outputLabel value="Speak?" for="speak" styleClass="FontLight" />
+											</div>
+											<div>
+												<p:selectOneButton value="#{amDetailUI.usersLanguage.speark}" style="width:95%" converter="YesNoLookupConvertor" id="speak" required="#{param['mainForm:addLanguage'] !=null}">
+					
+													<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+												</p:selectOneButton>
+											</div>
+										</h:panelGroup>
+					
+										<h:panelGroup rendered="true">
+											<div>
+												<p:outputLabel value="Read?" for="read" styleClass="FontLight" />
+											</div>
+											<div>
+												<p:selectOneButton value="#{amDetailUI.usersLanguage.read}" style="width:95%" converter="YesNoLookupConvertor" id="read" required="#{param['mainForm:addLanguage'] !=null}">
+					
+													<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+												</p:selectOneButton>
+											</div>
+										</h:panelGroup>
+					
+										<h:panelGroup rendered="true">
+											<div>
+												<p:outputLabel value="Write?" for="write" styleClass="FontLight" />
+											</div>
+											<div>
+												<p:selectOneButton value="#{amDetailUI.usersLanguage.write}" style="width:95%" converter="YesNoLookupConvertor" id="write" required="#{param['mainForm:addLanguage'] !=null}">
+					
+													<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+												</p:selectOneButton>
+											</div>
+										</h:panelGroup>
+					
+										<h:panelGroup rendered="true">
+											<div>
+												<p:outputLabel value="Home Language?" for="homeL" styleClass="FontLight" />
+											</div>
+											<div>
+												<p:selectBooleanCheckbox disabled="#{amDetailUI.homeLanguageSelected}" value="#{amDetailUI.usersLanguage.homeLanguage}" id="homeL" />
+											</div>
+										</h:panelGroup>
+					
+										<h:panelGroup rendered="true">
+											<p:commandButton process="pgLanguages" update="pgLanguages languageTable" value="#{lang['add']}" id="addLanguage" styleClass="Fright" icon="ui-icon-plus" action="#{amDetailUI.addLanguage()}" />
+										</h:panelGroup>
+									</p:panelGrid>
+									<p:spacer />
+									
+									<p:dataTable id="languageTable" var="var" value="#{amDetailUI.usersLanguageList}" rendered="#{amDetailUI.enableEdit}">
+										<p:column headerText="#{lang['language']}">
+											<h:outputText value="#{var.language.description}" />
+										</p:column>
+					
+										<p:column headerText="#{lang['speak']}">
+											<h:outputText value="#{var.speark.yesNoName}" />
+										</p:column>
+					
+										<p:column headerText="#{lang['read']}">
+											<h:outputText value="#{var.read.yesNoName}" />
+										</p:column>
+					
+										<p:column headerText="#{lang['write']}">
+											<h:outputText value="#{var.write.yesNoName}" />
+										</p:column>
+					
+										<p:column headerText="#{lang['home.language']}">
+											<p:selectBooleanCheckbox disabled="true" value="#{var.homeLanguage}" />
+										</p:column>
+					
+										<p:column width="70">
+											<p:commandButton icon="fa fa-database" title="#{lang['update']}" action="#{amDetailUI.prepareLanguageUpdate()}" process="@this" update="@form">
+												<f:setPropertyActionListener value="#{var}" target="#{amDetailUI.usersLanguage}" />
+											</p:commandButton>
+					
+											<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" action="#{amDetailUI.removeLanguageFromList()}" process="@this" update="@form">
+												<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+												<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+													<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+													<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+												</p:confirmDialog>
+												<f:setPropertyActionListener value="#{var}" target="#{amDetailUI.usersLanguage}" />
+											</p:commandButton>
+										</p:column>
+									</p:dataTable>
+								
+									
+								<p:dataTable  var="var" value="#{amDetailUI.usersLanguageList}" rendered="#{!amDetailUI.enableEdit}">
+									<p:column headerText="#{lang['language']}">
+										<h:outputText value="#{var.language.description}" />
+									</p:column>
+
+									<p:column headerText="#{lang['speak']}">
+										<h:outputText value="#{var.speark.yesNoName}" />
+									</p:column>
+
+									<p:column headerText="#{lang['read']}">
+										<h:outputText value="#{var.read.yesNoName}" />
+									</p:column>
+
+									<p:column headerText="#{lang['write']}">
+										<h:outputText value="#{var.write.yesNoName}" />
+									</p:column>
+
+									<p:column headerText="#{lang['home.language']}">
+										<p:selectBooleanCheckbox disabled="true" value="#{var.homeLanguage}" />
+									</p:column>
+								</p:dataTable>
+
+								<br />
+								<br />
+
+								<!-- User Documents -->
+								<h3>Documents</h3>
+								<p:dataTable value="#{amDetailUI.assessorModerator.docs}" var="rv1" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv1.id}">
+									<p:column headerText="#{lang['type']}" width="20%">
+							                       #{rv1.configDoc.name}
+							                    </p:column>
+									<p:column headerText="#{lang['uploaded.by']}">
+							                       #{rv1.users.firstName} #{rv1.users.lastName}
+							                    </p:column>
+									<p:column headerText="#{lang['uploaded']}" width="15%">
+										<h:outputText value="#{rv1.createDate}">
+											<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+										</h:outputText>
+									</p:column>
+									<p:column headerText="#{lang['version']}" width="15%">
+										<h:outputText value="#{rv1.versionNo}">
+										</h:outputText>
+									</p:column>
+
+									<p:column width="180">
+										<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+
+										<p:spacer width="5" rendered="#{rv1.id ne null}" />
+										<p:commandButton icon="fa fa-bars " id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="dhistUserDocs" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+
+										<p:commandButton rendered="#{amDetailUI.enableEdit}" icon="fa fa-upload" id="uploadUserDocs" styleClass="#{rv1.originalFname eq null ? 'red-btn' : ''} flat" actionListener="#{amDetailUI.prepUploadCloseCompanyInformationForUser}" process="@this"
+											oncomplete="PF('dlgUpload').show()" update=":uploadForm">
+											<f:setPropertyActionListener value="#{rv1}" target="#{amDetailUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="uploadUserDocs" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+
+										<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+											<p:spacer width="5" />
+											<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+												<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+											</p:commandButton>
+											<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+										</h:panelGroup>
+
+										<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+											<p:spacer width="5" />
+											<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+												<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+											</p:commandButton>
+											<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+										</h:panelGroup>
+
+									</p:column>
+								</p:dataTable>
+								<br />
+								<br />
+								
+								
+								
+								<h3>#{lang['qualifications']}</h3>
+								<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{amDetailUI.enableEdit}">
+									<h:panelGroup>
+										<div>
+											<p:outputLabel value="#{lang['qualification']}" for="qualificationAuto"></p:outputLabel>
+										</div>
+										<div>
+											<p:autoComplete style="width:100%" inputStyle="width:50%" id="qualificationAuto" value="#{amDetailUI.qualification}" completeMethod="#{autoCompleteUI.completeQualification}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+												 <p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+												 <p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+												 <p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+											</p:autoComplete>
+										</div>
+									</h:panelGroup>
+									<p:commandButton value="#{lang['add.qualification']}" update="assessorModTabView" icon="ui-icon-plus" iconPos="right" styleClass="flat" action="#{amDetailUI.addExtentionOfScopeQualification}" />
+								</p:panelGrid>
+								<p:dataTable var="var" value="#{amDetailUI.userQualifications}">
+									<p:column headerText="#{lang['qualifications']}">
+										<h:outputText value="#{var.qualification.description}" />
+									</p:column>
+
+									<p:column headerText="#{lang['saqa.id']}">
+										<h:outputText value="#{var.qualification.code}" />
+									</p:column>
+
+									<p:column headerText="#{lang['nqf.level']}">
+										<h:outputText value="#{var.qualification.nqflevel.description}" />
+									</p:column>
+									
+									<p:column  headerText="Approve" width="60">
+										<center>
+											<p:selectBooleanCheckbox value="#{var.accept}" disabled="#{(sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval and 
+											amDetailUI.assessorModExtensionOfScope.status ne ApprovalEnum.RejectedByEQTA and 
+											amDetailUI.assessorModExtensionOfScope.status ne ApprovalEnum.ApprovedByETQA and 
+											amDetailUI.assessorModExtensionOfScope.status ne ApprovalEnum.PendingCommitteeApproval) eq false}" >
+												<p:ajax  event="change"  update="mainForm:assessorModTabView:pgQualDetails" listener="#{amDetailUI.approveQualificationSkillProg(var)}" />
+											</p:selectBooleanCheckbox>
+										</center>
+									</p:column>
+									
+									<p:column width="35" rendered="#{amDetailUI.enableEdit}">
+										<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" action="#{amDetailUI.removeQualification()}" process="@this" update="@form">
+											<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+											<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+												<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+												<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+											</p:confirmDialog>
+											<f:setPropertyActionListener value="#{var}" target="#{amDetailUI.userQualification}" />
+										</p:commandButton>
+									</p:column>
+
+
+								</p:dataTable>
+								<br />
+								<br />
+
+								<h:panelGroup id="pgQualDetails">
+									<h3>#{lang['unit.standards']}</h3>
+									<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{amDetailUI.enableEdit}">
+										<h:panelGroup>
+											<div>
+												<p:outputLabel value="#{lang['unit.standard']}" for="unitStandardAuto"></p:outputLabel>
+											</div>
+											<div>
+												<p:autoComplete style="width:100%" inputStyle="width:50%" id="unitStandardAuto" value="#{amDetailUI.unitStandard}" completeMethod="#{autoCompleteUI.completeUnitStandards}" var="rv" itemLabel="#{rv.title}" itemValue="#{rv}" forceSelection="true" converter="UnitStandardsConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+													 <p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+													 <p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.title}</p:column>
+													 <p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqf}</p:column> 
+												</p:autoComplete>
+											</div>
+										</h:panelGroup>
+										<p:commandButton value="#{lang['add.unit.standard']}" update="assessorModTabView" icon="ui-icon-plus" iconPos="right" styleClass="flat" action="#{amDetailUI.addExtensionOfScopeUnitStandard}" />
+									</p:panelGrid>
+	
+									<p:dataTable var="var" value="#{amDetailUI.userUnitStandards}">
+										<p:column headerText="#{lang['name.of.unit.standard(s)']}">
+											<h:outputText value="#{var.unitStandard.title}" />
+										</p:column>
+	
+										<p:column headerText="#{lang['code']}">
+											<h:outputText value="#{var.unitStandard.code}" />
+										</p:column>
+	
+										<p:column headerText="#{lang['nqf.level']}">
+											<h:outputText value="#{var.unitStandard.nqf}" />
+										</p:column>
+										
+										<p:column headerText="Approve" width="60">
+												<center>
+													<p:selectBooleanCheckbox value="#{var.accept}" 
+													disabled="#{(sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval and 
+													amDetailUI.assessorModExtensionOfScope.status ne ApprovalEnum.RejectedByEQTA and 
+													amDetailUI.assessorModExtensionOfScope.status ne ApprovalEnum.ApprovedByETQA and 
+													amDetailUI.assessorModExtensionOfScope.status ne ApprovalEnum.PendingCommitteeApproval) eq false}" >
+														<p:ajax  event="change" />
+													</p:selectBooleanCheckbox>
+												</center>
+											</p:column>
+										
+										<p:column width="35" rendered="#{amDetailUI.enableEdit}">
+											<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" action="#{amDetailUI.removeUserUnitStandard()}" process="@this" update="@form">
+												<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+												<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+													<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+													<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+												</p:confirmDialog>
+												<f:setPropertyActionListener value="#{var}" target="#{amDetailUI.userUnitStandard}" />
+											</p:commandButton>
+										</p:column>
+	
+									</p:dataTable>
+								</h:panelGroup>
+							</p:tab>
+							
+							
+							<!-- Company Information -->
+							<p:tab rendered="false" title="#{lang['company.info']}">
+								<!-- Company List -->
+								<p:fieldset legend="#{lang['companies']}">
+									<p:dataTable value="#{amDetailUI.assessorModeratorCompaniesList}" var="rv" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv.company.id}" reflow="true">
+										<p:column headerText="#{lang['expand.row']}" width="45">
+											<p:rowToggler rendered="#{rv.company.docs.size() gt 0}" />
+										</p:column>
+										<p:column headerText="#{lang['companyName']}">
+							               #{rv.company.companyName}
+							            </p:column>
+										<p:column headerText="#{lang['companyRegistrationNumber']}">
+							               #{rv.company.companyRegistrationNumber}
+							            </p:column>
+										<p:column headerText="#{lang['entity.id']}">
+							               #{rv.company.levyNumber}
+							            </p:column>
+										<p:column headerText="#{lang['company.status']}" width="10%">
+							               #{lang[rv.company.companyStatus.registrationName]}
+							            </p:column>
+										<p:column width="37" headerText="#{lang['RAG']}">
+											<h:graphicImage value="/resources/hls/images/red.svg" rendered="#{rv.company.companyStatus eq CompanyStatusEnum.Pending}" width="40" styleClass="animated pulse infinite" />
+										</p:column>
+
+										<p:column width="80" rendered="false">
+											<p:commandButton id="companyUpdateBtn" icon="ui-icon-search" action="#{amDetailUI.prepForUpdate}" process="@this" update="companyInsForm">
+												<f:setPropertyActionListener value="#{rv}" target="#{amDetailUI.assessorModeratorCompany}" />
+												<p:tooltip for="companyUpdateBtn" value="#{lang['view.company.details']}" position="" />
+												<!-- <p:tooltip for="companyUpdateBtn" value="#{lang['update.company.details']}" position=""/> -->
+											</p:commandButton>
+										</p:column>
+										<p:rowExpansion>
+											<p:dataTable emptyMessage="#{lang['no.records.found']}" value="#{rv.company.docs}" var="rv1" rowKey="#{rv1.id}">
+												<p:column headerText="#{lang['type']}" width="20%">
+							                       #{rv1.configDoc.name}
+							                    </p:column>
+												<p:column headerText="#{lang['uploaded.by']}">
+							                       #{rv1.users.firstName} #{rv1.users.lastName}
+							                    </p:column>
+												<p:column headerText="#{lang['uploaded']}" width="15%">
+													<h:outputText value="#{rv1.createDate}">
+														<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+													</h:outputText>
+												</p:column>
+												<p:column headerText="#{lang['version']}" width="15%">
+													<h:outputText value="#{rv1.versionNo}">
+													</h:outputText>
+												</p:column>
+
+												<p:column width="180" headerText="#{lang['view.edit']}">
+													<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlb" rendered="#{rv1.id ne null}">
+														<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+													</p:commandButton>
+													<p:tooltip for="dlb" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+
+													<p:spacer width="5" rendered="#{rv1.id ne null}" />
+													<p:commandButton icon="fa fa-bars " id="dhist" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}">
+														<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+													</p:commandButton>
+													<p:tooltip for="dhist" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+
+													<p:commandButton rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload}" icon="fa fa-upload" id="upload" styleClass="#{rv1.originalFname eq null ? 'red-btn' : ''} flat" actionListener="#{amDetailUI.prepUploadCloseCompanyInformation}" process="@this"
+														oncomplete="PF('dlgUpload').show()" update=":uploadForm">
+														<f:setPropertyActionListener value="#{rv1}" target="#{amDetailUI.doc}" />
+														<f:setPropertyActionListener value="#{rv}" target="#{amDetailUI.assessorModeratorCompany}" />
+													</p:commandButton>
+													<p:tooltip for="upload" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+
+													<h:panelGroup id="panelGroupThree" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+														<p:spacer width="5" />
+														<p:commandButton icon="fa fa-comment-o " id="dnote" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+															<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+														</p:commandButton>
+														<p:tooltip for="dnote" value="#{lang['view.note']}" position="left" />
+													</h:panelGroup>
+
+													<h:panelGroup id="panelGroupFour" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+														<p:spacer width="5" />
+														<p:commandButton icon="fa fa-eye " id="viewerButton" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+															<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+														</p:commandButton>
+														<p:tooltip for="viewerButton" value="#{lang['view.document']} " position="left" />
+													</h:panelGroup>
+
+												</p:column>
+											</p:dataTable>
+										</p:rowExpansion>
+									</p:dataTable>
+
+									<div class="EmptyBox10" />
+
+								</p:fieldset>
+
+							</p:tab>
+
+							<!-- Code Of Conduct  -->
+							<p:tab title="#{lang['code.of.conduct']}" rendered="true">
+								<ui:include src="/pages/am/includes/codeOfConduct.xhtml">
+								</ui:include>
+							</p:tab>
+						</p:tabView>
+
+						<div class="EmptyBox10" />
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+						
+						
+						
+					</h:form>
+
+					<h:form id="companyInsForm">
+						<c:if test="#{amDetailUI.updateCompanyBool}">
+							<ui:include src="/pages/am/assessorModaratorcompanydetails.xhtml" />
+						</c:if>
+					</h:form>
+				</div>
+				
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+					
+						<h:form>
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{!amDetailUI.enableEdit}">
+								
+								<p:commandButton onstart="uploadStart()" styleClass="flat green-btn Fs18" style="height: 50px;" update="mainForm" process="@this" value="#{lang['approve.task']}" icon="ui-icon-save"  
+									action="#{amDetailUI.approveExtensionOfScopeTask}" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve and amDetailUI.assessorModExtensionOfScope.status ne ApprovalEnum.RejectedByEQTA}">
+								
+								</p:commandButton>
+								
+								<p:commandButton onstart="uploadStart()" update="mainForm"  styleClass="flat green-btn Fs18" style="height: 50px;" process="@this" value="#{lang['final.approval']}" icon="ui-icon-save"  
+								action="#{amDetailUI.extensionOfScopefinalApprove}" 
+								rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval and amDetailUI.assessorModExtensionOfScope.status eq ApprovalEnum.ApprovedByETQA}">
+									
+								</p:commandButton>
+								
+								<p:commandButton action="#{amDetailUI.checkIfQualificationIsApprove}" styleClass="flat green-btn Fs18" style="height: 50px;" update="mainForm" process="@this" 
+									value="#{lang['approve.task']}" icon="ui-icon-save"  rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval and amDetailUI.assessorModExtensionOfScope.status ne ApprovalEnum.RejectedByEQTA and amDetailUI.assessorModExtensionOfScope.status ne ApprovalEnum.ApprovedByETQA and amDetailUI.assessorModExtensionOfScope.status ne ApprovalEnum.PendingCommitteeApproval}">
+									
+								</p:commandButton>
+	
+								<c:if test="#{sessionUI.task.firstInProcess eq true and sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve and amDetailUI.assessorModExtensionOfScope.status ne ApprovalEnum.RejectedByEQTA}">
+									<p:commandButton update="mainForm"  styleClass="flat red-btn Fs18" style="height: 50px;"  oncomplete="PF('rejectReason').show()" process="@this" value="#{lang['reject.task']}" icon="ui-icon-save">
+										
+									</p:commandButton>
+								</c:if>
+								
+								<c:if test="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval and amDetailUI.assessorModExtensionOfScope.status ne ApprovalEnum.RejectedByEQTA and amDetailUI.assessorModExtensionOfScope.status ne ApprovalEnum.ApprovedByETQA}">
+									<p:commandButton update="mainForm"  styleClass="flat red-btn Fs18" style="height: 50px;"  oncomplete="PF('rejectReason').show()" process="@this" value="#{lang['reject.task']}" icon="ui-icon-save">
+										
+									</p:commandButton>
+								</c:if>
+								
+	
+								<c:if test="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve and sessionUI.task.firstInProcess eq false and amDetailUI.assessorModExtensionOfScope.status ne ApprovalEnum.RejectedByEQTA}">
+									<p:commandButton update="mainForm"  styleClass="flat red-btn Fs18" style="height: 50px;"  process="@this" value="#{lang['reject.task']}" oncomplete="PF('rejectReason').show()" icon="ui-icon-save">
+									
+									</p:commandButton>
+								</c:if>
+								
+								<c:if test="#{amDetailUI.assessorModExtensionOfScope.status eq ApprovalEnum.RejectedByEQTA}">
+									<p:commandButton update="mainForm" onstart="uploadStart()" action="#{amDetailUI.finalRrejectExtentionOfScope}"  styleClass="flat red-btn Fs18" style="height: 50px;"  process="@this" value="#{lang['reject.task']}" icon="ui-icon-save">
+										
+									</p:commandButton>
+								</c:if>
+							
+						    </p:panelGrid>
+						    
+						    <p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{amDetailUI.enableEdit}">
+						    	<p:commandButton onstart="uploadStart()" styleClass="flat green-btn Fs18" style="height: 50px;" update="mainForm" process="@this" value="#{lang['complete.task']}" icon="ui-icon-save"  
+									action="#{amDetailUI.completeExtensionOfScopeTask}" >
+								
+								</p:commandButton>
+						    </p:panelGrid>
+						 </h:form>
+					</div>
+				 </div>
+				
+			</div>
+			
+			
+			
+		</div>
+		
+		
+		
+		 <p:dialog header="#{lang['review.committee.date.scheduling']}" widgetVar="dateSchedule" hideEffect="clip" showEffect="clip" id="dateSchedule" appendTo="@(body)" modal="true" closable="true" width="80%" height="50vh" responsive="true">
+				<h:form id="tableForm">
+				
+					<h:panelGroup rendered="false" >
+						<p:commandButton icon="fa fa-calendar" value="Add New Schedule" update="@form" action="#{amDetailUI.redirectToSchedule}">
+						</p:commandButton>
+						<br />
+						<br />
+					</h:panelGroup>
+					<h:panelGroup rendered="#{reviewCommitteeMeetingUI.reviewCommitteeMeetingList.size() lt 1}" >
+						<ui:include src="/pages/includes/tabinfo.xhtml">
+							<ui:param name="showInfoCircle" value="true" />
+							<ui:param name="cssClass" value="secondaryText Fs15" />
+							<ui:param name="helpTxt" value="No review committee meeting available, Please advice employee that is responsible for scheduling meetings to login and schedule a meeting " />
+						</ui:include>
+					</h:panelGroup>
+					 <p:dataTable var="var" value="#{reviewCommitteeMeetingUI.reviewCommitteeMeetingList}" widgetVar="scheduleTable"  rows="5"
+					 		paginator="true"
+	                         paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+	                         rowsPerPageTemplate="5,10,15" paginatorPosition="bottom">
+				        <f:facet name="header">
+				            <p:outputPanel>
+				                <h:outputText value="Select Review Committee Date" />
+				            </p:outputPanel>
+				        </f:facet>
+				        
+				        <p:column filterBy="#{var.title}" sortBy="#{var.title}" headerText="#{lang['title']}" >
+				            <h:outputText value="#{var.title}" />
+				        </p:column>
+				        
+				        <p:column filterBy="#{var.fromDateTime}" sortBy="#{var.fromDateTime}" headerText="#{lang['from']}" >
+				            <h:outputText value="#{var.fromDateTime}" >
+				            	 <f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME}" />
+				            </h:outputText>
+				        </p:column>
+				        
+				         <p:column filterBy="#{var.toDateTime}" sortBy="#{var.toDateTime}" headerText="#{lang['to']}" >
+				            <h:outputText value="#{var.toDateTime}" >
+				            	 <f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME}" />
+				            </h:outputText>
+				        </p:column>
+				        
+				        <p:column filterBy="#{var.venue}" sortBy="#{var.venue}" headerText="#{lang['venue']}" >
+				            <h:outputText value="#{var.venue}" />
+				        </p:column>
+				        
+				        <p:column style="width:120px" >
+				             <p:commandButton value="#{lang['schedule']}" icon="ui-icon-check" update="@form" action="#{amDetailUI.approveExtensionOfScopeTask}"  styleClass="flat green-btn Fs18">
+								<f:setPropertyActionListener value="#{var}" target="#{amDetailUI.reviewCommitteeMeeting}" />
+							</p:commandButton>
+				        </p:column>
+			        
+			        </p:dataTable>
+		        
+		        </h:form>
+				<br/>
+				<p:fieldset rendered="false" legend="#{lang['add.review.committee.date.schedule']}" collapsed="true" toggleable="true" >
+					<ui:include src="/pages/etqaReviewCommittee/include/scheduleDetails.xhtml">
+				     </ui:include>
+			    </p:fieldset>
+			
+			</p:dialog>
+		
+		
+
+		<!-- Dialogs Start -->
+
+		<!-- Upload Documents -->
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true">
+			<h:form id="uploadForm">
+				<h:panelGroup id="uploadGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{amDetailUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{amDetailUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span>
+										<br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{amDetailUI.storeFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update="mainForm" multiple="false" fileLimit="1" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+
+		<!--Reject Reason Dialog -->
+
+		<p:dialog header="Reject Reasons" widgetVar="rejectReason" hideEffect="clip" showEffect="clip" id="dialogRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{amDetailUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{amDetailUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+
+							</p:selectManyMenu>
+							<br />
+							<br />
+							<p:outputLabel rendered="false" value="Additional Information"></p:outputLabel>
+							<br />
+							<p:inputTextarea rendered="false" value="#{amDetailUI.additionalInformation}"></p:inputTextarea>
+							<br />
+							<br />
+						</div>
+					</div>
+					<p:commandButton value="Reject Application" action="#{amDetailUI.rejectExtentionOfScope}">
+					</p:commandButton>
+				</div>
+			</h:form>
+		</p:dialog>
+		
+		<p:dialog header="Reject Reasons" widgetVar="finalRejectReason" hideEffect="clip" showEffect="clip" id="finalRialogRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="finalRejectReasonForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{amDetailUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{amDetailUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+
+							</p:selectManyMenu>
+							
+							<br />
+							<br />
+						</div>
+					</div>
+					<p:commandButton value="Reject Application" action="#{amDetailUI.finalRrejectExtentionOfScope}">
+					</p:commandButton>
+				</div>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="Reject Reasons" widgetVar="finalRejectReason" hideEffect="clip" showEffect="clip" id="dialogRejectReasonFinal" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonFormTwo">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{amDetailUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{amDetailUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+
+							</p:selectManyMenu>
+							
+							<br />
+							<br />
+						</div>
+					</div>
+					<p:commandButton value="#{lang['am.reject']}" action="#{amDetailUI.finalRrejectExtentionOfScope}">
+					</p:commandButton>
+				</div>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="Reject Reasons" widgetVar="rejectChildReason" hideEffect="clip" showEffect="clip" id="dialogRejectChildReason" appendTo="@(body)" modal="true" closable="true" width="75%" height="60vh" responsive="true" closeOnEscape="true">
+			<h:form id="rejectReasonChildForm">
+				<p:dataTable var="rowVar" value="#{amDetailUI.rejectReasonList}" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+					<p:column headerText="Create Date">
+						<p:outputLabel value="#{rowVar.rejectDate}">
+							<f:convertDateTime pattern="dd MMMM yyyy" />
+						</p:outputLabel>
+					</p:column>
+					<p:column headerText="Reason for Rejection">
+						<p:outputLabel value="#{rowVar.description}"></p:outputLabel>
+					</p:column>
+					
+					<p:column headerText="How to fix">
+						<p:outputLabel value="#{rowVar.howTo}"></p:outputLabel>
+					</p:column>
+				</p:dataTable>
+			</h:form>
+		</p:dialog>
+
+		<!-- Include -->
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+	</ui:define>
+	
+	
+
+</ui:composition>

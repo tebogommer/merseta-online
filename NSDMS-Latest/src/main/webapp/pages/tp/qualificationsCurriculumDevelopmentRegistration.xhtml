@@ -1,0 +1,153 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml" xmlns:o="http://omnifaces.org/ui">
+	<ui:define name="content">
+		<p:importEnum type="haj.com.entity.enums.PivotNonPivotEnum" />
+		<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+		<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+		<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					
+					<!-- <h1>#{lang['qcd']}</h1> -->
+					<h:form id="qualificationsCurriculumDevelopmentInsGrid">
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:dataTable value="#{qualificationsCurriculumDevelopmentUI.companies}" var="rv" reflow="true" emptyMessage="#{lang['no.records.found']}">
+							<p:ajax event="rowToggle" />
+							<p:column width="20">
+								<p:rowToggler>
+								</p:rowToggler>
+							</p:column>
+							<p:column headerText="#{lang['companyName']}">#{rv.companyName}</p:column>
+							<p:column headerText="#{lang['companyRegistrationNumber']}">#{rv.companyRegistrationNumber}</p:column>
+							<p:column headerText="#{lang['entity.id']}">#{rv.levyNumber}</p:column>
+							<p:column headerText="#{lang['company.status']}" width="10%">#{lang[rv.companyStatus.registrationName]}</p:column>
+							<p:column headerText="Size of Company" width="10%">#{rv.sizeOfCompany.detailDescription}</p:column>
+							<p:column headerText="#{lang['levy.paying']}" width="110" style="text-align:center">
+								<p:outputPanel rendered="#{rv.nonLevyPaying}">
+									<i class="fa fa-times fa-3x red" aria-hidden="true"></i>
+								</p:outputPanel>
+								<p:outputPanel rendered="#{not rv.nonLevyPaying}">
+									<i class="fa fa-check fa-3x green" aria-hidden="true"></i>
+								</p:outputPanel>
+							</p:column>
+							<p:column headerText="#{lang['RAG']}" width="37">
+								<h:graphicImage value="/resources/hls/images/red.svg" rendered="#{rv.companyStatus eq CompanyStatusEnum.Pending}" width="40" styleClass="animated pulse infinite" />
+								<h:graphicImage value="/resources/hls/images/green.svg" rendered="#{rv.companyStatus eq CompanyStatusEnum.Active}" width="30" />
+							</p:column>
+							<p:column width="40" rendered="true" headerText="#{lang['view.edit']}">
+								<p:commandButton immediate="true" icon="fa fa-plus" title="#{lang['qualifications.curriculum.development']}" action="#{qualificationsCurriculumDevelopmentUI.prepNewQualificationsCurriculumDevelopment}" update="mainForm">
+									<f:setPropertyActionListener value="#{rv}" target="#{qualificationsCurriculumDevelopmentUI.selectedCompany}" />
+								</p:commandButton>
+							</p:column>
+							<p:rowExpansion>
+								<p:dataTable value="#{rv.qualificationsCurriculumDevelopmentList}" var="qurv" reflow="true" emptyMessage="#{lang['no.records.found']}">
+									<p:column headerText="Type">
+										<p:outputLabel value="#{qurv.templateType.friendlyName}"></p:outputLabel>
+									</p:column>
+									<p:column headerText="Ofo codes">
+										<p:outputLabel value="#{qurv.ofoCodes.description}"></p:outputLabel>
+									</p:column>
+									<p:column headerText="Date Added">
+										<p:outputLabel value="#{qurv.createDate}">
+											<f:convertDateTime pattern="dd MMMM yyyy HH:mm:ss" />
+										</p:outputLabel>
+									</p:column>
+									<p:column headerText="Applicant">
+										<p:outputLabel value="#{qurv.createUser.firstName} #{qurv.createUser.lastName}" />
+									</p:column>
+									<p:column headerText="Status">
+										<p:outputLabel value="#{qurv.status.friendlyName}" />
+									</p:column>
+								</p:dataTable>
+							</p:rowExpansion>
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<h:form id="mainForm">
+					<c:if test="#{qualificationsCurriculumDevelopmentUI.qualificationscurriculumdevelopment ne null}">
+						<div class="card card-w-title">
+							<ui:include src="/pages/includes/qualificationsCurriculumDevelopment.xhtml" />
+							
+							<h:panelGroup id="docListUser" rendered="#{qualificationsCurriculumDevelopmentUI.qualificationscurriculumdevelopment.docs.size() gt 0}">
+								<br />
+								<span class="FontBold"> <i class="fa fa-exclamation-circle" aria-hidden="true"></i> #{lang['please.upload.the.following.compulsory.documents']}
+								</span>
+								<br />
+								<div class="ui-g dashboard">
+									<div class="ui-g-12">
+										<p:repeat var="rc" value="#{qualificationsCurriculumDevelopmentUI.qualificationscurriculumdevelopment.docs}" varStatus="x">
+											<div class="ui-g-12 ui-md-6 ui-lg-3">
+												<div class="ui-g card colorbox #{rc.originalFname eq null ? 'colorbox-5' : 'colorbox-1'}">
+													<div class="ui-g-4">
+														<i class="material-icons">#{rc.originalFname eq null ? 'cloud_upload' : 'check_circle'}</i>
+													</div>
+													<div class="ui-g-8">
+														<span class="colorbox-name">#{rc.configDoc.name}</span> <span class="colorbox-count"> <p:commandButton icon="fa fa-download" id="cbDownload1" rendered="#{rc.originalFname ne null}" action="#{qualificationsCurriculumDevelopmentUI.download(rc)}" ajax="false" value="#{lang['download']}"
+																immediate="true" process="@parent">
+																<p:ajax onevent="oneventFunction" />
+															</p:commandButton> <p:commandButton value="#{rc.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" styleClass="#{rc.originalFname eq null ? 'red-btn' : 'green-btn'} flat" process="@this" oncomplete="PF('dlgUpload').show()" update="mainForm">
+																<f:setPropertyActionListener value="#{rc}" target="#{qualificationsCurriculumDevelopmentUI.doc}" />
+															</p:commandButton>
+														</span>
+													</div>
+												</div>
+											</div>
+										</p:repeat>
+									</div>
+								</div>
+							</h:panelGroup>
+							<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update="mainForm qualificationsCurriculumDevelopmentInsGrid" action="#{qualificationsCurriculumDevelopmentUI.submitQualificationsCurriculumDevelopment}" styleClass="flat green-btn Fs18" style="height: 50px;" />
+						</div>
+						
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+					</c:if>
+				</h:form>
+			</div>
+
+			<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+			<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true" dynamic="true">
+				<h:form id="uploadForm">
+					<h:panelGroup id="uploadGroup">
+						<div class="ui-g">
+							<div class="ui-g-12">
+								<div class="card">
+									<h1 style="font-weight: bold; font-size: 25px;">#{qualificationsCurriculumDevelopmentUI.doc.configDoc.name}</h1>
+									<p:panel>
+										<h:panelGrid columns="2" style="width: 100%">
+											<p:outputLabel value="#{lang['notes']}:" for="note" />
+											<p:inputTextarea id="note" value="#{qualificationsCurriculumDevelopmentUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+												<p:ajax />
+											</p:inputTextarea>
+										</h:panelGrid>
+
+										<div class="TexAlCenter">
+											<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span>
+											<br />
+										</div>
+										<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{qualificationsCurriculumDevelopmentUI.storeNewFileInMemory}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update="mainForm" multiple="false" fileLimit="1" immediate="false" auto="true" />
+									</p:panel>
+									<div class="EmptyBox10" />
+								</div>
+							</div>
+						</div>
+					</h:panelGroup>
+				</h:form>
+			</p:dialog>
+
+		</div>
+
+		<style>
+.ui-selectlistbox-item.ui-corner-all {
+	border: 1pt solid #eee
+}
+</style>
+
+	</ui:define>
+</ui:composition>

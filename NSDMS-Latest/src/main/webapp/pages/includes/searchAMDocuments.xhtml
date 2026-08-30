@@ -1,0 +1,86 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:pt="http://xmlns.jcp.org/jsf/passthrough" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<!-- User Documents -->
+	<p:fieldset legend="#{lang['user.documents']}" id="userDocs">
+		<p:dataTable emptyMessage="#{lang['no.records.found']}" value="#{assessorModeratorApplicationUI.selectedAMApp.user.docs}" var="rv1" rowKey="#{rv1.id}"
+			 rows="5" paginator="true" paginatorPosition="bottom"
+                        paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                        rowsPerPageTemplate="5,10,15,20,25,50,100,150,300,600,900">
+			<p:column headerText="#{lang['type']}" width="20%">
+			
+                       #{rv1.configDoc.name}
+                    </p:column>
+			<p:column headerText="#{lang['uploaded.by']}">
+                       #{rv1.users.firstName} #{rv1.users.lastName}
+                    </p:column>
+			<p:column headerText="#{lang['uploaded']}" width="15%">
+				<h:outputText value="#{rv1.createDate}">
+					<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+				</h:outputText>
+			</p:column>
+			<p:column headerText="#{lang['version']}" width="15%">
+				<h:outputText value="#{rv1.versionNo}">
+				</h:outputText>
+			</p:column>
+
+			<p:column width="180">
+				<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}">
+					<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+				</p:commandButton>
+				<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+				
+				<p:spacer width="5" rendered="#{rv1.id ne null}" />
+				<p:commandButton icon="fa fa-bars "  process="@this" id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}">
+					<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+				</p:commandButton>
+
+				<p:spacer width="5" rendered="#{rv1.id ne null}" />
+				
+				<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+					<p:spacer width="5" />
+					<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+						<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+					</p:commandButton>
+					<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+				</h:panelGroup>
+
+				<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+					<p:spacer width="5" />
+					<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+						<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+					</p:commandButton>
+					<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+				</h:panelGroup>
+
+			</p:column>
+		</p:dataTable>
+		<br/>
+		 <p:panelGrid columns="4" style="width:100%" rendered="#{assessorModeratorApplicationUI.selectedAMApp.finalApproved}">
+	    	<h:panelGroup>
+	    	   <center>
+		    	   <p:commandButton icon="fa fa-download" value="Download Certificate" action="#{assessorModeratorApplicationUI.downloadAssessorModCertificate()}" ajax="false" title="Download Certificate">
+		    	   </p:commandButton>
+	    	   </center>
+	    	</h:panelGroup>
+	    	
+	    	<h:panelGroup>
+	    		 <center>
+	    			 <p:commandButton icon="fa fa-download" value="Download Statement Of Qualifications" action="#{assessorModeratorApplicationUI.downloadStatementOfQualifications()}" ajax="false" title="Download Statement Of Qualifications">
+	    			 </p:commandButton>
+	    		 </center>
+	    	</h:panelGroup>
+	    	
+	    	<h:panelGroup>
+	    		 <center>
+	    			 <p:commandButton icon="fa fa-download" value="Download Letter" action="#{assessorModeratorApplicationUI.downloadAssessorModCertificateLetter()}" ajax="false" title=" Download Letter">
+	    			 </p:commandButton>
+	    		 </center>
+	    	</h:panelGroup>
+	    	
+	    	<h:panelGroup>
+	    		 <center>
+			    	<p:commandButton  oncomplete="PF('documentsHistoruDl').show()" action="#{assessorModeratorApplicationUI.documentHistoryInfo()}" update="documentsHistoruDl" icon="fa fa-history" value="View Document(s) History"  title="View Document(s) History"/>
+		 		 </center>
+		   </h:panelGroup>
+	    </p:panelGrid>
+	</p:fieldset>
+</ui:composition>

@@ -1,0 +1,245 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<p:importEnum type="haj.com.entity.enums.ConfigDocProcessEnum"></p:importEnum>
+					<h:form id="companyUpdateInsForm">
+						<p:growl  showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<c:choose>
+
+							<c:when test="#{sdpmanagementUI.workflowProcess eq ConfigDocProcessEnum.SDP_COMPANY_CHANGE_APPROVAL}">
+								<h1>Changes Made To Company Information</h1>
+								<ui:include src="/pages/tpchanges/includes/companychangesinclude.xhtml"/>
+							</c:when>
+							
+							<c:when test="#{sdpmanagementUI.workflowProcess eq ConfigDocProcessEnum.NEW_SDP_CONTACT_PERSON}">
+								<h1>New Skills Development Provider Contact Person</h1>
+								<ui:include src="/pages/tpchanges/includes/newcontactpersoninclude.xhtml"/>
+							</c:when>
+							
+							<c:when test="#{sdpmanagementUI.workflowProcess eq ConfigDocProcessEnum.REMOVE_SDP_CONTACT_PERSON}">
+								<h1>Contact Person To Be Deregistered Information</h1>
+								<ui:include src="/pages/tpchanges/includes/deletecontactpersoninclude.xhtml"/>
+							</c:when>
+							
+							<c:when test="#{sdpmanagementUI.workflowProcess eq ConfigDocProcessEnum.UPDATE_SDP_CONTACT_PERSON}">
+								<h1>Change Made To Skills Development Provider Contact Person</h1>
+								<ui:include src="/pages/tpchanges/includes/updatecontactpersoninclude.xhtml"/>
+							</c:when>
+							
+							<c:when test="#{sdpmanagementUI.workflowProcess eq ConfigDocProcessEnum.NEW_SDP_ASSESSOR_MODERATOR}">
+								<h1>New Skills Development Provider Assessor/Moderator</h1>
+								<ui:include src="/pages/tpchanges/includes/newassessormodinclude.xhtml"/>
+							</c:when>
+							
+							<c:when test="#{sdpmanagementUI.workflowProcess eq ConfigDocProcessEnum.REMOVE_SDP_ASSESSOR_MODERATOR}">
+								<h1>Assessor/Moderator To Be Removed Information</h1>
+								<ui:include src="/pages/tpchanges/includes/deleteassessormodinclude.xhtml"/>
+							</c:when>
+							
+							<c:when test="#{sdpmanagementUI.workflowProcess eq ConfigDocProcessEnum.SDP_DOC_CHANGE}">
+								<h1>Skills Development Provider Documents Change</h1>
+								<ui:include src="/pages/tpchanges/includes/docchange.xhtml"/>
+							</c:when>
+
+							<c:otherwise>
+								<p:outputLabel value="You currently dont have permission to access this page"></p:outputLabel>
+							</c:otherwise>
+
+						</c:choose>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	
+	
+	<p:dialog header="Reject Reasons" widgetVar="deleteSDPContactfinalRejectReason" hideEffect="clip" showEffect="clip" id="deleteSDPContactfinalRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+		<h:form id="removeCpReasonFormTwo">
+			<div class="ui-fluid">
+				<div class="ui-g">
+					<div class="ui-g-12">
+						<p:selectManyMenu value="#{sdpmanagementUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="false" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+							<f:selectItems value="#{sdpmanagementUI.deleteSdpContactRejectReasons}" var="rv" itemValue="#{rv}" />
+
+							<p:column>
+								<h:outputText value="#{t.description}" />
+								<br />
+								<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+							</p:column>
+
+						</p:selectManyMenu>
+						
+						<br />
+						<br />
+					</div>
+				</div>
+				<p:commandButton value="#{lang['reject']}"  onstart="uploadStart()" action="#{sdpmanagementUI.rejectDeleteContactPersonTask}"/>
+			</div>
+		</h:form>
+	</p:dialog>
+	
+	<p:dialog header="Reject Reasons" widgetVar="deleteSDPAssessprModfinalRejectReason" hideEffect="clip" showEffect="clip" id="deleteSDPAssessprModfinalRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+		<h:form id="removeAmReasonFormTwo">
+			<div class="ui-fluid">
+				<div class="ui-g">
+					<div class="ui-g-12">
+						<p:selectManyMenu value="#{sdpmanagementUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="false" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+							<f:selectItems value="#{sdpmanagementUI.deleteSdpAssessorModRejectReasons}" var="rv" itemValue="#{rv}" />
+
+							<p:column>
+								<h:outputText value="#{t.description}" />
+								<br />
+								<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+							</p:column>
+
+						</p:selectManyMenu>
+						
+						<br />
+						<br />
+					</div>
+				</div>
+				<p:commandButton value="#{lang['reject']}"  onstart="uploadStart()" action="#{sdpmanagementUI.rejectDeleteAssessorModTask}"/>
+			</div>
+		</h:form>
+	</p:dialog>
+	
+	<p:dialog header="Reject Reasons" widgetVar="documentChangefinalRejectReason" hideEffect="clip" showEffect="clip" id="documentChangefinalRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+		<h:form id="docChangeFRM">
+			<div class="ui-fluid">
+				<div class="ui-g">
+					<div class="ui-g-12">
+						<p:selectManyMenu value="#{sdpmanagementUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="false" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+							<f:selectItems value="#{sdpmanagementUI.documentChangeRejectReasons}" var="rv" itemValue="#{rv}" />
+
+							<p:column>
+								<h:outputText value="#{t.description}" />
+								<br />
+								<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+							</p:column>
+
+						</p:selectManyMenu>
+						
+						<br />
+						<br />
+					</div>
+				</div>
+				<p:commandButton value="#{lang['reject']}"  onstart="uploadStart()" action="#{sdpmanagementUI.rejectDocumentTask}"/>
+			</div>
+		</h:form>
+	</p:dialog>
+	
+	<p:dialog header="Reject Reasons" widgetVar="newAssessorModfinalRejectReason" hideEffect="clip" showEffect="clip" id="newAssessorModfinalRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+		<h:form id="newAssModReasonFormTwo">
+			<div class="ui-fluid">
+				<div class="ui-g">
+					<div class="ui-g-12">
+						<p:selectManyMenu value="#{sdpmanagementUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="false" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+							<f:selectItems value="#{sdpmanagementUI.newAssessorModRejectReasons}" var="rv" itemValue="#{rv}" />
+
+							<p:column>
+								<h:outputText value="#{t.description}" />
+								<br />
+								<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+							</p:column>
+
+						</p:selectManyMenu>
+						
+						<br />
+						<br />
+					</div>
+				</div>
+				<p:commandButton value="#{lang['reject']}"  onstart="uploadStart()" action="#{sdpmanagementUI.rejectNewAssessorModTask()}"/>
+			</div>
+		</h:form>
+	</p:dialog>
+		
+	 <p:dialog header="Reject Reasons" widgetVar="newSDPContactfinalRejectReason" hideEffect="clip" showEffect="clip" id="newSDPContactfinalRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+		<h:form id="rejectReasonFormTwo">
+			<div class="ui-fluid">
+				<div class="ui-g">
+					<div class="ui-g-12">
+						<p:selectManyMenu value="#{sdpmanagementUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="false" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+							<f:selectItems value="#{sdpmanagementUI.newSdpContactRejectReasons}" var="rv" itemValue="#{rv}" />
+
+							<p:column>
+								<h:outputText value="#{t.description}" />
+								<br />
+								<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+							</p:column>
+
+						</p:selectManyMenu>
+						
+						<br />
+						<br />
+					</div>
+				</div>
+				<p:commandButton value="#{lang['reject']}"  onstart="uploadStart()"  action="#{sdpmanagementUI.rejectNewContactPersonTask}"/>
+			</div>
+		</h:form>
+	</p:dialog>
+	
+	 <p:dialog header="Reject Reasons" widgetVar="updateSDPContactfinalRejectReason" hideEffect="clip" showEffect="clip" id="updateSDPContactfinalRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+		<h:form id="updateCpForm">
+			<div class="ui-fluid">
+				<div class="ui-g">
+					<div class="ui-g-12">
+						<p:selectManyMenu value="#{sdpmanagementUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="false" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+							<f:selectItems value="#{sdpmanagementUI.updateSdpContactRejectReasons}" var="rv" itemValue="#{rv}" />
+
+							<p:column>
+								<h:outputText value="#{t.description}" />
+								<br />
+								<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+							</p:column>
+
+						</p:selectManyMenu>
+						
+						<br />
+						<br />
+					</div>
+				</div>
+				<p:commandButton value="#{lang['reject']}"  onstart="uploadStart()"  action="#{sdpmanagementUI.rejectUpdateContactPersonTask}"/>
+			</div>
+		</h:form>
+	</p:dialog>
+	
+	 <p:dialog header="Reject Reasons" widgetVar="companyChangefinalRejectReason" hideEffect="clip" showEffect="clip" id="companyChangefinalRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+		<h:form id="cpChangeFormTwo">
+			<div class="ui-fluid">
+				<div class="ui-g">
+					<div class="ui-g-12">
+						<p:selectManyMenu value="#{sdpmanagementUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="false" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+							<f:selectItems value="#{sdpmanagementUI.companyChangesRejectReasons}" var="rv" itemValue="#{rv}" />
+
+							<p:column>
+								<h:outputText value="#{t.description}" />
+								<br />
+								<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+							</p:column>
+
+						</p:selectManyMenu>
+						
+						<br />
+						<br />
+					</div>
+				</div>
+				<p:commandButton value="#{lang['reject']}"  onstart="uploadStart()"  action="#{sdpmanagementUI.rejectCompanyChangeRequest}"/>
+			</div>
+		</h:form>
+	</p:dialog>
+		
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+	</ui:define>
+
+</ui:composition>

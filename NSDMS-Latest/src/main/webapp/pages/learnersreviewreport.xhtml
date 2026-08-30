@@ -1,0 +1,143 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<p:importEnum type="haj.com.entity.enums.PivotNonPivotEnum" />
+					<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+					<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+					<p:importEnum type="haj.com.entity.enums.NewExistingLearnershipEnum" />
+						
+							<h1>Companies</h1>
+							<h:form id="learnersInsForm">
+								<p:growl showDetail="false" sticky="false">
+									<p:autoUpdate />
+								</p:growl>
+								<div class="card">
+									<p:dataTable rendered="true" var="rowVar" value="#{learnerReviewReportUI.dataModel}" lazy="true" id="allwspList" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+									paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true"
+									selectionMode="single" selection="#{learnerReviewReportUI.companyLearnerParent}">
+									
+									<p:ajax event="rowSelect" update="@form"  listener="#{learnerReviewReportUI.findCompanyLearners()}" />
+								
+									<p:column headerText="#{lang['entity.id']}" filterBy="#{rowVar.company.levyNumber}" sortBy="#{rowVar.company.levyNumber}">
+										<h:outputText value="#{rowVar.company.levyNumber}" />
+									</p:column>
+									<p:column headerText="#{lang['companyName']}" filterBy="#{rowVar.company.companyName}" sortBy="#{rowVar.company.companyName}">
+										<h:outputText value="#{rowVar.company.companyName}" />
+									</p:column>
+									
+									<p:column headerText="Registation Number" filterBy="#{rowVar.company.companyRegistrationNumber}" sortBy="#{rowVar.company.companyRegistrationNumber}" filterStyle="width: 95%" width="30%">
+										<h:outputText value="#{rowVar.company.companyRegistrationNumber}" />
+									</p:column>
+									
+									<p:column headerText="#{lang['status']}">
+										<h:outputText value="#{rowVar.status.friendlyName}" />
+									</p:column>
+									
+									<p:column headerText="Scheduled Date" width="15%" priority="3">
+										<h:outputText value="#{rowVar.scheduledEvent.fromDateTime}">
+											<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+										</h:outputText>
+									</p:column>
+									
+									<p:column width="40">
+										<p:commandButton icon="fa fa-search" title="View Learners" update="@form" action="#{learnerReviewReportUI.findCompanyLearners}">
+											<f:setPropertyActionListener value="#{rowVar}" target="#{learnerReviewReportUI.companyLearnerParent}" />
+										</p:commandButton>										
+									</p:column>
+								</p:dataTable>
+							</div>
+						
+							<c:if test="#{learnerReviewReportUI.selected eq true}">              	
+				             	<div class="card">	
+				             		<h1>#{learnerReviewReportUI.companyLearnerParent.company.companyName}</h1>
+				             		<p:panelGrid columns="1" style="width:100%" id="reviewDateEntryGrid" layout="grid" styleClass="ui-panelgrid-blank" >
+										<h:panelGroup rendered="#{learnerReviewReportUI.companyLearnerParent.scheduledEvent.id ne null and false}">
+											<div>
+												<p:outputLabel value="Review Date: " />
+											</div>
+											<div>
+												<p:outputLabel value="#{learnerReviewReportUI.companyLearnerParent.scheduledEvent.fromDateTime}" >
+													<f:convertDateTime pattern="dd MMMM yyyy HH:mm" />
+												</p:outputLabel>								
+											</div>
+										</h:panelGroup>
+										
+										<h:panelGroup>
+											<div>
+												<p:outputLabel value="Review Date: " for="reviewDateSelection" />
+											</div>
+											<div>
+												
+												<p:calendar id="reviewDateSelection" disabled="true"
+															required="true" requiredMessage="Provide: Review Date Before Proceeding" value="#{learnerReviewReportUI.companyLearnerParent.scheduledEvent.fromDateTime}" 
+															mindate="#{workplaceapprovalUI.today}" showOn="button" pattern="dd/MM/yyyy HH:mm" mask="true">
+													<p:ajax event="dateSelect" />
+												</p:calendar>
+											</div>
+										</h:panelGroup>
+										
+										<h:panelGroup>
+											<div>
+												<p:outputLabel value="Review To Date: " for="reviewToDateSelection" />
+											</div>
+											<div>
+												
+												<p:calendar id="reviewToDateSelection" disabled="true"
+															required="true" requiredMessage="Provide: Review To Date Before Proceeding" value="#{learnerReviewReportUI.companyLearnerParent.scheduledEvent.toDateTime}" 
+															mindate="#{learnerReviewReportUI.companyLearnerParent.scheduledEvent.fromDateTime}" showOn="button" pattern="dd/MM/yyyy HH:mm" mask="true">
+													<p:ajax event="dateSelect" />
+												</p:calendar>
+											</div>
+										</h:panelGroup>
+									</p:panelGrid>
+									
+									<br />
+					             	<p:dataTable rendered="true" var="rv2" value="#{learnerReviewReportUI.dataModelList}" lazy="true" id="allwspList2" rowKey="#{rv2.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+									paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true"
+									selectionMode="single" selection="#{learnerReviewReportUI.companyLearnerParent}">
+					             
+					             		<p:column headerText="#{lang['first.name']}" filterBy="#{rv2.user.firstName}">
+											<h:outputText value="#{rv2.user.firstName}" />
+										</p:column>
+										<p:column headerText="#{lang['last.name']}" filterBy="#{rv2.user.lastName}">
+											<h:outputText value="#{rv2.user.lastName}" />
+										</p:column>
+										<p:column headerText="Identity Number" filterBy="#{rv2.user.rsaIDNumber}">
+											<h:outputText value="#{rv2.user.rsaIDNumber}" />
+										</p:column>
+										<p:column headerText="Passport Number" filterBy="#{rv2.user.passportNumber}">
+											<h:outputText value="#{rv2.user.passportNumber}" />
+										</p:column>
+										<p:column headerText="Employment Status">
+											<h:outputText value="#{rv2.employmentStatus.friendlyName}" />
+										</p:column>
+										<p:column headerText="Application Status">
+											<h:outputText value="#{rv2.learnerStatus.friendlyName}" />
+										</p:column>
+										<p:column headerText="Intervention Type">
+										<h:outputText value="#{rv2.interventionType.description}" />
+										</p:column>
+										<p:column headerText="Course / Qualification ">
+											<h:outputText value="(#{rv2.qualification.code})" rendered="#{rv2.qualification ne null}"/>
+											<h:outputText value="#{rv2.qualification.description}" rendered="#{rv2.qualification ne null}"/>
+											<h:outputText value="(#{rv2.qualification.nqflevelg2description})" rendered="#{rv2.qualification ne null}"/>
+											<h:outputText value="#{rv2.skillsSet.description}" rendered="#{rv2.skillsSet ne null}" />
+											<h:outputText value="#{rv2.skillsProgram.description}" rendered="#{rv2.skillsProgram ne null}" />
+											<h:outputText value="#{rv2.unitStandard.title}" rendered="#{rv2.unitStandard ne null}" />
+											<h:outputText value="#{rv2.nonCredidBearingDescription}" rendered="#{rowVar.nonCredidBearingDescription ne null}" />
+										</p:column>
+						             	</p:dataTable>	
+					             
+								</div>
+							</c:if>
+					</h:form>
+				</div>
+			</div>
+			
+			
+		</div>
+	</ui:define>
+</ui:composition>

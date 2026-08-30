@@ -1,0 +1,374 @@
+@page "/admin/roles/{Id:int}"
+@page "/admin/roles/create"
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Security
+@inject IRolePermissionService RoleService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@rendermode InteractiveServer
+
+<PageTitle>@(IsNew ? "New Security Role" : $"Role: {_roleName}") - NSDMS</PageTitle>
+
+<!-- STICKY TOP BAR -->
+<div class="sticky-top bg-white pa-4 mb-4 border-bottom elevation-1 d-flex flex-wrap justify-space-between align-center gap-3" style="top: var(--mud-appbar-height, 64px); z-index: 10;">
+    <div class="d-flex align-center gap-3">
+        <MudButton Variant="Variant.Text"
+                   StartIcon="@Icons.Material.Filled.ArrowBack"
+                   Color="Color.Default"
+                   OnClick="BackToList">
+            Back to Roles Registry
+        </MudButton>
+        <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-2" />
+        <div>
+            <MudBreadcrumbs Items="_breadcrumbItems" Separator=">" Class="pa-0 ma-0" />
+            <MudText Typo="Typo.h6" Class="font-weight-bold">
+                @(IsNew ? "Create New Security Role" : $"Role: {_roleName}")
+            </MudText>
+        </div>
+    </div>
+    <div class="d-flex align-center gap-2">
+        @if (!IsNew && _roleName != "SuperAdmin" && _roleName != "Admin")
+        {
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Error"
+                       StartIcon="@Icons.Material.Filled.Delete"
+                       OnClick="DeleteRoleAsync">
+                Delete
+            </MudButton>
+        }
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Secondary"
+                   StartIcon="@Icons.Material.Filled.Cancel"
+                   OnClick="BackToList">
+            Cancel
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Save"
+                   OnClick="SaveRoleAsync"
+                   Disabled="_isSaving">
+            @(_isSaving ? "Saving..." : "Save Role & Permissions")
+        </MudButton>
+    </div>
+</div>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-0">
+    @if (_loading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-6" />
+    }
+    else
+    {
+        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Color="Color.Surface">
+            <!-- TAB 1: General Info -->
+            <MudTabPanel Text="General Settings" Icon="@Icons.Material.Filled.Settings">
+                <MudCard Elevation="0" Class="pa-4">
+                    <MudGrid Spacing="3">
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="_roleName"
+                                          Label="Role Name *"
+                                          Variant="Variant.Outlined"
+                                          Required="true"
+                                          Disabled="@(!IsNew && (_roleName == "SuperAdmin" || _roleName == "Admin"))"
+                                          HelperText="Unique organizational job title or system role identifier." />
+                        </MudItem>
+                        <MudItem xs="12" md="6" Class="d-flex align-center">
+                            <MudSwitch @bind-Value="_isActive"
+                                       Color="Color.Success"
+                                       Label="Active Role Status" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="_description"
+                                          Label="Role Description"
+                                          Variant="Variant.Outlined"
+                                          Lines="3"
+                                          HelperText="Detailed description of responsibilities, operational boundaries, and CASL access scopes." />
+                        </MudItem>
+                    </MudGrid>
+
+                    <MudDivider Class="my-6" />
+
+                    <MudText Typo="Typo.subtitle1" Class="fw-bold mb-2">
+                        Assigned Users (@_assignedUsers.Count)
+                    </MudText>
+                    @if (_assignedUsers.Count == 0)
+                    {
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">No users currently assigned to this role.</MudText>
+                    }
+                    else
+                    {
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (var user in _assignedUsers)
+                            {
+                                <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Person">
+                                    @user
+                                </MudChip>
+                            }
+                        </div>
+                    }
+                </MudCard>
+            </MudTabPanel>
+
+            <!-- TAB 2: Permission Matrix -->
+            <MudTabPanel Text="Module & Action Permissions" Icon="@Icons.Material.Filled.Checklist">
+                <MudCard Elevation="0" Class="pa-4">
+                    <!-- MATRIX CONTROL HEADER -->
+                    <div class="d-flex justify-space-between align-center flex-wrap gap-3 mb-4 pa-3 bg-light rounded">
+                        <div class="d-flex align-center gap-2">
+                            <MudIcon Icon="@Icons.Material.Filled.VerifiedUser" Color="Color.Primary" />
+                            <MudText Typo="Typo.subtitle1" Class="fw-bold">
+                                Active Claims: @_selectedClaims.Count of @_allPermissions.Count Selected
+                            </MudText>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <MudButton Variant="Variant.Outlined"
+                                       Color="Color.Success"
+                                       Size="Size.Small"
+                                       StartIcon="@Icons.Material.Filled.SelectAll"
+                                       OnClick="SelectAllPermissions">
+                                Grant All Permissions
+                            </MudButton>
+                            <MudButton Variant="Variant.Outlined"
+                                       Color="Color.Error"
+                                       Size="Size.Small"
+                                       StartIcon="@Icons.Material.Filled.ClearAll"
+                                       OnClick="ClearAllPermissions">
+                                Clear All
+                            </MudButton>
+                        </div>
+                    </div>
+
+                    <!-- MODULES GRID -->
+                    <MudGrid Spacing="3">
+                        @foreach (var (module, actions) in AppPermissions.ModuleActions)
+                        {
+                            var moduleAllSelected = actions.All(a => _selectedClaims.Contains(AppPermissions.Create(module, a)));
+                            var moduleSelectedCount = actions.Count(a => _selectedClaims.Contains(AppPermissions.Create(module, a)));
+
+                            <MudItem xs="12" md="6">
+                                <MudCard Elevation="2" Class="h-100 pa-3 border">
+                                    <div class="d-flex justify-space-between align-center pb-2 mb-2 border-bottom">
+                                        <div class="d-flex align-center gap-2">
+                                            <MudIcon Icon="@GetModuleIcon(module)" Color="Color.Primary" Size="Size.Small" />
+                                            <MudText Typo="Typo.subtitle1" Class="fw-bold">@module Subsystem</MudText>
+                                            <MudChip T="string" Size="Size.Small" Color="@(moduleSelectedCount > 0 ? Color.Primary : Color.Default)" Variant="Variant.Outlined">
+                                                @moduleSelectedCount / @actions.Count
+                                            </MudChip>
+                                        </div>
+                                        <MudButton Variant="Variant.Text"
+                                                   Size="Size.Small"
+                                                   Color="Color.Primary"
+                                                   OnClick="@(() => ToggleModuleAll(module, actions, !moduleAllSelected))">
+                                            @(moduleAllSelected ? "Deselect" : "Select All")
+                                        </MudButton>
+                                    </div>
+
+                                    <div class="d-flex flex-wrap gap-2 pt-2">
+                                        @foreach (var action in actions)
+                                        {
+                                            var claim = AppPermissions.Create(module, action);
+                                            var isChecked = _selectedClaims.Contains(claim);
+
+                                            <div class="pa-1 rounded" style="min-width: 140px; background-color: @(isChecked ? "var(--mud-palette-action-default-hover)" : "transparent");">
+                                                <MudCheckBox T="bool"
+                                                             Value="@isChecked"
+                                                             ValueChanged="@(val => OnPermissionToggled(claim, val))"
+                                                             Color="Color.Primary"
+                                                             Dense="true"
+                                                             Label="@action" />
+                                            </div>
+                                        }
+                                    </div>
+                                </MudCard>
+                            </MudItem>
+                        }
+                    </MudGrid>
+                </MudCard>
+            </MudTabPanel>
+        </MudTabs>
+    }
+</MudContainer>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private bool IsNew => Id == 0;
+    private string _roleName = "";
+    private string? _description = "";
+    private bool _isActive = true;
+    private List<string> _assignedUsers = new();
+    private HashSet<string> _selectedClaims = new();
+    private List<PermissionDefinition> _allPermissions = new();
+    private List<BreadcrumbItem> _breadcrumbItems = new();
+    private bool _loading = true;
+    private bool _isSaving = false;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _loading = true;
+        try
+        {
+            _allPermissions = AppPermissions.GetAllPermissions();
+
+            if (IsNew)
+            {
+                _roleName = "";
+                _description = "";
+                _isActive = true;
+                _assignedUsers.Clear();
+                _selectedClaims.Clear();
+            }
+            else
+            {
+                var role = await RoleService.GetRoleByIdAsync(Id);
+                if (role == null)
+                {
+                    Snackbar.Add($"Role with ID #{Id} not found.", Severity.Warning);
+                    Navigation.NavigateTo("/admin/roles");
+                    return;
+                }
+
+                _roleName = role.Name;
+                _description = role.Description;
+                _isActive = role.Active;
+                _assignedUsers = role.Users;
+                _selectedClaims = new HashSet<string>(role.PermissionClaims);
+            }
+
+            BuildBreadcrumbs();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading role details: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void BuildBreadcrumbs()
+    {
+        _breadcrumbItems = new List<BreadcrumbItem>
+        {
+            new("Home", href: "/"),
+            new("System Governance", href: "/admin/roles"),
+            new(IsNew ? "New Role" : _roleName, href: null, disabled: true)
+        };
+    }
+
+    private void OnPermissionToggled(string claim, bool isGranted)
+    {
+        if (isGranted) _selectedClaims.Add(claim);
+        else _selectedClaims.Remove(claim);
+    }
+
+    private void ToggleModuleAll(string module, List<string> actions, bool select)
+    {
+        foreach (var action in actions)
+        {
+            var claim = AppPermissions.Create(module, action);
+            if (select) _selectedClaims.Add(claim);
+            else _selectedClaims.Remove(claim);
+        }
+    }
+
+    private void SelectAllPermissions()
+    {
+        _selectedClaims = new HashSet<string>(_allPermissions.Select(p => p.ClaimValue));
+        Snackbar.Add("Granted all system permissions to role.", Severity.Info);
+    }
+
+    private void ClearAllPermissions()
+    {
+        _selectedClaims.Clear();
+        Snackbar.Add("Cleared all permissions from role.", Severity.Info);
+    }
+
+    private async Task SaveRoleAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_roleName))
+        {
+            Snackbar.Add("Please enter a valid Role Name.", Severity.Warning);
+            return;
+        }
+
+        _isSaving = true;
+        try
+        {
+            if (IsNew)
+            {
+                var created = await RoleService.CreateRoleAsync(_roleName, _description, _selectedClaims.ToList(), "Admin");
+                Snackbar.Add($"Role '{created.Name}' successfully created with {_selectedClaims.Count} permissions.", Severity.Success);
+                Navigation.NavigateTo($"/admin/roles/{created.Id}");
+            }
+            else
+            {
+                var updated = await RoleService.UpdateRoleAsync(Id, _roleName, _description, _isActive, _selectedClaims.ToList(), "Admin");
+                if (updated)
+                {
+                    Snackbar.Add($"Role '{_roleName}' updated successfully.", Severity.Success);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving role: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task DeleteRoleAsync()
+    {
+        bool? confirmed = await DialogService.ShowMessageBoxAsync(
+            "Confirm Deletion",
+            $"Are you sure you want to delete role '{_roleName}'? This action cannot be undone.",
+            yesText: "Delete", cancelText: "Cancel");
+
+        if (confirmed == true)
+        {
+            try
+            {
+                var deleted = await RoleService.DeleteRoleAsync(Id, "Admin");
+                if (deleted)
+                {
+                    Snackbar.Add($"Role '{_roleName}' was successfully deleted.", Severity.Success);
+                    Navigation.NavigateTo("/admin/roles");
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Could not delete role: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
+    private void BackToList()
+    {
+        Navigation.NavigateTo("/admin/roles");
+    }
+
+    private static string GetModuleIcon(string module) => module switch
+    {
+        "Organisations" => Icons.Material.Filled.Business,
+        "People" => Icons.Material.Filled.Person,
+        "Wsp" => Icons.Material.Filled.Assignment,
+        "Grants" => Icons.Material.Filled.AttachMoney,
+        "Finance" => Icons.Material.Filled.AccountBalance,
+        "Learners" => Icons.Material.Filled.School,
+        "Etqa" => Icons.Material.Filled.VerifiedUser,
+        "Workplace" => Icons.Material.Filled.Apartment,
+        "Compliance" => Icons.Material.Filled.Rule,
+        "System" => Icons.Material.Filled.Settings,
+        _ => Icons.Material.Filled.Folder
+    };
+}

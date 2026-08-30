@@ -1,0 +1,123 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:pt="http://xmlns.jcp.org/jsf/passthrough" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+				    
+	<p:dialog position="top" header="#{lang['review.committee.date.scheduling']}" widgetVar="eventDialog" hideEffect="clip" showEffect="clip" id="eventDialog"  modal="true" closable="true" height="50%" width="35%" responsive="true">
+		
+		<p:growl showDetail="false" sticky="false" escape="false">
+			<p:autoUpdate />
+		</p:growl>
+		<h:form id="eventDetailsFrm">
+			<p:panelGrid columns="1" id="eventDetails" layout="grid" styleClass="ui-panelgrid-blank form-group">
+	           
+				<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<h:panelGroup styleClass="md-inputfield">
+	           			<p:inputText id="title" value="#{reviewCommitteeMeetingUI.event.title}"  style="width:100%" required="true" />
+					 	<p:outputLabel for="title" value="#{lang['title']}" />
+				 	</h:panelGroup>
+				 	<h:panelGroup styleClass="md-inputfield">
+	           			<p:inputText id="venue" value="#{reviewCommitteeMeetingUI.reviewCommitteeMeeting.venue}"  style="width:100%" required="true" />
+					 	<p:outputLabel for="venue" value="#{lang['venue']}" />
+				 	</h:panelGroup>
+				 	
+				 	 <h:panelGroup rendered="true">
+						    <p:outputLabel value="#{lang['select.meeting.agenda']}" for="usManyMenu"></p:outputLabel>
+				            <p:selectManyMenu  style="width:100%" id="usManyMenu" value="#{reviewCommitteeMeetingUI.selectMeetingAgendaList}" required="true" requiredMessage="Please select meeting agenda" converter="MeetingAgendaConvertor"
+						                          var="t" filter="true" filterMatchMode="contains" showCheckbox="true">
+						    	 <f:selectItems value="#{reviewCommitteeMeetingUI.meetingAgendaList}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							     <p:column  headerText="#{lang['description']}">
+							        <h:outputText value="#{t.description}" />
+							     </p:column>
+							     <p:column headerText="#{lang['meeting.types']}">
+							        <h:outputText value="#{t.meetingNumber}" />
+							     </p:column>
+						     
+						  </p:selectManyMenu>
+					 </h:panelGroup>
+				</p:panelGrid>
+				<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					 <h:panelGroup styleClass="md-inputfield">
+					 	 <p:calendar id="from" required="true" value="#{reviewCommitteeMeetingUI.event.startDate}" showOn="button" requiredMessage="#{lang['select.from.date']}"  pattern="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME}" mask="true" style="width:95%">
+					 	 	 	<p:ajax event="dateSelect" />
+					 	 </p:calendar>
+	                   	 <p:outputLabel value="#{lang['from']}" for="from" style="width:95%" />
+					 </h:panelGroup> 
+					 
+					  <h:panelGroup styleClass="md-inputfield">
+					 	 <p:calendar id="to" value="#{reviewCommitteeMeetingUI.event.endDate}" required="true" showOn="button" requiredMessage="#{lang['select.to.date']}"  pattern="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME}" mask="true" style="width:95%">
+					 	 	 	<p:ajax event="dateSelect" />
+					 	 </p:calendar>
+	                   	 <p:outputLabel value="#{lang['to']}" for="to" style="width:95%" />
+					 </h:panelGroup>
+				</p:panelGrid>
+				
+				<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					 <h:panelGroup >
+						   <p:outputLabel value="#{lang['additional.info']}:" />
+						   <br/>
+						    <p:textEditor widgetVar="editor2" value="#{reviewCommitteeMeetingUI.reviewCommitteeMeeting.additionalInfo}" height="100" style="margin-bottom:10px" placeholder="Enter your content">
+						        <f:facet name="toolbar">
+						             <span class="ql-formats">
+						                <button class="ql-bold"></button>
+						                <button class="ql-italic"></button>
+						                <button class="ql-underline"></button>
+						                <button class="ql-strike"></button>
+						            </span>
+						            <span class="ql-formats">
+						                <select class="ql-font"></select>
+						                <select class="ql-size"></select>
+						            </span>
+						        </f:facet>
+						    </p:textEditor>
+					    </h:panelGroup>
+					    
+					   
+						<h:panelGroup styleClass="md-inputfield" id="pgMeetingUsers">
+						
+							
+							<p:autoComplete style="width:50%" id="meetingUsers" value="#{reviewCommitteeMeetingUI.meetingUser}" completeMethod="#{autoCompleteUI.completeHostingCompUser}" var="rv" itemLabel="#{rv.firstName} #{rv.lastName}" itemValue="#{rv}" forceSelection="true" converter="UsersConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+								<p:column headerText="#{lang['user']}" style="white-space: nowrap">#{rv.firstName} #{rv.lastName}</p:column>
+								<p:ajax update="userListDisplay" event="itemSelect"></p:ajax>
+							</p:autoComplete>
+							<p:outputLabel value="Meeting member:" for="meetingUsers" />
+							
+							<p:commandButton value="#{lang['add']}" icon="ui-icon-plus" process="@this" update="pgMeetingUsers"  action="#{reviewCommitteeMeetingUI.addUser}"/>
+							
+							<p:dataList style="margin-top:15px" id="userListDisplay" value="#{reviewCommitteeMeetingUI.meetingUsersList}" var="user" type="ordered" emptyMessage="Please add at least one meeting member">
+						        <f:facet name="header">
+						            Selected User(s)
+						        </f:facet>
+						        #{user.firstName} #{user.lastName}
+						       <p:spacer width="5"></p:spacer>
+						        <p:commandLink  id="ajax" rendered="false">
+						        	 <span class="fa fa-times grey" style="color:red;"></span>
+						        	 <f:setPropertyActionListener value="#{user}" target="#{reviewCommitteeMeetingUI.user}" />
+							    </p:commandLink> 
+						        
+						    </p:dataList>
+						</h:panelGroup>
+						
+				</p:panelGrid>
+					
+				<p:panelGrid columns="3" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" actionListener="#{reviewCommitteeMeetingUI.addEvent}"  />
+					
+					<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="eventDetails" process="@this" action="#{reviewCommitteeMeetingUI.prepareNew}">
+						<p:resetInput target="eventDetails" />
+					</p:commandButton> 
+					
+					<p:commandButton rendered="#{reviewCommitteeMeetingUI.reviewCommitteeMeeting.id ne null}" oncomplete="PF('eventDialog').hide()" value="#{lang['delete']}" icon="fa fa-trash-o" update="mainForm:myschedule" actionListener="#{reviewCommitteeMeetingUI.reviewCommitteeMeetingDelete}">
+						<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+						 <p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+					</p:commandButton>
+				</p:panelGrid>
+		</p:panelGrid>
+	</h:form>
+	
+	 <p:ajax listener="#{reviewCommitteeMeetingUI.onCloseDiolog}"/>
+	
+    </p:dialog>   
+					    
+					    
+</ui:composition>

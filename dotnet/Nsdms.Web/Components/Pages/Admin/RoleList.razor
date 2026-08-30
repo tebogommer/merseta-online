@@ -1,0 +1,246 @@
+@page "/admin/roles"
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Security
+@inject IRolePermissionService RoleService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@rendermode InteractiveServer
+
+<PageTitle>Security Roles & Permissions - NSDMS</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-4">
+    <!-- STICKY TOP BAR -->
+    <MudPaper Elevation="2" Class="sticky-top pa-4 mb-4 rounded-lg bg-surface d-flex justify-space-between align-center flex-wrap gap-3" Style="top: var(--mud-appbar-height, 64px); z-index: 10;">
+        <div class="d-flex align-center gap-3">
+            <MudIcon Icon="@Icons.Material.Filled.Security" Color="Color.Primary" Size="Size.Large" />
+            <div>
+                <MudText Typo="Typo.h5" Class="fw-bold">Security Roles & Permissions Matrix</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Configure Claims-Based RBAC roles and module-level action permissions</MudText>
+            </div>
+        </div>
+        <div class="d-flex align-center gap-2">
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Default"
+                       StartIcon="@Icons.Material.Filled.Refresh"
+                       OnClick="LoadRolesAsync">
+                Refresh
+            </MudButton>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Security"
+                       OnClick="CreateNewRole">
+                Create New Role
+            </MudButton>
+        </div>
+    </MudPaper>
+
+    <!-- SEARCH & FILTER BAR -->
+    <MudCard Elevation="2" Class="mb-4 pa-3">
+        <div class="d-flex align-center gap-4 flex-wrap">
+            <div style="min-width: 280px; flex: 1;">
+                <MudTextField @bind-Value="_searchString"
+                              Placeholder="Search role name or description..."
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              IconSize="Size.Medium"
+                              Immediate="true"
+                              Clearable="true"
+                              Variant="Variant.Outlined"
+                              Margin="Margin.Dense" />
+            </div>
+            <MudChipSet T="string" SelectedValue="@_statusFilter" SelectedValueChanged="OnStatusFilterChanged">
+                <MudChip T="string" Value="@("All")" Text="All Roles" Color="Color.Default" Variant="Variant.Filled" />
+                <MudChip T="string" Value="@("Active")" Text="Active Only" Color="Color.Success" Variant="Variant.Outlined" />
+                <MudChip T="string" Value="@("Inactive")" Text="Inactive Only" Color="Color.Error" Variant="Variant.Outlined" />
+            </MudChipSet>
+        </div>
+    </MudCard>
+
+    <!-- DATA TABLE -->
+    @if (_loading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-6" />
+    }
+    else
+    {
+        <MudTable T="RoleSummaryDto"
+                  Items="@FilteredRoles"
+                  Hover="true"
+                  Dense="true"
+                  Bordered="false"
+                  Elevation="2"
+                  Class="rounded-lg"
+                  OnRowClick="@(args => NavigateToRole(args.Item.Id))"
+                  RowClass="cursor-pointer">
+            <HeaderContent>
+                <MudTh><MudTableSortLabel SortBy="new Func<RoleSummaryDto, object>(x => x.Id)">ID</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<RoleSummaryDto, object>(x => x.Name)">Role Name</MudTableSortLabel></MudTh>
+                <MudTh Class="hidden md:table-cell">Description</MudTh>
+                <MudTh Class="hidden md:table-cell text-center">Permissions Granted</MudTh>
+                <MudTh Class="hidden md:table-cell text-center">Active Users</MudTh>
+                <MudTh Class="text-center">Status</MudTh>
+                <MudTh Class="text-end">Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="ID" Class="fw-bold text-primary">#@context.Id</MudTd>
+                <MudTd DataLabel="Role Name">
+                    <div class="d-flex align-center gap-2">
+                        <MudIcon Icon="@GetRoleIcon(context.Name)" Size="Size.Small" Color="Color.Primary" />
+                        <span class="fw-bold">@context.Name</span>
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="Description" Class="hidden md:table-cell text-secondary">
+                    @(string.IsNullOrEmpty(context.Description) ? "No description provided." : context.Description)
+                </MudTd>
+                <MudTd DataLabel="Permissions" Class="hidden md:table-cell text-center">
+                    <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Filled">
+                        @context.PermissionCount Permissions
+                    </MudChip>
+                </MudTd>
+                <MudTd DataLabel="Users" Class="hidden md:table-cell text-center">
+                    <MudChip T="string" Size="Size.Small" Color="Color.Secondary" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.People">
+                        @context.UserCount Users
+                    </MudChip>
+                </MudTd>
+                <MudTd DataLabel="Status" Class="text-center">
+                    @if (context.Active)
+                    {
+                        <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled">Active</MudChip>
+                    }
+                    else
+                    {
+                        <MudChip T="string" Color="Color.Default" Size="Size.Small" Variant="Variant.Outlined">Inactive</MudChip>
+                    }
+                </MudTd>
+                <MudTd DataLabel="Actions" Class="text-end" @onclick:stopPropagation="true">
+                    <div class="d-flex justify-end align-center gap-1">
+                        <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                       Color="Color.Primary"
+                                       Size="Size.Small"
+                                       OnClick="@(() => NavigateToRole(context.Id))"
+                                       aria-label="View Details" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                       Color="Color.Secondary"
+                                       Size="Size.Small"
+                                       OnClick="@(() => NavigateToRole(context.Id))"
+                                       aria-label="Edit Role" />
+                        @if (context.Name != "SuperAdmin" && context.Name != "Admin")
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                           Color="Color.Error"
+                                           Size="Size.Small"
+                                           OnClick="@(() => ConfirmDeleteRoleAsync(context))"
+                                           aria-label="Delete Role" />
+                        }
+                    </div>
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new int[]{10, 20, 50}" />
+            </PagerContent>
+        </MudTable>
+    }
+</MudContainer>
+
+@code {
+    private List<RoleSummaryDto> _roles = new();
+    private string _searchString = "";
+    private string _statusFilter = "All";
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadRolesAsync();
+    }
+
+    private async Task LoadRolesAsync()
+    {
+        _loading = true;
+        try
+        {
+            await RoleService.SeedDefaultRolePermissionsAsync();
+            _roles = await RoleService.GetAllRolesAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading roles: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private IEnumerable<RoleSummaryDto> FilteredRoles
+    {
+        get
+        {
+            var query = _roles.AsEnumerable();
+
+            if (_statusFilter == "Active") query = query.Where(r => r.Active);
+            else if (_statusFilter == "Inactive") query = query.Where(r => !r.Active);
+
+            if (!string.IsNullOrWhiteSpace(_searchString))
+            {
+                var s = _searchString.Trim();
+                query = query.Where(r => 
+                    r.Name.Contains(s, StringComparison.OrdinalIgnoreCase) || 
+                    (r.Description != null && r.Description.Contains(s, StringComparison.OrdinalIgnoreCase)));
+            }
+
+            return query;
+        }
+    }
+
+    private void OnStatusFilterChanged(string val)
+    {
+        _statusFilter = val ?? "All";
+    }
+
+    private void CreateNewRole()
+    {
+        Navigation.NavigateTo("/admin/roles/create");
+    }
+
+    private void NavigateToRole(int roleId)
+    {
+        Navigation.NavigateTo($"/admin/roles/{roleId}");
+    }
+
+    private async Task ConfirmDeleteRoleAsync(RoleSummaryDto role)
+    {
+        bool? confirmed = await DialogService.ShowMessageBoxAsync(
+            "Confirm Delete Role",
+            $"Are you sure you want to delete role '{role.Name}'? All user assignments will be detached.",
+            yesText: "Delete", cancelText: "Cancel");
+
+        if (confirmed == true)
+        {
+            try
+            {
+                var deleted = await RoleService.DeleteRoleAsync(role.Id, "Admin");
+                if (deleted)
+                {
+                    Snackbar.Add($"Role '{role.Name}' successfully deleted.", Severity.Success);
+                    await LoadRolesAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Could not delete role: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
+    private static string GetRoleIcon(string roleName) => roleName switch
+    {
+        "SuperAdmin" => Icons.Material.Filled.AdminPanelSettings,
+        "Admin" => Icons.Material.Filled.Security,
+        "FinanceManager" => Icons.Material.Filled.AccountBalance,
+        "CLO" => Icons.Material.Filled.Badge,
+        "SDF" => Icons.Material.Filled.BusinessCenter,
+        "ReviewCommittee" => Icons.Material.Filled.Groups,
+        _ => Icons.Material.Filled.Key
+    };
+}

@@ -1,0 +1,83 @@
+<ui:composition xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+		<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum"></p:importEnum>
+		
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Company Contact Responsibility</h1>
+					<h:form id="dataTableForm">
+							<ui:include src="/pages/includes/download_lazy.xhtml">
+								<ui:param name="file_name" value="Company SDFs and Users Responsible" />
+								<ui:param name="target" value="hcEmployeeDataTable" />
+							</ui:include>
+							<ui:include src="/pages/includes/filterGuide.xhtml" />
+							<p:dataTable var="rowVar" value="#{usersresponsibilitiesUI.dataModel}"  id="hcEmployeeDataTable" rowKey="#{rowVar.id}" paginator="true" rows="20" 
+										 paginatorPosition="bottom"  paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" 
+										 rowsPerPageTemplate="20,15,20,25,50" reflow="true" lazy="true">
+								<p:column headerText="Entity ID" filterBy="#{rowVar.companyUsers.company.levyNumber}">
+									<h:outputText value="#{rowVar.companyUsers.company.levyNumber}" rendered="#{rowVar.companyUsers.company.levyNumber ne null}"/>
+									<h:outputText value="N/A" rendered="#{rowVar.companyUsers.company.levyNumber eq null}"/>
+								</p:column>
+								
+								<p:column headerText="Company Registration Number" filterBy="#{rowVar.companyUsers.company.companyRegistrationNumber}">
+									<h:outputText value="#{rowVar.companyUsers.company.companyRegistrationNumber}" rendered="#{rowVar.companyUsers.company.companyRegistrationNumber ne null}"/>
+									<h:outputText value="N/A" rendered="#{rowVar.companyUsers.company.companyRegistrationNumber eq null}"/>
+								</p:column>
+								
+								<p:column headerText="Company Name" filterBy="#{rowVar.companyUsers.company.companyName}">
+									<h:outputText value="#{rowVar.companyUsers.company.companyName}" rendered="#{rowVar.companyUsers.company.companyName ne null}"/>
+									<h:outputText value="N/A" rendered="#{rowVar.companyUsers.company.companyName eq null}"/>
+								</p:column>
+								 
+								<p:column headerText="Trading Name" filterBy="#{rowVar.companyUsers.company.tradingName}">
+									<h:outputText value="#{rowVar.companyUsers.company.tradingName}" rendered="#{rowVar.companyUsers.company.tradingName ne null}"/>
+									<h:outputText value="N/A" rendered="#{rowVar.companyUsers.company.tradingName eq null}"/>
+								</p:column>							
+								
+								<p:column headerText="Responsible person Name" >
+									<h:outputText value="#{rowVar.companyUsers.user.firstName}" rendered="#{rowVar.companyUsers.user.firstName ne null}"/>
+									<h:outputText value="N/A" rendered="#{rowVar.companyUsers.user.firstName eq null}"/>
+								</p:column>
+								
+								<p:column headerText="Responsible person Surname">
+									<h:outputText value="#{rowVar.companyUsers.user.lastName}" rendered="#{rowVar.companyUsers.user.lastName ne null}"/>
+									<h:outputText value="N/A" rendered="#{rowVar.companyUsers.user.lastName eq null}"/>
+								</p:column>
+								
+								<p:column headerText="Responsible person Email">
+									<h:outputText value="#{rowVar.companyUsers.user.email}" rendered="#{rowVar.companyUsers.user.email ne null}"/>
+									<h:outputText value="N/A" rendered="#{rowVar.companyUsers.user.email eq null}"/>
+								</p:column>
+								
+								<p:column headerText="Contact Type" rendered="true" filterBy="#{rowVar.companyUsers.position.description}">
+									<h:outputText value="#{rowVar.companyUsers.position.description}" rendered="#{rowVar.companyUsers.position.description ne null}"/>
+									<h:outputText value="N/A" rendered="#{rowVar.companyUsers.position.description eq null}"/>
+								</p:column>
+								
+								<p:column headerText="Responsible For" filterBy="#{rowVar.userResponsibility.description}">
+									<h:outputText value="#{rowVar.userResponsibility.description}" rendered="#{rowVar.userResponsibility.description ne null}"/>
+									<h:outputText value="N/A" rendered="#{rowVar.userResponsibility.description eq null}"/>
+								</p:column>
+								
+								<p:column headerText="Primary SDF Name" >
+									<h:outputText value="#{rowVar.sdfUser.firstName}" rendered="#{rowVar.sdfUser.firstName ne null}"/>
+									<h:outputText value="N/A" rendered="#{rowVar.sdfUser.firstName eq null}"/>
+								</p:column>
+								
+								<p:column headerText="Primary SDF Surname">
+									<h:outputText value="#{rowVar.companyUsers.user.firstName}" rendered="#{rowVar.sdfUser.lastName ne null}"/>
+									<h:outputText value="N/A" rendered="#{rowVar.sdfUser.lastName eq null}"/>
+								</p:column>
+								
+								<p:column headerText="Primary SDF Email">
+									<h:outputText value="#{rowVar.sdfUser.email}" rendered="#{rowVar.sdfUser.email ne null}"/>
+									<h:outputText value="N/A" rendered="#{rowVar.sdfUser.email eq null}"/>
+								</p:column>
+							</p:dataTable>	
+					</h:form>
+				</div>
+			</div>
+		</div>	
+	</ui:define>
+</ui:composition>

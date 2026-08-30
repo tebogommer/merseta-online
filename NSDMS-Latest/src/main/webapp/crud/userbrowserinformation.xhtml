@@ -1,0 +1,148 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>User Browser Information</h1>
+					<h:form id="userbrowserinformationInsForm">
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:panelGrid columns="1" style="width:100%" id="userbrowserinformationInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="referrer" value="#{userbrowserinformationUI.userbrowserinformation.referrer}" style="width:95%" />
+								<p:outputLabel value="#{lang['referrer']}" for="referrer" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="users" value="#{userbrowserinformationUI.userbrowserinformation.users}" style="width:95%" />
+								<p:outputLabel value="#{lang['users']}" for="users" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="browserName" value="#{userbrowserinformationUI.userbrowserinformation.browserName}" style="width:95%" />
+								<p:outputLabel value="#{lang['browserName']}" for="browserName" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="createDate" value="#{userbrowserinformationUI.userbrowserinformation.createDate}" style="width:95%" />
+								<p:outputLabel value="#{lang['createDate']}" for="createDate" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="operatingSystem" value="#{userbrowserinformationUI.userbrowserinformation.operatingSystem}" style="width:95%" />
+								<p:outputLabel value="#{lang['operatingSystem']}" for="operatingSystem" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="ipAddress" value="#{userbrowserinformationUI.userbrowserinformation.ipAddress}" style="width:95%" />
+								<p:outputLabel value="#{lang['ipAddress']}" for="ipAddress" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="longitude" value="#{userbrowserinformationUI.userbrowserinformation.longitude}" style="width:95%" />
+								<p:outputLabel value="#{lang['longitude']}" for="longitude" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="tasks" value="#{userbrowserinformationUI.userbrowserinformation.tasks}" style="width:95%" />
+								<p:outputLabel value="#{lang['tasks']}" for="tasks" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="fullURL" value="#{userbrowserinformationUI.userbrowserinformation.fullURL}" style="width:95%" />
+								<p:outputLabel value="#{lang['fullURL']}" for="fullURL" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="userAgent" value="#{userbrowserinformationUI.userbrowserinformation.userAgent}" style="width:95%" />
+								<p:outputLabel value="#{lang['userAgent']}" for="userAgent" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="latitude" value="#{userbrowserinformationUI.userbrowserinformation.latitude}" style="width:95%" />
+								<p:outputLabel value="#{lang['latitude']}" for="latitude" />
+							</h:panelGroup>
+
+
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:userbrowserinformationList :userbrowserinformationInsForm:userbrowserinformationInsGrid" action="#{userbrowserinformationUI.userbrowserinformationInsert}" />
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="userbrowserinformationInsGrid" process="@this" action="#{userbrowserinformationUI.prepareNew}">
+									<p:resetInput target="userbrowserinformationInsGrid" />
+								</p:commandButton>
+							</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{userbrowserinformationUI.dataModel}" filteredValue="#{userbrowserinformationUI.userBrowserInformationfilteredList}" id="userbrowserinformationList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['referrer']}">
+								<h:outputText value="#{rowVar.referrer}" />
+							</p:column>
+							<p:column headerText="#{lang['users']}">
+								<h:outputText value="#{rowVar.users}" />
+							</p:column>
+							<p:column headerText="#{lang['browserName']}">
+								<h:outputText value="#{rowVar.browserName}" />
+							</p:column>
+							<p:column headerText="#{lang['createDate']}">
+								<h:outputText value="#{rowVar.createDate}" />
+							</p:column>
+							<p:column headerText="#{lang['operatingSystem']}">
+								<h:outputText value="#{rowVar.operatingSystem}" />
+							</p:column>
+							<p:column headerText="#{lang['ipAddress']}">
+								<h:outputText value="#{rowVar.ipAddress}" />
+							</p:column>
+							<p:column headerText="#{lang['longitude']}">
+								<h:outputText value="#{rowVar.longitude}" />
+							</p:column>
+							<p:column headerText="#{lang['tasks']}">
+								<h:outputText value="#{rowVar.tasks}" />
+							</p:column>
+							<p:column headerText="#{lang['fullURL']}">
+								<h:outputText value="#{rowVar.fullURL}" />
+							</p:column>
+							<p:column headerText="#{lang['userAgent']}">
+								<h:outputText value="#{rowVar.userAgent}" />
+							</p:column>
+							<p:column headerText="#{lang['latitude']}">
+								<h:outputText value="#{rowVar.latitude}" />
+							</p:column>
+
+
+							<p:column width="80">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":userbrowserinformationInsForm:userbrowserinformationInsGrid">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{userbrowserinformationUI.userbrowserinformation}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:userbrowserinformationList" action="#{userbrowserinformationUI.userbrowserinformationDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{userbrowserinformationUI.userbrowserinformation}" />
+								</p:commandButton>
+							</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+	<!-- 
+referrer = referrer
+users = users
+browserName = browserName
+createDate = createDate
+operatingSystem = operatingSystem
+ipAddress = ipAddress
+longitude = longitude
+tasks = tasks
+fullURL = fullURL
+userAgent = userAgent
+latitude = latitude
+
+-->
+</ui:composition>

@@ -31,6 +31,14 @@ BEGIN
     CREATE INDEX [IX_TrainingProvider_AccreditationNumber] ON [dbo].[TrainingProvider]([AccreditationNumber]);
 END
 
+IF EXISTS (SELECT * FROM sys.tables WHERE name = 'TrainingProvider')
+BEGIN
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('TrainingProvider') AND name = 'BrandColorHex')
+        ALTER TABLE [dbo].[TrainingProvider] ADD [BrandColorHex] NVARCHAR(50) NULL;
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('TrainingProvider') AND name = 'LogoDocumentId')
+        ALTER TABLE [dbo].[TrainingProvider] ADD [LogoDocumentId] INT NULL;
+END
+
 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'TrainingProviderQualification')
 BEGIN
     CREATE TABLE [dbo].[TrainingProviderQualification] (
@@ -260,6 +268,7 @@ BEGIN
         [NqfLevel] INT NULL,
         [LearningProgrammeTypeCode] NVARCHAR(50) NOT NULL DEFAULT 'Learnership',
         [FundingTypeCode] NVARCHAR(50) NOT NULL DEFAULT 'DiscretionaryGrant',
+        [FundingId] INT NULL,
         [StatusCode] NVARCHAR(50) NOT NULL DEFAULT 'Registered',
         [RegistrationDate] DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
         [CommencementDate] DATETIME2 NULL,
@@ -318,6 +327,230 @@ END
 IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[GrantApplication]') AND name = 'FundingWindowId')
 BEGIN
     ALTER TABLE [dbo].[GrantApplication] ADD [FundingWindowId] INT NULL;
+END
+
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[CompanyLearner]') AND name = 'FundingId')
+BEGIN
+    ALTER TABLE [dbo].[CompanyLearner] ADD [FundingId] INT NULL;
+    CREATE INDEX [IX_CompanyLearner_FundingId] ON [dbo].[CompanyLearner]([FundingId]);
+END
+
+-- Align Organisation columns
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Organisation]') AND name = 'OrganisationStatusCode')
+BEGIN
+    ALTER TABLE [dbo].[Organisation] ADD [OrganisationStatusCode] NVARCHAR(50) NULL DEFAULT 'ACTIVE';
+    EXEC sp_executesql N'UPDATE [dbo].[Organisation] SET [OrganisationStatusCode] = ISNULL([StatusCode], ''ACTIVE'') WHERE [OrganisationStatusCode] IS NULL';
+END
+
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Organisation]') AND name = 'LevyCategoryCode')
+BEGIN
+    ALTER TABLE [dbo].[Organisation] ADD [LevyCategoryCode] NVARCHAR(50) NULL DEFAULT 'LEVY_PAYING';
+    EXEC sp_executesql N'UPDATE [dbo].[Organisation] SET [LevyCategoryCode] = ISNULL([CategoryCode], ''LEVY_PAYING'') WHERE [LevyCategoryCode] IS NULL';
+END
+
+-- Align Person columns
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Person]') AND name = 'CitizenStatusCode')
+BEGIN
+    ALTER TABLE [dbo].[Person] ADD [CitizenStatusCode] NVARCHAR(50) NULL DEFAULT 'RSA_CITIZEN';
+    EXEC sp_executesql N'UPDATE [dbo].[Person] SET [CitizenStatusCode] = ISNULL([CitizenStatus], ''RSA_CITIZEN'') WHERE [CitizenStatusCode] IS NULL';
+END
+
+-- Align TrainingProvider columns
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[TrainingProvider]') AND name = 'ProviderStatusCode')
+BEGIN
+    ALTER TABLE [dbo].[TrainingProvider] ADD [ProviderStatusCode] NVARCHAR(50) NULL DEFAULT 'ACCREDITED';
+END
+
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Organisation]') AND name = 'LogoDocumentId')
+BEGIN
+    ALTER TABLE [dbo].[Organisation] ADD [LogoDocumentId] INT NULL;
+    ALTER TABLE [dbo].[Organisation] ADD [BrandColorHex] NVARCHAR(20) NULL;
+    CREATE INDEX [IX_Organisation_LogoDocumentId] ON [dbo].[Organisation]([LogoDocumentId]);
+END
+
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[TrainingProvider]') AND name = 'LogoDocumentId')
+BEGIN
+    ALTER TABLE [dbo].[TrainingProvider] ADD [LogoDocumentId] INT NULL;
+    CREATE INDEX [IX_TrainingProvider_LogoDocumentId] ON [dbo].[TrainingProvider]([LogoDocumentId]);
+END
+
+-- Align WspSubmission columns
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[WspSubmission]') AND name = 'WspApprovalStatusCode')
+BEGIN
+    ALTER TABLE [dbo].[WspSubmission] ADD [WspApprovalStatusCode] NVARCHAR(50) NULL DEFAULT 'DRAFT';
+END
+
+-- Align CompanyLearner columns
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[CompanyLearner]') AND name = 'EnrolmentStatusCode')
+BEGIN
+    ALTER TABLE [dbo].[CompanyLearner] ADD [EnrolmentStatusCode] NVARCHAR(50) NULL DEFAULT 'REGISTERED';
+END
+
+-- Align Visit columns
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Visit]') AND name = 'VisitStatusCode')
+BEGIN
+    ALTER TABLE [dbo].[Visit] ADD [VisitStatusCode] NVARCHAR(50) NULL DEFAULT 'Scheduled';
+    EXEC sp_executesql N'UPDATE [dbo].[Visit] SET [VisitStatusCode] = ISNULL([StatusCode], ''Scheduled'') WHERE [VisitStatusCode] IS NULL';
+END
+
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[Visit]') AND name = 'VisitTypeCode')
+BEGIN
+    ALTER TABLE [dbo].[Visit] ADD [VisitTypeCode] NVARCHAR(50) NULL DEFAULT 'WORKPLACE_APPROVAL';
+    EXEC sp_executesql N'UPDATE [dbo].[Visit] SET [VisitTypeCode] = ISNULL([VisitType], ''WORKPLACE_APPROVAL'') WHERE [VisitTypeCode] IS NULL';
+END
+
+-- Align EtqaAssessor columns
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[EtqaAssessor]') AND name = 'RegistrationStatusCode')
+BEGIN
+    ALTER TABLE [dbo].[EtqaAssessor] ADD [RegistrationStatusCode] NVARCHAR(50) NULL DEFAULT 'Active';
+    EXEC sp_executesql N'UPDATE [dbo].[EtqaAssessor] SET [RegistrationStatusCode] = ISNULL([StatusCode], ''Active'') WHERE [RegistrationStatusCode] IS NULL';
+END
+
+-- Align LevyFile columns
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[LevyFile]') AND name = 'ImportStatusCode')
+BEGIN
+    ALTER TABLE [dbo].[LevyFile] ADD [ImportStatusCode] NVARCHAR(50) NULL DEFAULT 'Processed';
+    EXEC sp_executesql N'UPDATE [dbo].[LevyFile] SET [ImportStatusCode] = ISNULL([StatusCode], ''Processed'') WHERE [ImportStatusCode] IS NULL';
+END
+
+-- ASP.NET Core Identity & Security Roles (PascalCase tables)
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'AppUser')
+BEGIN
+    CREATE TABLE [dbo].[AppUser] (
+        [Id] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        [UserName] NVARCHAR(100) NOT NULL,
+        [NormalizedUserName] NVARCHAR(100) NOT NULL,
+        [Email] NVARCHAR(150) NULL,
+        [NormalizedEmail] NVARCHAR(150) NULL,
+        [EmailConfirmed] BIT NOT NULL DEFAULT 0,
+        [PasswordHash] NVARCHAR(MAX) NULL,
+        [SecurityStamp] NVARCHAR(MAX) NULL,
+        [ConcurrencyStamp] NVARCHAR(MAX) NULL,
+        [PhoneNumber] NVARCHAR(50) NULL,
+        [PhoneNumberConfirmed] BIT NOT NULL DEFAULT 0,
+        [TwoFactorEnabled] BIT NOT NULL DEFAULT 0,
+        [LockoutEnd] DATETIMEOFFSET NULL,
+        [LockoutEnabled] BIT NOT NULL DEFAULT 1,
+        [AccessFailedCount] INT NOT NULL DEFAULT 0,
+        [PersonId] INT NULL,
+        [DefaultOrganisationId] INT NULL,
+        [IsActive] BIT NOT NULL DEFAULT 1,
+        [CreatedAt] DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
+        [CreatedBy] NVARCHAR(100) NOT NULL DEFAULT 'SYSTEM',
+        [ModifiedAt] DATETIME2 NULL,
+        [ModifiedBy] NVARCHAR(100) NULL
+    );
+    CREATE INDEX [IX_AppUser_PersonId] ON [dbo].[AppUser]([PersonId]);
+    CREATE INDEX [IX_AppUser_DefaultOrganisationId] ON [dbo].[AppUser]([DefaultOrganisationId]);
+    CREATE INDEX [IX_AppUser_NormalizedUserName] ON [dbo].[AppUser]([NormalizedUserName]);
+END
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'AppRole')
+BEGIN
+    CREATE TABLE [dbo].[AppRole] (
+        [Id] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        [Name] NVARCHAR(100) NOT NULL,
+        [NormalizedName] NVARCHAR(100) NOT NULL,
+        [ConcurrencyStamp] NVARCHAR(MAX) NULL,
+        [Description] NVARCHAR(250) NULL,
+        [Active] BIT NOT NULL DEFAULT 1
+    );
+    CREATE INDEX [IX_AppRole_NormalizedName] ON [dbo].[AppRole]([NormalizedName]);
+END
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'AppUserRole')
+BEGIN
+    CREATE TABLE [dbo].[AppUserRole] (
+        [UserId] INT NOT NULL,
+        [RoleId] INT NOT NULL,
+        PRIMARY KEY ([UserId], [RoleId])
+    );
+    CREATE INDEX [IX_AppUserRole_RoleId] ON [dbo].[AppUserRole]([RoleId]);
+END
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'AppRoleClaim')
+BEGIN
+    CREATE TABLE [dbo].[AppRoleClaim] (
+        [Id] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        [RoleId] INT NOT NULL,
+        [ClaimType] NVARCHAR(MAX) NULL,
+        [ClaimValue] NVARCHAR(MAX) NULL
+    );
+    CREATE INDEX [IX_AppRoleClaim_RoleId] ON [dbo].[AppRoleClaim]([RoleId]);
+END
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'AppUserClaim')
+BEGIN
+    CREATE TABLE [dbo].[AppUserClaim] (
+        [Id] INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+        [UserId] INT NOT NULL,
+        [ClaimType] NVARCHAR(MAX) NULL,
+        [ClaimValue] NVARCHAR(MAX) NULL
+    );
+    CREATE INDEX [IX_AppUserClaim_UserId] ON [dbo].[AppUserClaim]([UserId]);
+END
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'AppUserLogin')
+BEGIN
+    CREATE TABLE [dbo].[AppUserLogin] (
+        [LoginProvider] NVARCHAR(128) NOT NULL,
+        [ProviderKey] NVARCHAR(128) NOT NULL,
+        [ProviderDisplayName] NVARCHAR(MAX) NULL,
+        [UserId] INT NOT NULL,
+        PRIMARY KEY ([LoginProvider], [ProviderKey])
+    );
+    CREATE INDEX [IX_AppUserLogin_UserId] ON [dbo].[AppUserLogin]([UserId]);
+END
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'AppUserToken')
+BEGIN
+    CREATE TABLE [dbo].[AppUserToken] (
+        [UserId] INT NOT NULL,
+        [LoginProvider] NVARCHAR(128) NOT NULL,
+        [Name] NVARCHAR(128) NOT NULL,
+        [Value] NVARCHAR(MAX) NULL,
+        PRIMARY KEY ([UserId], [LoginProvider], [Name])
+    );
+END
+
+-- System Configuration & Feature Flags
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'SystemConfig')
+BEGIN
+    CREATE TABLE [dbo].[SystemConfig] (
+        [Id] INT IDENTITY(1,1) PRIMARY KEY,
+        [ConfigKey] NVARCHAR(150) NOT NULL,
+        [ConfigValue] NVARCHAR(MAX) NULL,
+        [ConfigCategory] NVARCHAR(50) NOT NULL DEFAULT 'General',
+        [Description] NVARCHAR(500) NULL,
+        [DataType] NVARCHAR(50) NOT NULL DEFAULT 'String',
+        [IsEncrypted] BIT NOT NULL DEFAULT 0,
+        [IsActive] BIT NOT NULL DEFAULT 1,
+        [CreatedAt] DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
+        [CreatedBy] NVARCHAR(100) NULL,
+        [ModifiedAt] DATETIME2 NULL,
+        [ModifiedBy] NVARCHAR(100) NULL
+    );
+    CREATE UNIQUE INDEX [IX_SystemConfig_ConfigKey] ON [dbo].[SystemConfig]([ConfigKey]);
+    CREATE INDEX [IX_SystemConfig_ConfigCategory] ON [dbo].[SystemConfig]([ConfigCategory]);
+END
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'SystemFeatureFlag')
+BEGIN
+    CREATE TABLE [dbo].[SystemFeatureFlag] (
+        [Id] INT IDENTITY(1,1) PRIMARY KEY,
+        [FeatureKey] NVARCHAR(150) NOT NULL,
+        [FeatureName] NVARCHAR(150) NOT NULL,
+        [Description] NVARCHAR(500) NULL,
+        [IsEnabled] BIT NOT NULL DEFAULT 0,
+        [FeatureCategory] NVARCHAR(50) NOT NULL DEFAULT 'Integrations',
+        [IsActive] BIT NOT NULL DEFAULT 1,
+        [CreatedAt] DATETIME2 NOT NULL DEFAULT GETUTCDATE(),
+        [CreatedBy] NVARCHAR(100) NULL,
+        [ModifiedAt] DATETIME2 NULL,
+        [ModifiedBy] NVARCHAR(100) NULL
+    );
+    CREATE UNIQUE INDEX [IX_SystemFeatureFlag_FeatureKey] ON [dbo].[SystemFeatureFlag]([FeatureKey]);
+    CREATE INDEX [IX_SystemFeatureFlag_FeatureCategory] ON [dbo].[SystemFeatureFlag]([FeatureCategory]);
 END
 ";
 

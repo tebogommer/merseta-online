@@ -1,0 +1,158 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:c="http://java.sun.com/jsp/jstl/core"
+                template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>GpGrantBatchEntry</h1>
+					<h:form id="gpgrantbatchentryInsForm">
+						<p:growl sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						
+						<p:panelGrid columns="1" style="width:100%" id="gpgrantbatchentryInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+       						         							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="arrivalDateFromSars" value="#{gpgrantbatchentryUI.gpgrantbatchentry.arrivalDateFromSars}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['arrivalDateFromSars']}" for="arrivalDateFromSars"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="schemeYear" value="#{gpgrantbatchentryUI.gpgrantbatchentry.schemeYear}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['schemeYear']}" for="schemeYear"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="mandatoryLevyFromSars" value="#{gpgrantbatchentryUI.gpgrantbatchentry.mandatoryLevyFromSars}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['mandatoryLevyFromSars']}" for="mandatoryLevyFromSars"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="discretionaryLevyFromSars" value="#{gpgrantbatchentryUI.gpgrantbatchentry.discretionaryLevyFromSars}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['discretionaryLevyFromSars']}" for="discretionaryLevyFromSars"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="mandatoryLevy" value="#{gpgrantbatchentryUI.gpgrantbatchentry.mandatoryLevy}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['mandatoryLevy']}" for="mandatoryLevy"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="toBeRemoved" value="#{gpgrantbatchentryUI.gpgrantbatchentry.toBeRemoved}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['toBeRemoved']}" for="toBeRemoved"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="createDate" value="#{gpgrantbatchentryUI.gpgrantbatchentry.createDate}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['createDate']}" for="createDate"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="gpGrantBatchList" value="#{gpgrantbatchentryUI.gpgrantbatchentry.gpGrantBatchList}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['gpGrantBatchList']}" for="gpGrantBatchList"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="voucherNo" value="#{gpgrantbatchentryUI.gpgrantbatchentry.voucherNo}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['voucherNo']}" for="voucherNo"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="docDate" value="#{gpgrantbatchentryUI.gpgrantbatchentry.docDate}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['docDate']}" for="docDate"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="levyNumber" value="#{gpgrantbatchentryUI.gpgrantbatchentry.levyNumber}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['levyNumber']}" for="levyNumber"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="documentNumber" value="#{gpgrantbatchentryUI.gpgrantbatchentry.documentNumber}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['documentNumber']}" for="documentNumber"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="purchases" value="#{gpgrantbatchentryUI.gpgrantbatchentry.purchases}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['purchases']}" for="purchases"/>
+     							</h:panelGroup>  
+
+
+        					    <p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+									<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:gpgrantbatchentryList :gpgrantbatchentryInsForm:gpgrantbatchentryInsGrid" action="#{gpgrantbatchentryUI.gpgrantbatchentryInsert}" />
+									<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="gpgrantbatchentryInsGrid" process="@this" action="#{gpgrantbatchentryUI.prepareNew}">
+										<p:resetInput target="gpgrantbatchentryInsGrid" />
+									</p:commandButton>									
+								</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{gpgrantbatchentryUI.dataModel}" filteredValue="#{gpgrantbatchentryUI.gpGrantBatchEntryfilteredList}" id="gpgrantbatchentryList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+           						              					<p:column headerText="#{lang['arrivalDateFromSars']}">  
+                        			<h:outputText value="#{rowVar.arrivalDateFromSars}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['schemeYear']}">  
+                        			<h:outputText value="#{rowVar.schemeYear}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['mandatoryLevyFromSars']}">  
+                        			<h:outputText value="#{rowVar.mandatoryLevyFromSars}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['discretionaryLevyFromSars']}">  
+                        			<h:outputText value="#{rowVar.discretionaryLevyFromSars}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['mandatoryLevy']}">  
+                        			<h:outputText value="#{rowVar.mandatoryLevy}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['toBeRemoved']}">  
+                        			<h:outputText value="#{rowVar.toBeRemoved}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['createDate']}">  
+                        			<h:outputText value="#{rowVar.createDate}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['gpGrantBatchList']}">  
+                        			<h:outputText value="#{rowVar.gpGrantBatchList}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['voucherNo']}">  
+                        			<h:outputText value="#{rowVar.voucherNo}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['docDate']}">  
+                        			<h:outputText value="#{rowVar.docDate}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['levyNumber']}">  
+                        			<h:outputText value="#{rowVar.levyNumber}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['documentNumber']}">  
+                        			<h:outputText value="#{rowVar.documentNumber}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['purchases']}">  
+                        			<h:outputText value="#{rowVar.purchases}" />  
+            					</p:column>      
+
+
+           						<p:column width="80">
+									<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":gpgrantbatchentryInsForm:gpgrantbatchentryInsGrid">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{gpgrantbatchentryUI.gpgrantbatchentry}" />
+									</p:commandButton>
+									<p:spacer width="5" />
+									<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:gpgrantbatchentryList" action="#{gpgrantbatchentryUI.gpgrantbatchentryDelete}">
+										<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+										<f:setPropertyActionListener value="#{rowVar}" target="#{gpgrantbatchentryUI.gpgrantbatchentry}" />
+									</p:commandButton>
+								</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+<!-- 
+_lang_
+-->
+</ui:composition>

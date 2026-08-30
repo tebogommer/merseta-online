@@ -1,0 +1,300 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<p:growl>
+						<p:autoUpdate />
+					</p:growl>
+					<h:form id="mainForm">
+						<h1>Company Grant Submissions Reporting</h1>
+						<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+							<p:tabView id="tabView">
+								<p:ajax event="tabChange" listener="#{companyGrantsReportingUI.onTabChange}" update="@form" />
+								<p:tab title="Company Grant Submission List" id="subListTab">
+									<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+										<h3>Report To Display: Company Grant Submission List</h3>
+										<p:commandButton icon="fa fa-list" update=":mainForm:tabView:resultsPanelGrantSubmissionList" action="#{companyGrantsReportingUI.generateSubmissionsReport}" value="Generate Report" onstart="uploadStart()" oncomplete="uploadDone()" />
+									</p:panelGrid>
+									<p:outputPanel id="resultsPanelGrantSubmissionList">
+										<c:if test="#{companyGrantsReportingUI.displaySubmissionsReport}">
+											<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+												<ui:include src="/pages/includes/download_lazy.xhtml">
+													<ui:param name="file_name" value="Grant_Submission_List" />
+													<ui:param name="target" value="dtGrantSubmission" />
+												</ui:include>
+												<p:dataTable var="rvSub" value="#{companyGrantsReportingUI.grantSubmissionSummaryList}" id="dtGrantSubmission" paginator="true" rows="10" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+													paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,15,20,25,50,100" reflow="true" lazy="false">
+													<p:column headerText="Entity ID">
+														<p:outputLabel value="#{rvSub.entityId}" />
+													</p:column>
+													<p:column headerText="Company Name">
+														<p:outputLabel value="#{rvSub.companyName}" />
+													</p:column>
+													<p:column headerText="Trading Name">
+														<p:outputLabel value="#{rvSub.tradingName}" />
+													</p:column>
+													<p:column headerText="Grant Year" styleClass="number-column">
+														<p:outputLabel value="#{rvSub.grantYear}" />
+													</p:column>
+													<p:column headerText="Grant Type">
+														<p:outputLabel value="#{rvSub.grantType}" />
+													</p:column>
+													<p:column headerText="SDF Type">
+														<p:outputLabel value="#{rvSub.sdfType}" />
+													</p:column>
+													<p:column headerText="Grant Sign Off">
+														<p:outputLabel value="#{rvSub.grantSignOffDate}">
+															<f:convertDateTime pattern="dd/MM/yyyy HH:MM" />
+														</p:outputLabel>
+													</p:column>
+													<p:column headerText="Grant Status">
+														<p:outputLabel value="#{rvSub.grantStatus}" />
+													</p:column>
+													<p:column headerText="Province">
+														<p:outputLabel value="#{rvSub.province}" />
+													</p:column>
+													<p:column headerText="Region">
+														<p:outputLabel value="#{rvSub.region}" />
+													</p:column>
+												</p:dataTable>
+											</p:panelGrid>
+										</c:if>
+									</p:outputPanel>
+								</p:tab>
+								<p:tab title="Company Grant Submission Tally" id="subTallyTab">
+									<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+										<h3>Report To Display: Number of Grant Submission By Company</h3>
+										<p:commandButton icon="fa fa-list" update=":mainForm:tabView:resultsPanelGrantSubmissionTally" action="#{companyGrantsReportingUI.generateTallyReport}" value="Generate Report" onstart="uploadStart()" oncomplete="uploadDone()" />
+									</p:panelGrid>
+									<p:outputPanel id="resultsPanelGrantSubmissionTally">
+										<c:if test="#{companyGrantsReportingUI.displayTallyReport}">
+											<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+												<ui:include src="/pages/includes/download_lazy.xhtml">
+													<ui:param name="file_name" value="Grant_Submission_Tally_List" />
+													<ui:param name="target" value="dtGrantTally" />
+												</ui:include>
+												<p:dataTable var="rvTally" value="#{companyGrantsReportingUI.grantSubmissionTallyList}" id="dtGrantTally" paginator="true" rows="10" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+													paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,15,20,25,50,100" reflow="true" lazy="false">
+													<p:column headerText="Entity ID">
+														<p:outputLabel value="#{rvTally.entityId}" />
+													</p:column>
+													<p:column headerText="Company Name">
+														<p:outputLabel value="#{rvTally.companyName}" />
+													</p:column>
+													<p:column headerText="Trading Name">
+														<p:outputLabel value="#{rvTally.tradingName}" />
+													</p:column>
+													<p:column headerText="Province">
+														<p:outputLabel value="#{rvTally.province}" />
+													</p:column>
+													<p:column headerText="Region">
+														<p:outputLabel value="#{rvTally.region}" />
+													</p:column>
+													<p:column headerText="Number of Submissions" styleClass="number-column">
+														<h:outputText value="#{rvTally.countSubmissions}">
+															<f:convertNumber pattern="###,###,###,###,##0" />
+														</h:outputText>
+													</p:column>
+												</p:dataTable>
+											</p:panelGrid>
+										</c:if>
+									</p:outputPanel>
+								</p:tab>
+								<p:tab title="Company Grant Application Details" id="grantTrendsTab">
+
+									<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+										<h3>Report To Display: Company Grant Submissions Information By Grant Year</h3>
+
+										<h:panelGroup>
+											<div>
+												<p:outputLabel value="Financial Year / Grant Year" />
+											</div>
+											<div>
+												<p:selectOneMenu id="yeartasks" value="#{companyGrantsReportingUI.selectedYear}" style="width:75%">
+													<p:ajax />
+													<f:selectItems value="#{companyGrantsReportingUI.financialYears}" />
+												</p:selectOneMenu>
+											</div>
+											<div class="EmptyBox10" />
+										</h:panelGroup>
+
+										<p:commandButton rendered="false" icon="fa fa-list" update=":mainForm:tabView:resultsPanelGrantTrends" value="Generate Report" action="#{companyGrantsReportingUI.generateGrantsByFinYearReport}" onstart="uploadStart()" oncomplete="uploadDone()" />
+										<p:commandButton rendered="true" icon="fa fa-list" update=":mainForm:tabView:resultsPanelGrantTrends" value="Generate Report" action="#{companyGrantsReportingUI.generateGrantsByFinYearReportVersionTwo}" onstart="uploadStart()" oncomplete="uploadDone()" />
+									</p:panelGrid>
+
+									<p:outputPanel id="resultsPanelGrantTrends">
+										<c:if test="#{companyGrantsReportingUI.displayWspFinYearReport}">
+											<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+												<ui:include src="/pages/includes/download_lazy.xhtml">
+													<ui:param name="file_name" value="Company_Grant_Application_Details" />
+													<ui:param name="target" value="wspByFinYearStatusReportNewDT" />
+												</ui:include>
+												<p:dataTable var="rvWspFinStatusNew" value="#{companyGrantsReportingUI.grantsSubmissionReportList}" id="wspByFinYearStatusReportNewDT" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+													paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" >
+													<p:column headerText="Entity ID" >
+														<p:outputLabel value="#{rvWspFinStatusNew.entityId}" />
+													</p:column>
+													<p:column headerText="Company Name">
+														<p:outputLabel value="#{rvWspFinStatusNew.companyName}" />
+													</p:column>
+													<p:column headerText="Trading Name">
+														<p:outputLabel value="#{rvWspFinStatusNew.tradingName}" />
+													</p:column>
+													<p:column headerText="Categorisation" rendered="false">
+														<p:outputLabel value="#{rvWspFinStatusNew.categorisation}" />
+													</p:column>
+													<p:column headerText="Sic Code">
+														<p:outputLabel value="#{rvWspFinStatusNew.sicCode}" />
+													</p:column>
+													<p:column headerText="Sic Code Description" >
+														<p:outputLabel value="#{rvWspFinStatusNew.sicCodeDesc}" />
+													</p:column>
+													<p:column headerText="Grant Year">
+														<p:outputLabel value="#{rvWspFinStatusNew.grantYear}" />
+													</p:column>
+													<p:column headerText="Grant Type">
+														<p:outputLabel value="#{rvWspFinStatusNew.wspType}" />
+													</p:column>
+													<p:column headerText="Province">
+														<p:outputLabel value="#{rvWspFinStatusNew.province}" />
+													</p:column>
+													<p:column headerText="Region">
+														<p:outputLabel value="#{rvWspFinStatusNew.region}" />
+													</p:column>
+													<p:column headerText="Number Of Employees">
+														<p:outputLabel value="#{rvWspFinStatusNew.numberOfEmployees}" />
+													</p:column>
+													<p:column headerText="Company Size">
+														<p:outputLabel value="#{rvWspFinStatusNew.companySize}" />
+													</p:column>
+													<p:column headerText="Union Assigned">
+														<p:outputLabel value="#{rvWspFinStatusNew.unionAssigned}" />
+													</p:column>
+													<p:column headerText="Union Name">
+														<p:outputLabel value="#{rvWspFinStatusNew.unionName}" />
+													</p:column>
+													<p:column headerText="Submission Date">
+														<p:outputLabel value="#{rvWspFinStatusNew.submissionDate}" >
+															<f:convertDateTime pattern="dd MMMM yyyy HH:mm" />
+														</p:outputLabel>
+													</p:column>
+													<p:column headerText="Extension Request">
+														<p:outputLabel value="#{rvWspFinStatusNew.extensionRequestFound}" />
+													</p:column>
+													<p:column headerText="Approval Date">
+														<p:outputLabel value="#{rvWspFinStatusNew.approvedDate}" >
+															<f:convertDateTime pattern="dd MMMM yyyy HH:mm" />
+														</p:outputLabel>
+													</p:column>
+													<p:column headerText="Approval Status">
+														<p:outputLabel value="#{rvWspFinStatusNew.wspStatus}" />
+													</p:column>
+													<p:column headerText="Rejection Reasons">
+														<p:outputLabel value="#{rvWspFinStatusNew.rejectReasons}" />
+													</p:column>
+												</p:dataTable>
+											</p:panelGrid>
+										</c:if>
+										<c:if test="#{companyGrantsReportingUI.displayWspFinYearReport and false}">
+											<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+												<ui:include src="/pages/includes/download_lazy.xhtml">
+													<ui:param name="file_name" value="Company_Grant_Application_Details" />
+													<ui:param name="target" value="wspByFinYearStatusReportDT" />
+												</ui:include>
+												<p:dataTable var="rvWspFinStatus" value="#{companyGrantsReportingUI.dataModelWspByFinancialYear}" id="wspByFinYearStatusReportDT" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+													paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+													<p:column headerText="Chamber" exportable="true" rendered="false">
+														<p:outputLabel value="#{rvWspFinStatus.company.sicCode.chamber.description}"></p:outputLabel>
+													</p:column>
+													<p:column headerText="Entity ID" filterBy="#{rvWspFinStatus.company.levyNumber}">
+														<p:outputLabel value="#{rvWspFinStatus.company.levyNumber}" />
+													</p:column>
+													<p:column headerText="Company Name">
+														<p:outputLabel value="#{rvWspFinStatus.company.companyName}" />
+													</p:column>
+													<p:column headerText="Trading Name">
+														<p:outputLabel value="#{rvWspFinStatus.company.tradingName}" />
+													</p:column>
+													<p:column headerText="Categorisation">
+														<p:outputLabel value="#{rvWspFinStatus.company.categorizationLookUp.friendlyName}" rendered="#{rvWspFinStatus.company.categorizationLookUp ne null}" />
+														<p:outputLabel value="#{rvWspFinStatus.company.categorization.friendlyName}" rendered="#{rvWspFinStatus.company.categorizationLookUp eq null}" />
+													</p:column>
+													<p:column headerText="Sic Code">
+														<p:outputLabel value="#{rvWspFinStatus.company.sicCode.code}" rendered="#{rvWspFinStatus.company.sicCode ne null}" />
+														<p:outputLabel value="Not Assigned" rendered="#{rvWspFinStatus.company.sicCode eq null}"/>
+													</p:column>
+													<p:column headerText="Sic Code Description" >
+														<p:outputLabel value="#{rvWspFinStatus.company.sicCode.description}" rendered="#{rvWspFinStatus.company.sicCode ne null}"/>
+														<p:outputLabel value="Not Assigned" rendered="#{rvWspFinStatus.company.sicCode eq null}"/>
+													</p:column>
+													<p:column headerText="Grant Year">
+														<p:outputLabel value="#{rvWspFinStatus.finYear}" />
+													</p:column>
+													<p:column headerText="Grant Type">
+														<p:outputLabel value="#{rvWspFinStatus.wspType.friendlyName}" />
+													</p:column>
+													<p:column headerText="Province">
+														<p:outputLabel value="#{rvWspFinStatus.company.province.provinceDesc}" />
+													</p:column>
+													<p:column headerText="Region">
+														<p:outputLabel value="#{rvWspFinStatus.company.region.description}" />
+													</p:column>
+													<p:column headerText="Number Of Employees">
+														<p:outputLabel value="#{rvWspFinStatus.company.numberOfEmployees}" />
+													</p:column>
+													<p:column headerText="Company Size">
+														<p:outputLabel value="Small" rendered="#{rvWspFinStatus.company.numberOfEmployees lt 50}" />
+														<p:outputLabel value="Medium" rendered="#{rvWspFinStatus.company.numberOfEmployees lt 150 and rvWspFinStatus.company.numberOfEmployees gt 49}" />
+														<p:outputLabel value="Large" rendered="#{rvWspFinStatus.company.numberOfEmployees gt 149}" />
+													</p:column>
+													<p:column headerText="Union Assigned">
+														<p:outputLabel value="Yes" rendered="#{rvWspFinStatus.company.majorityUnion ne null}" />
+														<p:outputLabel value="No" rendered="#{rvWspFinStatus.company.majorityUnion eq null}" />
+													</p:column>
+													<p:column headerText="Union Name">
+														<p:outputLabel value="#{rvWspFinStatus.company.majorityUnion.description}" rendered="#{rvWspFinStatus.company.majorityUnion ne null}" />
+														<p:outputLabel value="N/A" rendered="#{rvWspFinStatus.company.majorityUnion eq null}" />
+													</p:column>
+													<p:column headerText="Submission Date">
+														<p:outputLabel value="#{rvWspFinStatus.submissionDate}">
+															<f:convertDateTime pattern="dd MMMM yyyy HH:mm" />
+														</p:outputLabel>
+													</p:column>
+													<p:column headerText="Extension Request">
+														<p:outputLabel value="Yes" rendered="#{rvWspFinStatus.extensionRequests ne null and rvWspFinStatus.extensionRequests.size() gt 0}" />
+														<p:outputLabel value="No" rendered="#{rvWspFinStatus.extensionRequests eq null or rvWspFinStatus.extensionRequests.size() eq 0}" />
+													</p:column>
+													<p:column headerText="Approval Date">
+														<p:outputLabel value="#{rvWspFinStatus.approvedDate}">
+															<f:convertDateTime pattern="dd MMMM yyyy HH:mm" />
+														</p:outputLabel>
+													</p:column>
+													<p:column headerText="Approval Status">
+														<p:outputLabel value="#{rvWspFinStatus.wspStatusEnum.friendlyName}" />
+													</p:column>
+													<p:column headerText="Rejection Reasons">
+														<p:outputLabel value="#{rvWspFinStatus.rejectionReasons}" />
+													</p:column>
+												</p:dataTable>
+											</p:panelGrid>
+										</c:if>
+									</p:outputPanel>
+								</p:tab>
+							</p:tabView>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+			<h:form>
+				<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+				<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+			</h:form>
+		</p:confirmDialog>
+
+	</ui:define>
+</ui:composition>

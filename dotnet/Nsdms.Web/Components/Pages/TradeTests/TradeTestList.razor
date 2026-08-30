@@ -1,165 +1,152 @@
-@page "/trade-tests"
-@rendermode InteractiveServer
-@inject ILearnerService LearnerService
-@inject NavigationManager Navigation
+﻿@page "/tradetests"
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Domain.Entities
+@inject ITradeTestAndArplService TradeTestService
+@inject NavigationManager Nav
 @inject ISnackbar Snackbar
 
-<PageTitle>Trade Tests & Summative Assessments - NSDMS</PageTitle>
+<PageTitle>Trade Test & ARPL Administration | merSETA NSDMS</PageTitle>
 
-<div class="mb-4 d-flex justify-space-between align-center">
-    <div>
-        <MudBreadcrumbs Items="_breadcrumbItems" Class="pa-0 mb-1" />
-        <MudText Typo="Typo.h4" Class="fw-bold">Trade Tests & Assessments Hub</MudText>
-        <MudText Typo="Typo.body2" Color="Color.Secondary">Summative artisan trade evaluations, assessment outcomes, and trade certificate verification.</MudText>
-    </div>
-    <div>
-        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.School" OnClick="@(() => Navigation.NavigateTo("/learners"))">
-            Learner Directory
-        </MudButton>
-    </div>
-</div>
-
-<MudCard Outlined="true" Class="mb-4">
-    <MudCardContent Class="py-3">
-        <MudGrid AlignItems="Center">
-            <MudItem xs="12" sm="6" md="5">
-                <MudTextField @bind-Value="_searchString" Immediate="true" Placeholder="Search trade, test center, certificate number, candidate..."
-                              Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
-                              Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" OnClearButtonClick="@(() => OnSearch(""))" TextChanged="OnSearch" />
-            </MudItem>
-            <MudItem xs="12" sm="6" md="4">
-                <MudSelect T="string" Value="_selectedStatus" Label="Result Status" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" ValueChanged="OnStatusFilterChanged">
-                    <MudSelectItem Value="@("Scheduled")">Scheduled</MudSelectItem>
-                    <MudSelectItem Value="@("Competent")">Competent (Pass)</MudSelectItem>
-                    <MudSelectItem Value="@("NotYetCompetent")">Not Yet Competent</MudSelectItem>
-                    <MudSelectItem Value="@("Absent")">Absent / Deferred</MudSelectItem>
-                </MudSelect>
-            </MudItem>
-            <MudItem xs="12" sm="12" md="3" Class="d-flex justify-end">
-                <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadData">
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
+    <!-- Top Bar -->
+    <MudCard Elevation="2" Class="mb-4">
+        <MudCardContent Class="d-flex align-center justify-space-between py-3">
+            <div>
+                <MudBreadcrumbs Items="_breadcrumbs" Class="pa-0 mb-1" />
+                <MudText Typo="Typo.h5" Class="fw-bold">Artisan Trade Test & ARPL Administration</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    National artisan assessment scheduling, NAMB serial allocation, ARPL portfolio evaluation, and trade certification.
+                </MudText>
+            </div>
+            <MudStack Row="true" Spacing="2">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadDataAsync">
                     Refresh
                 </MudButton>
-            </MudItem>
-        </MudGrid>
-    </MudCardContent>
-</MudCard>
+            </MudStack>
+        </MudCardContent>
+    </MudCard>
 
-@if (_loading)
-{
-    <div class="d-flex justify-center my-8">
-        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
-    </div>
-}
-else
-{
-    <MudTable T="LearnerTradeTest" Items="_tradeTests" Hover="true" Striped="true" Elevation="1" Class="rounded-lg">
-        <HeaderContent>
-            <MudTh>Candidate Name</MudTh>
-            <MudTh>Trade Title</MudTh>
-            <MudTh>Test Center</MudTh>
-            <MudTh>Attempt</MudTh>
-            <MudTh>Test Date</MudTh>
-            <MudTh>Assessor</MudTh>
-            <MudTh>Outcome</MudTh>
-            <MudTh>Certificate Number</MudTh>
-            <MudTh Style="text-align: right;">Actions</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Candidate">
-                <div>
-                    <div class="fw-bold">@(context.CompanyLearner?.Person?.FullName ?? "Unknown")</div>
-                    <div class="text-muted small">ID: @(context.CompanyLearner?.Person?.RsaIdNumber ?? "N/A")</div>
-                </div>
-            </MudTd>
-            <MudTd DataLabel="Trade Title">
-                <div class="fw-semibold">@context.TradeTitle</div>
-                <div class="text-muted small">Employer: @(context.CompanyLearner?.Organisation?.CompanyName ?? "N/A")</div>
-            </MudTd>
-            <MudTd DataLabel="Test Center">@context.TestCenterName</MudTd>
-            <MudTd DataLabel="Attempt">
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Default">Attempt #@context.AttemptNumber</MudChip>
-            </MudTd>
-            <MudTd DataLabel="Test Date">@context.TradeTestDate.ToString("yyyy-MM-dd")</MudTd>
-            <MudTd DataLabel="Assessor">@(context.AssessorPerson?.FullName ?? "Assigned on day")</MudTd>
-            <MudTd DataLabel="Outcome">
-                @if (context.ResultStatusCode == "Competent")
-                {
-                    <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Verified">Competent</MudChip>
-                }
-                else if (context.ResultStatusCode == "NotYetCompetent")
-                {
-                    <MudChip T="string" Color="Color.Error" Size="Size.Small" Variant="Variant.Filled">Not Yet Competent</MudChip>
-                }
-                else
-                {
-                    <MudChip T="string" Color="Color.Warning" Size="Size.Small" Variant="Variant.Filled">@context.ResultStatusCode</MudChip>
-                }
-            </MudTd>
-            <MudTd DataLabel="Certificate">
-                @if (!string.IsNullOrWhiteSpace(context.SerialCertificateNumber))
-                {
-                    <span class="font-monospace fw-bold text-success">@context.SerialCertificateNumber</span>
-                }
-                else
-                {
-                    <span class="text-muted">—</span>
-                }
-            </MudTd>
-            <MudTd DataLabel="Actions" Style="text-align: right;">
-                <MudIconButton Icon="@Icons.Material.Filled.OpenInNew" Color="Color.Primary" Size="Size.Small" Title="View Learner Record"
-                               OnClick="@(() => Navigation.NavigateTo($"/learners/{context.CompanyLearnerId}"))" />
-            </MudTd>
-        </RowTemplate>
-        <PagerContent>
-            <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
-        </PagerContent>
-    </MudTable>
-}
+    @if (_isLoading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+    }
+
+    <!-- Filter & Master Grid -->
+    <MudCard Elevation="2">
+        <MudCardContent>
+            <MudTable Items="_applications" Hover="true" Dense="true" Elevation="0" Filter="FilterApplications">
+                <ToolBarContent>
+                    <MudText Typo="Typo.h6">Trade Test Applications (@_applications.Count)</MudText>
+                    <MudSpacer />
+                    <MudTextField @bind-Value="_searchString" Placeholder="Search by application #, candidate, trade..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Immediate="true" />
+                </ToolBarContent>
+                <HeaderContent>
+                    <MudTh>App #</MudTh>
+                    <MudTh>Candidate</MudTh>
+                    <MudTh>Trade Title</MudTh>
+                    <MudTh>Type</MudTh>
+                    <MudTh>Assessment Date</MudTh>
+                    <MudTh>NAMB Serial</MudTh>
+                    <MudTh>Outcome</MudTh>
+                    <MudTh>Status</MudTh>
+                    <MudTh Style="text-align: right;">Action</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="App #" Class="font-monospace fw-bold">@context.ApplicationNumber</MudTd>
+                    <MudTd DataLabel="Candidate">@(context.Person != null ? $"{context.Person.FirstName} {context.Person.LastName}" : "Candidate")</MudTd>
+                    <MudTd DataLabel="Trade Title">@context.TradeTitle</MudTd>
+                    <MudTd DataLabel="Type">
+                        <MudChip T="string" Size="Size.Small" Color="@(context.ApplicationTypeCode == "Section28" ? Color.Warning : Color.Info)" Variant="Variant.Outlined">
+                            @context.ApplicationTypeCode
+                        </MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Assessment Date">@(context.AssessmentDate?.ToString("yyyy-MM-dd") ?? "Unscheduled")</MudTd>
+                    <MudTd DataLabel="NAMB Serial" Class="font-monospace">@(context.NambSerialNumber ?? "Pending")</MudTd>
+                    <MudTd DataLabel="Outcome">
+                        @if (context.CompetencyStatusCode == "Competent")
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Filled">Competent</MudChip>
+                        }
+                        else if (context.CompetencyStatusCode == "NotYetCompetent")
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Error" Variant="Variant.Outlined">Not Yet Competent</MudChip>
+                        }
+                        else
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Text">Pending</MudChip>
+                        }
+                    </MudTd>
+                    <MudTd DataLabel="Status">
+                        <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.StatusCode)" Variant="Variant.Filled">
+                            @context.StatusCode
+                        </MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Action" Style="text-align: right;">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Visibility" OnClick="@(() => Nav.NavigateTo($"/tradetests/{context.Id}"))">
+                            View / Evaluate
+                        </MudButton>
+                    </MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager />
+                </PagerContent>
+            </MudTable>
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
 
 @code {
-    private List<LearnerTradeTest> _tradeTests = new();
-    private bool _loading = true;
-    private string _searchString = "";
-    private string? _selectedStatus;
-
-    private List<BreadcrumbItem> _breadcrumbItems = new()
+    private List<BreadcrumbItem> _breadcrumbs = new()
     {
-        new BreadcrumbItem("Dashboard", href: "/"),
-        new BreadcrumbItem("Learners", href: "/learners"),
-        new BreadcrumbItem("Trade Tests", href: null, disabled: true)
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Quality Assurance", href: "/etqa/accreditation"),
+        new BreadcrumbItem("Trade Tests & ARPL", href: null, disabled: true)
     };
+
+    private List<LearnerTradeTestApplication> _applications = new();
+    private bool _isLoading = true;
+    private string _searchString = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadData();
+        await LoadDataAsync();
     }
 
-    private async Task LoadData()
+    private async Task LoadDataAsync()
     {
-        _loading = true;
+        _isLoading = true;
         try
         {
-            _tradeTests = await LearnerService.GetAllTradeTestsAsync(_searchString, _selectedStatus);
+            _applications = await TradeTestService.GetApplicationsAsync();
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error loading trade tests: {ex.Message}", Severity.Error);
+            Snackbar.Add($"Failed to load trade test applications: {ex.Message}", Severity.Error);
         }
         finally
         {
-            _loading = false;
+            _isLoading = false;
         }
     }
 
-    private async Task OnSearch(string text)
+    private bool FilterApplications(LearnerTradeTestApplication app)
     {
-        _searchString = text;
-        await LoadData();
+        if (string.IsNullOrWhiteSpace(_searchString)) return true;
+        var personName = app.Person != null ? $"{app.Person.FirstName} {app.Person.LastName}" : "";
+        return app.ApplicationNumber.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+               app.TradeTitle.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+               personName.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+               (app.NambSerialNumber != null && app.NambSerialNumber.Contains(_searchString, StringComparison.OrdinalIgnoreCase));
     }
 
-    private async Task OnStatusFilterChanged(string value)
+    private Color GetStatusColor(string status) => status switch
     {
-        _selectedStatus = value;
-        await LoadData();
-    }
+        "Certified" => Color.Success,
+        "Competent" => Color.Success,
+        "Assessing" => Color.Warning,
+        "AwaitingNambApproval" => Color.Info,
+        "TradeCenterAllocated" => Color.Primary,
+        "Rejected" => Color.Error,
+        _ => Color.Default
+    };
 }

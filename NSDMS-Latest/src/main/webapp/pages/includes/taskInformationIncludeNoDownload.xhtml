@@ -1,0 +1,81 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+	<c:if test="false">
+		<!-- 
+			companylearnerstradetest entity
+		-->
+		<!--  
+			<ui:include src="/pages/includes/taskInformationInclude.xhtml">
+				<ui:param name="#{TaskList}" value =" lazy data model of Tasks " /> 
+				<ui:param name="CALENDER_PATTERN" value=" autoCompleteUI.CALENDER_PATTERN " />
+			</ui:include> 
+		-->
+	</c:if>
+
+	<p:importEnum type="haj.com.entity.enums.RagEnum" />
+	
+	<p:dataTable var="rvtask" value="#{TaskList}" id="includTasksDT" emptyMessage="#{lang['no.records.found']}" rowKey="#{rvtask.id}" paginator="true" rows="5" paginatorPosition="bottom"
+		paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true" >
+		
+		<p:column headerText="Expand" width="4%" exportable="false">
+			<p:rowToggler rendered="#{rvtask.taskUsersList.size() gt 0}"></p:rowToggler>
+		</p:column>
+
+		<p:column headerText="#{lang['process.name']}">
+			<h:outputText value="#{lang[rvtask.workflowProcess.registrationName]}" />
+		</p:column>
+		
+		<p:column headerText="TK" width="40%" filterBy="#{rvtask.description}" rendered="false">
+			<h:outputText value="#{rvtask.targetKey}" />
+		</p:column>
+
+		<p:column headerText="#{lang['description']}" width="40%" filterBy="#{rvtask.description}">
+			<h:outputText value="#{rvtask.description}" />
+		</p:column>
+
+		<p:column headerText="#{lang['last.action.user']}">
+			<h:outputText value="#{rvtask.actionUser.firstName} #{rvtask.actionUser.lastName}" />
+		</p:column>
+		
+		<p:column headerText="#{lang['status']}" width="120">
+			<h:outputText value="#{lang[rvtask.taskStatus.registrationName]}" />
+		</p:column>
+		
+		<p:column headerText="Create Date" width="120" sortBy="#{rvtask.createDate}">
+			<h:outputText value="#{rvtask.createDate}">
+				<f:convertDateTime pattern="#{CALENDER_PATTERN}" />
+			</h:outputText>
+		</p:column>
+		
+		<p:column headerText="Action Date" width="120">
+			<h:outputText value="#{rvtask.actionDate}">
+				<f:convertDateTime pattern="#{CALENDER_PATTERN}" />
+			</h:outputText>
+		</p:column>
+
+		<p:column headerText="#{lang['dueDate']}" width="120">
+			<h:outputText value="#{rvtask.dueDate}">
+				<f:convertDateTime pattern="#{CALENDER_PATTERN}" />
+			</h:outputText>
+		</p:column>
+		
+		<p:rowExpansion>
+		
+			<p:dataTable value="#{rvtask.taskUsersList}" var="rv1" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+				<f:facet name="header"> Task Users Assigned </f:facet>
+				<p:column headerText="First Name">
+					<h:outputText value="#{rv1.user.firstName}" />
+				</p:column>
+				<p:column headerText="Last Name">
+					<h:outputText value="#{rv1.user.lastName}" />
+				</p:column>
+				<p:column headerText="Email Address" rendered="#{not sessionUI.hideETQA}">
+					<h:outputText value="#{rv1.user.email}" />
+				</p:column>
+			</p:dataTable>
+			
+		</p:rowExpansion>
+		
+	</p:dataTable>
+	
+</ui:composition>

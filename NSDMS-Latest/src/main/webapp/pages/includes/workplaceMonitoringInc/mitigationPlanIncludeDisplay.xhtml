@@ -1,0 +1,64 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+	<c:if test="false">
+		<!--  
+			<ui:include src="/pages/includes/workplaceMonitoringInc/mitigationPlanIncludeDisplay.xhtml">
+				<ui:param name="#{MitigationPlanList}" value =" lazy data model of: haj.com.entity.WorkplaceMonitoringMitigationPlan " /> 
+			</ui:include> 
+		-->
+	</c:if>
+	<div class="EmptyBox10" />
+	<ui:include src="/pages/includes/download_lazy.xhtml">
+		<ui:param name="file_name" value="WPM_Mitigation_Plan_Extracted" />
+		<ui:param name="target" value="mitigationPlanIncDT" />
+	</ui:include>
+	<div class="EmptyBox10" />
+	<p:dataTable var="rowVarMpInc" value="#{MitigationPlanList}" id="mitigationPlanIncDT" rowKey="#{rowVarMpInc.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+		paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+		<p:column headerText="NSDMS Generated" exportable="false" width="5%">
+			<center>
+				<p:selectBooleanCheckbox value="#{rowVarMpInc.systemGenerated}" disabled="true" />
+			</center>
+		</p:column>
+		<p:column headerText="NSDMS Generated" style="display:none">
+			<p:outputLabel value="System generated" rendered="#{rowVarMpInc.systemGenerated}" />
+			<p:outputLabel value="Manually generated" rendered="#{!rowVarMpInc.systemGenerated}" />
+		</p:column>
+		<p:column headerText="Create User" style="display:none">
+			<p:outputLabel value="N/A" rendered="#{rowVarMpInc.systemGenerated}" />
+			<p:outputLabel value="#{rowVarMpInc.createUser.firstName} #{rowVarMpInc.createUser.lastName} (#{rowVarMpInc.createUser.email})" rendered="#{!rowVarMpInc.systemGenerated}" />
+		</p:column>
+		<p:column headerText="Section" width="7%">
+			<p:outputLabel value="Learner Monitoring Survey" rendered="#{rowVarMpInc.learnerSurveyAnswerLink ne null}" />
+			<p:outputLabel value="Discretionary Grant Compliance Survey" rendered="#{rowVarMpInc.discretionaryGrantComplianceLinkSurvey ne null}" />
+			<p:outputLabel value="N/A" rendered="#{rowVarMpInc.discretionaryGrantComplianceLinkSurvey eq null and rowVarMpInc.learnerSurveyAnswerLink eq null}" />
+		</p:column>
+		<p:column headerText="Date Submitted" width="5%">
+			<p:outputLabel value="#{rowVarMpInc.createDate}">
+				<f:convertDateTime pattern="dd MMMM yyyy" />
+			</p:outputLabel>
+		</p:column>
+		<p:column headerText="Non-compliance Issue" width="4%">
+			<p:outputLabel value="#{rowVarMpInc.nonComplianceIssue.friendlyName}" />
+		</p:column>
+		<p:column headerText="Action Plan" width="5%">
+			<p:outputLabel value="#{rowVarMpInc.actionPlan}" rendered="#{rowVarMpInc.actionPlan ne null and rowVarMpInc.actionPlan ne ''}" />
+			<p:outputLabel value="Not Provided" rendered="#{rowVarMpInc.actionPlan eq null or rowVarMpInc.actionPlan eq ''}" />
+		</p:column>
+		<p:column headerText="Due Date" width="5%">
+			<p:outputLabel value="#{rowVarMpInc.dueDate}" rendered="#{rowVarMpInc.dueDate ne null}">
+				<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+			</p:outputLabel>
+			<p:outputLabel value="Not Provided" rendered="#{rowVarMpInc.dueDate eq null}" />
+		</p:column>
+		<p:column headerText="Responsible" width="5%">
+			<p:outputLabel value="#{rowVarMpInc.responsible}" rendered="#{rowVarMpInc.responsible ne null and rowVarMpInc.responsible ne ''}" />
+			<p:outputLabel value="Not Provided" rendered="#{rowVarMpInc.responsible eq null or rowVarMpInc.responsible eq ''}" />
+		</p:column>
+		<p:column headerText="Status" width="5%">
+			<p:outputLabel value="#{rowVarMpInc.openClosedEnum}" />
+		</p:column>
+	</p:dataTable>
+
+
+</ui:composition>

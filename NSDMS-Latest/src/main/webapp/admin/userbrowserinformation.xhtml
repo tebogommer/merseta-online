@@ -1,0 +1,140 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+	<ui:define name="head">
+		<script src="https://maps.google.com/maps/api/js?sensor=true&amp;key=AIzaSyBpOrW8sXVv_fxYUx5gyNwIi5fqzlkN_qw" type="text/javascript"></script>
+	</ui:define>
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>User Browser Information</h1>
+					<h:form id="mainForm">
+					<p:tooltip position="left"/>
+						<p:panelGrid columns="2" style="width:100%" id="bugreportInsGrid2" layout="grid" rendered="#{userbrowserinformationUI.userbrowserinformation.id ne null}">
+						 <h:panelGroup>
+							<h:panelGroup>
+								<h1>
+									<h:outputText value="#{userbrowserinformationUI.userbrowserinformation.users.firstName} #{userbrowserinformationUI.userbrowserinformation.users.lastName}" />
+								</h1>
+								<br />
+								<h:outputText value="Task Description: " styleClass="FontBold" />
+								<h:outputText value="#{userbrowserinformationUI.userbrowserinformation.tasks.description}" />
+							</h:panelGroup>
+
+							<h:panelGroup>
+								<h:outputText value="User Agent:" styleClass="FontBold" />
+								<p:spacer width="10"></p:spacer>
+								<h:outputText value="#{userbrowserinformationUI.userbrowserinformation.userAgent}" />
+								<br />
+								<h:outputText value="Browser Name:" styleClass="FontBold" />
+								<p:spacer width="10"></p:spacer>
+								<h:outputText value="#{userbrowserinformationUI.userbrowserinformation.browserName}" />
+								<br />
+								<h:outputText value="IP Address:" styleClass="FontBold" />
+								<p:spacer width="10"></p:spacer>
+								<h:outputText value="#{userbrowserinformationUI.userbrowserinformation.ipAddress}" />
+								<br />
+                              <h:panelGroup rendered="#{userbrowserinformationUI.userbrowserinformation.latitude ne null}">
+                                <br/>
+								<h:outputText value="Latitude:" styleClass="FontBold" />
+								<p:spacer width="10" />
+								<h:outputText value="#{userbrowserinformationUI.userbrowserinformation.latitude}" />
+								<br />
+								<h:outputText value="Longitude:" styleClass="FontBold"  />
+								<p:spacer width="10" />
+								<h:outputText value="#{userbrowserinformationUI.userbrowserinformation.longitude}" />
+								<br />
+								<h:panelGroup rendered="#{userbrowserinformationUI.userbrowserinformation.ipLocation.city ne null}">
+								  <h:outputText value="City:" styleClass="FontBold" />
+								  <p:spacer width="10" />
+								  <h:outputText value="#{userbrowserinformationUI.userbrowserinformation.ipLocation.city}" />
+								  <br/>
+								  <h:outputText value="Region:" styleClass="FontBold" />
+								  <p:spacer width="10" />
+								  <h:outputText value="#{userbrowserinformationUI.userbrowserinformation.ipLocation.regionName}" />
+								  <br/>
+								  <h:outputText value="Country:" styleClass="FontBold" />
+								  <p:spacer width="10" />
+								  <h:outputText value="#{userbrowserinformationUI.userbrowserinformation.ipLocation.country}" />
+								  <br/>
+								  <h:outputText value="ISP:" styleClass="FontBold" />
+								  <p:spacer width="10" />
+								  <h:outputText value="#{userbrowserinformationUI.userbrowserinformation.ipLocation.isp}" />
+								  <br/>
+								</h:panelGroup>
+
+							 </h:panelGroup>
+							    <br />
+								<h:outputText value="Full URL:" styleClass="FontBold" rendered="false"/>
+								<p:spacer width="10"></p:spacer>
+								<h:outputText value="#{userbrowserinformationUI.userbrowserinformation.fullURL}" rendered="false" />
+								<br />
+								<h:outputText value="Referrer:" styleClass="FontBold" rendered="false"/>
+								<p:spacer width="10"></p:spacer>
+								<h:outputText value="#{userbrowserinformationUI.userbrowserinformation.referrer}" rendered="false"/>
+
+							</h:panelGroup>
+						  </h:panelGroup>
+						  <h:panelGroup>
+						     <p:gmap center="#{userbrowserinformationUI.userbrowserinformation.latitude}, #{userbrowserinformationUI.userbrowserinformation.longitude}" zoom="15"
+						           type="STREET" style="width:100%;height:300px" rendered="#{userbrowserinformationUI.userbrowserinformation.longitude ne null}" model="#{userbrowserinformationUI.circleModel}"/>
+
+						  </h:panelGroup>
+						</p:panelGrid>
+						<br />
+						<br />
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+						<p:dataTable var="rowVar" value="#{userbrowserinformationUI.dataModel}" filteredValue="#{userbrowserinformationUI.userBrowserInformationfilteredList}" id="userbrowserinformationList" rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,15,20,25,50,100" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['first.name']}" filterBy="#{rowVar.users.firstName}" filterMatchMode="contains" filterStyle="width: 99%">
+								<h:outputText value="#{rowVar.users.firstName}" />
+							</p:column>
+							<p:column headerText="#{lang['last.name']}" filterBy="#{rowVar.users.lastName}" filterMatchMode="contains" filterStyle="width: 99%">
+								<h:outputText value="#{rowVar.users.lastName}" />
+							</p:column>
+							<p:column headerText="#{lang['tasks']}">
+								<h:outputText value="#{rowVar.tasks.description}" />
+							</p:column>
+							<p:column headerText="IP Address" width="120">
+								<h:outputText value="#{rowVar.ipAddress}" />
+							</p:column>
+							<p:column headerText="Browser Name">
+								<h:outputText value="#{rowVar.browserName}" />
+							</p:column>
+							<p:column headerText="#{lang['createDate']}" sortBy="#{rowVar.createDate}">
+								<h:outputText value="#{rowVar.createDate}"><f:convertDateTime pattern="dd MMM yyyy (HH:mm:ss)"/></h:outputText>
+							</p:column>
+
+							<p:column width="40">
+								<p:commandButton icon="ui-icon-map" title="#{lang['view']}" update="@form" action="#{userbrowserinformationUI.latLangCheck}" >
+									<f:setPropertyActionListener value="#{rowVar}" target="#{userbrowserinformationUI.userbrowserinformation}" />
+								</p:commandButton>
+							</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+	<!--
+referrer = referrer
+users = users
+browserName = browserName
+createDate = createDate
+operatingSystem = operatingSystem
+ipAddress = ipAddress
+longitude = longitude
+tasks = tasks
+fullURL = fullURL
+userAgent = userAgent
+latitude = latitude
+
+-->
+</ui:composition>

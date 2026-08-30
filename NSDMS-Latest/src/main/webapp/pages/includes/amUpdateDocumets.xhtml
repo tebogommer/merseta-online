@@ -1,0 +1,41 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui">
+	<p:panelGrid columns="1" style="width:100%">
+			<h:outputText value="Upload Document(s)" styleClass="FontBold Fs15" />
+			<p:panelGrid columns="4" style="width:100%">
+				<h:panelGroup id="docListUser" rendered="#{assesorModiratorUI.assessorModExtensionOfScope.docs.size() gt 0}">
+						<br />
+						<span class="FontBold">
+							<i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+							#{lang['please.upload.the.following.compulsory.documents']}
+						</span>
+						<br />
+						<div class="ui-g dashboard">
+							<div class="ui-g-12">
+								<p:repeat var="rc" value="#{assesorModiratorUI.assessorModExtensionOfScope.docs}" varStatus="x">
+									<div class="ui-g-12 ui-md-6 ui-lg-3">
+										<div class="ui-g card colorbox #{rc.originalFname eq null ? 'colorbox-5' : 'colorbox-1'}">
+											<div class="ui-g-4">
+												<i class="material-icons">#{rc.originalFname eq null ? 'cloud_upload' : 'check_circle'}</i>
+											</div>
+											<div class="ui-g-8">
+												<span class="colorbox-name">#{rc.configDoc.name}</span>
+												<span class="colorbox-count">
+		
+													<p:commandButton icon="fa fa-download" id="cbDownload1" rendered="#{rc.originalFname ne null}" action="#{assesorModiratorUI.download(rc)}" ajax="false" value="#{lang['download']}" immediate="true" process="@parent">
+														<p:ajax onevent="oneventFunction" />
+													</p:commandButton>
+		
+													<p:commandButton value="#{rc.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" styleClass="#{rc.originalFname eq null ? 'red-btn' : 'green-btn'} flat" process="@this" oncomplete="PF('dlgUploadUser').show()" update="@form">
+														<f:setPropertyActionListener value="#{rc}" target="#{assesorModiratorUI.doc}" />
+													</p:commandButton>
+												</span>
+											</div>
+										</div>
+									</div>
+								</p:repeat>
+							</div>
+						</div>
+				</h:panelGroup>
+			</p:panelGrid>
+		</p:panelGrid>
+</ui:composition>

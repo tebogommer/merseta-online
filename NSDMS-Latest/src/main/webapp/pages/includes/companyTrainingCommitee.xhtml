@@ -1,0 +1,89 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui">
+
+	<c:if test="false">
+		<!-- 
+			include information
+			<ui:include src="/pages/includes/companyTrainingCommitee.xhtml">
+				<ui:param name="dataModelListTC" value=" haj.com.entity.WspCompanyTrainingComitteeHistory " />
+				<ui:param name="dateTaken" value=" DATE " />
+				<ui:param name="CALENDER_PATTERN_DETAILED" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+				<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+			</ui:include>
+		 -->
+	</c:if>
+	
+	<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{dateTaken ne null}">
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText disabled="true" value="#{dateTaken}" style="width:95%">
+				<f:convertDateTime pattern="#{CALENDER_PATTERN_DETAILED}" />
+			</p:inputText>
+			<p:outputLabel value="History Time Taken" />
+		</h:panelGroup>
+		<p:spacer/>
+	</p:panelGrid>
+
+	<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+		<p:dataTable var="rowVarTC" value="#{dataModelListTC}" rowKey="#{rowVarTC.id}" id="tcList" paginator="true" rows="10" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+			paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,15,20,25" reflow="true" lazy="true">
+			<p:column headerText="#{lang['expand.row']}" width="45">
+				<p:rowToggler></p:rowToggler>
+			</p:column>
+			<p:column headerText="#{lang['first.name']}">
+				<h:outputText value="#{rowVarTC.firstName}" />
+			</p:column>
+			<p:column headerText="#{lang['last.name']}">
+				<h:outputText value="#{rowVarTC.lastName}" />
+			</p:column>
+			<p:column headerText="#{lang['rsa.id.number']}">
+				<h:outputText value="#{rowVarTC.rsaIDNumber}" />
+			</p:column>
+			<p:column headerText="#{lang['passport.number']}">
+				<h:outputText value="#{rowVarTC.passportNumber}" />
+			</p:column>
+			<p:column headerText="#{lang['email']}">
+				<h:outputText value="#{rowVarTC.email}" />
+			</p:column>
+			<p:column headerText="#{lang['union.name']}">
+				<h:outputText value="#{rowVarTC.unionName}" />
+			</p:column>
+			<p:rowExpansion>
+				<p:panelGrid columns="3" style="width:100%" id="s" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<h:panelGroup>
+						<h:outputText value="#{lang['title']}" styleClass="Fs12 FontLight" />
+						<br />
+						<h:outputText value="#{rowVarTC.title.description}" />
+					</h:panelGroup>
+					<h:panelGroup>
+						<h:outputText value="#{lang['gender']}" styleClass="Fs12 FontLight" />
+						<br />
+						<h:outputText value="#{rowVarTC.gender.genderName}" />
+					</h:panelGroup>
+					<h:panelGroup>
+						<h:outputText value="#{lang['equity']}" styleClass="Fs12 FontLight" />
+						<br />
+						<h:outputText value="#{rowVarTC.equity.description}" />
+					</h:panelGroup>
+
+
+					<h:panelGroup>
+						<h:outputText value="#{lang['tel.number']}" styleClass="Fs12 FontLight" />
+						<br />
+						<h:outputText value="#{rowVarTC.telNumber}" />
+					</h:panelGroup>
+					<h:panelGroup>
+						<h:outputText value="#{lang['cell.number']}" styleClass="Fs12 FontLight" />
+						<br />
+						<h:outputText value="#{rowVarTC.cellNumber}" />
+					</h:panelGroup>
+					<h:panelGroup>
+						<h:outputText value="#{lang['fax.number']}" styleClass="Fs12 FontLight" />
+						<br />
+						<h:outputText value="#{rowVarTC.faxNumber}" />
+					</h:panelGroup>
+				</p:panelGrid>
+			</p:rowExpansion>
+		</p:dataTable>
+
+	</p:panelGrid>
+</ui:composition>

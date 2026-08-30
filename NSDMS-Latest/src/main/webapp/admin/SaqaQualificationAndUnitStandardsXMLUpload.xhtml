@@ -1,0 +1,87 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Unit Standards Lookup Data Import</h1>
+					<h:form id="saqaUsLookupQuarterlyImportForm">
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<div class="card">
+							<p:panelGrid rendered="true" columns="1" style="width:100%" id="saqaUsXMLImportInsGrid2" layout="grid" styleClass="ui-panelgrid-blank form-group">
+								<p:outputLabel value="Please import and process the Unit Standards first" />
+							</p:panelGrid>
+							<p:panelGrid rendered="true" columns="1" style="width:100%" id="saqaUsXMLImportInsGrid3" layout="grid" styleClass="ui-panelgrid-blank form-group">
+								<h:panelGroup styleClass="md-inputfield">
+									<p:fileUpload fileUploadListener="#{sAQAQualificationsAndUsLookupDataQuarterlyImportUI.handleFileUploadUnitStandards}" dragDropSupport="true" showButtons="false" label="Select Unit Standard XML file to import" multiple="false" allowTypes="/(\.|\/)(xml|XML)$/" fileLimit="1" auto="true"
+										mode="advanced" fileLimitMessage="Only 1 unit standard XML file import is allowed" update=":saqaUsLookupQuarterlyImportForm" disabled="false" />
+								</h:panelGroup>
+								<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+									<p:commandButton value="#{lang['saqa.us.xml.quarterly.import.submit.unit.standards']}" icon="ui-icon-save" update=":saqaUsLookupQuarterlyImportForm" action="#{sAQAQualificationsAndUsLookupDataQuarterlyImportUI.processUploadedXmlDataUnitStandards}"
+										onclick="PF('dlgWaitNonAjaxUnitStandards').show()" />
+									<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="saqaUsLookupQuarterlyImportForm" process="@this" action="#{sAQAQualificationsAndUsLookupDataQuarterlyImportUI.prepareNewUnitStandards}" />
+								</p:panelGrid>
+							</p:panelGrid>
+						</div>
+						<p:spacer height="12px" />
+						<h1>Qualifications Lookup Data Import</h1>
+						<div class="card">
+							<p:panelGrid rendered="true" columns="1" style="width:100%" id="saqaUsXMLImportInsGrid4" layout="grid" styleClass="ui-panelgrid-blank form-group">
+								<p:outputLabel value="Please import and process the Unit Standards first" />
+							</p:panelGrid>
+							<p:panelGrid rendered="true" columns="1" style="width:100%" id="saqaUsXMLImportInsGrid1" layout="grid" styleClass="ui-panelgrid-blank form-group">
+								<h:panelGroup styleClass="md-inputfield">
+									<p:fileUpload fileUploadListener="#{sAQAQualificationsAndUsLookupDataQuarterlyImportUI.handleFileUploadQualification}" dragDropSupport="true" showButtons="false" label="Select Qualification XML file to import" multiple="false" allowTypes="/(\.|\/)(xml|XML)$/" fileLimit="1" auto="true"
+										mode="advanced" fileLimitMessage="Only 1 qualification XML file import is allowed" update=":saqaUsLookupQuarterlyImportForm" disabled="false" />
+								</h:panelGroup>
+								<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+									<p:commandButton value="#{lang['saqa.us.xml.quarterly.import.submit.qualifications']}" icon="ui-icon-save" update=":saqaUsLookupQuarterlyImportForm" action="#{sAQAQualificationsAndUsLookupDataQuarterlyImportUI.processUploadedXmlDataQualifications}"
+										onclick="PF('dlgWaitNonAjaxQualifications').show()" />
+									<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="saqaUsLookupQuarterlyImportForm" process="@this" action="#{sAQAQualificationsAndUsLookupDataQuarterlyImportUI.prepareNewQualifications}" />
+								</p:panelGrid>
+							</p:panelGrid>
+						</div>
+						<p:spacer height="12px" />
+						<p:commandButton value="Only Process Qualifications" update="saqaUsLookupQuarterlyImportForm" icon="ui-icon-save" action="#{sAQAQualificationsAndUsLookupDataQuarterlyImportUI.onlyProcessQualifications}" onclick="PF('dlgWaitNonAjaxQualificationsProcessOnly').show()" />
+
+						<p:spacer height="12px" />
+						<h1>Process Learning Programme Information</h1>
+						<div class="card"></div>
+						<p:commandButton value="Process Learning Programme Information" update="@form" icon="ui-icon-save" action="#{sAQAQualificationsAndUsLookupDataQuarterlyImportUI.updateLearneringProgram}"  />
+						<p:spacer height="12px" />
+						<h1>Populate Sub Field Information</h1>
+						<div class="card"></div>
+						<p:commandButton value="Populate Sub Filed Information" update="@form" icon="ui-icon-save" action="#{sAQAQualificationsAndUsLookupDataQuarterlyImportUI.updateSubFiled}"  />
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+
+		<p:dialog modal="true" widgetVar="dlgWaitNonAjaxQualificationsProcessOnly" resizable="false" closable="false">
+			<p:fieldset title="Processing Qualifications">
+				<h1>ONLY PROCESSING QUALIFICATIONS. PLEASE WAIT....</h1>
+				<h1>NO FILE WAS UPLOADED....</h1>
+				<h1>TEMP TABELS WERE NOT CLEARED....</h1>
+			</p:fieldset>
+		</p:dialog>
+
+		<p:dialog modal="true" widgetVar="dlgWaitNonAjaxUnitStandards" resizable="false" closable="false">
+			<p:fieldset title="Unit Standards">
+				<h1>PROCESSING UNIT STANDARDS. PLEASE WAIT....</h1>
+				<h1>ESTIMATED 15 MINUTES PER 250MB FILE....</h1>
+			</p:fieldset>
+		</p:dialog>
+
+		<p:dialog modal="true" widgetVar="dlgWaitNonAjaxQualifications" resizable="false" closable="false">
+			<p:fieldset title="SAQA Qualifications">
+				<h1>PROCESSING QUALIFICATIONS. PLEASE WAIT....</h1>
+				<h1>ESTIMATED 30 MINUTES PER 250MB FILE....</h1>
+			</p:fieldset>
+		</p:dialog>
+
+	</ui:define>
+
+</ui:composition>

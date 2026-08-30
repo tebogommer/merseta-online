@@ -1,0 +1,657 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<h:panelGroup id="wspGrantGroup">
+	
+		<h:form id="wspQuestionForm">
+			<p:fieldset id="questionFormWsp" legend="#{lang['wsp.questions']}" rendered="#{initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.Draft}" toggleable="true" collapsed="false">
+				<p:panelGrid columns="1" style="width:100%" id="wspQuestionsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.Draft}">
+					<h:panelGroup style="width:100%">
+						<p:outputLabel value="#{lang['indicate.planned.training.inline.employment.equity.plan.question.form']}" for="plannedTrainingInlineEEP" />
+						<div class="EmptyBox10" />
+						<p:selectOneRadio disabled="#{initiatewspUI.wsp.wspStatusEnum ne WspStatusEnum.Draft}" value="#{initiatewspUI.wsp.employmentEquityPlanInline}" required="true" id="plannedTrainingInlineEEP" 
+									converter="YesNoLookupConvertor" columns="2" layout="grid" requiredMessage="Please indicate if planned training is in line with your employment equity plan">
+							<p:ajax />
+							<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+						</p:selectOneRadio>
+					</h:panelGroup>
+			    	<h:panelGroup style="width:100%" rendered="#{initiatewspUI.wspTypeEnum ne WspTypeEnum.Mandatory}">
+						<h:outputFormat  value="If applying for a Discretionary Grant and the application exceeds the 49.5% value of the levy contribution, would your organisation consider a partial funding partnership with merSETA? Please Refer to the merSETA {0}Grant Policy{1} and {2}Grants Criteria{3} if unclear." escape="false">
+							<f:param value="&lt;a target='_blank' href='#{initiatewspUI.termsAndConditionsLink}' style='font-weight: bold;'&gt;"></f:param>
+							<f:param value="&lt;/a&gt;"></f:param>
+							<f:param value="&lt;a target='_blank' href='#{initiatewspUI.termsAndConditionsLink1}' style='font-weight: bold;'&gt;"></f:param>
+							<f:param value="&lt;/a&gt;"></f:param>
+						</h:outputFormat>
+						<p:outputLabel for="leveyLabel" />
+						<div class="EmptyBox10" />
+						<p:selectOneRadio disabled="#{initiatewspUI.wsp.wspStatusEnum ne WspStatusEnum.Draft}" value="#{initiatewspUI.wsp.coFundingPartnership}" 
+										required="true" id="leveyLabel" converter="YesNoLookupConvertor" columns="2" layout="grid" 
+										requiredMessage="Please indicate if applying for a Discretionary Grant and the application exceeds the 49.5% value of the levy contribution, would your organisation consider a partial funding partnership with merSETA?">
+							<p:ajax />
+							<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+						</p:selectOneRadio>
+					</h:panelGroup>
+				</p:panelGrid>
+				<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.Draft}">
+					<p:commandButton styleClass="Fs14 FontLight" value="#{lang['save']}" icon="ui-icon-save" update="@form :tabView:pivotalPlanGroup" action="#{initiatewspUI.updateWsp}" process="wspQuestionForm" />
+				</p:panelGrid>
+			</p:fieldset>
+		</h:form>
+		
+		<h:form id="wspGrantForm">
+			<p:remoteCommand update="tabView:wspGrantTableForm @form" id="updateWSP" name="updateWSP" process="@this"></p:remoteCommand>
+			
+			<p:fieldset legend="#{lang['wsp']}" rendered="#{initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.Draft}" toggleable="true" collapsed="false">
+				<p:panelGrid columns="2" style="width:100%" id="discretionaryGrantGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+					<p:outputPanel>
+						<h:panelGroup styleClass="md-inputfield" style="margin-top:19px;">
+							<p:inputText id="fname" value="#{wspUI.mandatoryGrant.firstName}" style="width:95%; opacity:1 !important;" required="false" requiredMessage="#{lang['provide.first.name']}">
+								<p:ajax></p:ajax>
+							</p:inputText>
+							<p:outputLabel value="#{lang['first.name']}" for="fname"/>
+						</h:panelGroup>
+					</p:outputPanel>
+
+					<p:outputPanel>
+						<h:panelGroup styleClass="md-inputfield" style="margin-top:19px;">
+							<p:inputText id="lname" value="#{wspUI.mandatoryGrant.lastName}" style="width:95%; opacity:1 !important;" required="false" requiredMessage="#{lang['provide.last.name']}">
+								<p:ajax></p:ajax>
+							</p:inputText>
+							<p:outputLabel value="#{lang['last.name']}" for="lname"/>
+						</h:panelGroup>
+					</p:outputPanel>
+
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="ID Type" for="idType" />
+						</div>
+						<div>
+						<p:selectOneMenu id="idType" value="#{wspUI.mandatoryGrant.idType}" style="width:95%" required="false"  requiredMessage="#{lang['provide.type.of.id']}">
+							<p:ajax update="idInput rsaCitizenTypepanelWsp adateOfBirth agender anationality"  listener="#{wspUI.clearInfoPassportRsaIdSelection}" />
+							<f:selectItem itemLabel="---#{lang['select.id.type']}---" itemValue="" styleClass="FontLight gray" noSelectionOption="true" />
+							<f:selectItems value="#{enumUI.idPassportEnumDD}" />
+						</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					<p:spacer/>
+					<p:outputPanel id="idInput">
+						<h:panelGroup id="rsaPnl" styleClass="md-inputfield" rendered="#{wspUI.mandatoryGrant.idType eq idpass.RsaId}"  required="true" requiredMessage="#{lang['rsa.id.number']}">
+							<p:inputText id="rsaIDNumber" value="#{wspUI.mandatoryGrant.idNumber}" style="width:95%"  maxlength="#{searchUserPassportOrIdUI.MAX_RSA_ID_NUMBER}">
+								<p:ajax event="change" update="rsaCitizenTypepanelWsp adateOfBirth agender anationality" listener="#{wspUI.setDOBGenderNationality}" execute="" />
+							</p:inputText>
+							<p:outputLabel value="#{lang['rsa.id.number']}" for="rsaIDNumber" />
+						</h:panelGroup>
+						<h:panelGroup id="passPnl" styleClass="md-inputfield" rendered="#{wspUI.mandatoryGrant.idType eq idpass.Passport}" required="true" requiredMessage="#{lang['passport.number']}">
+							<p:inputText id="passportNumber" value="#{wspUI.mandatoryGrant.idNumber}" style="width:95%" validatorMessage="#{lang['user.passport.length']}" maxlength="#{searchUserPassportOrIdUI.MAX_PASSPORT_NUMBER}">
+								<p:ajax/>
+							</p:inputText>
+							<h:message for="passportNumber" />
+							<p:outputLabel value="#{lang['passport.number']}" for="passportNumber" />
+						</h:panelGroup>
+					</p:outputPanel>
+					
+					<p:outputPanel id="rsaCitizenTypepanelWsp">
+						<h:panelGroup id="citizenDisplayTypewsp" styleClass="md-inputfield" rendered="#{wspUI.mandatoryGrant.idType eq idpass.RsaId}">
+							<p:inputText id="citizenTypewsp" value="#{wspUI.mandatoryGrant.rsaCitizenTypeEnum.friendlyName}" style="width:95%" disabled="true">
+							</p:inputText>
+							<p:outputLabel value="RSA Citizen Type" for="citizenTypewsp" />
+						</h:panelGroup>
+					</p:outputPanel>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:calendar navigator="true" id="adateOfBirth" value="#{wspUI.mandatoryGrant.dateOfBirth}" disabled="#{wspUI.mandatoryGrant.idType eq idpass.RsaId}" size="19" showOn="button" 
+									pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" yearRange="c-100:c" required="false"  requiredMessage="#{lang['provide.date.of.birth']}">
+									<p:ajax event="dateSelect" />
+						</p:calendar>
+						<p:outputLabel value="#{lang['date.of.birth']}" for="adateOfBirth" />
+					</h:panelGroup>
+
+					<h:panelGroup id="agender">
+						<div>
+							<p:outputLabel value="Gender" for="gen" />
+						</div>
+						<div>
+							<p:selectOneMenu id="gen" value="#{wspUI.mandatoryGrant.gender}" disabled="#{wspUI.mandatoryGrant.idType eq idpass.RsaId}" style="width:95%" required="true" requiredMessage="#{lang['select.gender']}" converter="GenderConvertor">
+								<p:ajax />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsGender}" var="rv" itemLabel="#{rv.genderName}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					
+					<h:panelGroup >
+						<div>
+							<p:outputLabel value="#{lang['equity']}" for="eq" styleClass="gray"/>
+						</div>
+						<div>
+							<p:autoComplete id="eq" value="#{wspUI.mandatoryGrant.equity}" style="width:95%" completeMethod="#{autoCompleteUI.completeEquityExcludeOtherAndUnkown}" 
+											var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="EquityConvertor" dropdown="true" minQueryLength="3"
+											maxResults="10" requiredMessage="#{lang['provide.equity']}" required="true">
+								<p:ajax event="itemSelect" />
+								<p:column headerText="#{lang['equity']}" style="white-space: nowrap">#{rv.description}</p:column>
+							</p:autoComplete>
+						</div>
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield" id="anationality">
+						<p:autoComplete id="nationality" value="#{wspUI.mandatoryGrant.nationality}" disabled="#{wspUI.mandatoryGrant.idType eq idpass.RsaId and wspUI.mandatoryGrant.rsaCitizenTypeEnum eq RsaCitizenTypeEnum.RsaCitizen}" required="true" requiredMessage="#{lang['nationality.required']}" completeMethod="#{autoCompleteUI.completeNationality}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="NationalityConvertor" dropdown="true"
+							minQueryLength="3" maxResults="10">
+							<p:ajax event="itemSelect" />
+							<p:column headerText="#{lang['nationality']}" style="white-space: nowrap">#{rv.description}</p:column>
+						</p:autoComplete>
+						<p:outputLabel value="#{lang['nationality']}:" for="nationality" />
+					</h:panelGroup>
+
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="Enrolment Status" for="es" />
+						</div>
+						<div>
+							<p:selectOneMenu id="es" value="#{wspUI.mandatoryGrant.enrolmentStatus}" style="width:95%" required="true" requiredMessage="Select Enrolment Status" converter="EnrolmentStatusConvertor">
+								<p:ajax />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.enrolmentStatusWSP}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:autoComplete id="disability" value="#{wspUI.mandatoryGrant.disability}" completeMethod="#{autoCompleteUI.completeDisabilityStatusCanSelect}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="DisabilityStatusConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true"
+							requiredMessage="Please Select Disability">
+							<p:column headerText="Description" style="white-space: nowrap">#{rv.description}</p:column>
+							<p:ajax event="itemSelect" />
+						</p:autoComplete>
+						<p:outputLabel value="#{lang['disability']}" for="disability" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:autoComplete id="ofoCode" value="#{wspUI.mandatoryGrant.ofoCodes}" completeMethod="#{initiatewspUI.completeOfoCodesWspByDescAndYear}" var="rv" itemLabel="#{rv.ofoDescription}" itemValue="#{rv}" forceSelection="true" converter="OfoCodesConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true" requiredMessage="#{lang['select.ofo.code']}">
+							<p:column headerText="OfoCodes" style="white-space: nowrap">#{rv.ofoCodeParent}</p:column>
+							<p:column headerText="Description" style="white-space: nowrap">#{rv.description}</p:column>
+							<p:ajax event="itemSelect" />
+						</p:autoComplete>
+						<p:outputLabel value="#{lang['ofo.code']}" for="ofoCode" />
+					</h:panelGroup>
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="#{lang['employment.status']}" for="proc" styleClass="gray" />
+						</div>
+						<div>
+							<p:selectOneMenu id="proc" value="#{wspUI.mandatoryGrant.employmentStatus}" style="width:95%" required="true" requiredMessage="#{lang['select.employment.status']}">
+								<p:ajax listener="#{wspUI.calcEmploymentData}" />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" itemValue="" noSelectionOption="true" />
+								<f:selectItems value="#{enumUI.employmentStatusEnumDD}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield" style="margin-top: 19px" rendered="true">
+						<p:autoComplete id="muni" value="#{wspUI.mandatoryGrant.municipality}" completeMethod="#{autoCompleteUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityProvince}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%" required="true"
+							requiredMessage="Select Municipality">
+							<p:ajax event="itemSelect" />
+							<p:column headerText="Municipality" style="white-space: nowrap">#{rv.municipalityProvince}</p:column>
+						</p:autoComplete>
+						<p:outputLabel value="#{lang['municipality']}" for="muni" />
+					</h:panelGroup>
+
+					<h:panelGroup rendered="#{wspUI.mandatoryGrant.wsp.wspType eq WspTypeEnum.Both}">
+						<div>
+							<p:outputLabel value="#{lang['funding.method']}" for="fund" />
+						</div>
+						<div>
+							<p:selectOneMenu id="fund" value="#{wspUI.mandatoryGrant.funding}" style="width:95%" required="true" requiredMessage="#{lang['select.planned']}" converter="FundingConvertor">
+								<p:ajax event="itemSelect" listener="#{wspUI.checkDateLimits}" update="startDate endDate estimatedOutput" />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsFundingWSP}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+
+					<h:panelGroup rendered="#{wspUI.mandatoryGrant.wsp.wspType eq WspTypeEnum.Discretionary}">
+						<div>
+							<p:outputLabel value="#{lang['funding.method']}" for="fund2" />
+						</div>
+						<div>
+							<p:selectOneMenu id="fund2" value="#{wspUI.mandatoryGrant.funding}" style="width:95%" required="true" requiredMessage="#{lang['select.planned']}" converter="FundingConvertor">
+								<p:ajax event="itemSelect" listener="#{wspUI.checkDateLimits}" update="startDate endDate estimatedOutput" />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsFundingDisc}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+
+					<h:panelGroup rendered="#{wspUI.mandatoryGrant.wsp.wspType ne WspTypeEnum.Discretionary and wspUI.mandatoryGrant.wsp.wspType ne WspTypeEnum.Both}">
+						<div>
+							<p:outputLabel value="#{lang['funding.method']}" for="fund3" />
+						</div>
+						<div>
+							<p:selectOneMenu id="fund3" value="#{wspUI.mandatoryGrant.funding}" style="width:95%" required="true" requiredMessage="#{lang['select.planned']}" converter="FundingConvertor">
+								<p:ajax event="itemSelect" listener="#{wspUI.checkDateLimits}" update="startDate endDate estimatedOutput @form" />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsFundingDiscWSP}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="#{lang['intervention.type']}" for="intType" />
+						</div>
+						<div>
+							<p:selectOneMenu id="intType" value="#{wspUI.mandatoryGrant.interventionType}" style="width:95%" required="true" requiredMessage="#{lang['select.planned']}" converter="InterventionTypeConvertor">
+								<p:ajax event="itemSelect" listener="#{wspUI.applyInterventionData}" update="@form" />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsInterventionTypeWspSelection}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="#{lang['pivotal.non.pivotal.trainig']}" styleClass="gray" />
+						</div>
+						<div>
+							<p:selectOneMenu value="#{wspUI.mandatoryGrant.pivotNonPivot}" style="width:75%" disabled="true">
+								<p:ajax update="@form" />
+								<f:selectItem itemLabel="--- #{lang['select.one']} ---" itemValue="" styleClass="FontLight gray" noSelectionOption="true" />
+								<f:selectItems value="#{enumUI.pivotalNonPivotalDD}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="#{lang['nqf.aligned']}" for="nqf" />
+						</div>
+						<div>
+							<p:selectOneMenu id="nqf" value="#{wspUI.mandatoryGrant.nqfAligned}" style="width:95%" required="true" requiredMessage="#{lang['select.planned']}" converter="YesNoLookupConvertor" disabled="true">
+								<p:ajax />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="rv" itemLabel="#{rv.yesNoName}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					
+					<h:panelGroup styleClass="md-inputfield" rendered="#{wspUI.mandatoryGrant.pivotNonPivot eq PivotNonPivotEnum.Pivotal and not wspUI.skillsSet and not wspUI.skillsProgram and not wspUI.shortCreditBearing}" style="margin-top: 19px">
+						<p:autoComplete required="true" id="highestQualTitle" value="#{wspUI.mandatoryGrant.qualification}" completeMethod="#{autoCompleteUI.completeQualification}" var="rv" itemLabel="#{rv.saqaQualification}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+							<p:ajax event="itemSelect" listener="#{wspUI.applySaqaData}" update="@form" />
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+							<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+							<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+						</p:autoComplete>
+						<p:outputLabel value="#{lang['saqa.id']}" for="highestQualTitle" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield" rendered="#{wspUI.mandatoryGrant.pivotNonPivot eq PivotNonPivotEnum.Pivotal and wspUI.shortCreditBearing}" style="margin-top: 19px">
+						<p:autoComplete required="true" id="unitStandard" value="#{wspUI.mandatoryGrant.unitStandard}" completeMethod="#{autoCompleteUI.completeUnitStandards}" var="rv" itemLabel="#{rv.title}" itemValue="#{rv}" forceSelection="true" converter="UnitStandardsConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+							<p:ajax event="itemSelect" listener="#{wspUI.applySaqaData}" update="@form" />
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+							<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.title}</p:column>
+							<p:column headerText="NQF Level" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+						</p:autoComplete>
+						<p:outputLabel value="#{lang['unit.standard']}" for="unitStandard" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield" rendered="#{wspUI.mandatoryGrant.pivotNonPivot eq PivotNonPivotEnum.Pivotal and not wspUI.skillsSet and wspUI.skillsProgram}" style="margin-top: 19px">
+						<p:autoComplete required="true" id="skillsProgram" value="#{wspUI.mandatoryGrant.skillsProgram}" completeMethod="#{autoCompleteUI.completeSkillsProgram}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SkillsProgramConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+							<p:ajax event="itemSelect" listener="#{wspUI.applySaqaData}" update="@form" />
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+							<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+						</p:autoComplete>
+						<p:outputLabel value="Skills Program" for="skillsProgram" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield" rendered="#{wspUI.mandatoryGrant.pivotNonPivot eq PivotNonPivotEnum.Pivotal and wspUI.skillsSet and not wspUI.skillsProgram}" style="margin-top: 19px">
+						<p:autoComplete required="true" id="skillsSet" value="#{wspUI.mandatoryGrant.skillsSet}" completeMethod="#{autoCompleteUI.completeSkillsSet}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SkillsSetConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+							<p:ajax event="itemSelect" listener="#{wspUI.applySaqaData}" update="@form" />
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+							<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+						</p:autoComplete>
+						<p:outputLabel value="Skills Set" for="skillsSet" />
+					</h:panelGroup>
+
+					<h:panelGroup rendered="#{wspUI.mandatoryGrant.pivotNonPivot eq PivotNonPivotEnum.Pivotal}">
+						<div>
+							<p:outputLabel value="#{lang['nqf.level']}" for="nqflevel" />
+						</div>
+						<div>
+							<p:selectOneMenu id="nqflevel" value="#{wspUI.mandatoryGrant.nqfLevels}" style="width:95%" required="true" requiredMessage="Select NQF LEVEL" converter="NqfLevelsConvertor" disabled="#{wspUI.mandatoryGrant.qualification ne null}">
+								<p:ajax update="interventionLvl" listener="#{wspUI.applyNQFData}" />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsNqfLevels}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup id="interventionLvl" rendered="#{wspUI.mandatoryGrant.pivotNonPivot eq PivotNonPivotEnum.Pivotal}">
+						<div>
+							<p:outputLabel value="#{lang['level.of.training']}" for="intlevel" />
+						</div>
+						<div>
+							<p:selectOneMenu id="intlevel" value="#{wspUI.mandatoryGrant.interventionLevel}" style="width:95%" required="true" requiredMessage="Select Level of training" converter="InterventionLevelConvertor" disabled="#{wspUI.mandatoryGrant.nqfLevels ne null and wspUI.mandatoryGrant.nqfLevels.interventionLevel ne null}">
+								<p:ajax />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsInterventionLevel}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup rendered="#{wspUI.mandatoryGrant.pivotNonPivot eq PivotNonPivotEnum.Pivotal}">
+						<div>
+							<p:outputLabel value="#{lang['etqa']}" for="etqa" />
+						</div>
+						<div>
+							<p:selectOneMenu id="etqa" value="#{wspUI.mandatoryGrant.etqa}" disabled="#{wspUI.mandatoryGrant.qualification.etqaid ne null or wspUI.mandatoryGrant.skillsProgram ne null or wspUI.mandatoryGrant.skillsSet ne null}" style="width:95%" required="true" requiredMessage="Select Etqa" converter="EtqaConvertor">
+								<p:ajax />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsEtqa}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					
+					<h:panelGroup rendered="#{wspUI.mandatoryGrant.pivotNonPivot eq PivotNonPivotEnum.NonPivotal}">
+						<div>
+							<p:outputLabel value="#{lang['intervention.title']}" for="intTitle" />
+						</div>
+						<div>
+							<p:selectOneMenu id="intTitle" value="#{wspUI.mandatoryGrant.nonCreditBearingIntervationTitle}" style="width:95%" required="true" requiredMessage="Select Intervation Title" converter="NonCreditBearingIntervationTitleConvertor" disabled="#{atrUI.mandatoryGrant.qualification.etqaid ne null or atrUI.mandatoryGrant.skillsProgram ne null or atrUI.mandatoryGrant.skillsSet ne null}">
+								<p:ajax />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsNonCreditBearingIntervationTitle}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield" style="margin-top: 19px" rendered="false">
+						<p:inputText value="#{wspUI.mandatoryGrant.interventionTitle}" id="s" required="true" requiredMessage="Intervention title is Required" style="width: 95%">
+							<p:ajax></p:ajax>
+						</p:inputText>
+						<p:outputLabel value="#{lang['intervention.title']}" for="s" />
+					</h:panelGroup>
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="#{lang['provider.type']}" for="provType" />
+						</div>
+						<div>
+							<p:selectOneMenu id="provType" value="#{wspUI.mandatoryGrant.providerType}" style="width:95%" required="true" requiredMessage="Select Provider Type" converter="ProviderTypeConvertor">
+								<p:ajax />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsProviderType}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+
+					<p:outputPanel id="estimatedOutput">
+						<h:panelGroup styleClass="md-inputfield" style="margin-top: 19px">
+							<p:inputNumber id="estimated" minValue="0" value="#{wspUI.mandatoryGrant.estimatedCost}" decimalPlaces="0" inputStyle="width: 95%; opacity:1 !important;" required="true" requiredMessage="Estimated Cost is required">
+								<p:ajax></p:ajax>
+							</p:inputNumber>
+							<p:outputLabel value="#{lang['estimated.cost']}" for="estimated" />
+						</h:panelGroup>
+					</p:outputPanel>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:datePicker id="startDate" value="#{wspUI.mandatoryGrant.startDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" style="width: 95%"
+									  mask="true" requiredMessage="#{'estimated.start.date'}" yearNavigator="true" readonlyInput="true" required="true" yearRange="2024:2024">
+							<p:ajax update="duration" event="dateSelect"></p:ajax>
+						</p:datePicker>
+						<p:outputLabel value="#{lang['estimated.start.date']}" for="startDate" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:datePicker id="endDate" value="#{wspUI.mandatoryGrant.endDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" style="width: 95%"
+									  mask="true" requiredMessage="#{'estimated.end.date'}" yearNavigator="true" readonlyInput="true" required="true" yearRange="2024:2024">
+							<p:ajax update="duration" event="dateSelect" ></p:ajax>
+						</p:datePicker>
+						<p:outputLabel value="#{lang['estimated.end.date']}" for="endDate" />
+					</h:panelGroup>
+					<p:outputPanel id="duration">
+						<h:panelGroup styleClass="md-inputfield" style="margin-top:19px;">
+							<p:inputText value="#{wspUI.mandatoryGrant.duration} Days" disabled="true" style="width:95%; opacity:1 !important;" />
+							<p:outputLabel value="#{lang['duration']}" />
+						</h:panelGroup>
+					</p:outputPanel>
+				</p:panelGrid>
+			</p:fieldset>
+			<br />
+			<p:outputPanel id="dataForm4">
+				<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.Draft}">
+					<p:commandButton styleClass="Fs14 FontLight" value="#{lang['submit']}" icon="ui-icon-save" update="@form :tabView:wspGrantTableForm :tabView:wspGrantWSPTableForm" action="#{wspUI.generateEmployeesEmployed}" process="@form" />
+					<p:commandButton styleClass="Fs14 FontLight" value="Clear" icon="ui-icon-close" update="@form :tabView:wspGrantTableForm :tabView:wspGrantWSPTableForm" action="#{wspUI.clear}" process="@this">
+					</p:commandButton>
+				</p:panelGrid>
+			</p:outputPanel>
+			<br />
+		</h:form>
+
+		<h:form id="wspGrantTableForm">
+
+			<p:commandButton value="#{lang['delete.all']}" icon="ui-icon-delete-forever" styleClass="secondary Fs18 flat Fright" style="height: 50px" process="@this" update="@form" action="#{wspUI.deleteAll}" rendered="#{initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.Draft}">
+				<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+			</p:commandButton>
+			<br />
+			<h2>#{lang['wsp']}</h2>
+			<c:if test="#{sessionUI.externalParty and false}">
+				<ui:include src="/pages/includes/download_lazy.xhtml">
+					<ui:param name="file_name" value="WSP_DATA" />
+					<ui:param name="target" value="WSP_List_Download" />
+				</ui:include>
+			</c:if>
+			<p:dataTable var="rowVarWspDownload" style="display:none" value="#{wspUI.dataModel}" id="WSP_List_Download" rowKey="#{rowVarWspDownload.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,20,40,80,160,320" reflow="true"
+				lazy="true">
+				<p:column headerText="#{lang['first.name']}" rendered="#{initiatewspUI.showDetails}">
+					<p:outputLabel value="#{rowVarWspDownload.firstName}" style="width:95%" />
+				</p:column>
+				<p:column headerText="#{lang['last.name']}" rendered="#{initiatewspUI.showDetails}">
+					<p:outputLabel value="#{rowVarWspDownload.lastName}" style="width:95%" />
+				</p:column>
+				<p:column headerText="RSA ID/Passport Number" rendered="#{initiatewspUI.showDetails}">
+					<p:outputLabel value="#{rowVarWspDownload.idNumber}" />
+				</p:column>
+				<p:column headerText="#{lang['ofo.code']}">
+					<p:outputLabel value="#{rowVarWspDownload.ofoCodes.ofoCodeParent} - #{rowVarWspDownload.ofoCodes.description}" style="width:95%" rendered="#{rowVarWspDownload.ofoCodes ne null}" />
+				</p:column>
+				<p:column headerText="#{lang['employment.status']}">
+					<p:outputLabel value="#{rowVarWspDownload.employmentStatus.friendlyName}" style="width:95%" />
+				</p:column>
+				<p:column headerText="#{lang['municipality']}" rendered="false">
+					<p:outputLabel value="#{rowVarWspDownload.municipality.municipalityDesc}" style="width:95%" />
+				</p:column>
+				<p:column headerText="#{lang['funding.method']}">
+					<p:outputLabel value="#{rowVarWspDownload.funding.description}" style="width:95%" />
+				</p:column>
+				<p:column headerText="#{lang['intervention.type']}">
+					<p:outputLabel value="#{rowVarWspDownload.interventionType.description}" style="width:95%" />
+				</p:column>
+				<p:column headerText="#{lang['pivotal.status']}">
+					<p:outputLabel value="#{rowVarWspDownload.interventionType.pivotNonPivot.friendlyName}" style="width:95%" />
+				</p:column>
+				<p:column headerText="#{lang['nqf.aligned']}" >
+					<p:outputLabel value="#{rowVarWspDownload.nqfAligned.yesNoName}" rendered="#{rowVarWspDownload.pivotNonPivot eq PivotNonPivotEnum.Pivotal}" />
+					<p:outputLabel value="N/A" rendered="#{rowVarWspDownload.pivotNonPivot ne PivotNonPivotEnum.Pivotal}" />
+				</p:column>
+				<p:column headerText="#{lang['saqa.id']}" >
+					<p:outputLabel value="#{rowVarWspDownload.qualification.code}" rendered="#{rowVarWspDownload.pivotNonPivot eq PivotNonPivotEnum.Pivotal}" />
+					<p:outputLabel value="N/A" rendered="#{rowVarWspDownload.pivotNonPivot ne PivotNonPivotEnum.Pivotal}" />
+				</p:column>
+				<p:column headerText="#{lang['intervention.title']}" >
+					<p:outputLabel value="#{rowVarWspDownload.qualification.description}" rendered="#{rowVarWspDownload.pivotNonPivot eq PivotNonPivotEnum.Pivotal}" />
+					<p:outputLabel value="#{rowVar.interventionTitle}" rendered="#{rowVarWspDownload.pivotNonPivot eq PivotNonPivotEnum.NonPivotal}" />
+				</p:column>
+				<p:column headerText="#{lang['nqf.level']}" >
+					<p:outputLabel value="#{rowVarWspDownload.nqfLevels.description}" rendered="#{rowVarWspDownload.pivotNonPivot eq PivotNonPivotEnum.Pivotal}" />
+					<p:outputLabel value="N/A" rendered="#{rowVarWspDownload.pivotNonPivot ne PivotNonPivotEnum.Pivotal}" />
+				</p:column>
+				<p:column headerText="#{lang['level.of.training']}" >
+					<p:outputLabel value="#{rowVarWspDownload.interventionLevel.description}" rendered="#{rowVarWspDownload.pivotNonPivot eq PivotNonPivotEnum.Pivotal}" />
+					<p:outputLabel value="N/A" rendered="#{rowVarWspDownload.pivotNonPivot ne PivotNonPivotEnum.Pivotal}" />
+				</p:column>
+				<p:column headerText="#{lang['etqa']}" >
+					<p:outputLabel value="#{rowVarWspDownload.etqa.description}" rendered="#{rowVarWspDownload.pivotNonPivot eq PivotNonPivotEnum.Pivotal}" />
+					<p:outputLabel value="N/A" rendered="#{rowVarWspDownload.pivotNonPivot ne PivotNonPivotEnum.Pivotal}" />
+				</p:column>
+				<p:column headerText="#{lang['provider.type']}" >
+					<p:outputLabel value="#{rowVarWspDownload.providerType.description}" />
+				</p:column>
+				<p:column headerText="#{lang['estimated.cost']}" >
+					<p:outputLabel value="R#{rowVarWspDownload.estimatedCost}"  />
+				</p:column>
+				<p:column headerText="#{lang['start.date']}" >
+					<p:outputLabel value="#{rowVarWspDownload.startDate}" >
+						<f:convertDateTime pattern="dd MMMM yyyy" />
+					</p:outputLabel>
+				</p:column>
+				<p:column headerText="#{lang['end.date']}" >
+					<p:outputLabel value="#{rowVarWspDownload.endDate}" >
+						<f:convertDateTime pattern="dd MMMM yyyy" />
+					</p:outputLabel>
+				</p:column>
+			</p:dataTable>
+			
+			<p:dataTable var="rowVar" value="#{wspUI.dataModel}" id="WSP_List" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,20,40,80,160,320" reflow="true"
+				lazy="true">
+				<p:column headerText="#{lang['expand.row']}" width="45" exportable="false">
+					<p:rowToggler></p:rowToggler>
+				</p:column>
+				
+				<p:column headerText="#{lang['first.name']}" sortBy="#{rowVar.firstName}" rendered="#{initiatewspUI.showDetails}">
+					<p:outputLabel value="#{rowVar.firstName}" style="width:95%" />
+				</p:column>
+				<p:column headerText="#{lang['last.name']}" sortBy="#{rowVar.lastName}" rendered="#{initiatewspUI.showDetails}">
+					<p:outputLabel value="#{rowVar.lastName}" style="width:95%" />
+				</p:column>
+				<p:column headerText="RSA ID/Passport Number" rendered="#{initiatewspUI.showDetails}">
+					<p:outputLabel value="#{rowVar.idNumber}" />
+				</p:column>
+				<p:column headerText="#{lang['ofo.code']}">
+					<p:outputLabel value="#{rowVar.ofoCodes.ofoCodeParent} - #{rowVar.ofoCodes.description}" style="width:95%" rendered="#{rowVar.ofoCodes ne null}" />
+				</p:column>
+
+				<p:column headerText="#{lang['employment.status']}">
+					<p:outputLabel value="#{rowVar.employmentStatus.friendlyName}" style="width:95%" />
+				</p:column>
+				<p:column headerText="#{lang['municipality']}" rendered="false">
+					<p:outputLabel value="#{rowVar.municipality.municipalityDesc}" style="width:95%" />
+				</p:column>
+
+				<p:column headerText="#{lang['funding.method']}">
+					<p:outputLabel value="#{rowVar.funding.description}" style="width:95%" />
+				</p:column>
+				<p:column headerText="#{lang['intervention.type']}">
+					<p:outputLabel value="#{rowVar.interventionType.description}" style="width:95%" />
+				</p:column>
+				<p:column headerText="#{lang['pivotal.status']}">
+					<p:outputLabel value="#{rowVar.interventionType.pivotNonPivot.friendlyName}" style="width:95%" />
+				</p:column>
+
+				<p:column width="80" rendered="#{initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.Draft}" exportable="false">
+					<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":tabView:wspGrantForm" process="@this" action="#{wspUI.applyInterventionData}">
+						<f:setPropertyActionListener value="#{rowVar}" target="#{wspUI.mandatoryGrant}" />
+					</p:commandButton>
+					<p:spacer width="3" />
+					<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update="@form" oncomplete="updatePivotal(), updateDiscGrant()" process="@this" action="#{wspUI.deleteMandatory}">
+						<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure.you.want.to.delete.the.mandatory.grant']}" icon="ui-icon-warning" />
+						<f:setPropertyActionListener value="#{rowVar}" target="#{wspUI.mandatoryGrant}" />
+					</p:commandButton>
+				</p:column>
+
+				<p:rowExpansion>
+
+					<p:panelGrid columns="1" style="width:100%" id="s" layout="grid" styleClass="ui-panelgrid-blank form-group">
+						<p:fieldset legend="#{lang['wsp.data']}" rendered="#{rowVar.pivotNonPivot eq PivotNonPivotEnum.Pivotal}">
+
+							<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar.nqfAligned.yesNoName}" disabled="true" />
+									<p:outputLabel value="#{lang['nqf.aligned']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield" rendered="#{rowVar.qualification ne null}">
+									<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar.qualification.code}" disabled="true" />
+									<p:outputLabel value="#{lang['saqa.id']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield" rendered="#{rowVar.qualification ne null}">
+									<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar.qualification.description}" decimalPlaces="0" disabled="true" />
+									<p:outputLabel value="#{lang['intervention.title']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield" rendered="#{rowVar.unitStandard ne null}">
+									<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar.unitStandard.code}" disabled="true" />
+									<p:outputLabel value="#{lang['saqa.id']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield" rendered="#{rowVar.unitStandard ne null}">
+									<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar.unitStandard.title}" decimalPlaces="0" disabled="true" />
+									<p:outputLabel value="#{lang['intervention.title']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield" rendered="#{rowVar.nonCreditBearingIntervationTitle ne null}">
+									<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar.nonCreditBearingIntervationTitle.description}"  disabled="true" />
+									<p:outputLabel value="#{lang['intervention.title']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" minValue="0" value="#{rowVar.nqfLevels.description}" decimalPlaces="0" disabled="true" />
+									<p:outputLabel value=" #{lang['nqf.level']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar.interventionLevel.description}" decimalPlaces="0" disabled="true" />
+									<p:outputLabel value="#{lang['level.of.training']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" minValue="0" value="#{rowVar.etqa.description}" decimalPlaces="0" disabled="true" />
+									<p:outputLabel value=" #{lang['etqa']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar.providerType.description}" decimalPlaces="0" disabled="true" />
+									<p:outputLabel value="#{lang['provider.type']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" minValue="0" value="R#{rowVar.estimatedCost}" decimalPlaces="0" disabled="true" />
+									<p:outputLabel value=" #{lang['estimated.cost']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar.startDate}" decimalPlaces="0" disabled="true">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</p:inputText>
+									<p:outputLabel value="#{lang['start.date']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" minValue="0" value="#{rowVar.endDate}" decimalPlaces="0" disabled="true">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</p:inputText>
+									<p:outputLabel value=" #{lang['end.date']}" />
+								</h:panelGroup>
+
+							</p:panelGrid>
+						</p:fieldset>
+						<p:fieldset legend="#{lang['wsp.data']}" rendered="#{rowVar.pivotNonPivot eq PivotNonPivotEnum.NonPivotal}">
+							<p:panelGrid columns="2" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group">
+								<h:panelGroup styleClass="md-inputfield" rendered="#{rowVar.nonCreditBearingIntervationTitle ne null}">
+									<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar.nonCreditBearingIntervationTitle.description}" decimalPlaces="0" disabled="true" />
+									<p:outputLabel value="#{lang['intervention.title']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar.providerType.description}" decimalPlaces="0" disabled="true" />
+									<p:outputLabel value="#{lang['provider.type']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" minValue="0" value="R#{rowVar.estimatedCost}" decimalPlaces="0" disabled="true" />
+									<p:outputLabel value=" #{lang['estimated.cost']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar.startDate}" decimalPlaces="0" disabled="true">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</p:inputText>
+									<p:outputLabel value="#{lang['start.date']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" minValue="0" value="#{rowVar.endDate}" decimalPlaces="0" disabled="true">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</p:inputText>
+									<p:outputLabel value=" #{lang['end.date']}" />
+								</h:panelGroup>
+							</p:panelGrid>
+						</p:fieldset>
+					</p:panelGrid>
+				</p:rowExpansion>
+
+			</p:dataTable>
+			<p:panelGrid columns="1" style="width:100%; text-align:left" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<p:commandButton value="Download CSV" icon="fa fa-download" styleClass="Fs18 flat" style="height: 50px" process="@this" update="@form" action="#{wspUI.downloadCSV1}" ajax="false">
+				</p:commandButton>
+			</p:panelGrid>
+		</h:form>
+		<ui:include src="/pages/externalparty/wsp/wspCSV.xhtml" />
+	</h:panelGroup>
+</ui:composition>

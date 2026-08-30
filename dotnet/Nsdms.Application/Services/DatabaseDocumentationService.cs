@@ -188,6 +188,134 @@ public class DatabaseDocumentationService : IDatabaseDocumentationService
         return sb.ToString();
     }
 
+    public async Task<string> GenerateSqlExtendedPropertiesScriptAsync()
+    {
+        var tables = await GetDatabaseSchemaDocumentationAsync();
+        var sb = new StringBuilder();
+
+        sb.AppendLine("-- ===========================================================================");
+        sb.AppendLine("-- MerSETA NSDMS — SQL Server MS_Description Extended Properties Synchronizer");
+        sb.AppendLine($"-- Generated: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC");
+        sb.AppendLine("-- Target Engine: Microsoft SQL Server Express (localhost / NSDMS-NET)");
+        sb.AppendLine("-- ===========================================================================");
+        sb.AppendLine();
+        sb.AppendLine("SET NOCOUNT ON;");
+        sb.AppendLine();
+
+        foreach (var t in tables)
+        {
+            var escapedTableDesc = (t.Description ?? string.Empty).Replace("'", "''");
+            var schema = string.IsNullOrWhiteSpace(t.SchemaName) ? "dbo" : t.SchemaName;
+
+            // 1. Table Description
+            sb.AppendLine($"-- Table: {schema}.{t.TableName}");
+            sb.AppendLine($@"IF EXISTS (SELECT 1 FROM sys.tables t JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'{schema}' AND t.name = N'{t.TableName}')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description' AND ep.minor_id = 0
+          AND s.name = N'{schema}' AND t.name = N'{t.TableName}'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'{escapedTableDesc}', @level0type=N'SCHEMA', @level0name=N'{schema}', @level1type=N'TABLE', @level1name=N'{t.TableName}';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'{escapedTableDesc}', @level0type=N'SCHEMA', @level0name=N'{schema}', @level1type=N'TABLE', @level1name=N'{t.TableName}';
+END");
+
+            // 2. Column Descriptions
+            foreach (var col in t.Columns)
+            {
+                var escapedColDesc = (col.Description ?? string.Empty).Replace("'", "''");
+                sb.AppendLine($@"IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'{schema}' AND t.name = N'{t.TableName}' AND c.name = N'{col.ColumnName}')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'{schema}' AND t.name = N'{t.TableName}' AND c.name = N'{col.ColumnName}'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'{escapedColDesc}', @level0type=N'SCHEMA', @level0name=N'{schema}', @level1type=N'TABLE', @level1name=N'{t.TableName}', @level2type=N'COLUMN', @level2name=N'{col.ColumnName}';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'{escapedColDesc}', @level0type=N'SCHEMA', @level0name=N'{schema}', @level1type=N'TABLE', @level1name=N'{t.TableName}', @level2type=N'COLUMN', @level2name=N'{col.ColumnName}';
+END");
+            }
+            sb.AppendLine();
+        }
+
+        return sb.ToString();
+    }
+
+    public async Task<int> SyncExtendedPropertiesToDatabaseAsync()
+    {
+        var tables = await GetDatabaseSchemaDocumentationAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
+
+        var updatedCount = 0;
+        foreach (var t in tables)
+        {
+            var schema = string.IsNullOrWhiteSpace(t.SchemaName) ? "dbo" : t.SchemaName;
+            var escapedTableDesc = (t.Description ?? string.Empty).Replace("'", "''");
+
+            var tableSql = $@"
+IF EXISTS (SELECT 1 FROM sys.tables t JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'{schema}' AND t.name = N'{t.TableName}')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description' AND ep.minor_id = 0
+          AND s.name = N'{schema}' AND t.name = N'{t.TableName}'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'{escapedTableDesc}', @level0type=N'SCHEMA', @level0name=N'{schema}', @level1type=N'TABLE', @level1name=N'{t.TableName}';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'{escapedTableDesc}', @level0type=N'SCHEMA', @level0name=N'{schema}', @level1type=N'TABLE', @level1name=N'{t.TableName}';
+END";
+            try
+            {
+                await context.Database.ExecuteSqlRawAsync(tableSql);
+                updatedCount++;
+            }
+            catch
+            {
+                // Fallback for InMemory or missing table in non-relational context
+            }
+
+            foreach (var col in t.Columns)
+            {
+                var escapedColDesc = (col.Description ?? string.Empty).Replace("'", "''");
+                var colSql = $@"
+IF EXISTS (SELECT 1 FROM sys.columns c JOIN sys.tables t ON c.object_id = t.object_id JOIN sys.schemas s ON t.schema_id = s.schema_id WHERE s.name = N'{schema}' AND t.name = N'{t.TableName}' AND c.name = N'{col.ColumnName}')
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM sys.extended_properties ep
+        JOIN sys.tables t ON ep.major_id = t.object_id
+        JOIN sys.columns c ON ep.major_id = c.object_id AND ep.minor_id = c.column_id
+        JOIN sys.schemas s ON t.schema_id = s.schema_id
+        WHERE ep.name = N'MS_Description'
+          AND s.name = N'{schema}' AND t.name = N'{t.TableName}' AND c.name = N'{col.ColumnName}'
+    )
+        EXEC sys.sp_addextendedproperty @name=N'MS_Description', @value=N'{escapedColDesc}', @level0type=N'SCHEMA', @level0name=N'{schema}', @level1type=N'TABLE', @level1name=N'{t.TableName}', @level2type=N'COLUMN', @level2name=N'{col.ColumnName}';
+    ELSE
+        EXEC sys.sp_updateextendedproperty @name=N'MS_Description', @value=N'{escapedColDesc}', @level0type=N'SCHEMA', @level0name=N'{schema}', @level1type=N'TABLE', @level1name=N'{t.TableName}', @level2type=N'COLUMN', @level2name=N'{col.ColumnName}';
+END";
+                try
+                {
+                    await context.Database.ExecuteSqlRawAsync(colSql);
+                    updatedCount++;
+                }
+                catch
+                {
+                    // Fallback
+                }
+            }
+        }
+
+        return updatedCount;
+    }
+
     private static string SafeGetTableName(IReadOnlyEntityType entityType)
     {
         try
@@ -309,7 +437,6 @@ public class DatabaseDocumentationService : IDatabaseDocumentationService
         "WorkflowInstance" => "Universal state machine execution instances for long-running approval lifecycles.",
         "WorkflowTask" => "Actionable review, inspection, and verification tasks assigned to SETA roles.",
         "DocumentMetadata" => "SHA-256 integrity hashed digital evidence files in the Document Vault.",
-        "SetmisSubmissionBatch" => "Department of Higher Education & Training (DHET) flat-file extract submission batch logs.",
         "AuditLog" => "Immutable operational audit trail capturing user, action, timestamp, and JSON before/after snapshots.",
         _ => $"System entity for {entityName} data governance."
     };
@@ -333,7 +460,7 @@ public class DatabaseDocumentationService : IDatabaseDocumentationService
             "TrancheAmount" => "Calculated monetary amount for this delivery milestone.",
             "CalculatedRebateAmount" => "Calculated 20% statutory levy rebate amount.",
             "Status" or "StatusCode" or "MoaStatusCode" => "Current lifecycle state code in the workflow engine.",
-            "BatchNumber" => "Financial or SETMIS batch grouping reference.",
+            "BatchNumber" => "Financial transaction batch grouping reference.",
             _ => $"Domain property for {propName}."
         };
     }

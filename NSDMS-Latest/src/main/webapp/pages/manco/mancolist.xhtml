@@ -1,0 +1,124 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card">
+					<h:form id="mainForm">
+						<p:growl showDetail="false" sticky="false" escape="false">
+							<p:autoUpdate />
+						</p:growl>
+						<h1>Grant Applications Awaiting MANCO Decision</h1>
+
+						<ui:include src="/pages/includes/download_lazy_with_page.xhtml">
+							<ui:param name="file_name" value="MANCO_Grants_List" />
+							<ui:param name="target" value="wspList" />
+						</ui:include>
+
+						<p:dataTable var="rowVar" id="wspList" value="#{wspUI.wspAwaitingMancoDataModel}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+							rowsPerPageTemplate="10,20,30,40,50,60,70,80,90,100" reflow="true" lazy="true">
+							<p:column headerText="Company Name" rendered="true">
+								<p:outputLabel value="#{rowVar.company.companyName}">
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="Entity ID" rendered="true">
+								<p:outputLabel value="#{rowVar.company.levyNumber}"/>
+							</p:column>
+							<p:column headerText="#{lang['id']}" width="8%">
+								<p:outputLabel value="#{rowVar.id}"></p:outputLabel>
+							</p:column>
+							<p:column headerText="Date Set For Awaiting Manco Approval" rendered="true">
+								<p:outputLabel value="#{rowVar.dateMancoApprovalRequired}">
+									<f:convertDateTime pattern="dd/MM/yyyy HH:mm"/>
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="#{lang['fin.year']}" rendered="true">
+								<p:outputLabel value="#{rowVar.finYear}">
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="#{lang['status']}" rendered="true">
+								<p:outputLabel value="#{rowVar.wspStatusEnum.friendlyName}">
+								</p:outputLabel>
+								<p:outputLabel rendered="#{rowVar.wspStatusEnum.friendlyName eq 'Rejected'}" value=" - #{rowVar.rejectionReasons}">
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="#{lang['decision.date']}">
+								<p:outputLabel value="#{rowVar.approvedDate}" rendered="#{rowVar.wspStatusEnum.friendlyName eq 'Rejected' or rowVar.wspStatusEnum.friendlyName eq 'Approved'}">
+									<f:convertDateTime pattern="dd MMMM yyyy" />
+								</p:outputLabel>
+								<p:outputLabel value="N/A" rendered="#{rowVar.wspStatusEnum.friendlyName ne 'Rejected' and rowVar.wspStatusEnum.friendlyName ne 'Approved'}" />
+							</p:column>
+							<p:column headerText="Barcode" width="400" exportable="false" rendered="false">
+								<p:barcode value="#{rowVar.wspGuid}" type="code39" />
+							</p:column>
+							<p:column headerText="Applied for extension" style="text-align:center" exportable="false">
+								<p:outputPanel rendered="#{rowVar.extensionRequests.size() eq 0}">
+									<i class="fa fa-times fa-3x red" aria-hidden="true"></i>
+								</p:outputPanel>
+								<p:outputPanel rendered="#{rowVar.extensionRequests.size() gt 0}">
+									<i class="fa fa-check fa-3x green" aria-hidden="true"></i>
+								</p:outputPanel>
+							</p:column>
+							
+							<p:column headerText="Applied for extension" style="display:none">
+								<p:outputLabel value="No" rendered="#{rowVar.extensionRequests.size() eq 0}"/>
+								<p:outputLabel value="Yes" rendered="#{rowVar.extensionRequests.size() gt 0}"/>
+							</p:column>
+							
+							<p:column headerText="DG Verification Status" rendered="true" exportable="false">
+								<p:outputLabel value="#{rowVar.dgVerificationStatus.friendlyName}" rendered="#{rowVar.dgVerificationStatus ne null}"></p:outputLabel>
+								<p:outputLabel rendered="#{rowVar.dgVerification.status.friendlyName eq 'Rejected'}" value=" - #{rowVar.dgVerification.dgVerificationRejectionReasons}">
+								</p:outputLabel>
+								<p:outputLabel value="N/A" rendered="#{rowVar.dgVerificationStatus eq null}">
+								</p:outputLabel>
+							</p:column>
+
+							<p:column style="width:230px" exportable="false" headerText="Actions">
+								<p:commandButton rendered="true" value="Final Approve" icon="ui-icon-check"  styleClass="flat green-btn Fs18" oncomplete="PF('finalApproveDlg').show()" update="finalApproveForm">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{wspUI.wsp}" />
+								</p:commandButton>
+								<p:spacer width="5"></p:spacer>
+								<p:commandButton rendered="true" value="Final Reject" icon="ui-icon-circle-close"  process="@this" styleClass="flat red-btn Fs18" oncomplete="PF('finalRejectDlg').show()" update="finalRejectForm">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{wspUI.wsp}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+
+					</h:form>
+
+
+					<p:dialog header="Final Response: Rejection" widgetVar="finalRejectDlg" hideEffect="clip" showEffect="clip" id="dialogFinalReject" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+						<h:form id="finalRejectForm">
+							<div class="ui-fluid">
+								<div class="ui-g">
+									<div class="ui-g-12">
+										<span style="color: grey"><i class="fa fa-info-circle" aria-hidden="true"></i> Provide final response for rejecting the application.</span> <br />
+										<p:inputTextarea required="true" requiredMessage="Provide Response Before Proceeding" id="finalResponseEntryReject" rows="3" value="#{wspUI.wsp.finalResponse}">
+											<p:ajax />
+										</p:inputTextarea>
+									</div>
+								</div>
+								<p:commandButton value="Reject Application" update="@form :mainForm" id="finalRejectApplicationBtn" action="#{wspUI.finalRejectGrantApplication}"  oncomplete="PF('finalRejectDlg').hide()"/>
+							</div>
+						</h:form>
+					</p:dialog>
+
+					<p:dialog header="Final Response: Approve" widgetVar="finalApproveDlg" hideEffect="clip" showEffect="clip" id="dialogFinalApprove" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+						<h:form id="finalApproveForm">
+							<div class="ui-fluid">
+								<div class="ui-g">
+									<div class="ui-g-12">
+										<span style="color: grey"><i class="fa fa-info-circle" aria-hidden="true"></i> Provide final response for approving the application.</span> <br />
+										<p:inputTextarea required="true" requiredMessage="Provide Response Before Proceeding" id="finalResponseEntryApprove" rows="3" value="#{wspUI.wsp.finalResponse}">
+											<p:ajax />
+										</p:inputTextarea>
+									</div>
+								</div>
+								<p:commandButton value="Approve Application" update="@form :mainForm" id="finalApproveApplicationBtn" action="#{wspUI.finalApproveGrantApplication}" oncomplete="PF('finalApproveDlg').hide()"/>
+							</div>
+						</h:form>
+					</p:dialog>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+</ui:composition>

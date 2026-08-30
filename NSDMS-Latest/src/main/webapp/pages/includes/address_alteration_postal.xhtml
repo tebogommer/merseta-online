@@ -1,0 +1,67 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui">
+
+	<c:if test="false">
+		<!--  
+			<ui:include src="/pages/includes/address_alteration_postal.xhtml">		
+				<ui:param name="trainingSite" value=" " />
+				<ui:param name="disableEntry" value=" " />				
+			</ui:include> 
+		-->
+	</c:if>
+
+	<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText disabled="#{disableEntry}" id="addInfoPostalLineOne" value="#{address.addressLine1}" style="opacity: 1 !important; color: black; width:100%" required="true" requiredMessage="#{lang['enter.residential.address']}">
+				<p:ajax />
+				<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['residentialAddress.lineone.length.error']}" />
+			</p:inputText>
+			<p:outputLabel value="#{lang['address.line.1']}" for="addInfoPostalLineOne" />
+		</h:panelGroup>
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText disabled="#{disableEntry}" id="addInfoPostalLineTwo" style="opacity: 1 !important; color: black; width:100%" value="#{address.addressLine2}" required="#{trainingproviderUI.company.id eq null or trainingproviderUI.tpResidentialAddress.addressLine2.length() ne 0}" requiredMessage="Provide Address Line 2">
+				<p:ajax />
+				<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['residentialAddress.linetwo.length.error']}" />
+			</p:inputText>
+			<p:outputLabel value="#{lang['address.line.2']}" for="addInfoPostalLineTwo" />
+		</h:panelGroup>
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText disabled="#{disableEntry}" id="addInfoPostalLineThree" style="opacity: 1 !important; color: black; width:100%" value="#{address.addressLine3}">
+				<p:ajax />
+				<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['residentialAddress.linethree.length.error']}" />
+			</p:inputText>
+			<p:outputLabel value="#{lang['address.line.3']}" for="addInfoPostalLineThree" />
+		</h:panelGroup>
+		<h:panelGroup styleClass="md-inputfield">
+			<p:autoComplete disabled="#{disableEntry}" id="addInfoPostalTownSelection" value="#{address.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rvt" itemLabel="#{rvt.description}" itemValue="#{rvt}" forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3" maxResults="10"
+				inputStyle="width: 100%" style="width: 100%" required="true" requiredMessage="#{lang['please.select.a.town']}">
+				<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rvt.description}</p:column>
+				<p:ajax event="itemSelect"/>
+			</p:autoComplete>
+			<p:outputLabel value="#{lang['town']}" for="addInfoPostalTownSelection" />
+		</h:panelGroup>
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText disabled="#{disableEntry}" id="addInfoPostalTownPostCode" style="opacity: 1 !important; color: black; width:100%" value="#{address.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}">
+				<o:validator validatorId="javax.faces.Length" minimum="0" maximum="4" message="#{lang['residentialAddress.code.length.error']}" />
+				<p:ajax />
+			</p:inputText>
+			<p:outputLabel value="#{lang['post.code']}" for="addInfoPostalTownPostCode" />
+		</h:panelGroup>
+		<h:panelGroup styleClass="md-inputfield" id="addInfoPostalMuncipalityPG">
+			<p:autoComplete disabled="#{disableEntry}" id="addInfoPostalMuncipality" value="#{address.municipality}" completeMethod="#{autoCompleteUI.completeMunicipality}" var="rvmp" itemLabel="#{rvmp.municipalityDesc}" itemValue="#{rvmp}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true" minQueryLength="3"
+				maxResults="10" inputstyle="opacity: 1 !important; color: black; width: 100%" style="opacity: 1 !important; color: black; width: 100%" required="true" requiredMessage="#{lang['select.municipality']}">
+				<p:column headerText="#{lang['province']}" style="white-space: nowrap">#{rvmp.province.provinceDesc}</p:column>
+				<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">#{rvmp.municipalityDesc}</p:column>
+				<p:ajax event="change" update="addInfoPostalProvincePG"></p:ajax>
+				<p:ajax event="itemSelect" update="addInfoPostalProvincePG addInfoPostalMuncipalityPG addInfoPostalProviceOP"></p:ajax>
+			</p:autoComplete>
+			<p:outputLabel value="#{lang['municipality']}" for="addInfoPostalMuncipality" />
+		</h:panelGroup>
+		<p:outputPanel id="addInfoPostalProviceOP">
+			<h:panelGroup rendered="#{address.municipality ne null}" styleClass="md-inputfield" id="addInfoPostalProvincePG">
+				<p:inputText disabled="true" id="addInfoPostalProvince" value="#{address.municipality.province.provinceDesc}" style="opacity: 1 !important; color: black; width:100%" />
+				<p:outputLabel value="#{lang['province']}" for="addInfoPostalProvince" />
+			</h:panelGroup>
+		</p:outputPanel>
+	</p:panelGrid>
+
+</ui:composition>

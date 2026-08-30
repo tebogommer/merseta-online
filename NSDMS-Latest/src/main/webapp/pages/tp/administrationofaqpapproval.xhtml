@@ -1,0 +1,418 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<ui:include src="/pages/includes/taskdiagram.xhtml" />
+			</div>
+		</div>
+
+
+		<h:form id="administrationofaqpInsForm">
+			<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+			<p:importEnum type="haj.com.entity.enums.ConfigDocProcessEnum" />
+			<p:growl sticky="false">
+				<p:autoUpdate />
+			</p:growl>
+			<div class="ui-g">
+
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+
+
+						<p:panelGrid columns="2" style="opacity:1 !important;color:black;width:100%" id="administrationofaqpInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:autoComplete inputStyle="opacity:1 !important;color:black;" style="width:100%;" disabled="true" id="company" value="#{administrationofaqpUI.administrationofaqp.assessmentCenter}" completeMethod="#{autoCompleteUI.completeCompany}" var="rv" itemLabel="#{rv.companyNameDisplay}" itemValue="#{rv}" forceSelection="true" converter="CompanyConvertor" dropdown="true" minQueryLength="3"
+									maxResults="10">
+									<p:ajax event="itemSelect" listener="#{administrationofaqpUI.findProviderContact}" update="anationality"></p:ajax>
+									<p:column headerText="#{lang['companyName']}" style="white-space: nowrap">#{rv.companyName}</p:column>
+									<p:column headerText="#{lang['entity.id']}" style="white-space: nowrap">#{rv.levyNumber}</p:column>
+								</p:autoComplete>
+								<p:outputLabel value="#{lang['company']}" for="company" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield" id="anationality">
+								<p:inputText id="contactPerson" disabled="true" value="#{administrationofaqpUI.administrationofaqp.contactPerson.firstName} #{administrationofaqpUI.administrationofaqp.contactPerson.lastName}" style="opacity:1 !important;color:black;width:95%;"></p:inputText>
+								<p:outputLabel value="#{lang['merseta.contact.person']}:" for="contactPerson" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:autoComplete id="qualification" value="#{administrationofaqpUI.administrationofaqp.qualification}" completeMethod="#{autoCompleteUI.completeQualification}" var="rv" itemLabel="#{rv.saqaQualification}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="opacity:1 !important;color:black;"
+									style="width: 95%" disabled="true">
+									<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+									<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+									<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+								</p:autoComplete>
+
+								<p:outputLabel value="#{lang['qualification']}" for="qualification" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:calendar disabled="true" id="eisaDate" value="#{administrationofaqpUI.administrationofaqp.eisaDate}" inputStyle="opacity:1 !important;color:black;width:95%"  mask="true" pattern="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME}" timeControlType="select">
+									<p:ajax event="dateSelect" update="endTime" listener="#{administrationofaqpUI.dateSelect}"></p:ajax>
+								</p:calendar>
+								<p:outputLabel value="#{lang['eisa.date']}" for="eisaDate" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield" id="endDate">
+								<p:calendar disabled="true" id="endTime" value="#{administrationofaqpUI.administrationofaqp.endTime}" maxdate="#{administrationofaqpUI.maxDate}" inputStyle="opacity:1 !important;color:black;width:95%" mindate="#{administrationofaqpUI.administrationofaqp.eisaDate}"  mask="true" pattern="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME}" timeControlType="select" />
+								<p:outputLabel value="#{lang['end.time']}" for="endTime" />
+							</h:panelGroup>
+
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="#{lang['recieved.required.training']}" for="recievedREquiredTraining" styleClass=" gray" />
+								</div>
+								<div>
+									<p:selectOneMenu disabled="true" id="recievedREquiredTraining" value="#{administrationofaqpUI.administrationofaqp.recievedRequiredTraining}" style="opacity:1 !important;color:black;width:75%" required="true">
+										<p:ajax />
+										<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass=" gray" noSelectionOption="true" />
+										<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+									</p:selectOneMenu>
+								</div>
+							</h:panelGroup>
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="#{lang['in.possession.final.eisa']}" for="inPossessionFinalEISA" styleClass=" gray" />
+								</div>
+								<div>
+									<p:selectOneMenu disabled="true" id="inPossessionFinalEISA" value="#{administrationofaqpUI.administrationofaqp.inPossessionFinalEISA}" style="opacity:1 !important;color:black;width:75%" required="true">
+										<p:ajax />
+										<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass=" gray" noSelectionOption="true" />
+										<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+									</p:selectOneMenu>
+								</div>
+							</h:panelGroup>
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="#{lang['exemplar.eisa.has.been.published']}" for="exemplarEISAHasBeenPublished" styleClass=" gray" />
+								</div>
+								<div>
+									<p:selectOneMenu disabled="true" id="exemplarEISAHasBeenPublished" value="#{administrationofaqpUI.administrationofaqp.exemplarEISAHasBeenPublished}" style="opacity:1 !important;color:black;width:75%" required="true">
+										<p:ajax />
+										<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass=" gray" noSelectionOption="true" />
+										<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+									</p:selectOneMenu>
+								</div>
+							</h:panelGroup>
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="#{lang['entry.requirements.met']}" for="entryRequirementsMet" styleClass=" gray" />
+								</div>
+								<div>
+									<p:selectOneMenu disabled="true" id="entryRequirementsMet" value="#{administrationofaqpUI.administrationofaqp.entryRequirementsMet}" style="opacity:1 !important;color:black;width:75%" required="true">
+										<p:ajax />
+										<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass=" gray" noSelectionOption="true" />
+										<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+									</p:selectOneMenu>
+								</div>
+							</h:panelGroup>
+
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:autoComplete inputStyle="opacity:1 !important;color:black;" style="width:100%;" disabled="#{not sessionUI.task.firstInProcess or sessionUI.task.workflowProcess ne ConfigDocProcessEnum.ApplicationAdministrationOfAQP}" id="assessor" value="#{administrationofaqpUI.administrationofaqp.assessor}" completeMethod="#{autoCompleteUI.completeUserNotEmployee}" var="rv"
+									itemLabel="#{rv.firstName} #{rv.lastName}" itemValue="#{rv}" forceSelection="true" converter="UsersConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+									<p:ajax event="itemSelect"></p:ajax>
+									<p:column headerText="#{lang['first.name']}" style="white-space: nowrap">#{rv.firstName}</p:column>
+									<p:column headerText="#{lang['last.name']}" style="white-space: nowrap">#{rv.lastName}</p:column>
+								</p:autoComplete>
+								<p:outputLabel value="Assessor" for="assessor" />
+							</h:panelGroup>
+
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:autoComplete inputStyle="opacity:1 !important;color:black;" style="width:100%;" disabled="#{not sessionUI.task.firstInProcess or sessionUI.task.workflowProcess ne ConfigDocProcessEnum.ApplicationAdministrationOfAQP}" id="moderator" value="#{administrationofaqpUI.administrationofaqp.moderator}" completeMethod="#{autoCompleteUI.completeUserNotEmployee}" var="rv"
+									itemLabel="#{rv.firstName} #{rv.lastName}" itemValue="#{rv}" forceSelection="true" converter="UsersConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+									<p:ajax event="itemSelect"></p:ajax>
+									<p:column headerText="#{lang['first.name']}" style="white-space: nowrap">#{rv.firstName}</p:column>
+									<p:column headerText="#{lang['last.name']}" style="white-space: nowrap">#{rv.lastName}</p:column>
+								</p:autoComplete>
+								<p:outputLabel value="Moderator" for="moderator" />
+							</h:panelGroup>
+
+						</p:panelGrid>
+
+						<p:panelGrid columns="1" style="opacity:1 !important;color:black;width:100%" id="downloadCAGrid" layout="grid" styleClass="ui-panelgrid-blank form-group"
+							rendered="#{administrationofaqpUI.administrationofaqp.assessor eq sessionUI.activeUser or administrationofaqpUI.administrationofaqp.moderator eq sessionUI.activeUser or administrationofaqpUI.administrationofaqp.contactPerson eq sessionUI.activeUser}">
+							<h:panelGroup styleClass="md-inputfield" rendered="#{sessionUI.task.workflowProcess eq ConfigDocProcessEnum.ApplicationAdministrationOfAQP}">
+								<p:commandButton icon="fa fa-download" value="Confidentiality Agreement" action="#{administrationofaqpUI.downloadConfidentialityAgreement}" ajax="false" title="Download Confidentiality Agreement">
+								</p:commandButton>
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield" rendered="#{sessionUI.task.workflowProcess eq ConfigDocProcessEnum.AdministrationOfAQP}">
+								<p:commandButton icon="fa fa-download" value="Moderation/Examiner Report" action="#{administrationofaqpUI.downloadAdministrationJasper}" ajax="false" title="Download Confidentiality Agreement">
+								</p:commandButton>
+							</h:panelGroup>
+
+
+						</p:panelGrid>
+
+
+					</div>
+					<div class="card card-w-title">
+
+						<p:fieldset legend="#{lang['documents']}" id="userDocs" rendered="#{administrationofaqpUI.administrationofaqp.docs.size() gt 0}">
+							<p:dataTable value="#{administrationofaqpUI.administrationofaqp.docs}" var="rv1" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+
+								<p:column headerText="#{lang['type']}" width="20%">#{rv1.configDoc.name}</p:column>
+
+								<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+
+								<p:column headerText="#{lang['uploaded']}" width="15%">
+									<h:outputText value="#{rv1.createDate}">
+										<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+									</h:outputText>
+								</p:column>
+
+								<p:column headerText="#{lang['version']}" width="15%">
+									<h:outputText value="#{rv1.versionNo}">
+									</h:outputText>
+								</p:column>
+
+								<p:column width="180" headerText="#{lang['view.edit']}">
+
+									<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}">
+										<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+
+									<p:spacer width="5" rendered="#{rv1.id ne null}" />
+									<p:commandButton icon="fa fa-bars " id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}">
+										<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="dhistUserDocs" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+
+									<!-- only with permission to upload can upload a new version -->
+									<p:commandButton rendered="#{sessionUI.task.processRole eq rv1.configDoc.processRoles}" icon="fa fa-upload" id="uploadUserDocs" styleClass="#{rv1.originalFname eq null ? 'red-btn' : ''} flat" process="@this" oncomplete="PF('dlgUpload').show()" update=":uploadForm">
+										<f:setPropertyActionListener value="#{rv1}" target="#{administrationofaqpUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="uploadUserDocs" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+
+									<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+										<p:spacer width="5" />
+										<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+									</h:panelGroup>
+
+									<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+										<p:spacer width="5" />
+										<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+									</h:panelGroup>
+								</p:column>
+							</p:dataTable>
+						</p:fieldset>
+					</div>
+
+					<c:if test="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.UploadCSV}">
+						<div class="card card-w-title">
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="File Type" for="fileType" />
+								</div>
+								<div>
+									<p:selectOneMenu id="fileType" value="#{administrationofaqpUI.qctoFileTypeEnum}" style="width:75%" required="true">
+										<p:ajax />
+										<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+										<f:selectItems value="#{enumUI.QCTOFileTypeEnumDD}" />
+									</p:selectOneMenu>
+								</div>
+							</h:panelGroup>
+							<br />
+							<br />
+							<p:fileUpload fileUploadListener="#{administrationofaqpUI.handleFileUpload}" dragDropSupport="true" showButtons="false" label="Select CSV file to import" multiple="false" allowTypes="/(\.|\/)(csv|CSV|txt|TXT)$/" fileLimit="1" auto="true" mode="advanced" update="@form" onstart="uploadStart()" oncomplete="uploadDone()" />
+						</div>
+					</c:if>
+
+					<div class="card card-w-title">
+						<h3>Learner Qualification Achievement Status (Knowledge, Practical and Work Experience)</h3>
+						<p:dataTable var="rowVar" value="#{administrationofaqpUI.dataModelQualificationAchievementStatus}" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+							<p:column width="40" headerText="#{lang['expand.row']}">
+								<p:rowToggler></p:rowToggler>
+							</p:column>
+							<p:column headerText="#{lang['expectedTrainingCompletionDate']}">
+								<h:outputText value="#{rowVar.expectedTrainingCompletionDate}" />
+							</p:column>
+							<p:column headerText="#{lang['flc']}">
+								<h:outputText value="#{rowVar.flc}" />
+							</p:column>
+							<p:column headerText="#{lang['learnerEnrolledDate']}">
+								<h:outputText value="#{rowVar.learnerEnrolledDate}" />
+							</p:column>
+							<p:column headerText="#{lang['statementResultsIssueDate']}">
+								<h:outputText value="#{rowVar.statementResultsIssueDate}" />
+							</p:column>
+							<p:column headerText="#{lang['moduleAchievementStatus']}">
+								<h:outputText value="#{rowVar.moduleAchievementStatus}" />
+							</p:column>
+							<p:column headerText="#{lang['learnerModularAchievementTypeId']}">
+								<h:outputText value="#{rowVar.learnerModularAchievementTypeId}" />
+							</p:column>
+							<p:column headerText="#{lang['flcStatementResultNumber']}">
+								<h:outputText value="#{rowVar.flcStatementResultNumber}" />
+							</p:column>
+							<p:column headerText="#{lang['statementResultsStatus']}">
+								<h:outputText value="#{rowVar.statementResultsStatus}" />
+							</p:column>
+							<p:column headerText="#{lang['moduleCode']}">
+								<h:outputText value="#{rowVar.moduleCode}" />
+							</p:column>
+							<p:column headerText="#{lang['linkedToWorkplace']}">
+								<h:outputText value="#{rowVar.linkedToWorkplace}" />
+							</p:column>
+							<p:rowExpansion>
+								<br />
+								<br />
+								<p:panelGrid columns="2" style="opacity:1 !important;color:black;width:100%" id="administrationofaqpInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText disabled="true" style="opacity: 1; color: black; width: 95%" value="#{rowVar.qualificationEntryRequirement}" />
+										<p:outputLabel value="#{lang['qualificationEntryRequirement']}"></p:outputLabel>
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText disabled="true" style="opacity: 1; color: black; width: 95%" value="#{rowVar.enrolledSDPCode}" />
+										<p:outputLabel value="#{lang['enrolledSDPCode']}"></p:outputLabel>
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText disabled="true" style="opacity: 1; color: black; width: 95%" value="#{rowVar.employmentStatus}" />
+										<p:outputLabel value="#{lang['employmentStatus']}"></p:outputLabel>
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText disabled="true" style="opacity: 1; color: black; width: 95%" value="#{rowVar.learnerReadinessforEISATypeId}" />
+										<p:outputLabel value="#{lang['learnerReadinessforEISATypeId']}"></p:outputLabel>
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText disabled="true" style="opacity: 1; color: black; width: 95%" value="#{rowVar.learnerModularAchievementDate}" />
+										<p:outputLabel value="#{lang['learnerModularAchievementDate']}"></p:outputLabel>
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText disabled="true" style="opacity: 1; color: black; width: 95%" value="#{rowVar.assessmentPartnerCode}" />
+										<p:outputLabel value="#{lang['assessmentPartnerCode']}"></p:outputLabel>
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText disabled="true" style="opacity: 1; color: black; width: 95%" value="#{rowVar.assessmentCentreCode}" />
+										<p:outputLabel value="#{lang['assessmentCentreCode']}"></p:outputLabel>
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText disabled="true" style="opacity: 1; color: black; width: 95%" value="#{rowVar.nationalID}" />
+										<p:outputLabel value="#{lang['nationalID']}"></p:outputLabel>
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText disabled="true" style="opacity: 1; color: black; width: 95%" value="#{rowVar.learnerAlternateId}" />
+										<p:outputLabel value="#{lang['learnerAlternateId']}"></p:outputLabel>
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText disabled="true" style="opacity: 1; color: black; width: 95%" value="#{rowVar.qualificationId}" />
+										<p:outputLabel value="#{lang['qualificationId']}"></p:outputLabel>
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText disabled="true" style="opacity: 1; color: black; width: 95%" value="#{rowVar.dateStamp}" />
+										<p:outputLabel value="#{lang['dateStamp']}"></p:outputLabel>
+									</h:panelGroup>
+								</p:panelGrid>
+							</p:rowExpansion>
+						</p:dataTable>
+						<br />
+						<h3>Learner Qualification Achievement Status (EISA)</h3>
+						<p:dataTable var="rowVar" value="#{administrationofaqpUI.dataModelAchievementStatusEISA}" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+							<p:column headerText="#{lang['assessmentPartnerCode']}">
+								<h:outputText value="#{rowVar.assessmentPartnerCode}" />
+							</p:column>
+							<p:column headerText="#{lang['assessmentCentreCode']}">
+								<h:outputText value="#{rowVar.assessmentCentreCode}" />
+							</p:column>
+							<p:column headerText="#{lang['nationalID']}">
+								<h:outputText value="#{rowVar.nationalID}" />
+							</p:column>
+							<p:column headerText="#{lang['learnerAlternateId']}">
+								<h:outputText value="#{rowVar.learnerAlternateId}" />
+							</p:column>
+							<p:column headerText="#{lang['qualificationId']}">
+								<h:outputText value="#{rowVar.qualificationId}" />
+							</p:column>
+							<p:column headerText="#{lang['eisaComponentNumber']}">
+								<h:outputText value="#{rowVar.eisaComponentNumber}" />
+							</p:column>
+							<p:column headerText="#{lang['eisaComponentAchievementValue']}">
+								<h:outputText value="#{rowVar.eisaComponentAchievementValue}" />
+							</p:column>
+							<p:column headerText="#{lang['dateAssessed']}">
+								<h:outputText value="#{rowVar.dateAssessed}" />
+							</p:column>
+							<p:column headerText="#{lang['eisaPercentageObtained']}">
+								<h:outputText value="#{rowVar.eisaPercentageObtained}" />
+							</p:column>
+							<p:column headerText="#{lang['dateStamp']}">
+								<h:outputText value="#{rowVar.dateStamp}" />
+							</p:column>
+						</p:dataTable>
+					</div>
+
+					<div class="card card-w-title">
+						<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve}">
+							<p:commandButton value="#{lang['approve']}" icon="ui-icon-save" update="@form" action="#{administrationofaqpUI.approveWorkflow}" styleClass="flat green-btn Fs18" style="height: 50px;">
+							</p:commandButton>
+							<p:commandButton value="#{lang['reject.task']}" icon="ui-icon-save" update="@form" action="#{administrationofaqpUI.rejectWorkflow}" styleClass="flat red-btn Fs18" style="height: 50px;" process="@this">
+							</p:commandButton>
+						</p:panelGrid>
+
+						<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalEdit}">
+							<p:commandButton value="#{lang['approve']}" icon="ui-icon-save" update="@form" action="#{administrationofaqpUI.finalApproveWorkflow}" styleClass="flat green-btn Fs18" style="height: 50px;">
+							</p:commandButton>
+							<p:commandButton value="#{lang['reject.task']}" icon="ui-icon-save" update="@form" action="#{administrationofaqpUI.finalRejectWorkflow}" styleClass="flat red-btn Fs18" style="height: 50px;" process="@this">
+							</p:commandButton>
+						</p:panelGrid>
+
+						<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Approve and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalApproval and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalEdit}">
+							<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" update="@form" action="#{administrationofaqpUI.completeWorkflow}" styleClass="flat green-btn Fs18" style="height: 50px;"></p:commandButton>
+							<p:commandButton value="Reject" icon="ui-icon-save" update="@form" action="#{administrationofaqpUI.rejectWorkflow}" styleClass="flat red-btn Fs18" style="height: 50px;" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.View}">
+							</p:commandButton>
+						</p:panelGrid>
+					</div>
+
+				</div>
+
+			</div>
+		</h:form>
+
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true" dynamic="true">
+
+			<h:form id="uploadForm">
+
+				<h:panelGroup id="uploadGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{administrationofaqpUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{administrationofaqpUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span>
+										<br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{administrationofaqpUI.storeFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update="administrationofaqpInsForm" multiple="false" fileLimit="1" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+
+			</h:form>
+
+		</p:dialog>
+	</ui:define>
+
+</ui:composition>

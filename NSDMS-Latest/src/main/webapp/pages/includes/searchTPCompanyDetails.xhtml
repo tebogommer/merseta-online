@@ -1,0 +1,235 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui">
+	
+	<!-- disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" -->
+	<p:panelGrid columns="2" style="width:100%" id="searchCompanyInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText  id="searchCompanyName" value="#{company.companyName}" style="width:100%" required="true" requiredMessage="#{lang['enter.the.company.name']}">
+			</p:inputText>
+			<p:outputLabel value="#{lang['companyName']}" for="searchCompanyName" />
+		</h:panelGroup>
+
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText   id="searchTradingName" value="#{company.tradingName}" style="width:100%" required="true" requiredMessage="#{lang['enter.the.trading.name']}">
+			</p:inputText>
+			<p:outputLabel value="#{lang['tradingName']}" for="searchTradingName" />
+		</h:panelGroup>
+
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputMask   id="searchTelNumber" value="#{company.telNumber}" style="width:100%" required="true" requiredMessage="#{lang['enter.the.tel.number']}">
+			</p:inputMask>
+			<p:outputLabel value="#{lang['telNumber']}" for="searchTelNumber" />
+		</h:panelGroup>
+
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputMask id="searchFaxNumber"  validatorMessage="#{lang['user.faxnumber.length']}" value="#{company.faxNumber}" maxlength="#{sdfUI.MAX_FAX_NUMBER}" style="width:100%" required="false" requiredMessage="#{lang['fax.number']}"
+				 >
+			</p:inputMask>
+			<p:outputLabel value="#{lang['faxNumber']}" for="searchFaxNumber" />
+		</h:panelGroup>
+		
+		<h:panelGroup styleClass="md-inputfield" rendered="#{not company.nonLevyPaying}">
+			<p:inputMask mask="#{companyRegistrationNumberFormat}"  id="searchCompanyRegistrationNumber" value="#{company.companyRegistrationNumber}" style="width:100%" required="true"
+				requiredMessage="#{lang['enter.company.registration.number']}">
+			</p:inputMask>
+			<p:outputLabel value="#{lang['companyRegistrationNumber']}" for="searchCompanyRegistrationNumber" />
+		</h:panelGroup>
+
+		<h:panelGroup styleClass="md-inputfield" rendered="#{company.nonLevyPaying}">
+			<p:inputMask  id="searchCompanyRegistrationNumbera" value="#{company.companyRegistrationNumber}" style="width:100%" required="true" requiredMessage="#{lang['enter.company.registration.number']}">
+			</p:inputMask>
+			<p:outputLabel value="#{lang['companyRegistrationNumber']}" for="searchCompanyRegistrationNumbera" />
+		</h:panelGroup>
+
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText  id="searchCompnyEmail" value="#{company.email}" style="width:100%" required="true" requiredMessage="#{lang['enter.email.address']}">
+			</p:inputText>
+			<p:outputLabel value="#{lang['email']}" for="searchCompnyEmail" />
+		</h:panelGroup>
+
+		<p:fieldset legend="#{lang['residentialAddress']}" style="margin-top: 20px">
+			<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank" id="searchAddrPcode">
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText   id="searchaddr1" value="#{company.residentialAddress.addressLine1}" style="width:100%" />
+					<p:outputLabel value="#{lang['address.line.1']}" for="searchaddr1" />
+				</h:panelGroup>
+				
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText  id="searchaddr2" style="width:100%" value="#{company.residentialAddress.addressLine2}"/>
+					<p:outputLabel value="#{lang['address.line.2']}" for="searchaddr2" />
+				</h:panelGroup>
+				
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText   id="searchaddr3" style="width:100%" value="#{company.residentialAddress.addressLine3}"/>
+					<p:outputLabel value="#{lang['address.line.3']}" for="searchaddr3" />
+				</h:panelGroup>
+				
+				
+				<h:panelGroup>
+										<div>
+														<h:outputLabel value="#{lang['town']}" for="town" />
+													</div>
+													<div>
+														<p:autoComplete id="town" value="#{company.residentialAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3"
+															maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true" requiredMessage="#{lang['please.select.a.town']}" >
+															<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+														</p:autoComplete>
+													</div>
+												</h:panelGroup>
+				
+				
+				<!-- <h:panelGroup styleClass="md-inputfield">
+					<p:inputText  style="width:100%" value="#{company.residentialAddress.town.description}" />
+					<p:outputLabel value="#{lang['town']}" />
+				</h:panelGroup> -->
+				
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText  id="searchpcode" style="width:100%" value="#{company.residentialAddress.postcode}">
+					</p:inputText>
+					<p:outputLabel value="#{lang['post.code']}" for="searchpcode" />
+				</h:panelGroup>
+				
+				<!-- <h:panelGroup styleClass="md-inputfield">
+					<p:inputText  style="width:100%" value="#{company.residentialAddress.municipality.municipalityDesc}" />
+					<p:outputLabel value="#{lang['municipality']}" />
+				</h:panelGroup>
+				 -->
+								<h:panelGroup  styleClass="md-inputfield">
+				                       <p:autoComplete  id="MunicipalityID1" value="#{company.residentialAddress.municipality}" completeMethod="#{autoCompleteUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityDesc}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true" minQueryLength="3"
+				                           disabled="#{disableFields}" maxResults="10" inputstyle="opacity: 1 !important; color: black; width: 100%" style="opacity: 1 !important; color: black; width: 95%" required="true" requiredMessage="#{lang['select.municipality']}">
+				                            <p:column headerText="#{lang['province']}" style="white-space: nowrap">#{rv.province.provinceDesc}</p:column>
+				                            <p:column headerText="#{lang['municipality']}" style="white-space: nowrap">#{rv.municipalityDesc}</p:column>
+				                            <!-- <p:ajax event="itemSelect" update="resProvincePG" ></p:ajax> -->
+				                       </p:autoComplete>
+				                       <p:outputLabel value="#{lang['municipality']}" for="MunicipalityID" styleClass="gray" />
+					             </h:panelGroup>
+				
+				
+				<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank" >
+				<h:panelGroup styleClass="md-inputfield" rendered="false">
+					<!-- NOT IN USE -->
+					<p:inputText type="number" id="searchlongitude1" value="#{company.residentialAddress.longitude}" style="opacity: 1 !important; color: black; width:100%" required="true" requiredMessage="#{lang['enter.longitude']}">
+					</p:inputText>
+					<p:outputLabel value="#{lang['longitude']}" for="searchlongitude1" />
+				</h:panelGroup>
+				
+				<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank">
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText type="number" rendered="true"  id="searchlongitudeDegrees" style="opacity: 1 !important; color: black; width:100%" value="#{company.residentialAddress.longitudeDegrees}" required="true" requiredMessage="Enter #{lang['longitude']}: Degrees">
+						</p:inputText>
+						<p:outputLabel value="#{lang['longitude']}: Degrees" for="searchlongitudeDegrees" />
+					</h:panelGroup>
+	
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText type="number"  id="searchlongitudeMinutes" value="#{company.residentialAddress.longitudeMinutes}" style="opacity: 1 !important; color: black; width:100%" required="true" requiredMessage="Enter #{lang['longitude']}: Minutes">
+						</p:inputText>
+						<p:outputLabel value="#{lang['longitude']}: Minutes" for="searchlongitudeMinutes" />
+					</h:panelGroup>
+	
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText type="number"  id="searchlongitudeSeconds" value="#{company.residentialAddress.longitudeSeconds}" style="opacity: 1 !important; color: black; width:100%" required="true" requiredMessage="Enter #{lang['longitude']}: Seconds">
+						</p:inputText>
+						<p:outputLabel value="#{lang['longitude']}: Seconds" for="searchlongitudeSeconds" />
+					</h:panelGroup>
+				</p:panelGrid>
+				
+				<h:panelGroup styleClass="md-inputfield" rendered="false">
+					<!-- NOT IN USE -->
+					<p:inputText type="number" rendered="true" id="searchlatitude1" style="opacity: 1 !important; color: black; width:100%" value="#{company.residentialAddress.latitude}">
+						<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['enter.latitude']}" />
+					</p:inputText>
+					<p:outputLabel value="#{lang['latitude']}" for="searchlatitude1" />
+				</h:panelGroup>
+				
+				<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank">
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText type="number" rendered="true"  id="searchlatitudeDegrees" style="opacity: 1 !important; color: black; width:100%" value="#{company.residentialAddress.latitudeDegrees}" required="true" requiredMessage="Enter #{lang['latitude']}: Degrees">
+						</p:inputText>
+						<p:outputLabel value="#{lang['latitude']}: Degrees" for="searchlatitudeDegrees" />
+					</h:panelGroup>
+	
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText type="number"  id="searchlatitudeMinutes" value="#{company.residentialAddress.latitudeMinutes}" style="opacity: 1 !important; color: black; width:100%" required="true" requiredMessage="Enter #{lang['latitude']}: Minutes">
+						</p:inputText>
+						<p:outputLabel value="#{lang['latitude']}: Minutes" for="searchlatitudeMinutes" />
+					</h:panelGroup>
+	
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText type="number"  id="searchlatitudeSeconds" value="#{company.residentialAddress.latitudeSeconds}" style="opacity: 1 !important; color: black; width:100%" required="true" requiredMessage="Enter #{lang['latitude']}: Seconds">
+						</p:inputText>
+						<p:outputLabel value="#{lang['latitude']}: Seconds" for="searchlatitudeSeconds" />
+					</h:panelGroup>
+				</p:panelGrid>
+				
+				<h:panelGroup styleClass="md-inputfield" rendered="#{trainingproviderUI.tpResidentialAddress.longitude eq null or trainingproviderUI.tpResidentialAddress.latitude eq null}">
+															<!-- <a href="https://getlatlong.net" target="_blank">Check GPS Coordinate</a> -->
+															<a href="https://www.gps-coordinates.net" target="_blank">Check GPS Coordinate</a>
+				</h:panelGroup>
+			</p:panelGrid>
+				
+			</p:panelGrid>
+		</p:fieldset>
+
+		<p:fieldset legend="#{lang['postalAddress']}" style="margin-top: 20px">
+			<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank" id="searchPostalAddress">
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText   id="searchpostalAddressaddr1" style="width:100%"/>
+					<p:outputLabel value="#{lang['address.line.1']}" for="searchpostalAddressaddr1" />
+				</h:panelGroup>
+				
+				<h:panelGroup styleClass="md-inputfield" >
+					<p:inputText  id="searchpostalAddressaddr2" style="width:100%" value="#{company.postalAddress.addressLine2}"/>
+					<p:outputLabel value="#{lang['address.line.2']}" for="searchpostalAddressaddr2" />
+				</h:panelGroup>
+				
+				<h:panelGroup styleClass="md-inputfield" >
+					<p:inputText   id="searchpostalAddressaddr3" style="width:100%" value="#{company.postalAddress.addressLine3}"/>
+					<p:outputLabel value="#{lang['address.line.3']}" for="searchpostalAddressaddr3" />
+				</h:panelGroup>
+				
+				
+				<h:panelGroup>
+							<div>
+								<h:outputLabel value="#{lang['town']}" for="town" />
+							</div>
+							<div>
+								<p:autoComplete id="townPostal" value="#{company.postalAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3"
+										maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true" requiredMessage="#{lang['please.select.a.town']}" >
+								<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+								</p:autoComplete>
+							</div>
+					</h:panelGroup>
+				
+				
+				<h:panelGroup styleClass="md-inputfield" >
+					<p:inputText   id="searchpostalAddressPcode" style="width:100%" value="#{company.postalAddress.postcode}"/>
+					<p:outputLabel value="#{lang['post.code']}" for="searchpostalAddressPcode" />
+				</h:panelGroup>
+				
+				<h:panelGroup  styleClass="md-inputfield">
+				                       <p:autoComplete  id="MunicipalityID" value="#{company.postalAddress.municipality}" completeMethod="#{autoCompleteUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityDesc}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true" minQueryLength="3"
+				                           disabled="#{disableFields}" maxResults="10" inputstyle="opacity: 1 !important; color: black; width: 100%" style="opacity: 1 !important; color: black; width: 95%" required="true" requiredMessage="#{lang['select.municipality']}">
+				                            <p:column headerText="#{lang['province']}" style="white-space: nowrap">#{rv.province.provinceDesc}</p:column>
+				                            <p:column headerText="#{lang['municipality']}" style="white-space: nowrap">#{rv.municipalityDesc}</p:column>
+				                            <!-- <p:ajax event="itemSelect" update="resProvincePG" ></p:ajax> -->
+				                       </p:autoComplete>
+				                       <p:outputLabel value="#{lang['municipality']}" for="MunicipalityID" styleClass="gray" />
+					             </h:panelGroup>
+				
+				
+				<!-- <h:panelGroup styleClass="md-inputfield">
+					<p:inputText  style="width:100%" value="#{company.postalAddress.municipality.municipalityDesc}" />
+					<p:outputLabel value="#{lang['municipality']}" />
+				</h:panelGroup> -->
+			</p:panelGrid>
+		</p:fieldset>
+		
+	<p:outputLabel value="Please ensure all information provided is correct before submitting." style="color:red;font-weight: bold;font-size:15px"/>
+	<p:spacer/>
+
+	
+	
+	</p:panelGrid>
+	
+
+</ui:composition>

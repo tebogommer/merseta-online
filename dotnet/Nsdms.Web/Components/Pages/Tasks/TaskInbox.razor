@@ -1,30 +1,32 @@
 @page "/tasks"
+@implements IDisposable
 @using Nsdms.Application.Services
 @using Nsdms.Domain.Entities
 @inject IWorkflowEngineService WorkflowService
+@inject IRealtimeNotificationService NotificationService
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 
 <PageTitle>Universal Task Inbox - MerSETA NSDMS</PageTitle>
 
 <div class="tasks-inbox-page">
-    <!-- Sticky Header Top Bar -->
-    <header class="d-flex justify-space-between align-center mb-6 pa-4 rounded-lg elevation-2" style="background-color: #1e3a8a; color: #ffffff;">
+    <!-- Top Header Bar -->
+    <MudPaper Elevation="1" Class="d-flex flex-wrap justify-space-between align-center mb-6 pa-4 rounded-lg gap-3" Style="border-left: 6px solid var(--mud-palette-primary); background-color: var(--mud-palette-surface);">
         <div>
-            <h1 class="font-weight-bold" style="font-size: 1.5rem; color: #ffffff; margin: 0;">Universal Task Inbox</h1>
-            <p style="color: #e0e7ff; margin: 4px 0 0 0; font-size: 0.875rem;">
+            <h1 class="font-weight-bold" style="font-size: 1.5rem; margin: 0; color: var(--mud-palette-text-primary);">Universal Task Inbox</h1>
+            <p style="margin: 4px 0 0 0; font-size: 0.875rem; color: var(--mud-palette-text-secondary);">
                 Cross-Module Workflow Orchestration &bull; Pending Approvals &amp; SLA Tracking
             </p>
         </div>
         <div class="d-flex align-center gap-2">
-            <span class="px-3 py-1 rounded" style="background-color: #0f172a; color: #ffffff; font-size: 0.8125rem; font-weight: 700;">
+            <MudChip T="string" Color="Color.Primary" Variant="Variant.Filled" Size="Size.Small">
                 @_filteredTasks.Count Pending Task(s)
-            </span>
+            </MudChip>
         </div>
-    </header>
+    </MudPaper>
 
     <!-- Filters & Search Toolbar -->
-    <div class="mud-paper mud-elevation-1 pa-4 rounded-lg mb-4" style="background-color: #ffffff;">
+    <MudPaper Elevation="1" Class="pa-4 rounded-lg mb-4">
         <MudGrid Spacing="2" Class="align-center">
             <MudItem xs="12" sm="6" md="4">
                 <MudTextField @bind-Value="_searchString" 
@@ -32,11 +34,11 @@
                               Adornment="Adornment.Start" 
                               AdornmentIcon="@Icons.Material.Filled.Search" 
                               Variant="Variant.Outlined" 
-                              Dense="true" 
+                              Margin="Margin.Dense"
                               Immediate="true" />
             </MudItem>
             <MudItem xs="6" sm="3" md="2">
-                <MudSelect T="string" @bind-Value="_statusFilter" Label="Task Status" Variant="Variant.Outlined" Dense="true">
+                <MudSelect T="string" @bind-Value="_statusFilter" Label="Task Status" Variant="Variant.Outlined" Margin="Margin.Dense">
                     <MudSelectItem Value="@("All")">All Statuses</MudSelectItem>
                     <MudSelectItem Value="@("Open")">Open</MudSelectItem>
                     <MudSelectItem Value="@("Claimed")">Claimed</MudSelectItem>
@@ -44,7 +46,7 @@
                 </MudSelect>
             </MudItem>
             <MudItem xs="6" sm="3" md="2">
-                <MudSelect T="string" @bind-Value="_priorityFilter" Label="Priority" Variant="Variant.Outlined" Dense="true">
+                <MudSelect T="string" @bind-Value="_priorityFilter" Label="Priority" Variant="Variant.Outlined" Margin="Margin.Dense">
                     <MudSelectItem Value="@("All")">All Priorities</MudSelectItem>
                     <MudSelectItem Value="@("High")">High</MudSelectItem>
                     <MudSelectItem Value="@("Normal")">Normal</MudSelectItem>
@@ -60,23 +62,23 @@
                 </MudButton>
             </MudItem>
         </MudGrid>
-    </div>
+    </MudPaper>
 
     <!-- Tasks DataGrid -->
-    <div class="mud-paper mud-elevation-2 rounded-lg" style="background-color: #ffffff; overflow: hidden;">
+    <MudPaper Elevation="2" Class="rounded-lg" Style="overflow: hidden;">
         @if (_loading)
         {
             <div class="pa-8 text-center">
                 <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
-                <p class="mt-2 text-muted">Loading workflow tasks...</p>
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-2">Loading workflow tasks...</MudText>
             </div>
         }
         else if (!_filteredTasks.Any())
         {
             <div class="pa-8 text-center">
-                <MudIcon Icon="@Icons.Material.Filled.CheckCircleOutline" Size="Size.Large" Style="color: #059669;" />
-                <h3 class="mt-2" style="font-size: 1.125rem; color: #0f172a;">All Caught Up!</h3>
-                <p style="color: #64748b; font-size: 0.875rem;">No pending tasks require your action at this time.</p>
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircleOutline" Size="Size.Large" Color="Color.Success" />
+                <MudText Typo="Typo.h6" Class="mt-2 font-weight-bold">All Caught Up!</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">No pending tasks require your action at this time.</MudText>
             </div>
         }
         else
@@ -100,62 +102,62 @@
                 <RowTemplate>
                     <MudTd DataLabel="Process / Title">
                         <div class="d-flex flex-column">
-                            <span style="font-weight: 700; color: #1e40af; font-size: 0.9375rem;">
+                            <MudText Typo="Typo.body2" Class="font-weight-bold" Color="Color.Primary">
                                 @context.TaskTitle
-                            </span>
-                            <span style="font-size: 0.8125rem; color: #475569; margin-top: 2px;">
+                            </MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1">
                                 @context.TaskDescription
-                            </span>
+                            </MudText>
                         </div>
                     </MudTd>
                     <MudTd DataLabel="Assigned Role">
-                        <span class="px-2 py-1 rounded" style="background-color: #f1f5f9; color: #334155; font-size: 0.8125rem; font-weight: 600;">
+                        <MudChip T="string" Color="Color.Default" Variant="Variant.Filled" Size="Size.Small">
                             @(context.AssignedGroupRole ?? "Any Reviewer")
-                        </span>
+                        </MudChip>
                         @if (!string.IsNullOrEmpty(context.AssignedUserName))
                         {
-                            <div style="font-size: 0.75rem; color: #64748b; margin-top: 2px;">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block mt-1">
                                 Claimed by: @context.AssignedUserName
-                            </div>
+                            </MudText>
                         }
                     </MudTd>
                     <MudTd DataLabel="Priority">
                         @if (context.Priority == "High" || context.Priority == "Urgent")
                         {
-                            <span class="px-2 py-0.5 rounded" style="background-color: #fee2e2; color: #991b1b; font-size: 0.75rem; font-weight: 700;">
+                            <MudChip T="string" Color="Color.Error" Variant="Variant.Filled" Size="Size.Small">
                                 High
-                            </span>
+                            </MudChip>
                         }
                         else
                         {
-                            <span class="px-2 py-0.5 rounded" style="background-color: #f1f5f9; color: #475569; font-size: 0.75rem; font-weight: 600;">
+                            <MudChip T="string" Color="Color.Default" Variant="Variant.Outlined" Size="Size.Small">
                                 Normal
-                            </span>
+                            </MudChip>
                         }
                     </MudTd>
                     <MudTd DataLabel="Due Date">
-                        <span style="font-size: 0.8125rem; color: #334155; font-weight: 600;">
+                        <MudText Typo="Typo.body2" Class="font-weight-bold">
                             @context.DueDate.ToString("dd MMM yyyy")
-                        </span>
+                        </MudText>
                     </MudTd>
                     <MudTd DataLabel="Status">
                         @if (context.TaskStatus == "Open")
                         {
-                            <span class="px-2 py-0.5 rounded" style="background-color: #e0e7ff; color: #3730a3; font-size: 0.75rem; font-weight: 700;">
+                            <MudChip T="string" Color="Color.Info" Variant="Variant.Filled" Size="Size.Small">
                                 Open
-                            </span>
+                            </MudChip>
                         }
                         else if (context.TaskStatus == "Claimed")
                         {
-                            <span class="px-2 py-0.5 rounded" style="background-color: #fef3c7; color: #92400e; font-size: 0.75rem; font-weight: 700;">
+                            <MudChip T="string" Color="Color.Warning" Variant="Variant.Filled" Size="Size.Small">
                                 In Progress
-                            </span>
+                            </MudChip>
                         }
                         else
                         {
-                            <span class="px-2 py-0.5 rounded" style="background-color: #d1fae5; color: #065f46; font-size: 0.75rem; font-weight: 700;">
+                            <MudChip T="string" Color="Color.Success" Variant="Variant.Filled" Size="Size.Small">
                                 Completed
-                            </span>
+                            </MudChip>
                         }
                     </MudTd>
                     <MudTd DataLabel="Action" Style="text-align: right;">
@@ -164,7 +166,7 @@
                             {
                                 <MudButton Variant="Variant.Outlined" 
                                            Color="Color.Primary" 
-                                           Size="Size.Small"
+                                           Size="Size.Medium"
                                            StartIcon="@Icons.Material.Filled.PersonAdd"
                                            OnClick="@((e) => ClaimTaskAsync(context))">
                                     Claim
@@ -172,7 +174,7 @@
                             }
                             <MudButton Variant="Variant.Filled" 
                                        Color="Color.Primary" 
-                                       Size="Size.Small"
+                                       Size="Size.Medium"
                                        EndIcon="@Icons.Material.Filled.ArrowForward"
                                        OnClick="@((e) => NavigateToTask(context))">
                                 Review
@@ -182,7 +184,7 @@
                 </RowTemplate>
             </MudTable>
         }
-    </div>
+    </MudPaper>
 </div>
 
 @code {
@@ -203,7 +205,33 @@
 
     protected override async Task OnInitializedAsync()
     {
+        NotificationService.TaskAssignedReceived += OnRealtimeTaskReceived;
+        NotificationService.WorkflowTransitionReceived += OnRealtimeWorkflowReceived;
         await LoadTasksAsync();
+    }
+
+    private void OnRealtimeTaskReceived(string taskId, string taskTitle, string assignedRole, string priority)
+    {
+        InvokeAsync(async () =>
+        {
+            await LoadTasksAsync();
+            StateHasChanged();
+        });
+    }
+
+    private void OnRealtimeWorkflowReceived(string entityType, int entityId, string fromState, string toState, string actor)
+    {
+        InvokeAsync(async () =>
+        {
+            await LoadTasksAsync();
+            StateHasChanged();
+        });
+    }
+
+    public void Dispose()
+    {
+        NotificationService.TaskAssignedReceived -= OnRealtimeTaskReceived;
+        NotificationService.WorkflowTransitionReceived -= OnRealtimeWorkflowReceived;
     }
 
     private async Task LoadTasksAsync()

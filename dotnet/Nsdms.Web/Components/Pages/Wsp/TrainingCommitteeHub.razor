@@ -1,0 +1,127 @@
+﻿@page "/wsp/committees"
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Domain.Entities
+@inject ITrainingCommitteeAndDisputeService CommitteeService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>Training Committees &amp; WSP Disputes | merSETA NSDMS</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
+    <MudCard Elevation="2" Class="mb-4">
+        <MudCardContent Class="d-flex align-center justify-space-between py-3">
+            <div>
+                <MudBreadcrumbs Items="_breadcrumbs" Class="pa-0 mb-1" />
+                <MudText Typo="Typo.h5" Class="fw-bold">Workplace Training Committees &amp; WSP Disputes</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    Joint Union-Employer training committees, constitutional quorums, and dispute resolution.
+                </MudText>
+            </div>
+        </MudCardContent>
+    </MudCard>
+
+    <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6" Color="Color.Primary">
+        <!-- TAB 1: Committees -->
+        <MudTabPanel Text="Workplace Committees" Icon="@Icons.Material.Filled.Groups">
+            <MudTable Items="_committees" Hover="true" Dense="true" Elevation="0" Outlined="true">
+                <HeaderContent>
+                    <MudTh>Employer</MudTh>
+                    <MudTh>Financial Year</MudTh>
+                    <MudTh>Labour &amp; Employer Reps</MudTh>
+                    <MudTh>Constitutional Quorum</MudTh>
+                    <MudTh>Status</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Employer" Class="fw-bold">@(context.Organisation?.CompanyName ?? "Apex Engineering")</MudTd>
+                    <MudTd DataLabel="Year">FY@context.FinancialYear</MudTd>
+                    <MudTd DataLabel="Members">@context.Members.Count Registered</MudTd>
+                    <MudTd DataLabel="Quorum">
+                        @if (context.ConstitutionalQuorumMet)
+                        {
+                            <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Check">Compliant</MudChip>
+                        }
+                        else
+                        {
+                            <MudChip T="string" Color="Color.Error" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Warning">Deficient</MudChip>
+                        }
+                    </MudTd>
+                    <MudTd DataLabel="Status">
+                        <MudChip T="string" Color="Color.Info" Size="Size.Small">@context.StatusCode</MudChip>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudTabPanel>
+
+        <!-- TAB 2: WSP Disputes -->
+        <MudTabPanel Text="WSP Disputes &amp; Grievances" Icon="@Icons.Material.Filled.Gavel">
+            <MudTable Items="_disputes" Hover="true" Dense="true" Elevation="0" Outlined="true">
+                <HeaderContent>
+                    <MudTh>Dispute #</MudTh>
+                    <MudTh>Employer</MudTh>
+                    <MudTh>Dispute Reason</MudTh>
+                    <MudTh>Description</MudTh>
+                    <MudTh>Status</MudTh>
+                    <MudTh Style="text-align: right;">Action</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Dispute" Class="fw-bold">@context.DisputeReferenceNumber</MudTd>
+                    <MudTd DataLabel="Employer">@(context.Organisation?.CompanyName ?? "Apex Engineering")</MudTd>
+                    <MudTd DataLabel="Reason">
+                        <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">@context.DisputeReasonCode</MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Description">@context.Description</MudTd>
+                    <MudTd DataLabel="Status">
+                        <MudChip T="string" Size="Size.Small" Color="@(context.StatusCode == "Resolved" ? Color.Success : Color.Error)" Variant="Variant.Filled">
+                            @context.StatusCode
+                        </MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Action" Style="text-align: right;">
+                        @if (context.StatusCode != "Resolved")
+                        {
+                            <MudButton Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small" OnClick="@(() => ResolveDisputeAsync(context.Id))">
+                                Resolve Dispute
+                            </MudButton>
+                        }
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudTabPanel>
+    </MudTabs>
+</MudContainer>
+
+@code {
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("WSP & Grants", href: "/wsp"),
+        new BreadcrumbItem("Training Committees", href: null, disabled: true)
+    };
+
+    private List<TrainingCommittee> _committees = new();
+    private List<WspDispute> _disputes = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        try
+        {
+            _committees = await CommitteeService.GetAllCommitteesAsync();
+            _disputes = await CommitteeService.GetAllDisputesAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading training committee data: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task ResolveDisputeAsync(int disputeId)
+    {
+        await CommitteeService.ResolveDisputeAsync(disputeId, "Mediation concluded with consensus skills plan signatures.", "AdminUser");
+        Snackbar.Add("WSP Dispute resolved successfully.", Severity.Success);
+        await LoadDataAsync();
+    }
+}

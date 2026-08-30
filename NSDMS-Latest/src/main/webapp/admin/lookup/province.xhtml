@@ -1,0 +1,119 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Province</h1>
+					<h:form id="provinceInsForm">
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:panelGrid columns="1" style="width:100%" id="provinceInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="map" value="#{provinceUI.province.map}" style="width:95%" />
+								<p:outputLabel value="#{lang['map']}" for="map" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="provinceDesc" value="#{provinceUI.province.provinceDesc}" style="width:95%" />
+								<p:outputLabel value="#{lang['province.name']}" for="provinceDesc" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="code" value="#{provinceUI.province.code}" style="width:95%" required="true" requiredMessage="#{lang['provide.code']}" />
+								<p:outputLabel value="#{lang['code']}" for="code" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="statsProvId" value="#{provinceUI.province.statsProvId}" style="width:95%" />
+								<p:outputLabel value="#{lang['province.id']}" for="statsProvId" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="landArea" value="#{provinceUI.province.landArea}" style="width:95%" />
+								<p:outputLabel value="#{lang['land.area']}" for="landArea" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="color" value="#{provinceUI.province.color}" style="width:95%" />
+								<p:outputLabel value="#{lang['color']}" for="color" />
+							</h:panelGroup>
+
+
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:provinceList :provinceInsForm:provinceInsGrid" action="#{provinceUI.provinceInsert}" />
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="provinceInsGrid" process="@this" action="#{provinceUI.prepareNew}">
+									<p:resetInput target="provinceInsGrid" />
+								</p:commandButton>
+							</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+						<p:dataTable var="rowVar" value="#{provinceUI.dataModel}" filteredValue="#{provinceUI.provincefilteredList}" id="provinceList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['map']}">
+								<h:outputText value="#{rowVar.map}" />
+							</p:column>
+							<p:column headerText="#{lang['province.name']}">
+								<h:outputText value="#{rowVar.provinceDesc}" />
+							</p:column>
+							<!-- <p:column headerText="#{lang['municipalities']}">  
+                        			<h:outputText value="#{rowVar.municipalities}" />  
+            					</p:column>  -->
+							<p:column headerText="#{lang['code']}">
+								<h:outputText value="#{rowVar.code}" />
+							</p:column>
+							<p:column headerText="#{lang['province.id']}" filterBy="#{rowVar.statsProvId}" sortBy="#{rowVar.statsProvId}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.statsProvId}" />
+							</p:column>
+							<p:column headerText="#{lang['land.area']}" filterBy="#{rowVar.landArea}" sortBy="#{rowVar.landArea}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.landArea}" />
+							</p:column>
+							<p:column headerText="#{lang['create.date']}">
+								<h:outputText value="#{rowVar.createDate}">
+									<f:convertDateTime pattern="dd-MM-yyyy" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['color']}">
+								<h:outputText value="#{rowVar.color}" />
+							</p:column>
+
+
+							<p:column width="80">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":provinceInsForm:provinceInsGrid">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{provinceUI.province}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:provinceList" action="#{provinceUI.provinceDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{provinceUI.province}" />
+								</p:commandButton>
+							</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+	<!-- 
+map = map
+provinceDesc = provinceDesc
+municipalities = municipalities
+code = code
+statsProvId = statsProvId
+landArea = landArea
+createDate = createDate
+color = color
+
+-->
+</ui:composition>

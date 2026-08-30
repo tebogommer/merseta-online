@@ -1,0 +1,132 @@
+﻿@page "/assessments/summative"
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Domain.Entities
+@inject ISummativeAssessmentAndModerationService AssessmentService
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+
+<PageTitle>Summative Assessment & Statement of Results | merSETA NSDMS</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
+    <!-- Top Bar -->
+    <MudCard Elevation="2" Class="mb-4">
+        <MudCardContent Class="d-flex align-center justify-space-between py-3">
+            <div>
+                <MudBreadcrumbs Items="_breadcrumbs" Class="pa-0 mb-1" />
+                <MudText Typo="Typo.h5" Class="fw-bold">Summative Assessment & Statement of Results (SOR)</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    Unit standard credit recording, internal/external ETQA moderation, EISA occupational exam capture, and certified Statement of Results issuing.
+                </MudText>
+            </div>
+            <MudStack Row="true" Spacing="2">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadDataAsync">
+                    Refresh
+                </MudButton>
+            </MudStack>
+        </MudCardContent>
+    </MudCard>
+
+    @if (_isLoading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+    }
+
+    <!-- Table -->
+    <MudCard Elevation="2">
+        <MudCardContent>
+            <MudTable Items="_reports" Hover="true" Dense="true" Elevation="0" Filter="FilterReports">
+                <ToolBarContent>
+                    <MudText Typo="Typo.h6">Summative Assessment Reports (@_reports.Count)</MudText>
+                    <MudSpacer />
+                    <MudTextField @bind-Value="_searchString" Placeholder="Search by report #, learner, qualification..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Immediate="true" />
+                </ToolBarContent>
+                <HeaderContent>
+                    <MudTh>Report #</MudTh>
+                    <MudTh>Learner</MudTh>
+                    <MudTh>Qualification Title</MudTh>
+                    <MudTh>NQF Level</MudTh>
+                    <MudTh>Credits Earned</MudTh>
+                    <MudTh>Status</MudTh>
+                    <MudTh Style="text-align: right;">Action</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Report #" Class="font-monospace fw-bold">@context.ReportNumber</MudTd>
+                    <MudTd DataLabel="Learner">@(context.Person != null ? $"{context.Person.FirstName} {context.Person.LastName}" : "Learner")</MudTd>
+                    <MudTd DataLabel="Qualification Title">@context.QualificationTitle</MudTd>
+                    <MudTd DataLabel="NQF Level">Level @context.NqfLevel</MudTd>
+                    <MudTd DataLabel="Credits Earned">
+                        <MudText Typo="Typo.body2" Class="fw-bold">@context.TotalCreditsEarned / @context.TotalCreditsRequired</MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Status">
+                        <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.StatusCode)" Variant="Variant.Filled">
+                            @context.StatusCode
+                        </MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Action" Style="text-align: right;">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Assignment" OnClick="@(() => Nav.NavigateTo($"/assessments/summative/{context.Id}"))">
+                            Open Workbench
+                        </MudButton>
+                    </MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager />
+                </PagerContent>
+            </MudTable>
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
+
+@code {
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Quality Assurance", href: "/etqa/accreditation"),
+        new BreadcrumbItem("Summative Assessments & SOR", href: null, disabled: true)
+    };
+
+    private List<SummativeAssessmentReport> _reports = new();
+    private bool _isLoading = true;
+    private string _searchString = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _reports = await AssessmentService.GetReportsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to load assessment reports: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private bool FilterReports(SummativeAssessmentReport report)
+    {
+        if (string.IsNullOrWhiteSpace(_searchString)) return true;
+        var personName = report.Person != null ? $"{report.Person.FirstName} {report.Person.LastName}" : "";
+        return report.ReportNumber.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+               report.QualificationTitle.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+               personName.Contains(_searchString, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private Color GetStatusColor(string status) => status switch
+    {
+        "SorIssued" => Color.Success,
+        "CreditsApproved" => Color.Success,
+        "EtqaModerated" => Color.Info,
+        "InternalModerated" => Color.Warning,
+        "Assessed" => Color.Primary,
+        "Rejected" => Color.Error,
+        _ => Color.Default
+    };
+}

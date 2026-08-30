@@ -1,0 +1,489 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+		<h:form id="mainForm">
+
+			<p:importEnum type="haj.com.entity.enums.PivotNonPivotEnum" />
+			<p:importEnum type="haj.com.entity.enums.LearnerStatusEnum" />
+			<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+			<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+			<p:importEnum type="haj.com.entity.enums.LearnerChangeTypeEnum" />
+
+			<p:growl sticky="false">
+				<p:autoUpdate />
+			</p:growl>
+
+			<div class="ui-g">
+				<c:if test="false">
+					<div class="ui-g-12">
+						<div class="card card-w-title">
+							<h1>Provider Audits</h1>
+						</div>
+					</div>
+				</c:if>
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+						<h1>Providers With Issues Of Evidence</h1>
+						<p:dataTable var="rowVar" value="#{providermonitoringreportsUI.dataModel}" id="trainingprovidermonitoringList" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+							<p:column headerText="#{lang['companyName']}">#{rowVar.company.companyName}</p:column>
+							<p:column headerText="#{lang['companyRegistrationNumber']}">#{rowVar.company.companyRegistrationNumber}</p:column>
+							<p:column headerText="#{lang['entity.id']}">#{rowVar.company.levyNumber}</p:column>
+							<p:column headerText="#{lang['company.status']}" width="10%">#{lang[rowVar.company.companyStatus.registrationName]}</p:column>
+							<p:column headerText="Trading Name">#{rowVar.company.tradingName}</p:column>
+							<p:column headerText="Training Site Name"  filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.trainingProviderApplication.trainingSite.siteName}" rendered="#{rowVar.trainingProviderApplication ne null and rowVar.trainingProviderApplication.trainingSite ne null}" />
+								<h:outputText value="N/A" rendered="#{rowVar.trainingProviderApplication eq null or rowVar.trainingProviderApplication.trainingSite eq null}" />
+							</p:column>
+							<p:column headerText="Training Site Region"  filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.trainingProviderApplication.trainingSite.regionTown.region.description}" rendered="#{rowVar.trainingProviderApplication ne null and rowVar.trainingProviderApplication.trainingSite ne null}" />
+								<h:outputText value="N/A" rendered="#{rowVar.trainingProviderApplication eq null or rowVar.trainingProviderApplication.trainingSite eq null}" />
+							</p:column>
+							<p:column headerText="Initiated By">
+								<h:outputText value="#{rowVar.user.firstName} #{rowVar.user.lastName}" />
+							</p:column>
+							<p:column headerText="Quality Assuror">
+								<h:outputText value="#{rowVar.initiatingQA.firstName} #{rowVar.initiatingQA.lastName}">
+								</h:outputText>
+							</p:column>
+							<p:column headerText="Type">
+								<h:outputText value="Provider Audit" rendered="#{rowVar.audit}" />
+								<h:outputText value="Provider Monitoring" rendered="#{!rowVar.audit}" />
+							</p:column>
+							<p:column headerText="Reference Number">
+								<h:outputText value="#{rowVar.id}" />
+							</p:column>
+							<p:column headerText="#{lang['createDate']}">
+								<h:outputText value="#{rowVar.createDate}">
+									<f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="Monitoring / Audit Date">
+								<h:outputText value="#{rowVar.monitoringDate}">
+									<f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['status']}">
+								<h:outputText value="#{rowVar.status.friendlyName}" />
+							</p:column>
+							<p:column headerText="Rejection Reasons">
+								<p:outputLabel value="#{rowVar.rejectionReasons}" rendered="#{rowVar.rejectionReasons ne null}" />
+								<p:outputLabel value="N/A" rendered="#{rowVar.rejectionReasons eq null}" />
+							</p:column>
+							<p:column headerText="View" exportable="false" style="width:5%">
+								<p:commandButton icon="fa fa-search" update="@form" title="View Information" action="#{providermonitoringreportsUI.populateEvidanceRequiredReport}">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{providermonitoringreportsUI.trainingprovidermonitoringReport}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+
+						<p:outputPanel id="checkListIssuesPanel">
+							<c:if test="#{providermonitoringreportsUI.displayReportEvidance}">
+								<div class="EmptyBox10" />
+								<h3>#{providermonitoringreportsUI.trainingprovidermonitoringReport.company.companyName} (#{providermonitoringreportsUI.trainingprovidermonitoringReport.company.companyRegistrationNumber}) Selected. Reference Number: #{providermonitoringreportsUI.trainingprovidermonitoringReport.id}</h3>
+								<div class="EmptyBox10" />
+								<p:tabView>
+									<p:tab title="Checklist">
+										<p:dataTable var="rv1" value="#{providermonitoringreportsUI.auditorMonitorReviewEvidanceRequiredDataModelList}" id="auditormonitorreviewList" rowKey="#{rv1.id}" reflow="true" lazy="true" paginator="true" rows="5" paginatorPosition="bottom"
+											paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25">
+											<p:column headerText="#{lang['expand.row']}" width="45" rendered="true">
+												<p:rowToggler rendered="#{rv1.docs ne null and rv1.docs.size() gt 0}"></p:rowToggler>
+											</p:column>
+											<p:column headerText="Evidence Requirements">
+												<h:outputText value="#{rv1.evidenceRequirements}" escape="false" />
+											</p:column>
+											<p:column headerText="Comment">#{rv1.comment}</p:column>
+											<p:column headerText="Created Date">
+												<h:outputText value="#{rv1.createDate}">
+													<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+												</h:outputText>
+											</p:column>
+											<p:column headerText="Evidence Available" width="160">
+												<center>
+													<p:selectOneButton value="#{rv1.evidenceRequired}" layout="grid" columns="2" disabled="true">
+														<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+														<p:ajax></p:ajax>
+													</p:selectOneButton>
+												</center>
+											</p:column>
+											<p:rowExpansion>
+												<p:dataTable value="#{rv1.docs}" var="rv2" rowKey="#{rv2.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+													<p:column headerText="#{lang['uploaded.by']}">#{rv2.users.firstName} #{rv2.users.lastName}</p:column>
+													<p:column headerText="#{lang['uploaded']}" width="15%">
+														<h:outputText value="#{rv2.createDate}">
+															<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+														</h:outputText>
+													</p:column>
+													<p:column headerText="#{lang['version']}" width="15%">
+														<h:outputText value="#{rv2.versionNo}">
+														</h:outputText>
+													</p:column>
+													<p:column headerText="Upload Evidence" width="180">
+														<p:commandButton ajax="false" icon="fa fa-download" action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv2.id ne null}">
+															<f:setPropertyActionListener value="#{rv2}" target="#{uploadDocUI.doc}" />
+														</p:commandButton>
+														<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv2.id ne null}" />
+														<p:spacer width="5" rendered="#{rv2.id ne null}" />
+														<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rv2.note ne null and rv2.note.length() gt 0}">
+															<p:spacer width="5" />
+															<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+																<f:setPropertyActionListener value="#{rv2}" target="#{uploadDocUI.doc}" />
+															</p:commandButton>
+															<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+														</h:panelGroup>
+														<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv2.extension.toLowerCase() eq 'pdf' or rv2.extension.toLowerCase() eq 'png' or rv2.extension.toLowerCase() eq 'jpg' or rv2.extension.toLowerCase() eq 'jpeg' or rv2.extension.toLowerCase() eq 'gif'}">
+															<p:spacer width="5" />
+															<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+																<f:setPropertyActionListener value="#{rv2}" target="#{uploadDocUI.doc}" />
+															</p:commandButton>
+															<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+														</h:panelGroup>
+													</p:column>
+												</p:dataTable>
+											</p:rowExpansion>
+										</p:dataTable>
+									</p:tab>
+									<p:tab title="Sign Off List">
+										<div class="EmptyBox10" />
+										<p:commandButton immediate="true" icon="fa fa-cloud-download" value="Download Form" action="#{providermonitoringreportsUI.downloadForm}" ajax="false" title="Download" />
+										<div class="EmptyBox10" />
+										<p:dataTable var="rv" value="#{providermonitoringreportsUI.signOffLists}" id="signOffList" rowKey="#{rowVar.id}" reflow="true">
+											<p:column headerText="#{lang['signed.off.by']}">
+												<p:outputLabel value="#{rv.user.firstName} #{rv.user.lastName}" rendered="#{rv.user ne null}" />
+												<p:outputLabel value="Awaiting Assignment" rendered="#{rv.user eq null}" />
+											</p:column>
+											<p:column headerText="#{lang['date']}">
+												<p:outputLabel value="Pending Sign Off" rendered="#{rv.signOffDate eq null}" />
+												<p:outputLabel value="#{rv.signOffDate}" rendered="#{rv.signOffDate ne null}">
+													<f:convertDateTime pattern="dd/MM/yyyy HH:MM" />
+												</p:outputLabel>
+											</p:column>
+											<p:column headerText="#{lang['acknowledge']}" rendered="true">
+												<div>
+													<p:selectBooleanCheckbox style="width:100%" value="#{rv.accept}" disabled="true">
+													</p:selectBooleanCheckbox>
+												</div>
+												<div>
+													<p:outputLabel value="#{lang['site.visit.report.declaration.text']}"></p:outputLabel>
+												</div>
+											</p:column>
+										</p:dataTable>
+									</p:tab>
+								</p:tabView>
+							</c:if>
+						</p:outputPanel>
+					</div>
+				</div>
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+						<h1>Compliant Providers</h1>
+						<p:dataTable var="rowVar" value="#{providermonitoringreportsUI.dataModelNoIssues}" filteredValue="#{providermonitoringreportsUI.trainingProviderMonitoringfilteredList}" id="trainingprovidermonitoringListWithdrawn" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+							<p:column headerText="#{lang['companyName']}">#{rowVar.company.companyName}</p:column>
+							<p:column headerText="#{lang['companyRegistrationNumber']}">#{rowVar.company.companyRegistrationNumber}</p:column>
+							<p:column headerText="#{lang['entity.id']}">#{rowVar.company.levyNumber}</p:column>
+							<p:column headerText="#{lang['company.status']}" width="10%">#{lang[rowVar.company.companyStatus.registrationName]}</p:column>
+							<p:column headerText="Trading Name">#{rowVar.company.tradingName}</p:column>
+							<p:column headerText="Training Site Name"  filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.trainingProviderApplication.trainingSite.siteName}" rendered="#{rowVar.trainingProviderApplication ne null and rowVar.trainingProviderApplication.trainingSite ne null}" />
+								<h:outputText value="N/A" rendered="#{rowVar.trainingProviderApplication eq null or rowVar.trainingProviderApplication.trainingSite eq null}" />
+							</p:column>
+							<p:column headerText="Training Site Region"  filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.trainingProviderApplication.trainingSite.regionTown.region.description}" rendered="#{rowVar.trainingProviderApplication ne null and rowVar.trainingProviderApplication.trainingSite ne null}" />
+								<h:outputText value="N/A" rendered="#{rowVar.trainingProviderApplication eq null or rowVar.trainingProviderApplication.trainingSite eq null}" />
+							</p:column>
+							<p:column headerText="Initiated By">
+								<h:outputText value="#{rowVar.user.firstName} #{rowVar.user.lastName}" />
+							</p:column>
+							<p:column headerText="Quality Assuror">
+								<h:outputText value="#{rowVar.initiatingQA.firstName} #{rowVar.initiatingQA.lastName}">
+								</h:outputText>
+							</p:column>
+							<p:column headerText="Type">
+								<h:outputText value="Provider Audit" rendered="#{rowVar.audit}" />
+								<h:outputText value="Provider Monitoring" rendered="#{!rowVar.audit}" />
+							</p:column>
+							<p:column headerText="Reference Number">
+								<h:outputText value="#{rowVar.id}" />
+							</p:column>
+							<p:column headerText="#{lang['createDate']}">
+								<h:outputText value="#{rowVar.createDate}">
+									<f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="Monitoring / Audit Date">
+								<h:outputText value="#{rowVar.monitoringDate}">
+									<f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+								</h:outputText>
+							</p:column>
+
+							<p:column headerText="#{lang['status']}">
+								<h:outputText value="#{rowVar.status.friendlyName}" />
+							</p:column>
+							<p:column headerText="Rejection Reasons">
+								<p:outputLabel value="#{rowVar.rejectionReasons}" rendered="#{rowVar.rejectionReasons ne null}" />
+								<p:outputLabel value="N/A" rendered="#{rowVar.rejectionReasons eq null}" />
+							</p:column>
+							<p:column headerText="View" exportable="false" style="width:5%">
+								<p:commandButton icon="fa fa-search" update="@form" title="View Information" action="#{providermonitoringreportsUI.populateEvidanceNotRequiredReport}">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{providermonitoringreportsUI.trainingprovidermonitoringReport}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+
+						<p:outputPanel id="checkListPanel">
+							<c:if test="#{providermonitoringreportsUI.displayReportNoEvidanceRequired}">
+								<div class="EmptyBox10" />
+								<h3>#{providermonitoringreportsUI.trainingprovidermonitoringReport.company.companyName} (#{providermonitoringreportsUI.trainingprovidermonitoringReport.company.companyRegistrationNumber}) Selected. Reference Number: #{providermonitoringreportsUI.trainingprovidermonitoringReport.id}</h3>
+								<p:tabView>
+									<p:tab title="Checklist">
+										<p:dataTable var="rv1" value="#{providermonitoringreportsUI.auditorMonitorReviewEvidanceRequiredDataModelList}" id="auditormonitorreviewList" rowKey="#{rv1.id}" reflow="true" lazy="true" paginator="true" rows="5" paginatorPosition="bottom"
+											paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25">
+											<p:column headerText="#{lang['expand.row']}" width="45" rendered="true">
+												<p:rowToggler rendered="#{rv1.docs ne null and rv1.docs.size() gt 0}"></p:rowToggler>
+											</p:column>
+											<p:column headerText="Evidence Requirements">
+												<h:outputText value="#{rv1.evidenceRequirements}" escape="false" />
+											</p:column>
+											<p:column headerText="Comment">#{rv1.comment}</p:column>
+											<p:column headerText="Created Date">
+												<h:outputText value="#{rv1.createDate}">
+													<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+												</h:outputText>
+											</p:column>
+											<p:column headerText="Evidence Available" width="160">
+												<center>
+													<p:selectOneButton value="#{rv1.evidenceRequired}" layout="grid" columns="2" disabled="true">
+														<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+														<p:ajax></p:ajax>
+													</p:selectOneButton>
+												</center>
+											</p:column>
+											<p:rowExpansion>
+												<p:dataTable value="#{rv1.docs}" var="rv2" rowKey="#{rv2.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+													<p:column headerText="#{lang['uploaded.by']}">#{rv2.users.firstName} #{rv2.users.lastName}</p:column>
+													<p:column headerText="#{lang['uploaded']}" width="15%">
+														<h:outputText value="#{rv2.createDate}">
+															<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+														</h:outputText>
+													</p:column>
+													<p:column headerText="#{lang['version']}" width="15%">
+														<h:outputText value="#{rv2.versionNo}">
+														</h:outputText>
+													</p:column>
+													<p:column headerText="Upload Evidence" width="180">
+														<p:commandButton ajax="false" icon="fa fa-download" action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv2.id ne null}">
+															<f:setPropertyActionListener value="#{rv2}" target="#{uploadDocUI.doc}" />
+														</p:commandButton>
+														<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv2.id ne null}" />
+														<p:spacer width="5" rendered="#{rv2.id ne null}" />
+														<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rv2.note ne null and rv2.note.length() gt 0}">
+															<p:spacer width="5" />
+															<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+																<f:setPropertyActionListener value="#{rv2}" target="#{uploadDocUI.doc}" />
+															</p:commandButton>
+															<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+														</h:panelGroup>
+														<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv2.extension.toLowerCase() eq 'pdf' or rv2.extension.toLowerCase() eq 'png' or rv2.extension.toLowerCase() eq 'jpg' or rv2.extension.toLowerCase() eq 'jpeg' or rv2.extension.toLowerCase() eq 'gif'}">
+															<p:spacer width="5" />
+															<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+																<f:setPropertyActionListener value="#{rv2}" target="#{uploadDocUI.doc}" />
+															</p:commandButton>
+															<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+														</h:panelGroup>
+													</p:column>
+												</p:dataTable>
+											</p:rowExpansion>
+										</p:dataTable>
+									</p:tab>
+									<p:tab title="Sign Off List">
+										<div class="EmptyBox10" />
+										<p:commandButton immediate="true" icon="fa fa-cloud-download" value="Download Form" action="#{providermonitoringreportsUI.downloadForm}" ajax="false" title="Download" />
+										<div class="EmptyBox10" />
+										<p:dataTable var="rv" value="#{providermonitoringreportsUI.signOffLists}" rowKey="#{rowVar.id}" reflow="true">
+											<p:column headerText="#{lang['signed.off.by']}">
+												<p:outputLabel value="#{rv.user.firstName} #{rv.user.lastName}" rendered="#{rv.user ne null}" />
+												<p:outputLabel value="Awaiting Assignment" rendered="#{rv.user eq null}" />
+											</p:column>
+											<p:column headerText="#{lang['date']}">
+												<p:outputLabel value="Pending Sign Off" rendered="#{rv.signOffDate eq null}" />
+												<p:outputLabel value="#{rv.signOffDate}" rendered="#{rv.signOffDate ne null}">
+													<f:convertDateTime pattern="dd/MM/yyyy HH:MM" />
+												</p:outputLabel>
+											</p:column>
+											<p:column headerText="#{lang['acknowledge']}" rendered="true">
+												<div>
+													<p:selectBooleanCheckbox style="width:100%" value="#{rv.accept}" disabled="true">
+													</p:selectBooleanCheckbox>
+												</div>
+												<div>
+													<p:outputLabel value="#{lang['site.visit.report.declaration.text']}"></p:outputLabel>
+												</div>
+											</p:column>
+										</p:dataTable>
+									</p:tab>
+								</p:tabView>
+							</c:if>
+						</p:outputPanel>
+					</div>
+				</div>
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+						<h1>Withdrawn Audits and Monitoring</h1>
+						<p:dataTable var="rowVarWithdrawn" value="#{providermonitoringreportsUI.dataModelWithdrawn}" id="trainingprovidermonitoringListNoIssues" rowKey="#{rowVarWithdrawn.id}" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+							<p:column headerText="#{lang['companyName']}">#{rowVarWithdrawn.company.companyName}</p:column>
+							<p:column headerText="#{lang['companyRegistrationNumber']}">#{rowVarWithdrawn.company.companyRegistrationNumber}</p:column>
+							<p:column headerText="#{lang['entity.id']}">#{rowVarWithdrawn.company.levyNumber}</p:column>
+							<p:column headerText="#{lang['company.status']}" width="10%">#{lang[rowVarWithdrawn.company.companyStatus.registrationName]}</p:column>
+							<p:column headerText="Trading Name">#{rowVarWithdrawn.company.tradingName}</p:column>
+							<p:column headerText="Training Site Name"  filterStyle="width: 95%">
+								<h:outputText value="#{rowVarWithdrawn.trainingProviderApplication.trainingSite.siteName}" rendered="#{rowVarWithdrawn.trainingProviderApplication ne null and rowVarWithdrawn.trainingProviderApplication.trainingSite ne null}" />
+								<h:outputText value="N/A" rendered="#{rowVarWithdrawn.trainingProviderApplication eq null or rowVarWithdrawn.trainingProviderApplication.trainingSite eq null}" />
+							</p:column>
+							<p:column headerText="Training Site Region"  filterStyle="width: 95%">
+								<h:outputText value="#{rowVarWithdrawn.trainingProviderApplication.trainingSite.regionTown.region.description}" rendered="#{rowVarWithdrawn.trainingProviderApplication ne null and rowVarWithdrawn.trainingProviderApplication.trainingSite ne null}" />
+								<h:outputText value="N/A" rendered="#{rowVarWithdrawn.trainingProviderApplication eq null or rowVarWithdrawn.trainingProviderApplication.trainingSite eq null}" />
+							</p:column>
+							<p:column headerText="Initiated By">
+								<h:outputText value="#{rowVarWithdrawn.user.firstName} #{rowVarWithdrawn.user.lastName}" />
+							</p:column>
+							<p:column headerText="Quality Assuror">
+								<h:outputText value="#{rowVarWithdrawn.initiatingQA.firstName} #{rowVarWithdrawn.initiatingQA.lastName}">
+								</h:outputText>
+							</p:column>
+							<p:column headerText="Type">
+								<h:outputText value="Provider Audit" rendered="#{rowVarWithdrawn.audit}" />
+								<h:outputText value="Provider Monitoring" rendered="#{!rowVarWithdrawn.audit}" />
+							</p:column>
+							<p:column headerText="Reference Number">
+								<h:outputText value="#{rowVarWithdrawn.id}" />
+							</p:column>
+							<p:column headerText="#{lang['createDate']}">
+								<h:outputText value="#{rowVarWithdrawn.createDate}">
+									<f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="Monitoring / Audit Date">
+								<h:outputText value="#{rowVarWithdrawn.monitoringDate}">
+									<f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['status']}">
+								<h:outputText value="#{rowVarWithdrawn.status.friendlyName}" />
+							</p:column>
+							<p:column headerText="Rejection Reasons">
+								<p:outputLabel value="#{rowVarWithdrawn.rejectionReasons}" rendered="#{rowVarWithdrawn.rejectionReasons ne null}" />
+								<p:outputLabel value="N/A" rendered="#{rowVarWithdrawn.rejectionReasons eq null}" />
+							</p:column>
+							<p:column headerText="View" exportable="false" style="width:5%">
+								<p:commandButton icon="fa fa-search" update="@form" title="View Information" action="#{providermonitoringreportsUI.populateWithdrawnReport}">
+									<f:setPropertyActionListener value="#{rowVarWithdrawn}" target="#{providermonitoringreportsUI.trainingprovidermonitoringReport}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+
+						<p:outputPanel id="checkListWithdrawnPanel">
+							<c:if test="#{providermonitoringreportsUI.displayWithdrawn}">
+								<div class="EmptyBox10" />
+								<h3>#{providermonitoringreportsUI.trainingprovidermonitoringReport.company.companyName} (#{providermonitoringreportsUI.trainingprovidermonitoringReport.company.companyRegistrationNumber}) Selected. Reference Number: #{providermonitoringreportsUI.trainingprovidermonitoringReport.id}</h3>
+								<p:tabView>
+									<p:tab title="Checklist">
+
+										<p:dataTable var="rvwithdrawn" value="#{providermonitoringreportsUI.auditorMonitorReviewEvidanceRequiredDataModelList}" id="auditormonitorreviewList" rowKey="#{rvwithdrawn.id}" reflow="true" lazy="true" paginator="true" rows="5" paginatorPosition="bottom"
+											paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25">
+											<p:column headerText="#{lang['expand.row']}" width="45" rendered="true">
+												<p:rowToggler rendered="#{rvwithdrawn.docs ne null and rvwithdrawn.docs.size() gt 0}"></p:rowToggler>
+											</p:column>
+											<p:column headerText="Evidence Requirements">
+												<h:outputText value="#{rvwithdrawn.evidenceRequirements}" escape="false" />
+											</p:column>
+											<p:column headerText="Comment">#{rv1.comment}</p:column>
+											<p:column headerText="Created Date">
+												<h:outputText value="#{rvwithdrawn.createDate}">
+													<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+												</h:outputText>
+											</p:column>
+											<p:column headerText="Evidence Available" width="160">
+												<center>
+													<p:selectOneButton value="#{rvwithdrawn.evidenceRequired}" layout="grid" columns="2" disabled="true">
+														<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+														<p:ajax></p:ajax>
+													</p:selectOneButton>
+												</center>
+											</p:column>
+											<p:rowExpansion>
+												<p:dataTable value="#{rvwithdrawn.docs}" var="rvwithdrawnDocs" rowKey="#{rvwithdrawnDocs.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+													<p:column headerText="#{lang['uploaded.by']}">#{rvwithdrawnDocs.users.firstName} #{rvwithdrawnDocs.users.lastName}</p:column>
+													<p:column headerText="#{lang['uploaded']}" width="15%">
+														<h:outputText value="#{rvwithdrawnDocs.createDate}">
+															<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+														</h:outputText>
+													</p:column>
+													<p:column headerText="#{lang['version']}" width="15%">
+														<h:outputText value="#{rvwithdrawnDocs.versionNo}">
+														</h:outputText>
+													</p:column>
+													<p:column headerText="Upload Evidence" width="180">
+														<p:commandButton ajax="false" icon="fa fa-download" action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rvwithdrawnDocs.id ne null}">
+															<f:setPropertyActionListener value="#{rvwithdrawnDocs}" target="#{uploadDocUI.doc}" />
+														</p:commandButton>
+														<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rvwithdrawnDocs.id ne null}" />
+														<p:spacer width="5" rendered="#{rvwithdrawnDocs.id ne null}" />
+														<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rvwithdrawnDocs.note ne null and rvwithdrawnDocs.note.length() gt 0}">
+															<p:spacer width="5" />
+															<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+																<f:setPropertyActionListener value="#{rvwithdrawnDocs}" target="#{uploadDocUI.doc}" />
+															</p:commandButton>
+															<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+														</h:panelGroup>
+														<h:panelGroup id="panelGroupFourUserDocs"
+															rendered="#{rvwithdrawnDocs.extension.toLowerCase() eq 'pdf' or rvwithdrawnDocs.extension.toLowerCase() eq 'png' or rvwithdrawnDocs.extension.toLowerCase() eq 'jpg' or rvwithdrawnDocs.extension.toLowerCase() eq 'jpeg' or rvwithdrawnDocs.extension.toLowerCase() eq 'gif'}">
+															<p:spacer width="5" />
+															<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+																<f:setPropertyActionListener value="#{rvwithdrawnDocs}" target="#{uploadDocUI.doc}" />
+															</p:commandButton>
+															<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+														</h:panelGroup>
+													</p:column>
+												</p:dataTable>
+											</p:rowExpansion>
+										</p:dataTable>
+
+									</p:tab>
+									<p:tab title="Sign Off List">
+										<div class="EmptyBox10" />
+										<p:commandButton immediate="true" icon="fa fa-cloud-download" value="Download Form" action="#{providermonitoringreportsUI.downloadForm}" ajax="false" title="Download" />
+										<div class="EmptyBox10" />
+										<p:dataTable var="rvWithDrawn" value="#{providermonitoringreportsUI.signOffLists}" reflow="true">
+											<p:column headerText="#{lang['signed.off.by']}">
+												<p:outputLabel value="#{rvWithDrawn.user.firstName} #{rvWithDrawn.user.lastName}" rendered="#{rvWithDrawn.user ne null}" />
+												<p:outputLabel value="Awaiting Assignment" rendered="#{rvWithDrawn.user eq null}" />
+											</p:column>
+											<p:column headerText="#{lang['date']}">
+												<p:outputLabel value="Pending Sign Off" rendered="#{rvWithDrawn.signOffDate eq null}" />
+												<p:outputLabel value="#{rvWithDrawn.signOffDate}" rendered="#{rvWithDrawn.signOffDate ne null}">
+													<f:convertDateTime pattern="dd/MM/yyyy HH:MM" />
+												</p:outputLabel>
+											</p:column>
+											<p:column headerText="#{lang['acknowledge']}" rendered="true">
+												<div>
+													<p:selectBooleanCheckbox style="width:100%" value="#{rvWithDrawn.accept}" disabled="true">
+													</p:selectBooleanCheckbox>
+												</div>
+												<div>
+													<p:outputLabel value="#{lang['site.visit.report.declaration.text']}"></p:outputLabel>
+												</div>
+											</p:column>
+										</p:dataTable>
+									</p:tab>
+								</p:tabView>
+							</c:if>
+						</p:outputPanel>
+					</div>
+				</div>
+			</div>
+		</h:form>
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+	</ui:define>
+
+</ui:composition>

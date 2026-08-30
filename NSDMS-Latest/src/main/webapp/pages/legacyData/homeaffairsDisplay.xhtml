@@ -1,0 +1,80 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<p:growl sticky="false">
+				<p:autoUpdate />
+			</p:growl>
+
+
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+						<h1>Home Affairs</h1>
+						<c:if test="#{homeaffairsUI.displayDownload}">
+							<ui:include src="/pages/includes/download_lazy.xhtml">
+								<ui:param name="file_name" value="homeaffairsList_dataextract" />
+								<ui:param name="target" value="homeaffairsList" />
+							</ui:include>
+							<div class="EmptyBox10" />
+						</c:if>
+
+						<p:dataTable var="rowVar" value="#{homeaffairsUI.dataModel}" filteredValue="#{homeaffairsUI.homeAffairsfilteredList}" id="homeaffairsList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+							
+							<p:column headerText="DATE TIME CREATED">
+								<h:outputText value="#{rowVar.createDate}">
+									<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+								</h:outputText>
+							</p:column>
+							
+							<p:column headerText="NSDMS REF ID">
+								<h:outputText value="#{rowVar.id}" />
+							</p:column>
+							<p:column headerText="MERSETA_ID_NO" filterBy="#{rowVar.mersetaIDNO}">
+								<h:outputText value="#{rowVar.mersetaIDNO}" />
+							</p:column>
+							<p:column headerText="DHA_ID_NUMBER" filterBy="#{rowVar.dhaIDNumber}">
+								<h:outputText value="#{rowVar.dhaIDNumber}" />
+							</p:column>
+							<p:column headerText="SURNAME" filterBy="#{rowVar.surname}">
+								<h:outputText value="#{rowVar.surname}" />
+							</p:column>
+							<p:column headerText="FULL_NAMES" filterBy="#{rowVar.fullNames}">
+								<h:outputText value="#{rowVar.fullNames}" />
+							</p:column>
+							<p:column headerText="GENDER">
+								<h:outputText value="#{rowVar.gender}" />
+							</p:column>
+							<p:column headerText="ID_STATUS">
+								<h:outputText value="#{rowVar.idStatus}" />
+							</p:column>
+							<p:column headerText="DEATH_STATUS">
+								<h:outputText value="#{rowVar.deathStatus}" />
+							</p:column>
+							<p:column headerText="DEATH_DATE">
+								<h:outputText value="#{rowVar.deathDate}" />
+							</p:column>
+							<p:column headerText="ID_CARD_DATE_ISSUED">
+								<h:outputText value="#{rowVar.idCardDateIssued}" />
+							</p:column>
+							<p:column headerText="ID_BOOK_DATE_ISSUED">
+								<h:outputText value="#{rowVar.idBookDateIssued}" />
+							</p:column>
+							<p:column headerText="MAIDEN_NAME">
+								<h:outputText value="#{rowVar.maidenName}" />
+							</p:column>
+
+
+						</p:dataTable>
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+	</ui:define>
+</ui:composition>

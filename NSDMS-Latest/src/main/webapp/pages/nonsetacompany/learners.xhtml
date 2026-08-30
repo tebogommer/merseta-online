@@ -1,0 +1,133 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+				
+					<p:importEnum type="haj.com.entity.enums.PivotNonPivotEnum" />
+					<p:importEnum type="haj.com.entity.enums.LearnerStatusEnum" />
+					<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+					<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+					<p:importEnum type="haj.com.entity.enums.LearnerChangeTypeEnum" />
+					<p:importEnum type="haj.com.entity.enums.YesNoEnum" />
+
+					<h1>#{lang['sdps']} NSC</h1>
+					<p:growl sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+					<h:form id="learnersInsForm">
+						<p:dataTable value="#{nonSetaCompaniesLearnersUI.dataModelNonSetaCompany}" var="rvnsc" emptyMessage="#{lang['no.records.found']}" paginator="true" rows="10" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,20,40" reflow="true" lazy="true">
+							<p:column headerText="#{lang['companyName']}">#{rvnsc.companyName}</p:column>
+							<p:column headerText="#{lang['companyRegistrationNumber']}">#{rvnsc.companyRegistrationNumber}</p:column>
+							<p:column headerText="#{lang['company.status']}" width="10%">#{lang[rvnsc.companyStatus.registrationName]}</p:column>
+							<p:column headerText="#{lang['RAG']}" width="37">
+								<h:graphicImage value="/resources/hls/images/red.svg" rendered="#{rvnsc.companyStatus eq CompanyStatusEnum.Pending}" width="40" styleClass="animated pulse infinite" />
+								<h:graphicImage value="/resources/hls/images/green.svg" rendered="#{rvnsc.companyStatus eq CompanyStatusEnum.Active}" width="30" />
+							</p:column>
+							<p:column width="120" rendered="true" headerText="#{lang['view.edit']}" >
+								<p:commandButton icon="fa fa-users" title="#{lang['learner.registration']}" action="#{nonSetaCompaniesLearnersUI.learnersInfo}" update="mainForm" rendered="#{rvnsc.companyStatus eq CompanyStatusEnum.Active}">
+									<f:setPropertyActionListener value="#{rvnsc}" target="#{nonSetaCompaniesLearnersUI.nonSetaCompany}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-graduation-cap" title="Request Verification of Assessments" action="#{nonSetaCompaniesLearnersUI.prepTrainingProviderVerfication}" rendered="#{rvnsc.companyStatus eq CompanyStatusEnum.Active}" update="verificationRequestForm" oncomplete="PF('dlgVerificationRequest').show()">
+									<f:setPropertyActionListener value="#{rvnsc}" target="#{nonSetaCompaniesLearnersUI.nonSetaCompany}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-files-o" title="Add non-merSETA Qualifications" action="#{nonSetaCompaniesLearnersUI.prepNonMersetaQual}" rendered="#{rvnsc.companyStatus eq CompanyStatusEnum.Active}" update="verificationRequestForm" oncomplete="PF('dlgNonSETA').show()">
+									<f:setPropertyActionListener value="#{rvnsc}" target="#{nonSetaCompaniesLearnersUI.nonSetaCompany}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<h:form id="mainForm">
+					<p:tooltip position="left"></p:tooltip>
+					<c:if test="#{nonSetaCompaniesLearnersUI.dataModel ne null}">
+						<div class="card card-w-title">
+							<h3>#{nonSetaCompaniesLearnersUI.nonSetaCompany.companyName}'s Learners</h3>
+							<p:commandButton icon="fa fa-plus" value="Add New Learner" update="@form" action="#{nonSetaCompaniesLearnersUI.redirectToLearnerRegForCompany}">
+							</p:commandButton>
+							<br />
+							<br />
+							<p:dataTable var="rowVar" value="#{nonSetaCompaniesLearnersUI.dataModel}" filteredValue="#{nonSetaCompaniesLearnersUI.learnersfilteredList}" id="learnersList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25"
+								reflow="true" lazy="true">
+								<p:column headerText="#{lang['expand.row']}" width="45">
+									<p:rowToggler></p:rowToggler>
+								</p:column>
+
+								<p:column headerText="#{lang['first.name']}">
+									<h:outputText value="#{rowVar.user.firstName}" />
+								</p:column>
+								<p:column headerText="#{lang['last.name']}">
+									<h:outputText value="#{rowVar.user.lastName}" />
+								</p:column>
+								<p:column headerText="Identity Number">
+									<h:outputText value="#{rowVar.user.rsaIDNumber}" />
+									<h:outputText value="#{rowVar.user.passportNumber}" />
+								</p:column>								
+								<p:column headerText="Employment Status">
+									<h:outputText value="#{rowVar.user.employmentStatus.friendlyName}" />
+								</p:column>
+								<p:column headerText="Application Status">
+									<h:outputText value="#{rowVar.learnerStatus.friendlyName}" />
+								</p:column>
+								
+								<p:column width="120" headerText="#{lang['view.edit']}">
+									<p:commandButton icon="fa fa-database" title="#{lang['update']}" update="@form" action="#{nonSetaCompaniesLearnersUI.redirectToLearnerUpdateForCompany}" rendered="#{rowVar.status eq null}" process="@this">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{nonSetaCompaniesLearnersUI.companyLearners}" />
+									</p:commandButton>
+									<p:spacer width="5" rendered="#{rowVar.status eq null}" />
+									<p:commandButton icon="fa fa-search" title="View Requests" update="mainForm" action="#{nonSetaCompaniesLearnersUI.viewCompanyLearnerData}" process="@this">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{nonSetaCompaniesLearnersUI.companyLearners}" />
+									</p:commandButton>
+									<p:spacer width="5" />
+									<p:commandButton icon="fa fa-external-link-square" title="Transfer Learner" update="transferLearnerForm" action="#{nonSetaCompaniesLearnersUI.prepTransfer}" oncomplete="PF('dlgTransferLearner').show()" rendered="#{rowVar.learnerStatus eq LearnerStatusEnum.Registered}" process="@this">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{nonSetaCompaniesLearnersUI.companyLearners}" />
+									</p:commandButton>
+									<p:spacer width="5" rendered="#{rowVar.learnerStatus eq LearnerStatusEnum.Registered}" />
+									<p:commandButton icon="fa fa-clock-o" title="Lost Time" update="lostTimeForm" action="#{nonSetaCompaniesLearnersUI.prepLostTime}" oncomplete="PF('dlgLostTime').show()" rendered="#{rowVar.learnerStatus eq LearnerStatusEnum.Registered}" process="@this">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{nonSetaCompaniesLearnersUI.companyLearners}" />
+									</p:commandButton>
+									<p:spacer width="5" rendered="#{rowVar.learnerStatus eq LearnerStatusEnum.Registered}" />
+									<p:commandButton icon="fa fa-trash-o" title="Terminate Learner" update="TerminationForm" action="#{nonSetaCompaniesLearnersUI.prepTermination}" oncomplete="PF('dlgTermination').show()" rendered="#{rowVar.learnerStatus eq LearnerStatusEnum.Registered}" process="@this">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{nonSetaCompaniesLearnersUI.companyLearners}" />
+									</p:commandButton>
+									<p:commandButton icon="fa fa-pencil" title="Change Learnership Details" update="changeForm" action="#{nonSetaCompaniesLearnersUI.prepCompanyLearnersChange}" oncomplete="PF('dlgChange').show()" rendered="#{rowVar.learnerStatus eq LearnerStatusEnum.Registered}" process="@this">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{nonSetaCompaniesLearnersUI.companyLearners}" />
+									</p:commandButton>
+									<p:spacer width="5" rendered="#{rowVar.learnerStatus eq LearnerStatusEnum.Registered}" />
+									<p:commandButton icon="fa fa-file-text-o" title="Trade Test Application" update="tradeTestForm" action="#{nonSetaCompaniesLearnersUI.prepCompanyLearnersTradeTest}" oncomplete="PF('dlgTradeTest').show()" rendered="#{rowVar.learnerStatus eq LearnerStatusEnum.Registered}" process="@this">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{nonSetaCompaniesLearnersUI.companyLearners}" />
+									</p:commandButton>
+								</p:column>
+								<p:rowExpansion>
+									<ui:include src="/pages/tp/includes/learnerinfoexpansion.xhtml" />
+								</p:rowExpansion>
+							</p:dataTable>
+							<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+								<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+								<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+							</p:confirmDialog>
+						</div>
+						<c:if test="#{nonSetaCompaniesLearnersUI.viewLearnerData}">
+							<div class="card card-w-title">
+								<h3>Learner Request</h3>
+								<ui:include src="/pages/tp/includes/learnerrequests.xhtml">
+									<ui:param name="companyLearner" value="#{nonSetaCompaniesLearnersUI.companyLearners}"></ui:param>
+								</ui:include>
+							</div>
+						</c:if>
+					</c:if>
+				</h:form>
+			</div>
+		</div>
+
+		<ui:include src="/pages/tp/includes/dialogs.xhtml" />
+
+	</ui:define>
+
+</ui:composition>

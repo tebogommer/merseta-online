@@ -1,0 +1,108 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>CompanyLearnersChange</h1>
+					<h:form id="companylearnerschangeInsForm">
+						<p:growl sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:panelGrid columns="1" style="width:100%" id="companylearnerschangeInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="docs" value="#{companylearnerschangeUI.companylearnerschange.docs}" style="width:95%" />
+								<p:outputLabel value="#{lang['docs']}" for="docs" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="createDate" value="#{companylearnerschangeUI.companylearnerschange.createDate}" style="width:95%" />
+								<p:outputLabel value="#{lang['createDate']}" for="createDate" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="companyLearners" value="#{companylearnerschangeUI.companylearnerschange.companyLearners}" style="width:95%" />
+								<p:outputLabel value="#{lang['companyLearners']}" for="companyLearners" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="approvalDate" value="#{companylearnerschangeUI.companylearnerschange.approvalDate}" style="width:95%" />
+								<p:outputLabel value="#{lang['approvalDate']}" for="approvalDate" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="status" value="#{companylearnerschangeUI.companylearnerschange.status}" style="width:95%" />
+								<p:outputLabel value="#{lang['status']}" for="status" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="learnerChangeTypeEnum" value="#{companylearnerschangeUI.companylearnerschange.learnerChangeTypeEnum}" style="width:95%" />
+								<p:outputLabel value="#{lang['learnerChangeTypeEnum']}" for="learnerChangeTypeEnum" />
+							</h:panelGroup>
+
+
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:companylearnerschangeList :companylearnerschangeInsForm:companylearnerschangeInsGrid" action="#{companylearnerschangeUI.companylearnerschangeInsert}" />
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="companylearnerschangeInsGrid" process="@this" action="#{companylearnerschangeUI.prepareNew}">
+									<p:resetInput target="companylearnerschangeInsGrid" />
+								</p:commandButton>
+							</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{companylearnerschangeUI.dataModel}" filteredValue="#{companylearnerschangeUI.companyLearnersChangefilteredList}" id="companylearnerschangeList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['docs']}">
+								<h:outputText value="#{rowVar.docs}" />
+							</p:column>
+							<p:column headerText="#{lang['createDate']}">
+								<h:outputText value="#{rowVar.createDate}" />
+							</p:column>
+							<p:column headerText="#{lang['companyLearners']}">
+								<h:outputText value="#{rowVar.companyLearners}" />
+							</p:column>
+							<p:column headerText="#{lang['approvalDate']}">
+								<h:outputText value="#{rowVar.approvalDate}" />
+							</p:column>
+							<p:column headerText="#{lang['status']}">
+								<h:outputText value="#{rowVar.status}" />
+							</p:column>
+							<p:column headerText="#{lang['learnerChangeTypeEnum']}">
+								<h:outputText value="#{rowVar.learnerChangeTypeEnum}" />
+							</p:column>
+
+
+							<p:column width="80">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":companylearnerschangeInsForm:companylearnerschangeInsGrid">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{companylearnerschangeUI.companylearnerschange}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:companylearnerschangeList" action="#{companylearnerschangeUI.companylearnerschangeDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{companylearnerschangeUI.companylearnerschange}" />
+								</p:commandButton>
+							</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+	<!-- 
+docs = docs
+createDate = createDate
+companyLearners = companyLearners
+approvalDate = approvalDate
+status = status
+learnerChangeTypeEnum = learnerChangeTypeEnum
+
+-->
+</ui:composition>

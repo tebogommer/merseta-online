@@ -8,6 +8,7 @@ namespace Nsdms.Application.Services;
 public interface IAuditService
 {
     Task LogActionAsync(string entityName, int recordId, string actionName, string actor, object? beforeState = null, object? afterState = null);
+    Task LogAsync(string entityName, int recordId, string actionName, string actor, object? afterState = null);
     void LogAction(INsdmsDbContext db, string entityName, int recordId, string actionName, string actor, object? beforeState = null, object? afterState = null);
     Task LogActionAsync(INsdmsDbContext db, string entityName, int recordId, string actionName, string actor, object? beforeState = null, object? afterState = null);
 }
@@ -33,6 +34,11 @@ public class AuditService : IAuditService
         using var db = await _contextFactory.CreateDbContextAsync();
         LogAction(db, entityName, recordId, actionName, actor, beforeState, afterState);
         await db.SaveChangesAsync();
+    }
+
+    public Task LogAsync(string entityName, int recordId, string actionName, string actor, object? afterState = null)
+    {
+        return LogActionAsync(entityName, recordId, actionName, actor, null, afterState);
     }
 
     public void LogAction(INsdmsDbContext db, string entityName, int recordId, string actionName, string actor, object? beforeState = null, object? afterState = null)

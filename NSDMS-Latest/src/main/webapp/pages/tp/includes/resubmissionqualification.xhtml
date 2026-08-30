@@ -1,0 +1,678 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<h:panelGroup id="pgResubmissionQualDetails">
+		<p:fieldset legend="#{lang['qualifications']}">
+			<p:panelGrid columns="2" id="pgAddQual" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup>
+					<div>
+						<p:outputLabel rendered="true" value="#{lang['qualification']}"></p:outputLabel>
+					</div>
+					<div>
+					   <!-- Non-merSETA Qualification -->
+						<p:autoComplete rendered="#{sdpreaccreditationUI.selectTrainingProviderApplication.accreditationApplicationTypeEnum eq AccreditationApplicationTypeEnum.Non_MerSETA_Focused_Provider}"
+							style="width: 100%" id="nonSetaQualificationAuto" value="#{sdpreaccreditationUI.qualification}" completeMethod="#{autoCompleteUI.findNonMersetaQualificationAutocompleteWithNoTrades}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="3"
+							maxResults="10">
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+							<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+							<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+						</p:autoComplete>
+						
+						 <!-- QCTO Skills Development Provider-->
+						<p:autoComplete rendered="#{sdpreaccreditationUI.selectTrainingProviderApplication.accreditationApplicationTypeEnum eq AccreditationApplicationTypeEnum.QCTOSkillsDevelopmentProvider}"
+							style="width: 100%" id="nonSetaQualificationQCTOSelection" value="#{sdpreaccreditationUI.qualification}" completeMethod="#{autoCompleteUI.completeQualificationAutocompleteExcludingTrades}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="3"
+							maxResults="10">
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+							<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+							<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+						</p:autoComplete>
+						
+						<!-- QCTO Qualification-->
+						<p:autoComplete rendered="#{sdpreaccreditationUI.selectTrainingProviderApplication.accreditationApplicationTypeEnum eq AccreditationApplicationTypeEnum.QCTOTradeTestCentre}"
+							style="width: 100%" id="nonSetaQualificationSelection" value="#{sdpreaccreditationUI.qualification}" completeMethod="#{autoCompleteUI.completeNonMerSETAQualificationWithTrades}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor"
+							dropdown="true" minQueryLength="3" maxResults="10">
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+							<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+							<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+						</p:autoComplete>
+					</div>
+				</h:panelGroup>
+				<p:commandButton value="#{lang['add.qualification']}" update="resubmissionForm:trainingProviderTabView:pgResubmissionQualDetails" process="@this pgAddQual" icon="ui-icon-plus" iconPos="right" styleClass="flat" action="#{sdpreaccreditationUI.addQualificationToList}" />
+			</p:panelGrid>
+		
+			<p:dataTable var="rowVar" value="#{sdpreaccreditationUI.companyQualifications}" rowKey="#{rowVar.id}" reflow="true" styleClass="borderless">
+				<p:column headerText="#{lang['expand.row']}" width="45" rendered="false">
+					<p:rowToggler rendered="#{rowVar.trainingProviderDocParent ne null}"></p:rowToggler>
+				</p:column>
+				<p:column headerText="#{lang['code']}">
+					<h:outputText value="#{rowVar.qualification.code}" />
+				</p:column>
+				<p:column headerText="#{lang['qualification']}">
+					<h:outputText value="#{rowVar.qualification.description}" />
+				</p:column>
+				<p:column headerText="#{lang['level']}">
+					<h:outputText value="#{rowVar.qualification.nqflevelg2description}" />
+				</p:column>
+				<p:column headerText="Approve" width="60">
+					<center>
+						<p:selectBooleanCheckbox value="#{rowVar.accept}" disabled="true">
+							<p:ajax></p:ajax>
+						</p:selectBooleanCheckbox>
+					</center>
+				</p:column>
+				<p:column  width="45">
+					 <p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update="resubmissionForm:trainingProviderTabView:pgResubmissionQualDetails" action="#{sdpreaccreditationUI.removeQualificationFromList}" process="@this">
+						<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+						<f:setPropertyActionListener value="#{rowVar}" target="#{sdpreaccreditationUI.selectedCompanyQualification}" />
+					</p:commandButton>
+				</p:column>
+				<p:rowExpansion>
+					<p:panelGrid columns="1" style="width:100%" id="docListQualifications" layout="grid" styleClass="ui-panelgrid-blank form-group">
+						<p:dataTable value="#{rowVar.docList}" var="rv2" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv2.id}">
+							<p:column headerText="#{lang['type']}" width="18%">Supporting Document</p:column>
+							<p:column headerText="#{lang['original.file.name']}" priority="4">
+								<p:outputLabel value="#{rv2.originalFname}" styleClass="Fs12"></p:outputLabel>
+							</p:column>
+							<p:column headerText="#{lang['uploaded.by']}">#{rv2.users.firstName} #{rv2.users.lastName}</p:column>
+							<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+								<h:outputText value="#{rv2.createDate}">
+									<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['version']}" width="10%" priority="4">
+								<h:outputText value="#{rv2.versionNo}">
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['original.required']}" rendered="false">
+								<center>
+									<h:panelGroup rendered="#{rv2.configDoc.originalRequired}" styleClass="green">
+										<i class="fa fa-files-o fa-3x" aria-hidden="true"></i>
+									</h:panelGroup>
+									<h:panelGroup rendered="#{not rv2.configDoc.originalRequired}" styleClass="red">
+										<i class="fa fa-times fa-3x" aria-hidden="true"></i>
+									</h:panelGroup>
+								</center>
+							</p:column>
+							<p:column width="180" headerText="Actions">
+								<p:commandButton ajax="false" icon="fa fa-download" action="#{uploadDocUI.download}" id="dlbq" rendered="#{rv2.id ne null}" immediate="true">
+									<f:setPropertyActionListener value="#{rv2}" target="#{uploadDocUI.doc}" />
+								</p:commandButton>
+								<p:tooltip for="dlbq" value="#{lang['download.the.file']}" position="left" rendered="#{rv2.id ne null}" />
+	
+								<p:spacer width="5" rendered="#{rv2.id ne null}" />
+								<p:commandButton icon="fa fa-bars " id="dhistq" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv2.id ne null}" process="@this">
+									<f:setPropertyActionListener value="#{rv2}" target="#{uploadDocUI.doc}" />
+								</p:commandButton>
+	
+								<p:tooltip for="dhistq" value="#{lang['document.tracker']}" position="left" rendered="#{rv2.id ne null}" />
+								<h:panelGroup id="panelGroupThreeq" rendered="#{rv2.note ne null and rv2.note.length() gt 0}">
+									<p:spacer width="5" />
+									<p:commandButton icon="fa fa-comment-o" id="dnoteq" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel" process="@this">
+										<f:setPropertyActionListener value="#{rv2}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="dnoteq" value="#{lang['view.note']}" position="left" />
+								</h:panelGroup>
+	
+								<h:panelGroup id="panelGroupFourq" rendered="#{rv2.extension.toLowerCase() eq 'pdf' or rv2.extension.toLowerCase() eq 'png' or rv2.extension.toLowerCase() eq 'jpg' or rv2.extension.toLowerCase() eq 'jpeg' or rv2.extension.toLowerCase() eq 'gif'}">
+									<p:spacer width="5" />
+									<p:commandButton icon="fa fa-eye " id="viewerButtonq" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}" process="@this">
+										<f:setPropertyActionListener value="#{rv2}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="viewerButtonq" value="#{lang['view.document']} " position="left" />
+								</h:panelGroup>
+								
+								<p:commandButton rendered="true" icon="fa fa-upload" id="uploadUserDocs" styleClass="#{rv2.originalFname eq null ? 'red-btn' : ''} flat"
+									process="@this" oncomplete="PF('dlgUpload').show()" update=":uploadForm">
+									<f:setPropertyActionListener value="#{rv2}" target="#{target}" />
+								</p:commandButton>
+								<p:tooltip for="uploadUserDocs" value="#{rv2.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+							</p:column>
+						</p:dataTable>
+					</p:panelGrid>
+				</p:rowExpansion>
+			</p:dataTable>
+			
+			<br/>
+			<p:fieldset style="margin-top:0px;" rendered="false">
+				<p:panelGrid columns="4" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<p:commandButton id="upload1" value="#{sdpreaccreditationUI.companyQualSupportingDoc eq null? 'Upload Supporting Document' : 'Re-Upload Supporting Document'}" 
+						icon="fa fa-upload" oncomplete="PF('dlgUploadSupportingDoc').show()" process="@this" update="@form" styleClass="#{sdpreaccreditationUI.companyQualSupportingDoc eq null ? 'red-btn' : 'green-btn'} flat">
+						<f:setPropertyActionListener value="#{sdpreaccreditationUI.companyQualSupportingDoc}" target="#{sdpreaccreditationUI.doc}" />
+					</p:commandButton>
+					
+					<p:commandButton id="viewSupDoc" value="View Supporting Document" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}"   rendered="#{sdpreaccreditationUI.companyQualSupportingDoc.extension.toLowerCase() eq 'pdf' or sdpreaccreditationUI.companyQualSupportingDoc.extension.toLowerCase() eq 'png' or sdpreaccreditationUI.companyQualSupportingDoc.extension.toLowerCase() eq 'jpg' or sdpreaccreditationUI.companyQualSupportingDoc.extension.toLowerCase() eq 'jpeg' or sdpreaccreditationUI.companyQualSupportingDoc.extension.toLowerCase() eq 'gif'}"
+						icon="fa fa-eye" process="@this" styleClass="flat">
+						<f:setPropertyActionListener value="#{sdpreaccreditationUI.companyQualSupportingDoc}" target="#{uploadDocUI.doc}" />
+					</p:commandButton>
+				
+					<p:commandButton ajax="false" icon="fa fa-download" value="Download Supporting Document" action="#{uploadDocUI.download}" id="downLoadSupDoc" rendered="#{sdpreaccreditationUI.companyQualSupportingDoc.id ne null}" immediate="true">
+						<f:setPropertyActionListener value="#{sdpreaccreditationUI.companyQualSupportingDoc}" target="#{uploadDocUI.doc}" />
+					</p:commandButton>
+					
+					<p:commandButton icon="fa fa-bars " id="dhistSS" value="View Supporting Document History" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{sdpreaccreditationUI.companyQualSupportingDoc.id ne null}" process="@this">
+						<f:setPropertyActionListener value="#{sdpreaccreditationUI.companyQualSupportingDoc}" target="#{uploadDocUI.doc}" />
+					</p:commandButton>
+					
+				</p:panelGrid>
+			</p:fieldset>
+		</p:fieldset>
+	
+		<p:fieldset legend="#{lang['unit.standards']}" rendered="#{sdpreaccreditationUI.selectTrainingProviderApplication.accreditationApplicationTypeEnum ne AccreditationApplicationTypeEnum.QCTOTradeTestCentre}">
+			
+			<p:panelGrid columns="2" id="pgAddUS" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup>
+					<div>
+						<p:outputLabel value="#{lang['unit.standard']}" for="companyUnitStandardsAuto"></p:outputLabel>
+					</div>
+					<div>
+						<p:autoComplete style="width: 100%" id="companyUnitStandardsAuto" value="#{sdpreaccreditationUI.unitStandard}" completeMethod="#{autoCompleteUI.completeUnitStandardsBeforeLastEnrolmentDate}" var="rv" itemLabel="#{rv.title}" itemValue="#{rv}" forceSelection="true" converter="UnitStandardsConvertor" dropdown="true"
+							minQueryLength="3" maxResults="10">
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+							<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.title}</p:column>
+							<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqf}</p:column>
+							<p:ajax event="itemSelect" listener="#{sdpreaccreditationUI.usQualificationValidation}" update="pgResubmissionQualDetails" />
+						</p:autoComplete>
+					</div>
+				</h:panelGroup>
+				<p:commandButton style="float:left;" value="#{lang['add.unit.standard']}" process="pgAddUS" update="resubmissionForm:trainingProviderTabView:pgResubmissionQualDetails" icon="ui-icon-plus" iconPos="right" styleClass="flat Fright" action="#{sdpreaccreditationUI.addUnitToList}" />
+			</p:panelGrid>
+			<br/>
+			<p:dataTable var="rowVarUS" value="#{sdpreaccreditationUI.unitStandards}" rowKey="#{rowVar.id}" reflow="true" styleClass="borderless">
+				<p:column headerText="#{lang['expand.row']}" width="45" rendered="false">
+					<p:rowToggler rendered="#{rowVarUS.trainingProviderDocParent ne null}"></p:rowToggler>
+				</p:column>
+				<p:column headerText="#{lang['code']}">
+					<h:outputText value="#{rowVarUS.unitStandard.code}" />
+				</p:column>
+				<p:column headerText="Tilte">
+					<h:outputText value="#{rowVarUS.unitStandard.title}" />
+				</p:column>
+				<p:column headerText="#{lang['level']}">
+					<h:outputText value="#{rowVarUS.unitStandard.nqf}" />
+				</p:column>
+				<p:column headerText="Approve" width="60">
+					<center>
+						<p:selectBooleanCheckbox value="#{rowVarUS.accept}" disabled="true">
+							<p:ajax />
+						</p:selectBooleanCheckbox>
+					</center>
+				</p:column>
+				<p:column  width="45">
+					 <p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update="resubmissionForm:trainingProviderTabView:pgResubmissionQualDetails" action="#{sdpreaccreditationUI.removeUnitFromListmList}" process="@this">
+						<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+						<f:setPropertyActionListener value="#{rowVarUS}" target="#{sdpreaccreditationUI.selectCompanyUnitStandard}" />
+					</p:commandButton>
+				</p:column>
+				<p:rowExpansion>
+					<p:panelGrid columns="1" style="width:100%" id="docListUnitStandard" layout="grid" styleClass="ui-panelgrid-blank form-group">
+						<p:dataTable value="#{rowVarUS.docList}" var="rv1" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv1.id}">
+							<p:column headerText="#{lang['type']}" width="18%">Supporting Document</p:column>
+							<p:column headerText="#{lang['original.file.name']}" priority="4">
+								<p:outputLabel value="#{rv1.originalFname}" styleClass="Fs12"></p:outputLabel>
+							</p:column>
+							<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+							<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+								<h:outputText value="#{rv1.createDate}">
+									<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['version']}" width="10%" priority="4">
+								<h:outputText value="#{rv1.versionNo}">
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['original.required']}" rendered="false">
+								<center>
+									<h:panelGroup rendered="#{rv1.configDoc.originalRequired}" styleClass="green">
+										<i class="fa fa-files-o fa-3x" aria-hidden="true"></i>
+									</h:panelGroup>
+									<h:panelGroup rendered="#{not rv1.configDoc.originalRequired}" styleClass="red">
+										<i class="fa fa-times fa-3x" aria-hidden="true"></i>
+									</h:panelGroup>
+								</center>
+							</p:column>
+							<p:column width="180" headerText="Actions">
+								<p:commandButton ajax="false" icon="fa fa-download" action="#{uploadDocUI.download}" id="dlb" rendered="#{rv1.id ne null}" immediate="true">
+									<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+								</p:commandButton>
+								<p:tooltip for="dlb" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+	
+								<p:spacer width="5" rendered="#{rv1.id ne null}" />
+								<p:commandButton icon="fa fa-bars " id="dhist" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}" process="@this">
+									<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+								</p:commandButton>
+	
+								<p:tooltip for="dhist" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+								<h:panelGroup id="panelGroupThree" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+									<p:spacer width="5" />
+									<p:commandButton icon="fa fa-comment-o" id="dnote" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel" process="@this">
+										<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="dnote" value="#{lang['view.note']}" position="left" />
+								</h:panelGroup>
+	
+								<h:panelGroup id="panelGroupFour" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+									<p:spacer width="5" />
+									<p:commandButton icon="fa fa-eye " id="viewerButton" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}" process="@this">
+										<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="viewerButton" value="#{lang['view.document']} " position="left" />
+								</h:panelGroup>
+							</p:column>
+						</p:dataTable>
+					</p:panelGrid>
+				</p:rowExpansion>
+			</p:dataTable>
+			
+			
+			<br/>
+			<p:fieldset style="margin-top:0px;" rendered="false">
+				<p:panelGrid columns="4" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<p:commandButton id="usUpload" value="#{sdpreaccreditationUI.companyUSSupportingDoc eq null? 'Upload Supporting Document' : 'Re-Upload Supporting Document'}" 
+						icon="fa fa-upload" oncomplete="PF('dlgUploadSupportingDoc').show()" process="@this" update="@form" styleClass="#{sdpreaccreditationUI.companyUSSupportingDoc eq null ? 'red-btn' : 'green-btn'} flat">
+						<f:setPropertyActionListener value="#{sdpreaccreditationUI.companyUSSupportingDoc}" target="#{sdpreaccreditationUI.doc}" />
+					</p:commandButton>
+					
+					<p:commandButton id="usViewSupDoc" value="View Supporting Document" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}"   rendered="#{sdpreaccreditationUI.companyUSSupportingDoc.extension.toLowerCase() eq 'pdf' or sdpreaccreditationUI.companyUSSupportingDoc.extension.toLowerCase() eq 'png' or sdpreaccreditationUI.companyUSSupportingDoc.extension.toLowerCase() eq 'jpg' or sdpreaccreditationUI.companyUSSupportingDoc.extension.toLowerCase() eq 'jpeg' or sdpreaccreditationUI.companyUSSupportingDoc.extension.toLowerCase() eq 'gif'}"
+						icon="fa fa-eye" process="@this" styleClass="flat">
+						<f:setPropertyActionListener value="#{sdpreaccreditationUI.companyUSSupportingDoc}" target="#{uploadDocUI.doc}" />
+					</p:commandButton>
+				
+					<p:commandButton ajax="false" icon="fa fa-download" value="Download Supporting Document" action="#{uploadDocUI.download}" id="usDownLoadSupDoc" rendered="#{sdpreaccreditationUI.companyUSSupportingDoc.id ne null}" immediate="true">
+						<f:setPropertyActionListener value="#{sdpreaccreditationUI.companyUSSupportingDoc}" target="#{uploadDocUI.doc}" />
+					</p:commandButton>
+					
+					<p:commandButton icon="fa fa-bars " id="usDhistSS" value="View Supporting Document History" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{sdpreaccreditationUI.companyUSSupportingDoc.id ne null}" process="@this">
+						<f:setPropertyActionListener value="#{sdpreaccreditationUI.companyUSSupportingDoc}" target="#{uploadDocUI.doc}" />
+					</p:commandButton>
+					
+				</p:panelGrid>
+			</p:fieldset>
+		</p:fieldset>
+	
+		<p:fieldset legend="#{lang['skills.programme']}" rendered="#{sdpreaccreditationUI.selectTrainingProviderApplication.accreditationApplicationTypeEnum ne AccreditationApplicationTypeEnum.QCTOTradeTestCentre}">
+			
+			<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup styleClass="md-inputfield" id="pgSkillsP2" rendered="true">
+				
+					<!-- QCTO Skills Development Provider-->
+					<p:autoComplete rendered="#{sdpreaccreditationUI.selectTrainingProviderApplication.accreditationApplicationTypeEnum eq AccreditationApplicationTypeEnum.QCTOSkillsDevelopmentProvider}" id="nonSetaTpSkillsProgramQCTO" value="#{sdpreaccreditationUI.skillsProgram}" completeMethod="#{autoCompleteUI.completeSkillsProgramLinkedToMerseta}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SkillsProgramConvertor" dropdown="true"
+						minQueryLength="3" maxResults="10" inputStyle="width: 100%; opacity:1 !important;" style="width: 100%">
+						<p:ajax event="itemSelect"/>
+						<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+						<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+					</p:autoComplete>
+					
+					<!-- Non-merSETA Qualification-->
+					<p:autoComplete rendered="#{sdpreaccreditationUI.selectTrainingProviderApplication.accreditationApplicationTypeEnum eq AccreditationApplicationTypeEnum.Non_MerSETA_Focused_Provider}" id="nonSetaTpSkillsProgram" value="#{sdpreaccreditationUI.skillsProgram}" completeMethod="#{autoCompleteUI.completeSkillsProgramNotLinkedToEtqa}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SkillsProgramConvertor" dropdown="true"
+						minQueryLength="3" maxResults="10" inputStyle="width: 100%; opacity:1 !important;" style="width: 100%">
+						<p:ajax event="itemSelect"/>
+						<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+						<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+					</p:autoComplete>
+					
+					<p:outputLabel value="Skills Programme" styleClass="gray" />
+				</h:panelGroup>
+				<p:commandButton value="#{lang['add.skills.program']}" update="pgResubmissionQualDetails" process="@this" icon="ui-icon-plus" iconPos="right" styleClass="flat" action="#{sdpreaccreditationUI.addSkillsProgrammeToList()}" />
+			</p:panelGrid>
+			<br/>													
+			<p:dataTable var="rowVarPS" value="#{sdpreaccreditationUI.tpSkillsProgramList}" rowKey="#{rowVarPS.id}" reflow="true" styleClass="borderless">
+				<p:column headerText="#{lang['expand.row']}" width="45" rendered="false">
+					<p:rowToggler rendered="#{rowVarPS.docList.size() ne 0}"></p:rowToggler>
+				</p:column>
+				<p:column headerText="#{lang['code']}">
+					<h:outputText value="#{rowVarPS.skillsProgram.programmeID}" />
+				</p:column>
+				<p:column headerText="Skills Programme">
+					<h:outputText value="#{rowVarPS.skillsProgram.description}" />
+				</p:column>
+				<p:column headerText="Approve" width="60">
+					<center>
+						<p:selectBooleanCheckbox value="#{rowVarPS.accept}" disabled="true">
+							<p:ajax></p:ajax>
+						</p:selectBooleanCheckbox>
+					</center>
+				</p:column>
+				<p:column  width="45">
+					 <p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update="resubmissionForm:trainingProviderTabView:pgResubmissionQualDetails" action="#{sdpreaccreditationUI.removeSkillsProgramFromList}" process="@this">
+						<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+						<f:setPropertyActionListener value="#{rowVarPS}" target="#{sdpreaccreditationUI.selectSkillsProgram}" />
+					</p:commandButton>
+				</p:column>
+				<p:rowExpansion>
+					<p:panelGrid columns="1" style="width:100%" id="docListSP" layout="grid" styleClass="ui-panelgrid-blank form-group">
+						<p:dataTable value="#{rowVarPS.docList}" var="rv3" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv3.id}">
+							<p:column headerText="#{lang['type']}" width="18%">Supporting Document</p:column>
+							<p:column headerText="#{lang['original.file.name']}" priority="4">
+								<p:outputLabel value="#{rv3.originalFname}" styleClass="Fs12"></p:outputLabel>
+							</p:column>
+							<p:column headerText="#{lang['uploaded.by']}">#{rv3.users.firstName} #{rv3.users.lastName}</p:column>
+							<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+								<h:outputText value="#{rv3.createDate}">
+									<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['version']}" width="10%" priority="4">
+								<h:outputText value="#{rv3.versionNo}">
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['original.required']}" rendered="false">
+								<center>
+									<h:panelGroup rendered="#{rv3.configDoc.originalRequired}" styleClass="green">
+										<i class="fa fa-files-o fa-3x" aria-hidden="true"></i>
+									</h:panelGroup>
+									<h:panelGroup rendered="#{not rv3.configDoc.originalRequired}" styleClass="red">
+										<i class="fa fa-times fa-3x" aria-hidden="true"></i>
+									</h:panelGroup>
+								</center>
+							</p:column>
+							<p:column width="180" headerText="Actions">
+								<p:commandButton ajax="false" icon="fa fa-download" action="#{uploadDocUI.download}" id="dlbsp" rendered="#{rv3.id ne null}" immediate="true">
+									<f:setPropertyActionListener value="#{rv3}" target="#{uploadDocUI.doc}" />
+								</p:commandButton>
+								<p:tooltip for="dlbsp" value="#{lang['download.the.file']}" position="left" rendered="#{rv3.id ne null}" />
+	
+								<p:spacer width="5" rendered="#{rv3.id ne null}" />
+								<p:commandButton icon="fa fa-bars " id="dhistsp" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv3.id ne null}" process="@this">
+									<f:setPropertyActionListener value="#{rv3}" target="#{uploadDocUI.doc}" />
+								</p:commandButton>
+	
+								<p:tooltip for="dhistsp" value="#{lang['document.tracker']}" position="left" rendered="#{rv3.id ne null}" />
+								<h:panelGroup id="panelGroupThreesp" rendered="#{rv3.note ne null and rv3.note.length() gt 0}">
+									<p:spacer width="5" />
+									<p:commandButton icon="fa fa-comment-o" id="dnotesp" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel" process="@this">
+										<f:setPropertyActionListener value="#{rv3}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="dnotesp" value="#{lang['view.note']}" position="left" />
+								</h:panelGroup>
+	
+								<h:panelGroup id="panelGroupFourssp" rendered="#{rv3.extension.toLowerCase() eq 'pdf' or rv3.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv3.extension.toLowerCase() eq 'jpeg' or rv3.extension.toLowerCase() eq 'gif'}">
+									<p:spacer width="5" />
+									<p:commandButton icon="fa fa-eye " id="viewerButtonsp" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}" process="@this">
+										<f:setPropertyActionListener value="#{rv3}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="viewerButtonsp" value="#{lang['view.document']} " position="left" />
+								</h:panelGroup>
+							</p:column>
+						</p:dataTable>
+					</p:panelGrid>
+				</p:rowExpansion>
+			</p:dataTable>
+			<br/>
+			
+			<p:fieldset style="margin-top:0px;" rendered="false">
+				<p:panelGrid columns="4" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<p:commandButton id="spUpload" value="#{sdpreaccreditationUI.companySkillsProgSupportingDoc eq null? 'Upload Supporting Document' : 'Re-Upload Supporting Document'}" 
+						icon="fa fa-upload" oncomplete="PF('dlgUploadSupportingDoc').show()" process="@this" update="@form" styleClass="#{sdpreaccreditationUI.companySkillsProgSupportingDoc eq null ? 'red-btn' : 'green-btn'} flat">
+						<f:setPropertyActionListener value="#{sdpreaccreditationUI.companySkillsProgSupportingDoc}" target="#{sdpreaccreditationUI.doc}" />
+					</p:commandButton>
+					
+					<p:commandButton id="spViewSupDoc" value="View Supporting Document" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}"   rendered="#{sdpreaccreditationUI.companySkillsProgSupportingDoc.extension.toLowerCase() eq 'pdf' or sdpreaccreditationUI.companySkillsProgSupportingDoc.extension.toLowerCase() eq 'png' or sdpreaccreditationUI.companySkillsProgSupportingDoc.extension.toLowerCase() eq 'jpg' or sdpreaccreditationUI.companySkillsProgSupportingDoc.extension.toLowerCase() eq 'jpeg' or sdpreaccreditationUI.companySkillsProgSupportingDoc.extension.toLowerCase() eq 'gif'}"
+						icon="fa fa-eye" process="@this" styleClass="flat">
+						<f:setPropertyActionListener value="#{sdpreaccreditationUI.companySkillsProgSupportingDoc}" target="#{uploadDocUI.doc}" />
+					</p:commandButton>
+				
+					<p:commandButton ajax="false" icon="fa fa-download" value="Download Supporting Document" action="#{uploadDocUI.download}" id="spDownLoadSupDoc" rendered="#{sdpreaccreditationUI.companySkillsProgSupportingDoc.id ne null}" immediate="true">
+						<f:setPropertyActionListener value="#{sdpreaccreditationUI.companySkillsProgSupportingDoc}" target="#{uploadDocUI.doc}" />
+					</p:commandButton>
+					
+					<p:commandButton icon="fa fa-bars " id="spDhistSS" value="View Supporting Document History" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{sdpreaccreditationUI.companySkillsProgSupportingDoc.id ne null}" process="@this">
+						<f:setPropertyActionListener value="#{sdpreaccreditationUI.companySkillsProgSupportingDoc}" target="#{uploadDocUI.doc}" />
+					</p:commandButton>
+					
+				</p:panelGrid>
+			</p:fieldset>
+		</p:fieldset>
+	
+		<p:fieldset legend="#{lang['skills.set']}" rendered="#{sdpreaccreditationUI.selectTrainingProviderApplication.accreditationApplicationTypeEnum ne AccreditationApplicationTypeEnum.QCTOTradeTestCentre}">
+			<p:panelGrid columns="2" id="pgSS" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup>
+					<div>
+						<p:outputLabel value="Skills Set" />
+					</div>
+					<div>
+						<!-- QCTO Skills Development Provider-->
+						<p:autoComplete rendered="#{sdpreaccreditationUI.selectTrainingProviderApplication.accreditationApplicationTypeEnum eq AccreditationApplicationTypeEnum.QCTOSkillsDevelopmentProvider}" required="false" id="skillsSetQCTO" value="#{sdpreaccreditationUI.skillsSet}" completeMethod="#{autoCompleteUI.completeSkillsSetLinkedToMerseta}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SkillsSetConvertor" dropdown="true" minQueryLength="3"
+							maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 100%">
+							<p:ajax event="itemSelect" update="pgResubmissionQualDetails" />
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+							<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+						</p:autoComplete>
+					
+						<p:autoComplete rendered="#{sdpreaccreditationUI.selectTrainingProviderApplication.accreditationApplicationTypeEnum eq AccreditationApplicationTypeEnum.Non_MerSETA_Focused_Provider}" required="false" id="skillsSet" value="#{sdpreaccreditationUI.skillsSet}" completeMethod="#{autoCompleteUI.completeSkillsSetNotLinkedToSeta}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SkillsSetConvertor" dropdown="true" minQueryLength="3"
+							maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 100%">
+							<p:ajax event="itemSelect" update="pgResubmissionQualDetails" />
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+							<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+						</p:autoComplete>
+					</div>
+				</h:panelGroup>
+				<p:commandButton style="float:left;" value="#{lang['add.skills.set']}" update="resubmissionForm:trainingProviderTabView:pgResubmissionQualDetails" process="@this pgSS" icon="ui-icon-plus" iconPos="right" styleClass="flat Fright" action="#{sdpreaccreditationUI.addSkillsSetToList}" />
+			</p:panelGrid>
+			<br/>
+			<p:dataTable var="rowVarSS" value="#{sdpreaccreditationUI.tpSkillsSetList}" rowKey="#{rowVar.id}" reflow="true" styleClass="borderless">
+				<p:column headerText="#{lang['expand.row']}" width="45" rendered="false">
+					<p:rowToggler rendered="#{rowVarSS.trainingProviderDocParent ne null}"></p:rowToggler>
+				</p:column>
+				<p:column headerText="#{lang['code']}">
+					<h:outputText value="#{rowVarSS.skillsSet.programmeID}" />
+				</p:column>
+				<p:column headerText="Skills Set">
+					<h:outputText value="#{rowVarSS.skillsSet.description}" />
+				</p:column>
+				<p:column headerText="Approve" width="60">
+					<center>
+						<p:selectBooleanCheckbox value="#{rowVarSS.accept}" disabled="true">
+							<p:ajax></p:ajax>
+						</p:selectBooleanCheckbox>
+					</center>
+				</p:column>
+				<p:column  width="45">
+					 <p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update="resubmissionForm:trainingProviderTabView:pgResubmissionQualDetails" action="#{sdpreaccreditationUI.removeSkillsSetFromListmList}" process="@this">
+						<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+						<f:setPropertyActionListener value="#{rowVarSS}" target="#{sdpreaccreditationUI.tpSkillsSet}" />
+					</p:commandButton>
+				</p:column>
+				<p:rowExpansion>
+					<p:panelGrid columns="1" style="width:100%" id="docListSS" layout="grid" styleClass="ui-panelgrid-blank form-group">
+						<p:dataTable value="#{rowVarSS.docList}" var="rv4" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv4.id}">
+							<p:column headerText="#{lang['type']}" width="18%">Supporting Document</p:column>
+							<p:column headerText="#{lang['original.file.name']}" priority="4">
+								<p:outputLabel value="#{rv4.originalFname}" styleClass="Fs12"></p:outputLabel>
+							</p:column>
+							<p:column headerText="#{lang['uploaded.by']}">#{rv4.users.firstName} #{rv4.users.lastName}</p:column>
+							<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+								<h:outputText value="#{rv4.createDate}">
+									<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['version']}" width="10%" priority="4">
+								<h:outputText value="#{rv4.versionNo}">
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['original.required']}" rendered="false">
+								<center>
+									<h:panelGroup rendered="#{rv4.configDoc.originalRequired}" styleClass="green">
+										<i class="fa fa-files-o fa-3x" aria-hidden="true"></i>
+									</h:panelGroup>
+									<h:panelGroup rendered="#{not rv4.configDoc.originalRequired}" styleClass="red">
+										<i class="fa fa-times fa-3x" aria-hidden="true"></i>
+									</h:panelGroup>
+								</center>
+							</p:column>
+							<p:column width="180" headerText="Actions">
+								<p:commandButton ajax="false" icon="fa fa-download" action="#{uploadDocUI.download}" id="dlbSS" rendered="#{rv4.id ne null}" immediate="true">
+									<f:setPropertyActionListener value="#{rv4}" target="#{uploadDocUI.doc}" />
+								</p:commandButton>
+								<p:tooltip for="dlbSS" value="#{lang['download.the.file']}" position="left" rendered="#{rv4.id ne null}" />
+	
+								<p:spacer width="5" rendered="#{rv4.id ne null}" />
+								<p:commandButton icon="fa fa-bars " id="dhistSS" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv4.id ne null}" process="@this">
+									<f:setPropertyActionListener value="#{rv4}" target="#{uploadDocUI.doc}" />
+								</p:commandButton>
+	
+								<p:tooltip for="dhistSS" value="#{lang['document.tracker']}" position="left" rendered="#{rv4.id ne null}" />
+								<h:panelGroup id="panelGroupThreeSS" rendered="#{rv4.note ne null and rv4.note.length() gt 0}">
+									<p:spacer width="5" />
+									<p:commandButton icon="fa fa-comment-o" id="dnoteSS" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel" process="@this">
+										<f:setPropertyActionListener value="#{rv4}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="dnoteSS" value="#{lang['view.note']}" position="left" />
+								</h:panelGroup>
+	
+								<h:panelGroup id="panelGroupFoursSS" rendered="#{rv4.extension.toLowerCase() eq 'pdf' or rv4.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv4.extension.toLowerCase() eq 'jpeg' or rv4.extension.toLowerCase() eq 'gif'}">
+									<p:spacer width="5" />
+									<p:commandButton icon="fa fa-eye " id="viewerButtonSS" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}" process="@this">
+										<f:setPropertyActionListener value="#{rv4}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="viewerButtonSS" value="#{lang['view.document']} " position="left" />
+								</h:panelGroup>
+								
+								<p:commandButton rendered="true" icon="fa fa-upload" id="uploadUserDocs" styleClass="#{rv2.originalFname eq null ? 'red-btn' : ''} flat"
+									process="@this" oncomplete="PF('dlgUpload').show()" update=":uploadForm">
+									<f:setPropertyActionListener value="#{rv2}" target="#{uploadDocUI.doc}" />
+								</p:commandButton>
+								<p:tooltip for="uploadUserDocs" value="#{rv2.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+											
+							</p:column>
+						</p:dataTable>
+					</p:panelGrid>
+				</p:rowExpansion>
+			</p:dataTable>
+			
+			
+			<br/>
+			<p:fieldset style="margin-top:0px;" rendered="false">
+				<p:panelGrid columns="4" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<p:commandButton id="ssUpload" value="#{sdpreaccreditationUI.companySkillsSetSupportingDoc eq null? 'Upload Supporting Document' : 'Re-Upload Supporting Document'}" 
+						icon="fa fa-upload" oncomplete="PF('dlgUploadSupportingDoc').show()" process="@this" update="@form" styleClass="#{sdpreaccreditationUI.companySkillsSetSupportingDoc eq null ? 'red-btn' : 'green-btn'} flat">
+						<f:setPropertyActionListener value="#{sdpreaccreditationUI.companySkillsSetSupportingDoc}" target="#{sdpreaccreditationUI.doc}" />
+					</p:commandButton>
+					
+					<p:commandButton id="ssViewSupDoc" value="View Supporting Document" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}"   rendered="#{sdpreaccreditationUI.companySkillsSetSupportingDoc.extension.toLowerCase() eq 'pdf' or sdpreaccreditationUI.companySkillsSetSupportingDoc.extension.toLowerCase() eq 'png' or sdpreaccreditationUI.companySkillsSetSupportingDoc.extension.toLowerCase() eq 'jpg' or sdpreaccreditationUI.companySkillsSetSupportingDoc.extension.toLowerCase() eq 'jpeg' or sdpreaccreditationUI.companySkillsSetSupportingDoc.extension.toLowerCase() eq 'gif'}"
+						icon="fa fa-eye" process="@this" styleClass="flat">
+						<f:setPropertyActionListener value="#{sdpreaccreditationUI.companySkillsSetSupportingDoc}" target="#{uploadDocUI.doc}" />
+					</p:commandButton>
+				
+					<p:commandButton ajax="false" icon="fa fa-download" value="Download Supporting Document" action="#{uploadDocUI.download}" id="ssDownLoadSupDoc" rendered="#{sdpreaccreditationUI.companySkillsSetSupportingDoc.id ne null}" immediate="true">
+						<f:setPropertyActionListener value="#{sdpreaccreditationUI.companySkillsSetSupportingDoc}" target="#{uploadDocUI.doc}" />
+					</p:commandButton>
+					
+					<p:commandButton icon="fa fa-bars " id="ssDhistSS" value="View Supporting Document History" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{sdpreaccreditationUI.companySkillsSetSupportingDoc.id ne null}" process="@this">
+						<f:setPropertyActionListener value="#{sdpreaccreditationUI.companySkillsSetSupportingDoc}" target="#{uploadDocUI.doc}" />
+					</p:commandButton>
+					
+				</p:panelGrid>
+			</p:fieldset>
+			
+		</p:fieldset>
+		<br/>
+		<p:panelGrid columns="1" style="width:95%" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="true">
+			<p:commandButton value="Upload Document(s)" update="pgResubmissionQualDetails" icon="ui-icon-fast-forward" iconPos="right" action="#{sdpreaccreditationUI.doneQualificationDetails}" />
+		</p:panelGrid>
+		<br/>
+		<h:panelGroup rendered="#{sdpreaccreditationUI.doneQualification}">
+			<span class="FontBold">
+				<i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+				#{lang['please.upload.the.following.compulsory.documents']}
+			</span>
+		</h:panelGroup>
+		
+		<p:outputPanel id="pgSupDocs" layout="gride" rendered="#{sdpreaccreditationUI.doneQualification}">
+			<div class="ui-g dashboard">
+				<div class="ui-g-12">
+					<!-- Qualification(s) Supporting Document -->
+					<h:panelGroup rendered="#{sdpreaccreditationUI.companyQualifications.size() gt 0}" style="width:100%">
+						<div class="ui-g-12 ui-md-6 ui-lg-3">
+							<div class="ui-g card colorbox #{!sdpreaccreditationUI.qualUplaoaded ? 'colorbox-1' : 'colorbox-5'}">
+								<div class="ui-g-4">
+									<i class="material-icons">#{!sdpreaccreditationUI.qualUplaoaded  ? 'cloud_upload' : 'check_circle'}</i>
+								</div>
+								<div class="ui-g-8">
+									<span class="colorbox-name">Qualification(s) Supporting Document</span>
+									<span class="colorbox-count">
+										<p:commandButton icon="fa fa-download" rendered="#{sdpreaccreditationUI.qualUplaoaded and false}" action="#{sdpreaccreditationUI.downloadQualSupportingDoc()}" ajax="false" value="#{lang['download']}" immediate="true" process="@parent">
+											<p:ajax onevent="oneventFunction" />
+										</p:commandButton>
+										<p:spacer width="10"></p:spacer>
+										<p:commandButton value="#{!sdpreaccreditationUI.qualUplaoaded ? lang['click.to.upload'] : lang['re.upload']}" styleClass="#{!sdpreaccreditationUI.qualUplaoaded ? 'red-btn' : 'green-btn'} flat" process="@this" oncomplete="PF('dlgUploadSupportingDoc').show()" update="@form">
+											<f:setPropertyActionListener value="Qualifications" target="#{sdpreaccreditationUI.docFor}" />
+										</p:commandButton>
+									</span>
+								</div>
+							</div>
+						</div>
+					</h:panelGroup>
+			
+					<!-- Unit Standard(s) Supporting Document-->
+					<h:panelGroup rendered="#{sdpreaccreditationUI.unitStandards.size() gt 0}" style="width:100%">
+						<div class="ui-g-12 ui-md-6 ui-lg-3">
+							<div class="ui-g card colorbox #{!sdpreaccreditationUI.usUplaoaded ? 'colorbox-1' : 'colorbox-5'}">
+								<div class="ui-g-4">
+									<i class="material-icons">#{!sdpreaccreditationUI.usUplaoaded  ? 'cloud_upload' : 'check_circle'}</i>
+								</div>
+								<div class="ui-g-8">
+									<span class="colorbox-name">Unit Standard(s) Supporting Document</span>
+									<span class="colorbox-count">
+										<p:commandButton icon="fa fa-download" rendered="#{sdpreaccreditationUI.qualUplaoaded and false}" action="#{sdpreaccreditationUI.downloadUSSupportingDoc()}" ajax="false" value="#{lang['download']}" immediate="true" process="@parent">
+											<p:ajax onevent="oneventFunction" />
+										</p:commandButton>
+										<p:spacer width="10"></p:spacer>
+										<p:commandButton value="#{!sdpreaccreditationUI.usUplaoaded ? lang['click.to.upload'] : lang['re.upload']}" styleClass="#{!sdpreaccreditationUI.usUplaoaded ? 'red-btn' : 'green-btn'} flat" process="@this" oncomplete="PF('dlgUploadSupportingDoc').show()" update="@form">
+											<f:setPropertyActionListener value="Unit Standards" target="#{sdpreaccreditationUI.docFor}" />
+										</p:commandButton>
+									</span>
+								</div>
+							</div>
+						</div>
+					</h:panelGroup>
+					
+					<!-- Skills Programme(s) Supporting Document-->
+					<h:panelGroup rendered="#{sdpreaccreditationUI.tpSkillsProgramList.size() gt 0}" style="width:100%">
+						<div class="ui-g-12 ui-md-6 ui-lg-3">
+							<div class="ui-g card colorbox #{!sdpreaccreditationUI.spUplaoaded ? 'colorbox-1' : 'colorbox-5'}">
+								<div class="ui-g-4">
+									<i class="material-icons">#{!sdpreaccreditationUI.spUplaoaded  ? 'cloud_upload' : 'check_circle'}</i>
+								</div>
+								<div class="ui-g-8">
+									<span class="colorbox-name">Skills Programme(s) Supporting Document</span>
+									<span class="colorbox-count">
+										<p:commandButton icon="fa fa-download" rendered="#{sdpreaccreditationUI.qualUplaoaded and false}" action="#{sdpreaccreditationUI.downloadSkillsProgSupportingDoc()}" ajax="false" value="#{lang['download']}" immediate="true" process="@parent">
+											<p:ajax onevent="oneventFunction" />
+										</p:commandButton>
+										<p:spacer width="10"></p:spacer>
+										<p:commandButton value="#{!sdpreaccreditationUI.spUplaoaded  ? lang['click.to.upload'] : lang['re.upload']}" styleClass="#{!sdpreaccreditationUI.spUplaoaded  ? 'red-btn' : 'green-btn'} flat" process="@this" oncomplete="PF('dlgUploadSupportingDoc').show()" update="@form">
+											<f:setPropertyActionListener value="Skills Programme" target="#{sdpreaccreditationUI.docFor}" />
+										</p:commandButton>
+									</span>
+								</div>
+							</div>
+						</div>
+					</h:panelGroup>
+					
+					<!-- Skills Set(s) Supporting Document-->
+					<h:panelGroup rendered="#{sdpreaccreditationUI.tpSkillsSetList.size() gt 0}" style="width:100%">
+						<div class="ui-g-12 ui-md-6 ui-lg-3">
+							<div class="ui-g card colorbox #{!sdpreaccreditationUI.ssUplaoaded ? 'colorbox-1' : 'colorbox-5'}">
+								<div class="ui-g-4">
+									<i class="material-icons">#{!tsdpreaccreditationUI.ssUplaoaded  ? 'cloud_upload' : 'check_circle'}</i>
+								</div>
+								<div class="ui-g-8">
+									<span class="colorbox-name">Skills Set(s) Supporting Document</span>
+									<span class="colorbox-count">
+										<p:commandButton icon="fa fa-download" rendered="#{sdpreaccreditationUI.qualUplaoaded and false}" action="#{sdpreaccreditationUI.downloadSkillsSetSupportingDoc()}" ajax="false" value="#{lang['download']}" immediate="true" process="@parent">
+											<p:ajax onevent="oneventFunction" />
+										</p:commandButton>
+										<p:spacer width="10"></p:spacer>
+										<p:commandButton value="#{!sdpreaccreditationUI.ssUplaoaded  ? lang['click.to.upload'] : lang['re.upload']}" styleClass="#{!sdpreaccreditationUI.ssUplaoaded  ? 'red-btn' : 'green-btn'} flat" process="@this" oncomplete="PF('dlgUploadSupportingDoc').show()" update="@form">
+											<f:setPropertyActionListener value="Skills Set" target="#{sdpreaccreditationUI.docFor}" />
+										</p:commandButton>
+									</span>
+								</div>
+							</div>
+						</div>
+					</h:panelGroup>
+				</div>
+			</div>
+		</p:outputPanel>
+	
+	</h:panelGroup>
+
+</ui:composition>

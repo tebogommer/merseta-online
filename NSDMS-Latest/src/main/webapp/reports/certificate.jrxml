@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.8.0.final using JasperReports Library version 6.8.0-2ed8dfabb690ff337a5797129f2cd92902b0c87b  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="ApprenticeshipAnnexureA" pageWidth="595" pageHeight="842" whenNoDataType="AllSectionsNoDetail" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="7175d534-f4bb-474c-bd51-66c00c1d9428">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="MerSetaDataAdapter.xml"/>
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<parameter name="certificate_number" class="java.lang.String"/>
+	<parameter name="barcode" class="java.lang.String"/>
+	<parameter name="company_id" class="java.lang.Long"/>
+	<parameter name="corner_image" class="java.awt.Image"/>
+	<parameter name="logo" class="java.awt.Image"/>
+	<parameter name="top_bottom_border" class="java.awt.Image"/>
+	<parameter name="left_right_border" class="java.awt.Image"/>
+	<parameter name="certificate_signature" class="java.awt.Image"/>
+	<parameter name="manager" class="java.awt.Image"/>
+	<parameter name="ceo" class="java.awt.Image"/>
+	<parameter name="learner" class="haj.com.entity.Users"/>
+	<parameter name="qualification" class="haj.com.entity.lookup.Qualification"/>
+	<parameter name="trainingproviderverfication" class="haj.com.entity.TrainingProviderVerfication"/>
+	<parameter name="learners_names" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[SELECT   c.company_name 
+FROM  merseta.company AS c
+WHERE c.id=$P{company_id}]]>
+	</queryString>
+	<field name="company_name" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="company_name"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="company"/>
+	</field>
+	<group name="Group1" isResetPageNumber="true">
+		<groupHeader>
+			<band height="802">
+				<textField>
+					<reportElement x="65" y="381" width="430" height="28" uuid="3e875add-e717-4b2a-8d86-991c46161fb0"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" size="18" isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$P{learners_names}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="47" y="581" width="144" height="20" uuid="df84254f-34f0-4bd7-93f8-7d6a8bcc842a"/>
+					<box>
+						<bottomPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Bottom">
+						<font fontName="Arial" size="14" isBold="true" isItalic="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression><![CDATA[new SimpleDateFormat("dd/MM/yyyy").format($P{trainingproviderverfication}.getApprovalDate())]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="350" y="581" width="163" height="20" uuid="7411e12d-9f44-4155-9fdb-05e52e079eb9"/>
+					<box>
+						<bottomPen lineWidth="0.0"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Bottom">
+						<font fontName="Arial" size="14" isBold="true" isItalic="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$P{trainingproviderverfication}.getCertificateNumber()]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="66" y="412" width="430" height="28" uuid="f6e9084e-2ab4-4700-a2ef-33dbda983903"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" size="18" isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression><![CDATA[($P{learner}.getRsaIDNumber()==null|| $P{learner}.getRsaIDNumber().equals("") ?($P{learner}.getPassportNumber()):($P{learner}.getRsaIDNumber()))]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="45" y="502" width="466" height="60" uuid="9cb512f9-0679-4f98-ba24-d828fb3d71e0">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<textElement textAlignment="Center" verticalAlignment="Top">
+						<font fontName="Arial" size="12" isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$P{qualification}.getDescription()  + " "+$P{qualification}.getNqflevelg2description()]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupHeader>
+	</group>
+</jasperReport>

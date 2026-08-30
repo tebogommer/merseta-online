@@ -1,0 +1,161 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Employee Report</h1>
+					<h:form id="mainForm">
+						<div align="right">
+							<h:commandLink id="eExcelTsk" rendered="#{reportingUI.displayReport}">
+								<i class="fa fa-file-excel-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+								<p:dataExporter type="xls" target="employeeList" fileName="Employee_List_Report" pageOnly="true" />
+							</h:commandLink>
+							<h:commandLink id="ePdfTsk" rendered="#{reportingUI.displayReport}">
+								<i class="fa fa-file-pdf-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+								<p:dataExporter type="pdf" target="employeeList" fileName="Employee_List_Report" pageOnly="true" />
+							</h:commandLink>
+							<h:commandLink id="eCsvTsk" rendered="#{reportingUI.displayReport}">
+								<i class="fa fa-file-text-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+								<p:dataExporter type="csv" target="employeeList" fileName="Employee_List_Report" pageOnly="true" />
+							</h:commandLink>
+							<h:commandLink id="eXmlTsk" rendered="#{reportingUI.displayReport}">
+								<i class="fa fa-file-code-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+								<p:dataExporter type="xml" target="employeeList" fileName="Employee_List_Report" pageOnly="true" />
+							</h:commandLink>
+							<p:tooltip for="eExcelTsk" value="#{lang['export.search.results.to.excel']}" position="left" />
+							<p:tooltip for="ePdfTsk" value="#{lang['export.search.results.to.pdf']}" position="left" />
+							<p:tooltip for="eCsvTsk" value="#{lang['export.search.results.as.a.csv']}" position="left" />
+							<p:tooltip for="eXmlTsk" value="#{lang['export.search.results.as.a.xml']}" position="left" />
+						</div>
+						<p:tooltip position="left"></p:tooltip>
+						<p:commandButton value="Show / Unshow Report" action="#{reportingUI.reportButton}" rendered="true" update="mainForm" style="margin-right:20px;" styleClass="ui-priority-primary" />
+						<div>
+							<p:spacer />
+						</div>
+						<p:dataTable var="rowVar" rendered="#{reportingUI.displayReport}" value="#{reportingUI.employeeReportList}" id="employeeList" rowKey="#{rowVar.chamberName}" paginator="true" rows="15" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}" paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="15,30,45,60,75" reflow="true">
+
+							<p:column headerText="Chamber Name" filterBy="#{rowVar.chamberName}">
+								<h:outputText value="#{rowVar.chamberName}" />
+							</p:column>
+							<p:column headerText="Company Size" filterBy="#{rowVar.companySize}">
+								<h:outputText value="#{rowVar.companySize}" />
+							</p:column>
+							<p:column headerText="Number of Companies Active" sortBy="#{rowVar.numberOfCompanyActive}">
+								<h:outputText value="#{rowVar.numberOfCompanyActive}" />
+							</p:column>
+							<p:column headerText="Number of Companies Inactive" sortBy="#{rowVar.numberOfCompanyInactive}">
+								<h:outputText value="#{rowVar.numberOfCompanyInactive}" />
+							</p:column>
+
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Company Report</h1>
+					<h:form id="mainForm1">
+						<div align="right">
+							<h:commandLink id="eExcelTsk1" rendered="#{reportingUI.displayReport1}">
+								<i class="fa fa-file-excel-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+								<p:dataExporter type="xls" target="companyList" fileName="Company_List_Report" pageOnly="true" />
+							</h:commandLink>
+							<h:commandLink id="ePdfTsk1" rendered="#{reportingUI.displayReport1}">
+								<i class="fa fa-file-pdf-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+								<p:dataExporter type="pdf" target="companyList" fileName="Company_List_Report" pageOnly="true" />
+							</h:commandLink>
+							<h:commandLink id="eCsvTsk1" rendered="#{reportingUI.displayReport1}">
+								<i class="fa fa-file-text-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+								<p:dataExporter type="csv" target="companyList" fileName="Company_List_Report" pageOnly="true" />
+							</h:commandLink>
+							<h:commandLink id="eXmlTsk1" rendered="#{reportingUI.displayReport1}">
+								<i class="fa fa-file-code-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+								<p:dataExporter type="xml" target="companyList" fileName="Company_List_Report" pageOnly="true" />
+							</h:commandLink>
+							<p:tooltip for="eExcelTsk1" value="#{lang['export.search.results.to.excel']}" position="left" />
+							<p:tooltip for="ePdfTsk1" value="#{lang['export.search.results.to.pdf']}" position="left" />
+							<p:tooltip for="eCsvTsk1" value="#{lang['export.search.results.as.a.csv']}" position="left" />
+							<p:tooltip for="eXmlTsk1" value="#{lang['export.search.results.as.a.xml']}" position="left" />
+						</div>
+						<p:tooltip position="left"></p:tooltip>
+						<p:commandButton value="Show / Unshow Report" action="#{reportingUI.reportButton}" rendered="true" update="mainForm1" style="margin-right:20px;" styleClass="ui-priority-primary" />
+						<div>
+							<p:spacer />
+						</div>
+						<p:dataTable var="rowVar" rendered="#{reportingUI.displayReport1}" value="#{reportingUI.companyReportList}" id="companyList" rowKey="#{rowVar.chamberName}" paginator="true" rows="15" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}" paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="15,30,45,60,75" reflow="true">
+
+							<p:column headerText="Chamber Name" filterBy="#{rowVar.chamberName}">
+								<h:outputText value="#{rowVar.chamberName}" />
+							</p:column>
+							<p:column headerText="Company Size" filterBy="#{rowVar.companySize}">
+								<h:outputText value="#{rowVar.companySize}" />
+							</p:column>
+							<p:column headerText="Number of Companies LevyPaying" sortBy="#{rowVar.levyPaying}">
+								<h:outputText value="#{rowVar.levyPaying}" />
+							</p:column>
+							<p:column headerText="Number of Companies Not LevyPaying" sortBy="#{rowVar.notLevyPaying}">
+								<h:outputText value="#{rowVar.notLevyPaying}" />
+							</p:column>
+
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+		<!-- 	<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Grant Application Trend Analysis</h1>
+					<h:form id="mainForm2">
+						<div align="right">
+							<h:commandLink id="eExcelTsk2" rendered="#{reportingUI.displayReport2}">
+								<i class="fa fa-file-excel-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+								<p:dataExporter type="xls" target="grantList" fileName="Grant_List_Report" pageOnly="true" />
+							</h:commandLink>
+							<h:commandLink id="ePdfTsk2" rendered="#{reportingUI.displayReport2}">
+								<i class="fa fa-file-pdf-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+								<p:dataExporter type="pdf" target="grantList" fileName="Grant_List_Report" pageOnly="true" />
+							</h:commandLink>
+							<h:commandLink id="eCsvTsk2" rendered="#{reportingUI.displayReport2}">
+								<i class="fa fa-file-text-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+								<p:dataExporter type="csv" target="grantList" fileName="Grant_List_Report" pageOnly="true" />
+							</h:commandLink>
+							<h:commandLink id="eXmlTsk2" rendered="#{reportingUI.displayReport2}">
+								<i class="fa fa-file-code-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+								<p:dataExporter type="xml" target="grantList" fileName="Grant_List_Report" pageOnly="true" />
+							</h:commandLink>
+							<p:tooltip for="eExcelTsk2" value="#{lang['export.search.results.to.excel']}" position="left" />
+							<p:tooltip for="ePdfTsk2" value="#{lang['export.search.results.to.pdf']}" position="left" />
+							<p:tooltip for="eCsvTsk2" value="#{lang['export.search.results.as.a.csv']}" position="left" />
+							<p:tooltip for="eXmlTsk2" value="#{lang['export.search.results.as.a.xml']}" position="left" />
+						</div>
+						<p:tooltip position="left"></p:tooltip>
+						<p:commandButton value="Show / Unshow Report" action="#{reportingUI.reportButton}" rendered="true" update="mainForm2" style="margin-right:20px;" styleClass="ui-priority-primary" />
+						<div>
+							<p:spacer />
+						</div>
+						<p:dataTable var="rowVar" rendered="#{reportingUI.displayReport2}" value="#{reportingUI.grantReportList}" id="grantList" rowKey="#{rowVar.companyName}" paginator="true" rows="15" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}" paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="15,30,45,60,75" reflow="true">
+
+							<p:column headerText="Company Name" filterBy="#{rowVar.companyName}" sortBy="#{rowVar.companyName}">
+								<h:outputText value="#{rowVar.companyName}" />
+							</p:column>
+							<p:column headerText="Grant Year" filterBy="#{rowVar.grantYear}">
+								<h:outputText value="#{rowVar.grantYear}" />
+							</p:column>
+							<p:column headerText="Grant type" sortBy="#{rowVar.grantType}">
+								<h:outputText value="#{rowVar.grantType}" />
+							</p:column>
+							<p:column headerText="Province" sortBy="#{rowVar.province}">
+								<h:outputText value="#{rowVar.province}" />
+							</p:column>
+							<p:column headerText="Region" sortBy="#{rowVar.region}">
+								<h:outputText value="#{rowVar.region}" />
+							</p:column>
+
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div> -->
+		</div>
+		
+		
+	</ui:define>
+</ui:composition>

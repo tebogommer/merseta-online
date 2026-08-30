@@ -1,0 +1,214 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui">
+	<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="true">
+		<p:fieldset legend="#{lang['residentialAddress']}" style="margin-top: 20px" id="compAddrPcode">
+			<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank">
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText disabled="#{trainingproviderUI.company.id ne null or trainingproviderUI.tpResidentialAddress.addressLine1.length() gt 0}" id="addr1" value="#{trainingproviderUI.tpResidentialAddress.addressLine1}" style="opacity: 1 !important; color: black; width:100%" required="true"
+						requiredMessage="#{lang['enter.residential.address']}">
+						<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['residentialAddress.lineone.length.error']}" />
+					</p:inputText>
+					<p:outputLabel value="#{lang['address.line.1']}" for="addr1" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText disabled="#{trainingproviderUI.company.id ne null or trainingproviderUI.tpResidentialAddress.addressLine2.length() gt 0}" id="addr2" style="opacity: 1 !important; color: black; width:100%" value="#{trainingproviderUI.tpResidentialAddress.addressLine2}"
+						required="#{trainingproviderUI.company.id eq null or trainingproviderUI.tpResidentialAddress.addressLine2.length() ne 0}" requiredMessage="Provide Address Line 2">
+						<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['residentialAddress.linetwo.length.error']}" />
+					</p:inputText>
+					<p:outputLabel value="#{lang['address.line.2']}" for="addr2" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText disabled="#{trainingproviderUI.company.id ne null or trainingproviderUI.tpResidentialAddress.addressLine3.length() gt 0}" id="addr3" style="opacity: 1 !important; color: black; width:100%" value="#{trainingproviderUI.tpResidentialAddress.addressLine3}">
+						<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['residentialAddress.linethree.length.error']}" />
+					</p:inputText>
+					<p:outputLabel value="#{lang['address.line.3']}" for="addr3" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield">
+					<p:autoComplete disabled="#{trainingproviderUI.company.id ne null or trainingproviderUI.tpResidentialAddress.town ne null}" id="town" value="#{trainingproviderUI.tpResidentialAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}"
+						forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 100%" style="width: 100%" required="true" requiredMessage="#{lang['please.select.a.town']}">
+						<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+					</p:autoComplete>
+					<p:outputLabel value="#{lang['town']}" for="town" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText disabled="#{trainingproviderUI.company.id ne null or trainingproviderUI.tpResidentialAddress.postcode.length() gt 0}" id="pcode" style="opacity: 1 !important; color: black; width:100%" value="#{trainingproviderUI.tpResidentialAddress.postcode}" required="true"
+						requiredMessage="#{lang['provide.postcode']}">
+						<o:validator validatorId="javax.faces.Length" minimum="0" maximum="4" message="#{lang['residentialAddress.code.length.error']}" />
+					</p:inputText>
+					<p:outputLabel value="#{lang['post.code']}" for="pcode" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield" id="pgMunicipality">
+					<p:autoComplete disabled="#{trainingproviderUI.company.id ne null or trainingproviderUI.tpResidentialAddress.municipality ne null}" id="MunicipalityID" value="#{trainingproviderUI.tpResidentialAddress.municipality}" completeMethod="#{sdfDetailUI.completeMunicipality}" var="rv"
+						itemLabel="#{rv.municipalityDesc}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputstyle="opacity: 1 !important; color: black; width: 100%" style="opacity: 1 !important; color: black; width: 100%" required="true"
+						requiredMessage="#{lang['select.municipality']}">
+						<p:column headerText="#{lang['province']}" style="white-space: nowrap">#{rv.province.provinceDesc}</p:column>
+						<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">#{rv.municipalityDesc}</p:column>
+						<p:ajax event="change" update="resProvincePG"></p:ajax>
+						<p:ajax event="itemSelect" update="resProvincePG pgMunicipality"></p:ajax>
+					</p:autoComplete>
+					<p:outputLabel value="#{lang['municipality']}" for="resProvincePG" />
+				</h:panelGroup>
+
+
+				<h:panelGroup rendered="#{trainingproviderUI.tpResidentialAddress.municipality ne null}" styleClass="md-inputfield" id="resProvincePG">
+					<p:inputText disabled="true" id="resProvince" value="#{trainingproviderUI.tpResidentialAddress.municipality.province.provinceDesc}" style="opacity: 1 !important; color: black; width:100%" />
+					<p:outputLabel value="#{lang['province']}" for="resProvince" />
+				</h:panelGroup>
+
+
+			</p:panelGrid>
+			<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank">
+				<h:panelGroup styleClass="md-inputfield" rendered="false">
+				   <!-- NOT IN USE -->
+					<p:inputText type="number" disabled="#{trainingproviderUI.tpResidentialAddress.longitude ne null}" id="longitude" value="#{trainingproviderUI.tpResidentialAddress.longitude}" style="opacity: 1 !important; color: black; width:100%" required="true" requiredMessage="#{lang['enter.longitude']}">
+						<p:ajax></p:ajax>
+					</p:inputText>
+					<p:outputLabel value="#{lang['longitude']}" for="longitude" />
+				</h:panelGroup>
+				
+				
+
+				<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank">
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText type="number" rendered="true" disabled="#{trainingproviderUI.tpResidentialAddress.longitudeDegrees ne null}" id="longitudeDegreestp" style="opacity: 1 !important; color: black; width:100%" value="#{trainingproviderUI.tpResidentialAddress.longitudeDegrees}" required="true"
+							requiredMessage="Enter #{lang['longitude']}: Degrees">
+							<p:ajax></p:ajax>
+						</p:inputText>
+						<p:outputLabel value="#{lang['longitude']}: Degrees" for="longitudeDegreestp" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText type="number" disabled="#{trainingproviderUI.tpResidentialAddress.longitudeMinutes ne null}" id="longitudeMinutestp" value="#{trainingproviderUI.tpResidentialAddress.longitudeMinutes}" style="opacity: 1 !important; color: black; width:100%" required="true"
+							requiredMessage="Enter #{lang['longitude']}: Minutes">
+							<p:ajax></p:ajax>
+						</p:inputText>
+						<p:outputLabel value="#{lang['longitude']}: Minutes" for="longitudeMinutestp" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText type="number" disabled="#{trainingproviderUI.tpResidentialAddress.longitudeSeconds ne null}" id="longitudeSecondstp" value="#{trainingproviderUI.tpResidentialAddress.longitudeSeconds}" style="opacity: 1 !important; color: black; width:100%" required="true"
+							requiredMessage="Enter #{lang['longitude']}: Seconds">
+							<p:ajax></p:ajax>
+						</p:inputText>
+						<p:outputLabel value="#{lang['longitude']}: Seconds" for="longitudeSecondstp" />
+					</h:panelGroup>
+
+				</p:panelGrid>
+				
+				<h:panelGroup styleClass="md-inputfield" rendered="false">
+					<!-- NOT IN USE -->
+					<p:inputText type="number" rendered="true" disabled="#{trainingproviderUI.tpResidentialAddress.latitude ne null}" id="latitude" style="opacity: 1 !important; color: black; width:100%;" value="#{trainingproviderUI.tpResidentialAddress.latitude}">
+						<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['enter.latitude']}" />
+						<p:ajax></p:ajax>
+					</p:inputText>
+					<p:outputLabel value="#{lang['latitude']}" for="latitude" />
+				</h:panelGroup>
+				
+				<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank">
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText type="number" rendered="true" disabled="#{trainingproviderUI.tpResidentialAddress.latitudeDegrees ne null}" id="latitudeDegreestp" style="opacity: 1 !important; color: black; width:100%" value="#{trainingproviderUI.tpResidentialAddress.latitudeDegrees}" required="true"
+							requiredMessage="Enter #{lang['latitude']}: Degrees">
+							<p:ajax></p:ajax>
+						</p:inputText>
+						<p:outputLabel value="#{lang['latitude']}: Degrees" for="latitudeDegreestp" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText type="number" disabled="#{trainingproviderUI.tpResidentialAddress.latitudeMinutes ne null}" id="latitudeMinutestp" value="#{trainingproviderUI.tpResidentialAddress.latitudeMinutes}" style="opacity: 1 !important; color: black; width:100%" required="true"
+							requiredMessage="Enter #{lang['latitude']}: Minutes">
+							<p:ajax></p:ajax>
+						</p:inputText>
+						<p:outputLabel value="#{lang['latitude']}: Minutes" for="latitudeMinutestp" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText type="number" disabled="#{trainingproviderUI.tpResidentialAddress.latitudeSeconds ne null}" id="latitudeSecondstp" value="#{trainingproviderUI.tpResidentialAddress.latitudeSeconds}" style="opacity: 1 !important; color: black; width:100%" required="true"
+							requiredMessage="Enter #{lang['latitude']}: Seconds">
+							<p:ajax></p:ajax>
+						</p:inputText>
+						<p:outputLabel value="#{lang['latitude']}: Seconds" for="latitudeSecondstp" />
+					</h:panelGroup>
+				</p:panelGrid>
+				<h:panelGroup styleClass="md-inputfield" rendered="true">
+					<!-- <a href="https://getlatlong.net" target="_blank">Check GPS Coordinate</a> -->
+					<a href="https://www.gps-coordinates.net" target="_blank">Check GPS Coordinate</a>
+				</h:panelGroup>
+			</p:panelGrid>
+		</p:fieldset>
+
+		<p:fieldset id="postalAddressFS" legend="#{lang['postalAddress']}" style="margin-top: 20px">
+			<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank" id="postalAddress">
+				<h:panelGroup styleClass="md-inputfield" rendered="#{not trainingproviderUI.copyAddress}">
+					<p:inputText disabled="#{trainingproviderUI.company.id ne null or trainingproviderUI.tpPostalAddress.addressLine1.length() gt 0}" id="postalAddressaddr1" value="#{trainingproviderUI.tpPostalAddress.addressLine1}" style="opacity: 1 !important; color: black; width:100%" required="true"
+						requiredMessage="#{lang['enter.postal.address']}">
+						<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['postalAddress.lineone.length.error']}" />
+					</p:inputText>
+					<p:outputLabel value="#{lang['address.line.1']}" for="postalAddressaddr1" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield" rendered="#{not trainingproviderUI.copyAddress}">
+					<p:inputText disabled="#{trainingproviderUI.company.id ne null or trainingproviderUI.tpPostalAddress.addressLine2.length() gt 0}" id="postalAddressaddr2" style="opacity: 1 !important; color: black; width:100%" value="#{trainingproviderUI.tpPostalAddress.addressLine2}"
+						required="#{trainingproviderUI.company.id eq null or trainingproviderUI.tpPostalAddress.addressLine2.length() ne 0}" requiredMessage="Provide Address Line 2">
+						<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['postalAddress.linetwo.length.error']}" />
+					</p:inputText>
+					<p:outputLabel value="#{lang['address.line.2']}" for="postalAddressaddr2" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield" rendered="#{not trainingproviderUI.copyAddress}">
+					<p:inputText disabled="#{trainingproviderUI.company.id ne null or trainingproviderUI.tpPostalAddress.addressLine3.length() gt 0}" id="postalAddressaddr3" style="opacity: 1 !important; color: black; width:100%" value="#{trainingproviderUI.tpPostalAddress.addressLine3}">
+						<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['postalAddress.linethree.length.error']}" />
+					</p:inputText>
+					<p:outputLabel value="#{lang['address.line.3']}" for="postalAddressaddr3" />
+				</h:panelGroup>
+				<h:panelGroup rendered="#{not trainingproviderUI.copyAddress}" styleClass="md-inputfield">
+
+					<p:autoComplete disabled="#{trainingproviderUI.company.id ne null or trainingproviderUI.tpPostalAddress.town ne null}" id="townPostal" value="#{trainingproviderUI.tpPostalAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}"
+						forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 100%" style="width: 100%" required="true" requiredMessage="#{lang['please.select.a.town']}">
+						<p:column headerText="#{lang['town']}" style="white-space: nowrap">
+	                  #{rv.description}
+	         			</p:column>
+					</p:autoComplete>
+					<p:outputLabel value="#{lang['town']}" for="townPostal" />
+
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield" rendered="#{not trainingproviderUI.copyAddress}">
+					<p:inputText disabled="#{trainingproviderUI.company.id ne null or trainingproviderUI.tpPostalAddress.postcode.length() gt 0}" id="postalAddressPcode" style="opacity: 1 !important; color: black; width:100%" value="#{trainingproviderUI.tpPostalAddress.postcode}" required="true"
+						requiredMessage="#{lang['provide.postcode']}">
+						<o:validator validatorId="javax.faces.Length" minimum="0" maximum="4" message="#{lang['postalAddress.code.length.error']}" />
+					</p:inputText>
+					<p:outputLabel value="#{lang['post.code']}" for="postalAddressPcode" />
+				</h:panelGroup>
+				<h:panelGroup rendered="#{not trainingproviderUI.copyAddress}" styleClass="md-inputfield">
+					<p:autoComplete disabled="#{trainingproviderUI.company.id ne null or trainingproviderUI.tpPostalAddress.municipality ne null}" id="postalAddressMunicipalityID" value="#{trainingproviderUI.tpPostalAddress.municipality}" completeMethod="#{sdfDetailUI.completeMunicipality}" var="rv"
+						itemLabel="#{rv.municipalityProvince}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputstyle="opacity: 1 !important; color: black; width: 100%" style="opacity: 1 !important; color: black; width: 100%"
+						required="true" requiredMessage="#{lang['select.municipality']}">
+						<p:column headerText="#{lang['province']}" style="white-space: nowrap">#{rv.province.provinceDesc}</p:column>
+						<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">#{rv.municipalityDesc}</p:column>
+						<p:ajax event="change" update="postProvincePG"></p:ajax>
+						<p:ajax event="itemSelect" update="postProvincePG"></p:ajax>
+					</p:autoComplete>
+					<p:outputLabel value="#{lang['municipality']}" for="postalAddressMunicipalityID" />
+				</h:panelGroup>
+
+				<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank" id="postProvincePG">
+					<h:panelGroup rendered="#{trainingproviderUI.tpPostalAddress.municipality ne null}" styleClass="md-inputfield">
+						<p:inputText disabled="true" id="postProvince" value="#{trainingproviderUI.tpPostalAddress.municipality.province.provinceDesc}" style="opacity: 1 !important; color: black; width:100%" />
+						<p:outputLabel value="#{lang['province']}" for="postProvince" />
+					</h:panelGroup>
+				</p:panelGrid>
+
+				<h:panelGroup>
+					<div>
+						<p:outputLabel value="#{lang['same.as.my.address']}" styleClass="FontLight" />
+					</div>
+					<div>
+						<p:selectBooleanCheckbox disabled="#{trainingproviderUI.company.id ne null}" value="#{trainingproviderUI.copyAddress}">
+							<p:ajax update="postalAddress" listener="#{trainingproviderUI.clearPostal}" />
+						</p:selectBooleanCheckbox>
+					</div>
+				</h:panelGroup>
+			</p:panelGrid>
+			
+			<p:spacer height="110"></p:spacer>
+		</p:fieldset>
+	</p:panelGrid>
+</ui:composition>

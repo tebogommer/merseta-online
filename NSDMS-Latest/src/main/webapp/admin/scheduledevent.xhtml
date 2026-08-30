@@ -1,0 +1,131 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:c="http://java.sun.com/jsp/jstl/core"
+                template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>ScheduledEvent</h1>
+					<h:form id="scheduledeventInsForm">
+						<p:growl sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						
+						<p:panelGrid columns="1" style="width:100%" id="scheduledeventInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+       						         							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="title" value="#{scheduledeventUI.scheduledevent.title}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['title']}" for="title"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="createDate" value="#{scheduledeventUI.scheduledevent.createDate}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['createDate']}" for="createDate"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="fromDateTime" value="#{scheduledeventUI.scheduledevent.fromDateTime}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['fromDateTime']}" for="fromDateTime"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="user" value="#{scheduledeventUI.scheduledevent.user}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['user']}" for="user"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="toDateTime" value="#{scheduledeventUI.scheduledevent.toDateTime}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['toDateTime']}" for="toDateTime"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="status" value="#{scheduledeventUI.scheduledevent.status}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['status']}" for="status"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="targetKey" value="#{scheduledeventUI.scheduledevent.targetKey}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['targetKey']}" for="targetKey"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="targetClass" value="#{scheduledeventUI.scheduledevent.targetClass}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['targetClass']}" for="targetClass"/>
+     							</h:panelGroup>  
+
+
+        					    <p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+									<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:scheduledeventList :scheduledeventInsForm:scheduledeventInsGrid" action="#{scheduledeventUI.scheduledeventInsert}" />
+									<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="scheduledeventInsGrid" process="@this" action="#{scheduledeventUI.prepareNew}">
+										<p:resetInput target="scheduledeventInsGrid" />
+									</p:commandButton>									
+								</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{scheduledeventUI.dataModel}" filteredValue="#{scheduledeventUI.scheduledEventfilteredList}" id="scheduledeventList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+           						              					<p:column headerText="#{lang['title']}">  
+                        			<h:outputText value="#{rowVar.title}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['createDate']}">  
+                        			<h:outputText value="#{rowVar.createDate}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['fromDateTime']}">  
+                        			<h:outputText value="#{rowVar.fromDateTime}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['user']}">  
+                        			<h:outputText value="#{rowVar.user}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['toDateTime']}">  
+                        			<h:outputText value="#{rowVar.toDateTime}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['status']}">  
+                        			<h:outputText value="#{rowVar.status}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['targetKey']}">  
+                        			<h:outputText value="#{rowVar.targetKey}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['targetClass']}">  
+                        			<h:outputText value="#{rowVar.targetClass}" />  
+            					</p:column>      
+
+
+           						<p:column width="80">
+									<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":scheduledeventInsForm:scheduledeventInsGrid">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{scheduledeventUI.scheduledevent}" />
+									</p:commandButton>
+									<p:spacer width="5" />
+									<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:scheduledeventList" action="#{scheduledeventUI.scheduledeventDelete}">
+										<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+										<f:setPropertyActionListener value="#{rowVar}" target="#{scheduledeventUI.scheduledevent}" />
+									</p:commandButton>
+								</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+<!-- 
+title = title
+createDate = createDate
+fromDateTime = fromDateTime
+user = user
+toDateTime = toDateTime
+status = status
+targetKey = targetKey
+targetClass = targetClass
+
+-->
+</ui:composition>

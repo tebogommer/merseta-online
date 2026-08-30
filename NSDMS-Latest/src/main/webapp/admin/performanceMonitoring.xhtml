@@ -1,0 +1,161 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="head">
+	</ui:define>
+
+	<ui:define name="content">
+
+		<div class="ui-g">
+			<div class="ui-g-12">
+
+				<h:form id="mainForm">
+
+					<p:poll rendered="true" interval="10" update="mainForm:mem mainForm:diskUsage mainForm:memoryUsage mainForm:memoryGauge mainForm:diskGauge mainForm:jvmGauge mainForm:fsUsage mainForm:fsGauge" listener="#{performanceMonitoringUI.init}" />
+
+					<div class="card">
+						<div class="p-grid card-m-height">
+							<div class="p-col-4 p-md-4 p-lg-4 float-center">
+								<p:chart type="metergauge" model="#{performanceMonitoringUI.meterGaugeModelJVM}" rendered="false" />
+								<p:knob labelTemplate="#{performanceMonitoringUI.jvmUsagePercent}%" thickness=".4" value="35" id="jvmGauge" max="100" min="0" step="1" disabled="true" foregroundColor="#0e248e" backgroundColor="#d5dbea" />
+								<!-- " -->
+								<br />
+								<p:outputLabel value="JVM Usage" />
+							</div>
+							<div class="p-col-4 p-md-4 p-lg-4 float-center">
+								<p:chart type="metergauge" model="#{performanceMonitoringUI.meterGaugeModelDiskUsage}" rendered="false" />
+								<p:knob labelTemplate="#{performanceMonitoringUI.diskUsagePercent}%" thickness=".4" value="35" id="diskGauge" max="100" min="0" step="1" disabled="true" foregroundColor="#0e248e" backgroundColor="#d5dbea" />
+								<br />
+								<p:outputLabel value="Disk Usage" />
+							</div>
+							<div class="p-col-4 p-md-4 p-lg-4 float-center">
+								<p:chart type="metergauge" model="#{performanceMonitoringUI.meterGaugeModelMemoryUsage}" rendered="false" />
+								<p:knob labelTemplate="#{performanceMonitoringUI.memoryUsagePercent}%" thickness=".4" value="35" id="memoryGauge" max="100" min="0" step="1" disabled="true" foregroundColor="#0e248e" backgroundColor="#d5dbea" />
+								<br />
+								<p:outputLabel value="Memory Usage" />
+							</div>
+							<div class="p-col-4 p-md-12 p-lg-3">
+								<p:chart type="metergauge" model="#{performanceMonitoringUI.meterGaugeModelFileSystem}" id="fsGauge" rendered="false" />
+							</div>
+						</div>
+					</div>
+
+					<br />
+
+					<div class="card card-w-title">
+						<h3>
+							Server Info
+							<p:commandLink action="#{performanceMonitoringUI.populateServerStats}" update="mem jvmGauge" styleClass="Fright" style="padding: 5px 5px 5px 5px;" title="Refresh">
+								<i class="fa fa-refresh black" aria-hidden="true"></i>
+							</p:commandLink>
+						</h3>
+						<p:panelGrid columns="4" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank" id="mem">
+							<p:outputLabel value="Total thread count:" styleClass="FontLight" />
+							<p:outputLabel value="#{performanceMonitoringUI.totalThreadCount}" styleClass="FontBold " />
+
+							<p:outputLabel value="Available processors (cores):" styleClass="FontLight" />
+							<p:outputLabel value="#{performanceMonitoringUI.availableProcessors}" styleClass="FontBold " />
+
+							<p:outputLabel value="Free memory available to JVM: (MB)" styleClass="FontLight" />
+							<p:outputLabel value="#{performanceMonitoringUI.freeMemory}" styleClass="FontBold ">
+								<f:convertNumber minFractionDigits="2" />
+							</p:outputLabel>
+
+							<p:outputLabel value="Maximum memory: (MB)" styleClass="FontLight" />
+							<p:outputLabel value="#{performanceMonitoringUI.maxMemory}" styleClass="FontBold ">
+								<f:convertNumber minFractionDigits="2" />
+							</p:outputLabel>
+
+							<p:outputLabel value="Total memory available to JVM: (MB)" styleClass="FontLight" />
+							<p:outputLabel value="#{performanceMonitoringUI.totalMemory}" styleClass="FontBold ">
+								<f:convertNumber minFractionDigits="2" />
+							</p:outputLabel>
+
+						</p:panelGrid>
+
+					</div>
+					<br />
+					<div class="card card-w-title">
+						<h3>
+							Disk Usage
+							<p:commandLink action="#{performanceMonitoringUI.monitorDiskStatus}" update="diskUsage diskGauge" styleClass="Fright" style="padding: 5px 5px 5px 5px;" title="Refresh">
+								<i class="fa fa-refresh black" aria-hidden="true"></i>
+							</p:commandLink>
+						</h3>
+						<p:panelGrid columns="4" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank" id="diskUsage">
+							<p:outputLabel value="Total disk space: (GB)" styleClass="FontLight" />
+							<p:outputLabel value="#{performanceMonitoringUI.totalDiskSpace}" styleClass="FontBold ">
+								<f:convertNumber minFractionDigits="2" />
+							</p:outputLabel>
+
+							<p:outputLabel value="Free disk space: (GB)" styleClass="FontLight" />
+							<p:outputLabel value="#{performanceMonitoringUI.freeDiskSpace}" styleClass="FontBold ">
+								<f:convertNumber minFractionDigits="2" />
+							</p:outputLabel>
+
+							<p:outputLabel value="Free usable disk space: (GB)" styleClass="FontLight" />
+							<p:outputLabel value="#{performanceMonitoringUI.freeUsableDiskSpace}" styleClass="FontBold ">
+								<f:convertNumber minFractionDigits="2" />
+							</p:outputLabel>
+
+						</p:panelGrid>
+					</div>
+					<br />
+					<div class="card card-w-title">
+						<h3>
+							Memory Usage
+							<p:commandLink action="#{performanceMonitoringUI.monitorMemoryStats}" update="memoryUsage memoryGauge" styleClass="Fright" style="padding: 5px 5px 5px 5px;" title="Refresh">
+								<i class="fa fa-refresh black" aria-hidden="true"></i>
+							</p:commandLink>
+						</h3>
+						<p:panelGrid columns="4" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank" id="memoryUsage">
+							<p:outputLabel value="Initial heap memory: (MB)" styleClass="FontLight" />
+							<p:outputLabel value="#{performanceMonitoringUI.initialHeapMemoryUsage}" styleClass="FontBold ">
+								<f:convertNumber minFractionDigits="2" />
+							</p:outputLabel>
+
+							<p:outputLabel value="Used heap memory: (MB)" styleClass="FontLight" />
+							<p:outputLabel value="#{performanceMonitoringUI.usedHeapmemoryUsage}" styleClass="FontBold ">
+								<f:convertNumber minFractionDigits="2" />
+							</p:outputLabel>
+
+							<p:outputLabel value="Max heap memory: (MB)" styleClass="FontLight" />
+							<p:outputLabel value="#{performanceMonitoringUI.maxHeapMemoryUsage}" styleClass="FontBold ">
+								<f:convertNumber minFractionDigits="2" />
+							</p:outputLabel>
+
+							<p:outputLabel value="Comitted heap memory: (MB)" styleClass="FontLight" />
+							<p:outputLabel value="#{performanceMonitoringUI.comittedHeapMemoryUsage}" styleClass="FontBold ">
+								<f:convertNumber minFractionDigits="2" />
+							</p:outputLabel>
+
+						</p:panelGrid>
+					</div>
+
+					<p:outputPanel rendered="false">
+						<div class="card card-w-title">
+							<h3>
+								File System Usage
+								<p:commandLink action="#{performanceMonitoringUI.monitorFileSystemStats}" update="fsUsage fsGauge" styleClass="Fright" style="padding: 5px 5px 5px 5px;" title="Refresh">
+									<i class="fa fa-refresh black" aria-hidden="true"></i>
+								</p:commandLink>
+							</h3>
+							<p:panelGrid columns="4" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank" id="fsUsage">
+								<p:outputLabel value="Total file system space: (GB)" styleClass="FontLight" />
+								<p:outputLabel value="#{performanceMonitoringUI.fileSystemTotalSpace}" styleClass="FontBold " />
+
+								<p:outputLabel value="File system free space: (GB)" styleClass="FontLight" />
+								<p:outputLabel value="#{performanceMonitoringUI.fileSystemFreeSpace}" styleClass="FontBold " />
+
+								<p:outputLabel value="File system usable space: (GB)" styleClass="FontLight" />
+								<p:outputLabel value="#{performanceMonitoringUI.fileSystemUsableSpace}" styleClass="FontBold " />
+
+							</p:panelGrid>
+						</div>
+					</p:outputPanel>
+
+				</h:form>
+			</div>
+		</div>
+
+	</ui:define>
+</ui:composition>

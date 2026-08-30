@@ -1,0 +1,300 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="head">
+		<script src="#{request.contextPath}/js/highcharts.js" />
+		<script src="#{request.contextPath}/js/highcharts-3d.js" />
+		<script src="#{request.contextPath}/js/exporting.js" />
+	</ui:define>
+
+	<ui:define name="content">
+		<p:growl sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<h:form id="uploadForm">
+					<div class="card card-w-title">
+						<h1>Percentage of total Levies by Scheme year by Chamber:</h1>
+						<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="Scheme Year:" />
+								</div>
+								<div>
+									<p:selectOneMenu value="#{percentageOfTotalLeviesPaidByChamberUI.dateSelected}" style="width: 95%;">
+										<f:selectItems value="#{percentageOfTotalLeviesPaidByChamberUI.sarsYears}" var="sars" itemLabel="#{sars.year}" itemValue="#{sars.year}" />
+										<f:ajax render="@form" execute="@this" />
+									</p:selectOneMenu>
+								</div>
+							</h:panelGroup>
+						</p:panelGrid>
+
+						<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<p:commandButton icon="fa fa-plus" value="Generate Report" action="#{percentageOfTotalLeviesPaidByChamberUI.populateBean}" update="@form" onstart="uploadStart()" oncomplete="uploadDone()" />
+						</p:panelGrid>
+					</div>
+
+
+
+					<p:outputPanel rendered="#{percentageOfTotalLeviesPaidByChamberUI.percentageOfTotalLevies ne null}">
+						<div class="card card-w-title">
+							<div align="right" style="margin-bottom: 10px">
+								<h:commandLink id="eExcel1">
+									<i class="fa fa-file-excel-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+									<p:dataExporter type="xls" target="precentage" fileName="Percentage of total levies paid" />
+								</h:commandLink>
+								<h:commandLink title="#{lang['export.search.results.as.a.csv']}">
+									<i class="fa fa-file-text-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+									<p:dataExporter type="csv" target="precentage" fileName="Percentage of total levies paid" />
+								</h:commandLink>
+							</div>
+
+							<p:dataTable rendered="#{percentageOfTotalLeviesPaidByChamberUI.percentageOfTotalLevies ne null}" var="rowVar1" value="#{percentageOfTotalLeviesPaidByChamberUI.percentageOfTotalLevies}" id="precentage" rowKey="#{rowVar.id}" paginator="true" rows="15" paginatorPosition="bottom"
+								paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="15,30,45" reflow="true" lazy="true">
+								<f:facet name="header">
+						Percentage of Total Levies Paid by Chamber - #{percentageOfTotalLeviesPaidByChamberUI.headingForMainSchemeYearSelected}
+					</f:facet>
+								<p:columnGroup type="header">
+									<p:row>
+										<p:column rowspan="2" headerText="Description" />
+									</p:row>
+									<p:row>
+										<p:column colspan="1" headerText="Auto" />
+										<p:column colspan="1" headerText="Metal" />
+										<p:column colspan="1" headerText="Motor" />
+										<p:column colspan="1" headerText="New Tyre" />
+										<p:column colspan="1" headerText="Plastics" />
+										<p:column colspan="1" headerText="Unknown" />
+										<p:column colspan="1" headerText="ACM" />
+										<p:column colspan="1" headerText="TOTAL" />
+									</p:row>
+
+								</p:columnGroup>
+
+								<p:column headerText="Description">
+									<h:outputText value="#{rowVar1.description}" />
+								</p:column>
+								<p:column headerText="Auto" styleClass="number-column">
+									<h:outputText value="#{rowVar1.bdAuto}">
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Metal" styleClass="number-column">
+									<h:outputText value="#{rowVar1.bdMetal}">
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</h:outputText>
+								</p:column>
+								<p:column  headerText="Motor" styleClass="number-column">
+									<h:outputText value="#{rowVar1.bdMotor}">
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="New Tyre" styleClass="number-column">
+									<h:outputText value="#{rowVar1.bdNewTyre}">
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Plastics" styleClass="number-column">
+									<h:outputText value="#{rowVar1.bdPlastic}">
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Unknown" styleClass="number-column">
+									<h:outputText value="#{rowVar1.bdUnknown}">
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="ACM" styleClass="number-column">
+									<h:outputText value="#{rowVar1.bdAcm}">
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</h:outputText>
+								</p:column>
+
+
+								<p:column headerText="TOTAL" styleClass="number-column">
+									<h:outputText value="#{rowVar1.bdAuto + rowVar1.bdMetal + rowVar1.bdMotor +  rowVar1.bdNewTyre + rowVar1.bdPlastic + rowVar1.bdUnknown + rowVar1.bdAcm}">
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</h:outputText>
+								</p:column>
+
+							</p:dataTable>
+
+						</div>
+					</p:outputPanel>
+
+
+					<div class="EmptyBox10" />
+
+					<p:outputPanel rendered="#{percentageOfTotalLeviesPaidByChamberUI.percentageOfTotalLeviesPre ne null}">
+						<div class="card card-w-title">
+							<div align="right" style="margin-bottom: 10px">
+								<h:commandLink id="eExcel2">
+									<i class="fa fa-file-excel-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+									<p:dataExporter type="xls" target="percentagePre" fileName="Percentage of total levies paid" />
+								</h:commandLink>
+								<h:commandLink title="#{lang['export.search.results.as.a.csv']}">
+									<i class="fa fa-file-text-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+									<p:dataExporter type="csv" target="percentagePre" fileName="Percentage of total levies paid" />
+								</h:commandLink>
+							</div>
+
+							<p:dataTable rendered="#{percentageOfTotalLeviesPaidByChamberUI.percentageOfTotalLeviesPre ne null}" var="rowVar" value="#{percentageOfTotalLeviesPaidByChamberUI.percentageOfTotalLeviesPre}" id="percentagePre" rowKey="#{rowVar.id}" paginator="true" rows="15" paginatorPosition="bottom"
+								paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="15,30,45" reflow="true" lazy="true">
+								<f:facet name="header">
+						Percentage of Total Levies Paid by Chamber - #{percentageOfTotalLeviesPaidByChamberUI.headingForPreviousSchemeYearCalc}
+					</f:facet>
+								<p:columnGroup type="header">
+									<p:row>
+										<p:column rowspan="2" headerText="Description" />
+									</p:row>
+									<p:row>
+										<p:column colspan="1" headerText="Auto" />
+										<p:column colspan="1" headerText="Metal" />
+										<p:column colspan="1" headerText="Motor" />
+										<p:column colspan="1" headerText="New Tyre" />
+										<p:column colspan="1" headerText="Plastics" />
+										<p:column colspan="1" headerText="Unknown" />
+										<p:column colspan="1" headerText="ACM" />
+										<p:column colspan="1" headerText="TOTAL" />
+									</p:row>
+								</p:columnGroup>
+								<p:column headerText="Description" >
+									<h:outputText value="#{rowVar.description}" />
+								</p:column>
+								<p:column headerText="Auto" styleClass="number-column">
+									<h:outputText value="#{rowVar.bdAuto}">
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Metal" styleClass="number-column">
+									<h:outputText value="#{rowVar.bdMetal}">
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Motor" styleClass="number-column">
+									<h:outputText value="#{rowVar.bdMotor}">
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="New Tyre" styleClass="number-column">
+									<h:outputText value="#{rowVar.bdNewTyre}">
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Plastics" styleClass="number-column">
+									<h:outputText value="#{rowVar.bdPlastic}">
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Unknown" styleClass="number-column">
+									<h:outputText value="#{rowVar.bdUnknown}">
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="ACM" styleClass="number-column">
+									<h:outputText value="#{rowVar.bdAcm}">
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</h:outputText>
+								</p:column>
+
+								<p:column headerText="TOTAL" styleClass="number-column">
+									<h:outputText value="#{rowVar.bdAuto + rowVar.bdMetal + rowVar.bdMotor +  rowVar.bdNewTyre + rowVar.bdPlastic + rowVar.bdUnknown + rowVar.bdAcm}">
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</h:outputText>
+								</p:column>
+							</p:dataTable>
+						</div>
+					</p:outputPanel>
+
+					<p:spacer height="5px" />
+					<div id="container" style="width: 100%; height: 400px;"></div>
+					<p:spacer height="5px" />
+					<div id="precontainer" style="width: 100%; height: 400px;"></div>
+
+
+					<script type="text/javascript">
+
+		 $(function ONE() {
+
+
+				// Build the chart
+				Highcharts.chart('container', {
+				    chart: {
+				        plotBackgroundColor: null,
+				        plotBorderWidth: null,
+				        plotShadow: false,
+				        type: 'pie'
+				    },
+				    title: {
+				        text: 'Percentage of Total levies Paid by chamber Year to Date: #{percentageOfTotalLeviesPaidByChamberUI.headingForMainSchemeYearSelected}'
+				    },
+				    tooltip: {
+				        pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+				    },
+				    plotOptions: {
+				        pie: {
+				            allowPointSelect: true,
+				            cursor: 'pointer',
+				            dataLabels: {
+				                enabled: true,
+				                format: '<b>{point.name}</b>: {point.percentage:.1f} %',
+				                connectorColor: 'silver'
+				            }
+				        }
+				    },
+				    series: [{
+				        name: 'Total Levies',
+				        data:#{percentageOfTotalLeviesPaidByChamberUI.dataNow}
+				    }]
+				});
+
+			 });
+
+
+		
+			 $(function TWO() {
+
+
+					// Build the chart
+					Highcharts.chart('precontainer', {
+					    chart: {
+					        plotBackgroundColor: null,
+					        plotBorderWidth: null,
+					        plotShadow: false,
+					        type: 'pie'
+					    },
+					    title: {
+					        text: 'Percentage of Total levies Paid by chamber Year to Date: #{percentageOfTotalLeviesPaidByChamberUI.headingForPreviousSchemeYearCalc}'
+					    },
+					    tooltip: {
+					        pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+					    },
+					    plotOptions: {
+					        pie: {
+					            allowPointSelect: true,
+					            cursor: 'pointer',
+					            dataLabels: {
+					                enabled: true,
+					                format: '<b>{point.name}</b>: {point.percentage:.1f} %',
+					                connectorColor: 'silver'
+					            }
+					        }
+					    },
+					    series: [{
+					        name: 'Total Levies',
+					        data:#{percentageOfTotalLeviesPaidByChamberUI.dataPre}
+					    }]
+					});
+			});
+					
+	</script>
+
+
+				</h:form>
+			</div>
+		</div>
+	</ui:define>
+
+
+
+</ui:composition>

@@ -1,0 +1,91 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+
+	<ui:define name="content">
+		<div class="ui-g">
+
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="uploadForm">
+						<h1>#{lang['employer.breakdown.for.scheme.year']}</h1>
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+
+						<p:panelGrid columns="3" styleClass="ui-panelgrid-blank" columnClasses="FontBold,,">
+							<p:outputLabel value="SARS/DHET #{lang['scheme.year']}" />
+							<p:inputMask required="true" mask="9999" requiredMessage="Enter scheme year" value="#{reconReportSummaryUI.sarsLevyDetails.schemeYear}" size="4" />
+							<p:commandButton action="#{reconReportSummaryUI.contribSummary}" value="#{lang['submit']}" update="@form" />
+
+						</p:panelGrid>
+
+						<h:panelGroup rendered="#{reconReportSummaryUI.sarsLevyDetails.employerSummary ne null}">
+
+							<p:dataTable var="rv" value="#{reconReportSummaryUI.sarsLevyDetails.employerSummary}" sortBy="#{rv.id}" rendered="#{reconReportSummaryUI.sarsLevyDetails.employerSummary.size() gt 0}">
+								<p:column headerText="Status">
+									<h:outputText value="(#{rv.tradingStatus}) #{rv.status}" rendered="#{rv.tradingStatus ne null}" />
+									<h:outputText value="#{rv.status}" rendered="#{rv.tradingStatus eq null}" />
+								</p:column>
+								<p:column headerText="Employers">
+									<h:outputText value="#{rv.noEmployes}" styleClass="Fright FontBold">
+										<f:convertNumber pattern="###,###,###,###" />
+									</h:outputText>
+								</p:column>
+								<p:summaryRow>
+									<p:column style="text-align:right">
+										<h:outputText value="Total employers in SARS employer files" />
+									</p:column>
+									<p:column style="text-align:right">
+										<h:outputText value="#{reconReportSummaryUI.sarsLevyDetails.numberEmployersInSARSEmployerFiles}" styleClass="Fright FontBold Fs17">
+											<f:convertNumber pattern="###,###,###,###" />
+										</h:outputText>
+									</p:column>
+								</p:summaryRow>
+
+							</p:dataTable>
+							<br />
+							<p:panelGrid columns="3" layout="grid">
+
+
+								<p:outputLabel value="Levy Paying Employers in SARS Levy File" />
+								<p:outputLabel value="#{reconReportSummaryUI.sarsLevyDetails.numberEmployersInSARSLevyFiles}" styleClass="Fright FontBold Fs16" />
+								<p:outputLabel value="#{lang['b.a']}" styleClass="FontLight" />
+
+								<p:outputLabel value="Levy Paying Employers Paid Mandatory Grant" />
+								<p:outputLabel value="#{reconReportSummaryUI.sarsLevyDetails.numberEmployersInSETAInvoiceFile}" styleClass="Fright FontBold Fs16" />
+								<p:outputLabel value="#{lang['b.b']}" styleClass="FontLight" />
+
+								<p:spacer />
+								<p:separator styleClass="FontLight" />
+								<p:spacer />
+
+								<p:outputLabel value="#{lang['percentage.paid']}" />
+								<h:panelGroup styleClass="Fright FontLight Fs16">
+									<p:outputLabel value="#{(reconReportSummaryUI.sarsLevyDetails.numberEmployersInSETAInvoiceFile / reconReportSummaryUI.sarsLevyDetails.numberEmployersInSARSLevyFiles) * 100.0}">
+										<f:convertNumber pattern="#0.00" />
+									</p:outputLabel>% 	  
+     	</h:panelGroup>
+								<p:outputLabel value="#{lang['b.a.100']}" styleClass="FontLight" />
+
+							</p:panelGrid>
+
+						</h:panelGroup>
+
+					</h:form>
+				</div>
+			</div>
+
+
+		</div>
+
+
+
+
+
+
+
+
+
+	</ui:define>
+
+</ui:composition>

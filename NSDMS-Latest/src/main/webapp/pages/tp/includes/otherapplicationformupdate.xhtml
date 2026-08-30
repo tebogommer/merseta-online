@@ -1,0 +1,611 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+	<div class="ui-g ">
+		<c:if test="#{companylearnersdetailschangeUI.companylearners ne null}">
+			<div class="ui-g-12">
+				<h2>LEARNER UPDATE FORM </h2>
+				<p:outputPanel styleClass="card">
+					<p:fieldset id="learnerDetailsforms" collapsed="false" legend="#{lang['learner.details']}">
+					<p:panelGrid id="learnerRegistrationFormGridPanel" columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="#{lang['title']}" for="title" styleClass="gray" />
+							</div>
+							<div>
+								<p:selectOneMenu id="title" value="#{companylearnersdetailschangeUI.userChangeRequest.title}" disabled="#{disableFields}" converter="TitleConvertor" style="opacity: 1 !important; color: black; width:95%" required="true" requiredMessage="#{lang['select.title']}">
+									<p:ajax />
+									<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+									<f:selectItems value="#{selectItemsUI.selectItemsTitles}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+						
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText id="firstName" value="#{companylearnersdetailschangeUI.userChangeRequest.firstName}" style="width:95%" required="true" requiredMessage="#{lang['provide.first.name']}" disabled="#{disableFields}">
+								<p:ajax />
+							</p:inputText>
+							<p:outputLabel value="#{lang['first.name']}:" for="firstName" styleClass="gray" />
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText id="lastName" value="#{companylearnersdetailschangeUI.userChangeRequest.lastName}" style="width:95%" required="true" requiredMessage="#{lang['provide.last.name']}" disabled="#{disableFields}">
+								<p:ajax />
+							</p:inputText>
+							<p:outputLabel value="#{lang['last.name']}:" for="lastName" styleClass="gray" />
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText id="middleName" value="#{companylearnersdetailschangeUI.userChangeRequest.middleName}" style="width:95%" disabled="#{disableFields}">
+								<p:ajax />
+							</p:inputText>
+							<p:outputLabel value="#{lang['middle.name']}" for="middleName" styleClass="gray" />
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield" rendered="#{companylearnersdetailschangeUI.userChangeRequest.rsaIDNumber.length() gt 0}">
+							<p:inputText id="rsaId" value="#{companylearnersdetailschangeUI.userChangeRequest.rsaIDNumber}" style="width:95%" required="true" requiredMessage="#{lang['rsa.id.number']}" disabled="true">
+								<p:ajax />
+							</p:inputText>
+							<p:outputLabel value="#{lang['rsa.id.number']}" for="rsaId" styleClass="gray" />
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield" rendered="#{companylearnersdetailschangeUI.userChangeRequest.passportNumber.length() gt 0}">
+							<p:inputText id="passPort" value="#{companylearnersdetailschangeUI.userChangeRequest.passportNumber}" style="width:95%" required="true" requiredMessage="#{lang['passport.number']}" disabled="true">
+								<p:ajax />
+							</p:inputText>
+							<p:outputLabel value="#{lang['passport.number']}" for="passPort" styleClass="gray" />
+						</h:panelGroup>
+						
+						<h:panelGroup styleClass="md-inputfield" id="calDate">
+							<p:calendar id="glPostingDate" value="#{companylearnersdetailschangeUI.userChangeRequest.dateOfBirth}" showOn="button" required="true" requiredMessage="Select date of birth" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" inputStyle="width:93%" disabled="#{disableFields}">
+								<p:ajax event="change" listener="#{companylearnersdetailschangeUI.checkRequireGaurdian}" update="@form" />
+							</p:calendar>
+							<p:outputLabel value="Date Of Birth" for="glPostingDate" styleClass="gray" />
+						</h:panelGroup>
+
+						
+						<h:panelGroup id="mariedStatePanel" rendered="#{companylearnersdetailschangeUI.requireGaurdian or companylearnersdetailschangeUI.userChangeRequest.maried ne null}">
+							<div>
+								<p:outputLabel value="Are you married?" for="mariedState" styleClass="gray" />
+							</div>
+							<div>
+								<p:selectOneMenu id="mariedState" value="#{companylearnersdetailschangeUI.userChangeRequest.maried}" style="width:95%" required="true" requiredMessage="Select if married" disabled="#{disableFields}">
+									<p:ajax update="@form" listener="#{companylearnersdetailschangeUI.checkRequireGaurdian}" />
+									<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+									<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText id="email" value="#{companylearnersdetailschangeUI.userChangeRequest.email}" type="email" style="width:95%" required="true" requiredMessage="#{lang['provide.email']}" disabled="#{disableFields}">
+								<p:ajax />
+							</p:inputText>
+							<p:outputLabel value="#{lang['email']}" for="email" styleClass="gray" />
+						</h:panelGroup>
+
+
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputMask id="telNumber" value="#{companylearnersdetailschangeUI.userChangeRequest.telNumber}" mask="099 999 9999" style="width:95%" disabled="#{disableFields}">
+								<p:ajax />
+							</p:inputMask>
+							<p:outputLabel value="#{lang['tel.number']}" for="telNumber" styleClass="gray" />
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield">
+							<br />
+							<p:inputMask id="cellPhone" value="#{companylearnersdetailschangeUI.userChangeRequest.cellNumber}" mask="099 999 9999" style="width:95%" required="true" requiredMessage="#{lang['cell.number']}" disabled="#{disableFields}">
+								<p:ajax />
+							</p:inputMask>
+							<p:outputLabel value="#{lang['cell.number']}" for="cellPhone" styleClass="gray" />
+						</h:panelGroup>
+
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="#{lang['gender']} *" styleClass="gray" />
+							</div>
+							<div>
+								<p:selectOneMenu id="gender" value="#{companylearnersdetailschangeUI.userChangeRequest.gender}" converter="GenderConvertor" style="width:95%" required="true" requiredMessage="Select gender" disabled="#{disableFields}">
+									<p:ajax />
+									<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+									<f:selectItems value="#{selectItemsUI.selectItemsGender}" var="rv" itemLabel="#{rv.genderName}" itemValue="#{rv}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+
+
+
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="#{lang['equity']}" for="equity" styleClass="gray" />
+							</div>
+							<div>
+								<p:autoComplete id="equity" value="#{companylearnersdetailschangeUI.userChangeRequest.equity}" style="width:95%" completeMethod="#{autoCompleteUI.completeEquityExcludeOtherAndUnkown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="EquityConvertor" dropdown="true" minQueryLength="3" maxResults="10" requiredMessage="#{lang['provide.equity']}" required="true"
+									disabled="#{disableFields}">
+									<p:column headerText="equity" style="white-space: nowrap">#{rv.description}</p:column>
+									<p:ajax event="itemSelect"></p:ajax>
+								</p:autoComplete>
+							</div>
+						</h:panelGroup>
+
+
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="#{lang['nationality']}" for="nationality" styleClass="gray" />
+							</div>
+							<div>
+								<p:autoComplete id="nationality" value="#{companylearnersdetailschangeUI.userChangeRequest.nationality}" required="true" requiredMessage="#{lang['nationality.required']}" completeMethod="#{autoCompleteUI.completeNationality}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" style="width:95%" converter="NationalityConvertor" dropdown="true" minQueryLength="3" maxResults="10"
+									disabled="#{disableFields}">
+									<p:column headerText="#{lang['nationality']}" style="white-space: nowrap">#{rv.description}</p:column>
+									<p:ajax event="itemSelect"></p:ajax>
+								</p:autoComplete>
+							</div>
+						</h:panelGroup>
+						
+						<h:panelGroup styleClass="md-inputfield"  style="margin-top: 20px" rendered="false">
+							<div>
+								<p:outputLabel value="#{lang['disability']}" for="disability2" />
+							</div>
+							<div>
+								<p:autoComplete disabled="#{disableFields}" id="disability2" value="#{companylearnersdetailschangeUI.userChangeRequest.disabilityStatus}" style="width:95%" completeMethod="#{autoCompleteUI.completeDisabilityStatus}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="DisabilityStatusConvertor" dropdown="true" minQueryLength="3" maxResults="100" required="true" requiredMessage="Please Select Disability">
+									<p:column headerText="Disability2" style="white-space: nowrap">#{rv.description}</p:column>
+									<p:ajax event="itemSelect" update="learnerRegistrationFormGridPanel" listener="#{companylearnersdetailschangeUI.clearDisabilityRating}"/>
+								</p:autoComplete>
+							</div>
+						</h:panelGroup>
+					
+
+						<h:panelGroup rendered="false">
+							<div>
+								<p:outputLabel value="#{lang['disability']}" for="disability" styleClass="gray" />
+							</div>
+							<p:autoComplete id="disability" value="#{companylearnersdetailschangeUI.userChangeRequest.disabilityStatus}" completeMethod="#{autoCompleteUI.completeDisabilityStatus}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="DisabilityStatusConvertor" dropdown="true" minQueryLength="3" maxResults="15" inputStyle="width: 95%" style="width: 95%" required="true"
+								disabled="#{disableFields}" requiredMessage="Please Select Disability">
+								<p:column headerText="Description" style="white-space: nowrap">#{rv.description}</p:column>
+								<p:ajax event="itemSelect" update="learnerRegistrationFormGridPanel" />
+							</p:autoComplete>
+
+						</h:panelGroup>
+
+						<h:panelGroup rendered="false">
+							<div>
+								<p:outputLabel value="Have you previously undertaken a SETA or QCTO registered learning program?" styleClass="gray" />
+							</div>
+							<div>
+								<p:selectOneMenu value="#{companylearnersdetailschangeUI.companylearners.undertakenLearningProgramBefore}" style="width:95%" required="true" requiredMessage="Have you previously undertaken a SETA or QCTO registered Learning Programme required">
+									<p:ajax update="learnerRegistrationFormGridPanel" />
+									<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+									<f:selectItems value="#{enumUI.yesNoEnumDD}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield" rendered="#{companylearnersdetailschangeUI.companylearners.undertakenLearningProgramBefore.friendlyName eq 'Yes'}">
+							<br />
+							<p:inputText id="preTitle" value="#{companylearnersdetailschangeUI.companylearners.qualificationTitle}" style="width:95%" required="true" requiredMessage="Specify title" disabled="#{disableFields}">
+								<p:ajax />
+							</p:inputText>
+							<br />
+							<p:outputLabel value="Specify title:" for="preTitle" styleClass="gray" />
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield" rendered="#{companylearnersdetailschangeUI.companylearners.undertakenLearningProgramBefore.friendlyName eq 'Yes'}">
+							<br />
+							<p:inputText id="preRegNo" value="#{companylearnersdetailschangeUI.companylearners.registrationNumber}" style="width:95%" required="true" requiredMessage="Specify registration number" disabled="#{disableFields}">
+								<p:ajax />
+							</p:inputText>
+							<br />
+							<p:outputLabel value="Specify registration number:" for="preRegNo" styleClass="gray" />
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield" rendered="#{companylearnersdetailschangeUI.companylearners.undertakenLearningProgramBefore.friendlyName eq 'Yes'}">
+							<br />
+							<p:inputText id="preCredits" value="#{companylearnersdetailschangeUI.companylearners.credits}" style="width:95%" required="true" requiredMessage="Specify how many credits you have achieved" disabled="#{disableFields}">
+								<p:ajax />
+							</p:inputText>
+							<br />
+							<p:outputLabel value="Specify how many credits you have achieved:" for="preCredits" styleClass="gray" />
+						</h:panelGroup>
+						
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="Urban/Rural Area" for="urbanRural" styleClass="gray"/>
+							</div>
+							<div>
+								<p:selectOneMenu id="urbanRural" value="#{companylearnersdetailschangeUI.userChangeRequest.urbanRuralEnum}" disabled="#{disableFields}" style="width:95%" required="true" requiredMessage="Urban/Rural Area Required">
+									<p:ajax />
+									<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+									<f:selectItems value="#{enumUI.urbanRuralEnumDD}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+						
+						<h:panelGroup>
+							<div>
+								<p:outputLabel for="haveDisability" value="Do You Have A Disability?" styleClass="gray" />
+							</div>
+							<div>
+								<p:selectOneMenu id="haveDisability" value="#{companylearnersdetailschangeUI.userChangeRequest.disability}" style="width:95%" required="true" requiredMessage="Were you employed by your employer before concluding this agreement" disabled="#{disableFields}">
+									<p:ajax event="itemSelect" update="learnerDetailsforms"/>
+									<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+									<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+					</p:panelGrid>
+					
+					
+					
+					<p:fieldset collapsed="false" legend="#{lang['disability']}" rendered="#{companylearnersdetailschangeUI.userChangeRequest.disability eq YesNoEnum.Yes}">
+						<p:panelGrid columns="3" id="disabilityFormGridPanel2" style="width:100%" rendered="#{!disableFields}">
+							
+							<h:panelGroup  style="margin-top: 20px">
+								<div>
+									<p:outputLabel value="#{lang['disability']}" for="disability3" styleClass="FontLight gray"/>
+								</div>
+								<div>
+									<p:autoComplete disabled="#{disableFields}" id="disability3" value="#{companylearnersdetailschangeUI.usersDisability.disabilityStatus}" style="width:95%" completeMethod="#{autoCompleteUI.completeDisabilityCanSelect}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="DisabilityStatusConvertor" dropdown="true" minQueryLength="3" maxResults="100" required="false" requiredMessage="Please Select Disability">
+										<p:column headerText="Disability" style="white-space: nowrap">#{rv.description}</p:column>
+										<p:ajax event="itemSelect" update="disabilityFormGridPanel2" listener="#{companylearnersdetailschangeUI.clearDisabilityRating}"/>
+									</p:autoComplete>
+								</div>
+							</h:panelGroup>
+							
+							<h:panelGroup   style="margin-top: 20px">
+								<h:panelGroup rendered="#{companylearnersdetailschangeUI.selectItemsUsersDisabilityRating.size()>0}"  style="margin-top: 0px">
+									<p:outputLabel value="#{lang['disability.rating']}" styleClass="FontLight gray" for="diasbiltyRating3" /><br/>
+									<p:selectOneMenu id="diasbiltyRating3" value="#{companylearnersdetailschangeUI.usersDisability.disabilityRating}" converter="DisabilityRatingConvertor" style="width:95%" required="false" requiredMessage="Please Select Disability Rating">
+										<p:ajax />
+										<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+										<f:selectItems value="#{companylearnersdetailschangeUI.selectItemsUsersDisabilityRating}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+									</p:selectOneMenu>
+								</h:panelGroup>
+							</h:panelGroup>
+							
+							<h:panelGroup rendered="true">
+								<p:commandButton process="disabilityFormGridPanel2" update="disabilityTable" value="#{lang['add']}" id="addUsersDisability" styleClass="Fright" icon="ui-icon-plus" action="#{companylearnersdetailschangeUI.addUsersDisability()}" />
+							</h:panelGroup>
+						</p:panelGrid>
+						<p:spacer />
+						<p:dataTable id="disabilityTable" var="var" value="#{companylearnersdetailschangeUI.usersDisabilityList}">
+							<p:column headerText="#{lang['disability']}">
+								<h:outputText value="#{var.disabilityStatus.description}" />
+							</p:column>
+							
+							<p:column headerText="#{lang['disability.rating']}">
+								<h:outputText value="#{var.disabilityRating.description}" />
+							</p:column>
+							
+							<p:column width="70">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" action="#{companylearnersdetailschangeUI.prepareUsersDisabilityUpdate()}" process="@this" update="@form" rendered="false" disabled="#{disableFields}">
+									<f:setPropertyActionListener value="#{var}" target="#{companylearnersdetailschangeUI.usersDisability}" />
+								</p:commandButton>
+		
+								<p:commandButton  icon="fa fa-trash-o" title="#{lang['delete']}" action="#{companylearnersdetailschangeUI.removeUsersDisabilityFromList()}" process="@this" update="disabilityTable" disabled="#{disableFields}">
+									 <f:setPropertyActionListener value="#{var}" target="#{companylearnersdetailschangeUI.usersDisability}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+					</p:fieldset>
+					
+					<br />
+				<!-- User Languages -->
+				<p:fieldset id="languagesFs" collapsed="false" legend="#{lang['languages']}">
+					<p:panelGrid columns="6" id="pgLanguages" style="width:100%" rendered="#{!disableFields}">
+	
+						<h:panelGroup styleClass="md-inputfield">
+							<br />
+							<p:outputLabel value="#{lang['language']}" for="language" />
+							<p:autoComplete value="#{companylearnersdetailschangeUI.usersLanguage.language}" style="width:100%" id="language" required="#{param['amInsForm:addLanguage'] !=null}" completeMethod="#{autoCompleteUI.completeLanguage}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="LanguageConvertor" dropdown="true" minQueryLength="3" maxResults="20">
+								<p:column headerText="#{lang['language']}" style="white-space: nowrap">#{rv.description}</p:column>
+								<p:ajax />
+							</p:autoComplete>
+	
+						</h:panelGroup>
+	
+						<h:panelGroup rendered="true">
+							<div>
+								<p:outputLabel value="Speak?" for="speak" styleClass="FontLight" />
+							</div>
+							<div>
+								<p:selectOneButton value="#{companylearnersdetailschangeUI.usersLanguage.speark}" style="width:100%" converter="YesNoLookupConvertor" id="speak" required="#{param['amInsForm:addLanguage'] !=null}">
+	
+									<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+								</p:selectOneButton>
+							</div>
+						</h:panelGroup>
+	
+						<h:panelGroup rendered="true">
+							<div>
+								<p:outputLabel value="Read?" for="read" styleClass="FontLight" />
+							</div>
+							<div>
+								<p:selectOneButton value="#{companylearnersdetailschangeUI.usersLanguage.read}" style="width:100%" converter="YesNoLookupConvertor" id="read" required="#{param['amInsForm:addLanguage'] !=null}">
+	
+									<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+								</p:selectOneButton>
+							</div>
+						</h:panelGroup>
+	
+						<h:panelGroup rendered="true">
+							<div>
+								<p:outputLabel value="Write?" for="write" styleClass="FontLight" />
+							</div>
+							<div>
+								<p:selectOneButton value="#{companylearnersdetailschangeUI.usersLanguage.write}" style="width:100%" converter="YesNoLookupConvertor" id="write" required="#{param['amInsForm:addLanguage'] !=null}">
+	
+									<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+								</p:selectOneButton>
+							</div>
+						</h:panelGroup>
+	
+						<h:panelGroup rendered="true">
+							<div>
+								<p:outputLabel value="Home Language?" for="homeL" styleClass="FontLight" />
+							</div>
+							<div>
+								<p:selectBooleanCheckbox disabled="#{companylearnersdetailschangeUI.homeLanguageSelected}" value="#{companylearnersdetailschangeUI.usersLanguage.homeLanguage}" id="homeL" />
+							</div>
+						</h:panelGroup>
+	
+						<h:panelGroup rendered="true">
+							<p:commandButton process="pgLanguages" update="pgLanguages languageTable" value="#{lang['add']}" id="addLanguage" styleClass="Fright" icon="ui-icon-plus" action="#{companylearnersdetailschangeUI.addLanguage()}" />
+						</h:panelGroup>
+					</p:panelGrid>
+					<p:spacer />
+					<p:dataTable id="languageTable" var="var" value="#{companylearnersdetailschangeUI.usersLanguageList}">
+						<p:column headerText="#{lang['language']}">
+							<h:outputText value="#{var.language.description}" />
+						</p:column>
+	
+						<p:column headerText="#{lang['speak']}">
+							<h:outputText value="#{var.speark.yesNoName}" />
+						</p:column>
+	
+						<p:column headerText="#{lang['read']}">
+							<h:outputText value="#{var.read.yesNoName}" />
+						</p:column>
+	
+						<p:column headerText="#{lang['write']}">
+							<h:outputText value="#{var.write.yesNoName}" />
+						</p:column>
+	
+						<p:column headerText="#{lang['home.language']}">
+							<p:selectBooleanCheckbox disabled="true" value="#{var.homeLanguage}" />
+						</p:column>
+	
+						<p:column width="70">
+							<p:commandButton icon="fa fa-database" title="#{lang['update']}" action="#{companylearnersdetailschangeUI.prepareLanguageUpdate()}" process="@this" update="@form" rendered="false">
+								<f:setPropertyActionListener value="#{var}" target="#{companylearnersdetailschangeUI.usersLanguage}" />
+							</p:commandButton>
+	
+							<p:commandButton  icon="fa fa-trash-o" title="#{lang['delete']}" action="#{companylearnersdetailschangeUI.removeLanguageFromList()}" process="@this" update="@form" disabled="#{disableFields}">
+								 <f:setPropertyActionListener value="#{var}" target="#{companylearnersdetailschangeUI.usersLanguage}" />
+							</p:commandButton>
+						</p:column>
+					</p:dataTable>
+				</p:fieldset>
+			</p:fieldset>
+			<br />
+			<!-- User Employment -->
+			<p:fieldset id="learnerEmploymentDetailsforms" collapsed="false" legend="Learner Employment/Qualification Details">
+				<p:panelGrid id="learnerEmploymentRegistrationFormGridPanel" columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+					
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="Education Level" styleClass="gray" />
+							</div>
+							<div>
+								<p:selectOneMenu id="educationLevel" value="#{companylearnersdetailschangeUI.companylearnersdetailschange.highestEducationEnum}" style="width:95%" required="true" requiredMessage="Education level required" disabled="#{disableFields}">
+									<p:ajax update="learnerEmploymentRegistrationFormGridPanel"/>
+									<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+									<f:selectItems value="#{enumUI.highestEducationDD}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+						
+						<h:panelGroup rendered="#{companylearnersdetailschangeUI.companylearnersdetailschange.highestEducationEnum eq HighestEducationEnum.AboveMetric}">
+							<div>
+								<p:outputLabel value="#{lang['highest.qual.title']}" styleClass="gray" />
+							</div>
+							<div>
+								<p:autoComplete required="false" resultsMessage="Select Highest Qualification" style="width:95%" id="highestQual" value="#{companylearnersdetailschangeUI.companylearnersdetailschange.highestQualification}" disabled="#{disableFields}" completeMethod="#{autoCompleteUI.completeQualification}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor" dropdown="true"
+									minQueryLength="3" maxResults="10">
+									<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+									<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+									<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+									<p:ajax event="itemSelect" />
+								</p:autoComplete>
+							</div>
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield" >
+							<p:calendar id="monthlastSchoolYear" value="#{companylearnersdetailschangeUI.companylearnersdetailschange.lastSchoolYear}" maxdate="#{workplaceapprovalUI.today}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" inputStyle="width:90%" disabled="#{disableFields}" required="true" requiredMessage="Select Last School Year Date">
+								<p:ajax event="dateSelect"></p:ajax>
+							</p:calendar>
+							<p:outputLabel value="Last School Year Date" for="monthlastSchoolYear" styleClass="gray" />
+							
+						</h:panelGroup>
+						
+						<h:panelGroup styleClass="md-inputfield"> 
+	                        <p:autoComplete  id="lastSchoolAttended" value="#{companylearnersdetailschangeUI.companylearnersdetailschange.previousSchools}" 
+	                        				completeMethod="#{autoCompleteUI.completePreviousSchools}" var="rv" itemLabel="#{rv.officialInstitutionName}" 
+	                        				itemValue="#{rv}" forceSelection="true" converter="PreviousSchoolsConvertor" dropdown="true" minQueryLength="3" maxResults="10" 
+	                        				inputStyle="width: 95%" style="width: 95%" required="true"
+	                           				resultsMessage="Select Last School Attended" disabled="#{disableFields}">
+	                           <p:column headerText="EMIS Code" style="white-space: nowrap">#{rv.natEmis}</p:column>
+								<p:column headerText="Official Institution Name" style="white-space: nowrap">#{rv.officialInstitutionName}</p:column>
+								<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.townCity}</p:column>
+								<p:column headerText="#{lang['province']}" style="white-space: nowrap">#{rv.province}</p:column>
+	                           <p:ajax event="itemSelect" />
+	                        </p:autoComplete>
+	                        <p:outputLabel value="Last School Attended"  for="lastSchoolAttended" styleClass="gray" />
+		               </h:panelGroup>
+				
+				</p:panelGrid>
+			</p:fieldset>
+		<br />
+
+			<p:fieldset id="addressFs" collapsed="false" legend="#{lang['address']}">
+					<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank" layout="grid">
+						<p:fieldset legend="Learner #{lang['residentialAddress']} (Home)" style="margin-top: 20px">
+							<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank" id="addrPcode">
+								<h:panelGroup id="addressLine1Input" styleClass="md-inputfield">
+									<p:inputText id="addressLine1" value="#{companylearnersdetailschangeUI.residentialAddressChange.addressLine1}" style="width:95%" required="true" maxlength="30" disabled="#{disableFields}">
+										<p:ajax />
+									</p:inputText>
+									<p:outputLabel value="#{lang['address.line.1']}" for="addressLine1" styleClass="gray" />
+								</h:panelGroup>
+								<h:panelGroup id="addressLine2Input" styleClass="md-inputfield">
+									<p:inputText id="addressLine2" value="#{companylearnersdetailschangeUI.residentialAddressChange.addressLine2}" style="width:95%" required="true" maxlength="30" disabled="#{disableFields}">
+										<p:ajax />
+									</p:inputText>
+									<p:outputLabel value="#{lang['address.line.2']}" for="addressLine2" styleClass="gray" />
+								</h:panelGroup>
+								<h:panelGroup id="addressLine3Input" styleClass="md-inputfield">
+									<p:inputText id="addressLine3" value="#{companylearnersdetailschangeUI.residentialAddressChange.addressLine3}" style="width:95%" required="true" maxlength="30" disabled="#{disableFields}">
+										<p:ajax />
+									</p:inputText>
+									<p:outputLabel value="#{lang['address.line.3']}" for="addressLine3" styleClass="gray" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield" > 
+				                        <p:autoComplete  id="town1" value="#{companylearnersdetailschangeUI.residentialAddressChange.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true"
+				                           requiredMessage="#{lang['please.select.a.town']}" disabled="#{disableFields}">
+				                           <p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+				                           <p:ajax event="itemSelect" />
+				                        </p:autoComplete>
+				                        <p:outputLabel value="#{lang['town']}" for="town1" styleClass="gray" />
+					             </h:panelGroup>
+					             
+								<h:panelGroup rendered="false">
+									<div>
+										<h:outputLabel value="#{lang['town']}" for="theTown" styleClass="gray" />
+									</div>
+									<div>
+										<p:autoComplete id="theTown" value="#{companylearnersdetailschangeUI.residentialAddressChange.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true" disabled="#{disableFields}"
+											requiredMessage="#{lang['please.select.a.town']}">
+											<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+											<p:ajax event="itemSelect"/>
+										</p:autoComplete>
+									</div>
+								</h:panelGroup>
+
+
+								<h:panelGroup id="pcodeInput" styleClass="md-inputfield">
+									<p:inputText id="pcode" value="#{companylearnersdetailschangeUI.residentialAddressChange.postcode}" style="width:95%" required="true" maxlength="30" disabled="#{disableFields}">
+										<p:ajax />
+									</p:inputText>
+									<p:outputLabel value="#{lang['post.code']}" for="pcode" styleClass="gray" />
+								</h:panelGroup>
+								
+									<h:panelGroup  styleClass="md-inputfield">
+				                       <p:autoComplete  id="MunicipalityID" value="#{companylearnersdetailschangeUI.residentialAddressChange.municipality}" completeMethod="#{autoCompleteUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityDesc}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true" minQueryLength="3"
+				                           disabled="#{disableFields}" maxResults="10" inputstyle="opacity: 1 !important; color: black; width: 100%" style="opacity: 1 !important; color: black; width: 95%" required="true" requiredMessage="#{lang['select.municipality']}">
+				                            <p:column headerText="#{lang['province']}" style="white-space: nowrap">#{rv.province.provinceDesc}</p:column>
+				                            <p:column headerText="#{lang['municipality']}" style="white-space: nowrap">#{rv.municipalityDesc}</p:column>
+				                            <p:ajax event="itemSelect" update="resProvincePG" ></p:ajax>
+				                       </p:autoComplete>
+				                       <p:outputLabel value="#{lang['municipality']}" for="MunicipalityID" styleClass="gray" />
+					             </h:panelGroup>
+					             
+					             <p:panelGrid columns="1"  style="width : 100%" styleClass="ui-panelgrid-blank" id="resProvincePG"> 
+									<h:panelGroup rendered="#{companylearnersdetailschangeUI.residentialAddressChange.municipality ne null}" styleClass="md-inputfield" >
+					                    <p:inputText disabled="true" id="resProvince" value="#{companylearnersdetailschangeUI.residentialAddressChange.municipality.province.provinceDesc}" style="opacity: 1 !important; color: black; width:95%">
+					                    	 <p:ajax />
+					                    </p:inputText>
+					                    <p:outputLabel value="#{lang['province']}" for="resProvince" styleClass="gray" />
+					                   
+						            </h:panelGroup>
+					             </p:panelGrid>								
+
+								<h:panelGroup styleClass="md-inputfield" style="margin-top: 19px">
+									<p:autoComplete id="statsSaAreaCode" value="#{companylearnersdetailschangeUI.residentialAddressChange.statsSaAreaCode}" completeMethod="#{autoCompleteUI.completeSTATSSAAreaCode}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="STATSSAAreaCodeConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;"
+										style="width: 95%" disabled="#{disableFields}" required="true" requiredMessage="Select STATS SA Area Code">
+										<p:ajax event="itemSelect" />
+										<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+										<p:column headerText="#{lang['description']}" style="white-space: nowrap">#{rv.description}</p:column>
+									</p:autoComplete>
+									<p:outputLabel value="STATS SA Area Code" for="statsSaAreaCode" styleClass="gray" />
+								</h:panelGroup>
+							</p:panelGrid>
+						</p:fieldset>
+
+						<p:fieldset legend="Learner #{lang['postalAddress']} (Home)" style="margin-top: 20px" id="postAddress">
+							<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank" id="postalAddress">
+
+								<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank">
+									<p:selectBooleanCheckbox value="#{companylearnersdetailschangeUI.copyAddress}" disabled="#{disableFields}">
+										<p:ajax update="postAddress" listener="#{companylearnersdetailschangeUI.clearPostal}" />
+									</p:selectBooleanCheckbox>
+									<p:outputLabel value="#{lang['same.as.my.address']}" styleClass="gray" />
+								</p:panelGrid>
+								<h:panelGroup id="postalAddressLine1Input" styleClass="md-inputfield" rendered="#{!companylearnersdetailschangeUI.copyAddress}" disabled="#{disableFields}">
+									<p:inputText id="postalAddressLine1" value="#{companylearnersdetailschangeUI.postalAddressChange.addressLine1}" style="width:95%" required="true" maxlength="30">
+										<p:ajax />
+									</p:inputText>
+									<p:outputLabel value="#{lang['address.line.1']}" for="postalAddressLine1" styleClass="gray" />
+								</h:panelGroup>
+								<h:panelGroup id="postalAddressLine2Input" styleClass="md-inputfield" rendered="#{!companylearnersdetailschangeUI.copyAddress}" disabled="#{disableFields}">
+									<p:inputText id="postalAddressLine2" value="#{companylearnersdetailschangeUI.postalAddressChange.addressLine2}" style="width:95%" required="true" maxlength="30">
+										<p:ajax />
+									</p:inputText>
+									<p:outputLabel value="#{lang['address.line.2']}" for="postalAddressLine2" styleClass="gray" />
+								</h:panelGroup>
+								<h:panelGroup id="postalAddressLine3Input" styleClass="md-inputfield" rendered="#{!companylearnersdetailschangeUI.copyAddress}" disabled="#{disableFields}">
+									<p:inputText id="postalAddressLine3" value="#{companylearnersdetailschangeUI.postalAddressChange.addressLine3}" style="width:95%" required="true" maxlength="30">
+										<p:ajax />
+									</p:inputText>
+									<p:outputLabel value="#{lang['address.line.3']}" for="postalAddressLine3" styleClass="gray" />
+								</h:panelGroup>
+								
+								<h:panelGroup styleClass="md-inputfield" rendered="#{!companylearnersdetailschangeUI.copyAddress}"> 
+				                        <p:autoComplete  id="town2" value="#{companylearnersdetailschangeUI.postalAddressChange.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true"
+				                           requiredMessage="#{lang['please.select.a.town']}" disabled="#{disableFields}">
+				                           <p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+				                           <p:ajax event="itemSelect" />
+				                        </p:autoComplete>
+				                        <p:outputLabel value="#{lang['town']}" for="town2" styleClass="gray" />
+					             </h:panelGroup>
+
+								<h:panelGroup rendered="false">
+									<div>
+										<h:outputLabel value="#{lang['town']}" for="theTown2" styleClass="gray" />
+									</div>
+									<div>
+										<p:autoComplete id="theTown2" value="#{companylearnersdetailschangeUI.postalAddressChange.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true" disabled="#{disableFields}"
+											requiredMessage="#{lang['please.select.a.town']}">
+											<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+											<p:ajax />
+										</p:autoComplete>
+									</div>
+								</h:panelGroup>
+
+
+								<h:panelGroup id="postalPcodeInput" styleClass="md-inputfield" rendered="#{!companylearnersdetailschangeUI.copyAddress}">
+									<p:inputText id="postalPcode" value="#{companylearnersdetailschangeUI.postalAddressChange.postcode}" style="width:95%" required="true" maxlength="30" disabled="#{disableFields}">
+										<p:ajax />
+									</p:inputText>
+									<p:outputLabel value="#{lang['post.code']}" for="postalPcode" styleClass="gray" />
+								</h:panelGroup>
+								
+								<h:panelGroup  styleClass="md-inputfield" rendered="#{!companylearnersdetailschangeUI.copyAddress}" >
+				                       <p:autoComplete  id="postalAddressMunicipalityID" value="#{companylearnersdetailschangeUI.postalAddressChange.municipality}" completeMethod="#{autoCompleteUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityDesc}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true" minQueryLength="3"
+				                           disabled="#{disableFields}"  maxResults="10" inputstyle="opacity: 1 !important; color: black; width: 100%" style="opacity: 1 !important; color: black; width: 95%" required="true" requiredMessage="#{lang['select.municipality']}">
+				                            <p:column headerText="#{lang['province']}" style="white-space: nowrap">#{rv.province.provinceDesc}</p:column>
+				                            <p:column headerText="#{lang['municipality']}" style="white-space: nowrap">#{rv.municipalityDesc}</p:column>
+				                            <p:ajax event="itemSelect" update="resProvincePG" ></p:ajax>
+				                       </p:autoComplete>
+				                       <p:outputLabel value="#{lang['municipality']}" for="postalAddressMunicipalityID" styleClass="gray" />
+					             </h:panelGroup>
+							</p:panelGrid>
+						</p:fieldset>
+					</p:panelGrid>
+				</p:fieldset>
+				</p:outputPanel>
+				
+			</div>
+
+		</c:if>
+	</div>
+</ui:composition>

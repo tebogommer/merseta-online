@@ -1,0 +1,172 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Wsp Checklist</h1>
+					<h:form id="wspchecklistInsForm">
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:panelGrid columns="1" style="width:100%" id="wspchecklistInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="wsp" value="#{wspchecklistUI.wspchecklist.wsp}" style="width:95%" />
+								<p:outputLabel value="#{lang['wsp']}" for="wsp" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="createDate" value="#{wspchecklistUI.wspchecklist.createDate}" style="width:95%" />
+								<p:outputLabel value="#{lang['createDate']}" for="createDate" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="extensionGranted" value="#{wspchecklistUI.wspchecklist.extensionGranted}" style="width:95%" />
+								<p:outputLabel value="#{lang['extensionGranted']}" for="extensionGranted" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="wspy18Submitted" value="#{wspchecklistUI.wspchecklist.wspy18Submitted}" style="width:95%" />
+								<p:outputLabel value="#{lang['wspy18Submitted']}" for="wspy18Submitted" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="bankingDetailsChecked" value="#{wspchecklistUI.wspchecklist.bankingDetailsChecked}" style="width:95%" />
+								<p:outputLabel value="#{lang['bankingDetailsChecked']}" for="bankingDetailsChecked" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="otherSDFSigned" value="#{wspchecklistUI.wspchecklist.otherSDFSigned}" style="width:95%" />
+								<p:outputLabel value="#{lang['otherSDFSigned']}" for="otherSDFSigned" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="atrSubmitted" value="#{wspchecklistUI.wspchecklist.atrSubmitted}" style="width:95%" />
+								<p:outputLabel value="#{lang['atrSubmitted']}" for="atrSubmitted" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="atrImplementedPercent" value="#{wspchecklistUI.wspchecklist.atrImplementedPercent}" style="width:95%" />
+								<p:outputLabel value="#{lang['atrImplementedPercent']}" for="atrImplementedPercent" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="pivitolPlanSubmitted" value="#{wspchecklistUI.wspchecklist.pivitolPlanSubmitted}" style="width:95%" />
+								<p:outputLabel value="#{lang['pivitolPlanSubmitted']}" for="pivitolPlanSubmitted" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="signedRecognitionAgreement" value="#{wspchecklistUI.wspchecklist.signedRecognitionAgreement}" style="width:95%" />
+								<p:outputLabel value="#{lang['signedRecognitionAgreement']}" for="signedRecognitionAgreement" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="signOffComplete" value="#{wspchecklistUI.wspchecklist.signOffComplete}" style="width:95%" />
+								<p:outputLabel value="#{lang['signOffComplete']}" for="signOffComplete" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="nonNqfMotivation" value="#{wspchecklistUI.wspchecklist.nonNqfMotivation}" style="width:95%" />
+								<p:outputLabel value="#{lang['nonNqfMotivation']}" for="nonNqfMotivation" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="deviationMotivation" value="#{wspchecklistUI.wspchecklist.deviationMotivation}" style="width:95%" />
+								<p:outputLabel value="#{lang['deviationMotivation']}" for="deviationMotivation" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="minutesUplaoded" value="#{wspchecklistUI.wspchecklist.minutesUplaoded}" style="width:95%" />
+								<p:outputLabel value="#{lang['minutesUploaded']}" for="minutesUplaoded" />
+							</h:panelGroup>
+
+
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:wspchecklistList :wspchecklistInsForm:wspchecklistInsGrid" action="#{wspchecklistUI.wspchecklistInsert}" />
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="wspchecklistInsGrid" process="@this" action="#{wspchecklistUI.prepareNew}">
+									<p:resetInput target="wspchecklistInsGrid" />
+								</p:commandButton>
+							</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{wspchecklistUI.dataModel}" filteredValue="#{wspchecklistUI.wspChecklistfilteredList}" id="wspchecklistList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['wsp']}">
+								<h:outputText value="#{rowVar.wsp}" />
+							</p:column>
+							<p:column headerText="#{lang['createDate']}">
+								<h:outputText value="#{rowVar.createDate}" />
+							</p:column>
+							<p:column headerText="#{lang['extensionGranted']}">
+								<h:outputText value="#{rowVar.extensionGranted}" />
+							</p:column>
+							<p:column headerText="#{lang['wspy18Submitted']}">
+								<h:outputText value="#{rowVar.wspy18Submitted}" />
+							</p:column>
+							<p:column headerText="#{lang['bankingDetailsChecked']}">
+								<h:outputText value="#{rowVar.bankingDetailsChecked}" />
+							</p:column>
+							<p:column headerText="#{lang['otherSDFSigned']}">
+								<h:outputText value="#{rowVar.otherSDFSigned}" />
+							</p:column>
+							<p:column headerText="#{lang['atrSubmitted']}">
+								<h:outputText value="#{rowVar.atrSubmitted}" />
+							</p:column>
+							<p:column headerText="#{lang['atrImplementedPercent']}">
+								<h:outputText value="#{rowVar.atrImplementedPercent}" />
+							</p:column>
+							<p:column headerText="#{lang['pivitolPlanSubmitted']}">
+								<h:outputText value="#{rowVar.pivitolPlanSubmitted}" />
+							</p:column>
+							<p:column headerText="#{lang['signedRecognitionAgreement']}">
+								<h:outputText value="#{rowVar.signedRecognitionAgreement}" />
+							</p:column>
+							<p:column headerText="#{lang['signOffComplete']}">
+								<h:outputText value="#{rowVar.signOffComplete}" />
+							</p:column>
+							<p:column headerText="#{lang['nonNqfMotivation']}">
+								<h:outputText value="#{rowVar.nonNqfMotivation}" />
+							</p:column>
+							<p:column headerText="#{lang['deviationMotivation']}">
+								<h:outputText value="#{rowVar.deviationMotivation}" />
+							</p:column>
+							<p:column headerText="#{lang['minutesUploaded']}">
+								<h:outputText value="#{rowVar.minutesUplaoded}" />
+							</p:column>
+
+
+							<p:column width="80">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":wspchecklistInsForm:wspchecklistInsGrid">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{wspchecklistUI.wspchecklist}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:wspchecklistList" action="#{wspchecklistUI.wspchecklistDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{wspchecklistUI.wspchecklist}" />
+								</p:commandButton>
+							</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+	<!-- 
+wsp = wsp
+createDate = createDate
+extensionGranted = extensionGranted
+wspy18Submitted = wspy18Submitted
+bankingDetailsChecked = bankingDetailsChecked
+otherSDFSigned = otherSDFSigned
+atrSubmitted = atrSubmitted
+atrImplementedPercent = atrImplementedPercent
+pivitolPlanSubmitted = pivitolPlanSubmitted
+signedRecognitionAgreement = signedRecognitionAgreement
+signOffComplete = signOffComplete
+nonNqfMotivation = nonNqfMotivation
+deviationMotivation = deviationMotivation
+minutesUplaoded = minutesUplaoded
+
+-->
+</ui:composition>

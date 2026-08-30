@@ -1,0 +1,121 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Citizen Resident Status</h1>
+					<h:form id="citizenresidentstatusInsForm">
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:outputPanel id="citizenresidentstatusInsGrid" styleClass="ui-g">
+
+							<div class="ui-g-12 ui-md-6 ui-lg-6">
+								<br />
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="code" value="#{citizenresidentstatusUI.citizenresidentstatus.code}" style="width:95%" required="true" requiredMessage="#{lang['provide.code']}" />
+									<p:outputLabel value="#{lang['code']}" for="code" />
+								</h:panelGroup>
+							</div>
+							<div class="ui-g-12 ui-md-6 ui-lg-6">
+								<br />
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="setmisCode" value="#{citizenresidentstatusUI.citizenresidentstatus.setmisCode}" style="width:95%" />
+									<p:outputLabel value="#{lang['setmis.code']}" for="setmisCode" />
+								</h:panelGroup>
+							</div>
+							<div class="ui-g-12 ui-md-6 ui-lg-6">
+								<br />
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="qctoCode" value="#{citizenresidentstatusUI.citizenresidentstatus.qctoCode}" style="width:95%" />
+									<p:outputLabel value="#{lang['qcto.code']}" for="qctoCode" />
+								</h:panelGroup>
+							</div>
+							<div class="ui-g-12 ui-md-6 ui-lg-6">
+								<br />
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="nlrdCode" value="#{citizenresidentstatusUI.citizenresidentstatus.nlrdCode}" style="width:95%" />
+									<p:outputLabel value="#{lang['nlrd.code']}" for="nlrdCode" />
+								</h:panelGroup>
+							</div>
+							<div class="ui-g-12">
+								<br />
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="description" value="#{citizenresidentstatusUI.citizenresidentstatus.description}" style="width:95%" />
+									<p:outputLabel value="#{lang['description']}" for="description" />
+								</h:panelGroup>
+							</div>
+							<div class="ui-g-12">
+								<br />
+
+
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:citizenresidentstatusList :citizenresidentstatusInsForm:citizenresidentstatusInsGrid" action="#{citizenresidentstatusUI.citizenresidentstatusInsert}" />
+								<p:spacer width="5" />
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="citizenresidentstatusInsGrid" process="@this" action="#{citizenresidentstatusUI.prepareNew}">
+									<p:resetInput target="citizenresidentstatusInsGrid" />
+								</p:commandButton>
+
+							</div>
+
+						</p:outputPanel>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+						<p:dataTable var="rowVar" value="#{citizenresidentstatusUI.dataModel}" filteredValue="#{citizenresidentstatusUI.citizenResidentStatusfilteredList}" id="citizenresidentstatusList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['description']}">
+								<h:outputText value="#{rowVar.description}" />
+							</p:column>
+							<p:column headerText="#{lang['code']}" filterBy="#{rowVar.code}" sortBy="#{rowVar.code}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.code}" />
+							</p:column>
+							<p:column headerText="#{lang['setmis.code']}">
+								<h:outputText value="#{rowVar.setmisCode}" />
+							</p:column>
+							<p:column headerText="#{lang['qcto.code']}">
+								<h:outputText value="#{rowVar.qctoCode}" />
+							</p:column>
+							<p:column headerText="#{lang['nlrd.code']}">
+								<h:outputText value="#{rowVar.nlrdCode}" />
+							</p:column>
+
+
+							<p:column width="80">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":citizenresidentstatusInsForm:citizenresidentstatusInsGrid">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{citizenresidentstatusUI.citizenresidentstatus}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:citizenresidentstatusList" action="#{citizenresidentstatusUI.citizenresidentstatusDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{citizenresidentstatusUI.citizenresidentstatus}" />
+								</p:commandButton>
+							</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+	<!-- 
+description = description
+code = code
+createDate = createDate
+setmisCode = setmisCode
+qctoCode = qctoCode
+nlrdCode = nlrdCode
+
+-->
+</ui:composition>

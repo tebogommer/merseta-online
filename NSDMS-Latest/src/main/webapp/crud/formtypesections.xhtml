@@ -1,0 +1,107 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:c="http://java.sun.com/jsp/jstl/core"
+                template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>FormTypeSections</h1>
+					<h:form id="formtypesectionsInsForm">
+						<p:growl sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						
+						<p:panelGrid columns="1" style="width:100%" id="formtypesectionsInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+       						         							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="createDate" value="#{formtypesectionsUI.formtypesections.createDate}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['createDate']}" for="createDate"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="orderPos" value="#{formtypesectionsUI.formtypesections.orderPos}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['orderPos']}" for="orderPos"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="sectionDesc" value="#{formtypesectionsUI.formtypesections.sectionDesc}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['sectionDesc']}" for="sectionDesc"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="sectionTitle" value="#{formtypesectionsUI.formtypesections.sectionTitle}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['sectionTitle']}" for="sectionTitle"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="parentTemplate" value="#{formtypesectionsUI.formtypesections.parentTemplate}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['parentTemplate']}" for="parentTemplate"/>
+     							</h:panelGroup>  
+
+
+        					    <p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+									<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:formtypesectionsList :formtypesectionsInsForm:formtypesectionsInsGrid" action="#{formtypesectionsUI.formtypesectionsInsert}" />
+									<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="formtypesectionsInsGrid" process="@this" action="#{formtypesectionsUI.prepareNew}">
+										<p:resetInput target="formtypesectionsInsGrid" />
+									</p:commandButton>									
+								</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{formtypesectionsUI.dataModel}" filteredValue="#{formtypesectionsUI.formTypeSectionsfilteredList}" id="formtypesectionsList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+           						              					<p:column headerText="#{lang['createDate']}">  
+                        			<h:outputText value="#{rowVar.createDate}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['orderPos']}">  
+                        			<h:outputText value="#{rowVar.orderPos}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['sectionDesc']}">  
+                        			<h:outputText value="#{rowVar.sectionDesc}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['sectionTitle']}">  
+                        			<h:outputText value="#{rowVar.sectionTitle}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['parentTemplate']}">  
+                        			<h:outputText value="#{rowVar.parentTemplate}" />  
+            					</p:column>      
+
+
+           						<p:column width="80">
+									<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":formtypesectionsInsForm:formtypesectionsInsGrid">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{formtypesectionsUI.formtypesections}" />
+									</p:commandButton>
+									<p:spacer width="5" />
+									<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:formtypesectionsList" action="#{formtypesectionsUI.formtypesectionsDelete}">
+										<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+										<f:setPropertyActionListener value="#{rowVar}" target="#{formtypesectionsUI.formtypesections}" />
+									</p:commandButton>
+								</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+<!-- 
+createDate = createDate
+orderPos = orderPos
+sectionDesc = sectionDesc
+sectionTitle = sectionTitle
+parentTemplate = parentTemplate
+
+-->
+</ui:composition>

@@ -1,0 +1,359 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui"
+	xmlns:pe="http://primefaces.org/ui/extensions" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="head">
+		<style>
+.ui-fileupload-content {
+	height: 150px !important;
+	background-image:
+		url("#{request.contextPath}/resources/hls/images/upload.png")
+		!important;
+	background-repeat: no-repeat;
+	background-position: center;
+}
+
+.hsStayTop {
+	display: inline-block !important;
+	vertical-align: bottom !important;
+}
+</style>
+	</ui:define>
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title ">
+					<h1>#{lang['hosting.company.templates']}</h1>
+					<h:form id="masterForm">
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank">
+							<h:panelGroup>
+								<p:commandButton value="#{lang['add.root.chapter']}" id="addButton" icon="fa fa-plus " oncomplete="PF('dlg').show()" actionListener="#{hostingCompanyTemplatesUI.prepareNewTemplate}" update=":templateInsForm:templateInsGrid">
+									<p:tooltip for="addButton" value="Add Chapter" position="" />
+								</p:commandButton>
+							</h:panelGroup>
+							<h:panelGroup>
+								<p:outputLabel value="#{lang['expand.all']}" />
+								<p:spacer width="10" />
+								<p:selectBooleanCheckbox id="selectBooleanCheckboxOne" value="#{hostingCompanyTemplatesUI.expand}">
+									<p:ajax update="@form" listener="#{hostingCompanyTemplatesUI.templateInfo}" />
+									<p:tooltip for="addButton" value="#{lang['add.a.new.chapter.document']}" />
+								</p:selectBooleanCheckbox>
+							</h:panelGroup>
+						</p:panelGrid>
+						<div class="EmptyBox10" />
+						<div>
+							<div class="EmptyBox10" />
+							<span class=" Mdrop Fleft Fs14 gray"><i class="fa fa-info-circle"></i>#{lang['right.click.on.chapter.document.for.menu']}.</span> <br />
+							<div class="EmptyBox10" />
+							<span class=" Mdrop Fleft Fs14 gray"><i class="fa fa-info-circle"></i>#{lang['drag.and.drop.sub.folders.and.documents.to.re.allocate.them']}.</span> <br />
+							<div class="EmptyBox10" />
+						</div>
+						<p:tree value="#{hostingCompanyTemplatesUI.leftRoot}" var="doc" selectionMode="single" selection="#{hostingCompanyTemplatesUI.selectedNode}" animate="true" id="docs" draggable="true" droppable="true" style="width: 100%">
+							<p:ajax event="select" listener="#{hostingCompanyTemplatesUI.onNodeSelect}" />
+							<p:ajax event="dragdrop" listener="#{hostingCompanyTemplatesUI.onDragDrop}" update="@form" />
+							<p:treeNode id="treeNodeOne" expandedIcon="ui-icon-folder-open" collapsedIcon="ui-icon-folder-collapsed">
+								<h:outputText styleClass="breakWord" value="#{doc.title}" />
+							</p:treeNode>
+							<p:treeNode id="treeNodeTwo" type="document" icon="ui-icon-document">
+								<h:outputText styleClass="breakWord" value="#{doc.title}" />
+							</p:treeNode>
+						</p:tree>
+						<p:contextMenu for="docs">
+							<p:menuitem id="menuitemOne" value="#{lang['add']}" icon="fa fa-plus" actionListener="#{hostingCompanyTemplatesUI.readyForAdd}" />
+							<p:menuitem id="menuitemTwo" value="#{lang['edit']}" icon="fa fa-edit" actionListener="#{hostingCompanyTemplatesUI.readyForEdit}" />
+							<p:menuitem id="menuitemThree" value="#{lang['delete']}" icon="fa fa-close" action="#{hostingCompanyTemplatesUI.deleteNode}" update="@form" />
+						</p:contextMenu>
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+
+		<h:form id="docForm">
+			<c:if test="#{hostingCompanyTemplatesUI.showDocForm}">
+				<div class="ui-g">
+					<div class="ui-g-12">
+						<div class="card">
+							<h1 class="BigTopic TexAlCenter">
+								<h:outputText value="#{hostingCompanyTemplatesUI.template.title}" />
+							</h1>
+							<div class="ui-g">
+								<div class="ui-g-12 ui-md-6 ui-lg-6">
+									<p:outputLabel value="#{lang['document.note']}:" />
+									<p:outputLabel value="#{hostingCompanyTemplatesUI.doc.note}" />
+									<br />
+									<p:inputTextarea id="note" value="#{hostingCompanyTemplatesUI.doc.note}" style="width:100%" rows="6" cols="33">
+										<p:ajax />
+									</p:inputTextarea>
+								</div>
+								<div class="ui-g-12 ui-md-6 ui-lg-6">
+									<p:fileUpload style="width:100%" id="fileUploadOne" onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{hostingCompanyTemplatesUI.safeFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="Select file" fileLimitMessage="File to big to upload"
+										update="@form" multiple="false" fileLimit="1" immediate="false" auto="true" />
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="ui-g">
+					<div class="ui-g-12">
+						<div class="card card-w-title ">
+							<p:dataTable var="rv" value="#{hostingCompanyTemplatesUI.docs}" filteredValue="#{hostingCompanyTemplatesUI.docsfiltered}" id="resultTable" rowKey="#{rv.id}" paginator="true" rows="6" paginatorPosition="bottom"
+								paginatorTemplate=" {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" style="width 100%" rendered="#{hostingCompanyTemplatesUI.docs.size() gt 0}">
+
+								<f:facet name="header">#{hostingCompanyTemplatesUI.template.title}'s Document</f:facet>
+
+								<p:column id="columnOne" exportable="false" headerText="#{lang['expand.row']}" width="45">
+									<p:rowToggler rendered="#{rv.docVerions.size()>0}" />
+								</p:column>
+								<p:column headerText="#{lang['version']}" width="10%">
+									<h:outputText value="#{rv.versionNo}" />
+								</p:column>
+
+								<p:column headerText="#{lang['owner']}" style="width:20%">
+									<h:outputText value="#{rv.users.firstName} #{rv.users.lastName}" />
+								</p:column>
+
+								<p:column headerText="#{lang['date.added']}">
+									<h:outputText value="#{rv.createDate}">
+										<f:convertDateTime pattern="dd MMMM yyyy (HH:mm:ss)" />
+									</h:outputText>
+								</p:column>
+
+
+								<p:column headerText="#{lang['original.file.name']}" style="width:30%">
+									<h:outputText value="#{rv.originalFname}" />
+								</p:column>
+
+								<p:column headerText="#{lang['extension']}" style="width:6%">
+									<h:outputText value="#{rv.extension}" />
+								</p:column>
+
+								<p:column id="columnTwo" width="9%" exportable="false">
+									<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlb">
+										<f:setPropertyActionListener value="#{rv}" target="#{uploadDocUI.doc}" />
+										<p:tooltip for="dlb" value="#{lang['download.the.file']}" position="" />
+									</p:commandButton>
+
+									<p:spacer width="5" />
+									<p:commandButton icon="fa fa-bars " id="dhist" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList">
+										<f:setPropertyActionListener value="#{rv}" target="#{uploadDocUI.doc}" />
+										<p:tooltip for="dhist" value="#{lang['document.tracker']}" position="" />
+									</p:commandButton>
+
+									<h:panelGroup id="panelGroupFour" rendered="#{rv.note ne null}">
+										<p:spacer width="5" />
+										<p:commandButton icon="fa fa-comment-o " id="dnote" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+											<f:setPropertyActionListener value="#{rv}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="dnote" value="#{lang['view.note']} " />
+									</h:panelGroup>
+									<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv.extension.toLowerCase() eq 'pdf' or rv.extension.toLowerCase() eq 'png' or rv.extension.toLowerCase() eq 'jpg' or rv.extension.toLowerCase() eq 'jpeg' or rv.extension.toLowerCase() eq 'gif'}">
+										<p:spacer width="5" />
+										<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+											<f:setPropertyActionListener value="#{rv}" target="#{uploadDocUI.doc}" />
+											<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+										</p:commandButton>
+									</h:panelGroup>
+								</p:column>
+
+								<p:rowExpansion>
+									<h:dataTable var="rv1" value="#{rv.docVerions}">
+										<h:column>
+											<f:facet name="header">#{lang['original.file.name']}</f:facet>
+											<h:outputText value="#{rv1.originalFname}" />
+										</h:column>
+
+										<h:column>
+											<f:facet name="header">#{lang['version']}</f:facet>
+											<h:outputText value="#{rv1.versionNo}" />
+										</h:column>
+
+										<h:column>
+											<f:facet name="header">#{lang['owner']}</f:facet>
+											<h:outputText value="#{rv1.users.firstName} #{rv1.users.lastName}" />
+										</h:column>
+
+										<h:column>
+											<f:facet name="header">#{lang['date.added']}</f:facet>
+											<h:outputText value="#{rv1.createDate}">
+												<f:convertDateTime pattern="dd MMMM yyyy (HH:mm:ss)" />
+											</h:outputText>
+										</h:column>
+
+										<h:column id="columnFour">
+											<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlb1" title="#{lang['download.version']}">
+												<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+											</p:commandButton>
+											<p:tooltip for="dlb1" value="#{lang['download']}" />
+
+											<h:panelGroup id="panelGroupTwo" rendered="#{rv1.note ne null}">
+												<p:spacer width="5" />
+												<p:commandButton icon="fa fa-comment-o " id="dnote1" update=":noteForm:notePanel" oncomplete="PF('noteDialog').show()" title="View Note">
+													<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+												</p:commandButton>
+												<p:tooltip for="dnote1" value="#{lang['note']}" />
+											</h:panelGroup>
+
+											<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+												<p:spacer width="5" />
+												<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocsHistory" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+													<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+													<p:tooltip for="viewerButtonUserDocsHistory" value="#{lang['view.document']} " position="left" />
+												</p:commandButton>
+											</h:panelGroup>
+										</h:column>
+									</h:dataTable>
+								</p:rowExpansion>
+							</p:dataTable>
+						</div>
+					</div>
+				</div>
+			</c:if>
+
+			<p:confirmDialog global="true" showEffect="clip" hideEffect="clip">
+				<h:form>
+					<center>
+						<p:commandButton value="#{lang['yes']}" type="button" styleClass="ui-confirmdialog-yes" icon="fa fa-check " />
+						<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no" icon="fa fa-times " />
+					</center>
+				</h:form>
+			</p:confirmDialog>
+		</h:form>
+
+
+
+
+		<p:dialog modal="true" header="#{lang['insert.template.structure']}" widgetVar="dlg" resizable="false" hideEffect="clip" showEffect="clip" id="dialogINS" width="50%">
+			<h:form id="templateInsForm">
+				<h:panelGroup id="templateInsGrid">
+					<p:panelGrid styleClass="ui-panelgrid-blank form-group" layout="grid" id="panelGridThree" columns="1" style="width: 100%">
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText id="name" value="#{hostingCompanyTemplatesUI.template.title}" required="true" requiredMessage="#{lang['enter.chapter.document.title']}" style="width:100%" />
+							<p:outputLabel value="#{lang['chapter.document.title']}:" for="name" />
+						</h:panelGroup>
+
+						<p:panelGrid styleClass="ui-panelgrid-blank form-group" layout="grid" columns="2" style="width: 100%">
+							<p:outputLabel value="#{lang['chapter.or.document']}:" for="folderDocument" />
+							<p:selectOneRadio id="folderDocument" value="#{hostingCompanyTemplatesUI.template.templateType}" required="true" requiredMessage="#{lang['select.chapter.document']}">
+								<f:selectItems value="#{enumUI.templateTypeEnumDD}" />
+							</p:selectOneRadio>
+						</p:panelGrid>
+
+						<f:facet name="footer">
+							<center>
+								<p:commandButton id="Submittemplate" value="#{lang['submit']}" update=":masterForm:docs  :templateInsForm:templateInsGrid" oncomplete="handleInsRequest(xhr, status, args);" action="#{hostingCompanyTemplatesUI.templateInsert}" />
+							</center>
+						</f:facet>
+					</p:panelGrid>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog modal="true" header="#{lang['update.template.structure']}" widgetVar="dlgUpd" resizable="false" hideEffect="clip" showEffect="clip" id="dialogUPD" width="40%">
+			<h:form id="templateUpdForm">
+				<h:panelGroup id="templateUpdGrid">
+
+					<p:panelGrid styleClass="ui-panelgrid-blank form-group" layout="grid" id="panelGridFour" columns="1" style="width: 100%">
+
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText rows="2" id="name" value="#{hostingCompanyTemplatesUI.template.title}" required="true" requiredMessage="#{lang['enter.chapter.document.title']}" style="width:100%" />
+							<p:outputLabel value="#{lang['chapter.document.title']}:" for="name" />
+						</h:panelGroup>
+
+						<p:panelGrid styleClass="ui-panelgrid-blank form-group" layout="grid" columns="2" style="width:100%">
+							<p:outputLabel value="#{lang['chapter.or.document']}:" for="folderDocument" />
+							<p:selectOneRadio id="folderDocument" value="#{hostingCompanyTemplatesUI.template.templateType}" required="true" requiredMessage="#{lang['select.chapter.document']}">
+								<f:selectItems value="#{enumUI.templateTypeEnumDD}" />
+							</p:selectOneRadio>
+						</p:panelGrid>
+						<div class="EmptyBox5" />
+						<f:facet name="footer">
+							<center>
+								<p:commandButton id="Submittemplatetwo" value="#{lang['submit']}" update=":masterForm:docs  :templateUpdForm:templateUpdGrid" oncomplete="handleUpdRequest(xhr, status, args);" action="#{hostingCompanyTemplatesUI.templateUpdate}" />
+							</center>
+						</f:facet>
+					</p:panelGrid>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="#{lang['document.note']}" width="50%" widgetVar="noteDialogOld" resizable="false" hideEffect="clip" showEffect="clip" id="dialogNoteOld" modal="true">
+			<h:form id="noteFormOld">
+				<p:panelGrid styleClass="ui-panelgrid-blank form-group" layout="grid" columns="1" style="width:100%">
+					<p:outputPanel id="notePanel" style="overflow-y:scroll; overflow-x:scroll;">
+						<p:outputLabel rendered="#{hostingCompanyTemplatesUI.tdoc ne null}" value="#{hostingCompanyTemplatesUI.tdoc.note}" />
+					</p:outputPanel>
+					<div class="EmptyBox10" />
+					<f:facet name="footer">
+						<center>
+							<p:commandButton id="Closetemplate" icon="fa fa-close " type="button" onclick="PF('noteDialog').hide()" value="#{lang['close']}" />
+						</center>
+					</f:facet>
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+
+		<!-- Old Uploads -->
+		<p:dialog header="#{lang['view.document']}" widgetVar="viewDialogold" resizable="false" id="dialogVIEWOld" modal="true" width="750">
+			<f:event listener="#{viewerUI.onPrerender}" type="preRenderView" />
+			<h:form id="viewFormOld">
+				<h:panelGroup id="viewer">
+					<pe:documentViewer height="500" value="#{viewerUI.content}" />
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="#{lang['document.tracker']}" widgetVar="histDialogOld" resizable="false" hideEffect="clip" showEffect="clip" id="dialogOld" modal="true" width="40%">
+			<h:form id="documenttrackeFormOld">
+				<p:dataTable paginator="true" rows="6" paginatorPosition="bottom" paginatorTemplate=" {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true"
+					value="#{hostingCompanyTemplatesUI.documentTrackers}" var="rv" id="documenttrackeList">
+					<p:column headerText="#{lang['date.time']}:" sortBy="#{rv.date}">
+						<h:outputText value="#{rv.date}">
+							<f:convertDateTime pattern="dd MMMM yyyy (HH:mm:ss)" />
+						</h:outputText>
+					</p:column>
+
+					<p:column headerText="#{lang['user']}">
+        #{rv.user.firstName} #{rv.user.lastName} 
+      </p:column>
+
+					<p:column>
+         #{rv.documentTrackerEnum.friendlyName}
+       </p:column>
+
+				</p:dataTable>
+			</h:form>
+		</p:dialog>
+
+		<script type="text/javascript">
+			function handleInsRequest(xhr, status, args) {
+				if (args.validationFailed) {
+					jQuery('#dialogINS').effect("shake", {
+						times : 3
+					}, 500);
+				} else {
+					PF('dlg').hide();
+
+				}
+			}
+
+			function handleUpdRequest(xhr, status, args) {
+				if (args.validationFailed) {
+					jQuery('#dialogUPD').effect("shake", {
+						times : 3
+					}, 500);
+				} else {
+					PF('dlgUpd').hide();
+
+				}
+			}
+		</script>
+
+	</ui:define>
+
+</ui:composition>

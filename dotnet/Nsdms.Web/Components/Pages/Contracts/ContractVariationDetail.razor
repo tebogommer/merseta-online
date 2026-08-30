@@ -1,0 +1,118 @@
+@page "/contracts/variations/{Id:int}"
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Domain.Entities
+@inject IContractVariationService VariationService
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+
+<PageTitle>Contract Addenda Review | merSETA NSDMS</PageTitle>
+
+@if (_addenda == null)
+{
+    <MudContainer Class="my-8 text-center">
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        <MudText Typo="Typo.body1" Class="mt-3">Loading contract addenda record...</MudText>
+    </MudContainer>
+}
+else
+{
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
+        <!-- Sticky Top Bar -->
+        <MudCard Elevation="2" Class="mb-4 sticky-top-header" Style="position: sticky; top: var(--mud-appbar-height, 64px) !important; z-index: 10;">
+            <MudCardContent Class="d-flex align-center justify-space-between py-3">
+                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Primary" OnClick="@(() => Nav.NavigateTo("/contracts/variations"))" />
+                    <div>
+                        <MudText Typo="Typo.h5" Class="fw-bold">@_addenda.AddendaNumber — @_addenda.VariationTypeCode</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                            MOA Reference: <strong>@_addenda.GrantMoa?.MoaNumber</strong> | Revised End Date: <strong>@_addenda.RevisedEndDate.ToString("dd MMMM yyyy")</strong>
+                        </MudText>
+                    </div>
+                </MudStack>
+
+                <MudStack Row="true" Spacing="2">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Cancel" OnClick="@(() => Nav.NavigateTo("/contracts/variations"))">
+                        Cancel
+                    </MudButton>
+
+                    @if (_addenda.StatusCode == "SubmittedForReview")
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.CheckCircle" OnClick="ApproveAsync">
+                            Approve Addenda (Executive Signoff)
+                        </MudButton>
+                    }
+
+                    @if (_addenda.StatusCode == "ExecutiveApproved")
+                    {
+                        <MudChip T="string" Color="Color.Success" Variant="Variant.Filled" Size="Size.Large" Icon="@Icons.Material.Filled.Verified">
+                            EXECUTED &amp; APPLIED TO MOA
+                        </MudChip>
+                    }
+                </MudStack>
+            </MudCardContent>
+        </MudCard>
+
+        <!-- Main Structure -->
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <MudCard Outlined="true" Class="pa-4 h-100">
+                    <MudText Typo="Typo.h6" Class="fw-bold mb-3">Contract Variation Parameters</MudText>
+                    <MudSimpleTable Dense="true" Elevation="0">
+                        <tbody>
+                            <tr><td><strong>Addenda Number:</strong></td><td class="font-monospace fw-bold">@_addenda.AddendaNumber</td></tr>
+                            <tr><td><strong>MOA Number:</strong></td><td class="font-monospace">@_addenda.GrantMoa?.MoaNumber</td></tr>
+                            <tr><td><strong>Variation Type:</strong></td><td>@_addenda.VariationTypeCode</td></tr>
+                            <tr><td><strong>Original Contract Value:</strong></td><td>@_addenda.OriginalContractValue.ToString("C")</td></tr>
+                            <tr><td><strong>Revised Contract Value:</strong></td><td class="fw-bold">@_addenda.RevisedContractValue.ToString("C")</td></tr>
+                            <tr><td><strong>Value Variance:</strong></td><td>@_addenda.ContractValueVariance.ToString("C")</td></tr>
+                            <tr><td><strong>Original End Date:</strong></td><td>@_addenda.OriginalEndDate.ToString("dd MMM yyyy")</td></tr>
+                            <tr><td><strong>Revised End Date:</strong></td><td class="fw-bold">@_addenda.RevisedEndDate.ToString("dd MMM yyyy")</td></tr>
+                        </tbody>
+                    </MudSimpleTable>
+                </MudCard>
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <MudCard Outlined="true" Class="pa-4 h-100">
+                    <MudText Typo="Typo.h6" Class="fw-bold mb-3">Motivation &amp; Executive Sign-off</MudText>
+                    <MudSimpleTable Dense="true" Elevation="0">
+                        <tbody>
+                            <tr><td><strong>Status:</strong></td><td><span class="badge bg-primary">@_addenda.StatusCode</span></td></tr>
+                            <tr><td><strong>Motivation:</strong></td><td>@_addenda.MotivationReason</td></tr>
+                            <tr><td><strong>Executive Signoff By:</strong></td><td>@(_addenda.ExecutiveApprovedByUserId ?? "Pending Approval")</td></tr>
+                            <tr><td><strong>Approval Date:</strong></td><td>@(_addenda.ExecutiveApprovalDate?.ToString("dd MMM yyyy HH:mm") ?? "N/A")</td></tr>
+                        </tbody>
+                    </MudSimpleTable>
+                </MudCard>
+            </MudItem>
+        </MudGrid>
+    </MudContainer>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private ContractAddenda? _addenda;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAddendaAsync();
+    }
+
+    private async Task LoadAddendaAsync()
+    {
+        _addenda = await VariationService.GetAddendaByIdAsync(Id);
+    }
+
+    private async Task ApproveAsync()
+    {
+        try
+        {
+            _addenda = await VariationService.ApproveAddendaAsync(Id, "ChiefOperationsOfficer");
+            Snackbar.Add("Contract Addenda approved and applied to active MOA.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+}

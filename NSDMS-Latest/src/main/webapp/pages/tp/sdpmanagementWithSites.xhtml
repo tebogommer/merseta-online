@@ -1,0 +1,209 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui"
+	template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+
+		<p:growl showDetail="false" life="10000" sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>#{lang['sdps']}</h1>
+					<h:form id="mainForm">
+						<p:dataTable var="rv" value="#{sdpManagementWithSitesUI.trainingProviderApplicationDataModel}" id="applicationList" rowKey="#{rv.id}" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['company.name']}" filterBy="#{rv.company.companyName}" sortBy="#{rv.company.companyName}" filterStyle="width: 95%">
+								<h:outputText value="#{rv.company.companyName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['tradingName']}" filterBy="#{rv.company.tradingName}" sortBy="#{rv.company.tradingName}" filterStyle="width: 95%">
+								<h:outputText value="#{rv.company.tradingName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['entity.id']}" filterBy="#{rv.company.levyNumber}" sortBy="#{rv.company.levyNumber}" filterStyle="width: 95%">
+								<h:outputText value="#{rv.company.levyNumber}" />
+							</p:column>
+
+							<p:column headerText="Training Site Name" filterStyle="width: 95%">
+								<h:outputText value="#{rv.trainingSite.siteName}" rendered="#{rv.trainingSite ne null}" />
+								<h:outputText value="N/A" rendered="#{rv.trainingSite eq null}" />
+							</p:column>
+
+							<p:column headerText="#{lang['accreditation.number']}" filterBy="#{rv.certificateNumber}" sortBy="#{rv.certificateNumber}" filterStyle="width: 95%">
+								<h:outputText rendered="#{rv.certificateNumber ne null}" value="#{rv.certificateNumber}" />
+								<h:outputText rendered="#{rv.certificateNumber eq null}" value="#{rv.accreditationNumber}" />
+								<h:outputText rendered="#{(rv.certificateNumber eq null or rv.certificateNumber eq '') and (rv.accreditationNumber eq null or rv.accreditationNumber eq '') }" value="N/A" />
+							</p:column>
+
+							<p:column headerText="#{lang['start.date']}" sortBy="#{rv.startDate}" filterStyle="width: 95%">
+								<h:outputText value="#{rv.startDate}">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</h:outputText>
+								<h:outputText rendered="#{rv.startDate eq null}" value="N/A" />
+							</p:column>
+
+							<p:column headerText="Accreditation End Date" sortBy="#{rv.expiriyDate}" filterStyle="width: 95%">
+								<h:outputText value="#{rv.expiriyDate}">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</h:outputText>
+								<h:outputText rendered="#{rv.expiriyDate eq null}" value="N/A" />
+							</p:column>
+
+							<p:column headerText="#{lang['review.committee.date']}" sortBy="#{rvwpa.approvalDate}">
+								<h:outputText value="#{rv.reviewCommitteeMeeting.fromDateTime}">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</h:outputText>
+								<h:outputText rendered="#{rv.reviewCommitteeMeeting.fromDateTime eq null}" value="N/A" />
+							</p:column>
+
+							<p:column headerText="#{lang['decision.number']}" sortBy="#{rv.reviewCommitteeMeetingAgenda.decisionNumber}">
+								<h:outputText rendered="#{rv.reviewCommitteeMeetingAgenda ne null}" value="#{rv.reviewCommitteeMeetingAgenda.decisionNumber}" />
+								<h:outputText rendered="#{rv.reviewCommitteeMeetingAgenda eq null}" value="N/A" />
+							</p:column>
+
+							<p:column headerText="#{lang['type.of.application']}" sortBy="#{rv.accreditationApplicationTypeEnum}" filterStyle="width: 95%">
+								<h:outputText value="#{rv.accreditationApplicationTypeEnum.friendlyName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['company.approval']}" sortBy="#{rv.company.companyStatus}" filterStyle="width: 95%" rendered="false">
+								<h:outputText value="#{lang[rv.company.companyStatus.registrationName]}" />
+							</p:column>
+
+							<p:column headerText="#{lang['tp.application.status']}" sortBy="#{rv.approvalStatus}" filterStyle="width: 95%">
+								<h:outputText value="#{rv.approvalStatus.friendlyName}" />
+							</p:column>
+
+							<p:column headerText="Action / Edit" styleClass="action-column">
+								<p:commandButton update=":sdpInfoForm" icon="fa fa-search-plus" title="View Information" action="#{sdpManagementWithSitesUI.viewProviderApplicationInformation}" onstart="uploadStart()" oncomplete="uploadDone()">
+									<f:setPropertyActionListener value="#{rv}" target="#{sdpManagementWithSitesUI.selectedTrainingProviderApplication}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+					</h:form>
+				</div>
+
+				<h:form id="sdpInfoForm" style="width:100%">
+					<p:outputPanel rendered="#{sdpManagementWithSitesUI.selectedTrainingProviderApplication.id != null}">
+						<div class="card card-w-title">
+							<h1>#{lang['sdp']} Details</h1>
+							<p:tabView>
+								<p:tab title="#{lang['company.info']}">
+									<br />
+								</p:tab>
+								<p:tab title="Training Site Information" rendered="#{sdpManagementWithSitesUI.trainingSite ne null}">
+								</p:tab>
+								<p:tab title="Application Submission User">
+								</p:tab>
+								<p:tab title="#{lang['sdp.contact.persons']}" id="contactPersonsTab">
+									<p:outputPanel id="contactPersonsPanel">
+										<p:dataTable var="rvSdp" id="sdpAssignedList" value="#{sdpManagementWithSitesUI.sdpCompanyDataModel}" rowKey="#{rvSDP.id}" paginator="true" rows="5" paginatorPosition="bottom"
+											paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" reflow="true" lazy="true">
+											<p:column headerText="Designation" sortBy="#{rvSdp.sdpType}">
+												<p:outputLabel value="#{rvSdp.sdpType.description}"></p:outputLabel>
+											</p:column>
+											<p:column headerText="Title">
+												<p:outputLabel value="#{rvSdp.sdp.title.description}"></p:outputLabel>
+											</p:column>
+											<p:column headerText="First Name">
+												<p:outputLabel value="#{rvSdp.sdp.firstName}"></p:outputLabel>
+											</p:column>
+											<p:column headerText="Last Name">
+												<p:outputLabel value="#{rvSdp.sdp.lastName}"></p:outputLabel>
+											</p:column>
+											<p:column headerText="Identity Number">
+												<p:outputLabel value="#{rvSdp.sdp.rsaIDNumber}"></p:outputLabel>
+												<p:outputLabel value="#{rvSdp.sdp.passportNumber}"></p:outputLabel>
+											</p:column>
+											<p:column headerText="Email">
+												<p:outputLabel value="#{rvSdp.sdp.email}"></p:outputLabel>
+											</p:column>
+											<p:column headerText="Cell Number">
+												<p:outputLabel value="#{rvSdp.sdp.cellNumber}"></p:outputLabel>
+											</p:column>
+											<p:column headerText="Tel Number">
+												<p:outputLabel value="#{rvSdp.sdp.telNumber}"></p:outputLabel>
+											</p:column>
+											<p:column headerText="Fax Number">
+												<p:outputLabel value="#{rvSdp.sdp.faxNumber}"></p:outputLabel>
+											</p:column>
+										</p:dataTable>
+									</p:outputPanel>
+								</p:tab>
+								<p:tab title="#{lang['assessor.moderator.details']}" id="assModInfo">
+									<p:outputPanel id="assModPanel">
+										<p:dataTable var="rvAssMod" id="assModDM" value="#{sdpManagementWithSitesUI.assessorModeratorCompanySitesDataModel}" rowKey="#{rvAssMod.id}" paginator="true" rows="5" paginatorPosition="bottom"
+											paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" reflow="true" lazy="true">
+											<p:column headerText="Type">
+												<p:outputLabel value="#{rvAssMod.assessorModType.friendlyName}"></p:outputLabel>
+											</p:column>
+											<p:column headerText="Title">
+												<p:outputLabel value="#{rvAssMod.assessorModerator.title.description}"></p:outputLabel>
+											</p:column>
+											<p:column headerText="First Name">
+												<p:outputLabel value="#{rvAssMod.assessorModerator.firstName}"></p:outputLabel>
+											</p:column>
+											<p:column headerText="Last Name">
+												<p:outputLabel value="#{rvAssMod.assessorModerator.lastName}"></p:outputLabel>
+											</p:column>
+											<p:column headerText="Identity Number">
+												<p:outputLabel value="#{rvAssMod.assessorModerator.rsaIDNumber}"></p:outputLabel>
+												<p:outputLabel value="#{rvAssMod.assessorModerator.passportNumber}"></p:outputLabel>
+											</p:column>
+											<p:column headerText="Email">
+												<p:outputLabel value="#{rvAssMod.assessorModerator.email}"></p:outputLabel>
+											</p:column>
+											<p:column headerText="Cell Number">
+												<p:outputLabel value="#{rvAssMod.assessorModerator.cellNumber}"></p:outputLabel>
+											</p:column>
+											<p:column headerText="Tel Number">
+												<p:outputLabel value="#{rvAssMod.assessorModerator.telNumber}"></p:outputLabel>
+											</p:column>
+											<p:column headerText="Fax Number">
+												<p:outputLabel value="#{rvAssMod.assessorModerator.faxNumber}"></p:outputLabel>
+											</p:column>
+										</p:dataTable>
+									</p:outputPanel>
+								</p:tab>
+								<p:tab title="#{lang['qualification.and.unit.stands']}">
+									<!-- <ui:include src="/pages/includes/searchTPUnitStandrsAndQualification.xhtml" /> -->
+								</p:tab>
+								<p:tab title="#{lang['etqa.review.committee.date.details']}" rendered="#{sdpManagementWithSitesUI.selectedTrainingProviderApplication.reviewCommitteeMeeting ne null}">
+									<!-- <ui:include src="/pages/includes/searchTrainingProviderETQADates.xhtml" /> -->
+								</p:tab>
+								<p:tab title="#{lang['documents']}">
+									<!-- <ui:include src="/pages/includes/tpDocumentsUpdate.xhtml" /> -->
+								</p:tab>
+								<p:tab title="Company SDP Application(s)">
+									<!-- <ui:include src="/pages/includes/searchTPCompanyApplication.xhtml" /> -->
+								</p:tab>
+								<p:tab title="Company SDP Legacy Accreditation">
+									<ui:include src="/pages/includes/providerlegacyaccreditation.xhtml">
+										<ui:param name="legacyDataModel" value="#{sdpManagementWithSitesUI.legacyDataModel}" />
+									</ui:include>
+								</p:tab>
+							</p:tabView>
+
+						</div>
+					</p:outputPanel>
+				</h:form>
+			</div>
+
+
+
+
+
+		</div>
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+			<h:form>
+				<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+				<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+			</h:form>
+		</p:confirmDialog>
+
+	</ui:define>
+
+</ui:composition>

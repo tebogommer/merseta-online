@@ -1,0 +1,92 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Wsp Signoff</h1>
+					<h:form id="wspsignoffInsForm">
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:panelGrid columns="1" style="width:100%" id="wspsignoffInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="wsp" value="#{wspsignoffUI.wspsignoff.wsp}" style="width:95%" />
+								<p:outputLabel value="#{lang['wsp']}" for="wsp" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="createDate" value="#{wspsignoffUI.wspsignoff.createDate}" style="width:95%" />
+								<p:outputLabel value="#{lang['createDate']}" for="createDate" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="accept" value="#{wspsignoffUI.wspsignoff.accept}" style="width:95%" />
+								<p:outputLabel value="#{lang['accept']}" for="accept" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="user" value="#{wspsignoffUI.wspsignoff.user}" style="width:95%" />
+								<p:outputLabel value="#{lang['user']}" for="user" />
+							</h:panelGroup>
+
+
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:wspsignoffList :wspsignoffInsForm:wspsignoffInsGrid" action="#{wspsignoffUI.wspsignoffInsert}" />
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="wspsignoffInsGrid" process="@this" action="#{wspsignoffUI.prepareNew}">
+									<p:resetInput target="wspsignoffInsGrid" />
+								</p:commandButton>
+							</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{wspsignoffUI.dataModel}" filteredValue="#{wspsignoffUI.wspSignofffilteredList}" id="wspsignoffList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['wsp']}">
+								<h:outputText value="#{rowVar.wsp}" />
+							</p:column>
+							<p:column headerText="#{lang['createDate']}">
+								<h:outputText value="#{rowVar.createDate}" />
+							</p:column>
+							<p:column headerText="#{lang['accept']}">
+								<h:outputText value="#{rowVar.accept}" />
+							</p:column>
+							<p:column headerText="#{lang['user']}">
+								<h:outputText value="#{rowVar.user}" />
+							</p:column>
+
+
+							<p:column width="80">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":wspsignoffInsForm:wspsignoffInsGrid">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{wspsignoffUI.wspsignoff}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:wspsignoffList" action="#{wspsignoffUI.wspsignoffDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{wspsignoffUI.wspsignoff}" />
+								</p:commandButton>
+							</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+	<!-- 
+wsp = wsp
+createDate = createDate
+accept = accept
+user = user
+
+-->
+</ui:composition>

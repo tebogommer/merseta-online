@@ -1,0 +1,28 @@
+<ui:composition xmlns:o="http://omnifaces.org/ui" xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+	<p:outputPanel id="pgCompanyDetails" rendered="#{!learnerRegistrationNonMersetaFormUI.company.doneSearch}">
+		<p:panelGrid  columns="4" styleClass="ui-panelgrid-blank" style="width:50%" rendered="false">
+					
+			<h:panelGroup >
+				<p:outputLabel value="Non-merSETA Scope Company"/>
+				<p:spacer width="10"></p:spacer>
+				<p:selectBooleanCheckbox value="#{searchCompanyUI.searchNGO}">
+					<p:ajax update="pgCompanyDetails"  listener="#{searchCompanyUI.prepareNonSetaCompany}" event="change"></p:ajax>
+				</p:selectBooleanCheckbox>
+			</h:panelGroup>
+					
+		</p:panelGrid>
+	
+		<p:panelGrid id="searchCompanyPnl" columns="2" styleClass="ui-panelgrid-blank" rendered="#{learnerRegistrationNonMersetaFormUI.showInfo}" style="width:100%">
+			
+			<h:panelGroup id="regNumInput" styleClass="md-inputfield" >
+				<p:inputMask id="regNumCriteria" style="width:100%" value="#{searchCompanyUI.criteria}"  requiredMessage="#{lang['enter.reg.number']}" required="true" mask="#{searchCompanyUI.companyRegistrationNumberFormat}">
+				</p:inputMask>
+				<p:outputLabel value="#{lang['company.reg.number']}" for="regNumCriteria" />
+			</h:panelGroup>
+			
+			<p:commandButton id="idSearch" icon="fa fa-search" value="Submit" process="searchCompanyPnl" actionListener="#{searchCompanyUI.findNonMersetaCompany}" rendered="#{!learnerRegistrationNonMersetaFormUI.company.doneSearch}" update="learnerRegUserForm"/>
+		
+		</p:panelGrid>
+	</p:outputPanel>
+</ui:composition>

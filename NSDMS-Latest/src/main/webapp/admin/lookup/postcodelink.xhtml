@@ -1,0 +1,206 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<p:growl sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Post Code Link</h1>
+					<h:form id="postcodelinkInsForm">
+						<p:panelGrid columns="1" style="width:100%" id="postcodelinkInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+							<h:panelGroup styleClass="md-inputfield" rendered="false" >
+								<p:inputText id="description" value="#{postcodelinkUI.postcodelink.description}" style="width:95%" />
+								<p:outputLabel value="#{lang['description']}" for="description" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="suburb" value="#{postcodelinkUI.postcodelink.postCode}" style="width:95%" />
+								<p:outputLabel value="Post Code: CSV" for="suburb" />
+							</h:panelGroup>
+	
+							<h:panelGroup styleClass="md-inputfield" >
+								<p:inputText id="area" value="#{postcodelinkUI.postcodelink.area}" style="width:95%" />
+								<p:outputLabel value="Area: CSV" for="area" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield" >
+								<p:inputText id="regionCode" value="#{postcodelinkUI.postcodelink.provinceCode}" style="width:95%" />
+								<p:outputLabel value="Province Code: CSV" for="regionCode" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield" rendered="false">
+								<p:inputText id="postCodeUsedForSars" value="#{postcodelinkUI.postcodelink.postCodeUsedForSars}" style="width:95%" />
+								<p:outputLabel value="Post Code Used For Sars Link" for="postCodeUsedForSars" />
+							</h:panelGroup>
+
+							<h:panelGroup rendered="false">
+								<div>
+									<p:outputLabel value="Province Assigned" for="province" />
+								</div>
+								<div>
+									<p:selectOneMenu id="province" value="#{postcodelinkUI.postcodelink.province}" style="width:95%" required="true" converter="ProvinceConvertor">
+										<p:ajax />
+										<f:selectItems value="#{selectItemsUI.selectItemsProvince}" var="rv" itemLabel="#{rv.provinceDesc}" itemValue="#{rv}" />
+									</p:selectOneMenu>
+								</div>
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield" rendered="false">
+								<p:inputText id="nlrdCode" value="#{postcodelinkUI.postcodelink.nlrdCode}" style="width:95%" />
+								<p:outputLabel value="#{lang['nlrdCode']}" for="nlrdCode" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield" rendered="false">
+								<p:inputText id="smsCode" value="#{postcodelinkUI.postcodelink.smsCode}" style="width:95%" />
+								<p:outputLabel value="#{lang['smsCode']}" for="smsCode" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield" rendered="false">
+								<p:inputText id="code" value="#{postcodelinkUI.postcodelink.code}" style="width:95%" />
+								<p:outputLabel value="#{lang['code']}" for="code" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield" rendered="false">
+								<p:inputText id="createDate" value="#{postcodelinkUI.postcodelink.createDate}" style="width:95%" />
+								<p:outputLabel value="#{lang['createDate']}" for="createDate" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield" rendered="false">
+								<p:inputText id="setmisCode" value="#{postcodelinkUI.postcodelink.setmisCode}" style="width:95%" />
+								<p:outputLabel value="#{lang['setmisCode']}" for="setmisCode" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield" rendered="false">
+								<p:inputText id="qctoCode" value="#{postcodelinkUI.postcodelink.qctoCode}" style="width:95%" />
+								<p:outputLabel value="#{lang['qctoCode']}" for="qctoCode" />
+							</h:panelGroup>
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:postcodelinkList :postcodelinkInsForm:postcodelinkInsGrid" action="#{postcodelinkUI.postcodelinkInsert}" />
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="postcodelinkInsGrid" process="@this" action="#{postcodelinkUI.prepareNew}">
+									<p:resetInput target="postcodelinkInsGrid" />
+								</p:commandButton>
+							</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:panelGrid columns="4" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<p:commandButton value="Upload CSV" oncomplete="PF('csvUploadDlg').show()" update=":uploadFormCSF" action="#{postcodelinkUI.prepTypeSelection}" />
+							<p:commandButton value="Clear Uploaded Entries" update="@form" action="#{postcodelinkUI.clearUploadedEntries}" onstart="uploadStart()" oncomplete="uploadDone()" >
+							 	<p:confirm header="#{lang['confirmation']}" message="Are you sure? This will delete all entries." icon="ui-icon-warning" />
+							</p:commandButton>
+							<p:commandButton update="@form" action="#{postcodelinkUI.runValidiations}" value="Run Data Process" onstart="uploadStart()" oncomplete="uploadDone()">
+								<p:confirm header="#{lang['confirmation']}" message="Are you sure? This may take some time." icon="ui-icon-warning" />
+							</p:commandButton>
+							<p:commandButton update="@form" action="#{postcodelinkUI.populateMissingPostCodes}" value="Populate Missing Post Codes" onstart="uploadStart()" oncomplete="uploadDone()">
+								<p:confirm header="#{lang['confirmation']}" message="Are you sure? This may take some time." icon="ui-icon-warning" />
+							</p:commandButton>
+						</p:panelGrid>
+						
+						<c:if test="#{postcodelinkUI.displayDownload}">
+							<ui:include src="/pages/includes/download_lazy.xhtml">
+								<ui:param name="file_name" value="Post_Code_Link_Look_Up" />
+								<ui:param name="target" value="postcodelinkList" />
+							</ui:include>
+							<div class="EmptyBox10" />
+						</c:if>
+
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+						<p:dataTable var="rowVar" value="#{postcodelinkUI.dataModel}" filteredValue="#{postcodelinkUI.postCodeLinkfilteredList}" id="postcodelinkList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['description']}" rendered="false" >
+								<h:outputText value="#{rowVar.description}" />
+							</p:column>
+							
+							<p:column headerText="Post Code: CSV" filterBy="#{rowVar.postCode}">
+								<h:outputText value="#{rowVar.postCode}" />
+							</p:column>
+							<p:column headerText="Area: CSV" filterBy="#{rowVar.area}">
+								<h:outputText value="#{rowVar.area}" />
+							</p:column>
+							<p:column headerText="Province Code: CSV" filterBy="#{rowVar.provinceCode}">
+								<h:outputText value="#{rowVar.provinceCode}" />
+							</p:column>
+							<p:column headerText="Post Code Used For SARS" filterBy="#{rowVar.postCodeUsedForSars}">
+								<h:outputText value="#{rowVar.postCodeUsedForSars}" />
+							</p:column>
+							<p:column headerText="Province Assigned">
+								<h:outputText value="(#{rowVar.province.code}) #{rowVar.province.provinceDesc}" />
+							</p:column>
+							<p:column headerText="#{lang['nlrdCode']}" rendered="false">
+								<h:outputText value="#{rowVar.nlrdCode}" />
+							</p:column>
+							<p:column headerText="#{lang['smsCode']}" rendered="false">
+								<h:outputText value="#{rowVar.smsCode}" />
+							</p:column>
+							<p:column headerText="#{lang['code']}" rendered="false">
+								<h:outputText value="#{rowVar.code}" />
+							</p:column>
+							<p:column headerText="#{lang['createDate']}" rendered="false">
+								<h:outputText value="#{rowVar.createDate}" />
+							</p:column>
+							<p:column headerText="#{lang['setmisCode']}" rendered="false">
+								<h:outputText value="#{rowVar.setmisCode}" />
+							</p:column>
+							<p:column headerText="#{lang['qctoCode']}" rendered="false">
+								<h:outputText value="#{rowVar.qctoCode}" />
+							</p:column>
+							<p:column width="80" exportable="false">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":postcodelinkInsForm:postcodelinkInsGrid">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{postcodelinkUI.postcodelink}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:postcodelinkList :postcodelinkInsForm:postcodelinkInsGrid " action="#{postcodelinkUI.postcodelinkDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{postcodelinkUI.postcodelink}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-check-circle-o" title="Run Validiation" update=":mainForm:postcodelinkList :postcodelinkInsForm:postcodelinkInsGrid" action="#{postcodelinkUI.runValidiationForEntry}">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{postcodelinkUI.postcodelink}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+		</div>
+		
+		<p:dialog widgetVar="csvUploadDlg" modal="true" width="50%" responsive="true">
+			<h:form id="uploadFormCSF" >
+				<p:outputLabel value="Header Names For CSV: post_code, area, province_code" />
+				<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="CSV Type Upload" for="csvType" />
+						</div>
+						<div>
+							<p:selectOneMenu id="csvType" value="#{postcodelinkUI.csvTypeSelection}" style="width:100%">
+								<f:selectItems value="#{postcodelinkUI.csvTypeSelectionList}" />
+								<p:ajax />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					
+				</p:panelGrid>
+				<div class="EmptyBox10" />
+				<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<p:fileUpload fileUploadListener="#{postcodelinkUI.handleFileUpload}" dragDropSupport="true" showButtons="false" label="Select CSV file to import" multiple="false" allowTypes="/(\.|\/)(csv|CSV)$/" fileLimit="1" auto="true" mode="advanced" update=":mainForm" oncomplete="PF('csvUploadDlg').hide()" />
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+			<h:form>
+				<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+				<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+			</h:form>
+		</p:confirmDialog>
+
+	</ui:define>
+	<!-- 
+_lang_
+-->
+</ui:composition>

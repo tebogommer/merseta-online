@@ -1,0 +1,332 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+				
+					<p:importEnum type="haj.com.entity.enums.PivotNonPivotEnum" />
+					<p:importEnum type="haj.com.entity.enums.LearnerStatusEnum" />
+					<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+					<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+					<p:importEnum type="haj.com.entity.enums.LearnerChangeTypeEnum" />
+					<p:importEnum type="haj.com.entity.enums.LearnerTransferTypeEnum" />
+					<p:importEnum type="haj.com.entity.enums.YesNoEnum" />
+					
+					<h1>#{lang['sdps']}</h1>
+
+					<h:form id="learnersInsForm">
+						<p:growl sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						
+						<p:dataTable var="rv" id="tpList" value="#{sdpmanagementUI.tpDataModel}" rowKey="#{vr.id}" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15" reflow="true" lazy="true">
+							
+							<p:column headerText="#{lang['companyName']}" filterBy="#{rv.company.companyName}" sortBy="#{rv.company.companyName}">
+								#{rv.company.companyName}
+							</p:column>
+							<p:column headerText="#{lang['tradingName']}" filterBy="#{rowVar.company.tradingName}" sortBy="#{rowVar.company.tradingName}" filterStyle="width: 95%">
+								#{rv.company.tradingName}
+							</p:column>
+							<p:column headerText="#{lang['companyRegistrationNumber']}" filterBy="#{rv.company.companyRegistrationNumber}" sortBy="#{rv.company.companyRegistrationNumber}" rendered="false">
+								#{rv.company.companyRegistrationNumber}
+							</p:column>
+							<p:column headerText="#{lang['entity.id']}" filterBy="#{rv.company.levyNumber}" sortBy="#{rv.company.levyNumber}">
+								#{rv.company.levyNumber}
+							</p:column>
+							
+							<p:column headerText="Training Site Name" filterStyle="width: 95%">
+								<h:outputText value="#{rv.trainingSite.siteName}" rendered="#{rv.trainingSite ne null}" />
+								<h:outputText value="N/A" rendered="#{rv.trainingSite eq null}" />
+							</p:column>
+							
+							<p:column headerText="#{lang['accreditation.number']}" filterBy="#{rv.certificateNumber}" sortBy="#{rv.certificateNumber}" filterStyle="width: 95%">
+								<h:outputText value="#{rv.certificateNumber}" rendered="#{rv.certificateNumber ne null}"/>
+								<h:outputText value="#{rv.accreditationNumber}"  rendered="#{rv.certificateNumber eq null}"/>
+								<h:outputText rendered="#{(rv.certificateNumber eq null or rv.certificateNumber eq '') and (rv.accreditationNumber eq null or rv.accreditationNumber eq '') }" value="N/A" />
+							</p:column>
+							
+							<p:column headerText="#{lang['start.date']}" sortBy="#{rv.startDate}" filterStyle="width: 95%">
+								<h:outputText value="#{rv.startDate}" >
+									 <f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</h:outputText>
+								<h:outputText rendered="#{rv.startDate eq null}" value="N/A" />
+							</p:column>
+							
+							<p:column headerText="Expiry Date " sortBy="#{rv.expiriyDate}" filterStyle="width: 95%">
+								<h:outputText value="#{rv.expiriyDate}" >
+									 <f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</h:outputText>
+								<h:outputText rendered="#{rv.expiriyDate eq null}" value="N/A" />
+							</p:column>
+							
+							<p:column headerText="Application Type"  sortBy="#{rv.accreditationApplicationTypeEnum}">
+								#{rv.accreditationApplicationTypeEnum.friendlyName}
+							</p:column>
+							<p:column headerText="Application Status" width="10%"  sortBy="#{rv.approvalStatus}">
+								#{rv.approvalStatus.friendlyName}
+							</p:column>
+							<p:column headerText="#{lang['company.status']}" width="10%" rendered="false" sortBy="#{rv.company.companyStatus.registrationName}">
+								#{lang[rv.company.companyStatus.registrationName]}
+							</p:column>
+							<p:column headerText="Size of Company" width="10%" rendered="false">#{rv.company.sizeOfCompany.detailDescription}</p:column>
+							<p:column headerText="#{lang['levy.paying']}" width="110" style="text-align:center" rendered="false">
+								<p:outputPanel rendered="#{rv.company.nonLevyPaying}">
+									<i class="fa fa-times fa-3x red" aria-hidden="true"></i>
+								</p:outputPanel>
+								<p:outputPanel rendered="#{not rv.company.nonLevyPaying}">
+									<i class="fa fa-check fa-3x green" aria-hidden="true"></i>
+								</p:outputPanel>
+							</p:column>
+							<p:column headerText="#{lang['RAG']}" width="37" rendered="false">
+								<h:graphicImage value="/resources/hls/images/red.svg" rendered="#{rv.company.companyStatus eq CompanyStatusEnum.Pending}" width="40" styleClass="animated pulse infinite" />
+								<h:graphicImage value="/resources/hls/images/green.svg" rendered="#{rv.company.companyStatus eq CompanyStatusEnum.Active}" width="30" />
+							</p:column>
+							<p:column width="95" rendered="true" headerText="#{lang['view.edit']}">
+								<center>
+									<p:commandButton icon="fa fa-users" title="#{lang['learner.registration']}" action="#{learnersReportUI.checkLearnerInfo}" update="mainForm" rendered="#{rv.approvalStatus eq ApprovalEnum.Approved or rv.approvalStatus eq ApprovalEnum.DeAccredited}">
+										<f:setPropertyActionListener value="#{rv.company}" target="#{learnersReportUI.selectedCompany}" />
+										<f:setPropertyActionListener value="#{rv}" target="#{learnersReportUI.selectedTrainingProvider}" />
+									</p:commandButton>
+								</center>
+							</p:column>						
+						</p:dataTable>						
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<h:form id="mainForm">
+					<p:tooltip position="left"></p:tooltip>
+					<c:if test="#{learnersReportUI.companyLearnersList ne null}">
+						<div class="card card-w-title">
+							<ui:include src="/pages/includes/download_lazy.xhtml">
+								<ui:param name="file_name" value="learnerList" />
+								<ui:param name="target" value="learnerList" />
+							</ui:include>
+							
+							<p:tooltip position="left"/>
+							<p:commandButton id="toggler" type="button" style="float:right" icon="ui-icon-menu" />
+							<p:columnToggler datasource="learnerList" trigger="toggler" />
+						
+							<ui:include src="/pages/includes/filterGuide.xhtml" />
+							
+							<p:dataTable var="rowVar" value="#{learnersReportUI.companyLearnersList}" id="learnerList" 
+								paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+								paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" 
+								rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+								
+								<p:column headerText="#{lang['first.name']}" filterBy="#{rowVar.firstName}" sortBy="#{rowVar.firstName}">
+									<h:outputText value="#{rowVar.firstName}" />
+								</p:column>
+								
+								<p:column headerText="#{lang['last.name']}" filterBy="#{rowVar.lastName}" sortBy="#{rowVar.lastName}">
+									<h:outputText value="#{rowVar.lastName}" />
+								</p:column>
+								
+								<p:column headerText="Identity Number" filterBy="#{rowVar.rsaIDNumber}" sortBy="#{rowVar.rsaIDNumber}">
+									<h:outputText value="#{rowVar.rsaIDNumber}" />
+									<h:outputText rendered="#{rowVar.rsaIDNumber.length() lt 1}" value="N/A" />
+								</p:column>
+								
+								<p:column headerText="Passport Number" filterBy="#{rowVar.passportNumber}" sortBy="#{rowVar.passportNumber}">
+									<h:outputText rendered="#{rowVar.passportNumber.length() lt 1}" value="N/A" />
+									<h:outputText value="#{rowVar.passportNumber}" />
+								</p:column>
+								
+								<p:column headerText="Date of Birth">
+									<h:outputText value="#{rowVar.dateOfBirth}">
+										<f:convertDateTime pattern="dd/MM/YYYY" />
+									</h:outputText>
+								</p:column>
+								
+								<p:column headerText="Gender" >
+									<h:outputText value="#{rowVar.gender}" />
+								</p:column>
+								
+								<p:column headerText="Equity" >
+									<h:outputText value="#{rowVar.equity}" />
+								</p:column>
+								
+								<p:column headerText="Nationality" >
+									<h:outputText value="#{rowVar.nationality}" />
+								</p:column>
+								
+								<p:column headerText="Language" >
+									<h:outputText value="#{rowVar.language}" />
+								</p:column>
+								
+								<p:column headerText="Disability" >
+									<h:outputText value="#{rowVar.disability}" />
+								</p:column>
+								
+								<p:column headerText="Learner Email" >
+									<h:outputText value="#{rowVar.learnerEmail}" />
+								</p:column>
+								
+								<p:column headerText="Cell Number" >
+									<h:outputText value="#{rowVar.cellNumber}" />
+								</p:column>
+								
+								<p:column headerText="Tel Number" >
+									<h:outputText value="#{rowVar.telNumber}" />
+								</p:column>
+								
+								<p:column headerText="Employment Status" >
+									<h:outputText value="#{rowVar.employmentStatus}" />
+								</p:column>
+								
+								<p:column headerText="Highest Education" >
+									<h:outputText value="#{rowVar.highestEducation}" />
+								</p:column>
+								
+								<p:column headerText="Highest Qualification" >
+									<h:outputText value="#{rowVar.highestQualification}" />
+								</p:column>
+								
+								<p:column headerText="Status">
+									<h:outputText value="#{rowVar.learnerStatus}" />
+								</p:column>
+								
+								<p:column headerText="Approval Status" rendered="false">
+									<h:outputText value="#{rowVar.approvalStatus}" />
+								</p:column>
+								
+								<p:column headerText="Intervention Type">
+									<h:outputText value="#{rowVar.interventionType}" />
+								</p:column>
+								
+								<p:column headerText="Course / Qualification ">
+									<h:outputText value="(#{rowVar.learnershipCode}) " rendered="#{rowVar.learnershipCode ne null}"/>
+									<h:outputText value="#{rowVar.learnershipDescription}" rendered="#{rowVar.learnershipDescription ne null}"/>
+									<h:outputText value="(#{rowVar.qualificationCode}) " rendered="#{rowVar.qualificationCode ne null}"/>
+									<h:outputText value="#{rowVar.qualificationTitle}" rendered="#{rowVar.qualificationTitle ne null}"/>
+									<h:outputText value="(#{rowVar.skillsProgrammeCode}) " rendered="#{rowVar.skillsProgrammeCode ne null}"/>
+									<h:outputText value="#{rowVar.skillsProgrammeDescription}" rendered="#{rowVar.skillsProgrammeDescription ne null}" />
+									<h:outputText value="#{rowVar.skillsSetCode} " rendered="#{rowVar.skillsSetCode ne null}" />
+									<h:outputText value="#{rowVar.skillsSetDescription}" rendered="#{rowVar.skillsSetDescription ne null}" />
+									<h:outputText value="#{rowVar.unitStandardCode} " rendered="#{rowVar.unitStandardCode ne null}" />
+									<h:outputText value="#{rowVar.unitStandardDescription}" rendered="#{rowVar.unitStandardDescription ne null}" />
+									<h:outputText value="#{rowVar.nonCreditBearingDescription}" rendered="#{rowVar.nonCreditBearingDescription ne null}" />
+								</p:column>
+								
+								<p:column headerText="OFO Codes" >
+									<h:outputText value="(#{rowVar.ofoCode})" rendered="#{rowVar.ofoCode.length() gt 1}"/>
+									<h:outputText value="#{rowVar.ofoCodeDescription}" />
+								</p:column>
+								
+								<p:column headerText="Residential Address" >
+									<h:outputText value="#{rowVar.residentialAddress}" />
+								</p:column>
+								
+								<p:column headerText="Postal Address" >
+									<h:outputText value="#{rowVar.postalAddress}" />
+								</p:column>
+								
+								<p:column headerText="Urban/Rural" >
+									<h:outputText value="#{rowVar.urbanRural}" />
+								</p:column>
+								
+								<p:column headerText="STATS SA Area Code" >
+									<h:outputText value="#{rowVar.startSaAreaCode}" />
+								</p:column>
+								
+								<p:column headerText="Learner Municipality">
+									<h:outputText value="#{rowVar.learnerMunicipality}" />
+								</p:column>
+								
+								<p:column headerText="Registration Status Date" rendered="false">
+									<h:outputText value="#{rowVar.dateLearnerRegistered}">
+										<f:convertDateTime pattern="dd/MM/YYYY" />
+									</h:outputText>
+								</p:column>
+								
+								<p:column headerText="Registration Status Date">
+									<h:outputText value="#{rowVar.registrationDate}">
+										<f:convertDateTime pattern="dd/MM/YYYY" />
+									</h:outputText>
+								</p:column>
+								
+								<p:column headerText="Agreement Start Date">
+									<h:outputText value="#{rowVar.commencementDate}">
+										<f:convertDateTime pattern="dd/MM/YYYY" />
+									</h:outputText>
+								</p:column>
+								
+								<p:column headerText="Agreement End Date">
+									<h:outputText value="#{rowVar.completionDate}">
+										<f:convertDateTime pattern="dd/MM/YYYY" />
+									</h:outputText>
+								</p:column>
+								
+								<p:column headerText="Registration Number">
+									<h:outputText value="#{rowVar.registrationNumber}" />
+								</p:column>
+								
+								<p:column headerText="Employer" filterBy="#{rowVar.employerInfor}" sortBy="#{rowVar.employerInfor}">
+									<h:outputText value="#{rowVar.employerInfor}">
+									</h:outputText>
+								</p:column>
+								
+								<p:column headerText="Employer Chamber">
+									<h:outputText value="#{rowVar.chamber}" />
+								</p:column>
+								
+								<p:column headerText="Employer Region">
+									<h:outputText value="#{rowVar.employerRegion}" />
+								</p:column>
+								
+								<p:column headerText="Employer Municipality">
+									<h:outputText value="#{rowVar.employerMunicipality}" />
+								</p:column>
+								
+								<p:column headerText="Provider" filterBy="#{rowVar.providerInfor}" sortBy="#{rowVar.providerInfor}">
+									<h:outputText value="#{rowVar.providerInfor}">
+									</h:outputText>
+								</p:column>
+								
+								<p:column headerText="Provider Region">
+									<h:outputText value="#{rowVar.providerRegion}" />
+								</p:column>
+								
+								<p:column headerText="Provider Municipality">
+									<h:outputText value="#{rowVar.providerMunicipality}" />
+								</p:column>
+								
+								<p:column headerText="Funded By">
+									<h:outputText value="#{rowVar.fundedBy}" />
+								</p:column>
+								
+								<p:column headerText="LegacyLearner">
+									<h:outputText value="#{rowVar.legacyLearner}" />
+								</p:column>
+								
+								<p:column headerText="QMR Entered Date">
+									<h:outputText value="#{rowVar.qmrEnteredDate}">
+										<f:convertDateTime pattern="dd/MM/YYYY" />
+									</h:outputText>
+								</p:column>
+								
+								<p:column headerText="QMR Completed Date">
+									<h:outputText value="#{rowVar.qmrCompletedDate}">
+										<f:convertDateTime pattern="dd/MM/YYYY" />
+									</h:outputText>
+								</p:column>
+								
+								<p:column headerText="Create User Infor">
+									<h:outputText value="#{rowVar.createUser}" />
+								</p:column>
+								
+							</p:dataTable>
+							
+						</div>						
+					</c:if>
+				</h:form>
+			</div>
+		</div>
+
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+
+	</ui:define>
+
+</ui:composition>

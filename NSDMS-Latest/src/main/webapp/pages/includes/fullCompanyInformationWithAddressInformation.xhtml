@@ -1,0 +1,101 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui">
+
+	<br />
+	<br />
+
+	<c:if test="false">
+		<!--  
+	<ui:include src="/pages/includes/fullCompanyInformationWithAddressInformation.xhtml">
+		<ui:param name="company" value=" haj.com.entity.Company " />
+		<ui:param name="CELLPHONE_FORMAT" value=" sdfUI.CELLPHONE_FORMAT " />
+		<ui:param name="FAX_NUMBER_FORMAT" value=" sdfUI.FAX_NUMBER_FORMAT" />
+		<ui:param name="TELPHONE_FORMAT" value="sdfUI.TELPHONE_FORMAT" />
+	</ui:include> 
+	-->
+	</c:if>
+	<p:panelGrid columns="3" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText disabled="true" value="#{company.companyName}" style="width:95%">
+			</p:inputText>
+			<p:outputLabel value="#{lang['companyName']}" />
+		</h:panelGroup>
+
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText disabled="true" value="#{company.tradingName}" style="width:95%" />
+			<p:outputLabel value="#{lang['tradingName']}" />
+		</h:panelGroup>
+
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText disabled="true" value="#{company.companyRegistrationNumber}" style="width:95%" />
+			<p:outputLabel value="#{lang['reg.number']}" />
+		</h:panelGroup>
+
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText disabled="true" value="#{company.levyNumber}" style="width:95%" />
+			<p:outputLabel value="#{lang['levy.number']}" />
+		</h:panelGroup>
+
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputMask disabled="true" value="#{company.telNumber}" mask="#{TELPHONE_FORMAT}" style="width:95%" />
+			<p:outputLabel value="#{lang['telNumber']}" />
+		</h:panelGroup>
+
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputMask disabled="true" value="#{company.faxNumber}" mask="#{FAX_NUMBER_FORMAT}" style="width:95%" rendered="#{company.faxNumber ne null and company.faxNumber.length() gt 0}" />
+			<p:inputText disabled="true" value="#{lang['n.a']}" style="width:95%" rendered="#{company.faxNumber  eq null or company.faxNumber.length() eq 0}" />
+			<p:outputLabel value="#{lang['faxNumber']}" />
+		</h:panelGroup>
+
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText disabled="true" value="#{company.email}" style="width:95%" />
+			<p:outputLabel value="#{lang['email']}" />
+		</h:panelGroup>
+
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText disabled="true" value="#{company.sicCode.description}" style="width:95%" rendered="#{company.sicCode ne null}" />
+			<p:inputText disabled="true" value="#{lang['n.a']}" style="width:95%" rendered="#{company.sicCode eq null}" />
+			<p:outputLabel value="#{lang['sicCode']}" />
+		</h:panelGroup>
+
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText disabled="true" value="#{company.sicCode.chamber.description}" style="width:95%" rendered="#{company.sicCode ne null and company.sicCode.chamber ne null}" />
+			<p:inputText disabled="true" value="#{lang['n.a']}" style="width:95%" rendered="#{company.sicCode eq null or company.sicCode.chamber eq null}" />
+			<p:outputLabel value="#{lang['chamber']}" />
+		</h:panelGroup>
+
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText disabled="true" value="#{company.organisationType.description}" style="width:95%" rendered="#{company.organisationType ne null}" />
+			<p:inputText disabled="true" value="#{lang['n.a']}" style="width:95%" rendered="#{company.organisationType eq null}" />
+			<p:outputLabel value="#{lang['organisation.type']}" />
+		</h:panelGroup>
+
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText disabled="true" value="#{company.numberOfEmployees}" style="width:95%" />
+			<p:outputLabel value="#{lang['numberOfEmployees']}" />
+		</h:panelGroup>
+
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText disabled="true" value="#{company.recognitionAgreement.yesNoName}" style="width:95%" rendered="#{company.recognitionAgreement ne null}" />
+			<p:inputText disabled="true" value="#{lang['n.a']}" style="width:95%" rendered="#{company.recognitionAgreement eq null}" />
+			<p:outputLabel value="#{lang['recognition.agreement']}" />
+		</h:panelGroup>
+
+	</p:panelGrid>
+
+	<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+		<c:if test="#{company.residentialAddress ne null}">
+			<ui:include src="/pages/includes/addressInformation.xhtml">
+				<ui:param name="header" value="#{lang['residentialAddress']}" />
+				<ui:param name="address" value="#{company.residentialAddress}" />
+			</ui:include>
+		</c:if>
+		<c:if test="#{company.postalAddress ne null}">
+			<ui:include src="/pages/includes/addressInformation.xhtml">
+				<ui:param name="header" value="#{lang['postalAddress']}" />
+				<ui:param name="address" value="#{company.postalAddress}" />
+			</ui:include>
+		</c:if>
+	</p:panelGrid>
+
+
+</ui:composition>

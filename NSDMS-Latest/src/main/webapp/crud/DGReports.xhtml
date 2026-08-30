@@ -1,0 +1,150 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+
+					<h1>DG Reports</h1>
+
+					<h:form id="dgReportsInsForm">
+						<p:growl sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+
+						<p:panelGrid columns="1" style="width:100%" id="dgReportsInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="false">
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="createDate" value="#{dgReportsUI.dgverification.createDate}" style="width:95%" />
+								<p:outputLabel value="#{lang['createDate']}" for="createDate" />
+							</h:panelGroup>
+
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{dgReportsUI.dataModel}" filteredValue="#{dgReportsUI.dgverificationfilteredList}" id="DGReportsList" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+							<p:column style="width:16px">
+								<p:rowToggler />
+							</p:column>
+
+							<p:column headerText="Date Verification Generated">
+								<h:outputText value="#{rowVar.createDate}" />
+							</p:column>
+
+							<p:column headerText="DG Verification Status">
+								<h:outputText value="#{rowVar.status}" />
+							</p:column>
+
+							<p:column headerText="DG Verification with SDF">
+								<h:outputText value="Not With SDF" rendered="#{rowVar.withSdf eq null or rowVar.withSdf eq false}"/>
+								<h:outputText value="Currently With SDF" rendered="#{rowVar.withSdf eq true}"/>
+							</p:column>
+
+							<p:column headerText="DG Verification Application Appealed">
+								<h:outputText value="Not Appealed" rendered="#{rowVar.applicationAppealed eq null or rowVar.applicationAppealed eq false}"/>
+								<h:outputText value="Application Appealed" rendered="#{rowVar.applicationAppealed eq true}"/>
+							</p:column>
+
+							<p:column headerText="Date Application Appealed">
+								<h:outputText value="Not Provided Yet" rendered="#{rowVar.dateAppealed eq null}"/>
+								<h:outputText value="#{rowVar.dateAppealed}" rendered="#{rowVar.dateAppealed ne null}"/>
+							</p:column>
+
+							<p:column headerText="CLO First Name">
+								<h:outputText value="#{rowVar.cloUser.firstName}" />
+							</p:column>
+
+							<p:column headerText="CLO Last Name">
+								<h:outputText value="#{rowVar.cloUser.lastName}" />
+							</p:column>
+
+							<p:column headerText="CLO Recommendation on Submission">
+								<h:outputText value="Not Provided Yet" rendered="#{rowVar.cloRecommendation eq null}"/>
+								<h:outputText value="#{rowVar.cloRecommendation}" rendered="#{rowVar.cloRecommendation ne null}"/>
+							</p:column>
+
+							<p:column headerText="CRM First Name">
+								<h:outputText value="#{rowVar.crmUser.firstName}" />
+							</p:column>
+
+							<p:column headerText="CRM Last Name">
+								<h:outputText value="#{rowVar.crmUser.lastName}" />
+							</p:column>
+
+							<p:column headerText="CRM Decision">
+								<h:outputText value="Not Provided Yet" rendered="#{rowVar.crmDecision eq null}"/>
+								<h:outputText value="#{rowVar.crmDecision}" rendered="#{rowVar.crmDecision ne null}"/>
+							</p:column>
+
+							<p:column headerText="CRM Decision Date Stamp">
+								<h:outputText value="#{rowVar.crmApprovalRejectionDate}" />
+							</p:column>
+
+							<p:column headerText="Final Response (CRM rejection reason)">
+								<h:outputText value="#{rowVar.crmRejectionReasons}" />
+							</p:column>
+
+							<p:column headerText="Date CRM Appealed Date Approved">
+								<h:outputText value="#{rowVar.crmAppealedDateApproved}" />
+							</p:column>
+
+							<p:column headerText="Final Approval Date">
+								<h:outputText value="Not Provided Yet" rendered="#{rowVar.approvedDate eq null}"/>
+								<h:outputText value="#{rowVar.approvedDate}" rendered="#{rowVar.approvedDate ne null}"/>
+							</p:column>
+
+							<p:rowExpansion rendered="false">
+
+
+								<p:column headerText="Entity ID">
+									<h:outputText value="#{rowVar.wsp.company.levyNumber}" />
+								</p:column>
+
+								<p:column headerText="Organisation Name">
+									<h:outputText value="#{rowVar.wsp.company.companyName}" />
+								</p:column>
+
+								<p:column headerText="Trading Name">
+									<h:outputText value="#{rowVar.wsp.company.tradingName}" />
+								</p:column>
+
+								<p:column headerText="Categorization">
+									<h:outputText value="Null" />
+								</p:column>
+
+								<p:column headerText="DG Amount Applied For">
+									<h:outputText value="Null" />
+								</p:column>
+
+								<p:column headerText="Number of Employees">
+									<h:outputText value="#{rowVar.wsp.company.numberOfEmployees}" />
+								</p:column>
+
+								<p:column headerText="Organisation Type">
+									<h:outputText value="#{rowVar.wsp.company.organisationType.description}" />
+								</p:column>
+
+								<p:column headerText="Region">
+									<h:outputText value="#{rowVar.wsp.company.region.description}" />
+								</p:column>
+
+
+
+
+
+
+
+
+							</p:rowExpansion>
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+</ui:composition>

@@ -1,0 +1,112 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:c="http://java.sun.com/jsp/jstl/core"
+                template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>CompanyLearnersTermination</h1>
+					<h:form id="companylearnersterminationInsForm">
+						<p:growl autoUpdate="true" sticky="false" />
+						<p:panelGrid columns="1" style="width:100%" id="companylearnersterminationInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+       						         							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="docs" value="#{companylearnersterminationUI.companylearnerstermination.docs}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['docs']}" for="docs"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="createDate" value="#{companylearnersterminationUI.companylearnerstermination.createDate}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['createDate']}" for="createDate"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="companyLearners" value="#{companylearnersterminationUI.companylearnerstermination.companyLearners}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['companyLearners']}" for="companyLearners"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="approvalDate" value="#{companylearnersterminationUI.companylearnerstermination.approvalDate}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['approvalDate']}" for="approvalDate"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="status" value="#{companylearnersterminationUI.companylearnerstermination.status}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['status']}" for="status"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="lastWorkingDayOfLearner" value="#{companylearnersterminationUI.companylearnerstermination.lastWorkingDayOfLearner}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['lastWorkingDayOfLearner']}" for="lastWorkingDayOfLearner"/>
+     							</h:panelGroup>  
+
+
+        					    <p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+									<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:companylearnersterminationList :companylearnersterminationInsForm:companylearnersterminationInsGrid" action="#{companylearnersterminationUI.companylearnersterminationInsert}" />
+									<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="companylearnersterminationInsGrid" process="@this" action="#{companylearnersterminationUI.prepareNew}">
+										<p:resetInput target="companylearnersterminationInsGrid" />
+									</p:commandButton>									
+								</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{companylearnersterminationUI.dataModel}" filteredValue="#{companylearnersterminationUI.companyLearnersTerminationfilteredList}" id="companylearnersterminationList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+           						              					<p:column headerText="#{lang['docs']}">  
+                        			<h:outputText value="#{rowVar.docs}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['createDate']}">  
+                        			<h:outputText value="#{rowVar.createDate}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['companyLearners']}">  
+                        			<h:outputText value="#{rowVar.companyLearners}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['approvalDate']}">  
+                        			<h:outputText value="#{rowVar.approvalDate}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['status']}">  
+                        			<h:outputText value="#{rowVar.status}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['lastWorkingDayOfLearner']}">  
+                        			<h:outputText value="#{rowVar.lastWorkingDayOfLearner}" />  
+            					</p:column>      
+
+
+           						<p:column width="80">
+									<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":companylearnersterminationInsForm:companylearnersterminationInsGrid">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{companylearnersterminationUI.companylearnerstermination}" />
+									</p:commandButton>
+									<p:spacer width="5" />
+									<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:companylearnersterminationList" action="#{companylearnersterminationUI.companylearnersterminationDelete}">
+										<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+										<f:setPropertyActionListener value="#{rowVar}" target="#{companylearnersterminationUI.companylearnerstermination}" />
+									</p:commandButton>
+								</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+<!-- 
+docs = docs
+createDate = createDate
+companyLearners = companyLearners
+approvalDate = approvalDate
+status = status
+lastWorkingDayOfLearner = lastWorkingDayOfLearner
+
+-->
+</ui:composition>

@@ -1,0 +1,103 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+	<p:fieldset legend="#{lang['qualifications']}">
+		<p:dataTable var="rowVar" value="#{tpDetailUI.companyQualifications}" rowKey="#{rowVar.id}" reflow="true" styleClass="borderless">
+			<p:column headerText="Qualification Code" width="150">
+				<p:outputLabel value="#{rowVar.qualification.code}" />
+			</p:column>
+			<p:column headerText="Qualification Description">
+				<p:outputLabel value="#{rowVar.qualification.description}" />
+			</p:column>
+			<p:column headerText="Approve" width="60">
+				<center>
+					<p:selectBooleanCheckbox value="#{rowVar.accept}" disabled="#{tpDetailUI.trainingProviderApplication.approvalStatus eq ApprovalEnum.Rejected}">
+						<p:ajax update="mainForm:trainingProviderTabView:fsLegacySkillsProg mainForm:trainingProviderTabView:fslegacyUS mainForm:trainingProviderTabView:fsLegacySS" event="change" listener="#{tpDetailUI.approveQualificationSkillProg(rowVar)}" />
+					</p:selectBooleanCheckbox>
+				</center>
+			</p:column>
+		</p:dataTable>
+	</p:fieldset>
+	
+	<p:fieldset legend="#{lang['skills.programmes']}" id="fsLegacySkillsProg">
+		
+		<p:dataTable var="rowVar" value="#{tpDetailUI.tpSkillsProgramList}" rowKey="#{rowVar.id}" reflow="true" styleClass="borderless">
+			<p:column headerText="Programme ID" width="150">
+				<p:outputLabel value="#{rowVar.skillsProgram.programmeID}" />
+			</p:column>
+			<p:column headerText="Skills programme">
+				<p:outputLabel value="#{rowVar.skillsProgram.description}" />
+			</p:column>
+			<p:column headerText="Approve" width="60">
+				<center>
+					<p:selectBooleanCheckbox value="#{rowVar.accept}" disabled="#{tpDetailUI.trainingProviderApplication.approvalStatus eq ApprovalEnum.Rejected}">
+						<p:ajax></p:ajax>
+					</p:selectBooleanCheckbox>
+				</center>
+			</p:column>
+		</p:dataTable>
+		
+	</p:fieldset>
+
+	<p:fieldset legend="#{lang['unit.standards']}" id="fslegacyUS">
+		<p:dataTable var="rowVar" value="#{tpDetailUI.unitStandards}" rowKey="#{rowVar.id}" reflow="true" styleClass="borderless">
+			
+			<p:column headerText="Unit Standard Code" width="150">
+				<p:outputLabel value="#{rowVar.unitStandard.code}" />
+			</p:column>
+			<p:column headerText="Unit Standard Description">
+				<p:outputLabel value="#{rowVar.unitStandard.title}" />
+			</p:column>
+			<p:column headerText="Approve" width="60">
+				<center>
+					<p:selectBooleanCheckbox value="#{rowVar.accept}" disabled="#{tpDetailUI.trainingProviderApplication.approvalStatus eq ApprovalEnum.Rejected}">
+						<p:ajax></p:ajax>
+					</p:selectBooleanCheckbox>
+				</center>
+			</p:column>
+		</p:dataTable>
+	</p:fieldset>
+	
+	<p:fieldset legend="#{lang['skills.sets']}" rendered="true" id="fsLegacySS">
+		<p:dataTable var="rowVar" value="#{tpDetailUI.tpSkillsSetList}" rowKey="#{rowVar.id}" reflow="true" styleClass="borderless">
+			
+			<p:column headerText="Programme ID" width="150">
+				<p:outputLabel value="#{rowVar.skillsSet.programmeID}" />
+			</p:column>
+			
+			<p:column headerText="Skills Set">
+				<p:outputLabel value="#{rowVar.skillsSet.description}" />
+			</p:column>
+			<p:column headerText="Approve" width="60">
+				<center>
+					<p:selectBooleanCheckbox value="#{rowVar.accept}" disabled="#{tpDetailUI.trainingProviderApplication.approvalStatus eq ApprovalEnum.Rejected}">
+						<p:ajax></p:ajax>
+					</p:selectBooleanCheckbox>
+				</center>
+			</p:column>
+		</p:dataTable>
+		
+	</p:fieldset>
+	
+	<p:fieldset legend="Learnership(s)" rendered="true" id="fsLearnership">
+		<p:dataTable var="rowVar" value="#{tpDetailUI.tpLearnership}" rowKey="#{rowVar.id}" reflow="true" styleClass="borderless">
+			
+			<p:column headerText="Learnership">
+				<h:outputText value="#{rowVar.learnership.description}" />
+			</p:column>
+	
+			<p:column headerText="#{lang['code']}">
+				<h:outputText value="#{rowVar.learnership.code}" />
+			</p:column>
+			
+			<p:column headerText="Approve" width="60">
+				<center>
+					<p:selectBooleanCheckbox value="#{rowVar.accept}" disabled="#{tpDetailUI.trainingProviderApplication.approvalStatus eq ApprovalEnum.Rejected}">
+						<p:ajax></p:ajax>
+					</p:selectBooleanCheckbox>
+				</center>
+			</p:column>
+		</p:dataTable>
+		
+	</p:fieldset>
+	
+</ui:composition>

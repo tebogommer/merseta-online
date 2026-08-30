@@ -53,6 +53,7 @@ public class OrganisationService : IOrganisationService
                 o.CompanyName.Contains(s) ||
                 (o.TradingName != null && o.TradingName.Contains(s)) ||
                 o.SdlNumber.Contains(s) ||
+                (o.MainSdlNumber != null && o.MainSdlNumber.Contains(s)) ||
                 (o.RegistrationNumber != null && o.RegistrationNumber.Contains(s)) ||
                 (o.TaxNumber != null && o.TaxNumber.Contains(s)));
         }
@@ -106,16 +107,26 @@ public class OrganisationService : IOrganisationService
             existing.CompanyName,
             existing.TradingName,
             existing.SdlNumber,
+            existing.MainSdlNumber,
+            existing.SetaId,
             existing.RegistrationNumber,
             existing.TaxNumber,
-            existing.CategoryCode,
-            existing.StatusCode,
+            existing.LevyCategoryCode,
+            existing.OrganisationStatusCode,
             existing.ProvinceCode,
+            existing.CountryCode,
             existing.SectorCode,
             existing.ChamberCode,
             existing.SicCode,
             existing.CompanySizeCode,
             existing.OrganisationTypeCode,
+            existing.PhoneNumber,
+            existing.FaxNumber,
+            existing.WebsiteUrl,
+            existing.PhysicalAddress,
+            existing.PhysicalAddressPostalCode,
+            existing.PostalAddress,
+            existing.PostalAddressPostalCode,
             existing.BankName,
             existing.BankBranchCode,
             existing.BankAccountNumber,
@@ -128,16 +139,26 @@ public class OrganisationService : IOrganisationService
         existing.CompanyName = org.CompanyName;
         existing.TradingName = org.TradingName;
         existing.SdlNumber = org.SdlNumber;
+        existing.MainSdlNumber = org.MainSdlNumber;
+        existing.SetaId = org.SetaId;
         existing.RegistrationNumber = org.RegistrationNumber;
         existing.TaxNumber = org.TaxNumber;
-        existing.CategoryCode = org.CategoryCode;
-        existing.StatusCode = org.StatusCode;
+        existing.LevyCategoryCode = org.LevyCategoryCode;
+        existing.OrganisationStatusCode = org.OrganisationStatusCode;
         existing.ProvinceCode = org.ProvinceCode;
+        existing.CountryCode = org.CountryCode;
         existing.SectorCode = org.SectorCode;
         existing.ChamberCode = org.ChamberCode;
         existing.SicCode = org.SicCode;
         existing.CompanySizeCode = org.CompanySizeCode;
         existing.OrganisationTypeCode = org.OrganisationTypeCode;
+        existing.PhoneNumber = org.PhoneNumber;
+        existing.FaxNumber = org.FaxNumber;
+        existing.WebsiteUrl = org.WebsiteUrl;
+        existing.PhysicalAddress = org.PhysicalAddress;
+        existing.PhysicalAddressPostalCode = org.PhysicalAddressPostalCode;
+        existing.PostalAddress = org.PostalAddress;
+        existing.PostalAddressPostalCode = org.PostalAddressPostalCode;
         existing.BankName = org.BankName;
         existing.BankBranchCode = org.BankBranchCode;
         existing.BankAccountNumber = org.BankAccountNumber;
@@ -323,11 +344,19 @@ public class OrganisationService : IOrganisationService
         {
             existing.SiteName,
             existing.SiteCode,
+            existing.SiteNumber,
             existing.PhysicalAddress,
             existing.PostalAddress,
             existing.ProvinceCode,
+            existing.CountryCode,
             existing.City,
             existing.PostalCode,
+            existing.Latitude,
+            existing.Longitude,
+            existing.StatssaAreaCode,
+            existing.PhoneNumber,
+            existing.FaxNumber,
+            existing.Email,
             existing.PrimaryContactPersonId,
             existing.IsHeadOffice,
             existing.IsActive
@@ -347,11 +376,19 @@ public class OrganisationService : IOrganisationService
 
         existing.SiteName = site.SiteName;
         existing.SiteCode = site.SiteCode;
+        existing.SiteNumber = site.SiteNumber;
         existing.PhysicalAddress = site.PhysicalAddress;
         existing.PostalAddress = site.PostalAddress;
         existing.ProvinceCode = site.ProvinceCode;
+        existing.CountryCode = site.CountryCode;
         existing.City = site.City;
         existing.PostalCode = site.PostalCode;
+        existing.Latitude = site.Latitude;
+        existing.Longitude = site.Longitude;
+        existing.StatssaAreaCode = site.StatssaAreaCode;
+        existing.PhoneNumber = site.PhoneNumber;
+        existing.FaxNumber = site.FaxNumber;
+        existing.Email = site.Email;
         existing.PrimaryContactPersonId = site.PrimaryContactPersonId;
         existing.IsHeadOffice = site.IsHeadOffice;
         existing.IsActive = site.IsActive;
@@ -376,6 +413,7 @@ public class OrganisationService : IOrganisationService
             site.OrganisationId,
             site.SiteName,
             site.SiteCode,
+            site.SiteNumber,
             site.IsHeadOffice,
             site.IsActive
         };

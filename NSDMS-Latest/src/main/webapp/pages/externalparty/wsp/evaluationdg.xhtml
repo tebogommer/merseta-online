@@ -1,0 +1,59 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<!-- rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval and initiatewspdgUI.wsp.wspStatusEnum eq WspStatusEnum.Pending}" or (initiatewspdgUI.wsp.wspStatusEnum eq WspStatusEnum.Pending and sessionUI.task.processRole.rolePermission eq UserPermissionEnum.View) or (initiatewspdgUI.wsp.wspStatusEnum eq WspStatusEnum.Pending and sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve) or initiatewspdgUI.wsp.wspStatusEnum eq WspStatusEnum.Approved or initiatewspdgUI.wsp.wspStatusEnum eq WspStatusEnum.Rejected}" -->
+	<h:panelGroup id="evaluationGroup">
+		<h:form id="evaluationTableForm">
+			<p:outputPanel rendered="false">
+				<h2>Discretionary Grant Calibration</h2>
+				<p:dataTable var="rowVar" value="#{initiatewspUI.mandatoryGrantEvaluationsValidation}" id="mandatoryGrantEvaluationsValidation" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25"
+					reflow="true" lazy="true">
+					<p:column headerText="#{lang['criteria']}">
+						<h:outputText value="#{rowVar.description}" />
+					</p:column>
+					<p:column headerText="Score">
+						<h:outputText value="#{rowVar.yesScore}">
+						</h:outputText>
+					</p:column>
+					<p:column headerText="Positive Data Verification ">
+						<p:selectOneButton id="yesno" value="#{rowVar.yesNoEnum}" style="width:75%" required="true" disabled="#{!sessionUI.user.complianceReviewer or initiatewspUI.wsp.wspStatusEnum ne WspStatusEnum.Pending}">
+							<p:ajax process="@this" update="@form" listener="#{initiatewspUI.saveMandatoryGrantEvaluation(rowVar)}" />
+							<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+						</p:selectOneButton>
+					</p:column>
+					<p:column headerText="#{lang['totalScore']}">
+						<h:outputText value="#{rowVar.calcScoreDG}">
+							<f:convertNumber maxFractionDigits="2"></f:convertNumber>
+						</h:outputText>
+					</p:column>
+				</p:dataTable>
+			</p:outputPanel>
+			<c:if test="#{sessionUI.employee or initiatewspdgUI.wsp.wspStatusEnum ne WspStatusEnum.Pending}">
+				<div class="EmptyBox10" />
+				<h2>Discretionary Grant Evaluation</h2>
+				<p:dataTable var="rowVar" value="#{initiatewspdgUI.mandatoryGrantEvaluationsNotValidation}" id="mandatoryGrantEvaluationsNotValidation" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25"
+					reflow="true" lazy="true">
+					<p:column headerText="#{lang['criteria']}">
+						<h:outputText value="#{rowVar.description}" />
+					</p:column>
+					<p:column headerText="Score">
+						<h:outputText value="#{rowVar.yesScore}">
+						</h:outputText>
+					</p:column>
+					<p:column headerText="Positive Data Verification ">
+						<p:selectOneButton id="yesno" value="#{rowVar.yesNoEnum}" style="width:75%" required="true" disabled="#{!sessionUI.user.complianceReviewer or initiatewspdgUI.wsp.wspStatusEnum ne WspStatusEnum.Pending}">
+							<p:ajax process="@this" update="@form" listener="#{initiatewspdgUI.saveMandatoryGrantEvaluation(rowVar)}" />
+							<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+						</p:selectOneButton>
+					</p:column>
+					<p:column headerText="#{lang['totalScore']}">
+						<h:outputText value="#{rowVar.calcScoreDG}">
+							<f:convertNumber maxFractionDigits="2"></f:convertNumber>
+						</h:outputText>
+					</p:column>
+					<f:facet name="footer">
+						<span style="width: 100%; text-align: right">Total: #{initiatewspdgUI.total}</span>
+					</f:facet>
+				</p:dataTable>
+			</c:if>
+		</h:form>
+	</h:panelGroup>
+</ui:composition>

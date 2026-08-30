@@ -1,0 +1,307 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>merSETA Learnership</h1>
+					<h:form id="learnershipInsForm">
+					
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						
+						<p:panelGrid columns="1" style="width:100%" id="learnershipInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="description" value="#{learnershipUI.learnership.description}" style="width:95%" required="true" requiredMessage="Provide Description" />
+								<p:outputLabel value="Description" for="description" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="learnershipCode" value="#{learnershipUI.learnership.learnershipCode}" style="width:95%" required="true" requiredMessage="Provide Learnership Code" />
+								<p:outputLabel value="Learnership Code" for="learnershipCode" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="code" value="#{learnershipUI.learnership.code}" style="width:95%" required="true" requiredMessage="#{lang['provide.code']}" />
+								<p:outputLabel value="#{lang['code']}" for="code" />
+							</h:panelGroup>
+
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="#{lang['etqa']}:" styleClass="gray" />
+								</div>
+								<div>
+									<p:selectOneMenu id="etqa" value="#{learnershipUI.learnership.etqa}" converter="EtqaConvertor" style="width:75%" requiredMessage="#{lang['select.intervention.level']}" required="true">
+										<p:ajax></p:ajax>
+										<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+										<f:selectItems value="#{selectItemsUI.selectItemsEtqa}" var="il" itemLabel="#{il.description}" />
+									</p:selectOneMenu>
+								</div>
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:autoComplete id="ofoCode" value="#{learnershipUI.learnership.ofoCodes}" completeMethod="#{autoCompleteUI.completeOfoCodes}" var="rv" itemLabel="#{rv.ofoDescription}" itemValue="#{rv}" forceSelection="true" converter="OfoCodesConvertor" dropdown="true" minQueryLength="3" maxResults="10"
+									inputStyle="width: 95%" style="width: 95%" required="false" requiredMessage="#{lang['select.ofo.code']}">
+									<p:column headerText="OfoCodes" style="white-space: nowrap">#{rv.ofoCodeParent}</p:column>
+									<p:column headerText="Description" style="white-space: nowrap">#{rv.description}</p:column>
+									<p:ajax event="itemSelect" />
+								</p:autoComplete>
+								<p:outputLabel value="#{lang['ofo.code']}" for="ofoCode" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:autoComplete style="width: 100%" id="qualificationAuto" value="#{learnershipUI.learnership.qualification}" completeMethod="#{autoCompleteUI.completeQualification}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor"
+									dropdown="true" minQueryLength="3" maxResults="10">
+									<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+									<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+									<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+								</p:autoComplete>
+								<p:outputLabel value="#{lang['qualification']}" styleClass="gray" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield" rendered="#{learnershipUI.learnership.orginalQualificationAssigned ne null}">
+								<p:inputText value="(#{learnershipUI.learnership.orginalQualificationAssigned.code}) #{learnershipUI.learnership.orginalQualificationAssigned.description}" disabled="true" style="width:95%" />
+								<p:outputLabel value="Original Qualification Assigned " styleClass="gray" />
+							</h:panelGroup>
+
+							<h:panelGroup rendered="false">
+								<div>
+									<p:outputLabel value="AQP" styleClass="gray" />
+								</div>
+								<div>
+									<p:selectOneMenu id="aqp" value="#{learnershipUI.learnership.aqp}" converter="AqpConvertor" style="width:75%" requiredMessage="#{lang['select.ofo.code']}" required="true">
+										<p:ajax></p:ajax>
+										<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+										<f:selectItems value="#{selectItemsUI.selectItemsAqp}" var="il" itemLabel="#{il.description}" />
+									</p:selectOneMenu>
+								</div>
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputNumber decimalPlaces="0" id="credits" value="#{learnershipUI.learnership.credits}" style="width:94%" required="true" requiredMessage="Provide Credits" />
+								<p:outputLabel value="Credits" for="credits" />
+							</h:panelGroup>
+							
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputNumber decimalPlaces="0" id="setmisCode" value="#{learnershipUI.learnership.setmisCode}" style="width:94%" required="true" requiredMessage="Enter Setmis Code" />
+								<p:outputLabel value="Setmis Code" for="setmisCode" />
+							</h:panelGroup>
+
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:learnershipList :learnershipInsForm:learnershipInsGrid" action="#{learnershipUI.learnershipInsert}" />
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="learnershipInsGrid" process="@this" action="#{learnershipUI.prepareNew}">
+									<p:resetInput target="learnershipInsGrid" />
+								</p:commandButton>
+							</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+
+						<p:dataTable var="rowVar" value="#{learnershipUI.dataModel}" filteredValue="#{learnershipUI.learnershipfilteredList}" id="learnershipList" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['expand.row']}" width="45">
+								<p:rowToggler rendered="#{rowVar.learnershipUnitStandards.size() ne 0}"></p:rowToggler>
+							</p:column>
+
+							<p:column headerText="NSDMS ID" style="width:5%">
+								<h:outputText value="#{rowVar.id}" />
+							</p:column>
+
+							<p:column headerText="Description">
+								<h:outputText value="#{rowVar.description}" />
+							</p:column>
+
+							<p:column headerText="Learnership Code" filterBy="#{rowVar.learnershipCode}" sortBy="#{rowVar.learnershipCode}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.learnershipCode}" />
+							</p:column>
+
+							<p:column headerText="#{lang['code']}" filterBy="#{rowVar.code}" sortBy="#{rowVar.code}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.code}" />
+							</p:column>
+
+							<p:column headerText="#{lang['ofo.code']}">
+								<h:outputText value="#{rowVar.ofoCodes.description}" />
+							</p:column>
+
+							<p:column headerText="#{lang['etqa']}">
+								<h:outputText value="#{rowVar.etqa.description}" />
+							</p:column>
+
+							<p:column headerText="#{lang['qualification']}">
+								<h:outputText value="(#{rowVar.qualification.code})" />
+								<h:outputText value="#{rowVar.qualification.description}" />
+							</p:column>
+
+							<p:column headerText="Credits">
+								<h:outputText value="#{rowVar.credits}" />
+							</p:column>
+							<p:column headerText="Setmis Code">
+								<h:outputText value="#{rowVar.setmisCode}" />
+							</p:column>
+
+							<p:column width="80">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":learnershipInsForm:learnershipInsGrid">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{learnershipUI.learnership}" />
+								</p:commandButton>
+								<p:spacer width="5" rendered="#{rowVar.qualification ne null}" />
+								<p:commandButton rendered="#{rowVar.qualification ne null}" icon="fa fa-plus" action="#{learnershipUI.prepUnitStandardAdd}" title="Link Unit Standards" update="@form :learnershipInsForm:learnershipInsGrid :linkUnitStandardsForm" oncomplete="PF('dlgLinkUnitStandards').show()" >
+									<f:setPropertyActionListener  value="#{rowVar}" target="#{learnershipUI.learnershipLink}" />
+								</p:commandButton>
+								<p:spacer width="5" rendered="#{rowVar.learnershipUnitStandards eq null or rowVar.learnershipUnitStandards.size() eq 0}" />
+								<p:commandButton rendered="#{rowVar.learnershipUnitStandards eq null or rowVar.learnershipUnitStandards.size() eq 0}" icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:learnershipList" action="#{learnershipUI.learnershipDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{learnershipUI.learnership}" />
+								</p:commandButton>
+							</p:column>
+
+							<p:rowExpansion>
+								<h4>Assigned Unit Standards</h4>
+
+								<p:dataTable var="rowVarUS" value="#{learnershipUI.learnershipUnitStandardsAssignedList}" rowKey="#{rowVarUS.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+									rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+
+									<p:column headerText="Code">
+										<h:outputText value="#{rowVarUS.unitStandards.code}" />
+									</p:column>
+
+									<p:column headerText="Title">
+										<h:outputText value="#{rowVarUS.unitStandards.title}" />
+									</p:column>
+
+									<p:column headerText="ID">
+										<h:outputText value="#{rowVarUS.unitStandards.code}" />
+									</p:column>
+
+									<p:column width="80" rendered="false">
+										<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update="@form" action="#{learnershipUI.deleteLink}">
+											<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+											<f:setPropertyActionListener value="#{rowVarUS}" target="#{learnershipUI.selectedLearnershipUnitStandards}" />
+										</p:commandButton>
+									</p:column>
+
+								</p:dataTable>
+
+
+							</p:rowExpansion>
+
+						</p:dataTable>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+			<h:form>
+				<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+				<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+			</h:form>
+		</p:confirmDialog>
+
+		<p:dialog header="Link Unit Standards" dynamic="true" position="top" responsive="true" widgetVar="dlgLinkUnitStandards" resizable="false" hideEffect="clip" showEffect="clip" id="dialogLinkUnitStandards" appendTo="@(body)" modal="true" width="70%" height="80vh">
+			<h:form id="linkUnitStandardsForm">
+				<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<p:fieldset legend="Learnership Information" style="margin-bottom:20px">
+						<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText value="#{learnershipUI.learnershipLink.description}" style="width:95%" disabled="true" />
+								<p:outputLabel value="Description" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText value="#{learnershipUI.learnershipLink.learnershipCode}" style="width:95%" disabled="true" />
+								<p:outputLabel value="Learnership Code" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText value="#{learnershipUI.learnershipLink.code}" style="width:95%" disabled="true" />
+								<p:outputLabel value="#{lang['code']}" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText value="#{learnershipUI.learnershipLink.etqa.description}" style="width:95%" disabled="true" />
+								<p:outputLabel value="#{lang['etqa']}" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText value="#{learnershipUI.learnershipLink.ofoCodes.description}" style="width:95%" disabled="true" />
+								<p:outputLabel value="#{lang['ofo.code']}" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText value="(#{learnershipUI.learnershipLink.qualification.code}) #{learnershipUI.learnershipLink.qualification.description}" style="width:95%" disabled="true" />
+								<p:outputLabel value="#{lang['qualification']}" />
+							</h:panelGroup>
+						</p:panelGrid>
+					</p:fieldset>
+				</p:panelGrid>
+
+				<h:panelGroup id="unitList">
+					<p:panelGrid columns="3" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="#{lang['unit.standard']}" for="unitStandardAuto"></p:outputLabel>
+							</div>
+							<div>
+								<p:autoComplete style="width:100%" inputStyle="width:50%" id="unitStandardAuto" value="#{learnershipUI.selectedLearnershipUnitStandards.unitStandards}" completeMethod="#{learnershipUI.completeUnitStandardsLinkedToQualification}" var="rv" itemLabel="#{rv.title}" itemValue="#{rv}" forceSelection="true"
+									converter="UnitStandardsConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+									<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+									<p:column headerText="Title" style="white-space: nowrap">#{rv.title}</p:column>
+								</p:autoComplete>
+							</div>
+						</h:panelGroup>
+						<h:panelGroup >
+							<div>
+								<p:outputLabel value="Unit Standard Type" for="unitstdtype" styleClass="gray" />
+							</div>
+							<div>
+								<p:selectOneMenu id="unitstdtype" value="#{learnershipUI.selectedLearnershipUnitStandards.unitStandardTypeEnum}" style="width:95%" required="true" requiredMessage="Select unit standard type">
+									<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+									<f:selectItems value="#{enumUI.unitStandardTypeEnumDD}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+						<p:commandButton title="#{lang['add.unit.standard']}" update="@form" icon="ui-icon-plus" iconPos="right" styleClass="flat" action="#{learnershipUI.addUnitStandard}" process="unitList" />
+					</p:panelGrid>
+					<div>
+						<br />
+						<p:dataTable var="t" value="#{learnershipUI.learnershipUnitStandardsAssignedList}" id="usList" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+							rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+							<p:column headerText="Code">
+								<h:outputText value="#{t.unitStandards.code}" />
+							</p:column>
+							<p:column headerText="Title">
+								<h:outputText value="#{t.unitStandards.title}" />
+							</p:column>
+							<p:column headerText="Unit STD Type" rendered="true">  
+                       			<h:outputText value="#{t.unitStandardTypeEnum.friendlyName}" />  
+           					</p:column>  
+							<p:column width="40">
+								<p:commandButton title="Delete" update="usList" icon="fa fa-trash" iconPos="right" styleClass="flat" action="#{learnershipUI.deleteLinkPopUp}" process="@this">
+									<f:setPropertyActionListener value="#{t}" target="#{learnershipUI.selectedLearnershipUnitStandards}" />
+								</p:commandButton>
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update="linkUnitStandardsForm" process="@this">
+									<f:setPropertyActionListener value="#{t}" target="#{learnershipUI.selectedLearnershipUnitStandards}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+					</div>
+				</h:panelGroup>
+				<p:panelGrid columns="1" style="width:100%" id="learnershipInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<p:commandButton value="Close View" update=":linkUnitStandardsForm :mainForm :learnershipInsForm" onclick="PF('dlgLinkUnitStandards').hide()" action="#{learnershipUI.closeView}" />
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+	</ui:define>
+</ui:composition>

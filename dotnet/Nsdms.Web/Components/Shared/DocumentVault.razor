@@ -3,11 +3,11 @@
 @inject IStorageService StorageService
 @inject ISnackbar Snackbar
 
-<div class="document-vault pa-4 rounded-lg elevation-1" style="background-color: #ffffff; border: 1px solid #e2e8f0;">
+<MudPaper Elevation="1" Class="document-vault pa-4 rounded-lg">
     <div class="d-flex align-center justify-space-between mb-3">
         <div class="d-flex align-center gap-2">
-            <MudIcon Icon="@Icons.Material.Filled.FolderZip" Style="color: #1e40af;" Size="Size.Small" />
-            <h4 style="font-weight: 700; color: #0f172a; margin: 0; font-size: 1rem;">Document &amp; Evidence Vault</h4>
+            <MudIcon Icon="@Icons.Material.Filled.FolderZip" Color="Color.Primary" Size="Size.Small" />
+            <MudText Typo="Typo.subtitle1" Class="font-weight-bold">Document &amp; Evidence Vault</MudText>
         </div>
         <MudButton Variant="Variant.Outlined" 
                    Color="Color.Primary" 
@@ -24,10 +24,10 @@
     }
     else if (!_documents.Any())
     {
-        <div class="pa-4 text-center rounded" style="background-color: #f8fafc; border: 1px dashed #cbd5e1;">
-            <MudIcon Icon="@Icons.Material.Filled.UploadFile" Size="Size.Large" Style="color: #94a3b8;" />
-            <p style="color: #64748b; font-size: 0.875rem; margin: 4px 0 0 0;">No compliance evidence documents uploaded yet.</p>
-        </div>
+        <MudPaper Elevation="0" Class="pa-4 text-center rounded border border-dashed">
+            <MudIcon Icon="@Icons.Material.Filled.UploadFile" Size="Size.Large" Color="Color.Secondary" />
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-1">No compliance evidence documents uploaded yet.</MudText>
+        </MudPaper>
     }
     else
     {
@@ -43,37 +43,36 @@
             </HeaderContent>
             <RowTemplate>
                 <MudTd DataLabel="Document Type">
-                    <span style="font-weight: 600; color: #1e293b;">@context.DocumentTypeName</span>
-                    <br />
-                    <span style="font-size: 0.75rem; color: #64748b; font-family: monospace;">@context.DocumentTypeCode</span>
+                    <MudText Typo="Typo.body2" Class="font-weight-bold">@context.DocumentTypeName</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Style="font-family: monospace;">@context.DocumentTypeCode</MudText>
                 </MudTd>
                 <MudTd DataLabel="File Name">
                     <div class="d-flex align-center gap-1">
-                        <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Small" Style="color: #dc2626;" />
-                        <span style="font-size: 0.875rem; color: #0f172a;">@context.FileName</span>
+                        <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Small" Color="Color.Error" />
+                        <MudText Typo="Typo.body2">@context.FileName</MudText>
                     </div>
                 </MudTd>
                 <MudTd DataLabel="Size">
-                    <span style="font-size: 0.8125rem; color: #475569;">@FormatFileSize(context.FileSizeBytes)</span>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@FormatFileSize(context.FileSizeBytes)</MudText>
                 </MudTd>
                 <MudTd DataLabel="Uploaded By">
-                    <span style="font-size: 0.8125rem; color: #475569;">@(context.UploadedByUserName ?? "System User")</span>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@(context.UploadedByUserName ?? "System User")</MudText>
                 </MudTd>
                 <MudTd DataLabel="Upload Date">
-                    <span style="font-size: 0.8125rem; color: #475569;">@context.UploadDate.ToLocalTime().ToString("dd MMM yyyy")</span>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@context.UploadDate.ToLocalTime().ToString("dd MMM yyyy")</MudText>
                 </MudTd>
                 <MudTd DataLabel="Status">
                     @if (context.IsVerified)
                     {
-                        <span class="px-2 py-0.5 rounded" style="background-color: #d1fae5; color: #065f46; font-size: 0.75rem; font-weight: 700;">
+                        <MudChip T="string" Color="Color.Success" Variant="Variant.Filled" Size="Size.Small">
                             Verified
-                        </span>
+                        </MudChip>
                     }
                     else
                     {
-                        <span class="px-2 py-0.5 rounded" style="background-color: #fef3c7; color: #92400e; font-size: 0.75rem; font-weight: 700;">
+                        <MudChip T="string" Color="Color.Warning" Variant="Variant.Filled" Size="Size.Small">
                             Pending Check
-                        </span>
+                        </MudChip>
                     }
                 </MudTd>
                 <MudTd DataLabel="Actions" Style="text-align: right;">
@@ -100,13 +99,13 @@
     <!-- Upload Modal -->
     @if (_showUploadModal)
     {
-        <div class="upload-modal pa-4 mt-3 rounded-lg elevation-2" style="background-color: #f8fafc; border: 1px solid #cbd5e1;">
-            <p style="font-weight: 700; color: #0f172a; margin: 0 0 12px 0; font-size: 0.95rem;">
+        <MudPaper Elevation="2" Class="upload-modal pa-4 mt-3 rounded-lg">
+            <MudText Typo="Typo.subtitle2" Class="font-weight-bold mb-3">
                 Upload Compliance Evidence
-            </p>
+            </MudText>
             <MudGrid Spacing="2">
                 <MudItem xs="12" md="6">
-                    <MudSelect T="string" @bind-Value="_selectedDocType" Label="Document Requirement Type" Variant="Variant.Outlined" Dense="true">
+                    <MudSelect T="string" @bind-Value="_selectedDocType" Label="Document Requirement Type" Variant="Variant.Outlined" Margin="Margin.Dense">
                         <MudSelectItem Value="@("RSA_ID")">Certified RSA ID Document</MudSelectItem>
                         <MudSelectItem Value="@("BANK_CONFIRM")">Proof of Banking Details</MudSelectItem>
                         <MudSelectItem Value="@("ACCREDIT_CERT")">Accreditation Certificate</MudSelectItem>
@@ -116,7 +115,7 @@
                     </MudSelect>
                 </MudItem>
                 <MudItem xs="12" md="6">
-                    <MudTextField @bind-Value="_inputFileName" Label="File Name" Variant="Variant.Outlined" Dense="true" Placeholder="e.g. proof_of_banking_2026.pdf" />
+                    <MudTextField @bind-Value="_inputFileName" Label="File Name" Variant="Variant.Outlined" Margin="Margin.Dense" Placeholder="e.g. proof_of_banking_2026.pdf" />
                 </MudItem>
             </MudGrid>
             <div class="d-flex justify-end gap-2 mt-3">
@@ -125,9 +124,9 @@
                     Upload to Vault
                 </MudButton>
             </div>
-        </div>
+        </MudPaper>
     }
-</div>
+</MudPaper>
 
 @code {
     [Parameter] public string TargetEntityName { get; set; } = string.Empty;

@@ -1,0 +1,254 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				
+				<h:form id="mainForm">
+					<p:tooltip position="left"></p:tooltip>
+					<div class="card card-w-title">
+						<H1>Learner Mentor List</H1>
+						
+						<ui:include src="/pages/includes/download_lazy.xhtml">
+							<ui:param name="file_name" value="LearnerList" />
+							<ui:param name="target" value="learnerList" />
+						</ui:include>
+						 <p:tooltip position="left"/>
+						<p:commandButton id="toggler" type="button" style="float:right" icon="ui-icon-menu" />
+						<p:columnToggler datasource="learnerList" trigger="toggler" />
+						
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+						
+						<p:dataTable var="rowVar" value="#{sitesSmeCompanyLearnersUI.companyLearnersList}" id="learnerList" 
+							paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+							paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" 
+							rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+							
+							<p:column headerText="#{lang['first.name']}" filterBy="#{rowVar.firstName}" sortBy="#{rowVar.firstName}">
+								<h:outputText value="#{rowVar.firstName}" />
+							</p:column>
+							
+							<p:column headerText="#{lang['last.name']}" filterBy="#{rowVar.lastName}" sortBy="#{rowVar.lastName}">
+								<h:outputText value="#{rowVar.lastName}" />
+							</p:column>
+							
+							<p:column headerText="Identity Number" filterBy="#{rowVar.rsaIDNumber}" sortBy="#{rowVar.rsaIDNumber}">
+								<h:outputText value="#{rowVar.rsaIDNumber}" />
+								<h:outputText rendered="#{rowVar.rsaIDNumber.length() lt 1}" value="N/A" />
+							</p:column>
+							
+							<p:column headerText="Passport Number" filterBy="#{rowVar.passportNumber}" sortBy="#{rowVar.passportNumber}">
+								<h:outputText rendered="#{rowVar.passportNumber.length() lt 1}" value="N/A" />
+								<h:outputText value="#{rowVar.passportNumber}" />
+							</p:column>
+							
+							<p:column headerText="Date of Birth" rendered="false">
+								<h:outputText value="#{rowVar.dateOfBirth}">
+									<f:convertDateTime pattern="dd/MM/YYYY" />
+								</h:outputText>
+							</p:column>
+							
+							<p:column headerText="Gender" rendered="false">
+								<h:outputText value="#{rowVar.gender}" />
+							</p:column>
+							
+							<p:column headerText="Equity" rendered="false">
+								<h:outputText value="#{rowVar.equity}" />
+							</p:column>
+							
+							<p:column headerText="Nationality" rendered="false">
+								<h:outputText value="#{rowVar.nationality}" />
+							</p:column>
+							
+							<p:column headerText="Language" rendered="false">
+								<h:outputText value="#{rowVar.language}" />
+							</p:column>
+							
+							<p:column headerText="Disability" rendered="false">
+								<h:outputText value="#{rowVar.disability}" />
+							</p:column>
+							
+							<p:column headerText="Learner Email" >
+								<h:outputText value="#{rowVar.learnerEmail}" />
+							</p:column>
+							
+							<p:column headerText="Cell Number" rendered="false">
+								<h:outputText value="#{rowVar.cellNumber}" />
+							</p:column>
+							
+							<p:column headerText="Tel Number" rendered="false">
+								<h:outputText value="#{rowVar.telNumber}" />
+							</p:column>
+							
+							<p:column headerText="Employment Status" >
+								<h:outputText value="#{rowVar.employmentStatus}" />
+							</p:column>
+							
+							<p:column headerText="Highest Education" rendered="false">
+								<h:outputText value="#{rowVar.highestEducation}" />
+							</p:column>
+							
+							<p:column headerText="Highest Qualification" rendered="false">
+								<h:outputText value="#{rowVar.highestQualification}" />
+							</p:column>
+							
+							<p:column headerText="Status">
+								<h:outputText value="#{rowVar.learnerStatus}" />
+							</p:column>
+							
+							<p:column headerText="Approval Status" rendered="false">
+								<h:outputText value="#{rowVar.approvalStatus}" />
+							</p:column>
+							
+							<p:column headerText="Intervention Type">
+								<h:outputText value="#{rowVar.interventionType}" />
+							</p:column>
+							
+							<p:column headerText="Course / Qualification ">
+								<h:outputText value="(#{rowVar.learnershipCode}) " rendered="#{rowVar.learnershipCode ne null}"/>
+								<h:outputText value="#{rowVar.learnershipDescription}" rendered="#{rowVar.learnershipDescription ne null}"/>
+								<h:outputText value="(#{rowVar.qualificationCode}) " rendered="#{rowVar.qualificationCode ne null}"/>
+								<h:outputText value="#{rowVar.qualificationTitle}" rendered="#{rowVar.qualificationTitle ne null}"/>
+								<h:outputText value="(#{rowVar.skillsProgrammeCode}) " rendered="#{rowVar.skillsProgrammeCode ne null}"/>
+								<h:outputText value="#{rowVar.skillsProgrammeDescription}" rendered="#{rowVar.skillsProgrammeDescription ne null}" />
+								<h:outputText value="#{rowVar.skillsSetCode} " rendered="#{rowVar.skillsSetCode ne null}" />
+								<h:outputText value="#{rowVar.skillsSetDescription}" rendered="#{rowVar.skillsSetDescription ne null}" />
+								<h:outputText value="#{rowVar.unitStandardCode} " rendered="#{rowVar.unitStandardCode ne null}" />
+								<h:outputText value="#{rowVar.unitStandardDescription}" rendered="#{rowVar.unitStandardDescription ne null}" />
+								<h:outputText value="#{rowVar.nonCreditBearingDescription}" rendered="#{rowVar.nonCreditBearingDescription ne null}" />
+							</p:column>
+							
+							<p:column headerText="OFO Codes" >
+								<h:outputText value="(#{rowVar.ofoCode})" rendered="#{rowVar.ofoCode.length() gt 1}"/>
+								<h:outputText value="#{rowVar.ofoCodeDescription}" />
+							</p:column>
+							
+							<p:column headerText="Residential Address" rendered="false">
+								<h:outputText value="#{rowVar.residentialAddress}" />
+							</p:column>
+							
+							<p:column headerText="Postal Address" rendered="false">
+								<h:outputText value="#{rowVar.postalAddress}" />
+							</p:column>
+							
+							<p:column headerText="Urban/Rural" rendered="false">
+								<h:outputText value="#{rowVar.urbanRural}" />
+							</p:column>
+							
+							<p:column headerText="STATS SA Area Code" rendered="false">
+								<h:outputText value="#{rowVar.startSaAreaCode}" />
+							</p:column>
+							
+							<p:column headerText="Learner Municipality" rendered="false">
+								<h:outputText value="#{rowVar.learnerMunicipality}" />
+							</p:column>
+							
+							<p:column headerText="Registration Status Date" rendered="false">
+								<h:outputText value="#{rowVar.dateLearnerRegistered}">
+									<f:convertDateTime pattern="dd/MM/YYYY" />
+								</h:outputText>
+							</p:column>
+							
+							<p:column headerText="Registration Status Date">
+								<h:outputText value="#{rowVar.registrationDate}">
+									<f:convertDateTime pattern="dd/MM/YYYY" />
+								</h:outputText>
+							</p:column>
+							
+							<p:column headerText="Agreement Start Date" rendered="false">
+								<h:outputText value="#{rowVar.commencementDate}">
+									<f:convertDateTime pattern="dd/MM/YYYY" />
+								</h:outputText>
+							</p:column>
+							
+							<p:column headerText="Agreement End Date" rendered="false">
+								<h:outputText value="#{rowVar.completionDate}">
+									<f:convertDateTime pattern="dd/MM/YYYY" />
+								</h:outputText>
+							</p:column>
+							
+							<p:column headerText="Registration Number">
+								<h:outputText value="#{rowVar.registrationNumber}" />
+							</p:column>
+							
+							<p:column headerText="Employer" filterBy="#{rowVar.employerInfor}" sortBy="#{rowVar.employerInfor}">
+								<h:outputText value="#{rowVar.employerInfor}">
+								</h:outputText>
+							</p:column>
+							
+							<p:column headerText="Site" >
+								<h:outputText value="#{rowVar.siteName}" />
+							</p:column>
+							
+							<p:column headerText="Employer Chamber" rendered="false">
+								<h:outputText value="#{rowVar.chamber}" />
+							</p:column>
+							
+							<p:column headerText="Employer Region" rendered="false">
+								<h:outputText value="#{rowVar.employerRegion}" />
+							</p:column>
+							
+							<p:column headerText="Employer Municipality" rendered="false">
+								<h:outputText value="#{rowVar.employerMunicipality}" />
+							</p:column>
+							
+							<p:column headerText="Provider" filterBy="#{rowVar.providerInfor}" sortBy="#{rowVar.providerInfor}" rendered="false">
+								<h:outputText value="#{rowVar.providerInfor}">
+								</h:outputText>
+							</p:column>
+							
+							<p:column headerText="Provider Region" rendered="false">
+								<h:outputText value="#{rowVar.providerRegion}" />
+							</p:column>
+							
+							<p:column headerText="Provider Municipality" rendered="false">
+								<h:outputText value="#{rowVar.providerMunicipality}" />
+							</p:column>
+							
+							<p:column headerText="Funded By" rendered="false">
+								<h:outputText value="#{rowVar.fundedBy}" />
+							</p:column>
+							
+							<p:column headerText="LegacyLearner" rendered="false">
+								<h:outputText value="#{rowVar.legacyLearner}" />
+							</p:column>
+							
+							<p:column headerText="QMR Entered Date" rendered="false">
+								<h:outputText value="#{rowVar.qmrEnteredDate}">
+									<f:convertDateTime pattern="dd/MM/YYYY" />
+								</h:outputText>
+							</p:column>
+							
+							<p:column headerText="QMR Completed Date" rendered="false">
+								<h:outputText value="#{rowVar.qmrCompletedDate}">
+									<f:convertDateTime pattern="dd/MM/YYYY" />
+								</h:outputText>
+							</p:column>
+							
+							<p:column headerText="Create User Infor" rendered="false">
+								<h:outputText value="#{rowVar.createUser}" />
+							</p:column>
+							
+							<p:column headerText="Mentor First Name" filterBy="#{rowVar.mentorFirstName}">
+								<h:outputText value="#{rowVar.mentorFirstName}" />
+							</p:column>
+							
+							<p:column headerText="Mentor Last Name" filterBy="#{rowVar.mentorLastName}">
+								<h:outputText value="#{rowVar.mentorLastName}" />
+							</p:column>
+							
+							<p:column headerText="Mentor ID Number" filterBy="#{rowVar.mentorRsaIDNumber}">
+								<h:outputText value="#{rowVar.mentorRsaIDNumber}" />
+							</p:column>
+							
+							<p:column headerText="Mentor Passport" filterBy="#{rowVar.mentorPassportNumber}">
+								<h:outputText value="#{rowVar.mentorPassportNumber}" />
+							</p:column>
+							
+						</p:dataTable>
+					</div>
+				</h:form>
+			</div>
+		</div>
+	</ui:define>
+</ui:composition>

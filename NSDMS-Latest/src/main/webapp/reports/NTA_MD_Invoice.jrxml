@@ -1,0 +1,604 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.6.0.final using JasperReports Library version 6.6.0  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="NTA_MD_Invoice" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="dc06adf0-ff21-40be-9129-0d617f94718a">
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="One Empty Record"/>
+	<parameter name="mdec" class="java.lang.Long"/>
+	<parameter name="status" class="java.lang.String"/>
+	<parameter name="logo" class="java.awt.Image" isForPrompting="false"/>
+	<queryString language="SQL">
+		<![CDATA[select c.company_name , c.levy_number, a.fin_date, year(d.fin_year_start_date) , year(d.fin_year_end_date) , current_date,
+a.monthly_payroll_declaration as amount_declared,
+a.levy_due as payable_levy_amount,
+(a.levy_due*.5) as employer_training_grant,
+(a.levy_due*(35/100)) as key_priority,
+(a.levy_due*(15/100)) as admin_fee,
+resi.address_line_1, resi.address_line_2, resi.address_line_4, resi.postcode, resiTown.description as resi_town, resiRegion.description as resi_region,
+postal.address_line_1, postal.address_line_2, postal.address_line_4, postal.postcode, postalTown.description as postal_town, postalRegion.description as postal_region
+from monthly_declaration a
+inner join annual_declaration b
+on a.annual_declaration_id = b.id
+inner join company c
+on b.company_id = c.id
+inner join financial_year d
+on b.financial_year_id = d.id
+left join address resi
+on c.residential_address_id = resi.id
+left join towns resiTown
+on resi.town_id = resiTown.id
+left join region resiRegion
+on resi.region_id = resiRegion.id
+left join address postal
+on c.postal_address_id = postal.id
+left join towns postalTown
+on postal.town_id = postalTown.id
+left join region postalRegion
+on postal.region_id = postalRegion.id
+where a.id = $P{mdec}]]>
+	</queryString>
+	<field name="company_name" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="company_name"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="company"/>
+	</field>
+	<field name="levy_number" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="levy_number"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="company"/>
+	</field>
+	<field name="fin_date" class="java.sql.Timestamp">
+		<property name="com.jaspersoft.studio.field.label" value="fin_date"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="monthly_declaration"/>
+	</field>
+	<field name="year(d.fin_year_start_date)" class="java.lang.Long">
+		<property name="com.jaspersoft.studio.field.label" value="year(d.fin_year_start_date)"/>
+	</field>
+	<field name="year(d.fin_year_end_date)" class="java.lang.Long">
+		<property name="com.jaspersoft.studio.field.label" value="year(d.fin_year_end_date)"/>
+	</field>
+	<field name="current_date" class="java.sql.Date">
+		<property name="com.jaspersoft.studio.field.label" value="current_date"/>
+	</field>
+	<field name="amount_declared" class="java.math.BigDecimal">
+		<property name="com.jaspersoft.studio.field.label" value="amount_declared"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="monthly_declaration"/>
+	</field>
+	<field name="payable_levy_amount" class="java.math.BigDecimal">
+		<property name="com.jaspersoft.studio.field.label" value="payable_levy_amount"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="monthly_declaration"/>
+	</field>
+	<field name="employer_training_grant" class="java.math.BigDecimal">
+		<property name="com.jaspersoft.studio.field.label" value="employer_training_grant"/>
+	</field>
+	<field name="key_priority" class="java.math.BigDecimal">
+		<property name="com.jaspersoft.studio.field.label" value="key_priority"/>
+	</field>
+	<field name="admin_fee" class="java.math.BigDecimal">
+		<property name="com.jaspersoft.studio.field.label" value="admin_fee"/>
+	</field>
+	<field name="address_line_1" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="address_line_1"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="address_line_2" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="address_line_2"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="address_line_4" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="address_line_4"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="postcode" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="postcode"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="resi_town" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="resi_town"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="towns"/>
+	</field>
+	<field name="resi_region" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="resi_region"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="region"/>
+	</field>
+	<field name="COLUMN_18" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="address_line_1"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="COLUMN_19" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="address_line_2"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="COLUMN_20" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="address_line_4"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="COLUMN_21" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="postcode"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="postal_town" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="postal_town"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="towns"/>
+	</field>
+	<field name="postal_region" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="postal_region"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="region"/>
+	</field>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="88" splitType="Stretch">
+			<textField>
+				<reportElement x="197" y="7" width="168" height="30" uuid="bfab3a45-e4d7-46aa-a2df-c1a53c2c21d8"/>
+				<textElement textAlignment="Center">
+					<font fontName="Arial" size="14" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Levy Submission"]]></textFieldExpression>
+			</textField>
+			<image scaleImage="RetainShape">
+				<reportElement mode="Opaque" x="9" y="0" width="80" height="80" forecolor="#FFFFFF" uuid="acc5563c-30e7-425d-b4df-929925f0d582"/>
+				<imageExpression><![CDATA[$P{logo}]]></imageExpression>
+			</image>
+		</band>
+	</title>
+	<columnHeader>
+		<band height="150" splitType="Stretch">
+			<textField>
+				<reportElement x="2" y="10" width="100" height="22" uuid="c0ea6dd9-cc49-4d69-83e6-cf8e12741e73"/>
+				<textElement>
+					<font fontName="Arial" size="10" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Employer:"]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="97" y="10" width="173" height="19" uuid="6393efe7-ec15-4a14-9e72-1396e50fc7a7"/>
+				<textElement>
+					<font fontName="Arial" size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{company_name}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="2" y="26" width="119" height="20" uuid="ed029cd8-5af8-4c5d-bda9-80ae3b24a850"/>
+				<textElement>
+					<font fontName="Arial" size="10" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Employer Code:"]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="97" y="26" width="100" height="18" uuid="ad969e82-bc27-4fea-a7ec-7d95d6b163b5"/>
+				<textElement>
+					<font fontName="Arial"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{levy_number}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="2" y="51" width="119" height="20" uuid="034ed65f-089a-4ee0-aea7-b305786db85d"/>
+				<textElement>
+					<font fontName="Arial" size="10" isBold="true" isUnderline="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Status:"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="3" y="65" width="119" height="20" uuid="7dc1a1d9-8e6d-4c20-bbb4-5c8d2e64aa0e"/>
+				<textElement>
+					<font fontName="Arial" size="10" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Payment Reference:"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="2" y="79" width="119" height="20" uuid="3232993f-b21d-492e-8ec5-1e484a4c5237"/>
+				<textElement>
+					<font fontName="Arial" size="10" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Financial Entry Date:"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="2" y="94" width="119" height="20" uuid="cd334f68-f1f3-4259-a41a-549f8375322a"/>
+				<textElement>
+					<font fontName="Arial" size="10" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Financial Period:"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="2" y="109" width="119" height="20" uuid="9c63accd-ef8d-42e6-8de7-f239acdbedab"/>
+				<textElement>
+					<font fontName="Arial" size="10" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Submission Date:"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="2" y="124" width="119" height="16" uuid="15a2af02-434f-40c5-a426-b7f5e0eea76f"/>
+				<textElement>
+					<font fontName="Arial" size="10" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Employee Count:"]]></textFieldExpression>
+			</textField>
+			<textField pattern="yyyy-MM-dd" isBlankWhenNull="true">
+				<reportElement x="118" y="79" width="100" height="19" uuid="2e91ad0f-2719-4fb6-a8cd-f54bfafcee64"/>
+				<textElement>
+					<font fontName="Arial"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{fin_date}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="118" y="94" width="333" height="20" uuid="be7a1a71-702c-4cc3-8cbf-d69699f36ad2"/>
+				<textElement>
+					<font fontName="Arial"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{year(d.fin_year_start_date)}+"/"+$F{year(d.fin_year_end_date)}]]></textFieldExpression>
+			</textField>
+			<textField pattern="yyyy-MM-dd" isBlankWhenNull="true">
+				<reportElement x="118" y="110" width="100" height="16" uuid="c0556583-12f6-4e68-a68f-8c8da4856f7d"/>
+				<textElement>
+					<font fontName="Arial"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{current_date}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="398" y="11" width="100" height="20" uuid="3e185583-3d84-4916-825e-da49e35ec07b"/>
+				<textElement textAlignment="Left">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Physical Address"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="274" y="40" width="119" height="20" uuid="1341f343-a0f8-47da-a73a-fa0c2903ac07"/>
+				<textElement textAlignment="Right">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Region:"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="274" y="55" width="119" height="20" uuid="a32dce49-2701-40d5-be59-892a889e5bd9"/>
+				<textElement textAlignment="Right">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Town:"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="274" y="70" width="119" height="20" uuid="bc961e5a-922f-4ddc-8699-394050aec739"/>
+				<textElement textAlignment="Right">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Suburb:"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="274" y="85" width="119" height="20" uuid="4ef3952a-8b6b-4b7d-94ba-605ba244b86c"/>
+				<textElement textAlignment="Right">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Address:"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="275" y="26" width="119" height="20" uuid="7fe28731-2b46-4337-8a26-ba37580b5359"/>
+				<textElement textAlignment="Right">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Country:"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="492" y="11" width="100" height="20" uuid="1ca6eaaf-2618-41e6-b5f8-c32a228f8ccd"/>
+				<textElement textAlignment="Left">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Postal Address"]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="400" y="26" width="84" height="14" uuid="65cbdf05-fd46-49bb-b0ee-827ffe4146e2"/>
+				<textElement textAlignment="Left">
+					<font fontName="Arial" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Namibia:"]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="399" y="40" width="86" height="14" uuid="f1a1c2d8-e1dd-41c8-9c1c-d27c16f30e3b"/>
+				<textElement>
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{resi_region}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="118" y="52" width="100" height="16" uuid="f3238ce7-aa7d-4203-8991-5e5dfbb667bc"/>
+				<textElement>
+					<font fontName="Arial"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{status}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="118" y="66" width="100" height="18" uuid="69c00630-eac3-47f6-95e5-75014774c874"/>
+				<textElement>
+					<font fontName="Arial"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{levy_number}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="399" y="55" width="100" height="14" uuid="b7eaf60a-9d66-4c2f-94a8-67ac88806685"/>
+				<textElement>
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{resi_town}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="398" y="70" width="100" height="12" uuid="c42b412f-b927-4164-a83b-8eb31c835d4b"/>
+				<textElement>
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{COLUMN_18}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="399" y="85" width="80" height="30" uuid="12b2d748-06af-4bc0-9483-6b14bf1da380"/>
+				<textElement>
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{address_line_1}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="492" y="26" width="84" height="14" uuid="b660915f-1976-47a5-ac81-24bf77907be4"/>
+				<textElement textAlignment="Left">
+					<font fontName="Arial" size="8" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Namibia:"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="491" y="40" width="86" height="14" uuid="15a7cbfe-420d-4656-b97c-49cd8afbeb5c"/>
+				<textElement>
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{resi_region}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="491" y="55" width="100" height="14" uuid="1b166b42-1204-44a0-8ebf-35affebbe41e"/>
+				<textElement>
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{resi_town}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="490" y="70" width="100" height="12" uuid="b6d18629-eb2d-4153-bc42-b5178e557923"/>
+				<textElement>
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{COLUMN_18}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="490" y="85" width="100" height="18" uuid="034d0161-0cf1-4a9d-9356-099767c0c80a"/>
+				<textElement>
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{COLUMN_19}]]></textFieldExpression>
+			</textField>
+		</band>
+	</columnHeader>
+	<detail>
+		<band height="362" splitType="Stretch">
+			<line>
+				<reportElement x="1" y="10" width="549" height="1" uuid="07a39cf4-a874-4c3f-a402-8d8b36931da0"/>
+			</line>
+			<textField>
+				<reportElement x="9" y="26" width="128" height="22" uuid="607d8860-480b-4092-8f2e-3de20a51754c"/>
+				<textElement>
+					<font fontName="Arial" size="11" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Amount Declared:"]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement x="1" y="43" width="549" height="1" uuid="e82749ab-9b82-40f5-8d0c-5393bd25e5b1"/>
+			</line>
+			<textField pattern="#,##0.00#;(#,##0.00#-)">
+				<reportElement x="148" y="28" width="126" height="20" uuid="d793abb7-0b46-421b-9c26-bfe7b0bee971">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="5680c484-b320-4291-9ad2-3001bfaf9955"/>
+				</reportElement>
+				<textElement textAlignment="Right">
+					<font fontName="Arial" size="11"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{amount_declared}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="7" y="55" width="128" height="22" uuid="999ad374-d392-4b31-bc23-dbd281a0b489"/>
+				<textElement>
+					<font fontName="Arial" size="11" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Payable Levy Amount:"]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00#;(#,##0.00#-)">
+				<reportElement x="398" y="55" width="144" height="22" uuid="4216da28-c1c6-4f4e-bcbd-28cce564b47d">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="74ad10b7-f585-447a-a1bd-82269c6769a3"/>
+				</reportElement>
+				<textElement textAlignment="Right">
+					<font fontName="Arial" size="11"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{payable_levy_amount}]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement x="281" y="72" width="269" height="1" uuid="65c82290-dd25-4e19-aeec-a557b5f7c5df"/>
+			</line>
+			<textField>
+				<reportElement x="281" y="80" width="138" height="20" uuid="ec837ffe-0af4-4f6b-8c1e-c7e978628d95"/>
+				<textElement>
+					<font fontName="Arial" size="11" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Employer Training Grant:"]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00#;(#,##0.00#-)">
+				<reportElement x="333" y="80" width="142" height="20" uuid="b72cd0b9-d0ae-450d-851c-fdc609089f30">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="efc99e9b-160c-48e0-8e19-d9874a654ded"/>
+				</reportElement>
+				<textElement textAlignment="Right">
+					<font fontName="Arial" size="11"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{employer_training_grant}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="281" y="97" width="138" height="20" uuid="d14372d9-f81c-4814-b09c-a50e95c11bce"/>
+				<textElement>
+					<font fontName="Arial" size="11" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Key Priority:"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="281" y="113" width="138" height="20" uuid="dec61850-8d14-43d4-a9b7-635898e82e05"/>
+				<textElement>
+					<font fontName="Arial" size="11" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Admin Fee:"]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00#;(#,##0.00#-)">
+				<reportElement x="375" y="97" width="100" height="18" uuid="3957f4d4-4154-4600-a051-8ff998c969a6">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="5df0b000-838c-4f73-8a8b-d29052ccf74a"/>
+				</reportElement>
+				<textElement textAlignment="Right">
+					<font fontName="Arial" size="11"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{key_priority}]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00#;(#,##0.00#-)">
+				<reportElement x="375" y="113" width="100" height="14" uuid="7741b6d5-8929-4c6a-9d36-7a4ea2835709">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="0527945f-ea14-4111-90fe-ad54d1aaee97"/>
+				</reportElement>
+				<textElement textAlignment="Right">
+					<font fontName="Arial" size="11"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{admin_fee}]]></textFieldExpression>
+			</textField>
+			<line>
+				<reportElement x="281" y="131" width="269" height="1" uuid="8c81870f-9be2-418e-aed4-33b33937b2b2"/>
+			</line>
+			<line>
+				<reportElement x="1" y="16" width="549" height="1" uuid="6d19db31-5fc6-4089-bddf-e5c5577259c7"/>
+			</line>
+			<line>
+				<reportElement x="1" y="161" width="549" height="1" uuid="7aba945c-ec87-4a43-9561-598af6243e60"/>
+			</line>
+			<line>
+				<reportElement x="1" y="44" width="1" height="117" uuid="6cafec58-8c99-4a0c-a6ee-edea19f5bbab"/>
+			</line>
+			<line>
+				<reportElement x="281" y="183" width="269" height="1" uuid="8de41464-17ff-424a-82cb-86807bd755e0"/>
+			</line>
+			<textField>
+				<reportElement x="282" y="170" width="138" height="20" uuid="bea9c8e6-d58a-49ed-b671-148bea8aceb2"/>
+				<textElement>
+					<font fontName="Arial" size="11" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Total Payable:"]]></textFieldExpression>
+			</textField>
+			<textField pattern="#,##0.00#;(#,##0.00#-)">
+				<reportElement x="398" y="171" width="144" height="22" uuid="2b268a15-0cf3-4bce-8b10-8f3fc7d417ad">
+					<property name="com.jaspersoft.studio.spreadsheet.connectionID" value="74ad10b7-f585-447a-a1bd-82269c6769a3"/>
+				</reportElement>
+				<textElement textAlignment="Right">
+					<font fontName="Arial" size="11"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{payable_levy_amount}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="2" y="201" width="119" height="20" uuid="f21cc8e4-b847-4fa2-9be6-9b6b06e189aa"/>
+				<textElement>
+					<font fontName="Arial" size="10" isBold="true" isUnderline="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Bank Details:"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="3" y="215" width="119" height="20" uuid="1e8db520-db35-4a33-a772-3e6a0da51b32"/>
+				<textElement>
+					<font fontName="Arial" size="10" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Account Name:"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="2" y="229" width="119" height="20" uuid="ff87ae14-2d1f-49eb-bcf4-bcdd9c10ec12"/>
+				<textElement>
+					<font fontName="Arial" size="10" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Bank Name:"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="2" y="244" width="119" height="20" uuid="e957f98d-b725-4734-a049-a3bec6b07ff4"/>
+				<textElement>
+					<font fontName="Arial" size="10" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Branch Name:"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="2" y="259" width="119" height="20" uuid="1e321039-7abe-4190-9fe5-16ca2f1ed0cb"/>
+				<textElement>
+					<font fontName="Arial" size="10" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Branch Code:"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="2" y="274" width="119" height="16" uuid="976d12cc-f7d5-4e7d-8137-42fcc8dd1cc5"/>
+				<textElement>
+					<font fontName="Arial" size="10" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Account Number:"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="126" y="215" width="174" height="20" uuid="6dbff90a-09c2-45ef-bff3-d6d823f27fa6"/>
+				<textElement>
+					<font fontName="Arial" size="10" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA["NTA NATIONAL TRAINING FUND"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="125" y="229" width="119" height="20" uuid="4d5b7ed3-1202-4613-bad6-7269db0ab4e0"/>
+				<textElement>
+					<font fontName="Arial" size="10" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Bank Windhoek"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="125" y="244" width="119" height="20" uuid="6b4ccbf9-4544-45ae-81db-b9a11152b5f8"/>
+				<textElement>
+					<font fontName="Arial" size="10" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Kudu Branch"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="125" y="259" width="119" height="20" uuid="8edf873a-2864-4205-abee-a07f3290dd7b"/>
+				<textElement>
+					<font fontName="Arial" size="10" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA["482172"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="125" y="274" width="119" height="16" uuid="add8580c-a623-44ef-901d-ac0033d13bd6"/>
+				<textElement>
+					<font fontName="Arial" size="10" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA["8003909368"]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<pageFooter>
+		<band height="65" splitType="Stretch">
+			<textField pattern="yyyy-MM-dd">
+				<reportElement x="71" y="29" width="100" height="16" uuid="be829ed9-5247-4c68-a0a3-6b0f4739758e"/>
+				<textElement>
+					<font fontName="Arial"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="4" y="29" width="100" height="18" uuid="8077d3de-a723-4c25-8915-02d267b3add2"/>
+				<textElement>
+					<font fontName="Arial"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Created On:"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="401" y="30" width="147" height="15" uuid="67205987-5a16-4bae-8b73-011672e3b2da"/>
+				<textElement textAlignment="Right">
+					<font fontName="Arial"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Page " + $V{PAGE_NUMBER} + " of"]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report">
+				<reportElement x="550" y="30" width="100" height="14" uuid="1ea64a32-80ac-402b-be5c-6d0a1121fc51"/>
+				<textElement>
+					<font fontName="Arial"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+</jasperReport>

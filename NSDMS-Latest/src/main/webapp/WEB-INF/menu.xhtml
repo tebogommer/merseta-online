@@ -1,0 +1,1056 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:f="http://java.sun.com/jsf/core" xmlns:h="http://java.sun.com/jsf/html" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:pu="http://primefaces.org/ultima">
+	<h:form id="menuform">
+		<c:if test="#{sessionUI.user.profileImageSmall ne null}">
+			<style>
+.layout-wrapper .layout-menu .profile .profile-image {
+	width: 60px;
+	height: 60px;
+	border-radius: 30px;
+	-webkit-border-radius: 30px;
+	-moz-border-radius: 30px;
+	background: url("#{sessionUI.user.profileImageSmall}") top left no-repeat;
+	box-shadow: 0 0 4px rgba(0, 0, 0, .8);
+	-webkit-box-shadow: 0 0 4px rgba(0, 0, 0, .8);
+	-moz-box-shadow: 0 0 4px rgba(0, 0, 0, .8);
+	background-size: 60px 60px;
+}
+</style>
+		</c:if>
+		<div class="layout-menu #{guestPreferences.menuClass}">
+			<div class="nano">
+				<div class="nano-content menu-scroll-content">
+					<ui:fragment rendered="#{guestPreferences.profileMode == 'inline' and guestPreferences.menuLayout != 'menu-layout-static menu-layout-horizontal' and sessionUI.user ne null}">
+						<div class="profile">
+							<c:if test="#{sessionUI.user.profileImage eq null}">
+								<div class="profile-image"></div>
+							</c:if>
+							<c:if test="#{sessionUI.user.profileImage ne null}">
+								<p:graphicImage value="#{imageStreamer.image}" styleClass="profile-image" rendered="#{sessionUI.user.profileImage ne null}">
+									<f:param name="imageId" value="#{sessionUI.user.profileImage.id}" />
+								</p:graphicImage>
+								<div class="EmptyBox5" />
+							</c:if>
+							<a id="profile-options" href="#">
+								<span class="profile-name">#{sessionUI.user.firstName} #{sessionUI.user.lastName}</span>
+								<i class="material-icons">&#xE313;</i>
+							</a>
+						</div>
+						<ul id="profile-menu" class="ultima-menu">
+							<li role="menuitem">
+								<a href="#{request.contextPath}/pages/profile.jsf" class="ripplelink">
+									<i class="material-icons">&#xE7FD;</i>
+									<span>#{lang['profile']}</span>
+								</a>
+							</li>
+							<li role="menuitem">
+								<h:commandLink action="#{logonUI.logoff}" styleClass="ripplelink" immediate="true">
+									<i class="material-icons">power_settings_new</i>
+									<span>#{lang['logout']}</span>
+								</h:commandLink>
+							</li>
+						</ul>
+					</ui:fragment>
+					<c:if test="#{sessionUI.user ne null}">
+						<pu:menu widgetVar="me">
+							<c:if test="#{!sessionUI.user.admin and !sessionUI.user.finance}">
+								<c:if test="#{sessionUI.externalParty or sessionUI.employee}">
+									<c:if test="#{not sessionUI.externalParty and sessionUI.employee}">
+										<p:menuitem id="org" value="#{lang['organogram']}" icon="business" url="#{request.contextPath}/pages/orgchart.jsf" rendered="false" />
+										<p:menuitem id="sdf" value="#{lang['dashboard']}" icon="&#xE871;" url="#{request.contextPath}#{sessionUI.dashboard}" rendered="#{sessionUI.dashboard ne null}" />
+										<p:menuitem id="dashRep" value="#{lang['dashboard.reporting']}" icon="assessment" url="#{request.contextPath}#{sessionUI.dashboardReporting}" rendered="#{sessionUI.dashboardReporting ne null and false}" />
+										<p:submenu id="companyManagement" label="#{lang['company.management']}" icon="fa fa-building">
+											<p:menuitem id="scomp" value="#{lang['companies']}" icon="fa fa-building" url="#{request.contextPath}/pages/searchcompany.jsf" rendered="#{sessionUI.role.companies}" />
+											<p:menuitem id="ec_sdfs" value="SDFs" icon="people_outline" url="#{request.contextPath}/pages/sdf/users.jsf" rendered="#{sessionUI.role.sdfs}" />
+											<p:menuitem id="wppa" value="#{lang['wpd.designation']}" icon="school" url="#{request.contextPath}/pages/assignWorkplaceApprovalQualifications.jsf" rendered="#{sessionUI.user.qualWorkplaceAssignment}" />
+											<p:menuitem id="wpaInfo" value="#{lang['workplace.approval']}" icon="fa fa-address-book" url="#{request.contextPath}/pages/workplaceApprovalInfo.jsf" rendered="false" />
+											<p:menuitem id="workplaceapprovalreportemp" value="#{lang['workplace.approval']}" icon="fa fa-address-book" url="#{request.contextPath}/pages/workplaceapprovalreport.jsf" />
+										</p:submenu>
+										<p:submenu id="grantManagement" label="#{lang['grant.management']}" icon="business">
+											<p:menuitem id="orga" value="#{lang['grant.application']}" icon="business" url="#{request.contextPath}/pages/externalparty/company.jsf" />
+											<p:menuitem id="dgv" value="#{lang['dg.verification']}" icon="fa fa-money" url="#{request.contextPath}/pages/dgverification.jsf" rendered="#{sessionUI.role.dgVerification}" />
+											<p:menuitem id="dgall" value="#{lang['dg.allocation']}" icon="fa fa-check" url="#{request.contextPath}/pages/dgallocation/dgallocation.jsf" rendered="#{sessionUI.role.dgAllocation}" />
+											<p:menuitem id="commitment_register" value="Commitment Register" icon="fa fa-money" url="#{request.contextPath}/pages/activecontracts.jsf" />
+											<p:menuitem id="orgwxs" value="#{lang['extension.request']}" icon="fa fa-history" url="#{request.contextPath}/pages/extensionrequest.jsf" rendered="#{sessionUI.user.viewExtensionRequest}" />
+											<p:menuitem id="grantHist3" value="Mandatory Grant Historical Data" icon="fa fa-money" url="#{request.contextPath}/pages/wsphistoricdata.jsf" rendered="false" />
+										</p:submenu>
+										<p:submenu id="qaManagement" label="#{lang['qa.management']}" icon="fa fa-clipboard">
+											<p:menuitem id="searchTP" value="#{lang['providers']}" icon="fa fa-leanpub" url="#{request.contextPath}/pages/searchtrainingprovider.jsf" />
+											<p:menuitem id="lm" value="#{lang['learner.management']}" icon="accessibility" url="#{request.contextPath}/pages/tp/learnerdetail.jsf" />
+											<p:menuitem id="searchAM" value="#{lang['assessor.mod']}" icon="assignment_ind" url="#{request.contextPath}/pages/searchAssessorMod.jsf" />
+											<p:menuitem id="CoursewareDistroEmp" value="Courseware Distribution" icon="fa fa-book" url="#{request.contextPath}/pages/tp/coursewareDistibutionReport.jsf" rendered="#{sessionUI.role.coursewareDistro or sessionUI.user.coursewareDistroSub}" />
+											<p:menuitem id="qaQualificationDev" value="#{lang['qualification.dev']}" icon="fa fa-graduation-cap" url="#{request.contextPath}/pages/searchQualificationDevelopment.jsf" />
+											<p:menuitem id="aqp" value="Administration of AQP" icon="fa fa-pencil" url="#{request.contextPath}/pages/tp/administrationofaqp.jsf" rendered="#{sessionUI.role.providerMonitoring and not sessionUI.hideETQA}" />
+											<p:menuitem id="qmSkillsetR" value="Skills Set" icon="fa fa-sticky-note-o" url="#{request.contextPath}/pages/reference/skillsset.jsf" />
+											<p:menuitem id="qmSkillprogrammeR" value="Skill Programme" icon="fa fa-sticky-note-o" url="#{request.contextPath}/pages/reference/skillsprogram.jsf" />
+										</p:submenu>
+										<c:if test="#{sessionUI.user.reviewCommitteeMember}">
+											<p:submenu id="revCom" label="ETQA Committee" icon="assignment_ind">
+												<p:menuitem id="meeting" value="Date Scheduling" rendered="#{sessionUI.user.reviewCommitteeMember}" icon="fa fa-calendar" url="#{request.contextPath}/pages/etqaReviewCommittee/reviewCommitteeDateScheduling.jsf" />
+												<p:menuitem id="amretqa" value="Assessor/Moderator" rendered="#{sessionUI.user.reviewCommitteeMember}" icon="assignment_ind" url="#{request.contextPath}/pages/am/approvedassessormodarators.jsf" />
+												<p:menuitem id="amreExOfScopetqa" value="Assessor/Mod Extension Of Scope" rendered="#{sessionUI.user.reviewCommitteeMember}" icon="assignment_ind" url="#{request.contextPath}/pages/am/assessormodaratorsextofscope.jsf" />
+												<p:menuitem id="tp" value="Providers" icon="fa fa-leanpub" url="#{request.contextPath}/pages/tp/approvedtrainingprovider.jsf" rendered="#{sessionUI.user.reviewCommitteeMember}" />
+												<p:menuitem id="tpExtOfScope" value="SDP Scope Extension" rendered="#{sessionUI.user.reviewCommitteeMember}" icon="fa fa-leanpub" url="#{request.contextPath}/pages/tp/sdpextensionofscopeapproval.jsf" />
+												<p:menuitem id="spetqa" value="Skills Prog/Set App" rendered="#{sessionUI.user.reviewCommitteeMember}" icon="fa fa-sticky-note-o" url="#{request.contextPath}/pages/am/approvedskillsregistration.jsf" />
+											</p:submenu>
+										</c:if>
+										<p:menuitem rendered="false" id="searchLearner" value="#{lang['learners.history']}" icon="accessibility" url="#{request.contextPath}/pages/searchlearners.jsf" />
+										<p:submenu id="monitoring" label="#{lang['monitoring']}" icon="fa fa-clipboard">
+											<p:menuitem id="mgv" value="#{lang['mg.verification']}" icon="fa fa-check-square" url="#{request.contextPath}/pages/mgverification.jsf" rendered="true" />
+											<p:submenu id="ProviderMonitoringSubMenu" label="Provider Monitoring" icon="fa fa-leanpub" rendered="#{sessionUI.role.providerMonitoring}">
+												<p:menuitem id="ProviderMonitoring" value="Initiate Audit" icon="fa fa-pencil" url="#{request.contextPath}/pages/tp/providerAudits.jsf" />
+												<p:menuitem id="ProviderMonitoringMonitoring" value="Initiate Monitoring" icon="fa fa-pencil" url="#{request.contextPath}/pages/tp/providermnitoringMonitoring.jsf" rendered="true" />
+												<p:menuitem id="ProviderMonitoringReports" value="Monitoring Reports" icon="pie_chart_outlined" url="#{request.contextPath}/pages/tp/providermnitoringreports.jsf" />
+												<p:menuitem id="schedule" value="Monitoring Dates" icon="perm_contact_calendar" url="#{request.contextPath}/pages/tp/monitoringAuditSchedule.jsf" />
+											</p:submenu>
+										</p:submenu>
+										<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:f="http://java.sun.com/jsf/core" xmlns:h="http://java.sun.com/jsf/html" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:pu="http://primefaces.org/ultima">
+											<h:form id="menuform">
+												<c:if test="#{sessionUI.user.profileImageSmall ne null}">
+													<style>
+.layout-wrapper .layout-menu .profile .profile-image {
+	width: 60px;
+	height: 60px;
+	border-radius: 30px;
+	-webkit-border-radius: 30px;
+	-moz-border-radius: 30px;
+	background: url("#{sessionUI.user.profileImageSmall}") top left no-repeat;
+	box-shadow: 0 0 4px rgba(0, 0, 0, .8);
+	-webkit-box-shadow: 0 0 4px rgba(0, 0, 0, .8);
+	-moz-box-shadow: 0 0 4px rgba(0, 0, 0, .8);
+	background-size: 60px 60px;
+}
+</style>
+												</c:if>
+												<div class="layout-menu #{guestPreferences.menuClass}">
+													<div class="nano">
+														<div class="nano-content menu-scroll-content">
+															<ui:fragment rendered="#{guestPreferences.profileMode == 'inline' and guestPreferences.menuLayout != 'menu-layout-static menu-layout-horizontal' and sessionUI.user ne null}">
+																<div class="profile">
+																	<c:if test="#{sessionUI.user.profileImage eq null}">
+																		<div class="profile-image"></div>
+																	</c:if>
+																	<c:if test="#{sessionUI.user.profileImage ne null}">
+																		<p:graphicImage value="#{imageStreamer.image}" styleClass="profile-image" rendered="#{sessionUI.user.profileImage ne null}">
+																			<f:param name="imageId" value="#{sessionUI.user.profileImage.id}" />
+																		</p:graphicImage>
+																		<div class="EmptyBox5" />
+																	</c:if>
+																	<a id="profile-options" href="#">
+																		<span class="profile-name">#{sessionUI.user.firstName} #{sessionUI.user.lastName}</span>
+																		<i class="material-icons">&#xE313;</i>
+																	</a>
+																</div>
+																<ul id="profile-menu" class="ultima-menu">
+																	<li role="menuitem">
+																		<a href="#{request.contextPath}/pages/profile.jsf" class="ripplelink">
+																			<i class="material-icons">&#xE7FD;</i>
+																			<span>#{lang['profile']}</span>
+																		</a>
+																	</li>
+																	<li role="menuitem">
+																		<h:commandLink action="#{logonUI.logoff}" styleClass="ripplelink" immediate="true">
+																			<i class="material-icons">power_settings_new</i>
+																			<span>#{lang['logout']}</span>
+																		</h:commandLink>
+																	</li>
+																</ul>
+															</ui:fragment>
+															<c:if test="#{sessionUI.user ne null}">
+																<pu:menu widgetVar="me">
+																	<c:if test="#{!sessionUI.user.admin and !sessionUI.user.finance}">
+																		<c:if test="#{sessionUI.externalParty or sessionUI.employee}">
+																			<c:if test="#{not sessionUI.externalParty and sessionUI.employee}">
+																				<p:menuitem id="org" value="#{lang['organogram']}" icon="business" url="#{request.contextPath}/pages/orgchart.jsf" rendered="false" />
+																				<p:menuitem id="sdf" value="#{lang['dashboard']}" icon="&#xE871;" url="#{request.contextPath}#{sessionUI.dashboard}" rendered="#{sessionUI.dashboard ne null}" />
+																				<p:menuitem id="dashRepTwo" value="#{lang['dashboard.reporting']}" icon="assessment" url="#{request.contextPath}#{sessionUI.dashboardReporting}" rendered="#{sessionUI.dashboardReporting ne null and false}" />
+																				<p:submenu id="cloCrmReportingSM" label="Region Reporting" icon="fa fa-globe" rendered="#{sessionUI.role.cloCrmReporting}">
+																					<p:menuitem id="companyByRegionMI" value="Companies" icon="assessment" url="#{request.contextPath}/pages/reports/cloCrmReporting/companyRegionReport.jsf" />
+																					<p:menuitem id="dgVerificationMI" value="DG Verification" icon="assessment" url="#{request.contextPath}/pages/reports/cloCrmReporting/dgVerificationRegionReport.jsf" />
+																					<p:menuitem id="moaByRegionMI" value="MOA Allocation" icon="assessment" url="#{request.contextPath}/pages/reports/cloCrmReporting/moaAllocationRegionReport.jsf" />
+																					<p:menuitem id="pipByRegionMI" value="MOA PIP" icon="assessment" url="#{request.contextPath}/pages/reports/cloCrmReporting/moaPipRegionReport.jsf" />
+																					<p:menuitem id="workplaceApprovalByRegionMI" value="Workplace Approval List" icon="assessment" url="#{request.contextPath}/pages/reports/cloCrmReporting/workplaceApprovalRegionReport.jsf" />
+																				</p:submenu>
+																				<p:submenu id="companyManagement" label="#{lang['company.management']}" icon="fa fa-building">
+																					<p:menuitem id="scomp" value="#{lang['companies']}" icon="fa fa-building" url="#{request.contextPath}/pages/searchcompany.jsf" rendered="#{sessionUI.role.companies}" />
+																					<p:menuitem id="ec_sdfs" value="SDFs" icon="people_outline" url="#{request.contextPath}/pages/sdf/users.jsf" rendered="#{sessionUI.role.sdfs}" />
+																					<p:menuitem icon="people_outline" id="companysdfreportRepotTempEmployees" value="Company SDFs" url="#{request.contextPath}/pages/companysdfreport.jsf" />
+																					<p:menuitem id="mentormanagement" value="#{lang['mentor.management']}" icon="settings" url="#{request.contextPath}/pages/mentormanagement.jsf" />
+																					<p:menuitem id="wppa" value="#{lang['wpd.designation']}" icon="school" url="#{request.contextPath}/pages/assignWorkplaceApprovalQualifications.jsf" rendered="#{sessionUI.user.qualWorkplaceAssignment}" />
+																					<p:menuitem id="wpaInfo" value="#{lang['workplace.approval']}" icon="fa fa-address-book" url="#{request.contextPath}/pages/workplaceApprovalInfo.jsf" rendered="false" />
+																					<p:menuitem id="workplaceapprovalreport" value="#{lang['workplace.approval']}" icon="fa fa-address-book" url="#{request.contextPath}/pages/workplaceapprovalreport.jsf" />
+																					<p:menuitem id="allocationReviewEmp" value="Company Allocation" icon="assignment_turned_in" url="#{request.contextPath}/pages/dgallocation/dgallocationInformation.jsf" />
+																					<p:menuitem id="searchcompanyregionEmp" value="Company Region Search" icon="fa fa-building" url="#{request.contextPath}/pages/searchcompanyregion.jsf" />
+																					<p:menuitem id="ec_sdf_user_responible" value="Company Contact Responsibility" icon="people_outline" url="#{request.contextPath}/pages/conpanysdfusersresponsible.jsf" rendered="#{sessionUI.role.sdfs}" />
+																					<p:menuitem id="companyregion" value="#{lang['company.region']}" icon="fa fa-building" url="#{request.contextPath}/pages/companyregion.jsf" rendered="#{sessionUI.role.mgVerification}" />
+																				</p:submenu>
+																				<p:submenu id="grantManagement" label="#{lang['grant.management']}" icon="business">
+																					<p:menuitem id="orga" value="#{lang['grant.application']}" icon="business" url="#{request.contextPath}/pages/externalparty/company.jsf" />
+																					<p:submenu label="#{lang['mg.verification']}" icon="fa fa-leanpub" rendered="#{sessionUI.role.mgVerification}">
+																						<p:menuitem id="mgveri" value="#{lang['mg.verification']}" icon="fa fa-money" url="#{request.contextPath}/pages/mgverificationapplication.jsf" rendered="#{sessionUI.role.mgVerification}" />
+																						<p:menuitem id="mgverifi" value="#{lang['mg.report']}" icon="fa fa-money" url="#{request.contextPath}/pages/companymgsubmission.jsf" rendered="#{sessionUI.role.mgVerification}" />
+																					</p:submenu>
+																					<p:menuitem id="dgv" value="#{lang['dg.verification']}" icon="fa fa-money" url="#{request.contextPath}/pages/dgverification.jsf" rendered="#{sessionUI.role.dgVerification}" />
+																					<p:menuitem id="dgall" value="#{lang['dg.allocation']}" icon="fa fa-check" url="#{request.contextPath}/pages/dgallocation/dgallocation.jsf" rendered="#{sessionUI.role.dgAllocation}" />
+																					<p:menuitem id="dgallProj" value="Project Allocation" icon="fa fa-check" url="#{request.contextPath}/pages/dgallocation/dgallocationprojects.jsf" rendered="#{sessionUI.role.dgAllocation}" />
+																					<p:menuitem id="dgallostatuses" value="DG Allocation Status" icon="business" url="#{request.contextPath}/pages/dgallocationstatuses.jsf" />
+																					<p:menuitem id="dgallostatuseRegisterMI" value="DG Allocation Register" icon="view_list" url="#{request.contextPath}/pages/dgallocation/dgAllocationRegister.jsf" />
+																					<p:menuitem id="commitment_register2" value="MOA Status" icon="fa fa-money" url="#{request.contextPath}/pages/moastatus.jsf" />
+																					<p:menuitem id="dgAllocationTaskStatus" value="PIP TaskTracker" icon="fa fa-money" url="#{request.contextPath}/pages/dgAllocationTaskStatus.jsf" />
+																					<p:menuitem id="pipReport" value="PIP Report" icon="fa fa-money" url="#{request.contextPath}/pages/pipReport.jsf" />
+																					<p:menuitem id="commitment_register" value="Commitment Register" icon="fa fa-money" url="#{request.contextPath}/pages/activecontracts.jsf" />
+																					<p:menuitem id="orgwxs" value="#{lang['extension.request']}" icon="fa fa-history" url="#{request.contextPath}/pages/extensionrequest.jsf" rendered="#{sessionUI.user.viewExtensionRequest}" />
+																					<p:menuitem id="grantHist2" value="Mandatory Grant Historical Data" icon="fa fa-money" url="#{request.contextPath}/pages/wsphistoricdata.jsf" rendered="false" />
+																					<p:menuitem id="manco" value="MANCO" icon="business" url="#{request.contextPath}/pages/manco/mancolist.jsf" rendered="#{sessionUI.user.mancoGrantApproval}" />
+																					<p:menuitem id="dgBulk" value="DG Bulk Approval" icon="business" url="#{request.contextPath}/pages/dgallocation/dgContractBulkApproval.jsf" rendered="#{sessionUI.user.dgContractingBulkApproval}" />
+																					<p:menuitem id="grantAppManagment" value="Grant Management" icon="fa fa-book" url="#{request.contextPath}/pages/grantApplicationManagement.jsf" rendered="#{sessionUI.user.wspManagment}" />
+																				</p:submenu>
+																				<p:submenu id="projectPortalEmp" label="Project Portal" icon="fa fa-tasks">
+																					<p:menuitem id="holdingRoom" value="Holding Room" icon="fa fa-folder-o" url="#{request.contextPath}/pages/projectholdingroom.jsf" />
+																					<p:menuitem id="FundingWindows" value="Funding Windows" icon="fa fa-window-restore" url="#{request.contextPath}/pages/dgyear.jsf" />
+																					<p:menuitem id="applications" value="Active Projects" icon="business" url="#{request.contextPath}/pages/projectownerapplications.jsf" />
+																					<p:menuitem id="strategicPriorities" value="Key Focus Areas" icon="fa fa-exclamation" url="#{request.contextPath}/pages/strategicpriorities.jsf" />
+																				</p:submenu>
+																				<p:submenu id="moaRegistersSM" label="MOA Management" icon="fa fa-money" rendered="#{sessionUI.activeUser.moaRegisterAccess}">
+																					<p:menuitem id="moaListMoaRegistersMI" value="MOA Register" icon="fa fa-money" url="#{request.contextPath}/pages/reports/registers/moaAllocationReport.jsf" />
+																					<p:menuitem id="paymentsMoaRegistersMI" value="Payments Register" icon="fa fa-money" url="#{request.contextPath}/pages/reports/registers/moaPaymentsReport.jsf" />
+																					<p:menuitem id="commitmentRegisterMoaRegistersMI" value="Commitment Register" rendered="false" icon="fa fa-money" url="#{request.contextPath}/pages/activecontracts.jsf" />
+																				</p:submenu>
+																				<p:submenu id="taskReportingSM" label="Task Reporting" icon="fa fa-book" rendered="#{sessionUI.activeUser.taskReporting}">
+																					<p:menuitem id="taskReportingMI" value="Employee Task Reporting" icon="fa fa-book" url="#{request.contextPath}/pages/reports/employeeTaskReporting.jsf" />
+																					<p:menuitem id="employeeLoginReportingMI" value="Employee Login Report" icon="fa fa-book" url="#{request.contextPath}/pages/reports/employeeLoginReporting.jsf" />
+																					<p:menuitem id="processTaskReportingMI" value="Process Task Reporting" icon="fa fa-book" url="#{request.contextPath}/pages/reports/processTaskReporting.jsf" />
+																				</p:submenu>
+																				<p:menuitem id="sspReportingMI" value="SSP Reporting" icon="fa fa-book" url="#{request.contextPath}/pages/sspReporting/sspReporting.jsf" rendered="#{sessionUI.activeUser.sspReporting}" />
+																				<p:menuitem id="grantsSubmissionRepMI" value="Grants Submission Reporting" icon="fa fa-th-list" url="#{request.contextPath}/pages/reports/companyGrantsReporting.jsf" rendered="#{sessionUI.activeUser.grantTrendAnylsis}" />
+																				<p:menuitem id="companyRegisterRepMI" value="Company Status Reporting" icon="fa fa-building-o" url="#{request.contextPath}/pages/reports/companyRegisterReporting.jsf" rendered="#{sessionUI.activeUser.companyRegisterReport}" />
+																				<p:menuitem id="dgVeririficationRepMI" value="DG Verification Reporting" icon="fa fa-building-o" url="#{request.contextPath}/pages/reports/dgVerificationReport.jsf" rendered="#{sessionUI.activeUser.dgVerificationReport}" />
+																				<p:menuitem id="mgVeririficationRepMI" value="MG Verification Reporting" icon="fa fa-building-o" url="#{request.contextPath}/pages/reports/dgVerificationReport.jsf" rendered="#{sessionUI.activeUser.mgVerificationReport}" />
+																				<p:menuitem id="providerSusDeAcredMI" value="Provider Suspension &amp; De-Acred" icon="fa fa-building-o" url="#{request.contextPath}/pages/providerManagement/providerSuspensionAcred.jsf" rendered="#{sessionUI.activeUser.userPermissions.providerSuspension}" />
+																				<p:menuitem id="legacySiteAllocationMI" value="Legacy Acred Site Allocation" icon="fa fa-building-o" url="#{request.contextPath}/pages/providerManagement/legacySiteApplicationSiteAllocation.jsf" rendered="#{sessionUI.activeUser.userPermissions.legacySiteAllocation}" />
+																				<p:submenu id="workplaceMonitroingSM" label="Workplace Monitoring" icon="assignment" rendered="#{sessionUI.role.workplaceMonitoringAccess}">
+																					<p:menuitem id="companiesWpm" value="#{lang['companies']}" icon="fa fa-building" url="#{request.contextPath}/pages/workplaceMonitoring/searchcompany.jsf" />
+																					<p:menuitem id="allWorkplaceMonitoring" value="All Monitoring Visits" icon="fa fa-building" url="#{request.contextPath}/pages/workplaceMonitoring/allWorkplaceMonitoring.jsf" />
+																					<p:menuitem id="allWorkplaceNCMonitoring" value="Non-Compliance Visits" icon="fa fa-building" url="#{request.contextPath}/pages/workplaceMonitoring/allWorkplaceMonitoringNonCompliance.jsf" />
+																				</p:submenu>
+																				<p:menuitem id="sarsDescLevyCal" value="Levy Calculation Information" icon="assignment" url="#{request.contextPath}/pages/sarslevydetailcalculation.jsf" rendered="#{sessionUI.user.sarsLevyDetailCalc}" />
+																				<p:menuitem id="sarsLevyReturnsCal" value="Mandatory Levy Returns" icon="assignment" url="#{request.contextPath}/pages/sarslevyschemeyearreturns.jsf" rendered="#{sessionUI.user.sarsLevyMandInvoicesUpdate}" />
+																				<p:submenu id="dgmgEmpTransactionsSM" label="Transactions" icon="view_list" rendered="#{sessionUI.user.gpTransactionsManagement}">
+																					<p:menuitem id="mgTransEmp" value="MG Transactions" icon="assignment" url="#{request.contextPath}/pages/mgdgtransactions/mandatoryGrantsTransactionGp.jsf" />
+																					<p:menuitem id="dgTransEmp" value="DG Transactions" icon="assessment" url="#{request.contextPath}/pages/mgdgtransactions/discretionaryGrantsTransactionGp.jsf" />
+																				</p:submenu>
+																				<p:submenu id="qaManagement" label="#{lang['qa.management']}" icon="fa fa-clipboard">
+																					<p:menuitem id="searchTP" value="#{lang['providers']}" icon="fa fa-leanpub" url="#{request.contextPath}/pages/searchtrainingprovider.jsf" />
+																					<p:menuitem id="lm" value="#{lang['learner.management']}" icon="accessibility" url="#{request.contextPath}/pages/tp/learnerdetail.jsf" />
+																					<p:menuitem id="elm" value="#{lang['learner.registration']}" icon="fa fa-users" url="#{request.contextPath}/pages/employeeslearnersregistration.jsf" rendered="#{sessionUI.user.registerLearner}" />
+																					<p:menuitem id="elmdetails" value="Learner Detail" icon="fa fa-users" url="#{request.contextPath}/pages/learnerdetail.jsf" rendered="#{sessionUI.user.registerLearner}" />
+																					<p:submenu id="learnerrecordscertification" label="Certification" icon="fa fa-graduation-cap">
+																						<p:menuitem id="employeelearnersverification" value="Add Assessments" icon="fa fa-graduation-cap" url="#{request.contextPath}/pages/employeelearnersverification.jsf" rendered="#{sessionUI.user.addAssessment}" />
+																						<p:menuitem id="generatecertificate" value="Generate Certificates" icon="fa fa-book" url="#{request.contextPath}/pages/generatecertificate.jsf" rendered="#{sessionUI.user.generateCertificates}" />
+																						<p:menuitem id="generatedcertificate" value="Generated Certificates" icon="fa fa-book" url="#{request.contextPath}/pages/generatedcertificate.jsf" rendered="#{sessionUI.user.generateCertificates}" />
+																						<p:menuitem id="generateresults" value="Generated Results" icon="fa fa-book" url="#{request.contextPath}/pages/generateresults.jsf" rendered="#{sessionUI.user.generateCertificates}" />
+																						<p:menuitem id="qaverificationlearnersholding" value="Learner Moderation" icon="assessment" url="#{request.contextPath}/pages/tp/qaverificationlearnersholding.jsf" />
+																					</p:submenu>
+																					<p:submenu id="legacylearnerrecords" label="Legacy Records" icon="fa fa-history">
+																						<p:menuitem id="legacylearnersemployees" value="#{lang['legacy.learner.management']}" icon="fa fa-history" url="#{request.contextPath}/pages/externalparty/legacylearnersemployees.jsf" />
+																						<p:menuitem id="legacysecttwentyeight" value="#{lang['legacy.section.twentyeight']}" icon="fa fa-history" url="#{request.contextPath}/pages/legacysecttwentyeight.jsf" />
+																						<p:menuitem id="legacyproviderlearners" value="#{lang['legacy.provider.learner.management']}" icon="fa fa-history" url="#{request.contextPath}/pages/externalparty/legacyproviderlearners.jsf" />
+																					</p:submenu>
+																					<p:submenu id="learnerrecordsreports" label="Learners Reports" icon="fa fa-users">
+																						<p:menuitem id="lmreport" value="Learner List" icon="people_outline" url="#{request.contextPath}/pages/tp/companylearnersreport.jsf" />
+																						<p:menuitem id="companylearnersreportingpage" value="Learners Report" icon="people_outline" url="#{request.contextPath}/pages/companylearnersreportingpage.jsf" />
+																						<p:menuitem id="reviewlmreport" value="Learners Under Review" icon="fa fa-leanpub" url="#{request.contextPath}/pages/learnersreviewreport.jsf" />
+																						<p:menuitem id="companylearnersmentorratio" value="Learners Mentor Ratio" icon="pie_chart_outlined" url="#{request.contextPath}/pages/tp/companylearnersmentorratio.jsf" rendered="false" />
+																						<p:menuitem id="lmentorreport" value="Learner Mentor List" icon="people_outline" url="#{request.contextPath}/pages/companylearnersmentorreport.jsf" />
+																					</p:submenu>
+																					<p:submenu id="ProviderMonitoringSubMenu2" label="Provider Monitoring" icon="fa fa-leanpub">
+																						<p:menuitem id="ProviderMonitoring2" value="Initiate Audit" icon="fa fa-pencil" url="#{request.contextPath}/pages/tp/providerAudits.jsf" rendered="true" />
+																						<p:menuitem id="ProviderMonitoring2Monitoring" value="Initiate Monitoring" icon="fa fa-pencil" url="#{request.contextPath}/pages/tp/providermnitoringMonitoring.jsf" rendered="true" />
+																						<p:menuitem id="ProviderMonitoringReports2" value="Monitoring Reports" icon="pie_chart_outlined" url="#{request.contextPath}/pages/tp/providermnitoringreports.jsf" />
+																						<p:menuitem id="schedule2" value="Monitoring Dates" icon="perm_contact_calendar" url="#{request.contextPath}/pages/tp/monitoringAuditSchedule.jsf" />
+																					</p:submenu>
+																					<p:menuitem id="searchAM" value="#{lang['assessor.mod']}" icon="assignment_ind" url="#{request.contextPath}/pages/searchAssessorMod.jsf" />
+																					<p:menuitem id="CoursewareDistroEmp" value="Courseware Distribution" icon="fa fa-book" url="#{request.contextPath}/pages/tp/coursewareDistibutionReport.jsf" rendered="#{sessionUI.role.coursewareDistro}" />
+																					<p:menuitem id="qaQualificationDev" value="#{lang['qualification.dev']}" icon="fa fa-graduation-cap" url="#{request.contextPath}/pages/searchQualificationDevelopment.jsf" />
+																					<p:menuitem id="aqp" value="Administration of AQP" icon="fa fa-pencil" url="#{request.contextPath}/pages/tp/administrationofaqp.jsf" rendered="#{sessionUI.role.providerMonitoring and  not sessionUI.hideETQA}" />
+																					<p:menuitem id="qmLearneshipR" value="Learnership Application" icon="fa fa-sticky-note-o" url="#{request.contextPath}/pages/reference/learnershipapplication.jsf" />
+																					<p:menuitem id="qmSkillsetR" value="Skills Set" icon="fa fa-sticky-note-o" url="#{request.contextPath}/pages/reference/skillsset.jsf" />
+																					<p:menuitem id="qmSkillprogrammeR" value="Skill Programme" icon="fa fa-sticky-note-o" url="#{request.contextPath}/pages/reference/skillsprogram.jsf" />
+																					<p:menuitem id="skillsReg" value="Skills Registration" icon="fa fa-sticky-note-o" url="#{request.contextPath}/pages/skillsregistrationreport.jsf" />
+																					<p:menuitem id="ProviderMonitoringReportsg" value="Monitoring Reports" icon="pie_chart_outlined" url="#{request.contextPath}/pages/tp/providermnitoringreports.jsf" rendered="false" />
+																					<p:submenu id="arplManagementSM" label="#{lang['arpl.management']}" icon="fa fa-paperclip">
+																						<p:menuitem id="allArplMI" value="All Applications" icon="fa fa-leanpub" url="#{request.contextPath}/pages/arpl/arplReview.jsf" />
+																						<p:menuitem id="orgDocHoldingAreaMI" value="Orginal Documents Holding Area" icon="fa fa-book" url="#{request.contextPath}/pages/arpl/arplOrgDocHoldingArea.jsf" />
+																						<p:menuitem id="namdholdingMI" value="#{lang['arpl.awaiting.Namb']}" icon="fa fa-users" url="#{request.contextPath}/pages/arpl/arplAwaitingNamb.jsf" />
+																						<p:menuitem id="stageRepArplMI" value="Staging Report" icon="fa fa-bar-chart" url="#{request.contextPath}/pages/arpl/arplStageReporting.jsf" />
+																						<p:menuitem id="collectionReportArplMI" value="Collection Report" icon="fa fa-pie-chart" url="#{request.contextPath}/pages/arpl/arplCollectionReporting.jsf" />
+																					</p:submenu>
+																					<p:submenu id="tradeTestManagementSM" label="#{lang['trade.test.management']}" icon="fa fa-paperclip">
+																						<p:menuitem id="alltradeTestsMI" value="All Applications" icon="fa fa-leanpub" url="#{request.contextPath}/pages/tradetest/tradeTestReview.jsf" />
+																						<p:menuitem id="namdholdingTTMI" value="#{lang['arpl.awaiting.Namb']}" icon="fa fa-users" url="#{request.contextPath}/pages/tradetest/tradeTestAwaitingNamb.jsf" />
+																						<p:menuitem id="stageRepTTMI" value="Staging Report" icon="fa fa-bar-chart" url="#{request.contextPath}/pages/tradetest/tradeTestStageReporting.jsf" />
+																						<p:menuitem id="collectionReportTradeTestMI" value="Collection Report" icon="fa fa-pie-chart" url="#{request.contextPath}/pages/tradetest/tradeTestCollectionReporting.jsf" />
+																					</p:submenu>
+																					<p:submenu id="legacyTradeTestManagementSM" label="Legacy #{lang['trade.test.management']}" icon="fa fa-paperclip">
+																						<p:menuitem id="arpltradetestlearners" value="Legacy Trade Test Learners" icon="fa fa-users" url="#{request.contextPath}/pages/arpltradetestlearners.jsf" />
+																						<p:menuitem id="viewlegacyapplyarpl" value="Legacy ARPL Learners" icon="fa fa-users" url="#{request.contextPath}/pages/externalparty/viewlegacyapplyarpl.jsf" />
+																						<p:menuitem id="arpltradetestlearnersreport" value="Legacy Trade Test Learners Report" icon="fa fa-file-text-o" url="#{request.contextPath}/pages/arpltradetestlearnersreport.jsf" />
+																					</p:submenu>
+																				</p:submenu>
+																				<p:submenu id="monitoring" rendered="false" label="#{lang['monitoring']}" icon="fa fa-clipboard">
+																					<p:menuitem id="mgv" value="#{lang['mg.verification']}" icon="fa fa-check-square" url="#{request.contextPath}/pages/mgverification.jsf" rendered="false" />
+																					<p:submenu id="ProviderMonitoringSubMenu3" label="Provider Monitoring" icon="fa fa-leanpub" rendered="#{sessionUI.role.providerMonitoring}">
+																						<p:menuitem id="ProviderMonitoring3" value="Initiate Audit" icon="fa fa-pencil" url="#{request.contextPath}/pages/tp/providerAudits.jsf" rendered="false" />
+																						<p:menuitem id="ProviderMonitoring3Monitoring" value="Initiate Monitoring" icon="fa fa-pencil" url="#{request.contextPath}/pages/tp/providermnitoringMonitoring.jsf" rendered="false" />
+																						<p:menuitem id="ProviderMonitoringReports3" value="Monitoring Reports" icon="pie_chart_outlined" url="#{request.contextPath}/pages/tp/providermnitoringreports.jsf" />
+																					</p:submenu>
+																				</p:submenu>
+																				<c:if test="#{sessionUI.user.mancoMember and not sessionUI.hideETQA}">
+																					<p:submenu id="mancoCom" label="MANCO Review" icon="fa fa-check-square">
+																						<p:menuitem id="mancoMGVerification" value="MG Verification" icon="fa fa-money" url="#{request.contextPath}/pages/mgverification/mgverificationmancoapproval.jsf" />
+																					</p:submenu>
+																				</c:if>
+																				<p:submenu id="learnerReviewMember" label="Learner Review" icon="fa fa-pencil">
+																					<c:if test="#{sessionUI.user.learnerReviewMember}">
+																						<p:menuitem id="learnerReview" rendered="false" value="Learner Application Review " icon="fa fa-pencil" url="#{request.contextPath}/pages/etqaReviewCommittee/learnerrevireapproval.jsf" />
+																						<p:menuitem id="learnerHoldingRoomReview" value="Learner Review" icon="assessment" url="#{request.contextPath}/pages/etqaReviewCommittee/learnerholdingroom.jsf" />
+																						<p:menuitem id="learnerTerminationReview" value="Agreement Termination Review" icon="fa fa-user-times" url="#{request.contextPath}/pages/etqaReviewCommittee/learnerterminationapplications.jsf" />
+																					</c:if>
+																					<p:menuitem id="learnerTerminationInvestigation" value="Agreement Termination Investigation" icon="fa fa-address-card" url="#{request.contextPath}/pages/etqaReviewCommittee/learnerterminationinvestigation.jsf" />
+																				</p:submenu>
+																				<c:if test="#{sessionUI.user.reviewCommitteeMember}">
+																					<p:submenu id="revCom" label="ETQA Committee" icon="assignment_ind">
+																						<p:menuitem id="meeting" value="Date Scheduling" rendered="#{sessionUI.user.reviewCommitteeMember}" icon="fa fa-calendar" url="#{request.contextPath}/pages/etqaReviewCommittee/reviewCommitteeDateScheduling.jsf" />
+																						<p:menuitem id="amretqa" value="Assessor/Moderator" rendered="#{sessionUI.user.reviewCommitteeMember}" icon="assignment_ind" url="#{request.contextPath}/pages/am/approvedassessormodarators.jsf" />
+																						<p:menuitem id="amreExOfScopetqa1" value="Assessor/Mod Extension Of Scope" rendered="#{sessionUI.user.reviewCommitteeMember}" icon="assignment_ind" url="#{request.contextPath}/pages/am/assessormodaratorsextofscope.jsf" />
+																						<p:menuitem id="tp2" value="Providers" rendered="#{sessionUI.user.reviewCommitteeMember}" icon="fa fa-leanpub" url="#{request.contextPath}/pages/tp/approvedtrainingprovider.jsf" />
+																						<p:menuitem id="tpExtOfScope2" value="SDP Scope Extension" rendered="#{sessionUI.user.reviewCommitteeMember}" icon="fa fa-leanpub" url="#{request.contextPath}/pages/tp/sdpextensionofscopeapproval.jsf" />
+																						<p:menuitem id="spetqa" value="Skills Prog/Set App" rendered="#{sessionUI.user.reviewCommitteeMember}" icon="fa fa-sticky-note-o" url="#{request.contextPath}/pages/am/approvedskillsregistration.jsf" />
+																					</p:submenu>
+																				</c:if>
+																				<p:menuitem id="searchLearner" value="#{lang['learners.history']}" rendered="false" icon="accessibility" url="#{request.contextPath}/pages/searchlearners.jsf" />
+																				<p:menuitem icon="people_outline" id="dataExtracts" value="Data Extracts" url="#{request.contextPath}/pages/setmisNrldExtracts.jsf" rendered="#{sessionUI.user.dataExtracts}" />
+																				<p:menuitem icon="account_balance_wallet" id="gpBankingDetails" value="GP Bank Details" url="#{request.contextPath}/pages/gpBankingDetailsMonitoring.jsf" rendered="#{sessionUI.user.gpBankingDetails}" />
+																				<p:menuitem icon="assignment" id="legacyAppAlterMI" value="Legacy Accreditations Monitoring" url="#{request.contextPath}/pages/approvedLegacyProviderApplications.jsf" rendered="#{sessionUI.user.alterLegacyApplications}" />
+																				<p:menuitem icon="assignment_turned_in" id="levyDetailsMgTrans" value="Levy Detail Payments Management" url="#{request.contextPath}/pages/detailLevyMgTransations.jsf" rendered="#{sessionUI.user.levyDetailMgTransactions}" />
+																				<p:submenu id="tp" icon="fa fa-leanpub" label="#{lang['skills.development']}">
+																					<p:menuitem id="empskillreg" value="Skills Prog/Set App" icon="fa fa-sticky-note-o" url="#{request.contextPath}/pages/skillsregistration.jsf" />
+																					<p:menuitem id="emplearnerDev" value="Learnership Application" icon="fa fa-id-badge" url="#{request.contextPath}/pages/learnershipregistration.jsf" />
+																					<p:menuitem id="empCurricDev" value="#{lang['qualification.dev']}" icon="fa fa-graduation-cap" url="#{request.contextPath}/pages/qualificationsCurriculumDevelopmentRegistration.jsf" />
+																				</p:submenu>
+																				<p:menuitem id="orgaa" value="#{lang['inter.seta.transfer']}" icon="fa fa-paper-plane" url="#{request.contextPath}/pages/intersetatransfer/transferrequests.jsf" rendered="#{sessionUI.role.interSetaTransfer and  not sessionUI.hideETQA}" />
+																				<p:menuitem id="skillreg" value="Skills Registration" icon="fa fa-sticky-note-o" url="#{request.contextPath}/pages/tp/skillsregistration.jsf" rendered="false" />
+																				<p:submenu id="tempReporting" label="Reporting" icon="assessment" rendered="#{sessionUI.user.tempReporting and false}">
+																					<p:menuitem icon="assignment" id="wspReporting" value="Grant Reports" url="#{request.contextPath}/pages/wspReportingPage.jsf" />
+																					<p:menuitem icon="assignment" id="dgReporting" value="DG Reports" url="#{request.contextPath}/pages/dgReportingPage.jsf" />
+																				</p:submenu>
+																				<p:menuitem id="s_v" value="Site Visits" icon="fa fa-industry" url="#{request.contextPath}/pages/clo/sitevisit.jsf" rendered="#{sessionUI.role.siteVisit}" />
+																				<p:menuitem id="svrForClo" value="Site Visit Report" icon="fa fa-industry" url="#{request.contextPath}/pages/sitevisitreport.jsf" rendered="#{sessionUI.role.siteVisitReport}" />
+																				<p:menuitem id="menuProcessRolesa" value="#{lang['assign.administrators']}" icon="group_work" url="#{request.contextPath}/admin/assignprocessrolessimple.jsf" rendered="false" />
+																				<p:menuitem id="templateViewEP1" value="#{lang['templates']}" icon="library_books" url="#{request.contextPath}/pages/externalparty/templateView.jsf" rendered="false" />
+																				<p:menuitem id="vbug2s" value="#{lang['view.bugs']}" icon="remove_red_eye" url="#{request.contextPath}/pages/viewbugreport.jsf" rendered="#{sessionUI.user.viewBugs}" />
+																				<p:submenu id="nsdpSM" label="NSDP" icon="fa fa-book" rendered="#{sessionUI.user.nsdpReportView or sessionUI.user.nsdpReportConfig}">
+																					<p:menuitem id="nsdpConfigMI" value="Reporting Config" icon="fa fa-table" url="#{request.contextPath}/pages/nsdpReporting/nsdpConfig.jsf" rendered="#{sessionUI.user.nsdpReportConfig}" />
+																					<p:menuitem id="nsdpReportingMI" value="Quarter Reporting" icon="fa fa-table" url="#{request.contextPath}/pages/nsdpReporting/nsdpReporting.jsf" rendered="#{sessionUI.user.nsdpReportView}" />
+																				</p:submenu>
+																				<p:submenu id="amrMainSM" label="QMR" icon="fa fa-book" rendered="#{sessionUI.user.qmrAccess}">
+																					<p:submenu id="firmGrantSubSM" label="Firm Grants" icon="fa fa-bars">
+																						<p:menuitem id="firmGrantSubMI" value="Firm Grants" icon="fa fa-table" url="#{request.contextPath}/pages/qmrReporting/firmGrants/firmGrants.jsf" />
+																					</p:submenu>
+																					<p:submenu id="learnershipMI" label="Learnerships" icon="fa fa-bars">
+																						<p:menuitem id="learnershipUnemployedEntered" value="Unemployed Entered" icon="fa fa-table" url="#{request.contextPath}/pages/qmrReporting/learnership/learnershipUnemployedEntered.jsf" />
+																						<p:menuitem id="learnershipUnemployedCompleted" value="Unemployed Completed" icon="fa fa-table" url="#{request.contextPath}/pages/qmrReporting/learnership/learnershipUnemployedCompleted.jsf" />
+																						<p:menuitem id="learnershipWorkingEntered" value="Working Entered" icon="fa fa-table" url="#{request.contextPath}/pages/qmrReporting/learnership/learnershipWorkingEntered.jsf" />
+																						<p:menuitem id="learnershipWorkingCompleted" value="Working Completed" icon="fa fa-table" url="#{request.contextPath}/pages/qmrReporting/learnership/learnershipWorkingCompleted.jsf" />
+																					</p:submenu>
+																					<p:submenu id="bursaryMI" label="Bursary" icon="fa fa-bars">
+																						<p:menuitem id="bursaryUnemployedEntered" value="Unemployed Entered" icon="fa fa-table" url="#{request.contextPath}/pages/qmrReporting/bursaries/bursaryUnemployedEntered.jsf" />
+																						<p:menuitem id="bursaryUnemployedCompleted" value="Unemployed Completed" icon="fa fa-table" url="#{request.contextPath}/pages/qmrReporting/bursaries/bursaryUnemployedCompleted.jsf" />
+																						<p:menuitem id="bursaryWorkingEntered" value="Working Entered" icon="fa fa-table" url="#{request.contextPath}/pages/qmrReporting/bursaries/bursaryWorkingEntered.jsf" />
+																						<p:menuitem id="bursaryWorkingCompleted" value="Working Completed" icon="fa fa-table" url="#{request.contextPath}/pages/qmrReporting/bursaries/bursaryWorkingCompleted.jsf" />
+																					</p:submenu>
+																					<p:submenu id="internshipMI" label="Internship" icon="fa fa-bars">
+																						<p:menuitem id="internshipUnemployedEntered" value="Unemployed Entered" icon="fa fa-table" url="#{request.contextPath}/pages/qmrReporting/internships/internshipUnemployedEntered.jsf" />
+																						<p:menuitem id="internshipUnemployedCompleted" value="Unemployed Completed" icon="fa fa-table" url="#{request.contextPath}/pages/qmrReporting/internships/internshipUnemployedCompleted.jsf" />
+																					</p:submenu>
+																					<p:submenu id="skillsProgrammeMI" label="Skills Programme" icon="fa fa-bars">
+																						<p:menuitem id="skillsProgrammeUnemployedEntered" value="Unemployed Entered" icon="fa fa-table" url="#{request.contextPath}/pages/qmrReporting/skillsprogrammes/skillsProgrammeUnemployedEntered.jsf" />
+																						<p:menuitem id="skillsProgrammeUnemployedCompleted" value="Unemployed Completed" icon="fa fa-table" url="#{request.contextPath}/pages/qmrReporting/skillsprogrammes/skillsProgrammeUnemployedCompleted.jsf" />
+																						<p:menuitem id="skillsProgrammeWorkingEntered" value="Working Entered" icon="fa fa-table" url="#{request.contextPath}/pages/qmrReporting/skillsprogrammes/skillsProgrammeWorkingEntered.jsf" />
+																						<p:menuitem id="skillsProgrammeWorkingCompleted" value="Working Completed" icon="fa fa-table" url="#{request.contextPath}/pages/qmrReporting/skillsprogrammes/skillsProgrammeWorkingCompleted.jsf" />
+																					</p:submenu>
+																					<p:submenu id="artisanMI" label="Artisan" icon="fa fa-bars">
+																						<p:menuitem id="artisanEntered" value="Entered" icon="fa fa-table" url="#{request.contextPath}/pages/qmrReporting/artisan/artisanEntered.jsf" />
+																						<p:menuitem id="artisanCompleted" value="Completed" icon="fa fa-table" url="#{request.contextPath}/pages/qmrReporting/artisan/artisanCompleted.jsf" />
+																					</p:submenu>
+																					<p:submenu id="candidacyProgrammeMI" label="Candidacy Programme" icon="fa fa-bars">
+																						<p:menuitem id="candidacyProgrammeEntered" value="Entered" icon="fa fa-table" url="#{request.contextPath}/pages/qmrReporting/candidacyprogramme/candidacyProgrammeEntered.jsf" />
+																						<p:menuitem id="candidacyProgrammeCompleted" value="Completed" icon="fa fa-table" url="#{request.contextPath}/pages/qmrReporting/candidacyprogramme/candidacyProgrammeCompleted.jsf" />
+																					</p:submenu>
+																					<p:submenu id="rplMI" label="Recognition of Prior Learning" icon="fa fa-bars">
+																						<p:menuitem id="rpl" value="RPL" icon="fa fa-table" url="#{request.contextPath}/pages/qmrReporting/rpl/rpl.jsf" />
+																					</p:submenu>
+																					<p:submenu id="tvetMI" label="TVET Student Placement" icon="fa fa-bars">
+																						<p:menuitem id="tvetEntered" value="Entered" icon="fa fa-table" url="#{request.contextPath}/pages/qmrReporting/tvetstudent/tvetEntered.jsf" />
+																						<p:menuitem id="tvetCompleted" value="Completed" icon="fa fa-table" url="#{request.contextPath}/pages/qmrReporting/tvetstudent/tvetCompleted.jsf" />
+																					</p:submenu>
+																					<p:submenu id="universityStudentMI" label="University Student Placement" icon="fa fa-bars">
+																						<p:menuitem id="universityStudentEntered" value="Entered" icon="fa fa-table" url="#{request.contextPath}/pages/qmrReporting/universitystudentplacement/universityStudentEntered.jsf" />
+																						<p:menuitem id="universityStudentCompleted" value="Completed" icon="fa fa-table" url="#{request.contextPath}/pages/qmrReporting/universitystudentplacement/universityStudentCompleted.jsf" />
+																					</p:submenu>
+																					<p:submenu id="lecturerDevelopmentMI" label="Lecturer Development" icon="fa fa-bars">
+																						<p:menuitem id="lecturerDevelopmentEntered" value="Entered" icon="fa fa-table" url="#{request.contextPath}/pages/qmrReporting/leacturerdevelopmentprogrammes/lecturerDevelopmentEntered.jsf" />
+																						<p:menuitem id="lecturerDevelopmentCompleted" value="Completed" icon="fa fa-table" url="#{request.contextPath}/pages/qmrReporting/leacturerdevelopmentprogrammes/lecturerDevelopmentCompleted.jsf" />
+																					</p:submenu>
+																					<p:submenu id="aetProgrammeMI" label="AET Programme" icon="fa fa-bars">
+																						<p:menuitem id="aetProgrammeEntered" value="Entered" icon="fa fa-table" url="#{request.contextPath}/pages/qmrReporting/aetprogrammes/aetProgrammeEntered.jsf" />
+																						<p:menuitem id="aetProgrammeCompleted" value="Completed" icon="fa fa-table" url="#{request.contextPath}/pages/qmrReporting/aetprogrammes/aetProgrammeCompleted.jsf" />
+																					</p:submenu>
+																					<p:submenu id="individualUnitStandardMI" label="Individual Unit Standard" icon="fa fa-bars" rendered="false">
+																						<p:menuitem id="individualUnitStandardEntered" value="Entered" icon="fa fa-table" url="#{request.contextPath}/pages/qmrReporting/individualunitstandard/IndividualUnitStandardEntered.jsf" />
+																						<p:menuitem id="individualUnitStandardCompleted" value="Completed" icon="fa fa-table" url="#{request.contextPath}/pages/qmrReporting/individualunitstandard/IndividualUnitStandardCompleted.jsf" />
+																					</p:submenu>
+																				</p:submenu>
+																				<p:submenu id="upData" label="Upload Data" icon="fa fa-upload" rendered="#{sessionUI.user.viewUploadData}">
+																					<p:menuitem id="upData1" value="Deviation Data" icon="fa fa-upload" url="#{request.contextPath}/pages/wspcalculationdata.jsf" />
+																					<p:menuitem id="upData3" value="Categorization Data" icon="fa fa-upload" url="#{request.contextPath}/pages/categorizationdata.jsf" />
+																					<p:menuitem id="upData2" value="Workplace Approval Data" icon="fa fa-upload" url="#{request.contextPath}/pages/workplaceapprovaldata.jsf" />
+																					<p:menuitem id="ldsmr" value="Legacy Data" icon="fa fa-upload" rendered="true" url="#{request.contextPath}/pages/legacyinfo/legacymenu.jsf"></p:menuitem>
+																					<p:submenu id="ldsm" value="Legacy Data" icon="fa fa-upload" rendered="false">
+																						<p:submenu id="ldAppTradeTest" label="Apprenticeship Trade Test" icon="fa fa-book">
+																							<p:menuitem id="ldApprenticeship" value="Apprenticeship" icon="fa fa-file-text" url="#{request.contextPath}/pages/legacyData/legacyApprenticeshipDisplay.jsf" />
+																							<p:menuitem id="ldAppTradeTestTradeTest" value="Trade Test" icon="fa fa-file-text" url="#{request.contextPath}/pages/legacyData/legacyApprenticeshipTradeTestDisplay.jsf" />
+																						</p:submenu>
+																						<p:submenu id="ldBursary" label="Bursary" icon="fa fa-book">
+																							<p:menuitem id="ldBursaryBursary" value="Bursary" icon="fa fa-file-text" url="#{request.contextPath}/pages/legacyData/legacyBursaryDisplay.jsf" />
+																						</p:submenu>
+																						<p:submenu id="ldEmployerWa" label="Employer WA" icon="fa fa-book">
+																							<p:menuitem id="ldEmployerWaWorkPlace" value="WorkPlace" icon="fa fa-file-text" url="#{request.contextPath}/pages/legacyData/legacyEmployerWaWorkPlaceDisplay.jsf" />
+																							<p:menuitem id="ldEmployerWaTrade" value="Trade" icon="fa fa-file-text" url="#{request.contextPath}/pages/legacyData/legacyemployerwa2tradeDisplay.jsf" />
+																							<p:menuitem id="ldEmployerWaQualification" value="Qualification" icon="fa fa-file-text" url="#{request.contextPath}/pages/legacyData/legacyEmployerWA2QualificationDisplay.jsf" rendered="true" />
+																							<p:menuitem id="ldEmployerWaLearnership" value="Learnership" icon="fa fa-file-text" url="#{request.contextPath}/pages/legacyData/legacyEmployerWA2LearnershipDisplay.jsf" rendered="true" />
+																							<p:menuitem id="ldEmployerWaSkillsProgramme" value="Skills Programme" icon="fa fa-file-text" url="#{request.contextPath}/legacyData/pages/legacyEmployerWA2SkillsProgrammeDisplay.jsf" rendered="false" />
+																							<p:menuitem id="ldEmployerWaUnitStandard" value="Unit Standard" icon="fa fa-file-text" url="#{request.contextPath}/pages/legacyData/legacyEmployerWAUnitStandardDisplay.jsf" rendered="false" />
+																						</p:submenu>
+																						<p:submenu id="ldorganisation" label="Organisation" icon="fa fa-book">
+																							<p:menuitem id="ldorganisationLevyPaying" value="Levy Paying" icon="fa fa-file-text" url="#{request.contextPath}/pages/legacyData/legacyOrganisationLevyPayingDisplay.jsf" rendered="true" />
+																							<p:menuitem id="ldorganisationLevyPaying1" value="Non Levy Paying" icon="fa fa-file-text" url="#{request.contextPath}/pages/legacyData/legacyOrganisationNonLevyPayingDisplay.jsf" rendered="true" />
+																							<p:menuitem id="ldorganisationSites" value="Sites" icon="fa fa-file-text" url="#{request.contextPath}/pages/legacyData/legacyOrganisationSitesDisplay.jsf" rendered="true" />
+																						</p:submenu>
+																						<p:submenu id="ldAssessor" label="Assessor" icon="fa fa-book">
+																							<p:menuitem id="ldAssessorAccreditation" value="Accreditation" icon="fa fa-file-text" url="#{request.contextPath}/pages/legacyData/legacyassessoraccreditationDisplay.jsf" />
+																							<p:menuitem id="ldAssessorQualification" value="Qualification" icon="fa fa-file-text" url="#{request.contextPath}/pages/legacyData/legacyassessorqualificationDisplay.jsf" />
+																							<p:menuitem id="ldAssessorSkillsprogramme" value="Skills Programme" icon="fa fa-file-text" url="#{request.contextPath}/pages/legacyData/legacyassessorskillsprogrammeDisplay.jsf" />
+																							<p:menuitem id="ldAssessorUnitStandard" value="Unit Standard" icon="fa fa-file-text" url="#{request.contextPath}/pages/legacyData/legacyassessorunitstandardDisplay.jsf" />
+																						</p:submenu>
+																						<p:submenu id="ldModerator" label="Moderator" icon="fa fa-book">
+																							<p:menuitem id="ldModeratorAccreditation" value="Accreditation" icon="fa fa-file-text" url="#{request.contextPath}/pages/legacyData/legacyModeratorAccreditationDisplay.jsf" />
+																							<p:menuitem id="ldModeratorQualification" value="Qualification" icon="fa fa-file-text" url="#{request.contextPath}/pages/legacyData/legacyModeratorQualificationDisplay.jsf" />
+																							<p:menuitem id="ldModeratorSkillsprogramme" value="Skills Programme" icon="fa fa-file-text" url="#{request.contextPath}/pages/legacyData/legacyModeratorSkillsprogrammeDisplay.jsf" />
+																							<p:menuitem id="ldModeratorUnitStandard" value="Unit Standard" icon="fa fa-file-text" url="#{request.contextPath}/pages/legacyData/legacyModeratorUnitStandardDisplay.jsf" />
+																						</p:submenu>
+																						<p:submenu id="ldProvider" label="Provider" icon="fa fa-book">
+																							<p:menuitem id="ldProviderAccreditation" value="Accreditation" icon="fa fa-file-text" url="#{request.contextPath}/pages/legacyData/legacyProviderAccreditationDisplay.jsf" />
+																							<p:menuitem id="ldProviderLearnership" value="Learnership" icon="fa fa-file-text" url="#{request.contextPath}/pages/legacyData/legacyProviderLearnershipDisplay.jsf" />
+																							<p:menuitem id="ldProviderSkillsProgramme" value="Skills Programme" icon="fa fa-file-text" url="#{request.contextPath}/pages/legacyData/legacyProviderAccreditationDisplay.jsf" rendered="false" />
+																							<p:menuitem id="ldProviderQualification" value="Qualification" icon="fa fa-file-text" url="#{request.contextPath}/pages/legacyData/legacyProviderAccreditationDisplay.jsf" rendered="false" />
+																							<p:menuitem id="ldProviderUnitStandard" value="Unit Standard" icon="fa fa-file-text" url="#{request.contextPath}/pages/legacyData/legacyProviderAccreditationDisplay.jsf" rendered="false" />
+																						</p:submenu>
+																						<p:submenu id="ldTvet" label="Tvet" icon="fa fa-book">
+																							<p:menuitem id="ldTvetTvet" value="Tvet" icon="fa fa-file-text" url="#{request.contextPath}/pages/legacyData/legacytvetDisplay.jsf" />
+																						</p:submenu>
+																						<p:submenu id="ldExperiential" label="Experiential" icon="fa fa-book">
+																							<p:menuitem id="ldExperientialExperiential" value="Experiential" icon="fa fa-file-text" url="#{request.contextPath}/pages/legacyData/legacyexperientialDisplay.jsf" />
+																						</p:submenu>
+																						<p:submenu id="ldEInternship" label="Internship" icon="fa fa-book">
+																							<p:menuitem id="ldInternshipInternship" value="Internship" icon="fa fa-file-text" url="#{request.contextPath}/pages/legacyData/legacyInternshipDisplay.jsf" />
+																						</p:submenu>
+																						<p:submenu id="ldSectionTwentyEight" label="Section 28" icon="fa fa-book">
+																							<p:menuitem id="ldSectionTwentyEightARPL" value="ARPL" icon="fa fa-file-text" url="#{request.contextPath}/pages/legacyData/legacysecttwentyeightDisplay.jsf" />
+																						</p:submenu>
+																						<p:submenu id="ldDttc" label="DTTC" icon="fa fa-book">
+																							<p:menuitem id="ldDttcApproval" value="Approval" icon="fa fa-file-text" url="#{request.contextPath}/pages/legacyData/legacydttcapprovalDisplay.jsf" />
+																							<p:menuitem id="ldDttcTrade" value="Trade" icon="fa fa-file-text" url="#{request.contextPath}/pages/legacyData/legacydttctradeDisplay.jsf" />
+																							<p:menuitem id="ldDttcQualification" value="Qualification" icon="fa fa-file-text" url="#{request.contextPath}/pages/legacyData/legacydttcqualificationDisplay.jsf" />
+																							<p:menuitem id="ldDttcSkillsProgramme" value="Skills Programme" icon="fa fa-file-text" url="#{request.contextPath}/pages/legacyData/legacydttcskillsprogrammeDisplay.jsf" />
+																							<p:menuitem id="ldDttcUnitStandard" value="Unit Standard" icon="fa fa-file-text" url="#{request.contextPath}/pages/legacyData/legacydttcunitstandardDisplay.jsf" />
+																						</p:submenu>
+																						<p:submenu id="ldSkillsProgramme" label="Skills Programme" icon="fa fa-book">
+																							<p:menuitem id="ldSkillsProgrammeSkillsProgramme" value="Skills Programme" icon="fa fa-file-text" url="#{request.contextPath}/pages/legacyData/legacyskillsprogrammeDisplay.jsf" />
+																							<p:menuitem id="ldSkillsProgrammeAssessments" value="Assessments" icon="fa fa-file-text" url="#{request.contextPath}/pages/legacyData/legacyskillsprogrammeassessmentsDisplay.jsf" />
+																						</p:submenu>
+																						<p:submenu id="ldperson" label="Person" icon="fa fa-book">
+																							<p:menuitem id="ldpersonPerson" value="Person" icon="fa fa-file-text" url="#{request.contextPath}/pages/legacyData/legacypersonDisplay.jsf" rendered="true" />
+																						</p:submenu>
+																						<p:submenu id="ldHomeAffairs" label="Home Affairs" icon="fa fa-book">
+																							<p:menuitem id="ldHomeAffairsHomeAffairs" value="Home Affairs" icon="fa fa-file-text" url="#{request.contextPath}/pages/legacyData/homeaffairsDisplay.jsf" rendered="true" />
+																						</p:submenu>
+																						<p:submenu id="ldUnitStandard" label="Unit Standard" icon="fa fa-book">
+																							<p:menuitem id="ldUnitStandard1" value="Unit Standard" icon="fa fa-file-text" url="#{request.contextPath}/pages/legacyData/legacyunitstandardDisplay.jsf" rendered="true" />
+																							<p:menuitem id="ldUnitStandardAssessment" value="Assessment" icon="fa fa-file-text" url="#{request.contextPath}/pages/legacyData/legacyunitstandardassessmentDisplay.jsf" rendered="true" />
+																						</p:submenu>
+																					</p:submenu>
+																				</p:submenu>
+																				<p:menuitem id="chatEmp" value="Chat" icon="chat" url="#{request.contextPath}/pages/chat/chatEmp.jsf" disabled="false" rendered="false" />
+																				<p:menuitem id="cloCalender" value="Review Calendar" icon="fa fa-calendar" url="#{request.contextPath}/pages/clo/clodateschedule.jsf" rendered="#{not sessionUI.hideETQA}" />
+																				<p:menuitem id="eventsView" value="Scheduled Events" icon="fa fa-calendar" url="#{request.contextPath}/pages/scheduledevents.jsf" rendered="#{not sessionUI.hideETQA}" />
+																			</c:if>
+																			<c:if test="#{sessionUI.externalParty}">
+																				<p:menuitem id="dash" value="#{lang['dashboard']}" icon="&#xE871;" url="#{request.contextPath}/pages/externalparty/dashboard.jsf" />
+																				<p:submenu id="nonSetaCompanyMenu" label="NSC" icon="business" rendered="#{sessionUI.nonSetaCompany}">
+																					<p:menuitem id="nscCompanyMan" value="Company Managament" icon="business" url="#{request.contextPath}/pages/nonsetacompany/companyManagement.jsf" />
+																					<p:submenu id="tpnsc" icon="fa fa-leanpub" label="#{lang['skills.development']}" rendered="false">
+																						<p:menuitem id="eosnsc" value="SDP Management" icon="fa fa-cogs" url="#{request.contextPath}/pages/tp/sdpmanagement.jsf" rendered="false" />
+																						<p:menuitem id="lransc" value="#{lang['learner.management']}" icon="accessibility" url="#{request.contextPath}/pages/nonsetacompany/learners.jsf" rendered="false" />
+																						<p:menuitem id="nonsetacm" value="Non SmerSETA Company Management" icon="settings" url="#{request.contextPath}/pages/externalparty/nonsetacompanymanagement.jsf" rendered="false" />
+																						<p:menuitem id="skillregnsc" value="Skills Prog/Set App" icon="fa fa-sticky-note-o" url="#{request.contextPath}/pages/tp/skillsregistration.jsf" rendered="false" />
+																						<p:menuitem id="learnerDevnsc" value="Learnership Application" icon="fa fa-id-badge" url="#{request.contextPath}/pages/tp/learnershipregistration.jsf" rendered="false" />
+																						<p:menuitem id="CoursewareDistronsc" value="Courseware Distribution" icon="fa fa-book" url="#{request.contextPath}/pages/tp/coursewareDistibution.jsf" rendered="false" />
+																						<p:menuitem id="CurricDevnsc" value="#{lang['qualification.dev']}" icon="fa fa-graduation-cap" url="#{request.contextPath}/pages/qualificationsCurriculumDevelopmentRegistration.jsf" rendered="false" />
+																					</p:submenu>
+																				</p:submenu>
+																				<p:menuitem id="chatE" value="Chat" icon="chat" url="#{request.contextPath}/pages/chat/chat.jsf" disabled="false" rendered="false" />
+																				<c:if test="#{sessionUI.learner}">
+																				</c:if>
+																				<c:if test="#{not sessionUI.checkLearner}">
+																					<p:submenu id="notsdfMenu" label="Company Contact" icon="fa fa-industry" rendered="#{!sessionUI.sdf and !sessionUI.trainingProvider and not sessionUI.hideETQA}">
+																						<p:menuitem id="compLearners4" value="#{lang['learner.management']}" icon="accessibility" url="#{request.contextPath}/pages/externalparty/learners.jsf" rendered="#{!sessionUI.sdf}" />
+																						<p:menuitem id="legacycontactLearners" value="#{lang['legacy.learner.management']}" icon="fa fa-history" url="#{request.contextPath}/pages/externalparty/legacylearners.jsf" rendered="#{not sessionUI.hideETQA}" />
+																					</p:submenu>
+																					<p:submenu id="sdfMenu" label="SDF" icon="fa fa-industry" rendered="#{sessionUI.sdf}">
+																						<p:menuitem id="cm" value="#{lang['company.management']}" icon="settings" url="#{request.contextPath}/pages/externalparty/companymanagement.jsf" />
+																						<p:menuitem id="wpmComp" value="Workplace Monitoring" icon="settings" url="#{request.contextPath}/pages/workplaceMonitoring/allWorkplaceMonitoringSdfView.jsf" />
+																						<p:menuitem id="orga" value="#{lang['grant.application']}" icon="business" url="#{request.contextPath}/pages/externalparty/company.jsf" />
+																						<p:menuitem id="projectPortal" value="Project Portal" icon="fa fa-tasks" url="#{request.contextPath}/pages/externalparty/companydg.jsf" />
+																						<p:menuitem id="allocationReviewCli" value="Company Allocation" icon="assignment_turned_in" url="#{request.contextPath}/pages/dgallocation/dgallocationInformation.jsf" />
+																						<p:menuitem id="compLearners" value="#{lang['learner.management']}" icon="accessibility" url="#{request.contextPath}/pages/externalparty/learners.jsf" />
+																						<p:menuitem id="learnerusers" value="Learner Details" icon="accessibility" url="#{request.contextPath}/pages/externalparty/learnerusers.jsf" />
+																						<p:menuitem id="legacycompLearners" value="#{lang['legacy.learner.management']}" icon="fa fa-history" url="#{request.contextPath}/pages/externalparty/legacylearners.jsf" />
+																						<p:menuitem id="companymentor" value="#{lang['mentor.management']}" icon="people" url="#{request.contextPath}/pages/externalparty/companymentor.jsf" />
+																						<p:menuitem id="companyworkplaceapproval" value="#{lang['workplace.approval']}" icon="fa fa-cogs" url="#{request.contextPath}/pages/externalparty/companyworkplaceapproval.jsf" />
+																						<p:menuitem id="companylearnersmentorratiocompany" value="Learners Mentor Ratio" icon="pie_chart_outlined" url="#{request.contextPath}/pages/tp/companylearnersmentorratio.jsf" rendered="false" />
+																						<p:menuitem id="compLearnersreport" value="Learners Report" icon="fa fa-book" url="#{request.contextPath}/pages/externalparty/learnersreport.jsf" />
+																						<p:menuitem id="lmentorreportsdf" value="Learner Mentor List" icon="people_outline" url="#{request.contextPath}/pages/externalparty/companylearnersmentorreport.jsf" />
+																					</p:submenu>
+																					<p:menuitem id="er" value="#{lang['extension.request']}" icon="fa fa-external-link" url="#{request.contextPath}/pages/externalparty/extensionprocessrequest.jsf" rendered="false" />
+																					<p:menuitem id="lr" value="#{lang['learner.registration']}" icon="accessibility" url="#{request.contextPath}/pages/companyLookupTableForLearnersReg.jsf" rendered="false" />
+																					<p:submenu id="tp" icon="fa fa-leanpub" label="#{lang['skills.development']}" rendered="#{sessionUI.trainingProvider}">
+																						<p:menuitem id="eos" value="SDP Management" icon="fa fa-cogs" url="#{request.contextPath}/pages/tp/sdpmanagement.jsf" rendered="#{sessionUI.trainingProvider}" />
+																						<p:menuitem id="tplapp" value="SDP Legacy Management" icon="fa fa-history" url="#{request.contextPath}/pages/tp/trainingproviderlegacyapplication.jsf" rendered="#{sessionUI.trainingProvider and false}" />
+																						<p:menuitem id="lra" value="#{lang['learner.management']}" icon="accessibility" url="#{request.contextPath}/pages/tp/learners.jsf" rendered="#{sessionUI.trainingProvider}" />
+																						<p:menuitem id="learneruserstp" value="Learner Details" icon="accessibility" url="#{request.contextPath}/pages/tp/learnerusers.jsf" rendered="#{sessionUI.trainingProvider}" />
+																						<p:menuitem id="compLearnersreportsdp" value="Learners Report" icon="fa fa-book" url="#{request.contextPath}/pages/tp/learnersreport.jsf" rendered="#{sessionUI.trainingProvider}" />
+																						<p:menuitem id="lmentorreportprovider" value="Learner Mentor List" icon="people_outline" url="#{request.contextPath}/pages/tp/companylearnersmentorreport.jsf" />
+																						<p:menuitem id="legacyprovideruserlearners" value="#{lang['legacy.provider.learner.management']}" icon="fa fa-history" url="#{request.contextPath}/pages/externalparty/legacyproviderlearners.jsf" />
+																						<p:menuitem id="companylearnersmentorratioprovider" value="Learners Mentor Ratio" icon="pie_chart_outlined" url="#{request.contextPath}/pages/tp/companylearnersmentorratio.jsf" rendered="false" />
+																						<p:menuitem id="verificationlearners" value="#{lang['provider.verification']}" icon="fa fa-graduation-cap" url="#{request.contextPath}/pages/tp/verificationlearners.jsf" rendered="#{sessionUI.trainingProvider}" />
+																						<p:menuitem id="nonsetacm2" value="Non MerSETA Company Management" icon="settings" url="#{request.contextPath}/pages/externalparty/nonsetacompanymanagement.jsf" rendered="false" />
+																						<p:menuitem id="skillreg" value="Skills Prog/Set App" icon="fa fa-sticky-note-o" url="#{request.contextPath}/pages/tp/skillsregistration.jsf" rendered="#{sessionUI.trainingProvider or sessionUI.employee}" />
+																						<p:menuitem id="learnerDev" value="Learnership Application" icon="fa fa-id-badge" url="#{request.contextPath}/pages/tp/learnershipregistration.jsf" rendered="#{sessionUI.trainingProvider}" />
+																						<p:menuitem id="CoursewareDistro" value="Courseware Distribution" icon="fa fa-book" url="#{request.contextPath}/pages/tp/coursewareDistibution.jsf" rendered="#{sessionUI.trainingProvider and sessionUI.user.active}" />
+																						<p:menuitem id="CurricDev" value="#{lang['qualification.dev']}" icon="fa fa-graduation-cap" url="#{request.contextPath}/pages/qualificationsCurriculumDevelopmentRegistration.jsf" rendered="#{sessionUI.trainingProvider}" />
+																					</p:submenu>
+																					<p:menuitem id="shrl" value="#{lang['stakeholder.relations']}" icon="people" url="#{request.contextPath}/pages/stakeholderRelations.jsf" rendered="false" />
+																					<p:menuitem id="templateViewEP" value="#{lang['templates']}" icon="library_books" url="#{request.contextPath}/pages/externalparty/templateView.jsf" rendered="false" />
+																				</c:if>
+																				<p:menuitem id="externalQualificationDev" value="#{lang['qualification.dev']}" icon="fa fa-graduation-cap" url="#{request.contextPath}/pages/qualificationrequests.jsf" rendered="#{not sessionUI.hideETQA and !sessionUI.trainingProvider and false}" />
+																			</c:if>
+																			<p:submenu id="reft" label="#{lang['reference.tables']}" icon="subject" rendered="false">
+																				<p:menuitem id="qualiR" value="#{lang['saqa.qualifications']}" icon="school" url="#{request.contextPath}/pages/reference/saqaqualification.jsf" />
+																				<p:menuitem id="unitsR" value="#{lang['saqa.unit.standards']}" icon="subtitles" url="#{request.contextPath}/pages/reference/saqaunitstandard.jsf" />
+																				<p:menuitem id="etqaR" value="#{lang['etqa']}" icon="business" url="#{request.contextPath}/pages/reference/etqa.jsf" />
+																				<p:menuitem id="skillsetR" value="Skills Set" icon="fa fa-sticky-note-o" url="#{request.contextPath}/pages/reference/skillsset.jsf" />
+																				<p:menuitem id="skillprogrammeR" value="Skill Programme" icon="fa fa-sticky-note-o" url="#{request.contextPath}/pages/reference/skillsprogram.jsf" />
+																			</p:submenu>
+																		</c:if>
+																	</c:if>
+																	<c:if test="#{sessionUI.user.admin}">
+																		<p:menuitem id="menuDashboard" value="#{lang['dashboard']}" icon="&#xE871;" url="#{request.contextPath}/admin/dashboard.jsf" />
+																		<p:submenu id="admin_companyManagement" label="#{lang['company.management']}" icon="fa fa-building">
+																			<p:menuitem id="admin_admin_scomp" value="#{lang['companies']}" icon="fa fa-building" url="#{request.contextPath}/pages/searchcompany.jsf" />
+																			<p:menuitem id="admin_ec_sdfs" value="SDFs" icon="people_outline" url="#{request.contextPath}/pages/sdf/users.jsf" />
+																			<p:menuitem icon="people_outline" id="companysdfreportRepotTemp" value="Company SDFs" url="#{request.contextPath}/pages/companysdfreport.jsf" />
+																			<p:menuitem id="admin_mentormanagement" value="#{lang['mentor.management']}" icon="settings" url="#{request.contextPath}/pages/mentormanagement.jsf" rendered="#{not sessionUI.hideETQA}" />
+																			<p:menuitem id="admin_wppa" value="#{lang['wpd.designation']}" icon="school" url="#{request.contextPath}/pages/assignWorkplaceApprovalQualifications.jsf" rendered="#{not sessionUI.hideETQA}" />
+																			<p:menuitem id="admin_wpaInfo" value="#{lang['workplace.approval']}" icon="fa fa-address-book" url="#{request.contextPath}/pages/workplaceApprovalInfo.jsf" rendered="false" />
+																			<p:menuitem id="workplaceapprovalreportadmin" value="#{lang['workplace.approval']}" icon="fa fa-address-book" url="#{request.contextPath}/pages/workplaceapprovalreport.jsf" />
+																			<p:menuitem id="admin_allocationReviewEmp" value="Company Allocation" icon="assignment_turned_in" url="#{request.contextPath}/pages/dgallocation/dgallocationInformation.jsf" />
+																			<p:menuitem id="admin_searchcompanyregionEmp" value="Company Region Search" icon="fa fa-building" url="#{request.contextPath}/pages/searchcompanyregion.jsf" />
+																			<p:menuitem id="admin_ec_sdf_user_responible" value="Company Contact Responsibility" icon="people_outline" url="#{request.contextPath}/pages/conpanysdfusersresponsible.jsf" />
+																			<p:menuitem id="compbankingDetails" value="#{lang['company.banking.details']}" icon="fa fa-building" url="#{request.contextPath}/admin/companybankingdetails.jsf" />
+																			<p:menuitem id="admin_company_region" value="#{lang['company.region']}" icon="fa fa-building" url="#{request.contextPath}/pages/companyregion.jsf" rendered="false" />
+																		</p:submenu>
+																		<p:submenu id="admin_grantManagement" label="#{lang['grant.management']}" icon="business">
+																			<p:menuitem id="admin_orga" value="#{lang['grant.application']}" icon="business" url="#{request.contextPath}/pages/externalparty/company.jsf" />
+																			<p:menuitem id="admin_dgv" value="#{lang['dg.verification']}" icon="fa fa-money" url="#{request.contextPath}/pages/dgverification.jsf" />
+																			<p:menuitem id="admin_mg_veri" value="#{lang['mg.report']}" icon="fa fa-money" url="#{request.contextPath}/pages/mgverificationreport.jsf" />
+																			<p:menuitem id="admin_dgall" value="#{lang['dg.allocation']}" icon="fa fa-check" url="#{request.contextPath}/pages/dgallocation/dgallocation.jsf" />
+																			<p:menuitem id="admin_dgallProj" value="Project Allocation" icon="fa fa-check" url="#{request.contextPath}/pages/dgallocation/dgallocationprojects.jsf" rendered="#{sessionUI.role.dgAllocation}" />
+																			<p:menuitem id="admin_dgallostatuses" value="DG Allocation Status" icon="business" url="#{request.contextPath}/pages/dgallocationstatuses.jsf" />
+																			<p:menuitem id="admin_commitment_register2" value="MOA Status" icon="fa fa-money" url="#{request.contextPath}/pages/moastatus.jsf" />
+																			<p:menuitem id="admin_dgAllocationTaskStatus" value="PIP TaskTracker" icon="fa fa-money" url="#{request.contextPath}/pages/dgAllocationTaskStatus.jsf" />
+																			<p:menuitem id="admin_pipReport" value="PIP Report" icon="fa fa-money" url="#{request.contextPath}/pages/pipReport.jsf" />
+																			<p:menuitem id="admin_commitment_register" value="Commitment Register" icon="fa fa-money" url="#{request.contextPath}/pages/activecontracts.jsf" />
+																			<p:menuitem id="admin_orgwxs" value="#{lang['extension.request']}" icon="fa fa-history" url="#{request.contextPath}/pages/extensionrequest.jsf" />
+																			<p:menuitem id="grantHist1" value="Mandatory Grant Historical Data" icon="fa fa-money" url="#{request.contextPath}/pages/wsphistoricdata.jsf" rendered="false" />
+																		</p:submenu>
+																		<c:if test="#{sessionUI.user.superAdmin}">
+																			<p:menuitem id="hcm" value="#{lang['hosting.companies']}" icon="&#xE871;" url="#{request.contextPath}/admin/hostingCompanyProfile.jsf" />
+																			<p:menuitem id="hce" value="#{lang['employees']}" icon="person_pin_circle" url="#{request.contextPath}/admin/hostingCompanyEmployees.jsf" />
+																			<p:menuitem id="hcd" value="#{lang['hc.departments']}" icon="business" url="#{request.contextPath}/admin/hostingcompanydepartments.jsf" />
+																			<p:menuitem id="hcdn" value="#{lang['organisation.chart']}" icon="business" url="#{request.contextPath}/admin/orgchartConfigurator.jsf" />
+																			<p:menuitem id="hcdata" value="#{lang['hc.data']}" icon="data_usage" url="#{request.contextPath}/admin/userhostingcompany.jsf" rendered="false" />
+																			<p:menuitem id="gt" value="#{lang['document.types']}" icon="&#xE871;" url="#{request.contextPath}/admin/configdoc.jsf" />
+																			<p:menuitem id="hct" value="#{lang['hosting.company.templates']}" icon="library_books" url="#{request.contextPath}/admin/hostingCompanyTemplates.jsf" />
+																			<p:menuitem id="hctseta" value="Employee Templates" icon="library_books" url="#{request.contextPath}/admin/hostingCompanyEmployeeTemplates.jsf" />
+																			<p:menuitem id="lupm" value="#{lang['lookup.menus']}" icon="&#xE5D2;" url="#{request.contextPath}/admin/lookupMenu.jsf" />
+																			<p:menuitem id="menuProcessRoles" value="#{lang['assign.process.roles']}" icon="group_work" url="#{request.contextPath}/admin/assignprocessroles.jsf" />
+																			<p:menuitem id="menuUsers" value="#{lang['users']}" icon="supervisor_account" url="#{request.contextPath}/admin/users.jsf" />
+																			<p:menuitem id="surveysReport" value="Surveys" icon="assessment" url="#{request.contextPath}/admin/surveyReport.jsf" />
+																			<p:menuitem id="wspapproval" value="#{lang['mg.approval.list']}" icon="chrome_reader_mode" url="#{request.contextPath}/admin/ts1.jsf" rendered="false" />
+																			<p:submenu id="adminReporting" label="Reporting" icon="assessment">
+																				<p:menuitem icon="assignment" id="adminWspReporting" value="Grant Reports" url="#{request.contextPath}/pages/wspReportingPage.jsf" />
+																				<p:menuitem icon="assignment" id="adminAllocatioNReporting" value="Allocation Reports" url="#{request.contextPath}/pages/dgAllocationReportingPage.jsf" />
+																				<p:menuitem icon="assignment" id="adminDgReporting" value="DG Reports" url="#{request.contextPath}/pages/dgReportingPage.jsf" />
+																				<p:menuitem icon="assignment" id="adminMgReporting" value="MG Reports" url="#{request.contextPath}/pages/mgReportingPage.jsf" rendered="false" />
+																				<p:menuitem icon="assignment" id="admincoursewareRepotTemp" value="Courseware Repot Temp" url="#{request.contextPath}/pages/coursewareDistibutionReport.jsf" />
+																				<p:menuitem icon="assignment" id="adminWpaReporting" value="WPA Reporting" url="#{request.contextPath}/pages/workplaceApprovalReporting.jsf" rendered="false" />
+																				<p:menuitem icon="assignment" id="compLearnerReport" value="Company Learner Report" url="#{request.contextPath}/admin/companyLearnerReport.jsf" />
+																				<p:menuitem icon="people_outline" id="companyContactReportRepotTemp" value="Company Contacts" url="#{request.contextPath}/pages/companycontactsreport.jsf" />
+																				<p:menuitem icon="assignment" id="adminTaskPerWFP" value="Tasks Per Workflow" url="#{request.contextPath}/pages/tasksPerWorkflowProcess.jsf" />
+																				<p:menuitem icon="assignment" id="adminNumUsers" value="Number Of Users" url="#{request.contextPath}/pages/numberOfUsersPerType.jsf" />
+																				<p:menuitem icon="assignment" id="adminLevyPaying" value="Provincial Distribution" url="#{request.contextPath}/pages/provincialDistributionOfLevyPayingAndNon-PayingEntities.jsf" />
+																				<p:menuitem icon="assignment" id="adminSDFRep" value="Number of SDF's" url="#{request.contextPath}/pages/SDFReport.jsf" />
+																				<p:menuitem icon="assignment" id="adminGrantSub" value="Grants Submissions" url="#{request.contextPath}/pages/grantsSubmissions.jsf" />
+																				<p:menuitem icon="people_outline" id="setmisRep" value="Setmis Files" url="#{request.contextPath}/pages/setmisNrldExtracts.jsf" />
+																				<p:menuitem icon="assignment" id="adminWspTasks" value="Wsp Admin Tasks" url="#{request.contextPath}/admin/adminwsptasks.jsf" />
+																			</p:submenu>
+																			<p:submenu id="moaRegistersSMAdmin" label="MOA Management" icon="fa fa-money">
+																				<p:menuitem id="moaListMoaRegistersMIAdmin" value="MOA Register" icon="fa fa-money" url="#{request.contextPath}/pages/reports/registers/moaAllocationReport.jsf" />
+																				<p:menuitem id="paymentsMoaRegistersMIAdmin" value="Payments Register" icon="fa fa-money" url="#{request.contextPath}/pages/reports/registers/moaPaymentsReport.jsf" />
+																				<p:menuitem id="commitmentRegisterMoaRegistersMIAdmin" value="Commitment Register" rendered="false" icon="fa fa-money" url="#{request.contextPath}/pages/activecontracts.jsf" />
+																			</p:submenu>
+																			<p:submenu id="sars" label="#{lang['sars']}" icon="attach_money">
+																				<p:menuitem id="sarsl" value="#{lang['SARS.levy.files']}" icon="file_upload" url="#{request.contextPath}/admin/sarsfiles.jsf" />
+																				<p:submenu id="sarsL01" label="Levy reports" icon="apps">
+																					<p:menuitem id="sarsrsc01" value="By Scheme Year" icon="schedule" url="#{request.contextPath}/admin/sarsreportsByRefAndSchemeYear.jsf" />
+																					<p:menuitem id="sarsrchm01" value="Chamber/Scheme Year" icon="schedule" url="#{request.contextPath}/admin/sarsreportsByChamberSchemeYear.jsf" />
+																					<p:menuitem id="sarsr" value="SARS Reports by entity between SARS arrival date" icon="pie_chart_outlined" url="#{request.contextPath}/admin/sarsreports.jsf" />
+																					<p:menuitem id="sarsShemeYearSummaryMI" value="Scheme Year Summary" icon="schedule" url="#{request.contextPath}/admin/sarsReportBySchemeYearSummary.jsf" />
+																					<p:menuitem id="sarsArrDateSummaryMI" value="Arrival Date Summary" icon="schedule" url="#{request.contextPath}/admin/sarsReportBetweenArrivalDates.jsf" />
+																					<p:menuitem id="sarsMultiSchemeYearSummaryMI" value="Multiple Scheme Years" icon="schedule" url="#{request.contextPath}/admin/sarsReportSummaryMultipleSchemeYears.jsf" />
+																					<p:menuitem id="sarsArrDateSchemeYearSummary" value="Arrival Date and Multiple Scheme Years Summary" icon="schedule" url="#{request.contextPath}/admin/sarsReportSummaryArrivalDates_SchemeYears.jsf" />
+																				</p:submenu>
+																				<p:menuitem id="sarsp" value="#{lang['bank.statements']}" icon="book" url="#{request.contextPath}/admin/sarsleviespaid.jsf" />
+																				<p:menuitem id="sarspFZ1" value="#{lang['deposit.report']}" icon="attach_money" url="#{request.contextPath}/admin/levySummaryReport.jsf" />
+																				<p:menuitem id="sarspDR1" value="Levy Deviation Report" icon="flip_to_back" url="#{request.contextPath}/admin/sarslevydeviation.jsf" />
+																				<p:menuitem id="sarsStandDevRepMI" value="Standard Deviation Report" icon="flip_to_back" url="#{request.contextPath}/admin/sarsLevyStandardDeviationReport.jsf" />
+																				<p:menuitem id="recs" value="#{lang['employer.breakdown']}" icon="chrome_reader_mode" url="#{request.contextPath}/admin/sarscontribsummary.jsf?summary=true" />
+																				<p:submenu id="sarsR" label="#{lang['reconciliation']}" icon="apps">
+																					<p:menuitem id="recs1P" value="Per Period" icon="filter_1" url="#{request.contextPath}/admin/sarsreconforperiod.jsf" />
+																					<p:menuitem id="recs1SA" value="Per Scheme Year" icon="filter_1" url="#{request.contextPath}/admin/sarslevyreconbyschemeyear.jsf" rendered="false" />
+																					<p:menuitem id="recs1" value="#{lang['by.levy.number']}" icon="filter_1" url="#{request.contextPath}/admin/reconsummary.jsf" />
+																				</p:submenu>
+																				<p:menuitem id="sschg" value="#{lang['sars.status.changed']}" icon="track_changes" url="#{request.contextPath}/admin/sarsstatuschanged.jsf" />
+																				<p:menuitem id="nmsic" value="Non matching SIC codes" icon="thumbs_up_down" url="#{request.contextPath}/mis/nonmatchinsicCodes.jsf" />
+																				<p:menuitem id="itrf" value="Inter SETA Transfers" icon="swap_horiz" url="#{request.contextPath}/admin/sarsintersetatransfers.jsf" />
+																				<p:menuitem id="compFin" value="Remittance Advice" icon="assignment_ind" url="#{request.contextPath}/admin/companyFinanceGpReporting.jsf" rendered="#{not sessionUI.hideETQA}" />
+																				<p:submenu id="dgmgTransactionsSM" label="Transactions" icon="view_list">
+																					<p:menuitem id="mgTrans" value="MG Transactions" icon="assignment" url="#{request.contextPath}/admin/mandatoryGrantsTransactionGp.jsf" />
+																					<p:menuitem id="dgTrans" value="DG Transactions" icon="assessment" url="#{request.contextPath}/admin/discretionaryGrantsTransactionGp.jsf" />
+																				</p:submenu>
+																			</p:submenu>
+																			<p:submenu id="finRep" label="Finance Reporting" icon="assessment">
+																				<p:menuitem id="lmr1" value="Employer Levy Status Analysis" icon="fa fa-money" url="#{request.contextPath}/admin/reportscreens/levyanalysisbychamber.jsf" />
+																				<p:menuitem id="lmr2" value="Levy Analysis by Scheme Year &amp; Chamber" icon="fa fa-pie-chart" url="#{request.contextPath}/admin/reportscreens/levyincomebyyearbychamber.jsf" />
+																				<p:menuitem id="lmr3" value="Chamber Revenue by Scheme Year by Month" icon="fa fa-money" url="#{request.contextPath}/admin/reportscreens/chamberrevenuebymonth.jsf" />
+																				<p:menuitem id="lmr4" value="Percentage of Total Levies Paid by Chamber" icon="fa fa-pie-chart" url="#{request.contextPath}/admin/reportscreens/percentageoftotalleviespaidbychamber.jsf" />
+																				<p:menuitem id="lmr6" value="Number of Employers Contributing By Size" icon="fa fa-bar-chart" url="#{request.contextPath}/admin/reportscreens/sizeofemployercontributionanalysis.jsf" rendered="false" />
+																				<p:menuitem id="lmr7" value="Size of Employer - Contribution Analysis" icon="fa fa-users" url="#{request.contextPath}/admin/reportscreens/sizeofemployeranalysis.jsf" />
+																				<p:menuitem id="lmr6P" value="Size of Employer - By Size, Chamber &amp; Province Contribution Analysis" icon="fa fa-globe" url="#{request.contextPath}/admin/reportscreens/sizeofemployeranalysisByProvince.jsf" rendered="true" />
+																				<p:menuitem id="lmr8" value="Grants And Project Expenses From Inception" icon="fa fa-bar-chart" url="#{request.contextPath}/admin/reportscreens/historicalgrantsandprojectsanalysis.jsf" rendered="false" />
+																				<p:menuitem id="lmr9" value="SARS File Employers Joining/ Leaving Report" icon="fa fa-bar-chart" url="#{request.contextPath}/admin/reportscreens/afterlevyimportreportjoiningandleavingcompanies.jsf" />
+																				<p:menuitem id="lmr10" value="Levies By Scheme Year" icon="fa fa-money" url="#{request.contextPath}/admin/reportscreens/leviesbyschemeyearbylevymonthsplitintochambers.jsf" rendered="false" />
+																				<p:menuitem id="lmr11" value="Below Threshold Report" icon="fa fa-money" url="#{request.contextPath}/admin/reportscreens/belowThresholdReport.jsf" />
+																			</p:submenu>
+																			<p:submenu id="upData2" label="Upload Data" icon="fa fa-upload">
+																				<p:menuitem id="upData5" value="Deviation Data" icon="fa fa-upload" url="#{request.contextPath}/admin/wspcalculationdata.jsf" />
+																				<p:menuitem id="upData6" value="Categorization Data" icon="fa fa-upload" url="#{request.contextPath}/admin/categorizationdata.jsf" />
+																				<p:menuitem id="upData10" value="Workplace Approval Data" icon="fa fa-upload" url="#{request.contextPath}/pages/workplaceapprovaldata.jsf" rendered="#{not sessionUI.hideETQA}" />
+																				<p:menuitem id="ldsmr2" value="Legacy Data" icon="fa fa-upload" rendered="true" url="#{request.contextPath}/pages/legacyinfo/legacymenu.jsf"></p:menuitem>
+																			</p:submenu>
+																			<p:menuitem id="cOSH" value="On-screen help" icon="info_outline" url="#{request.contextPath}/admin/onscreenhelp.jsf" />
+																			<p:menuitem id="cFaqs" value="#{lang['create.FAQ']}" icon="fa fa-question-circle" url="#{request.contextPath}/admin/createfrequentlyaskedquestions.jsf" />
+																			<p:menuitem id="reopenWspMI" value="Reopen WSP " icon="lock_open" url="#{request.contextPath}/admin/reopenWsp.jsf" />
+																			<p:menuitem id="performanceMonitor" value="Performance" icon="fa fa-tachometer" url="#{request.contextPath}/admin/performanceMonitoring.jsf" />
+																			<p:submenu id="monitoringSM" label="Admin Monitoring" icon="account_balance">
+																				<p:menuitem id="monitorBDMI" value="Monitor Banking Details" icon="account_balance" url="#{request.contextPath}/admin/monitorBankingDetails.jsf" />
+																				<p:menuitem id="monitorDGVMI" value="Monitor DG Verification" icon="account_balance" url="#{request.contextPath}/admin/monitorDgVerification.jsf" />
+																				<p:menuitem id="monitorSetmisEx" value="Monitor SETMIS Exceptions" icon="account_balance" url="#{request.contextPath}/admin/exceptionstable.jsf" />
+																				<p:menuitem id="monitorCI" value="Monitor Company Information" icon="account_balance" url="#{request.contextPath}/admin/monitorCompanyInformation.jsf" />
+																				<p:menuitem id="monitorUI" value="Monitor User Information" icon="account_balance" url="#{request.contextPath}/admin/monitorUserInformation.jsf" />
+																				<p:menuitem id="monitorAI" value="Monitor Address Information" icon="account_balance" url="#{request.contextPath}/admin/monitorAddressInformation.jsf" />
+																				<p:menuitem id="monitorCHMI" value="Monitor Company Hist" icon="account_balance" url="#{request.contextPath}/admin/monitorCompanyHistory.jsf" />
+																				<p:menuitem id="monitorASMA" value="Monitor Assessor And Mod" icon="account_balance" url="#{request.contextPath}/admin/monitorAssessorMod.jsf" />
+																				<p:menuitem id="monitorLegASMA" value="Monitor Legacy Assessor And Mod" icon="account_balance" url="#{request.contextPath}/admin/monitorLegacyAssessorMod.jsf" />
+																				<p:menuitem id="monitorPA" value="Monitor Provider Applications" icon="account_balance" url="#{request.contextPath}/admin/monitorTrainingProviders.jsf" />
+																				<p:menuitem id="monitorPAStatus" value="Monitor Training Provider Status" icon="account_balance" url="#{request.contextPath}/admin/monitortrainingproviderstatus.jsf" />
+																				<p:menuitem id="monitorCL" value="Monitor Company Learner" icon="account_balance" url="#{request.contextPath}/admin/companylearnersmonitor.jsf" />
+																				<p:menuitem id="monitorVoa" value="Monitor Verification Of Assessments" icon="account_balance" url="#{request.contextPath}/admin/monitorverificationlearners.jsf" />
+																				<p:menuitem id="monitorCMI" value="Monitor Contracts" icon="account_balance" url="#{request.contextPath}/admin/monitorContracts.jsf" rendered="false" />
+																				<p:menuitem id="monitorCPMI" value="Monitor Contract Payments" icon="account_balance" url="#{request.contextPath}/admin/monitorBankingDetails.jsf" rendered="false" />
+																			</p:submenu>
+																			<p:menuitem id="reass" value="Re-assign Tasks" icon="fa fa-history" url="#{request.contextPath}/admin/reassigntasks.jsf" />
+																			<p:menuitem id="searchTask" value="Search Tasks" icon="fa fa-search" url="#{request.contextPath}/admin/searchtasks.jsf" />
+																			<p:menuitem id="recs1a" value="Send Bulk Email" icon="filter_1" url="#{request.contextPath}/admin/sendBulkMail.jsf" />
+																			<p:menuitem id="bulkMailComp" value="Send Email To Companies" icon="filter_1" url="#{request.contextPath}/admin/sendBulkMailToCompanies.jsf" />
+																			<p:menuitem id="scheduleLogsMI" value="Schedule Changes Log" icon="assignment" url="#{request.contextPath}/admin/schedulechangeslog.jsf" />
+																			<p:menuitem id="saqaUsXmlImport" value="SAQA XML Lookup Import" icon="fa fa-upload" url="#{request.contextPath}/admin/SaqaQualificationAndUnitStandardsXMLUpload.jsf" rendered="true" />
+																			<p:menuitem id="gpTransactionTestMI" value="Remittance API Test" icon="fa fa-check" url="#{request.contextPath}/admin/gpTransactionsTest.jsf" rendered="true" />
+																			<p:menuitem id="mailLogView" value="Mail Log" icon="fa fa-envelope-o" url="#{request.contextPath}/admin/mailLog.jsf" rendered="true" />
+																			<p:menuitem id="companylearnersunderreview" value="Learners Under Review" icon="info_outline" url="#{request.contextPath}/admin/companylearnersunderreview.jsf" rendered="true" />
+																		</c:if>
+																		<p:menuitem id="vbugs" value="#{lang['view.bugs']}" icon="remove_red_eye" url="#{request.contextPath}/admin/bugreport.jsf" />
+																		<p:menuitem id="scompa" value="#{lang['companies']}" icon="fa fa-building" url="#{request.contextPath}/pages/searchcompany.jsf" rendered="false" />
+																		<p:menuitem id="ec_sdfsa" value="SDF's" icon="people_outline" url="#{request.contextPath}/pages/sdf/users.jsf" />
+																		<p:submenu id="themes" label="#{lang['themes']}" icon="&#xE40A;" rendered="false">
+																			<f:attribute name="badge" value="5" />
+																			<p:menuitem id="theme0" value="DAJO" icon="&#xE3AE;" actionListener="#{guestPreferences.setTheme('techfinium')}" ajax="false" />
+																			<p:menuitem id="theme01" value="merseta" icon="&#xE3AE;" actionListener="#{guestPreferences.setTheme('merseta')}" ajax="false" />
+																			<p:menuitem id="theme1" value="Indigo - Pink" icon="&#xE3AE;" actionListener="#{guestPreferences.setTheme('indigo')}" ajax="false" />
+																			<p:menuitem id="theme2" value="Brown - Green" icon="&#xE3AE;" actionListener="#{guestPreferences.setTheme('brown')}" ajax="false" />
+																			<p:menuitem id="theme3" value="Blue - Amber" icon="&#xE3AE;" actionListener="#{guestPreferences.setTheme('blue')}" ajax="false" />
+																			<p:menuitem id="theme4" value="Blue Grey - Green" icon="&#xE3AE;" actionListener="#{guestPreferences.setTheme('blue-grey')}" ajax="false" />
+																			<p:menuitem id="theme5" value="Dark - Blue" icon="&#xE3AE;" actionListener="#{guestPreferences.setTheme('dark-blue')}" ajax="false" />
+																			<p:menuitem id="theme6" value="Dark - Green" icon="&#xE3AE;" actionListener="#{guestPreferences.setTheme('dark-green')}" ajax="false" />
+																			<p:menuitem id="theme7" value="Green - Yellow" icon="&#xE3AE;" actionListener="#{guestPreferences.setTheme('green')}" ajax="false" />
+																			<p:menuitem id="theme8" value="Purple - Cyan" icon="&#xE3AE;" actionListener="#{guestPreferences.setTheme('purple-cyan')}" ajax="false" />
+																			<p:menuitem id="theme9" value="Purple - Amber" icon="&#xE3AE;" actionListener="#{guestPreferences.setTheme('purple-amber')}" ajax="false" />
+																			<p:menuitem id="theme10" value="Teal - Lime" icon="&#xE3AE;" actionListener="#{guestPreferences.setTheme('teal')}" ajax="false" />
+																			<p:menuitem id="theme11" value="Cyan - Amber" icon="&#xE3AE;" actionListener="#{guestPreferences.setTheme('cyan')}" ajax="false" />
+																			<p:menuitem id="theme12" value="Grey - Deep Orange" icon="&#xE3AE;" actionListener="#{guestPreferences.setTheme('grey')}" ajax="false" />
+																		</p:submenu>
+																		<p:submenu id="um_customization" label="#{lang['customization']}" icon="&#xE8B8;" styleClass="amber-badge">
+																			<f:attribute name="badge" value="10" />
+																			<p:menuitem id="custom1" value="Compact Size" icon="&#xE061;" actionListener="#{guestPreferences.setCompact(true)}" ajax="false" />
+																			<p:menuitem id="custom2" value="Material Size" icon="&#xE062;" actionListener="#{guestPreferences.setCompact(false)}" ajax="false" />
+																			<p:menuitem id="custom3" value="Static Menu" icon="&#xE5D2;" actionListener="#{guestPreferences.setMenuLayout('static')}" ajax="false" />
+																			<p:menuitem id="custom4" value="Overlay Menu" icon="&#xE879;" actionListener="#{guestPreferences.setMenuLayout('overlay')}" ajax="false" />
+																			<p:menuitem id="custom5" value="Slim Menu" icon="&#xE879;" actionListener="#{guestPreferences.setMenuLayout('slim')}" ajax="false" />
+																			<p:menuitem id="custom6" value="Horizontal Menu" icon="&#xE22C;" actionListener="#{guestPreferences.setMenuLayout('horizontal')}" ajax="false" />
+																			<p:menuitem id="custom7" value="Light Menu" icon="&#xE893;" actionListener="#{guestPreferences.setLightMenu}" ajax="false" />
+																			<p:menuitem id="custom8" value="Dark Menu" icon="&#xE892;" actionListener="#{guestPreferences.setDarkMenu}" ajax="false" />
+																			<p:menuitem id="custom9" value="Inline Profile" icon="&#xE0BA;" actionListener="#{guestPreferences.setProfileMode('inline')}" ajax="false" />
+																			<p:menuitem id="custom10" value="Top Profile" icon="&#xE55A;" actionListener="#{guestPreferences.setProfileMode('overlay')}" ajax="false" />
+																		</p:submenu>
+																		<p:submenu id="um_orientation" label="#{lang['orientation']}" icon="&#xE237;" rendered="false">
+																			<p:menuitem id="um_ltr" value="LTR" icon="&#xE236;" actionListener="#{guestPreferences.setOrientationRTL(false)}" ajax="false" />
+																			<p:menuitem id="um_rtl" value="RTL" icon="&#xE237;" actionListener="#{guestPreferences.setOrientationRTL(true)}" ajax="false" />
+																		</p:submenu>
+																		<p:menuitem id="glosRa" value="User Browser Information" icon="fa fa-users" url="#{request.contextPath}/admin/userbrowserinformation.jsf" />
+																	</c:if>
+																	<c:if test="#{sessionUI.user.finance}">
+																		<p:menuitem id="dashboardMi" value="#{lang['dashboard']}" icon="&#xE871;" url="#{request.contextPath}#{sessionUI.role.dashboard}" rendered="#{sessionUI.role ne null}" />
+																		<p:submenu id="grantManagementFin" label="#{lang['grant.management']}" icon="business">
+																			<p:menuitem id="orgaFin" value="#{lang['grant.application']}" icon="business" url="#{request.contextPath}/pages/externalparty/company.jsf" />
+																			<p:menuitem id="mgveriFin" value="#{lang['mg.verification']}" icon="fa fa-money" url="#{request.contextPath}/pages/mgverificationapplication.jsf" rendered="#{sessionUI.role.mgVerification}" />
+																			<p:menuitem id="mgverFin" value="#{lang['mg.report']}" icon="fa fa-money" url="#{request.contextPath}/pages/mgverificationreport.jsf" rendered="#{sessionUI.role.mgVerification}" />
+																			<p:menuitem id="dgvFin" value="#{lang['dg.verification']}" icon="fa fa-money" url="#{request.contextPath}/pages/dgverification.jsf" rendered="#{sessionUI.role.dgVerification}" />
+																			<p:menuitem id="dgallFin" value="#{lang['dg.allocation']}" icon="fa fa-check" url="#{request.contextPath}/pages/dgallocation/dgallocation.jsf" rendered="#{sessionUI.role.dgAllocation}" />
+																			<p:menuitem id="dgallProjFin" value="Project Allocation" icon="fa fa-check" url="#{request.contextPath}/pages/dgallocation/dgallocationprojects.jsf" rendered="#{sessionUI.role.dgAllocation}" />
+																			<p:menuitem id="dgallostatusesFin" value="DG Allocation Status" icon="business" url="#{request.contextPath}/pages/dgallocationstatuses.jsf" />
+																			<p:menuitem id="commitment_register2Fin" value="MOA Status" icon="fa fa-money" url="#{request.contextPath}/pages/moastatus.jsf" />
+																			<p:menuitem id="dgAllocationTaskStatusFin" value="PIP TaskTracker" icon="fa fa-money" url="#{request.contextPath}/pages/dgAllocationTaskStatus.jsf" />
+																			<p:menuitem id="pipReportFin" value="PIP Report" icon="fa fa-money" url="#{request.contextPath}/pages/pipReport.jsf" />
+																			<p:menuitem id="commitment_registerFin" value="Commitment Register" icon="fa fa-money" url="#{request.contextPath}/pages/activecontracts.jsf" />
+																			<p:menuitem id="orgwxsFin" value="#{lang['extension.request']}" icon="fa fa-history" url="#{request.contextPath}/pages/extensionrequest.jsf" rendered="#{sessionUI.user.viewExtensionRequest}" />
+																			<p:menuitem id="grantHist2Fin" value="Mandatory Grant Historical Data" icon="fa fa-money" url="#{request.contextPath}/pages/wsphistoricdata.jsf" rendered="false" />
+																		</p:submenu>
+																		<p:submenu id="moaRegistersSMFin" label="MOA Management" icon="fa fa-money" rendered="#{sessionUI.activeUser.moaRegisterAccess}">
+																			<p:menuitem id="moaListMoaRegistersMIFin" value="MOA Register" icon="fa fa-money" url="#{request.contextPath}/pages/reports/registers/moaAllocationReport.jsf" />
+																			<p:menuitem id="paymentsMoaRegistersMIFin" value="Payments Register" icon="fa fa-money" url="#{request.contextPath}/pages/reports/registers/moaPaymentsReport.jsf" />
+																			<p:menuitem id="commitmentRegisterMoaRegistersMIFin" value="Commitment Register" rendered="false" icon="fa fa-money" url="#{request.contextPath}/pages/activecontracts.jsf" />
+																		</p:submenu>
+																		<p:submenu id="finRepFin" label="Finance Reporting" icon="assessment">
+																			<p:menuitem id="lmr11" value="Employer Levy Status Analysis" icon="fa fa-money" url="#{request.contextPath}/admin/reportscreens/levyanalysisbychamber.jsf" />
+																			<p:menuitem id="lmr22" value="Levy Analysis by Scheme Year &amp; Chamber" icon="fa fa-pie-chart" url="#{request.contextPath}/admin/reportscreens/levyincomebyyearbychamber.jsf" />
+																			<p:menuitem id="lmr33" value="Chamber Revenue by Scheme Year by Month" icon="fa fa-money" url="#{request.contextPath}/admin/reportscreens/chamberrevenuebymonth.jsf" />
+																			<p:menuitem id="lmr44" value="Percentage of Total Levies Paid by Chamber" icon="fa fa-pie-chart" url="#{request.contextPath}/admin/reportscreens/percentageoftotalleviespaidbychamber.jsf" />
+																			<p:menuitem id="lmr66" value="Number of Employers Contributing By Size" icon="fa fa-bar-chart" url="#{request.contextPath}/admin/reportscreens/sizeofemployercontributionanalysis.jsf" rendered="false" />
+																			<p:menuitem id="lmr77" value="Size of Employer - Contribution Analysis" icon="fa fa-users" url="#{request.contextPath}/admin/reportscreens/sizeofemployeranalysis.jsf" />
+																			<p:menuitem id="lmr66P" value="Size of Employer - By Size, Chamber &amp; Province Contribution Analysis" icon="fa fa-globe" url="#{request.contextPath}/admin/reportscreens/sizeofemployeranalysisByProvince.jsf" />
+																			<p:menuitem id="lmr88" value="Grants And Project Expenses From Inception" icon="fa fa-bar-chart" url="#{request.contextPath}/admin/reportscreens/historicalgrantsandprojectsanalysis.jsf" rendered="false" />
+																			<p:menuitem id="lmr99" value="SARS File Employers Joining/ Leaving Report" icon="fa fa-bar-chart" url="#{request.contextPath}/admin/reportscreens/afterlevyimportreportjoiningandleavingcompanies.jsf" />
+																			<p:menuitem id="lmr1010" value="Levies By Scheme Year" icon="fa fa-money" url="#{request.contextPath}/admin/reportscreens/leviesbyschemeyearbylevymonthsplitintochambers.jsf" rendered="false" />
+																			<p:menuitem id="lmr1111" value="Below Threshold Report" icon="fa fa-money" url="#{request.contextPath}/admin/reportscreens/belowThresholdReport.jsf" />
+																		</p:submenu>
+																		<p:menuitem icon="assignment" id="legacyAppAlterNfMI" value="Legacy Accreditations Monitoring" url="#{request.contextPath}/pages/approvedLegacyProviderApplications.jsf" rendered="#{sessionUI.user.alterLegacyApplications}" />
+																		<p:menuitem icon="account_balance_wallet" id="gpBankingDetailsFin" value="GP Bank Details" url="#{request.contextPath}/pages/gpBankingDetailsMonitoring.jsf" rendered="#{sessionUI.user.gpBankingDetails}" />
+																		<p:menuitem icon="assignment_turned_in" id="levyDetailsMgTransFin" value="Levy Detail Payments Management" url="#{request.contextPath}/pages/detailLevyMgTransations.jsf" rendered="#{sessionUI.user.levyDetailMgTransactions}" />
+																		<p:menuitem id="sarslF" value="#{lang['SARS.levy.files']}" icon="file_upload" url="#{request.contextPath}/admin/sarsfiles.jsf" />
+																		<p:menuitem id="sarsDescLevyCalFin" value="Levy Calculation Information" icon="assignment" url="#{request.contextPath}/pages/sarslevydetailcalculation.jsf" rendered="#{sessionUI.user.sarsLevyDetailCalc}" />
+																		<p:menuitem id="sarsLevyReturnsCalFin" value="Mandatory Levy Returns" icon="assignment" url="#{request.contextPath}/pages/sarslevyschemeyearreturns.jsf" />
+																		<p:submenu id="sarsL01f" label="Levy reports" icon="apps">
+																			<p:menuitem id="sarsrsc01f" value="By Scheme Year" icon="schedule" url="#{request.contextPath}/admin/sarsreportsByRefAndSchemeYear.jsf" />
+																			<p:menuitem id="sarsrf" value="SARS Reports by entity between SARS arrival date" icon="pie_chart_outlined" url="#{request.contextPath}/admin/sarsreports.jsf" />
+																			<p:menuitem id="sarsShemeYearSummaryFUMI" value="Scheme Year Summary" icon="schedule" url="#{request.contextPath}/admin/sarsReportBySchemeYearSummary.jsf" />
+																			<p:menuitem id="sarsArrDateSummaryFUMI" value="Arrival Date Summary" icon="schedule" url="#{request.contextPath}/admin/sarsReportBetweenArrivalDates.jsf" />
+																			<p:menuitem id="sarsMultiSchemeYearSummaryFUMI" value="Multiple Scheme Years" icon="schedule" url="#{request.contextPath}/admin/sarsReportSummaryMultipleSchemeYears.jsf" />
+																			<p:menuitem id="sarsArrDateSchemeYearSummaryFUMI" value="Arrival Date and Multiple Scheme Years Summary" icon="schedule" url="#{request.contextPath}/admin/sarsReportSummaryArrivalDates_SchemeYears.jsf" />
+																		</p:submenu>
+																		<p:menuitem id="sarspF" value="Bank Statements" icon="book" url="#{request.contextPath}/admin/sarsleviespaid.jsf" />
+																		<p:menuitem id="sarspFZ" value="Deposit report" icon="attach_money" url="#{request.contextPath}/admin/levySummaryReport.jsf" />
+																		<p:menuitem id="sarspDR" value="Levy Deviation Report" icon="flip_to_back" url="#{request.contextPath}/admin/sarslevydeviation.jsf" rendered="false" />
+																		<p:menuitem id="sarsStandFNcDevRepMI" value="Standard Deviation Report" icon="flip_to_back" url="#{request.contextPath}/admin/sarsLevyStandardDeviationReport.jsf" />
+																		<p:submenu id="sarsR" label="#{lang['reconciliation']}" icon="apps">
+																			<p:menuitem id="recs1P" value="Per Period" icon="filter_1" url="#{request.contextPath}/admin/sarsreconforperiod.jsf" />
+																			<p:menuitem id="recs1S" value="Per Scheme Year" icon="filter_1" url="#{request.contextPath}/admin/sarslevyreconbyschemeyear.jsf" rendered="false" />
+																			<p:menuitem id="recs1F" value="#{lang['by.levy.number']}" icon="filter_1" url="#{request.contextPath}/admin/reconsummary.jsf" />
+																		</p:submenu>
+																		<p:menuitem id="sschg" value="#{lang['sars.status.changed']}" icon="track_changes" url="#{request.contextPath}/admin/sarsstatuschanged.jsf" />
+																		<p:menuitem id="nmsic1" value="Non matching SIC codes" icon="thumbs_up_down" url="#{request.contextPath}/mis/nonmatchinsicCodes.jsf" />
+																		<p:menuitem id="itrf" value="Inter SETA Transfers" icon="swap_horiz" url="#{request.contextPath}/admin/sarsintersetatransfers.jsf" />
+																		<p:menuitem id="compWSP" value="Mandatory Grant Historical Data" icon="fa fa-industry" url="#{request.contextPath}/admin/companywspdetails.jsf" />
+																		<p:menuitem id="compb" value="#{lang['company.banking.details']}" icon="fa fa-building" url="#{request.contextPath}/admin/companybankingdetails.jsf" rendered="#{sessionUI.role.companies}" />
+																		<p:submenu id="managerCompManSM" label="#{lang['company.management']}" icon="fa fa-building">
+																			<p:menuitem id="managerCompManMI" value="#{lang['companies']}" icon="fa fa-building" url="#{request.contextPath}/pages/searchcompany.jsf" />
+																		</p:submenu>
+																		<p:menuitem id="compFinf" value="Remittance Advice" icon="assignment_ind" url="#{request.contextPath}/admin/companyFinanceGpReporting.jsf" />
+																		<p:menuitem id="compFinanceReporting" value="Company Contact Details" icon="assignment_ind" url="#{request.contextPath}/pages/companyfinancereport.jsf" />
+																		<p:submenu id="dgmgFnTransactionsSM" label="Transactions" icon="view_list">
+																			<p:menuitem id="mgTransf" value="MG Transactions" icon="assignment" url="#{request.contextPath}/admin/mandatoryGrantsTransactionGp.jsf" />
+																			<p:menuitem id="dgTransf" value="DG Transactions" icon="assessment" url="#{request.contextPath}/admin/discretionaryGrantsTransactionGp.jsf" />
+																		</p:submenu>
+																	</c:if>
+																	<p:menuitem id="externalLearnerDev" value="Learnership Application" icon="fa fa-id-badge" url="#{request.contextPath} hipregistration.jsf" rendered="false" />
+																	<p:menuitem id="shrlNew" value="#{lang['stakeholder.relations']}" icon="people" url="#{request.contextPath}/pages/stakeholderRelations.jsf" rendered="#{sessionUI.externalParty and not sessionUI.checkLearner}" />
+																	<p:submenu id="userResourcesMI" label="#{lang['user.resources']}" icon="book">
+																		<p:submenu id="reftUR" label="#{lang['reference.tables']}" icon="subject" rendered="#{sessionUI.externalParty or sessionUI.employee}">
+																			<p:menuitem id="qualiRUR" value="#{lang['saqa.qualifications']}" icon="school" url="#{request.contextPath}/pages/reference/saqaqualification.jsf" />
+																			<p:menuitem id="unitsRUR" value="#{lang['saqa.unit.standards']}" icon="subtitles" url="#{request.contextPath}/pages/reference/saqaunitstandard.jsf" />
+																			<p:menuitem id="etqaRUR" value="#{lang['etqa']}" icon="business" url="#{request.contextPath}/pages/reference/etqa.jsf" />
+																			<p:menuitem id="skillsetRUR" value="Skills Set" icon="fa fa-sticky-note-o" url="#{request.contextPath}/pages/reference/skillsset.jsf" />
+																			<p:menuitem id="skillprogrammeRUR" value="Skill Programme" icon="fa fa-sticky-note-o" url="#{request.contextPath}/pages/reference/skillsprogram.jsf" />
+																		</p:submenu>
+																		<p:menuitem id="glosRUR" value="#{lang['glossary']}" icon="chrome_reader_mode" url="#{request.contextPath}/pages/reference/glossary.jsf" />
+																		<p:menuitem id="vbug2aUR" value="Tutorial Videos" icon="fa fa-play" url="#{request.contextPath}/pages/video.jsf" />
+																		<p:menuitem id="faqsUR" value="#{lang['f.a.q']}" icon="fa fa-question" url="#{request.contextPath}/pages/frequentlyaskedquestions.jsf" />
+																		<p:menuitem id="employeeTemplates1" value="#{lang['employee.templates']}" icon="library_books" url="#{request.contextPath}/pages/employeeTemplateView.jsf" rendered="#{sessionUI.employee or sessionUI.user.superAdmin}" />
+																		<p:menuitem id="templateViewEP1UR" value="#{lang['templates']}" icon="library_books" url="#{request.contextPath}/pages/externalparty/templateView.jsf" rendered="#{not sessionUI.externalParty and sessionUI.employee}" />
+																		<p:menuitem id="templateViewEPUR" value="#{lang['templates']}" icon="library_books" url="#{request.contextPath}/pages/externalparty/templateView.jsf" rendered="#{sessionUI.externalParty and not sessionUI.checkLearner}" />
+																	</p:submenu>
+																	<p:submenu id="arplMi" label="ARPL" icon="fa fa-list" rendered="#{sessionUI.externalParty}">
+																		<p:menuitem id="applyAprlMI" value="Application Management" icon="fa fa-plus-circle" url="#{request.contextPath}/pages/externalparty/viewApplyArpl.jsf" />
+																	</p:submenu>
+																	<p:menuitem id="extractDemo" value="SETMIS Extract" icon="library_books" url="#{request.contextPath}/dataExtracts.jsf" rendered="#{sessionUI.user.id eq 2458}" />
+																	<p:submenu id="supportMI" label="#{lang['support']}" icon="fa fa-phone">
+																		<p:menuitem id="ec_bugreport" value="#{lang['issue.request.report']}" icon="bug_report" url="#{request.contextPath}/pages/bugreport.jsf" rendered="#{false}" />
+																		<p:menuitem id="ec_bugreportw" value="System Support Request" icon="bug_report" url="#{request.contextPath}/pages/systemmaintenance.jsf" rendered="#{not sessionUI.externalParty}" />
+																		<p:menuitem id="contact" value="Contact Us" icon="fa fa-phone" onclick="PF('dlgOffices').show()" update=":genOfficesForm" />
+																	</p:submenu>
+																</pu:menu>
+															</c:if>
+															<c:if test="#{sessionUI.user eq null}">
+																<pu:menu widgetVar="me">
+																	<p:menuitem id="login" value="#{lang['login']}" icon="&#xE7FD;" url="#{request.contextPath}/login.jsf" />
+																</pu:menu>
+															</c:if>
+														</div>
+													</div>
+												</div>
+											</h:form>
+										</ui:composition>
+										<p:menuitem id="orgaa" value="#{lang['inter.seta.transfer']}" icon="fa fa-paper-plane" url="#{request.contextPath}/pages/intersetatransfer/transferrequests.jsf" rendered="#{sessionUI.role.interSetaTransfer}" />
+										<p:menuitem id="skillreg" value="Skills Registration" icon="fa fa-sticky-note-o" url="#{request.contextPath}/pages/tp/skillsregistration.jsf" rendered="false" />
+										<p:submenu id="tempReporting" label="Reporting" icon="assessment" rendered="#{sessionUI.user.tempReporting and false}">
+											<p:menuitem icon="assignment" id="wspReporting" value="Grant Reports" url="#{request.contextPath}/pages/wspReportingPage.jsf" />
+											<p:menuitem icon="assignment" id="dgReporting" value="DG Reports" url="#{request.contextPath}/pages/dgReportingPage.jsf" />
+										</p:submenu>
+										<p:menuitem id="s_v" value="Site Visits" icon="fa fa-industry" url="#{request.contextPath}/pages/clo/sitevisit.jsf" rendered="#{sessionUI.role.siteVisit}" />
+										<p:menuitem id="svrForClo" value="Site Visit Report" icon="fa fa-industry" url="#{request.contextPath}/pages/sitevisitreport.jsf" rendered="#{sessionUI.role.siteVisitReport}" />
+										<p:menuitem id="menuProcessRolesa" value="#{lang['assign.administrators']}" icon="group_work" url="#{request.contextPath}/admin/assignprocessrolessimple.jsf" rendered="false" />
+										<p:menuitem id="templateViewEP1" value="#{lang['templates']}" icon="library_books" url="#{request.contextPath}/pages/externalparty/templateView.jsf" rendered="false" />
+										<p:menuitem id="vbug2s" value="#{lang['view.bugs']}" icon="remove_red_eye" url="#{request.contextPath}/pages/viewbugreport.jsf" rendered="#{sessionUI.user.viewBugs}" />
+										<p:submenu id="upData" label="Upload Data" icon="fa fa-upload" rendered="#{sessionUI.user.viewUploadData}">
+											<p:menuitem id="upData1" value="Deviation Data" icon="fa fa-upload" url="#{request.contextPath}/pages/wspcalculationdata.jsf" />
+											<p:menuitem id="upData3" value="Categorization Data" icon="fa fa-upload" url="#{request.contextPath}/pages/categorizationdata.jsf" />
+											<p:menuitem id="upData2" value="Workplace Approval Data" icon="fa fa-upload" url="#{request.contextPath}/pages/workplaceapprovaldata.jsf" rendered="#{not sessionUI.hideETQA}" />
+											<p:menuitem id="ldsmr3" value="Legacy Data" icon="fa fa-upload" rendered="true" url="#{request.contextPath}/pages/legacyinfo/legacymenu.jsf"></p:menuitem>
+										</p:submenu>
+										<p:menuitem id="chatEmp" value="Chat" icon="chat" url="#{request.contextPath}/pages/chat/chatEmp.jsf" disabled="false" rendered="false" />
+									</c:if>
+									<c:if test="#{sessionUI.externalParty}">
+										<p:menuitem id="dash" value="#{lang['dashboard']}" icon="&#xE871;" url="#{request.contextPath}/pages/externalparty/dashboard.jsf" />
+										<p:menuitem id="chatE" value="Chat" icon="chat" url="#{request.contextPath}/pages/chat/chat.jsf" disabled="false" rendered="false" />
+										<c:if test="#{sessionUI.learner}">
+										</c:if>
+										<c:if test="#{not sessionUI.checkLearner}">
+											<p:submenu id="sdfMenu" label="SDF" icon="fa fa-industry" rendered="#{sessionUI.sdf}">
+												<p:menuitem id="cm" value="#{lang['company.management']}" icon="settings" url="#{request.contextPath}/pages/externalparty/companymanagement.jsf" />
+												<p:menuitem id="orga" value="#{lang['grant.application']}" icon="business" url="#{request.contextPath}/pages/externalparty/company.jsf" />
+											</p:submenu>
+											<p:menuitem id="er" value="#{lang['extension.request']}" icon="fa fa-external-link" url="#{request.contextPath}/pages/externalparty/extensionprocessrequest.jsf" rendered="false" />
+											<p:menuitem id="lr" value="#{lang['learner.registration']}" icon="accessibility" url="#{request.contextPath}/pages/companyLookupTableForLearnersReg.jsf" rendered="false" />
+											<p:submenu id="tp" icon="fa fa-leanpub" label="#{lang['skills.development']}" rendered="#{sessionUI.trainingProvider}">
+												<p:menuitem id="lra" value="#{lang['learner.management']}" icon="accessibility" url="#{request.contextPath}/pages/tp/learners.jsf" rendered="#{sessionUI.trainingProvider}" />
+												<p:menuitem id="skillreg" value="Skills Prog/Set App" icon="fa fa-sticky-note-o" url="#{request.contextPath}/pages/tp/skillsregistration.jsf" rendered="#{sessionUI.trainingProvider or sessionUI.employee}" />
+												<p:menuitem id="learnerDev" value="Learnership Application" icon="fa fa-id-badge" url="#{request.contextPath}/pages/tp/learnershipregistration.jsf" rendered="#{sessionUI.trainingProvider}" />
+												<p:menuitem id="CoursewareDistro" value="Courseware Distribution" icon="fa fa-book" url="#{request.contextPath}/pages/tp/coursewareDistibution.jsf" rendered="#{sessionUI.trainingProvider and sessionUI.user.active}" />
+												<p:menuitem id="CurricDev" value="#{lang['qualification.dev']}" icon="fa fa-graduation-cap" url="#{request.contextPath}/pages/qualificationsCurriculumDevelopmentRegistration.jsf" rendered="#{sessionUI.trainingProvider}" />
+											</p:submenu>
+											<p:menuitem id="shrl" value="#{lang['stakeholder.relations']}" icon="people" url="#{request.contextPath}/pages/stakeholderRelations.jsf" rendered="false" />
+											<p:menuitem id="templateViewEP" value="#{lang['templates']}" icon="library_books" url="#{request.contextPath}/pages/externalparty/templateView.jsf" rendered="false" />
+										</c:if>
+										<p:menuitem id="externalQualificationDev" value="#{lang['qualification.dev']}" icon="fa fa-graduation-cap" url="#{request.contextPath}/pages/qualificationrequests.jsf" rendered="#{!sessionUI.trainingProvider}" />
+									</c:if>
+									<p:submenu id="reft" label="#{lang['reference.tables']}" icon="subject" rendered="false">
+										<p:menuitem id="qualiR" value="#{lang['saqa.qualifications']}" icon="school" url="#{request.contextPath}/pages/reference/saqaqualification.jsf" />
+										<p:menuitem id="unitsR" value="#{lang['saqa.unit.standards']}" icon="subtitles" url="#{request.contextPath}/pages/reference/saqaunitstandard.jsf" />
+										<p:menuitem id="etqaR" value="#{lang['etqa']}" icon="business" url="#{request.contextPath}/pages/reference/etqa.jsf" />
+										<p:menuitem id="skillsetR" value="Skills Set" icon="fa fa-sticky-note-o" url="#{request.contextPath}/pages/reference/skillsset.jsf" />
+										<p:menuitem id="skillprogrammeR" value="Skill Programme" icon="fa fa-sticky-note-o" url="#{request.contextPath}/pages/reference/skillsprogram.jsf" />
+									</p:submenu>
+								</c:if>
+							</c:if>
+							<c:if test="#{sessionUI.user.admin}">
+								<p:menuitem id="menuDashboard" value="#{lang['dashboard']}" icon="&#xE871;" url="#{request.contextPath}/admin/dashboard.jsf" />
+								<c:if test="#{sessionUI.user.superAdmin}">
+									<p:menuitem id="hcm" value="#{lang['hosting.companies']}" icon="&#xE871;" url="#{request.contextPath}/admin/hostingCompanyProfile.jsf" />
+									<p:menuitem id="hce" value="#{lang['employees']}" icon="person_pin_circle" url="#{request.contextPath}/admin/hostingCompanyEmployees.jsf" />
+									<p:menuitem id="hcd" value="#{lang['hc.departments']}" icon="business" url="#{request.contextPath}/admin/hostingcompanydepartments.jsf" />
+									<p:menuitem id="hcdn" value="#{lang['organisation.chart']}" icon="business" url="#{request.contextPath}/admin/orgchartConfigurator.jsf" />
+									<p:menuitem id="hcdata" value="#{lang['hc.data']}" icon="data_usage" url="#{request.contextPath}/admin/userhostingcompany.jsf" rendered="false" />
+									<p:menuitem id="gt" value="#{lang['document.types']}" icon="&#xE871;" url="#{request.contextPath}/admin/configdoc.jsf" />
+									<p:menuitem id="hct" value="#{lang['hosting.company.templates']}" icon="library_books" url="#{request.contextPath}/admin/hostingCompanyTemplates.jsf" />
+									<p:menuitem id="lupm" value="#{lang['lookup.menus']}" icon="&#xE5D2;" url="#{request.contextPath}/admin/lookupMenu.jsf" />
+									<p:menuitem id="menuProcessRoles" value="#{lang['assign.process.roles']}" icon="group_work" url="#{request.contextPath}/admin/assignprocessroles.jsf" />
+									<p:menuitem id="menuUsers" value="#{lang['users']}" icon="supervisor_account" url="#{request.contextPath}/admin/users.jsf" />
+									<p:menuitem id="surveysReport" value="Surveys" icon="assessment" url="#{request.contextPath}/admin/surveyReport.jsf" />
+									<p:menuitem id="wspapproval" value="#{lang['mg.approval.list']}" icon="chrome_reader_mode" url="#{request.contextPath}/admin/ts1.jsf" rendered="false" />
+									<p:submenu id="adminReporting" label="Reporting" icon="assessment">
+										<p:menuitem icon="assignment" id="adminWspReporting" value="Grant Reports" url="#{request.contextPath}/pages/wspReportingPage.jsf" />
+										<p:menuitem icon="assignment" id="adminDgReporting" value="DG Reports" url="#{request.contextPath}/pages/dgReportingPage.jsf" />
+										<p:menuitem icon="assignment" id="admincoursewareRepotTemp" value="Courseware Repot Temp" url="#{request.contextPath}/pages/coursewareDistibutionReport.jsf" />
+										<p:menuitem icon="assignment" id="adminWpaReporting" value="WPA Reporting" url="#{request.contextPath}/pages/workplaceApprovalReporting.jsf" rendered="false" />
+									</p:submenu>
+									<p:submenu id="sars" label="#{lang['sars']}" icon="attach_money">
+										<p:menuitem id="sarsl" value="#{lang['SARS.levy.files']}" icon="file_upload" url="#{request.contextPath}/admin/sarsfiles.jsf" />
+										<p:submenu id="sarsL01" label="Levy reports" icon="apps">
+											<p:menuitem id="sarsrsc01" value="By Scheme Year" icon="schedule" url="#{request.contextPath}/admin/sarsreportsByRefAndSchemeYear.jsf" />
+											<p:menuitem id="sarsrchm01" value="Chamber/Scheme Year" icon="schedule" url="#{request.contextPath}/admin/sarsreportsByChamberSchemeYear.jsf" />
+											<p:menuitem id="sarsr" value="By Arrival Date" icon="pie_chart_outlined" url="#{request.contextPath}/admin/sarsreports.jsf" />
+										</p:submenu>
+										<p:menuitem id="sarsp" value="#{lang['bank.statements']}" icon="book" url="#{request.contextPath}/admin/sarsleviespaid.jsf" />
+										<p:menuitem id="sarspFZ1" value="#{lang['deposit.report']}" icon="attach_money" url="#{request.contextPath}/admin/levySummaryReport.jsf" />
+										<p:menuitem id="sarspDR1" value="Levy Deviation Report" icon="flip_to_back" url="#{request.contextPath}/admin/sarslevydeviation.jsf" rendered="false" />
+										<p:menuitem id="recs" value="#{lang['employer.breakdown']}" icon="chrome_reader_mode" url="#{request.contextPath}/admin/sarscontribsummary.jsf?summary=true" />
+										<p:submenu id="sarsR" label="#{lang['reconciliation']}" icon="apps">
+											<p:menuitem id="recs1P" value="Per Period" icon="filter_1" url="#{request.contextPath}/admin/sarsreconforperiod.jsf" />
+											<p:menuitem id="recs1SA" value="Per Scheme Year" icon="filter_1" url="#{request.contextPath}/admin/sarslevyreconbyschemeyear.jsf" rendered="false" />
+											<p:menuitem id="recs1" value="#{lang['by.levy.number']}" icon="filter_1" url="#{request.contextPath}/admin/reconsummary.jsf" />
+										</p:submenu>
+										<p:menuitem id="sschg" value="#{lang['sars.status.changed']}" icon="track_changes" url="#{request.contextPath}/admin/sarsstatuschanged.jsf" />
+										<p:menuitem id="nmsic" value="Non matching SIC codes" icon="thumbs_up_down" url="#{request.contextPath}/mis/nonmatchinsicCodes.jsf" />
+										<p:menuitem id="itrf" value="Inter SETA Transfers" icon="swap_horiz" url="#{request.contextPath}/admin/sarsintersetatransfers.jsf" />
+									</p:submenu>
+									<p:submenu id="upData2" label="Upload Data" icon="fa fa-upload">
+										<p:menuitem id="upData5" value="Deviation Data" icon="fa fa-upload" url="#{request.contextPath}/admin/wspcalculationdata.jsf" />
+										<p:menuitem id="upData6" value="Categorization Data" icon="fa fa-upload" url="#{request.contextPath}/admin/categorizationdata.jsf" />
+										<p:menuitem id="upData10" value="Workplace Approval Data" icon="fa fa-upload" url="#{request.contextPath}/pages/workplaceapprovaldata.jsf" rendered="#{not sessionUI.hideETQA}" />
+										<p:menuitem id="ldsmr4" value="Legacy Data" icon="fa fa-upload" rendered="true" url="#{request.contextPath}/pages/legacyinfo/legacymenu.jsf"></p:menuitem>
+									</p:submenu>
+									<p:menuitem id="cOSH" value="On-screen help" icon="info_outline" url="#{request.contextPath}/admin/onscreenhelp.jsf" />
+									<p:menuitem id="cFaqs" value="#{lang['create.FAQ']}" icon="fa fa-question-circle" url="#{request.contextPath}/admin/createfrequentlyaskedquestions.jsf" />
+									<p:menuitem id="reass" value="Re-assign Tasks" icon="fa fa-history" url="#{request.contextPath}/admin/reassigntasks.jsf" />
+									<p:menuitem id="recs1a" value="Send Bulk Email" icon="filter_1" url="#{request.contextPath}/admin/sendBulkMail.jsf" />
+									<p:menuitem id="scheduleLogsMI" value="Schedule Changes Log" icon="assignment" url="#{request.contextPath}/admin/schedulechangeslog.jsf" />
+								</c:if>
+								<p:menuitem id="vbugs" value="#{lang['view.bugs']}" icon="remove_red_eye" url="#{request.contextPath}/admin/bugreport.jsf" />
+								<p:menuitem id="scompa" value="#{lang['companies']}" icon="fa fa-building" url="#{request.contextPath}/pages/searchcompany.jsf" />
+								<p:menuitem id="ec_sdfsa" value="SDF's" icon="people_outline" url="#{request.contextPath}/pages/sdf/users.jsf" />
+								<p:submenu id="themes" label="#{lang['themes']}" icon="&#xE40A;" rendered="false">
+									<f:attribute name="badge" value="5" />
+									<p:menuitem id="theme0" value="DAJO" icon="&#xE3AE;" actionListener="#{guestPreferences.setTheme('techfinium')}" ajax="false" />
+									<p:menuitem id="theme01" value="merseta" icon="&#xE3AE;" actionListener="#{guestPreferences.setTheme('merseta')}" ajax="false" />
+									<p:menuitem id="theme1" value="Indigo - Pink" icon="&#xE3AE;" actionListener="#{guestPreferences.setTheme('indigo')}" ajax="false" />
+									<p:menuitem id="theme2" value="Brown - Green" icon="&#xE3AE;" actionListener="#{guestPreferences.setTheme('brown')}" ajax="false" />
+									<p:menuitem id="theme3" value="Blue - Amber" icon="&#xE3AE;" actionListener="#{guestPreferences.setTheme('blue')}" ajax="false" />
+									<p:menuitem id="theme4" value="Blue Grey - Green" icon="&#xE3AE;" actionListener="#{guestPreferences.setTheme('blue-grey')}" ajax="false" />
+									<p:menuitem id="theme5" value="Dark - Blue" icon="&#xE3AE;" actionListener="#{guestPreferences.setTheme('dark-blue')}" ajax="false" />
+									<p:menuitem id="theme6" value="Dark - Green" icon="&#xE3AE;" actionListener="#{guestPreferences.setTheme('dark-green')}" ajax="false" />
+									<p:menuitem id="theme7" value="Green - Yellow" icon="&#xE3AE;" actionListener="#{guestPreferences.setTheme('green')}" ajax="false" />
+									<p:menuitem id="theme8" value="Purple - Cyan" icon="&#xE3AE;" actionListener="#{guestPreferences.setTheme('purple-cyan')}" ajax="false" />
+									<p:menuitem id="theme9" value="Purple - Amber" icon="&#xE3AE;" actionListener="#{guestPreferences.setTheme('purple-amber')}" ajax="false" />
+									<p:menuitem id="theme10" value="Teal - Lime" icon="&#xE3AE;" actionListener="#{guestPreferences.setTheme('teal')}" ajax="false" />
+									<p:menuitem id="theme11" value="Cyan - Amber" icon="&#xE3AE;" actionListener="#{guestPreferences.setTheme('cyan')}" ajax="false" />
+									<p:menuitem id="theme12" value="Grey - Deep Orange" icon="&#xE3AE;" actionListener="#{guestPreferences.setTheme('grey')}" ajax="false" />
+								</p:submenu>
+								<p:submenu id="um_customization" label="#{lang['customization']}" icon="&#xE8B8;" styleClass="amber-badge">
+									<f:attribute name="badge" value="10" />
+									<p:menuitem id="custom1" value="Compact Size" icon="&#xE061;" actionListener="#{guestPreferences.setCompact(true)}" ajax="false" />
+									<p:menuitem id="custom2" value="Material Size" icon="&#xE062;" actionListener="#{guestPreferences.setCompact(false)}" ajax="false" />
+									<p:menuitem id="custom3" value="Static Menu" icon="&#xE5D2;" actionListener="#{guestPreferences.setMenuLayout('static')}" ajax="false" />
+									<p:menuitem id="custom4" value="Overlay Menu" icon="&#xE879;" actionListener="#{guestPreferences.setMenuLayout('overlay')}" ajax="false" />
+									<p:menuitem id="custom5" value="Slim Menu" icon="&#xE879;" actionListener="#{guestPreferences.setMenuLayout('slim')}" ajax="false" />
+									<p:menuitem id="custom6" value="Horizontal Menu" icon="&#xE22C;" actionListener="#{guestPreferences.setMenuLayout('horizontal')}" ajax="false" />
+									<p:menuitem id="custom7" value="Light Menu" icon="&#xE893;" actionListener="#{guestPreferences.setLightMenu}" ajax="false" />
+									<p:menuitem id="custom8" value="Dark Menu" icon="&#xE892;" actionListener="#{guestPreferences.setDarkMenu}" ajax="false" />
+									<p:menuitem id="custom9" value="Inline Profile" icon="&#xE0BA;" actionListener="#{guestPreferences.setProfileMode('inline')}" ajax="false" />
+									<p:menuitem id="custom10" value="Top Profile" icon="&#xE55A;" actionListener="#{guestPreferences.setProfileMode('overlay')}" ajax="false" />
+								</p:submenu>
+								<p:submenu id="um_orientation" label="#{lang['orientation']}" icon="&#xE237;" rendered="false">
+									<p:menuitem id="um_ltr" value="LTR" icon="&#xE236;" actionListener="#{guestPreferences.setOrientationRTL(false)}" ajax="false" />
+									<p:menuitem id="um_rtl" value="RTL" icon="&#xE237;" actionListener="#{guestPreferences.setOrientationRTL(true)}" ajax="false" />
+								</p:submenu>
+								<p:menuitem id="glosRa" value="User Browser Information" icon="fa fa-users" url="#{request.contextPath}/admin/userbrowserinformation.jsf" />
+							</c:if>
+							<c:if test="#{sessionUI.user.finance}">
+								<p:menuitem id="sarslF" value="#{lang['SARS.levy.files']}" icon="file_upload" url="#{request.contextPath}/admin/sarsfiles.jsf" />
+								<p:submenu id="sarsL01f" label="Levy reports" icon="apps">
+									<p:menuitem id="sarsrsc01f" value="By Scheme Year" icon="schedule" url="#{request.contextPath}/admin/sarsreportsByRefAndSchemeYear.jsf" />
+									<p:menuitem id="sarsrf" value="By Arrival Date" icon="pie_chart_outlined" url="#{request.contextPath}/admin/sarsreports.jsf" />
+								</p:submenu>
+								<p:menuitem id="sarspF" value="Bank Statements" icon="book" url="#{request.contextPath}/admin/sarsleviespaid.jsf" />
+								<p:menuitem id="sarspFZ" value="Deposit report" icon="attach_money" url="#{request.contextPath}/admin/levySummaryReport.jsf" />
+								<p:menuitem id="sarspDR" value="Levy Deviation Report" icon="flip_to_back" url="#{request.contextPath}/admin/sarslevydeviation.jsf" rendered="false" />
+								<p:submenu id="sarsR" label="#{lang['reconciliation']}" icon="apps">
+									<p:menuitem id="recs1P" value="Per Period" icon="filter_1" url="#{request.contextPath}/admin/sarsreconforperiod.jsf" />
+									<p:menuitem id="recs1S" value="Per Scheme Year" icon="filter_1" url="#{request.contextPath}/admin/sarslevyreconbyschemeyear.jsf" rendered="false" />
+									<p:menuitem id="recs1F" value="#{lang['by.levy.number']}" icon="filter_1" url="#{request.contextPath}/admin/reconsummary.jsf" />
+								</p:submenu>
+								<p:menuitem id="sschg" value="#{lang['sars.status.changed']}" icon="track_changes" url="#{request.contextPath}/admin/sarsstatuschanged.jsf" />
+								<p:menuitem id="nmsic1" value="Non matching SIC codes" icon="thumbs_up_down" url="#{request.contextPath}/mis/nonmatchinsicCodes.jsf" />
+								<p:menuitem id="itrf" value="Inter SETA Transfers" icon="swap_horiz" url="#{request.contextPath}/admin/sarsintersetatransfers.jsf" />
+							</c:if>
+							<p:menuitem id="externalLearnerDev" value="Learnership Application" icon="fa fa-id-badge" url="#{request.contextPath}/pages/externalparty/learnershipregistration.jsf" rendered="false" />
+							<p:menuitem id="shrlNew" value="#{lang['stakeholder.relations']}" icon="people" url="#{request.contextPath}/pages/stakeholderRelations.jsf" rendered="#{sessionUI.externalParty and not sessionUI.checkLearner}" />
+							<p:submenu id="userResourcesMI" label="#{lang['user.resources']}" icon="book">
+								<p:submenu id="reftUR" label="#{lang['reference.tables']}" icon="subject" rendered="#{sessionUI.externalParty or sessionUI.employee}">
+									<p:menuitem id="qualiRUR" value="#{lang['saqa.qualifications']}" icon="school" url="#{request.contextPath}/pages/reference/saqaqualification.jsf" />
+									<p:menuitem id="unitsRUR" value="#{lang['saqa.unit.standards']}" icon="subtitles" url="#{request.contextPath}/pages/reference/saqaunitstandard.jsf" />
+									<p:menuitem id="etqaRUR" value="#{lang['etqa']}" icon="business" url="#{request.contextPath}/pages/reference/etqa.jsf" />
+									<p:menuitem id="skillsetRUR" value="Skills Set" icon="fa fa-sticky-note-o" url="#{request.contextPath}/pages/reference/skillsset.jsf" />
+									<p:menuitem id="skillprogrammeRUR" value="Skill Programme" icon="fa fa-sticky-note-o" url="#{request.contextPath}/pages/reference/skillsprogram.jsf" />
+								</p:submenu>
+								<p:menuitem id="glosRUR" value="#{lang['glossary']}" icon="chrome_reader_mode" url="#{request.contextPath}/pages/reference/glossary.jsf" />
+								<p:menuitem id="vbug2aUR" value="Tutorial Videos" icon="fa fa-play" url="#{request.contextPath}/pages/video.jsf" />
+								<p:menuitem id="faqsUR" value="#{lang['f.a.q']}" icon="fa fa-question" url="#{request.contextPath}/pages/frequentlyaskedquestions.jsf" />
+								<p:menuitem id="templateViewEP1UR" value="#{lang['templates']}" icon="library_books" url="#{request.contextPath}/pages/externalparty/templateView.jsf" rendered="#{not sessionUI.externalParty and sessionUI.employee}" />
+								<p:menuitem id="templateViewEPUR" value="#{lang['templates']}" icon="library_books" url="#{request.contextPath}/pages/externalparty/templateView.jsf" rendered="#{sessionUI.externalParty and not sessionUI.checkLearner}" />
+							</p:submenu>
+							<p:submenu id="supportMI" label="#{lang['support']}" icon="fa fa-phone">
+								<p:menuitem id="ec_bugreport" value="#{lang['issue.request.report']}" icon="bug_report" url="#{request.contextPath}/pages/bugreport.jsf" rendered="#{not sessionUI.externalParty}" />
+								<p:menuitem id="ec_bugreportw" value="System Support Request" icon="bug_report" url="#{request.contextPath}/pages/systemmaintenance.jsf" rendered="#{not sessionUI.externalParty}" />
+								<p:menuitem id="contact" value="Contact Us" icon="fa fa-phone" onclick="PF('dlgOffices').show()" update=":genOfficesForm" />
+							</p:submenu>
+						</pu:menu>
+					</c:if>
+					<c:if test="#{sessionUI.user eq null}">
+						<pu:menu widgetVar="me">
+							<p:menuitem id="login" value="#{lang['login']}" icon="&#xE7FD;" url="#{request.contextPath}/login.jsf" />
+						</pu:menu>
+					</c:if>
+				</div>
+			</div>
+		</div>
+	</h:form>
+</ui:composition>

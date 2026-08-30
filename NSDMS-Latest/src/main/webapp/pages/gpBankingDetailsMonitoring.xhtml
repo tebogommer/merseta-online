@@ -1,0 +1,379 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum"></p:importEnum>
+					<p:importEnum type="haj.com.entity.enums.UsersStatusEnum" />
+
+					<p:growl showDetail="false" sticky="false" id="msg">
+						<p:autoUpdate />
+					</p:growl>
+
+					<h1>Monitor Banking Details NSDMS/GP</h1>
+
+					<h:form id="mainForm">
+
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+
+						<p:dataTable var="rowVar" value="#{gpBankingDetailsMonitoringUI.dataModelComapny}" id="companyList" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,20,40" reflow="true" lazy="true" selection="#{searchCompanyUI.company}">
+							<p:column headerText="#{lang['company.name']}" filterBy="#{rowVar.companyName}" sortBy="#{rowVar.companyName}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.companyName}" />
+							</p:column>
+							<p:column headerText="#{lang['tradingName']}" filterBy="#{rowVar.tradingName}" sortBy="#{rowVar.tradingName}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.tradingName}" />
+							</p:column>
+							<p:column headerText="#{lang['entity.id']}" filterBy="#{rowVar.levyNumber}" sortBy="#{rowVar.levyNumber}" filterStyle="width: 95%" width="10%">
+								<h:outputText value="#{rowVar.levyNumber}" />
+							</p:column>
+							<p:column headerText="#{lang['status']}" sortBy="#{rowVar.companyStatus}" width="10%">
+								<h:outputText value="#{lang[rowVar.companyStatus.registrationName]}" />
+							</p:column>
+							<p:column width="30">
+								<p:commandButton onstart="uploadStart()" oncomplete="uploadDone()" icon="fa fa-tasks" title="View Company Banking Details" action="#{gpBankingDetailsMonitoringUI.selectCompany}" update="@form">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{gpBankingDetailsMonitoringUI.selectedCompany}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+
+						<p:outputPanel rendered="#{gpBankingDetailsMonitoringUI.selectedCompany ne null and gpBankingDetailsMonitoringUI.selectedCompany.id ne null}">
+
+							<h3>#{gpBankingDetailsMonitoringUI.selectedCompany.companyName} (#{gpBankingDetailsMonitoringUI.selectedCompany.levyNumber}) Selected</h3>
+
+							<p:panel header="GP Information">
+
+								<c:if test="#{gpBankingDetailsMonitoringUI.vendor eq null}">
+									<h4>Not Found On GP: #{gpBankingDetailsMonitoringUI.selectedCompany.levyNumber}</h4>
+								</c:if>
+
+								<c:if test="#{gpBankingDetailsMonitoringUI.vendor ne null}">
+
+									<h2>Company Name On GP: #{gpBankingDetailsMonitoringUI.vendor.name}</h2>
+
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['bankAccNumber']}" for="bankAccNumberID"
+											styleClass="#{gpBankingDetailsMonitoringUI.vendor eq null or gpBankingDetailsMonitoringUI.vendor.taxRegistrationNumber eq '' ? 'FontBold Fs20 orange' : gpBankingDetailsMonitoringUI.bankingDetails.bankAccNumber ne gpBankingDetailsMonitoringUI.vendor.taxRegistrationNumber ? 'FontBold Fs20 red': 'FontBold Fs20 green'}" />
+										<br />
+										<p:outputLabel id="bankAccNumberID" value="#{gpBankingDetailsMonitoringUI.bankingDetails.maskedBankAccNumber}" style="width:95%"
+											styleClass="#{gpBankingDetailsMonitoringUI.vendor eq null or gpBankingDetailsMonitoringUI.vendor.taxRegistrationNumber eq '' ? 'FontBold Fs20 orange' : gpBankingDetailsMonitoringUI.bankingDetails.bankAccNumber ne gpBankingDetailsMonitoringUI.vendor.taxRegistrationNumber ?'FontBold Fs20 red':'FontBold Fs20 green'}" />
+									</h:panelGroup>
+									<br />
+									<br />
+									<h:panelGroup>
+										<p:outputLabel value="GP #{lang['bankAccNumber']}"
+											styleClass="#{gpBankingDetailsMonitoringUI.vendor eq null or gpBankingDetailsMonitoringUI.vendor.taxRegistrationNumber eq '' ? 'FontBold Fs20 orange' : gpBankingDetailsMonitoringUI.bankingDetails.bankAccNumber ne gpBankingDetailsMonitoringUI.vendor.taxRegistrationNumber ? 'FontBold Fs20 red': 'FontBold Fs20 green'}" />
+										<br />
+										<c:if test="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve or (sessionUI.task.processRole.rolePermission eq UserPermissionEnum.View and !sessionUI.task.firstInProcess)}">
+											<p:outputLabel id="gpbankAccNumberIDDisplay" value="#{gpBankingDetailsMonitoringUI.vendor.taxRegistrationNumber}" style="width:95%"
+												styleClass="#{gpBankingDetailsMonitoringUI.bankingDetails.bankAccNumber ne gpBankingDetailsMonitoringUI.vendor.taxRegistrationNumber ?'FontBold Fs20 red': 'FontBold Fs20 green'}" />
+											<p:outputLabel id="gpbankAccNumberID2Display" value="N/A" style="width:95%" styleClass="FontBold Fs20 orange" rendered="#{gpBankingDetailsMonitoringUI.vendor eq null or gpBankingDetailsMonitoringUI.vendor.taxRegistrationNumber eq ''}" />
+										</c:if>
+										<c:if test="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalApproval and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Approve and (sessionUI.task.processRole.rolePermission eq UserPermissionEnum.View and sessionUI.task.firstInProcess)}">
+											<p:outputLabel id="gpbankAccNumberID" value="#{gpBankingDetailsMonitoringUI.vendor.maskedBankAccNumber}" style="width:95%"
+												styleClass="#{gpBankingDetailsMonitoringUI.bankingDetails.bankAccNumber ne gpBankingDetailsMonitoringUI.vendor.taxRegistrationNumber ?'FontBold Fs20 red': 'FontBold Fs20 green'}" />
+											<p:outputLabel id="gpbankAccNumberID2" value="N/A" style="width:95%" styleClass="FontBold Fs20 orange" rendered="#{gpBankingDetailsMonitoringUI.vendor eq null or gpBankingDetailsMonitoringUI.vendor.taxRegistrationNumber eq ''}" />
+										</c:if>
+									</h:panelGroup>
+									<br />
+									<br />
+									<h:panelGroup>
+										<p:outputLabel value="Status: On Hold" rendered="#{gpBankingDetailsMonitoringUI.vendor.detailsOnHold}" styleClass="FontBold Fs20 red" />
+										<p:outputLabel value="Status: Not On Hold" rendered="#{!gpBankingDetailsMonitoringUI.vendor.detailsOnHold}" styleClass="FontBold Fs20 green" />
+										<br />
+										<br />
+										<p:outputLabel value="Reason: #{gpBankingDetailsMonitoringUI.vendor.userDefined1}" rendered="#{gpBankingDetailsMonitoringUI.vendor.detailsOnHold}" styleClass="FontBold Fs20 red" />
+										<p:outputLabel value="Reason: #{gpBankingDetailsMonitoringUI.vendor.userDefined1}" rendered="#{!gpBankingDetailsMonitoringUI.vendor.detailsOnHold}" styleClass="FontBold Fs20 green" />
+										<br />
+										<br />
+										<p:commandButton rendered="#{!gpBankingDetailsMonitoringUI.vendor.detailsOnHold}" value="Set GP Information To: On Hold" action="#{gpBankingDetailsMonitoringUI.prepSettingOnHold}" update=":gpHoldForm">
+											<p:confirm header="Confirmation" message="Are you sure?" icon="fa fa-exclamation-triangle" />
+										</p:commandButton>
+										<br />
+										<br />
+										<p:commandButton rendered="#{gpBankingDetailsMonitoringUI.vendor.detailsOnHold and false}" value="Set To Open" action="#{gpBankingDetailsMonitoringUI.prepRemovingOnHold}" update=":gpHoldForm">
+											<p:confirm header="Confirmation" message="Are you sure?" icon="fa fa-exclamation-triangle" />
+										</p:commandButton>
+									</h:panelGroup>
+								</c:if>
+							</p:panel>
+
+							<div class="EmptyBox10" />
+
+							<p:tabView id="tabView">
+								<p:tab title="NSDMS Organisation Details" id="nsdmsOrgDetailsTab">
+									<p:outputPanel id="nsdmsOrgDetailsPanel">
+										<ui:include src="/pages/includes/fullCompanyInformationWithAddressInformation.xhtml">
+											<ui:param name="company" value="#{gpBankingDetailsMonitoringUI.selectedCompany}" />
+											<ui:param name="CELLPHONE_FORMAT" value="#{autoCompleteUI.CELLPHONE_FORMAT}" />
+											<ui:param name="FAX_NUMBER_FORMAT" value="#{autoCompleteUI.FAX_NUMBER_FORMAT}" />
+											<ui:param name="TELPHONE_FORMAT" value="#{autoCompleteUI.TELPHONE_FORMAT}" />
+										</ui:include>
+									</p:outputPanel>
+								</p:tab>
+								<p:tab title="Organisation: Approved Banking Details" id="apporvedBankingDetailsTab">
+									<p:outputPanel id="apporvedBankingDetailsPanel">
+										<p:dataTable var="rowVarBD" value="#{gpBankingDetailsMonitoringUI.bankingDetailsList}" id="bankingdetailsList" rowKey="#{rowVarBD.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+											paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+											<f:facet name="header">Approved Banking Details</f:facet>
+											<p:column headerText="NSDMS REF ID">
+												<h:outputText value="#{rowVarBD.id}" />
+											</p:column>
+											<p:column headerText="#{lang['bank']}">
+												<h:outputText value="#{rowVarBD.bank.description}" />
+											</p:column>
+											<p:column headerText="#{lang['createDate']}">
+												<h:outputText value="#{rowVarBD.createDate}">
+													<f:convertDateTime pattern="dd MMMM yyyy (HH:mm:ss)" />
+												</h:outputText>
+											</p:column>
+											<p:column headerText="#{lang['bankAccNumber']}">
+												<h:outputText value="#{rowVarBD.maskedBankAccNumber}" />
+											</p:column>
+											<p:column headerText="#{lang['branchCode']}">
+												<h:outputText value="#{rowVarBD.branchCode}" />
+											</p:column>
+											<p:column headerText="#{lang['bankHolder']}">
+												<h:outputText value="#{rowVarBD.bankHolder}" />
+											</p:column>
+											<p:column headerText="#{lang['status']}">
+												<p:outputLabel value="#{rowVarBD.status.friendlyName}"></p:outputLabel>
+											</p:column>
+											<p:column headerText="Approved Date" sortBy="#{rowVarBD.approvalDate}">
+												<p:outputLabel value="#{rowVarBD.approvalDate}">
+													<f:convertDateTime pattern="dd MMMM yyyy HH:mm:ss" />
+												</p:outputLabel>
+											</p:column>
+											<p:column headerText="Actions" exportable="false" styleClass="action-column">
+												<p:commandButton title="View Tasks" update="taskViewForm" onstart="uploadStart()" oncomplete="uploadDone()" icon="fa fa-tasks" action="#{gpBankingDetailsMonitoringUI.viewTasksAssigned}">
+													<f:setPropertyActionListener value="#{rowVarBD}" target="#{gpBankingDetailsMonitoringUI.selectedBankingDetailsTaskView}" />
+												</p:commandButton>
+											</p:column>
+										</p:dataTable>
+									</p:outputPanel>
+								</p:tab>
+								<p:tab title="Organisation: All Banking Details" id="allBankingDetailsTab">
+									<p:outputPanel id="allBankingDetailsPanel">
+
+										<p:dataTable var="rowVarABD" value="#{gpBankingDetailsMonitoringUI.allBankingDetailsList}" id="allbankingdetailsList" rowKey="#{rowVarABD.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+											paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+											<f:facet name="header">All Banking Details On NSDMS</f:facet>
+											<p:column headerText="NSDMS REF ID">
+												<h:outputText value="#{rowVarABD.id}" />
+											</p:column>
+											<p:column headerText="#{lang['bank']}">
+												<h:outputText value="#{rowVarABD.bank.description}" />
+											</p:column>
+											<p:column headerText="#{lang['createDate']}">
+												<h:outputText value="#{rowVarABD.createDate}">
+													<f:convertDateTime pattern="dd MMMM yyyy (HH:mm:ss)" />
+												</h:outputText>
+											</p:column>
+											<p:column headerText="#{lang['bankAccNumber']}">
+												<h:outputText value="#{rowVarABD.maskedBankAccNumber}" />
+											</p:column>
+											<p:column headerText="#{lang['branchCode']}">
+												<h:outputText value="#{rowVarABD.branchCode}" />
+											</p:column>
+											<p:column headerText="#{lang['bankHolder']}">
+												<h:outputText value="#{rowVarABD.bankHolder}" />
+											</p:column>
+											<p:column headerText="#{lang['status']}">
+												<p:outputLabel value="#{rowVarABD.status.friendlyName}"></p:outputLabel>
+											</p:column>
+											<p:column headerText="Approved Date" sortBy="#{rowVarABD.approvalDate}">
+												<p:outputLabel value="#{rowVarABD.approvalDate}">
+													<f:convertDateTime pattern="dd MMMM yyyy HH:mm:ss" />
+												</p:outputLabel>
+											</p:column>
+											<p:column headerText="Actions" exportable="false" styleClass="action-column">
+												<p:commandButton title="View Tasks" update="taskViewForm" onstart="uploadStart()" oncomplete="uploadDone()" icon="fa fa-tasks" action="#{gpBankingDetailsMonitoringUI.viewTasksAssigned}">
+													<f:setPropertyActionListener value="#{rowVarABD}" target="#{gpBankingDetailsMonitoringUI.selectedBankingDetailsTaskView}" />
+												</p:commandButton>
+											</p:column>
+										</p:dataTable>
+									</p:outputPanel>
+								</p:tab>
+							</p:tabView>
+						</p:outputPanel>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="historyForm">
+						<h1>History</h1>
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+						<p:dataTable var="rowVarHist" value="#{gpBankingDetailsMonitoringUI.gpBankAccountAlterAuditDataModel}" id="historyListDT" rowKey="#{rowVarHist.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+							lazy="true" paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+							<f:facet name="header">History</f:facet>
+							<p:column headerText="NSDMS REF ID" sortBy="#{rowVarHist.id}">
+								<h:outputText value="#{rowVarHist.id}" />
+							</p:column>
+							<p:column headerText="Action Date">
+								<p:outputLabel value="#{rowVarHist.createDate}">
+									<f:convertDateTime pattern="dd MMMM yyyy (HH:mm:ss)" />
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="Action User" sortBy="#{rowVarHist.users}">
+								<h:outputText value="#{rowVarHist.users.firstName} #{rowVarHist.users.lastName} (#{rowVarHist.users.email})" />
+							</p:column>
+							<p:column headerText="Company Name" filterBy="#{rowVarHist.company.companyName}">
+								<h:outputText value="#{rowVarHist.company.companyName}" />
+							</p:column>
+							<p:column headerText="Entity ID" filterBy="#{rowVarHist.company.levyNumber}">
+								<h:outputText value="#{rowVarHist.company.levyNumber}" />
+							</p:column>
+							<p:column headerText="NSDMS REF ID" sortBy="#{rowVarHist.id}">
+								<h:outputText value="#{rowVarHist.id}" />
+							</p:column>
+							<p:column headerText="Set To: On Hold" exportable="false" styleClass="action-column" sortBy="#{rowVarHist.setToHold}">
+								<p:selectBooleanCheckbox disabled="true" value="#{rowVarHist.setToHold}" />
+							</p:column>
+							<p:column headerText="Set To: On Hold" style="display:none">
+								<h:outputText value="Yes" rendered="#{rowVarHist.setToHold}" />
+								<h:outputText value="No" rendered="#{!rowVarHist.setToHold}" />
+							</p:column>
+							<p:column headerText="GP Reason" filterBy="#{rowVarHist.reason}">
+								<h:outputText value="#{rowVarHist.reason}" />
+							</p:column>
+							<p:column headerText="Reason For Alteration" filterBy="#{rowVarHist.reasonForAlteration}">
+								<h:outputText value="#{rowVarHist.reasonForAlteration}" />
+							</p:column>
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+			<h:form>
+				<p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="fa fa-check" />
+				<p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="fa fa-times" />
+			</h:form>
+		</p:confirmDialog>
+
+		<p:dialog position="top" header="GP: Set Account Information To On Hold" widgetVar="gpHoldDlg" hideEffect="clip" showEffect="clip" id="gpHoldDialog" modal="true" closable="true" width="75%" responsive="true">
+			<h:form id="gpHoldForm">
+				<p:fieldset legend="Current GP information">
+					<p:panelGrid columns="3" style="width:100%"  layout="grid" styleClass="ui-panelgrid-blank" >
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText rendered="#{gpBankingDetailsMonitoringUI.vendor eq null}" value="No" style="width:95%" disabled="true" />
+							<p:inputText rendered="#{gpBankingDetailsMonitoringUI.vendor ne null}" value="Yes" style="width:95%" disabled="true" />
+							<p:outputLabel value="Entity On GP" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText rendered="#{gpBankingDetailsMonitoringUI.vendor eq null}" value="N/A" style="width:95%" disabled="true" />
+							<p:inputText rendered="#{gpBankingDetailsMonitoringUI.vendor ne null}" value="#{gpBankingDetailsMonitoringUI.vendor.name}" style="width:95%" disabled="true" />
+							<p:outputLabel value="Name" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText rendered="#{gpBankingDetailsMonitoringUI.vendor eq null or gpBankingDetailsMonitoringUI.vendor.taxRegistrationNumber eq ''}" value="N/A" styleClass="FontBold orange" style="width:95%" disabled="true" />
+							<p:inputText rendered="#{gpBankingDetailsMonitoringUI.vendor ne null and gpBankingDetailsMonitoringUI.vendor.taxRegistrationNumber ne ''}" value="#{gpBankingDetailsMonitoringUI.vendor.maskedBankAccNumber}" style="width:95%" disabled="true" />
+							<p:outputLabel value="GP #{lang['bankAccNumber']}" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="On Hold" rendered="#{gpBankingDetailsMonitoringUI.vendor ne null and gpBankingDetailsMonitoringUI.vendor.detailsOnHold}" style="width:95%" disabled="true" />
+							<p:inputText value="Not On Hold" rendered="#{gpBankingDetailsMonitoringUI.vendor ne null and !gpBankingDetailsMonitoringUI.vendor.detailsOnHold}" style="width:95%" disabled="true" />
+							<p:inputText value="N/A" rendered="#{gpBankingDetailsMonitoringUI.vendor eq null}" style="width:95%" disabled="true" />
+							<p:outputLabel value="Status" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{gpBankingDetailsMonitoringUI.vendor.userDefined1}" rendered="#{gpBankingDetailsMonitoringUI.vendor ne null and gpBankingDetailsMonitoringUI.vendor.userDefined1 ne ''}" style="width:95%" disabled="true" />
+							<p:inputText value="No Reason Found" rendered="#{gpBankingDetailsMonitoringUI.vendor ne null and gpBankingDetailsMonitoringUI.vendor.userDefined1 eq ''}" style="width:95%" disabled="true" />
+							<p:inputText value="N/A" rendered="#{gpBankingDetailsMonitoringUI.vendor eq null}" style="width:95%" disabled="true" />
+							<p:outputLabel value="Hold Reason" />
+						</h:panelGroup>
+					</p:panelGrid>
+				</p:fieldset>
+				<p:fieldset legend="Information Required">
+					<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank" >
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="Not On Hold" rendered="#{!gpBankingDetailsMonitoringUI.gpBankAccountAlterAudit.setToHold}" style="width:95%" disabled="true" />
+							<p:inputText value="On Hold" rendered="#{gpBankingDetailsMonitoringUI.gpBankAccountAlterAudit.setToHold}" style="width:95%" disabled="true" />
+							<p:outputLabel value="Status To Be Set" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield" rendered="#{gpBankingDetailsMonitoringUI.gpBankAccountAlterAudit.setToHold}">
+							<p:inputText value="#{gpBankingDetailsMonitoringUI.gpBankAccountAlterAudit.reason}" maxlength="25" style="width:95%" required="true" requiredMessage="Provide: GP Reason" />
+							<p:outputLabel value="GP Reason (25 Max Charaters)" />
+						</h:panelGroup>
+					</p:panelGrid>
+					<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank" >
+						<h:panelGroup styleClass="md-inputfield" >
+							<p:inputText value="#{gpBankingDetailsMonitoringUI.gpBankAccountAlterAudit.reasonForAlteration}" maxlength="100" style="width:95%" required="true" requiredMessage="Provide: Reason For Alteration" />
+							<p:outputLabel value="Reason For Alteration" />
+						</h:panelGroup>
+					</p:panelGrid>
+				</p:fieldset>
+				<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank" >
+					<p:commandButton icon="fa fa-database" process="gpHoldForm" action="#{gpBankingDetailsMonitoringUI.updateDetailsOnGPHoldStatusTrue}" value="Submit" update=":historyForm :mainForm" onstart="uploadStart()" oncomplete="uploadDone()">
+						<p:confirm header="Confirmation" message="Are you sure?" icon="fa fa-exclamation-triangle" />
+					</p:commandButton>
+				</p:panelGrid>
+				
+			</h:form>
+		</p:dialog>
+
+		<p:dialog position="top" header="Task View" widgetVar="taskViewDlg" hideEffect="clip" showEffect="clip" id="taskViewDialog" modal="true" closable="true" width="75%" responsive="true">
+			<h:form id="taskViewForm">
+
+				<p:panelGrid columns="3" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText disabled="true" value="#{gpBankingDetailsMonitoringUI.selectedBankingDetailsTaskView.id}" style="width:95%" />
+						<p:outputLabel value="NSDMS REF ID" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText disabled="true" value="#{gpBankingDetailsMonitoringUI.selectedBankingDetailsTaskView.createDate}" style="width:95%">
+							<f:convertDateTime pattern="dd MMMM yyyy (HH:mm:ss)" />
+						</p:inputText>
+						<p:outputLabel value="#{lang['createDate']}" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText disabled="true" value="#{gpBankingDetailsMonitoringUI.selectedBankingDetailsTaskView.approvalDate}" style="width:95%">
+							<f:convertDateTime pattern="dd MMMM yyyy (HH:mm:ss)" />
+						</p:inputText>
+						<p:outputLabel value="Approved Date" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText disabled="true" value="#{gpBankingDetailsMonitoringUI.selectedBankingDetailsTaskView.bank.description}" style="width:95%" />
+						<p:outputLabel value="#{lang['bank']}" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText disabled="true" value="#{gpBankingDetailsMonitoringUI.selectedBankingDetailsTaskView.branchCode}" style="width:95%" />
+						<p:outputLabel value="#{lang['branchCode']}" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText disabled="true" value="#{gpBankingDetailsMonitoringUI.selectedBankingDetailsTaskView.maskedBankAccNumber}" style="width:95%" />
+						<p:outputLabel value="#{lang['bankAccNumber']}" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText disabled="true" value="#{gpBankingDetailsMonitoringUI.selectedBankingDetailsTaskView.bankHolder}" style="width:95%" />
+						<p:outputLabel value="#{lang['bankHolder']}" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText disabled="true" value="#{gpBankingDetailsMonitoringUI.selectedBankingDetailsTaskView.status.friendlyName}" style="width:95%" />
+						<p:outputLabel value="#{lang['status']}" />
+					</h:panelGroup>
+
+				</p:panelGrid>
+
+				<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+					<ui:include src="/pages/includes/taskInformationInclude.xhtml">
+						<ui:param name="TaskList" value="#{gpBankingDetailsMonitoringUI.dataModelTasks}" />
+						<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+					</ui:include>
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+
+	</ui:define>
+</ui:composition>

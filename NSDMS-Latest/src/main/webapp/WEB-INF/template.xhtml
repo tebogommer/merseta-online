@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui">
+
+<h:head>
+	<f:facet name="first">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="theme-color" content="#{guestPreferences.themeColors[guestPreferences.theme]}" />
+		<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+		<meta http-equiv="Pragma" content="no-cache" />
+		<meta http-equiv="Expires" content="0" />
+	</f:facet>
+	<title>merSETA</title>
+	<h:outputScript name="js/nanoscroller.js" library="ultima-layout" />
+	<h:outputScript name="js/layout.js" library="ultima-layout" />
+	<h:outputScript name="js/ripple.js" library="ultima-layout" />
+	<h:outputScript name="js/swipe.js" library="ultima-layout" />
+	<script src="#{request.contextPath}/help/intro.js"></script>
+
+	<style type="text/css">
+.ui-fileupload-content {
+	height: 66px !important;
+	background-image: url("#{request.contextPath}/resources/hls/images/upload.png") !important;
+	background-repeat: no-repeat;
+	background-position: center;
+}
+
+.error {
+	color: #F44336 !important;
+	font-size: 14px;
+}
+</style>
+	<ui:insert name="head" />
+</h:head>
+
+<h:body styleClass="main-body #{guestPreferences.compact ? 'layout-compact' : null}">
+
+	<h:form id="webSocketsForm">
+		<h:inputHidden value="#{sessionUI.wsUrl}" id="wsUrl" />
+	</h:form>
+
+	<script>
+		var wsUri = $("#webSocketsForm\\:wsUrl").val();
+		var websocket;
+		if (websocket == null) {
+			websocket = new WebSocket(wsUri);
+		}
+		websocket.onopen = function(msgEvent) {
+			//console.log("----> template and onopen!!!")
+		};
+
+		websocket.onmessage = function(msgEvent) {
+			//console.log("----> template and onmessage!!!" + msgEvent.data);
+			$("#chatNotificationBadge").show();
+			handleUpdate(msgEvent.data);
+		};
+
+		websocket.onclose = function(msgEvent) {
+			//console.log("----> template and onclose ..."+msgEvent);
+		};
+
+		websocket.onerror = function(msgEvent) {
+			//console.log("----> template and onerror ... "+msgEvent);
+		};
+	</script>
+
+
+	<div class="layout-wrapper #{guestPreferences.menuLayout} #{guestPreferences.orientationRTL ? 'layout-rtl' : null}">
+		<ui:include src="./topbar.xhtml" />
+		<ui:include src="./rightpanel.xhtml" />
+		<ui:include src="./menu.xhtml" />
+		<f:event type="preRenderView" listener="#{sessionUI.resetValidationErrors}" />
+
+
+		<div class="layout-main">
+			<h:form id="validationErrorForm">
+				<p:fieldset rendered="#{sessionUI.validationErrors.length() gt 0}" styleClass="error Fs12" style="margin-bottom: 10px;">
+					<h2 style="margin-top: 0px">Validation Errors</h2>
+					<h4 style="margin-top: 0px">Please Correct the Following</h4>
+					<p:outputLabel value="#{sessionUI.validationErrors}" escape="false"></p:outputLabel>
+				</p:fieldset>
+			</h:form>
+			<ui:insert name="content" />
+			<ui:include src="./footer.xhtml" />
+		</div>
+	</div>
+
+	<ui:include src="timeout.xhtml" />
+
+	<p:ajaxStatus style="width:64px;height:64px;position:fixed;right:7px;top:84px">
+		<f:facet name="start">
+			<i class="fa fa-circle-o-notch fa-spin ajax-loader" aria-hidden="true"></i>
+		</f:facet>
+
+		<f:facet name="complete">
+			<h:outputText value="" />
+		</f:facet>
+	</p:ajaxStatus>
+
+	<ui:include src="./commonDialogs.xhtml" />
+
+	<script>
+		function uploadStart() {
+			//alert("Upload Started");
+			//console.log("Upload Started");
+			PF('dlgWait').show();
+		}
+
+		function uploadDone() {
+			//alert("Upload Done");
+			//console.log("Upload Done");
+			PF('dlgWait').hide();
+		}
+	</script>
+
+	<p:dialog modal="true" widgetVar="dlgWait" resizable="false" closable="false">
+		<h1>PLEASE WAIT....</h1>
+		<div class="Seperator" />
+		<center>
+			<p:graphicImage name="images/468.gif" library="hls" />
+		</center>
+	</p:dialog>
+
+
+	<h:outputStylesheet name="css/nanoscroller.css" library="ultima-layout" />
+	<h:outputStylesheet name="css/animate.css" library="ultima-layout" />
+	<h:outputStylesheet name="css/ripple.css" library="ultima-layout" />
+	<h:outputStylesheet name="css/layout-#{guestPreferences.theme}.css" library="ultima-layout" />
+	<link rel="stylesheet" href="#{request.contextPath}/help/introjs.css" />
+	<link rel="stylesheet" href="#{request.contextPath}/help/introjs-custom.css" />
+	<h:outputStylesheet name="css/hs.css" library="hls" />
+</h:body>
+
+</html>

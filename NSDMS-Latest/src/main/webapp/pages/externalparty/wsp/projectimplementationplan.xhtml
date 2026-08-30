@@ -1,0 +1,71 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:pt="http://xmlns.jcp.org/jsf/passthrough" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<h:panelGroup id="projectimplementationplanGroup">
+		<h:form id="projectimplementationplanForm">
+			<p:remoteCommand update=":tabView:projectimplementationplanForm:projectimplementationplanList" id="updatePIP" name="updatePIP" action="#{discretionarygrantpipUI.findPIP}" process="@this" />
+			<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<p class="FontBold red">All details must be provided for each deliverable</p>
+			</p:panelGrid>
+			<p:dataTable var="rowVar" value="#{discretionarygrantpipUI.projectimplementationplanList}" id="projectimplementationplanList" rowKey="#{rowVar.id}" reflow="true">
+				<p:column>
+					<f:facet name="header">
+						<label style="text-align: top; position: relative;">Deliverable</label>
+					</f:facet>
+					<p:inputText value="#{rowVar.interventionTypeDescription}" disabled="#{initiatewspdgUI.wsp.wspStatusEnum ne WspStatusEnum.AwaitingContract and initiatewspdgUI.wsp.projectOwner ne sessionUI.activeUser}">
+						<p:ajax event="valueChange" />
+					</p:inputText>
+				</p:column>
+				<p:column>
+					<f:facet name="header">
+						<label style="text-align: top; position: relative;">Projected Start Date</label>
+					</f:facet>
+					<div>
+						<p:outputLabel value="#{rowVar.projectedRecruitmentDate}" rendered="#{initiatewspdgUI.wsp.wspStatusEnum ne WspStatusEnum.AwaitingContract and initiatewspdgUI.wsp.projectOwner ne sessionUI.activeUser}" disabled="true">
+							<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+						</p:outputLabel>
+						<p:calendar id="german" value="#{rowVar.projectedRecruitmentDate}" locale="de" inputStyle="width:calc(99% - 40px)" navigator="true" required="true" requiredMessage="#{lang['projectedRecruitmentDate']}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" rendered="#{initiatewspdgUI.wsp.wspStatusEnum eq WspStatusEnum.AwaitingContract or initiatewspdgUI.wsp.projectOwner eq sessionUI.activeUser}" mask="true">
+							<p:ajax event="dateSelect" />
+						</p:calendar>
+					</div>
+				</p:column>
+				<p:column>
+					<f:facet name="header">
+						<label style="text-align: top; position: relative;">Project End Date</label>
+					</f:facet>
+					<div>
+						<p:outputLabel value="#{rowVar.projectedRecruitmentDate}" rendered="#{initiatewspdgUI.wsp.wspStatusEnum ne WspStatusEnum.AwaitingContract and initiatewspdgUI.wsp.projectOwner ne sessionUI.activeUser}" disabled="true">
+							<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+						</p:outputLabel>
+						<p:calendar id="german1" value="#{rowVar.projectedInductionDate}" inputStyle="width:calc(99% - 40px)" locale="de" navigator="true" required="true" requiredMessage="#{lang['projectedInductionDate']}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" rendered="#{initiatewspdgUI.wsp.wspStatusEnum eq WspStatusEnum.AwaitingContract or initiatewspdgUI.wsp.projectOwner eq sessionUI.activeUser}" mask="true">
+							<p:ajax event="dateSelect" />
+						</p:calendar>
+					</div>
+				</p:column>
+				<p:column>
+					<f:facet name="header">
+						<label style="text-align: top; position: relative;">Actual End Date</label>
+					</f:facet>
+					<div>
+						<p:outputLabel value="#{rowVar.projectedRegistrationDate}" rendered="#{initiatewspdgUI.wsp.wspStatusEnum ne WspStatusEnum.AwaitingContract and initiatewspdgUI.wsp.projectOwner ne sessionUI.activeUser}" disabled="true">
+							<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+						</p:outputLabel>
+						<p:calendar id="german2" inputStyle="width:calc(99% - 40px)" value="#{rowVar.projectedRegistrationDate}" locale="de" navigator="true" required="true" requiredMessage="#{lang['projectedRegistrationDate']}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" rendered="#{initiatewspdgUI.wsp.wspStatusEnum eq WspStatusEnum.AwaitingContract or initiatewspdgUI.wsp.projectOwner eq sessionUI.activeUser}" mask="true">
+							<p:ajax event="dateSelect" />
+						</p:calendar>
+					</div>
+				</p:column>
+				<p:column>
+					<f:facet name="header">
+						<label style="text-align: top; position: relative;">Amount (Remaining: #{discretionarygrantpipUI.remaingAmount})</label>
+					</f:facet>
+					<p:inputNumber value="#{rowVar.totalAwardAmount}" disabled="#{initiatewspdgUI.wsp.wspStatusEnum ne WspStatusEnum.AwaitingContract and initiatewspdgUI.wsp.projectOwner ne sessionUI.activeUser}">
+						<p:ajax event="valueChange" listener="#{discretionarygrantpipUI.checkRemaingAmount(rowVar)}" update="@form" />
+					</p:inputNumber>
+				</p:column>
+			</p:dataTable>
+			<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{initiatewspdgUI.wsp.wspStatusEnum eq WspStatusEnum.AwaitingContract or initiatewspdgUI.wsp.projectOwner eq sessionUI.activeUser and sessionUI.employee}">
+				<p:commandButton value="Add Deliverable" icon="fa fa-save" update="@form" action="#{discretionarygrantpipUI.addNewPIP}" process="@form" oncomplete="updatePIP()" rendered="true" />
+				<p:commandButton styleClass="green-btn" value="#{lang['save']}" icon="fa fa-save" update="@form" action="#{discretionarygrantpipUI.completePIP}" process="@form" oncomplete="updatePIP()" rendered="true" />
+			</p:panelGrid>
+		</h:form>
+	</h:panelGroup>
+</ui:composition>

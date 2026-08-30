@@ -1,0 +1,461 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui">
+
+			<c:if test="#{assesorModiratorUI.continueReg}">
+				<div align="right">
+					<p:commandLink id="hb2" onclick="helpGuideCompany()">
+						<i class="fa fa-question-circle Fs50 secondaryText" aria-hidden="true"></i>
+					</p:commandLink>
+					<p:tooltip for="hb2" position="left" value="#{lang['help.guide']}" />
+				</div>
+			</c:if>
+			<c:if test="#{assesorModiratorUI.continueReg}">
+				<ui:include src="/pages/includes/tabinfo.xhtml">
+					<ui:param name="showInfoCircle" value="true" />
+					<ui:param name="cssClass" value="secondaryText Fs15" />
+					<ui:param name="helpTxt" value="#{lang['The.system.will.auto-fill.based.selections']}" />
+				</ui:include>
+			</c:if>
+
+			<p:fieldset legend="#{lang['company.main.heading']}" rendered="#{assesorModiratorUI.continueReg}">
+				
+				<div align="right">
+					<p:commandButton immediate="true" icon="fa fa-refresh" action="#{assesorModiratorUI.prepareNewCompany}" id="close"  update="companyDetails" />
+					<p:tooltip for="close" position="left" value="#{lang['close']}" />
+				</div>
+			
+				<p:panelGrid rendered="#{!assesorModiratorUI.company.doneSearch}">
+					<h:panelGroup id="searchNGO">
+						<p:outputLabel id="nonLevyPaying" value="#{lang['non.levy.paying']}" styleClass="gray" />
+						<p:spacer width="20"></p:spacer>
+						<p:selectBooleanCheckbox id="nonLevyPaying1" value="#{searchCompanyUI.searchProvider}">
+							<p:ajax update="companyDetails idPassportHelp" event="change" listener="#{searchCompanyUI.clearCheckbox1()}"></p:ajax>
+						</p:selectBooleanCheckbox>
+						<br />
+						<p:outputLabel id="levyPaying" value="#{lang['levy.paying.entity']}" styleClass="gray" />
+						<p:spacer width="20"></p:spacer>
+						<p:selectBooleanCheckbox id="levyPaying1" value="#{searchCompanyUI.searchLevyPaying}">
+							<p:ajax update="companyDetails idPassportHelp" event="change"  listener="#{searchCompanyUI.clearCheckbox2()}"></p:ajax>
+						</p:selectBooleanCheckbox>
+						<br />
+						<p:outputLabel id="trainingProvider" value="#{lang['training.provider']}" styleClass="gray" rendered="false"/>
+						<p:spacer width="20" rendered="false"></p:spacer>
+						<p:selectBooleanCheckbox id="trainingProvider1" value="#{searchCompanyUI.searchTrainingProvider}" rendered="false">
+							<p:ajax update="companyDetails idPassportHelp" event="change"  listener="#{searchCompanyUI.clearCheckbox3()}"></p:ajax>
+						</p:selectBooleanCheckbox>
+					</h:panelGroup>
+				</p:panelGrid>
+				
+				<p:panelGrid id="searchTPPnl" style="width:50%" columns="1" styleClass="ui-panelgrid-blank form-group" rendered="#{!assesorModiratorUI.company.doneSearch and searchCompanyUI.searchTrainingProvider}" layout="grid">
+					
+					<br/>
+					<span class="#{cssClass== null ? 'Fs13 gray' : cssClass}">
+						#{lang['search.by.training.provider.name.or.training.provider.registration.number']}
+					</span>
+					<br/>
+					
+					<h:panelGroup styleClass="md-inputfield">
+						<p:autoComplete style="width:100%;" id="tp" value="#{assesorModiratorUI.company}" completeMethod="#{autoCompleteUI.completeCompanyByNameOrRegNumber}" var="rv" itemLabel="#{rv.companyNameDisplay}" itemValue="#{rv}" forceSelection="true" converter="CompanyConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+								<p:column headerText="#{lang['companyName']}" style="white-space: nowrap">#{rv.companyName}</p:column>
+								<p:column headerText="#{lang['companyRegistrationNumber']}" style="white-space: nowrap">#{rv.companyRegistrationNumber}</p:column>
+						</p:autoComplete>
+						<p:outputLabel value="#{lang['training.provider']}" for="tp" />
+					</h:panelGroup>
+				
+				</p:panelGrid>
+
+				<p:panelGrid id="searchCompanyPnl" style="width:50%" columns="3" styleClass="ui-panelgrid-blank form-group" rendered="#{!assesorModiratorUI.company.doneSearch and searchCompanyUI.searchLevyPaying}" layout="grid">
+
+					<p:selectOneRadio value="#{searchCompanyUI.companyRegOrSDLEnum}" columns="1" layout="responsive" rendered="#{!searchCompanyUI.searchNGO}">
+						<p:ajax update="searchCompanyPnl " />
+						<f:selectItems value="#{enumUI.companyRegOrSDLEnumDD}" var="idpassEnum" itemLabel="#{idpassEnum}" itemValue="#{idpassEnum}" />
+					</p:selectOneRadio>
+
+					<h:panelGroup id="regNumInput" styleClass="md-inputfield" rendered="#{searchCompanyUI.companyRegOrSDLEnum eq regSDL.REG}">
+						<p:inputMask id="regNumCriteria" mask="#{searchCompanyUI.companyRegistrationNumberFormat}" value="#{searchCompanyUI.criteria}" style="width:95%" requiredMessage="#{lang['enter.reg.number']}" required="true" />
+						<p:outputLabel value="#{lang['registration.number']}" for="regNumCriteria" />
+					</h:panelGroup>
+
+					<h:panelGroup id="sdlNumInput" styleClass="md-inputfield" rendered="#{searchCompanyUI.companyRegOrSDLEnum eq regSDL.SDLNumber and !searchCompanyUI.searchNGO}">
+						<p:inputMask id="sdlNumCriteria" mask="#{searchCompanyUI.companyLevyNumberFormat}" value="#{searchCompanyUI.criteria}" style="width:95%" requiredMessage="#{lang['enter.sdl.number']}" required="true" />
+						<p:outputLabel value="#{lang['sdl.number']}" for="sdlNumCriteria" />
+					</h:panelGroup>
+
+					<p:commandButton id="idSearch" icon="fa fa-search" value="Submit" process="searchCompanyPnl" actionListener="#{searchCompanyUI.find}" update="companyDetails" rendered="#{searchCompanyUI.companyRegOrSDLEnum eq regSDL.REG or searchCompanyUI.searchNGO}" />
+					<p:commandButton id="idSearch2" icon="fa fa-search" value="Submit" process="searchCompanyPnl" actionListener="#{searchCompanyUI.findBySDL}" update="companyDetails" rendered="#{searchCompanyUI.companyRegOrSDLEnum eq regSDL.SDLNumber and !searchCompanyUI.searchNGO}" />
+				</p:panelGrid>
+
+				<p:panelGrid id="searchCompanyPnl2" style="width:50%" columns="3" styleClass="ui-panelgrid-blank form-group" rendered="#{!assesorModiratorUI.company.doneSearch and searchCompanyUI.searchProvider}" layout="grid">
+
+					<p:selectOneRadio value="#{searchCompanyUI.providerNameRegisTrationNumberEnum}" columns="1" layout="responsive" rendered="#{!searchCompanyUI.searchNGO}">
+						<p:ajax update="searchCompanyPnl2" />
+						<f:selectItems value="#{enumUI.providerNameRegisTrationNumberEnumDD}" var="idpassEnum" itemLabel="#{idpassEnum}" itemValue="#{idpassEnum}" />
+					</p:selectOneRadio>
+
+					<h:panelGroup id="provNameNumberName" styleClass="md-inputfield" rendered="#{searchCompanyUI.providerNameRegisTrationNumberEnum eq provNameNumber.Name}">
+						<p:inputMask id="provNameNumberNameCriteria" mask="#{searchCompanyUI.companyRegistrationNumberFormat}" value="#{searchCompanyUI.criteria}" style="width:95%" requiredMessage="#{lang['enter.reg.number']}" required="true" />
+						<p:outputLabel value="#{lang['registration.number']}" for="provNameNumberNameCriteria" />
+					</h:panelGroup>
+
+					<h:panelGroup id="provNameNumberProviderNumber" styleClass="md-inputfield" rendered="#{searchCompanyUI.providerNameRegisTrationNumberEnum eq provNameNumber.ProviderNumber}">
+						<p:inputMask id="provNameNumberProviderNumberCriterea"  value="#{searchCompanyUI.criteria}" style="width:95%" requiredMessage="#{lang['enter.sdl.number']}" required="true" />
+						<p:outputLabel value="Provider Number" for="provNameNumberProviderNumberCriterea" />
+					</h:panelGroup>
+
+					<p:commandButton id="provNameNumberNameSearch" icon="fa fa-search" value="Submit" process="searchCompanyPnl2" actionListener="#{searchCompanyUI.find}" update="companyDetails" rendered="#{searchCompanyUI.providerNameRegisTrationNumberEnum eq provNameNumber.Name}" />
+					<p:commandButton id="provNameNumberProviderNumberSearch" icon="fa fa-search" value="Submit" process="searchCompanyPnl2" actionListener="#{searchCompanyUI.findBySDL}" update="companyDetails" rendered="#{searchCompanyUI.providerNameRegisTrationNumberEnum eq provNameNumber.ProviderNumber}" />
+				</p:panelGrid>
+
+
+				<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{assesorModiratorUI.company.doneSearch and not assesorModiratorUI.company.nonLevyPaying}">
+					
+					
+					<h:panelGroup styleClass="md-inputfield">
+					        <p:inputText  id="companyName" value="#{assesorModiratorUI.company.companyName}" style="opacity: 1 !important; color: black; width:95%" required="true"  disabled="#{assesorModiratorUI.company.companyName.length() gt 0}"  requiredMessage="#{lang['enter.the.company.name']}">
+					                <o:validator validatorId="javax.faces.Length" minimum="0" maximum="70" message="#{lang['company.name.length.error']}" />
+					        </p:inputText>
+					        <p:outputLabel value="#{lang['companyName']}" for="companyName" />
+					</h:panelGroup>
+					
+					<h:panelGroup styleClass="md-inputfield">
+					        <p:inputText  disabled="#{assesorModiratorUI.company.tradingName.length() gt 0}"  id="tradingName" value="#{assesorModiratorUI.company.tradingName}" style="opacity: 1 !important; color: black; width:95%" required="true" requiredMessage="#{lang['enter.the.trading.name']}">
+					                <o:validator validatorId="javax.faces.Length" minimum="0" maximum="70" message="#{lang['company.tradename.length.error']}" />
+					        </p:inputText>
+					        <p:outputLabel value="#{lang['tradingName']}" for="tradingName" />
+					</h:panelGroup>
+					
+					<h:panelGroup styleClass="md-inputfield">
+					        
+					        <p:inputMask  disabled="#{assesorModiratorUI.company.telNumber.length() gt 0}" id="compTelNumber" mask="#{profileUI.TELPHONE_FORMAT}" value="#{assesorModiratorUI.company.telNumber}" style="width: 95%" label="telNumber" required="true" requiredMessage="#{lang['enter.the.tel.number']}">
+								<o:validator validatorId="javax.faces.Length" minimum="0" maximum="20" message="#{lang['user.tellnumber.length']}" />
+							</p:inputMask>
+							 <p:outputLabel value="#{lang['telNumber']}" for="compTelNumber" />
+					</h:panelGroup>
+					
+					<h:panelGroup styleClass="md-inputfield">
+					         <p:inputMask   disabled="#{assesorModiratorUI.company.faxNumber.length() gt 0}" id="compFaxNumber" mask="#{profileUI.TELPHONE_FORMAT}" value="#{assesorModiratorUI.company.faxNumber}"  style="opacity: 1 !important; color: black; width:95%" label="faxNumber" required="true" requiredMessage="#{lang['user.faxnumber.length']}">
+								<o:validator validatorId="javax.faces.Length" minimum="0" maximum="20" message="#{lang['user.faxnumber.length']}" />
+							</p:inputMask>
+					        <p:outputLabel value="#{lang['faxNumber']}" for="compFaxNumber" />
+					</h:panelGroup>
+					
+					<p:fieldset legend="#{lang['residentialAddress']}" style="margin-top: 20px">
+					        <p:panelGrid columns="1" style="width : 95%" styleClass="ui-panelgrid-blank" id="compAddrPcode">
+					                <h:panelGroup styleClass="md-inputfield">
+					                        <p:inputText disabled="#{assesorModiratorUI.compResidentialAddress.addressLine1.length() gt 0}" id="addr1" value="#{assesorModiratorUI.compResidentialAddress.addressLine1}" style="opacity: 1 !important; color: black; width:95%" required="true" requiredMessage="#{lang['enter.residential.address']}">
+					                                <o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['residentialAddress.lineone.length.error']}" />
+					                        </p:inputText>
+					                        <p:outputLabel value="#{lang['address.line.1']}" for="addr1" />
+					                </h:panelGroup>
+					                <h:panelGroup styleClass="md-inputfield">
+					                        <p:inputText disabled="#{assesorModiratorUI.compResidentialAddress.addressLine2.length() gt 0}"  id="addr2" style="opacity: 1 !important; color: black; width:95%" value="#{assesorModiratorUI.compResidentialAddress.addressLine2}">
+					                                <o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['residentialAddress.linetwo.length.error']}" />
+					                        </p:inputText>
+					                        <p:outputLabel value="#{lang['address.line.2']}" for="addr2" />
+					                </h:panelGroup>
+					                <h:panelGroup styleClass="md-inputfield">
+					                        <p:inputText disabled="#{assesorModiratorUI.compResidentialAddress.addressLine3.length() gt 0}"  id="addr3" style="opacity: 1 !important; color: black; width:95%" value="#{assesorModiratorUI.compResidentialAddress.addressLine3}">
+					                                <o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['residentialAddress.linethree.length.error']}" />
+					                        </p:inputText>
+					                        <p:outputLabel value="#{lang['address.line.3']}" for="addr3" />
+					                </h:panelGroup>
+					
+					
+					                <h:panelGroup>
+					                        <div>
+					                                <h:outputLabel value="#{lang['town']}" for="town" />
+					                        </div>
+					                        <div>
+					                                <p:autoComplete  disabled="#{assesorModiratorUI.compResidentialAddress.town ne null}"  id="town" value="#{assesorModiratorUI.compResidentialAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true"
+					                                        requiredMessage="#{lang['please.select.a.town']}" >
+					                                        <p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+					                                </p:autoComplete>
+					                        </div>
+					                </h:panelGroup>
+					
+					                <h:panelGroup styleClass="md-inputfield">
+					                        <p:inputText  disabled="#{assesorModiratorUI.compResidentialAddress.postcode.length() gt 0}"   id="pcode" style="opacity: 1 !important; color: black; width:95%" value="#{assesorModiratorUI.compResidentialAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}">
+					                                <o:validator validatorId="javax.faces.Length" minimum="0" maximum="4" message="#{lang['residentialAddress.code.length.error']}" />
+					                        </p:inputText>
+					                        <p:outputLabel value="#{lang['post.code']}" for="pcode" />
+					                </h:panelGroup>
+					
+					                <h:panelGroup>
+					                        <div>
+					                                <h:outputLabel value="#{lang['municipality']}" for="MunicipalityID" />
+					                        </div>
+					                        <div>
+					                                <p:autoComplete disabled="#{assesorModiratorUI.compResidentialAddress.municipality ne null}"  id="MunicipalityID" value="#{assesorModiratorUI.compResidentialAddress.municipality}" completeMethod="#{sdfDetailUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityDesc}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true" minQueryLength="3"
+					                                        maxResults="10" inputstyle="opacity: 1 !important; color: black; width: 95%" style="opacity: 1 !important; color: black; width: 95%" required="true" requiredMessage="#{lang['select.municipality']}">
+					                                        <p:column headerText="#{lang['province']}" style="white-space: nowrap">#{rv.province.provinceDesc}</p:column>
+					                                        <p:column headerText="#{lang['municipality']}" style="white-space: nowrap">#{rv.municipalityDesc}</p:column>
+					                                </p:autoComplete>
+					                        </div>
+					                </h:panelGroup>
+					
+					                <h:panelGroup styleClass="md-inputfield">
+					                        <div class="EmptyBox40"></div>
+					                </h:panelGroup>
+					        </p:panelGrid>
+					</p:fieldset>
+					
+					<p:fieldset legend="#{lang['postalAddress']}" style="margin-top: 20px">
+					        <p:panelGrid columns="1" style="width : 95%" styleClass="ui-panelgrid-blank" id="postalAddress">
+					                <h:panelGroup styleClass="md-inputfield" rendered="#{not assesorModiratorUI.copyAddress}">
+					                        <p:inputText disabled="#{assesorModiratorUI.compPostalAddress.addressLine1.length() gt 0}" id="postalAddressaddr1" value="#{assesorModiratorUI.compPostalAddress.addressLine1}" style="opacity: 1 !important; color: black; width:95%" required="true" requiredMessage="#{lang['enter.postal.address']}">
+					                                <o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['postalAddress.lineone.length.error']}" />
+					                        </p:inputText>
+					                        <p:outputLabel value="#{lang['address.line.1']}" for="postalAddressaddr1" />
+					                </h:panelGroup>
+					                <h:panelGroup styleClass="md-inputfield" rendered="#{not assesorModiratorUI.copyAddress}">
+					                        <p:inputText disabled="#{assesorModiratorUI.compPostalAddress.addressLine2.length() gt 0}" id="postalAddressaddr2" style="opacity: 1 !important; color: black; width:95%" value="#{assesorModiratorUI.compPostalAddress.addressLine2}">
+					                                <o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['postalAddress.linetwo.length.error']}" />
+					                        </p:inputText>
+					                        <p:outputLabel value="#{lang['address.line.2']}" for="postalAddressaddr2" />
+					                </h:panelGroup>
+					                <h:panelGroup styleClass="md-inputfield" rendered="#{not assesorModiratorUI.copyAddress}">
+					                        <p:inputText disabled="#{assesorModiratorUI.compPostalAddress.addressLine3.length() gt 0}" id="postalAddressaddr3" style="opacity: 1 !important; color: black; width:95%" value="#{assesorModiratorUI.compPostalAddress.addressLine3}">
+					                                <o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['postalAddress.linethree.length.error']}" />
+					                        </p:inputText>
+					                        <p:outputLabel value="#{lang['address.line.3']}" for="postalAddressaddr3" />
+					                </h:panelGroup>
+					
+					                <h:panelGroup rendered="#{not assesorModiratorUI.copyAddress}">
+					                        <div>
+					                                <h:outputLabel value="#{lang['town']}" for="townPostal" />
+					                        </div>
+					                        <div>
+					                                <p:autoComplete disabled="#{assesorModiratorUI.compPostalAddress.town ne null}"  id="townPostal" value="#{assesorModiratorUI.compPostalAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true"
+					                                        requiredMessage="#{lang['please.select.a.town']}" >
+					                                        <p:column headerText="#{lang['town']}" style="white-space: nowrap">
+					                        #{rv.description}
+					                </p:column>
+					                                </p:autoComplete>
+					                        </div>
+					                </h:panelGroup>
+					
+					                <h:panelGroup styleClass="md-inputfield" rendered="#{not assesorModiratorUI.copyAddress}">
+					                        <p:inputText disabled="#{assesorModiratorUI.compPostalAddress.postcode.length() gt 0}"  id="postalAddressPcode" style="opacity: 1 !important; color: black; width:95%" value="#{assesorModiratorUI.compPostalAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}">
+					                                <o:validator validatorId="javax.faces.Length" minimum="0" maximum="4" message="#{lang['postalAddress.code.length.error']}" />
+					                        </p:inputText>
+					                        <p:outputLabel value="#{lang['post.code']}" for="postalAddressPcode" />
+					                </h:panelGroup>
+					
+					                <h:panelGroup rendered="#{not assesorModiratorUI.copyAddress}">
+					                        <div>
+					                                <h:outputLabel value="#{lang['municipality']}" for="postalAddressMunicipalityID" />
+					                        </div>
+					                        <div>
+					                                <p:autoComplete  disabled="#{assesorModiratorUI.compPostalAddress.municipality ne null}" id="postalAddressMunicipalityID" value="#{assesorModiratorUI.compPostalAddress.municipality}" completeMethod="#{sdfDetailUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityProvince}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true" minQueryLength="3"
+					                                        maxResults="10" inputstyle="opacity: 1 !important; color: black; width: 95%" style="opacity: 1 !important; color: black; width: 95%" required="true" requiredMessage="#{lang['select.municipality']}">
+					                                        <p:column headerText="#{lang['province']}" style="white-space: nowrap">#{rv.province.provinceDesc}</p:column>
+					                                        <p:column headerText="#{lang['municipality']}" style="white-space: nowrap">#{rv.municipalityDesc}</p:column>
+					                                </p:autoComplete>
+					                        </div>
+					                </h:panelGroup>
+					
+					                <h:panelGroup>
+					                        <div>
+					                                <p:outputLabel value="#{lang['same.as.my.address']}" styleClass="FontLight" />
+					                        </div>
+					                        <div>
+					                                <p:selectBooleanCheckbox   value="#{assesorModiratorUI.copyAddress}" >
+					                                        <p:ajax update="postalAddress" listener="#{assesorModiratorUI.clearPostal}"/>
+					                                </p:selectBooleanCheckbox>
+					                        </div>
+					                </h:panelGroup>
+					        </p:panelGrid>
+					</p:fieldset>
+					
+					<h:panelGroup styleClass="md-inputfield">
+					   	<p:inputMask id="companyRegNumber" value="#{assesorModiratorUI.company.companyRegistrationNumber}" mask="#{assesorModiratorUI.companyRegistrationNumberFormat}" style="width:95%" required="true" requiredMessage="#{lang['enter.company.number']}" />
+						<p:outputLabel value="#{lang['companyRegistrationNumber']}:" for="companyRegNumber" />
+					</h:panelGroup>
+					
+					
+					<h:panelGroup styleClass="md-inputfield">
+					        <p:inputText  id="email" value="#{assesorModiratorUI.company.email}" style="opacity: 1 !important; color: black; width:95%" required="true" requiredMessage="#{lang['enter.email.address']}">
+					                <o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['user.email.length']}" />
+					        </p:inputText>
+					        <p:outputLabel value="#{lang['email']}" for="email" />
+					</h:panelGroup>
+					
+					<h:panelGroup styleClass="md-inputfield" rendered="#{not assesorModiratorUI.company.nonLevyPaying}">
+					    <p:inputText id="companyLevyNumber" value="#{assesorModiratorUI.company.levyNumber}" style="width:95%" required="true" requiredMessage="#{lang['enter.levy.number']}" disabled="#{assesorModiratorUI.company.levyNumber.length() gt 0}" />
+						<p:outputLabel value="#{lang['levyNumber']}:" for="companyLevyNumber" />
+					</h:panelGroup>
+					
+					<h:panelGroup>
+					        <div style="margin-top: -20px !important;">
+					                <p:outputLabel value="#{lang['organisation.type']}" for="compOrganisationType" styleClass="gray Fs12" style="margin-left:5px" />
+					        </div>
+					        <div>
+					                <p:selectOneMenu  id="compOrganisationType" value="#{assesorModiratorUI.company.organisationType}" converter="OrganisationTypeConvertor" style="opacity: 1 !important; color: black; width:95%" required="true" requiredMessage="Select: Organisation Type">
+					                        <f:selectItem itemLabel="-- #{lang['select.one']} --" noSelectionOption="true" />
+					                        <f:selectItems value="#{sdfDetailUI.organisationTypeList}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+					                </p:selectOneMenu>
+					        </div>
+					</h:panelGroup>
+					
+					
+					<h:panelGroup>
+					        <div style="margin-top: -20px !important;">
+					                <p:outputLabel value="#{lang['sicCode']}" for="compSicCodeNew" styleClass="gray Fs12" style="margin-left:5px">
+					                </p:outputLabel>
+					        </div>
+					        <div>
+					                <p:autoComplete  id="compSicCodeNew" value="#{assesorModiratorUI.company.sicCode}" style="opacity: 1 !important; color: black; width: 95%" completeMethod="#{autoCompleteUI.completeSIC}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SICCodeConvertor" dropdown="true" minQueryLength="1"
+					                        maxResults="10" inputStyle="opacity: 1 !important; color: black;" required="true" requiredMessage="#{lang['select.sic.code']}">
+					                        <p:ajax update="compChambers" event="itemSelect"></p:ajax>
+					                        <p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+					                        <p:column headerText="#{lang['description']}" style="white-space: nowrap">#{rv.description}</p:column>
+					                </p:autoComplete>
+					
+					        </div>
+					</h:panelGroup>
+					
+					<h:panelGroup id="compChambers">
+					        <div style="margin-top: -20px !important;">
+					                <p:outputLabel value="#{lang['chamber']}" for="chamber" styleClass="gray Fs12" style="margin-left:5px" />
+					        </div>
+					        <div>
+					                <p:selectOneMenu disabled="true" id="chamber" value="#{assesorModiratorUI.company.sicCode.chamber}" converter="ChamberConvertor" style="opacity: 1 !important; color: black; width:95%">
+					                        <f:selectItem itemLabel="-- #{lang['select.one']} --" noSelectionOption="true" />
+					                        <f:selectItems value="#{sdfDetailUI.chambers}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+					                </p:selectOneMenu>
+					        </div>
+					</h:panelGroup>
+					
+					
+					
+				</p:panelGrid>
+
+				<c:if test="#{assesorModiratorUI.company.nonLevyPaying}">
+					<h1>Non-Levy Paying companies</h1>
+				</c:if>
+				<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" id="companyGrid" rendered="#{assesorModiratorUI.company.doneSearch and assesorModiratorUI.company.nonLevyPaying}">
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="companyName2" value="#{assesorModiratorUI.company.companyName}" maxlength="#{assesorModiratorUI.MAX_COMPANY_NAME_SIZE}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.company.name']}" />
+						<p:outputLabel value="#{lang['companyName']}:" for="companyName2" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputMask id="companyRegNumber2" value="#{assesorModiratorUI.company.companyRegistrationNumber}" style="width:95%" required="true" requiredMessage="#{lang['enter.company.number']}" />
+						<p:outputLabel value="#{lang['companyRegistrationNumber']}:" for="companyRegNumber2" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="companyEmail" value="#{assesorModiratorUI.company.email}" maxlength="#{assesorModiratorUI.MAX_EMAIL_SIZE}" style="width:95%" required="true" requiredMessage="#{lang['email.error']}" />
+						<p:outputLabel value="#{lang['email']}:" for="companyEmail" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputMask id="companyTelNumber" value="#{assesorModiratorUI.company.telNumber}" mask="#{assesorModiratorUI.TELPHONE_FORMAT}" style="width:95%" required="true" requiredMessage="#{lang['tel.number.error']}" />
+						<p:outputLabel value="#{lang['tel.number']}:" for="companyTelNumber" />
+					</h:panelGroup>
+
+					<h:panelGroup>
+						<div style="margin-top: -20px !important;">
+							<p:outputLabel value="#{lang['sicCode']}" for="sicCodeNew" styleClass="gray Fs12" style="margin-left:5px">
+							</p:outputLabel>
+						</div>
+						<div>
+							<p:autoComplete id="sicCodeNew" value="#{assesorModiratorUI.company.sicCode}" style="width: 95%" completeMethod="#{autoCompleteUI.completeSIC}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SICCodeConvertor" dropdown="true" minQueryLength="1" maxResults="10" disabled="false" required="true" requiredMessage="#{lang['sic.code.error']}">
+								<p:ajax update="chambers" event="itemSelect"></p:ajax>
+								<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+								<p:column headerText="#{lang['description']}" style="white-space: nowrap">#{rv.description}</p:column>
+							</p:autoComplete>
+						</div>
+					</h:panelGroup>
+
+					<h:panelGroup id="chambers">
+						<div style="margin-top: -20px !important;">
+							<p:outputLabel value="#{lang['chamber']}" for="compChamber" styleClass="gray Fs12" style="margin-left:5px" />
+						</div>
+						<div>
+							<p:selectOneMenu disabled="true" id="compChamber" value="#{assesorModiratorUI.company.sicCode.chamber}" converter="ChamberConvertor" style="width:95%; opacity: 1;" required="true" requiredMessage="#{lang['select.a.chamber']}">
+								<f:selectItem itemLabel="#{lang['select.sic_code']}" noSelectionOption="true" />
+								<f:selectItems value="#{sdfDetailUI.chambers}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+
+					<h:panelGroup>
+						<div style="margin-top: -20px !important;">
+							<p:outputLabel value="Organisation Type" for="organisationType" styleClass="gray Fs12" style="margin-left:5px" />
+						</div>
+						<div>
+							<p:selectOneMenu id="organisationType" value="#{assesorModiratorUI.company.organisationType}" converter="OrganisationTypeConvertor" style="width:95%" required="true" requiredMessage="Select: Organisation Type">
+								<f:selectItem itemLabel="-- #{lang['select.one']} --" noSelectionOption="true" />
+								<f:selectItems value="#{sdfDetailUI.organisationTypeList}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					
+
+				</p:panelGrid>
+
+				<p:panelGrid id="docList" layout="grid" columns="1" styleClass="ui-panelgrid-blank form-group" rendered="#{assesorModiratorUI.company.docs.size() gt 0}">
+					<h:panelGroup>
+						<br />
+						<span class="FontBold">
+							<i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+							#{lang['please.upload.the.following.compulsory.documents']}
+						</span>
+						<div class="ui-g dashboard">
+							<div class="ui-g-12">
+								<p:repeat var="rc" value="#{assesorModiratorUI.company.docs}" varStatus="x">
+									<div class="ui-g-12 ui-md-6 ui-lg-3">
+										<div class="ui-g card colorbox #{rc.originalFname eq null ? 'colorbox-5' : 'colorbox-1'}">
+											<div class="ui-g-4">
+												<i class="material-icons">#{rc.originalFname eq null ? 'cloud_upload' : 'check_circle'}</i>
+											</div>
+											<div class="ui-g-8">
+												<span class="colorbox-name">#{rc.configDoc.name}</span>
+												<span class="colorbox-count">
+													<p:commandButton icon="fa fa-download" id="cbDownload" rendered="#{rc.originalFname ne null}" action="#{assesorModiratorUI.download(rc)}" ajax="false" value="#{lang['download']}" immediate="true" process="@parent">
+														<p:ajax onevent="oneventFunction" />
+													</p:commandButton>
+													<p:spacer width="5" rendered="#{rc.originalFname ne null}"></p:spacer>
+													<p:tooltip for="cbDownload" value="#{lang['download']} #{rc.originalFname}" position="left" rendered="#{rc.originalFname ne null}" />
+													<p:commandButton id="sdfUpload" value="#{rc.originalFname eq null ? lang['click.to.upload'] : lang['re.upload'] }" styleClass="#{rc.originalFname eq null ? 'red-btn' : 'green-btn'} flat" process="@this" oncomplete="PF('dlgUpload').show()" update=":uploadForm">
+														<f:setPropertyActionListener value="#{rc}" target="#{assesorModiratorUI.doc}" />
+													</p:commandButton>
+												</span>
+											</div>
+										</div>
+									</div>
+								</p:repeat>
+							</div>
+						</div>
+					</h:panelGroup>
+				</p:panelGrid>
+
+			    <p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{assesorModiratorUI.company.doneSearch or searchCompanyUI.searchTrainingProvider}">
+					<p:commandButton value="#{lang['add.company']}" icon="ui-icon-plus" action="#{assesorModiratorUI.addCompanyToList}" process="companyDetails" update="companyDetails submitPanel" rendered="#{!assesorModiratorUI.company.tempUpdate}" />
+					<p:commandButton value="#{lang['update']}" icon="fa fa-database" process="companyDetails" update="companyDetails submitPanel companyList" rendered="#{assesorModiratorUI.company.tempUpdate}" action="#{assesorModiratorUI.updateCompany}" />
+				</p:panelGrid>
+
+				<br />
+				<h:panelGroup id="companyList">
+					<p:dataList value="#{assesorModiratorUI.companyList}" var="company" rendered="#{assesorModiratorUI.companyList.size() gt 0}">
+						<p:outputLabel value="#{company.companyName}"></p:outputLabel>
+						<p:commandLink id="ajax" update="amInsForm:companyDetails" process="@this" action="#{assesorModiratorUI.resetSearch}">
+							<span style="color: #353535; margin: 0px 10px;" class="fa fa-database Fs20 grey"></span>
+							<f:setPropertyActionListener value="#{company}" target="#{assesorModiratorUI.company}" />
+						</p:commandLink>
+						<p:tooltip position="top" for="ajax" value="#{lang['reset.search']}" />
+						<p:commandLink id="ajaxs" update=":amInsForm:companyDetails" process="@this" action="#{assesorModiratorUI.removeCompanyFromList}">
+							<span style="color: red" class="fa fa-times Fs12 "></span>
+							<f:setPropertyActionListener value="#{company}" target="#{assesorModiratorUI.company}" />
+						</p:commandLink>
+						<p:tooltip position="bottom" for="ajaxs" value="#{lang['remove.company.from.list']}" />
+					</p:dataList>
+				</h:panelGroup>
+
+
+				<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" id="xxxGs2">
+					<p:outputLabel value="Please provide all mandatory documents for companies added before continuing" rendered="#{assesorModiratorUI.companyDocCheck eq false and assesorModiratorUI.company.regDone}" />
+					<p:commandButton value="#{lang['continue']}" immediate="true" update="companyQualifications companyDetails" icon="ui-icon-fast-forward" iconPos="right" styleClass="flat" action="#{assesorModiratorUI.doneCompanyBit}" rendered="#{assesorModiratorUI.companyList.size() gt 0 and assesorModiratorUI.companyDocCheck eq true}" />
+				</p:panelGrid>
+			</p:fieldset>
+</ui:composition>

@@ -1,0 +1,187 @@
+@page "/finance/levy-audits"
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Domain.Entities
+@inject ISarsLevyReconAuditService ReconService
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+
+<PageTitle>SARS Levy Reconciliation &amp; Discrepancy Audits | merSETA NSDMS</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
+    <!-- Top Bar -->
+    <MudCard Elevation="2" Class="mb-4">
+        <MudCardContent Class="d-flex align-center justify-space-between py-3">
+            <div>
+                <MudBreadcrumbs Items="_breadcrumbs" Class="pa-0 mb-1" />
+                <MudText Typo="Typo.h5" Class="fw-bold">SARS Levy Reconciliation &amp; Discrepancy Audits</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    Multi-year SARS monthly SDL levy variance recalculations, underpayment detection, overpayment clawbacks, and ledger audits.
+                </MudText>
+            </div>
+            <MudStack Row="true" Spacing="2">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Calculate" OnClick="PerformAuditAsync">
+                    Run Auto-Reconciliation
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadDataAsync">
+                    Refresh
+                </MudButton>
+            </MudStack>
+        </MudCardContent>
+    </MudCard>
+
+    @if (_isLoading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+    }
+
+    <!-- Table -->
+    <MudCard Elevation="2">
+        <MudCardContent>
+            <MudTable Items="_audits" Hover="true" Dense="true" Elevation="0" Filter="FilterAudits"
+                      OnRowClick="@((TableRowClickEventArgs<SarsLevyReconAudit> e) => { if (e.Item?.OrganisationId > 0) Nav.NavigateTo($"/employers/{e.Item.OrganisationId}"); })"
+                      RowClass="cursor-pointer" T="SarsLevyReconAudit">
+                <ToolBarContent>
+                    <MudText Typo="Typo.h6">Reconciliation Audits (@_audits.Count)</MudText>
+                    <MudSpacer />
+                    <MudTextField @bind-Value="_searchString" Placeholder="Search by SDL #, employer, discrepancy..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Immediate="true" />
+                </ToolBarContent>
+                <HeaderContent>
+                    <MudTh>Financial Year</MudTh>
+                    <MudTh>SDL Number</MudTh>
+                    <MudTh>Employer Name</MudTh>
+                    <MudTh>SARS Received</MudTh>
+                    <MudTh>Calculated Expected</MudTh>
+                    <MudTh>Variance</MudTh>
+                    <MudTh>Discrepancy</MudTh>
+                    <MudTh>Audit Status</MudTh>
+                    <MudTh Style="text-align: right;">Action</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Financial Year" Class="fw-bold">@context.FinancialYear</MudTd>
+                    <MudTd DataLabel="SDL Number" Class="font-monospace">@context.SdlNumber</MudTd>
+                    <MudTd DataLabel="Employer Name">@(context.Organisation?.CompanyName ?? "Registered SDL Payer")</MudTd>
+                    <MudTd DataLabel="SARS Received">@context.TotalSarsLeviesReceived.ToString("C")</MudTd>
+                    <MudTd DataLabel="Calculated Expected">@context.TotalCalculatedLeviesExpected.ToString("C")</MudTd>
+                    <MudTd DataLabel="Variance">
+                        <MudText Typo="Typo.body2" Color="@(context.VarianceAmount < 0 ? Color.Error : (context.VarianceAmount > 0 ? Color.Warning : Color.Success))" Class="fw-bold">
+                            @context.VarianceAmount.ToString("C")
+                        </MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Discrepancy">
+                        <MudChip T="string" Size="Size.Small" Color="@GetDiscrepancyColor(context.DiscrepancyReasonCode)" Variant="Variant.Outlined">
+                            @context.DiscrepancyReasonCode
+                        </MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Audit Status">
+                        <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.AuditStatusCode)" Variant="Variant.Filled">
+                            @context.AuditStatusCode
+                        </MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Action" Style="text-align: right;">
+                        @if (context.ClawbackActionRequired && context.AuditStatusCode != "Resolved")
+                        {
+                            <MudButton Variant="Variant.Filled" Color="Color.Warning" Size="Size.Small" StartIcon="@Icons.Material.Filled.Payments" OnClick="@(() => SettleClawbackAsync(context.Id))">
+                                Settle Clawback
+                            </MudButton>
+                        }
+                        else
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Text">Reconciled</MudChip>
+                        }
+                    </MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager />
+                </PagerContent>
+            </MudTable>
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
+
+@code {
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Finance & Disbursements", href: "/finance/grants"),
+        new BreadcrumbItem("SARS Levy Audits", href: null, disabled: true)
+    };
+
+    private List<SarsLevyReconAudit> _audits = new();
+    private bool _isLoading = true;
+    private string _searchString = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _audits = await ReconService.GetReconAuditsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to load recon audits: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task PerformAuditAsync()
+    {
+        try
+        {
+            await ReconService.PerformSarsLevyAuditAsync("2026", "L987654321", 540000m, 500000m, null, "Overpayment detected from March 2026 SARS return.", "FinanceAuditor");
+            Snackbar.Add("Reconciliation audit executed. Discrepancies flagged for clawback.", Severity.Success);
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task SettleClawbackAsync(int id)
+    {
+        try
+        {
+            await ReconService.SettleClawbackAsync(id, "FinanceAuditor");
+            Snackbar.Add("Clawback variance settled successfully.", Severity.Success);
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private bool FilterAudits(SarsLevyReconAudit audit)
+    {
+        if (string.IsNullOrWhiteSpace(_searchString)) return true;
+        return audit.SdlNumber.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+               audit.DiscrepancyReasonCode.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+               audit.FinancialYear.Contains(_searchString, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private Color GetDiscrepancyColor(string code) => code switch
+    {
+        "ExactMatch" => Color.Success,
+        "Underpayment" => Color.Error,
+        "Overpayment" => Color.Warning,
+        _ => Color.Info
+    };
+
+    private Color GetStatusColor(string status) => status switch
+    {
+        "Resolved" => Color.Success,
+        "Reconciled" => Color.Success,
+        "DiscrepancyFlagged" => Color.Warning,
+        "ClawbackIssued" => Color.Error,
+        _ => Color.Default
+    };
+}

@@ -1,0 +1,332 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                template="/WEB-INF/template.xhtml">
+
+	<ui:define name="head">
+    	    <script src="#{request.contextPath}/js/highcharts.js"/>
+    	    <script src="#{request.contextPath}/js/highcharts-3d.js"/>
+    	    <script src="#{request.contextPath}/js/modules/map.js"/>
+		<script src="#{request.contextPath}/js/exporting.js"/> 
+	</ui:define> 
+
+
+    <ui:define name="content">
+
+ 	 <div class="ui-g dashboard">
+
+             <div class="ui-g-12 ui-md-6 ui-lg-3">
+                <div class="ui-g card colorbox colorbox-5">
+                    <div class="ui-g-4">
+                        <i class="material-icons">&#xE160;</i>
+                    </div>
+                    <div class="ui-g-8">
+                        <span class="colorbox-name">#{lang['open.tasks']}</span>
+                        <span class="colorbox-count">#{dashBoardSeniorManagerReportingUI.openTasks}</span>
+                    </div>
+                </div>
+            </div>   
+
+             <div class="ui-g-12 ui-md-6 ui-lg-3">
+                <div class="ui-g card colorbox colorbox-2">
+                    <div class="ui-g-4">
+                        <i class="material-icons">drive_eta</i>
+                    </div>
+                    <div class="ui-g-8">
+                        <span class="colorbox-name">#{lang['underway.tasks']}</span>
+                        <span class="colorbox-count">#{dashBoardSeniorManagerReportingUI.underwayTasks}</span>
+                    </div>
+                </div>
+            </div>               
+            <div class="ui-g-12 ui-md-6 ui-lg-4">
+                <div class="ui-g card colorbox colorbox-1">
+                    <div class="ui-g-4">
+                        <i class="material-icons">&#xE86C;</i>
+                    </div>
+                    <div class="ui-g-8">
+                        <span class="colorbox-name">#{lang['completed.tasks']}<span style="font-size: 11px !important;"> #{lang['for.this.month']}</span> </span>
+                        <span class="colorbox-count">#{dashBoardSeniorManagerReportingUI.completedTasks}</span>
+                    </div>
+                </div>
+            </div>                   
+	  </div>    
+    
+ 
+ <ui:include src="/pages/includes/taskDashboard.xhtml" />   
+    
+    
+        <div class="ui-g">
+	 		<div class="ui-g-12 ui-md-12">
+				<div class="card card-w-title">
+  						<div id="container" style="height: 400px"></div>
+                </div>
+            </div>
+        </div>
+        
+         <div class="ui-g">
+	 		<div class="ui-g-12 ui-md-6 ui-lg-6">
+				<div class="card card-w-title">
+				<ui:include src="/pages/includes/sdfBiographical.xhtml" />
+
+                </div>
+            </div>
+             <div class="ui-g-12 ui-md-6 ui-lg-6">
+				<div class="card card-w-title">
+				<H1>Number of SDFs per Company</H1>
+				<p>List filtered by active and approved SDFs</p>
+  						<ui:include src="/pages/includes/filterGuide.xhtml" />
+					<h:form id="dashForm3">
+						<p:growl /> <p:tooltip position="left" />
+						<p:dataTable var="rowVar" value="#{dashBoardSeniorManagerReportingUI.findSDFPerEmploy}"  rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,15,20,25,50" reflow="true" >
+
+
+           					<p:column headerText="#{lang['companyName']}" filterBy="#{rowVar.description}" sortBy="#{rowVar.description}">  
+                        			<h:outputText value="#{rowVar.description}" />  
+            					</p:column>
+            					<p:column headerText="#{lang['numberOfSDF']}" sortBy="#{rowVar.count}">  
+                        			<h:outputText value="#{rowVar.count}" />  
+            					</p:column>
+
+						</p:dataTable>
+						</h:form>
+                </div>
+            </div>    
+      
+        </div>
+        
+
+        
+        
+    <div class="ui-g">    
+    
+    	 		<div class="ui-g-12 ui-md-4 ui-lg-4">
+				<div class="card card-w-title" style="height: 540px">
+				<H1>Registered Companies per Province</H1>
+					<h:form id="dashForm2">
+						<p:growl /> <p:tooltip position="left" />
+						<p:dataTable var="rowVar" value="#{dashBoardSeniorManagerReportingUI.findEmpPerProv}"   rowKey="#{rowVar.id}" reflow="true">
+
+
+						
+           					<p:column headerText="#{lang['province.name']}">  
+                        			<h:outputText value="#{rowVar.description}" />  
+            					</p:column>
+            					<p:column headerText="Companies" >  
+                        			<h:outputText value="#{rowVar.count}" />  
+            					</p:column>
+            					
+            					 <!--           						<p:column width="30">
+					
+									<p:commandButton icon="ui-icon-attach-money" title="View Levies" action="#{tblemployerUI.viewLevies}">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{tblemployerUI.tblemployer}" />
+									</p:commandButton>
+								</p:column> -->
+
+						</p:dataTable>
+						</h:form>
+						 
+                </div>
+           
+            </div>  
+    
+        	<div class="ui-g-12 ui-md-8 ui-lg-8">
+				<div class="card card-w-title">
+  						<div id="container3" style="height: 500px"></div>
+                </div>
+         </div>         
+     </div>   
+     
+          <div class="ui-g">
+            	<div class="ui-g-12 ui-md-12 ui-lg-12">
+				<div class="card card-w-title">
+  						<div id="container2" style="height: 400px"></div>
+                </div>
+            </div>            
+
+        </div>
+        
+
+<h:form>        
+
+<script type="text/javascript">
+//<![CDATA[
+$(document ).ready(function() {  
+	
+	 $(function () {
+
+		 Highcharts.setOptions({
+			    colors: ['#4D2600', '#999372', '#C5913E', '#C57901', '#F0C070', '#8B592E', '#1E4B88', '#767776', '#87C6E1']
+			});
+		 
+		 Highcharts.chart('container', {
+			    chart: {
+			        type: 'column',
+			        options3d: {
+			            enabled: true,
+			            alpha: 15,
+			            beta: 15,
+			            viewDistance: 25,
+			            depth: 60
+			        }
+			    },
+
+			    title: {
+			        text: #{dashBoardSeniorManagerReportingUI.heading}
+			    },
+			    credits: {
+		            enabled: false
+		        },
+			    xAxis: {
+			        categories: #{dashBoardSeniorManagerReportingUI.pr}
+			    },
+
+			    yAxis: {
+			        allowDecimals: false,
+			        min: 0,
+			        title: {
+			            text: 'Tasks'
+			        }
+			    },
+
+			    tooltip: {
+			        headerFormat: '<b>{point.key}</b><br>',
+			        pointFormat: '<span style="color:{series.color}">\u25CF</span> {series.name}: {point.y}'
+			    },
+
+			    plotOptions: {
+			        column: {
+			            stacking: 'normal',
+			            depth: 40
+			        }
+			    },
+
+			    series: [{
+			        name: 'Open',
+			        data: #{dashBoardSeniorManagerReportingUI.openData}
+			       
+			    }, {
+			        name: 'Underway',
+			        data: #{dashBoardSeniorManagerReportingUI.underwayData}
+			     
+			    },  
+			    {
+			        name: 'Completed',
+			        data: #{dashBoardSeniorManagerReportingUI.completedData}
+			       
+			    }]
+			});
+
+
+		 Highcharts.chart('container2', {
+			    chart: {
+			        type: 'pie',
+			        options3d: {
+			            enabled: true,
+			            alpha: 45,
+			            beta: 0
+			        }
+			    },
+			    credits: {
+		            enabled: false
+		        },
+			    title: {
+			        text: 'Companies by status'
+			    },
+			    tooltip: {
+			        pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+			    },
+			    plotOptions: {
+			        pie: {
+			            allowPointSelect: true,
+			            cursor: 'pointer',
+			            depth: 35,
+			            dataLabels: {
+			                enabled: true,
+			                format: '{point.name}'
+			            }
+			        }
+			    },
+			    series: [{
+			        type: 'pie',
+			        name: 'Status',
+			        data: [
+			            ['Approved', #{dashBoardSeniorManagerReportingUI.approved}],
+			            ['Rejected', #{dashBoardSeniorManagerReportingUI.rejected}],
+			            {
+			                name: 'Active',
+			                y: #{dashBoardSeniorManagerReportingUI.activeCompanies},
+			                sliced: true,
+			                selected: true
+			            }
+			        ]
+			    }]
+			});
+	 
+
+		 var data = [
+			 #{dashBoardSeniorManagerReportingUI.provData}
+			];
+			
+		 $.getJSON('#{request.contextPath}/js/za-all.geo.json', function (geojson) {
+
+			    // Initiate the chart
+			    Highcharts.mapChart('container3', {
+			        chart: {
+			            map: geojson
+			        },
+
+			        title: {
+			            text: 'Registered Companies per Province'
+			        },
+				    credits: {
+			            enabled: false
+			        },
+			        exporting: {
+			            enabled: false
+			        },
+			        mapNavigation: {
+			            enabled: true,
+			            buttonOptions: {
+			                verticalAlign: 'bottom'
+			            }
+			        },
+
+			        colorAxis: {
+			            min: 1,
+			            type: 'logarithmic',
+			            minColor: '#F0C070',
+			            maxColor: '#5B3718'
+			        },
+
+			        series: [{
+			        		animation: {
+			                duration: 1000
+			            },
+			            data: data,
+			            name: 'Companies',
+			            states: {
+			                hover: {
+			                    color: '#C5913E'
+			                }
+			            },
+			            dataLabels: {
+			                enabled: true,
+			                format: '{point.name}'
+			            }
+			        }]
+			    }); /* end of map */
+			});		/* end of gson */
+		
+				 
+	 
+	 }); /* end of $(function ()  */		 
+});  /* end of document ready mainForm1:utaskTable_head  profile-menu */	  
+//]]>		  
+</script>    
+</h:form>  
+    </ui:define>
+
+</ui:composition>

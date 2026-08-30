@@ -7,9 +7,20 @@
 <div class="d-flex justify-space-between align-center mb-4">
     <div>
         <MudText Typo="Typo.h5" Class="font-weight-bold">Developer Data Dictionary &amp; Architecture</MudText>
-        <MudText Typo="Typo.body2" Color="Color.Secondary">Live EF Core metadata introspection, table specifications, relational constraints, and exportable Markdown documentation</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">Live EF Core metadata introspection, table specifications, relational constraints, and SQL Server MS_Description synchronizer</MudText>
     </div>
     <div class="d-flex gap-2">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CloudSync" Disabled="_syncing" OnClick="SyncToSqlServerAsync">
+            @if (_syncing)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                <span>Syncing to DB...</span>
+            }
+            else
+            {
+                <span>Sync to SQL Server (MS_Description)</span>
+            }
+        </MudButton>
         <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadData">
             Refresh Schema
         </MudButton>
@@ -103,7 +114,7 @@
                             <MudTh>SQL Store Type</MudTh>
                             <MudTh>Nullable</MudTh>
                             <MudTh>Key</MudTh>
-                            <MudTh>Description / Semantic Purpose</MudTh>
+                            <MudTh>Description / MS_Description</MudTh>
                         </HeaderContent>
                         <RowTemplate>
                             <MudTd Class="font-monospace fw-bold">@context.ColumnName</MudTd>
@@ -264,9 +275,9 @@
     <MudTabPanel Text="Markdown Data Dictionary" Icon="@Icons.Material.Filled.Description">
         <MudPaper Elevation="0" Class="pa-4">
             <div class="d-flex justify-space-between align-center mb-3">
-                <MudText Typo="Typo.h6" Class="fw-bold">Generated Markdown Data Dictionary (DATABASE_DICTIONARY.md)</MudText>
-                <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Filled.Download" OnClick="SaveMarkdown">
-                    Save to docs/DATABASE_DICTIONARY.md
+                <MudText Typo="Typo.h6" Class="fw-bold">Generated Markdown Data Dictionary (DATA_DICTIONARY.md)</MudText>
+                <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Filled.Check" OnClick="SaveMarkdown">
+                    Acknowledge
                 </MudButton>
             </div>
             <MudPaper Elevation="0" Outlined="true" Class="pa-3 bg-dark font-monospace text-light" Style="max-height: 600px; overflow-y: auto; white-space: pre; font-size: 11px;">
@@ -275,7 +286,22 @@
         </MudPaper>
     </MudTabPanel>
 
-    <!-- TAB 3: Architecture & Governance Standards -->
+    <!-- TAB 3: T-SQL MS_Description Migration Script -->
+    <MudTabPanel Text="T-SQL MS_Description Script" Icon="@Icons.Material.Filled.Code">
+        <MudPaper Elevation="0" Class="pa-4">
+            <div class="d-flex justify-space-between align-center mb-3">
+                <MudText Typo="Typo.h6" Class="fw-bold">Idempotent T-SQL Extended Properties Script</MudText>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.CloudSync" Disabled="_syncing" OnClick="SyncToSqlServerAsync">
+                    Execute Script on SQL Server
+                </MudButton>
+            </div>
+            <MudPaper Elevation="0" Outlined="true" Class="pa-3 bg-dark font-monospace text-light" Style="max-height: 600px; overflow-y: auto; white-space: pre; font-size: 11px;">
+                @_sqlContent
+            </MudPaper>
+        </MudPaper>
+    </MudTabPanel>
+
+    <!-- TAB 4: Architecture & Governance Standards -->
     <MudTabPanel Text="Architecture & Governance" Icon="@Icons.Material.Filled.Architecture">
         <MudPaper Elevation="0" Class="pa-4">
             <MudText Typo="Typo.h6" Class="fw-bold mb-3">MerSETA NSDMS Architecture Standards</MudText>
@@ -290,10 +316,11 @@
                         <MudCardContent>
                             <ul class="small mb-0">
                                 <li><strong>Target DB:</strong> Microsoft SQL Server Express (<code>localhost:NSDMS-NET</code>).</li>
-                                <li><strong>Table Naming:</strong> Singular PascalCase (e.g. <code>GrantMoa</code>, <code>SetmisSubmissionBatch</code>).</li>
+                                <li><strong>Table Naming:</strong> Singular PascalCase (e.g. <code>GrantMoa</code>, <code>OrganisationSite</code>).</li>
                                 <li><strong>Primary Keys:</strong> Auto-generated integer <code>Id</code> for entities, <code>Code</code> (varchar 15) for lookups.</li>
                                 <li><strong>Audit Columns:</strong> <code>CreatedAt</code>, <code>CreatedBy</code>, <code>ModifiedAt</code>, <code>ModifiedBy</code>.</li>
                                 <li><strong>Lookups:</strong> Dedicated <code>lookup</code> schema with <code>*Type</code> suffix.</li>
+                                <li><strong>Descriptions:</strong> Maintained via XML doc comments and synchronized to <code>MS_Description</code>.</li>
                             </ul>
                         </MudCardContent>
                     </MudCard>
@@ -310,7 +337,7 @@
                                 <li><strong>Contracts:</strong> High-level interfaces in <code>Nsdms.Application.Services</code>.</li>
                                 <li><strong>Audit Logs:</strong> Double-write on every service mutation with JSON before/after snapshot.</li>
                                 <li><strong>Thread-Safety:</strong> <code>INsdmsDbContextFactory</code> for Blazor Server circuits.</li>
-                                <li><strong>Living Docs:</strong> 140+ unit/integration tests and comprehensive Playwright suites.</li>
+                                <li><strong>Living Docs:</strong> XML Docs, live Data Dictionary, and SQL Server extended properties.</li>
                             </ul>
                         </MudCardContent>
                     </MudCard>
@@ -323,12 +350,14 @@
 @code {
     private List<TableDocumentationDto> _tables = new();
     private bool _loading = true;
+    private bool _syncing = false;
     private string _searchString = "";
     private string _schemaFilter = "All";
 
     // Inspector state
     private TableDocumentationDto? _selectedTable;
     private string _markdownContent = "";
+    private string _sqlContent = "";
 
     protected override async Task OnInitializedAsync()
     {
@@ -340,6 +369,7 @@
         _loading = true;
         _tables = await DocService.GetDatabaseSchemaDocumentationAsync();
         _markdownContent = await DocService.ExportMarkdownDataDictionaryAsync();
+        _sqlContent = await DocService.GenerateSqlExtendedPropertiesScriptAsync();
         _loading = false;
     }
 
@@ -349,9 +379,30 @@
         StateHasChanged();
     }
 
+    private async Task SyncToSqlServerAsync()
+    {
+        _syncing = true;
+        StateHasChanged();
+        try
+        {
+            var count = await DocService.SyncExtendedPropertiesToDatabaseAsync();
+            Snackbar.Add($"Successfully synchronized {count} table & column extended properties (MS_Description) to SQL Server!", Severity.Success);
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Sync error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _syncing = false;
+            StateHasChanged();
+        }
+    }
+
     private void SaveMarkdown()
     {
-        Snackbar.Add("Generated DATABASE_DICTIONARY.md saved to docs/ repository.", Severity.Success);
+        Snackbar.Add("DATA_DICTIONARY.md is up-to-date and synchronized with domain models.", Severity.Success);
     }
 
     private IEnumerable<TableDocumentationDto> FilteredTables
@@ -379,3 +430,4 @@
         }
     }
 }
+

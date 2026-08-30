@@ -1,0 +1,30 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	
+	<ui:include src="/pages/includes/sdp_document_change_display.xhtml"/>
+	
+	<c:if test="#{sdpmanagementUI.trainingProviderApplication ne null}">
+		<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+			<p:fieldset legend="#{lang['sdp']} Details" toggleable="true" collapsed="true">
+				<ui:include src="/pages/includes/sdp_info_display.xhtml">
+					<ui:param name="trainingProvider" value="#{sdpmanagementUI.trainingProviderApplication}" />
+				</ui:include>
+			</p:fieldset>
+		</p:panelGrid>
+	</c:if>
+
+	<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+		<p:panel header="#{lang['assessor.and.moderator']}">
+		<ui:include src="/pages/includes/company_user_info_display.xhtml">
+			<ui:param name="companyUser" value="#{sdpmanagementUI.companyUser}" />
+		</ui:include>
+		</p:panel>
+	</p:panelGrid>
+	
+	<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="text-align: center" layout="grid">
+		<p:commandButton id="approveTask" onstart="uploadStart()" value="#{lang['approve.task']}" icon="ui-icon-save" update="@form" action="#{sdpmanagementUI.approveDeleteAssessorModTask}" styleClass="flat green-btn Fs18" style="height: 50px;"></p:commandButton>
+
+		<p:commandButton id="rejectTask" value="#{lang['reject.task']}" icon="ui-icon-clear-all" update="@form"  oncomplete="PF('deleteSDPAssessprModfinalRejectReason').show()" process="@this" styleClass="flat red-btn Fs18" style="height: 50px;">
+		</p:commandButton>
+	</p:panelGrid>
+	
+</ui:composition>

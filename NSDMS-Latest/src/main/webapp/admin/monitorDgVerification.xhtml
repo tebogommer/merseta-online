@@ -1,0 +1,264 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum"></p:importEnum>
+					<p:importEnum type="haj.com.entity.enums.UsersStatusEnum" />
+					<p:growl showDetail="false" sticky="false" id="msg">
+						<p:autoUpdate />
+					</p:growl>
+					<h1>Monitor DG Verification</h1>
+					<h:form id="mainForm">
+
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+						<p:dataTable rendered="true" var="rowVarC" value="#{monitorDgVerificationUI.companyDataModel}" lazy="true" id="companyList" rowKey="#{rowVarC.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+							paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+							<p:column headerText="#{lang['company.name']}" filterBy="#{rowVarC.companyName}" sortBy="#{rowVarC.companyName}" filterStyle="width: 95%" exportable="true">
+								<h:outputText value="#{rowVarC.companyName}" />
+							</p:column>
+							<p:column headerText="#{lang['tradingName']}" filterBy="#{rowVarC.tradingName}" sortBy="#{rowVarC.tradingName}" filterStyle="width: 95%" exportable="true">
+								<h:outputText value="#{rowVarC.tradingName}" />
+							</p:column>
+							<p:column headerText="#{lang['entity.id']}" filterBy="#{rowVarC.levyNumber}" sortBy="#{rowVarC.levyNumber}" filterStyle="width: 95%" width="10%" exportable="true">
+								<h:outputText value="#{rowVarC.levyNumber}" />
+							</p:column>
+							<p:column headerText="Grant Status" width="13%" rendered="true" exportable="true">
+								<h:outputText value="#{rowVarC.lastestGrantStatus}" />
+							</p:column>
+							<p:column headerText="DG Verification Status" width="13%" rendered="true" exportable="true">
+								<h:outputText value="#{rowVarC.lastestDgVerificationStatus}" />
+							</p:column>
+							<p:column headerText="#{lang['status']}" sortBy="#{rowVarC.companyStatus}" width="10%" rendered="false">
+								<h:outputText value="#{lang[rowVarC.companyStatus.registrationName]}" />
+							</p:column>
+							<p:column width="7%" exportable="false">
+								<p:commandButton icon="fa fa-search" update=":mainForm:companyVerificationPanel :mainForm:verificationDataPanel" action="#{monitorDgVerificationUI.selectCompany}" onstart="uploadStart()" oncomplete="uploadDone()">
+									<f:setPropertyActionListener value="#{rowVarC}" target="#{monitorDgVerificationUI.selectedCompany}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+
+						<p:outputLabel id="companyVerificationPanel">
+							<c:if test="#{monitorDgVerificationUI.selectedCompany ne null}">
+								<h4>#{monitorDgVerificationUI.selectedCompany.companyName} Selected.</h4>
+								<p:commandButton rendered="false" id="closeVerBtn" value="Close View" icon="fa fa-times" update=":mainForm:companyVerificationPanel :mainForm:verificationDataPanel" action="#{monitorDgVerificationUI.closeViewSelectCompany}" onstart="uploadStart()" oncomplete="uploadDone()" />
+								<div class="EmptyBox10" />
+								<p:dataTable rendered="true" var="rowVarDG" value="#{monitorDgVerificationUI.dgVerificationDataModel}" lazy="true" id="allVerificationList" rowKey="#{rowVarDG.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+									paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+									<p:column headerText="#{lang['reference.id']}" width="100">
+										<p:outputLabel value="#{rowVarDG.id}" />
+									</p:column>
+									<p:column headerText="#{lang['year']}">
+										<h:outputText value="#{rowVarDG.wsp.finYear}" />
+									</p:column>
+									<p:column headerText="#{lang['companyName']}">
+										<h:outputText value="#{rowVarDG.wsp.company.companyName}" />
+									</p:column>
+									<p:column headerText="Grant #{lang['status']}">
+										<h:outputText value="#{rowVarDG.wsp.wspStatusEnum.friendlyName}" />
+									</p:column>
+									<p:column headerText="Verification #{lang['status']}">
+										<h:outputText value="#{rowVarDG.status.friendlyName}" rendered="#{rowVarDG.status ne null}" />
+										<h:outputText value="Not Yet Started" rendered="#{rowVarDG.status eq null}" />
+									</p:column>
+									<p:column width="7%" exportable="false">
+										<p:commandButton title="View Verification Data" icon="fa fa-search" update=":mainForm:verificationDataPanel :mainForm:verificationDataGenPanel" action="#{monitorDgVerificationUI.viewVerificationData}" onstart="uploadStart()" oncomplete="uploadDone()">
+											<f:setPropertyActionListener value="#{rowVarDG}" target="#{monitorDgVerificationUI.selectedDgVerification}" />
+										</p:commandButton>
+										<p:spacer width="5" />
+										<p:commandButton title="View Raw Gen Data" icon="fa fa-search-plus" update=":mainForm:verificationDataPanel :mainForm:verificationDataGenPanel" action="#{monitorDgVerificationUI.viewDataGenerationForVerification}" onstart="uploadStart()" oncomplete="uploadDone()">
+											<f:setPropertyActionListener value="#{rowVarDG}" target="#{monitorDgVerificationUI.selectedDgVerification}" />
+										</p:commandButton>
+										<p:spacer width="5" />
+										<p:commandButton title="Re-Gen Data" icon="fa fa-database" update=":mainForm:verificationDataPanel :mainForm:verificationDataGenPanel" action="#{monitorDgVerificationUI.generateVerificationData}" onstart="uploadStart()" oncomplete="uploadDone()">
+											<f:setPropertyActionListener value="#{rowVarDG}" target="#{monitorDgVerificationUI.selectedDgVerification}" />
+										</p:commandButton>
+										<p:spacer width="5" />
+										<p:commandButton styleClass="red-btn" title="Re-open Verification to CLO" icon="fa fa-repeat" update=":mainForm:companyVerificationPanel: :mainForm:verificationDataGenPanel" action="#{monitorDgVerificationUI.reopenToStartVerification}" onstart="uploadStart()" oncomplete="uploadDone()">
+											<p:confirm header="Confirmation" message="Are you sure you want to re-open the DG verification?" icon="fa fa-exclamation-triangle" />
+											<f:setPropertyActionListener value="#{rowVarDG}" target="#{monitorDgVerificationUI.selectedDgVerification}" />
+										</p:commandButton>
+									</p:column>
+								</p:dataTable>
+							</c:if>
+						</p:outputLabel>
+
+						<p:outputLabel id="verificationDataGenPanel">
+							<c:if test="#{monitorDgVerificationUI.mandatoryGrantDataList ne null and monitorDgVerificationUI.mandatoryGrantDataList.size() ne 0}">
+								<h4>Raw Generation Data for REF ID: #{monitorDgVerificationUI.selectedDgVerification.id} Selected.</h4>
+								<p:dataTable var="rowVarRD" value="#{monitorDgVerificationUI.mandatoryGrantDataList}" id="rawDataMgDT" rowKey="#{rowVarRD.id}" paginator="true" rows="10" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+									paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,15,20,25,50,100" reflow="true">
+									<p:column headerText="#{lang['number.of.learners']}">
+										<p:outputLabel value="#{rowVarRD.amount}" style="width:95%" />
+									</p:column>
+									<p:column headerText="#{lang['number.of.disabled']}">
+										<p:outputLabel value="#{rowVarRD.disabledAmount}" style="width:95%" />
+									</p:column>
+									<p:column headerText="#{lang['ofo.codes']}">
+										<p:outputLabel value="#{rowVarRD.ofoCodes.ofoDescription}" style="width:95%" />
+									</p:column>
+									<p:column headerText="#{lang['intervention.type']}">
+										<p:outputLabel value="#{rowVarRD.interventionType.description}" style="width:95%" />
+									</p:column>
+									<p:column headerText="#{lang['intervention.title']}">
+										<p:outputLabel value="(#{rowVarRD.qualification.code}) #{rowVarRD.qualification.description}" decimalPlaces="0" disabled="true" rendered="#{rowVarRD.qualification ne null}" />
+										<p:outputLabel value="(#{rowVarRD.skillsProgram.programmeID}) #{rowVarRD.skillsProgram.description}" decimalPlaces="0" disabled="true" rendered="#{rowVarRD.skillsProgram ne null}" />
+										<p:outputLabel value="(#{rowVarRD.skillsSet.programmeID}) #{rowVarRD.skillsSet.description}" decimalPlaces="0" disabled="true" rendered="#{rowVarRD.skillsSet ne null}" />
+										<p:outputLabel value="(#{rowVarRD.unitStandard.code}) #{rowVarRD.unitStandard.title}" rendered="#{rowVarRD.unitStandard ne null}" />
+										<p:outputLabel value="(#{rowVarRD.nonCreditBearingIntervationTitle.code}) #{rowVarRD.nonCreditBearingIntervationTitle.description}" rendered="#{rowVarRD.nonCreditBearingIntervationTitle ne null}" />
+									</p:column>
+									<p:column headerText="#{lang['nqf.level']}">
+										<p:outputLabel minValue="0" value="#{rowVarRD.nqfLevels.description}" decimalPlaces="0" disabled="true" />
+									</p:column>
+								</p:dataTable>
+							</c:if>
+						</p:outputLabel>
+
+						<p:outputLabel id="verificationDataPanel">
+							<c:if test="#{monitorDgVerificationUI.selectedDgVerification ne null}">
+								<h4>Verification Data for REF ID: #{monitorDgVerificationUI.selectedDgVerification.id} Selected.</h4>
+								<div class="EmptyBox10" />
+								<p:dataTable var="rowVar" value="#{monitorDgVerificationUI.mandatoryGrantDataModel}" lazy="true" id="employeesimportList" rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+									paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,15,20,25,50,100" reflow="true">
+									<p:column headerText="#{lang['expand.row']}" width="45">
+										<p:rowToggler></p:rowToggler>
+									</p:column>
+									<p:column headerText="#{lang['reference.id']}" width="100">
+										<p:outputLabel value="#{rowVar.id}" />
+									</p:column>
+									<p:column headerText="#{lang['number.of.learners']}" sortBy="#{rowVar.amount}">
+										<p:outputLabel value="#{rowVar.amount}" style="width:95%" />
+									</p:column>
+									<p:column headerText="#{lang['number.of.disabled']}" sortBy="#{rowVar.amount}">
+										<p:outputLabel value="#{rowVar.disabledAmount}" style="width:95%" />
+									</p:column>
+									<p:column headerText="#{lang['recommendationLastOneQuantity']}" exportable="false">
+										<p:outputLabel value="#{rowVar.grantRecommendations.get(rowVar.grantRecommendations.size() - 1).quantity}" style="width:95%" rendered="#{rowVar.grantRecommendations.size() gt 0}" />
+									</p:column>
+									<p:column headerText="#{lang['ofo.codes']}" sortBy="#{rowVar.ofoCodes}" filterBy="#{rowVar.ofoCodes.ofoCode}" filterMatchMode="contains">
+										<p:outputLabel value="#{rowVar.ofoCodes.ofoDescription}" style="width:95%" />
+									</p:column>
+									<p:column headerText="#{lang['intervention.type']}" sortBy="#{rowVar.interventionType.description}">
+										<p:outputLabel value="#{rowVar.interventionType.description}" style="width:95%" />
+									</p:column>
+									<p:column headerText="#{lang['intervention.title']}">
+										<p:outputLabel value="(#{rowVar.qualification.code}) #{rowVar.qualification.description}" decimalPlaces="0" disabled="true" rendered="#{rowVar.qualification ne null}" />
+										<p:outputLabel value="(#{rowVar.skillsProgram.programmeID}) #{rowVar.skillsProgram.description}" decimalPlaces="0" disabled="true" rendered="#{rowVar.skillsProgram ne null}" />
+										<p:outputLabel value="(#{rowVar.skillsSet.programmeID}) #{rowVar.skillsSet.description}" decimalPlaces="0" disabled="true" rendered="#{rowVar.skillsSet ne null}" />
+										<p:outputLabel value="(#{rowVar.unitStandard.code}) #{rowVar.unitStandard.title}" rendered="#{rowVar.unitStandard ne null}" />
+										<p:outputLabel value="(#{rowVar.nonCreditBearingIntervationTitle.code}) #{rowVar.nonCreditBearingIntervationTitle.description}" rendered="#{rowVar.nonCreditBearingIntervationTitle ne null}" />
+									</p:column>
+									<p:column headerText="#{lang['nqf.level']}" sortBy="#{rowVar.nqfLevels}">
+										<p:outputLabel minValue="0" value="#{rowVar.nqfLevels.description}" decimalPlaces="0" disabled="true" />
+									</p:column>
+									<p:column headerText="Processed">
+										<p:outputPanel rendered="#{rowVar.grantRecommendations.size() eq 0}">
+											<i class="fa fa-times fa-3x red" aria-hidden="true"></i>
+										</p:outputPanel>
+										<p:outputPanel rendered="#{rowVar.grantRecommendations.size() gt 0}">
+											<i class="fa fa-check fa-3x green" aria-hidden="true"></i>
+										</p:outputPanel>
+									</p:column>
+									<p:rowExpansion>
+										<p:outputPanel rendered="#{rowVar.grantRecommendations.size() gt 0}">
+											<h3>Recommendations</h3>
+											<p:dataTable value="#{rowVar.grantRecommendations}" var="rv4" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv4.id}">
+												<p:column headerText="#{lang['first.name']}">
+													<h:outputText value="#{rv4.recommendingUser.firstName}" />
+												</p:column>
+												<p:column headerText="#{lang['last.name']}">
+													<h:outputText value="#{rv4.recommendingUser.lastName}" />
+												</p:column>
+												<p:column headerText="#{lang['intervention.type']}">
+													<p:outputLabel value="#{rv4.interventionType.description}" />
+												</p:column>
+												<p:column headerText="#{lang['qualification.id']}">
+													<h:outputText value="#{rv4.qualification.code}" rendered="#{rv4.qualification ne null}" />
+													<h:outputText value="#{rv4.unitStandards.code}" rendered="#{rv4.unitStandards ne null}" />
+													<h:outputText value="#{rv4.skillsSet.code}" rendered="#{rv4.skillsSet ne null}" />
+													<h:outputText value="#{rv4.skillsProgram.programmeID}" rendered="#{rv4.skillsProgram ne null}" />
+													<h:outputText value="#{rv4.nonCreditBearingIntervationTitle.code}" rendered="#{rv4.nonCreditBearingIntervationTitle ne null}" />
+												</p:column>
+												<p:column headerText="#{lang['intervention.title']}">
+													<h:outputText value="#{rv4.qualification.description}" rendered="#{rv4.qualification ne null}" />
+													<h:outputText value="#{rv4.unitStandards.title}" rendered="#{rv4.unitStandards ne null}" />
+													<h:outputText value="#{rv4.skillsProgram.description}" rendered="#{rv4.skillsProgram ne null}" />
+													<h:outputText value="#{rv4.skillsSet.description}" rendered="#{rv4.skillsSet ne null}" />
+													<h:outputText value="#{rv4.nonCreditBearingIntervationTitle.description}" rendered="#{rv4.nonCreditBearingIntervationTitle ne null}" />
+												</p:column>
+												<p:column headerText="#{lang['nqf.level']}">
+													<h:outputText value="#{rv4.qualification.nqflevel.description}" rendered="#{rv4.qualification ne null}" />
+													<h:outputText value="#{rv4.unitStandards.nqflevelg2description}" rendered="#{rv4.unitStandards ne null}" />
+													<h:outputText value="#{rv4.skillsProgram.qualification.nqflevel.description}" rendered="#{rv4.skillsProgram ne null}" />
+													<h:outputText value="#{rv4.skillsSet.qualification.nqflevel.description}" rendered="#{rv4.skillsSet ne null}" />
+													<h:outputText value="N/A" rendered="#{rv4.nonCreditBearingIntervationTitle ne null}" />
+												</p:column>
+												<p:column headerText="#{lang['number.of.learners']}">
+													<h:outputText value="#{rv4.quantity}" />
+												</p:column>
+												<p:column headerText="Reason for Recommendation">
+													<h:outputText value="N/A" rendered="#{rv4.rejectReasons eq null}" />
+													<h:outputText value="#{rv4.rejectReasons.description}" rendered="#{rv4.rejectReasons ne null}" />
+													<br />
+													<h:outputText styleClass="Fs12 gray" value="#{rv4.rejectReasons.howTo}" rendered="#{rv4.rejectReasons ne null}" />
+												</p:column>
+											</p:dataTable>
+											<br />
+										</p:outputPanel>
+										<p:panelGrid columns="1" style="width:100%" id="s" layout="grid" styleClass="ui-panelgrid-blank form-group">
+											<p:fieldset legend="Original #{lang['discretionary.data']}" rendered="#{rowVar.pivotNonPivot eq PivotNonPivotEnum.Pivotal}">
+												<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+													<h:panelGroup styleClass="md-inputfield">
+														<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar.nqfAligned.yesNoName}" disabled="true" />
+														<p:outputLabel value="#{lang['nqf.aligned']}" />
+													</h:panelGroup>
+													<h:panelGroup styleClass="md-inputfield">
+														<p:inputText style="width:95%; opacity:1 !important;" minValue="0" value="#{rowVar.nqfLevels.description}" decimalPlaces="0" disabled="true" />
+														<p:outputLabel value=" #{lang['nqf.level']}" />
+													</h:panelGroup>
+													<h:panelGroup styleClass="md-inputfield">
+														<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar.interventionLevel.description}" decimalPlaces="0" disabled="true" />
+														<p:outputLabel value="#{lang['level.of.training']}" />
+													</h:panelGroup>
+													<h:panelGroup styleClass="md-inputfield" rendered="#{rowVar.etqa ne null}">
+														<p:inputText style="width:95%; opacity:1 !important;" minValue="0" value="#{rowVar.etqa.description}" decimalPlaces="0" disabled="true" />
+														<p:outputLabel value="#{lang['etqa']}" />
+													</h:panelGroup>
+													<h:panelGroup styleClass="md-inputfield">
+														<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar.providerType.description}" decimalPlaces="0" disabled="true" />
+														<p:outputLabel value="#{lang['provider.type']}" />
+													</h:panelGroup>
+													<h:panelGroup styleClass="md-inputfield" rendered="#{rowVar.startDate ne null}">
+														<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar.startDate}" decimalPlaces="0" disabled="true">
+															<f:convertDateTime pattern="dd MMMM yyyy" />
+														</p:inputText>
+														<p:outputLabel value="#{lang['start.date']}" />
+													</h:panelGroup>
+													<h:panelGroup styleClass="md-inputfield" rendered="#{rowVar.endDate ne null}">
+														<p:inputText style="width:95%; opacity:1 !important;" minValue="0" value="#{rowVar.endDate}" decimalPlaces="0" disabled="true">
+															<f:convertDateTime pattern="dd MMMM yyyy" />
+														</p:inputText>
+														<p:outputLabel value=" #{lang['end.date']}" />
+													</h:panelGroup>
+												</p:panelGrid>
+											</p:fieldset>
+										</p:panelGrid>
+									</p:rowExpansion>
+								</p:dataTable>
+							</c:if>
+						</p:outputLabel>
+					</h:form>
+					<p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+						<h:form>
+							<p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="fa fa-check" />
+							<p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="fa fa-times" />
+						</h:form>
+					</p:confirmDialog>
+				</div>
+			</div>
+		</div>
+
+	</ui:define>
+</ui:composition>

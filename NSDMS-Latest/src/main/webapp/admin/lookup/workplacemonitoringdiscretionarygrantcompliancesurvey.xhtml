@@ -1,0 +1,89 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Workplace Monitoring: Discretionary Grant Compliance Survey</h1>
+					<h:form id="workplacemonitoringdiscretionarygrantcompliancesurveyInsForm">
+						<p:growl sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+
+						<p:panelGrid columns="1" style="width:100%" id="workplacemonitoringdiscretionarygrantcompliancesurveyInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="number" value="#{workplacemonitoringdiscretionarygrantcompliancesurveyUI.workplacemonitoringdiscretionarygrantcompliancesurvey.number}" style="width:95%" required="true" requiredMessage="Provide: Number" />
+								<p:outputLabel value="Number" for="number" />
+							</h:panelGroup>
+							
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="question" value="#{workplacemonitoringdiscretionarygrantcompliancesurveyUI.workplacemonitoringdiscretionarygrantcompliancesurvey.question}" style="width:95%" required="true" requiredMessage="Provide: Question" />
+								<p:outputLabel value="Question" for="question" />
+							</h:panelGroup>
+							
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:workplacemonitoringdiscretionarygrantcompliancesurveyList :workplacemonitoringdiscretionarygrantcompliancesurveyInsForm:workplacemonitoringdiscretionarygrantcompliancesurveyInsGrid"
+									action="#{workplacemonitoringdiscretionarygrantcompliancesurveyUI.workplacemonitoringdiscretionarygrantcompliancesurveyInsert}" />
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="workplacemonitoringdiscretionarygrantcompliancesurveyInsGrid" process="@this" action="#{workplacemonitoringdiscretionarygrantcompliancesurveyUI.prepareNew}">
+									<p:resetInput target="workplacemonitoringdiscretionarygrantcompliancesurveyInsGrid" />
+								</p:commandButton>
+							</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<ui:include src="/pages/includes/download_lazy.xhtml">
+							<ui:param name="file_name" value="Workplace_Monitoring_Discretionary_Grant_Compliance_Survey_List" />
+							<ui:param name="target" value="workplacemonitoringdiscretionarygrantcompliancesurveyList" />
+						</ui:include>
+						<div class="EmptyBox10"/>
+						<p:dataTable var="rowVar" value="#{workplacemonitoringdiscretionarygrantcompliancesurveyUI.dataModel}" 
+							id="workplacemonitoringdiscretionarygrantcompliancesurveyList" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+							rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+							<p:column headerText="Number" sortBy="#{rowVar.number}">
+								<h:outputText value="#{rowVar.number}" />
+							</p:column>
+							
+							
+							<p:column headerText="Question" filterBy="#{rowVar.question}">
+								<h:outputText value="#{rowVar.question}" />
+							</p:column>
+							
+							<p:column headerText="#{lang['createDate']}">
+								<h:outputText value="#{rowVar.createDate}" >
+									<f:convertDateTime pattern="dd MMMM yyyy HH:mm:ss"/>
+								</h:outputText>
+							</p:column>
+
+							<p:column width="80">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":workplacemonitoringdiscretionarygrantcompliancesurveyInsForm:workplacemonitoringdiscretionarygrantcompliancesurveyInsGrid">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{workplacemonitoringdiscretionarygrantcompliancesurveyUI.workplacemonitoringdiscretionarygrantcompliancesurvey}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:workplacemonitoringdiscretionarygrantcompliancesurveyList" action="#{workplacemonitoringdiscretionarygrantcompliancesurveyUI.workplacemonitoringdiscretionarygrantcompliancesurveyDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{workplacemonitoringdiscretionarygrantcompliancesurveyUI.workplacemonitoringdiscretionarygrantcompliancesurvey}" />
+								</p:commandButton>
+							</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+	<!-- 
+_lang_
+-->
+</ui:composition>

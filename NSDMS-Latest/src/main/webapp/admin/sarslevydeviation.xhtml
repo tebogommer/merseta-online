@@ -1,0 +1,156 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+
+
+
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+						<p:tooltip position="left" />
+						<h1>SARS Levy Deviation Report based on levy files of DHET/ SARS month: <h:outputText value="#{sarsLevyDeviationUI.baseDate}"><f:convertDateTime pattern="MMMM yyyy"/> </h:outputText></h1>
+						  <div align="right">
+						    <h:commandLink id="eExcel" action="#{sarsLevyDeviationUI.excel}">
+										<i class="fa fa-file-excel-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+					       </h:commandLink>
+					      </div>
+					      <p:tooltip for="eExcel" value="#{lang['export.search.results.to.excel']}" position="left"/>
+							<br/>
+
+						<p:dataTable var="rv" value="#{sarsLevyDeviationUI.dataModel}"  id="sarsLevyDeviationList" rowKey="#{rowVar.id}" paginator="true" rows="20" paginatorPosition="bottom"
+							paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="20,40,80,160,120,240" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['sdl.number']}" filterBy="#{rv.sdlnumber}" filterStyle="width: 95%">
+								<h:outputText value="#{rv.sdlnumber}"/>
+							</p:column>
+
+							<p:column headerText="Lates Levy">
+								<h:outputText value="#{rv.latest_levy}" styleClass="Fright">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="Average levy">
+								<h:outputText value="#{rv.average_levy}" styleClass="Fright">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="Deviation Amount">
+								<h:outputText value="#{rv.deviation_amount}" styleClass="Fright">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</h:outputText>
+							</p:column>
+
+							<p:column headerText="Deviation Percentage">
+							  <div  class="Fright">
+								<h:outputText value="#{rv.deviation_percentage}">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</h:outputText>%
+								</div>
+							</p:column>
+							<p:column headerText="No Levies in last year" width="100">
+							   <h:outputText value="#{rv.no_levies}" styleClass="Fright FontLight"/>
+							</p:column>
+							<p:column headerText="No Levies since inception" width="100">
+							   <h:outputText value="#{rv.noLeviesSinceStart}" styleClass="Fright FontLight"/>
+							</p:column>
+							<p:column headerText="Levy Status" width="110">
+								 <h:outputText value="Normal" rendered="#{rv.levyStatus eq 1}" styleClass="FontLight"/>
+								 <h:outputText value="Inconsistent" rendered="#{rv.levyStatus eq 2}" styleClass="FontBold"/>
+								 <h:outputText value="Below Threshold" rendered="#{rv.levyStatus eq 3}" styleClass="FontBold red"/>
+							</p:column>
+
+           					<p:column width="30">
+									<p:commandButton icon="ui-icon-zoom-in" title="View latest levy" update=":detailForm" action="#{sarsLevyDeviationUI.findDetail}" oncomplete="PF('detailDialog').show()">
+										<f:setPropertyActionListener value="#{rv}" target="#{sarsLevyDeviationUI.sarsLevyRecon}" />
+									</p:commandButton>
+							</p:column>
+
+						</p:dataTable>
+
+
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+
+		<p:dialog closeOnEscape="true" draggable="false"  widgetVar="detailDialog" resizable="false" hideEffect="clip" showEffect="clip"  modal="true" responsive="true" width="95%" header="Latest levy file details">
+		  <h:form id="detailForm">
+
+
+						<p:fieldset >
+					   		<p:panelGrid columns="4" styleClass="ui-panelgrid-blank"  layout="grid" columnClasses="FontBold,Fs14,FontBold,Fs14">
+					   		  <p:outputLabel value="#{lang['levy.number']}"/>
+					   		  <p:outputLabel value="#{sarsLevyDeviationUI.sarsLevyRecon.sdlnumber}"/>
+
+					   		  <p:outputLabel value="Levy files for"/>
+					   		  <h:outputText value="#{sarsLevyDeviationUI.baseDate}"><f:convertDateTime pattern="MMMM yyyy"/> </h:outputText>
+
+					   		  <p:outputLabel value="#{lang['name']}"/>
+					   		  <p:outputLabel value="#{sarsLevyDeviationUI.sarsEmployerDetail.registeredNameOfEntity}"/>
+
+					   		  <p:outputLabel value="#{lang['company.reg.number']}"/>
+					   		  <p:outputLabel value="#{sarsLevyDeviationUI.sarsEmployerDetail.companyRegistrationNumber}"/>
+
+					   		  <p:outputLabel value="#{lang['tradingName']}"/>
+					   		  <p:outputLabel value="#{sarsLevyDeviationUI.sarsEmployerDetail.tradingName}"/>
+
+					   		  <p:outputLabel value="#{lang['trading.status']}"/>
+					   		  <p:outputLabel value="(#{sarsLevyDeviationUI.sarsEmployerDetail.tradingStatus}) #{sarsReportsUI.sarsEmployerDetail.status}"/>
+
+						   	  <p:outputLabel value="#{lang['sic']}"/>
+					   		  <p:outputLabel value="#{sarsLevyDeviationUI.sarsEmployerDetail.sicCode2}"/>
+
+					   		</p:panelGrid>
+
+					   </p:fieldset>
+		<br/><br/>
+						<p:dataTable var="rv" value="#{sarsLevyDeviationUI.sarsLevyDetails}"  rowKey="#{rowVar.id}" reflow="true">
+
+							<p:column headerText="#{lang['scheme.year']}" width="4%">
+								<h:outputText value="#{rv.schemeYear}"  />
+
+							</p:column>
+
+							<p:column headerText="#{lang['mandatory.levy']}">
+								<h:outputText value="#{rv.mandatoryLevy}" styleClass="Fright">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['discretionary.levy']}">
+								<h:outputText value="#{rv.discretionaryLevy}" styleClass="Fright">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['admin.levy']}">
+								<h:outputText value="#{rv.adminLevy}" styleClass="Fright">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</h:outputText>
+							</p:column>
+
+							<p:column headerText="#{lang['interest']}">
+								<h:outputText value="#{rv.interest}" styleClass="Fright">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</h:outputText>
+							</p:column>
+
+							<p:column headerText="#{lang['penalty']}">
+								<h:outputText value="#{rv.penalty}" styleClass="Fright">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['total']}">
+								<h:outputText value="#{rv.total}" styleClass="Fright">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</h:outputText>
+							</p:column>
+						</p:dataTable>
+
+		  </h:form>
+		</p:dialog>
+
+	</ui:define>
+
+</ui:composition>

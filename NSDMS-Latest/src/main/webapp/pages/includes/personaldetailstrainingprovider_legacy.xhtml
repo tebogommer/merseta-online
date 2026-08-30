@@ -1,0 +1,152 @@
+<ui:composition xmlns:o="http://omnifaces.org/ui" xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<ui:include src="/pages/includes/tpsdpprimaryrepresentatives_legacy.xhtml" />
+	<h:panelGroup rendered="#{trainingproviderUI.formUser.doneSearch}">
+		<br />
+		<h:panelGroup id="companyDetails">
+			<ui:include src="/pages/includes/tpcompanydetails_legacy.xhtml" />
+			<br />
+			<h:panelGroup rendered="#{trainingproviderUI.company ne null and trainingproviderUI.company.regDone and trainingproviderUI.formUser.regFieldsDone}" id="cpPanel">
+				<p:outputPanel styleClass="card">
+					<h1>Add Contact Person(s)</h1>
+					<ui:include src="/pages/includes/tabinfo.xhtml">
+						<ui:param name="showInfoCircle" value="true" />
+						<ui:param name="cssClass" value="secondaryText Fs15" />
+						<ui:param name="helpTxt" value="#{lang['a.minimum.of.two.contact.persons.are.required']}" />
+					</ui:include>
+					<p:outputPanel id="fsContactPerson">
+						<ui:include src="/pages/includes/tpSdpAssignment.xhtml">
+						</ui:include>
+					</p:outputPanel>
+				</p:outputPanel>
+			</h:panelGroup>
+			<br />
+			<p:outputPanel id="smeMainPG" rendered="#{trainingproviderUI.doneContactPerson and trainingproviderUI.formUser.regFieldsDone and trainingproviderUI.company.regDone}" styleClass="card">
+				<h1>Availability of Assessor and Moderator</h1>
+				<ui:include src="/pages/includes/tpAvailailityOfFacAndAssessorWithNewStructure.xhtml">
+				</ui:include>
+				<c:if test="false">
+					<!-- NOT IN USED -->
+					<ui:include src="/pages/includes/tpSME.xhtml" />
+				</c:if>
+			</p:outputPanel>
+
+			<p:outputPanel styleClass="card" id="qualUSGrid" style="width:100%" rendered="#{trainingproviderUI.doneSMEReg and trainingproviderUI.formUser.regFieldsDone and trainingproviderUI.company.regDone}">
+				<h1>#{lang['qualification.details']}</h1>
+				<p:fieldset>
+					<br />
+					<p:dataTable var="qual" value="#{trainingproviderUI.legacyProviderQualificationList}">
+						<p:column headerText="#{lang['qualifications']}">
+							<h:outputText value="#{qual.qualification.description}" />
+						</p:column>
+
+						<p:column headerText="#{lang['saqa.id']}">
+							<h:outputText value="#{qual.qualification.code}" />
+						</p:column>
+
+						<p:column headerText="#{lang['nqf.level']}">
+							<h:outputText value="#{qual.qualification.nqflevel.description}" />
+						</p:column>
+
+						<p:column headerText="#{lang['status']}" width="37">
+							<h:graphicImage rendered="#{qual.qualificationExpired}" id="redStatus" value="/resources/hls/images/red.svg" width="40" styleClass="animated pulse infinite" />
+							<p:tooltip for="redStatus" value="This qualification has expired, as a result it cannot be processed"></p:tooltip>
+							<h:graphicImage rendered="#{!qual.qualificationExpired}" id="greenStatus" value="/resources/hls/images/green.svg" width="30" />
+							<p:tooltip for="greenStatus" value="This qualification is active"></p:tooltip>
+						</p:column>
+
+					</p:dataTable>
+					<br />
+					<p:dataTable var="us" value="#{trainingproviderUI.legacyProviderUnitStandardList}" rows="5" paginatorPosition="bottom" paginator="true" paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+						rowsPerPageTemplate="5,10,15,20,25,50,100">
+						<p:column headerText="#{lang['name.of.unit.standard(s)']}">
+							<h:outputText value="#{us.unitStandard.title}" />
+						</p:column>
+
+						<p:column headerText="#{lang['code']}">
+							<h:outputText value="#{us.unitStandard.code}" />
+						</p:column>
+
+						<p:column headerText="#{lang['nqf.level']}">
+							<h:outputText value="#{us.unitStandard.nqf}" />
+						</p:column>
+
+						<p:column headerText="#{lang['status']}" width="37">
+							<h:graphicImage rendered="#{us.unitStandardExpired}" id="redStatus" value="/resources/hls/images/red.svg" width="40" styleClass="animated pulse infinite" />
+							<p:tooltip for="redStatus" value="This unit standard has expired, as a result it cannot be processed "></p:tooltip>
+							<h:graphicImage rendered="#{!us.unitStandardExpired}" id="greenStatus" value="/resources/hls/images/green.svg" width="30" />
+							<p:tooltip for="greenStatus" value="This unit standard is active"></p:tooltip>
+						</p:column>
+
+					</p:dataTable>
+					<br />
+					<p:dataTable var="sp" value="#{trainingproviderUI.legacyProviderSkillsProgrammeList}" rows="5" paginatorPosition="bottom" paginator="true" paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+						rowsPerPageTemplate="5,10,15,20,25,50,100">
+						<p:column headerText="#{lang['skills.programme']}">
+							<h:outputText value="#{sp.skillsProgram.description}" />
+						</p:column>
+
+						<p:column headerText="#{lang['programmeID']}">
+							<h:outputText value="#{sp.skillsProgram.programmeID}" />
+						</p:column>
+
+						<p:column headerText="#{lang['code']}" rendered="false">
+							<h:outputText value="#{sp.skillsProgram.code}" />
+						</p:column>
+						<p:column headerText="#{lang['status']}" width="37">
+							<h:graphicImage rendered="#{sp.qualificationExpired}" id="redStatus" value="/resources/hls/images/red.svg" width="40" styleClass="animated pulse infinite" />
+							<p:tooltip for="redStatus" value="This skills programme has expired, as a result it cannot be processed "></p:tooltip>
+							<h:graphicImage rendered="#{!sp.qualificationExpired}" id="greenStatus" value="/resources/hls/images/green.svg" width="30" />
+							<p:tooltip for="greenStatus" value="This skills programme is active"></p:tooltip>
+						</p:column>
+					</p:dataTable>
+
+					<br />
+					<p:dataTable var="ss" value="#{trainingproviderUI.legacyProviderSkillsProgrammeSkillsSetList}" rows="5" paginatorPosition="bottom" paginator="true" paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+						rowsPerPageTemplate="5,10,15,20,25,50,100">
+						<p:column headerText="Skills Set">
+							<h:outputText value="#{ss.skillsSet.description}" />
+						</p:column>
+
+						<p:column headerText="#{lang['programmeID']}">
+							<h:outputText value="#{ss.skillsSet.programmeID}" />
+						</p:column>
+
+						<p:column headerText="#{lang['code']}" rendered="false">
+							<h:outputText value="#{ss.skillsSet.code}" />
+						</p:column>
+						<p:column headerText="#{lang['status']}" width="37">
+							<h:graphicImage rendered="#{ss.qualificationExpired}" id="redStatusss" value="/resources/hls/images/red.svg" width="40" styleClass="animated pulse infinite" />
+							<p:tooltip for="redStatusss" value="This skills set has expired, as a result it cannot be processed "></p:tooltip>
+							<h:graphicImage rendered="#{!ss.qualificationExpired}" id="greenStatusss" value="/resources/hls/images/green.svg" width="30" />
+							<p:tooltip for="greenStatusss" value="This skills set is active"></p:tooltip>
+						</p:column>
+					</p:dataTable>
+
+					<br />
+					<p:dataTable var="ls" value="#{trainingproviderUI.legacyProviderLearnershipList}" rendered="true" rows="5" paginatorPosition="bottom" paginator="true" paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+						rowsPerPageTemplate="5,10,15,20,25,50,100">
+						<p:column headerText="Learnership">
+							<h:outputText value="#{ls.learnership.qualification.description}" />
+						</p:column>
+
+						<p:column headerText="#{lang['code']}">
+							<h:outputText value="#{ls.learnership.code}" />
+						</p:column>
+
+						<p:column headerText="#{lang['status']}" width="37">
+							<h:graphicImage rendered="#{ls.qualificationExpired}" id="redStatus" value="/resources/hls/images/red.svg" width="40" styleClass="animated pulse infinite" />
+							<p:tooltip for="redStatus" value="This learnership has expired, as a result it cannot be processed "></p:tooltip>
+							<h:graphicImage rendered="#{!ls.qualificationExpired}" id="greenStatus" value="/resources/hls/images/green.svg" width="30" />
+							<p:tooltip for="greenStatus" value="This learnership is active"></p:tooltip>
+						</p:column>
+					</p:dataTable>
+				</p:fieldset>
+			</p:outputPanel>
+
+			<br />
+			<h:panelGrid id="authMainPG" style="width:100%">
+				<ui:include src="/pages/includes/tpAuthorisation_Legacy.xhtml" />
+			</h:panelGrid>
+		</h:panelGroup>
+	</h:panelGroup>
+</ui:composition>

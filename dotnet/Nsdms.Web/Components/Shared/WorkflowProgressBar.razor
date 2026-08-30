@@ -1,0 +1,231 @@
+@inject IWorkflowEngineService WorkflowService
+@inject ISnackbar Snackbar
+
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-3" />
+}
+else
+{
+    <MudCard Elevation="2" Class="mb-4">
+        <MudCardHeader Class="pb-2">
+            <CardHeaderContent>
+                <div class="d-flex align-center justify-space-between flex-wrap gap-2">
+                    <div class="d-flex align-center gap-2">
+                        <MudIcon Icon="@Icons.Material.Filled.AccountTree" Color="Color.Primary" />
+                        <MudText Typo="Typo.subtitle1" Class="fw-bold">@_processTitle Workflow Progression</MudText>
+                        @if (_instance != null)
+                        {
+                            <MudChip T="string" Color="@GetStatusColor(_instance.CurrentWorkflowState?.StateCode)" Size="Size.Small" Variant="Variant.Filled">
+                                Current State: @(_instance.CurrentWorkflowState?.StateName ?? "In Progress")
+                            </MudChip>
+                        }
+                        else
+                        {
+                            <MudChip T="string" Color="Color.Info" Size="Size.Small" Variant="Variant.Filled">
+                                Current State: Active
+                            </MudChip>
+                        }
+                    </div>
+                    @if (_instance != null && _instance.IsCompleted)
+                    {
+                        <MudChip T="string" Color="Color.Success" Size="Size.Small" Icon="@Icons.Material.Filled.CheckCircle" Variant="Variant.Outlined">
+                            Workflow Completed
+                        </MudChip>
+                    }
+                </div>
+            </CardHeaderContent>
+        </MudCardHeader>
+        <MudCardContent Class="pt-2 pb-4">
+            <!-- Responsive Step Flow Track -->
+            <div class="workflow-stepper-container d-flex align-center justify-space-between flex-wrap gap-2">
+                @for (int i = 0; i < DisplayStates.Count; i++)
+                {
+                    var state = DisplayStates[i];
+                    var stepIndex = i + 1;
+                    var isPast = _currentStepOrder > state.StepOrder || (_instance?.IsCompleted == true && state.IsTerminal);
+                    var isCurrent = _currentStateId == state.Id || (_currentStateId == 0 && i == 0);
+
+                    <div class="workflow-step-node d-flex flex-column align-center text-center px-2 py-1" style="min-width: 130px; flex: 1;">
+                        <div class="d-flex align-center w-100 mb-1">
+                            @if (i > 0)
+                            {
+                                <div class="step-connector flex-grow-1" style="height: 3px; background-color: @(isPast || isCurrent ? "var(--mud-palette-success)" : "var(--mud-palette-lines-default)");"></div>
+                            }
+                            
+                            <div class="step-badge-circle d-flex align-center justify-center rounded-circle"
+                                 style="width: 36px; height: 36px; font-weight: bold; font-size: 13px; margin: 0 auto;
+                                        background-color: @(isPast ? "var(--mud-palette-success)" : isCurrent ? "var(--mud-palette-primary)" : "var(--mud-palette-surface)");
+                                        color: @(isPast || isCurrent ? "white" : "var(--mud-palette-text-secondary)");
+                                        border: 2px solid @(isPast ? "var(--mud-palette-success)" : isCurrent ? "var(--mud-palette-primary)" : "var(--mud-palette-lines-default)");
+                                        box-shadow: @(isCurrent ? "0 0 10px rgba(27, 85, 155, 0.4)" : "none");">
+                                @if (isPast)
+                                {
+                                    <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" />
+                                }
+                                else
+                                {
+                                    <span>@stepIndex</span>
+                                }
+                            </div>
+
+                            @if (i < DisplayStates.Count - 1)
+                            {
+                                <div class="step-connector flex-grow-1" style="height: 3px; background-color: @(isPast ? "var(--mud-palette-success)" : "var(--mud-palette-lines-default)");"></div>
+                            }
+                        </div>
+
+                        <MudText Typo="Typo.caption" Class="@(isCurrent ? "fw-bold text-primary" : isPast ? "fw-bold text-success" : "text-muted")" Style="line-height: 1.2;">
+                            @state.StateName
+                        </MudText>
+
+                        @if (!string.IsNullOrEmpty(state.AllowedGroupRole))
+                        {
+                            <span class="badge bg-light text-dark font-monospace mt-1" style="font-size: 10px; border: 1px solid #ddd; border-radius: 4px; padding: 1px 4px;">
+                                @state.AllowedGroupRole
+                            </span>
+                        }
+                    </div>
+                }
+            </div>
+        </MudCardContent>
+    </MudCard>
+}
+
+@code {
+    [Parameter] public string ProcessCode { get; set; } = string.Empty;
+    [Parameter] public int EntityId { get; set; }
+    [Parameter] public string EntityTitle { get; set; } = string.Empty;
+    [Parameter] public string EntityRef { get; set; } = string.Empty;
+
+    private List<WorkflowState> _states = new();
+    private WorkflowInstance? _instance;
+    private int _currentStateId = 0;
+    private int _currentStepOrder = 1;
+    private string _processTitle = "";
+    private bool _loading = true;
+
+    private List<WorkflowState> DisplayStates
+    {
+        get
+        {
+            if (_states.Count > 0) return _states;
+            return GetFallbackStates(ProcessCode);
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadWorkflowStateAsync();
+    }
+
+    private async Task LoadWorkflowStateAsync()
+    {
+        if (string.IsNullOrEmpty(ProcessCode) || EntityId <= 0)
+        {
+            _loading = false;
+            return;
+        }
+
+        _loading = true;
+        try
+        {
+            _states = await WorkflowService.GetWorkflowDefinitionStatesAsync(ProcessCode);
+            _processTitle = _states.FirstOrDefault()?.WorkflowDefinition?.Name ?? GetProcessDefaultTitle(ProcessCode);
+
+            _instance = await WorkflowService.GetInstanceByEntityAsync(ProcessCode, EntityId);
+            if (_instance != null)
+            {
+                _currentStateId = _instance.CurrentWorkflowStateId;
+                _currentStepOrder = _instance.CurrentWorkflowState?.StepOrder ?? 1;
+            }
+            else if (_states.Count > 0)
+            {
+                var initial = _states.FirstOrDefault(s => s.IsInitial) ?? _states.First();
+                _currentStateId = initial.Id;
+                _currentStepOrder = initial.StepOrder;
+            }
+        }
+        catch
+        {
+            _processTitle = GetProcessDefaultTitle(ProcessCode);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private static string GetProcessDefaultTitle(string code) => code switch
+    {
+        "PROVIDER" => "Training Provider Accreditation",
+        "WSP" => "Workplace Skills Plan (WSP)",
+        "DG" => "Discretionary Grant Application",
+        "WPAPP" => "Workplace Approval",
+        "LRN" => "Learner Registration",
+        "GRANT_MOA" => "Grant MOA Contracting",
+        _ => code
+    };
+
+    private static List<WorkflowState> GetFallbackStates(string code) => code switch
+    {
+        "PROVIDER" => new List<WorkflowState>
+        {
+            new() { Id = 1, StateName = "Draft Application", StepOrder = 1, AllowedGroupRole = "Provider" },
+            new() { Id = 2, StateName = "Under Desktop Review", StepOrder = 2, AllowedGroupRole = "CLO Officer" },
+            new() { Id = 3, StateName = "Site Audit Scheduled", StepOrder = 3, AllowedGroupRole = "CLO Officer" },
+            new() { Id = 4, StateName = "Pending Committee Approval", StepOrder = 4, AllowedGroupRole = "QA Manager" },
+            new() { Id = 5, StateName = "Accredited", StepOrder = 5, IsTerminal = true }
+        },
+        "WSP" => new List<WorkflowState>
+        {
+            new() { Id = 1, StateName = "Draft WSP", StepOrder = 1, AllowedGroupRole = "Primary SDF" },
+            new() { Id = 2, StateName = "Signed by SDF", StepOrder = 2, AllowedGroupRole = "Primary SDF" },
+            new() { Id = 3, StateName = "Signed by Labour", StepOrder = 3, AllowedGroupRole = "Organised Labour" },
+            new() { Id = 4, StateName = "Under CLO Review", StepOrder = 4, AllowedGroupRole = "CLO Officer" },
+            new() { Id = 5, StateName = "Approved & Awarded", StepOrder = 5, IsTerminal = true }
+        },
+        "DG" => new List<WorkflowState>
+        {
+            new() { Id = 1, StateName = "Application Submitted", StepOrder = 1, AllowedGroupRole = "Grant Applicant" },
+            new() { Id = 2, StateName = "Technical Evaluation", StepOrder = 2, AllowedGroupRole = "CLO Officer" },
+            new() { Id = 3, StateName = "Committee Adjudication", StepOrder = 3, AllowedGroupRole = "Review Committee" },
+            new() { Id = 4, StateName = "Grant Awarded", StepOrder = 4, IsTerminal = true }
+        },
+        "WPAPP" => new List<WorkflowState>
+        {
+            new() { Id = 1, StateName = "Application Logged", StepOrder = 1, AllowedGroupRole = "Employer SDF" },
+            new() { Id = 2, StateName = "Site Inspection", StepOrder = 2, AllowedGroupRole = "CLO Inspector" },
+            new() { Id = 3, StateName = "Mentor Ratio Review", StepOrder = 3, AllowedGroupRole = "QA Officer" },
+            new() { Id = 4, StateName = "Workplace Approved", StepOrder = 4, IsTerminal = true }
+        },
+        "LRN" => new List<WorkflowState>
+        {
+            new() { Id = 1, StateName = "Registered", StepOrder = 1, AllowedGroupRole = "Provider / Employer" },
+            new() { Id = 2, StateName = "Contract Signed", StepOrder = 2, AllowedGroupRole = "CLO Officer" },
+            new() { Id = 3, StateName = "Training Commenced", StepOrder = 3, AllowedGroupRole = "Training Provider" },
+            new() { Id = 4, StateName = "Completed & Certified", StepOrder = 4, IsTerminal = true }
+        },
+        "GRANT_MOA" => new List<WorkflowState>
+        {
+            new() { Id = 1, StateName = "Contract Drafting", StepOrder = 1, AllowedGroupRole = "Finance Specialist" },
+            new() { Id = 2, StateName = "Pending SETA Signoff", StepOrder = 2, AllowedGroupRole = "Finance Manager" },
+            new() { Id = 3, StateName = "Active & Committed", StepOrder = 3, AllowedGroupRole = "Senior Executive" },
+            new() { Id = 4, StateName = "Completed & Reconciled", StepOrder = 4, IsTerminal = true }
+        },
+        _ => new List<WorkflowState>
+        {
+            new() { Id = 1, StateName = "Initiated", StepOrder = 1 },
+            new() { Id = 2, StateName = "Under Review", StepOrder = 2 },
+            new() { Id = 3, StateName = "Approved", StepOrder = 3, IsTerminal = true }
+        }
+    };
+
+    private Color GetStatusColor(string? stateCode) => stateCode switch
+    {
+        "APPROVED" or "ACCREDITED" or "COMPLETED" => Color.Success,
+        "REJECTED" or "DECLINED" or "TERMINATED" => Color.Error,
+        "DRAFT" or "APPLIED" or "REGISTERED" => Color.Info,
+        _ => Color.Warning
+    };
+}

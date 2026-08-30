@@ -1,0 +1,305 @@
+<ui:composition xmlns:pe="http://primefaces.org/ui/extensions" xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<style type="text/css">
+.ui-inplace .ui-state-highlight * {
+	color: #ffffff !important;
+	background-color: #C94135 !important;
+}
+</style>
+		<h:form id="formtypeInsForm">
+
+			<p:growl>
+				<p:autoUpdate></p:autoUpdate>
+			</p:growl>
+			<div class="ui-g">
+				<div class="ui-g-12">
+					<div class="card clearfix card-w-title">
+						<p:outputLabel value="Edit Form" styleClass="Fs15 FontBold"></p:outputLabel>
+						<p:spacer width="10"></p:spacer>
+						<p:selectBooleanCheckbox value="#{formtypesectionsUI.editMode}">
+							<p:ajax update="@form" event="change"></p:ajax>
+						</p:selectBooleanCheckbox>
+						
+						<br />
+						<p:inplace toggleable="#{formtypesectionsUI.editMode}" editor="true" effect="none">
+							<p:ajax event="save" listener="#{formtypesectionsUI.saveFormType}" process="@this"></p:ajax>
+							<f:facet name="output">
+								<h1>#{formtypesectionsUI.formtype.formTitle}</h1>
+								<h:outputFormat value="#{formtypesectionsUI.formtype.formIntroduction}" escape="false" />
+							</f:facet>
+							<f:facet name="input">
+							<br/>	
+							<p:panelGrid columns="2" style="width:100%" id="formtypeInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+	
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="formTitle" value="#{formtypesectionsUI.formtype.formTitle}" style="width:100%" />
+									<p:outputLabel value="Title" for="formTitle" />
+								</h:panelGroup>
+								
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="paperNum" value="#{formtypesectionsUI.formtype.paperNumber}" style="width:100%" />
+									<p:outputLabel value="Paper Number" for="paperNum" />
+								</h:panelGroup>
+								
+								<h:panelGroup styleClass="md-inputfield">
+									<p:autoComplete style="width:100%"  id="qualificationAuto" value="#{formtypesectionsUI.formtype.qualification}" required="true" completeMethod="#{autoCompleteUI.completeQualification}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}"
+												forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="1" maxResults="10" placeholder="#{lang['qualification']}">
+										<p:column headerText="#{lang['description']}" style="white-space: nowrap">#{rv.description}</p:column>
+									</p:autoComplete>
+								</h:panelGroup>
+								
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputNumber id="passMArk" value="#{formtypesectionsUI.formtype.pointsThreshold}" style="width:100%" />
+									<p:outputLabel value="Pass Requirement" for="passMArk" style="width:100%" />
+									
+								</h:panelGroup>
+							</p:panelGrid>
+							<p:panelGrid columns="1" style="width:100%" id="formtypeInsGrid2" layout="grid" styleClass="ui-panelgrid-blank form-group">
+								    <h:panelGroup>
+										<p:outputLabel value="Introduction" for="formIntro" />
+										<br />
+										<p:textEditor id="formIntro" value="#{formtypesectionsUI.formtype.formIntroduction}" height="200" style="width:100%" />
+									</h:panelGroup>
+							</p:panelGrid>
+								
+								
+								
+							</f:facet>
+						</p:inplace>
+					</div>
+				</div>
+			</div>
+
+			<div class="ui-g">
+				
+				<p:repeat var="rv" value="#{formtypesectionsUI.formtypesectionsList}">
+					<div class="ui-g-12">
+					 <div class="card card-w-title">
+						<p:commandButton icon="fa fa-download" process="@this"  value="Download Question Paper" oncomplete="PF('dlgDownloadQP').show()"  title="Download">
+							<f:setPropertyActionListener value="#{rv}" target="#{formtypesectionsUI.formTypeSections}" />
+						</p:commandButton>
+					 </div>
+						<p:outputPanel>
+							<div class="card clearfix card-w-title">
+								<h2>#{lang['questions']}</h2>
+								<p:panelGrid>
+									<p:inplace toggleable="#{formtypesectionsUI.editMode}" editor="true" effect="none">
+										<p:ajax event="save" listener="#{formtypesectionsUI.saveSection(rv)}" process="@this"></p:ajax>
+										<f:facet name="output">
+											<h2>#{rv.sectionTitle}</h2>
+											<h:outputFormat value="#{rv.sectionDesc}" escape="false" />
+										</f:facet>
+										<f:facet name="input">
+											<p:outputLabel value="Section Title" style="width: 95%" styleClass="gray"></p:outputLabel>
+											<br />
+											<p:inputText value="#{rv.sectionTitle}" style="width: 85%"></p:inputText>
+											<br />
+											<br />
+											<p:outputLabel value="Section Description" style="width: 95%" styleClass="gray"></p:outputLabel>
+											<br />
+											<p:textEditor value="#{rv.sectionDesc}" style="width: 85%"></p:textEditor>
+											<br />
+										</f:facet>
+									</p:inplace>
+								</p:panelGrid>
+								<br />
+								<p:repeat var="question" value="#{rv.formSectionQuestions}">
+									
+								  <p:fieldset>
+								  
+										<div class="ui-g-12">
+										  <div class="card card-w-title">
+											<p:outputLabel value="#{question.questionDesc}" required="true" style="width: 85%" styleClass="gray"></p:outputLabel>
+										</div>
+										</div>
+										<div class="#{question.answerType.displayParamsQuestion}">
+													<p:inplace toggleable="#{formtypesectionsUI.editMode}" id="ajax" editor="true">
+													<p:ajax event="save" listener="#{formtypesectionsUI.saveQuestion(question)}" process="@this" update="@form"></p:ajax>
+													<f:facet name="output">
+														<p:fieldset >
+															<p:outputLabel value="#{question.question}" required="true" style="width: 85%"></p:outputLabel>
+														</p:fieldset>
+													</f:facet>
+												<f:facet name="input">
+													<p:fieldset>
+														<p:panelGrid columns="1" style="width:100%"  layout="grid" styleClass="ui-panelgrid-blank form-group">
+														
+															<h:panelGroup styleClass="md-inputfield">
+																<p:inputText value="#{question.question}" required="true" style="width: 100%"></p:inputText>
+																<p:outputLabel value="Question" style="width: 100%" ></p:outputLabel>
+															</h:panelGroup>
+															
+															
+															<h:panelGroup styleClass="md-inputfield">
+																<p:inputNumber value="#{question.marks}" style="width: 100%"></p:inputNumber>
+																<p:outputLabel value="Marks" style="width: 100%" ></p:outputLabel>
+															</h:panelGroup>
+															
+															<p:outputLabel value="Answer Type" style="width: 100%" styleClass="gray"></p:outputLabel>
+															<p:selectOneMenu id="anserTy" value="#{question.answerType}" style="width:100%" required="true">
+																<p:ajax />
+																<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+																<f:selectItems value="#{enumUI.answerTypeEnumDD}" />
+															</p:selectOneMenu>
+															
+															<h:panelGroup styleClass="md-inputfield">
+																<p:inputTextarea value="#{question.questionDesc}" style="width: 100%"></p:inputTextarea>
+																<p:outputLabel value="Question Desc" style="width: 100%"></p:outputLabel>
+															</h:panelGroup>
+															
+					
+														</p:panelGrid>
+													</p:fieldset>
+													<br/>
+												</f:facet>
+											</p:inplace>
+	
+											<c:if test="#{formtypesectionsUI.editMode}">
+												<br />
+												<br />
+												<p:commandLink action="#{formtypesectionsUI.deleteQuestion}" process="@this" update="@form" styleClass="gray">
+													<i class="fa fa-trash" aria-hidden="true"></i> Delete Question
+												<f:setPropertyActionListener value="#{question}" target="#{formtypesectionsUI.formSectionQuestions}" />
+												</p:commandLink>
+											</c:if>
+										</div>
+										<div class="#{question.answerType.displayParams}">
+											<ui:include src="/pages/formconfig/includes/controls.xhtml">
+												<ui:param name="question" value="#{question}" />
+											</ui:include>
+										</div>
+									
+									
+									
+									</p:fieldset>
+									
+									
+									
+									
+									<br/>
+								</p:repeat>
+								<c:if test="#{formtypesectionsUI.editMode}">
+									<br />
+									<div class="ui-g-12 ui-md-6">
+										<p:inplace editor="true" effect="none">
+											<p:ajax event="save" listener="#{formtypesectionsUI.saveNewQuestion(rv)}" process="@this" update="@form"></p:ajax>
+											<f:facet name="output">
+												<p:outputLabel value="Add New Question" styleClass="gray Fs15 FontBold" />
+											</f:facet>
+											<f:facet name="input">
+												<p:outputLabel value="Question" style="width: 95%" styleClass="gray"></p:outputLabel>
+												<br />
+												<p:inputText value="#{formtypesectionsUI.formSectionQuestions.question}" style="width: 85%"></p:inputText>
+												<br />
+												<p:outputLabel value="Question Desc" style="width: 95%" styleClass="gray"></p:outputLabel>
+												<br />
+												<p:inputText value="#{formtypesectionsUI.formSectionQuestions.questionDesc}" style="width: 85%"></p:inputText>
+												<br />
+												<p:outputLabel value="Marks" style="width: 95%" styleClass="gray"></p:outputLabel>
+												<br />
+												<p:inputNumber value="#{formtypesectionsUI.formSectionQuestions.marks}" style="width: 85%"></p:inputNumber>
+												<br/>
+												<p:outputLabel value="Answer Type" style="width: 95%" styleClass="gray"></p:outputLabel>
+												<br />
+												<p:selectOneMenu id="anserTy" value="#{formtypesectionsUI.formSectionQuestions.answerType}" style="width:75%" required="true">
+													<p:ajax />
+													<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+													<f:selectItems value="#{enumUI.answerTypeEnumDD}" />
+												</p:selectOneMenu>
+												<br />
+												<br />
+											</f:facet>
+										</p:inplace>
+									</div>
+									<c:if test="false">
+										<div class="ui-g-12 ui-md-6">
+											<p:commandLink action="#{formtypesectionsUI.formtypesectionsDelete}" process="@this" update="@form" styleClass="gray Fs15 FontBold">
+												<i class="fa fa-trash" aria-hidden="true"></i> Delete Section
+											<f:setPropertyActionListener value="#{rv}" target="#{formtypesectionsUI.formtypesections}" />
+											</p:commandLink>
+										</div>
+									</c:if>
+								</c:if>
+							</div>
+						</p:outputPanel>
+					</div>
+				</p:repeat>
+				<c:if test="false">
+					<div class="ui-g-12">
+						<div class="card clearfix card-w-title">
+							<p:inplace editor="true" effect="none">
+								<p:ajax event="save" listener="#{formtypesectionsUI.saveNewSection}" process="@this" update="@form"></p:ajax>
+								<f:facet name="output">
+									<p:outputLabel value="Add New Section" />
+								</f:facet>
+								<f:facet name="input">
+									<p:outputLabel value="Section Title" style="width: 95%" styleClass="gray"></p:outputLabel>
+									<br />
+									<p:inputText value="#{formtypesectionsUI.formtypesections.sectionTitle}" style="width: 95%"></p:inputText>
+									<br />
+									<br />
+									<p:outputLabel value="Section Description" style="width: 95%" styleClass="gray"></p:outputLabel>
+									<br />
+									<p:textEditor value="#{formtypesectionsUI.formtypesections.sectionDesc}" style="width: 95%"></p:textEditor>
+									<br />
+								</f:facet>
+							</p:inplace>
+						</div>
+					</div>
+				</c:if>
+			</div>
+
+		</h:form>
+		
+		<p:dialog header="#{lang['download.question.paper']}" widgetVar="dlgDownloadQP" resizable="false" hideEffect="clip" showEffect="clip" id="dlgDownloadQP" width="50%" responsive="true" modal="true" dynamic="true">
+			<h:form id="uploadForm">
+				<h:panelGroup id="uploadGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+							
+								<p:panelGrid columns="1" style="width:100%"  layout="grid" styleClass="ui-panelgrid-blank form-group">
+														
+										<h:panelGroup styleClass="md-inputfield">
+        									 <p:calendar value="#{formtypesectionsUI.qpDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true"  style="width: 100%" />
+        									 <p:outputLabel value="Date:" style="width: 100%"/>
+										</h:panelGroup>
+										
+										<h:panelGroup styleClass="md-inputfield">
+										
+											<p:panelGrid columns="2" style="width:100%"  layout="grid" styleClass="ui-panelgrid-blank form-group">
+												<h:panelGroup styleClass="md-inputfield">
+													 <p:calendar value="#{formtypesectionsUI.qpFromTime}"  id="from" pattern="HH:mm a" timeOnly="true"  />
+													 <p:outputLabel for="from" value="From: " />
+												</h:panelGroup>
+												<h:panelGroup styleClass="md-inputfield"> 
+													  <p:calendar value="#{formtypesectionsUI.qpToTime}"  id="to" pattern="HH:mm a" timeOnly="true"  />
+													 <p:outputLabel for="to" value="To: " />
+											     </h:panelGroup>
+											 </p:panelGrid>
+                                             
+										</h:panelGroup>
+										
+										<h:panelGroup styleClass="md-inputfield">
+										      <p:inputText value="#{formtypesectionsUI.numOfQuestios}"  style="width: 100%"></p:inputText>
+											  <p:outputLabel value="Number Of Questions" style="width: 100%" ></p:outputLabel>
+								              
+										</h:panelGroup>
+										
+										<h:panelGroup styleClass="md-inputfield">
+											<p:commandButton icon="fa fa-download" value="#{lang['download']}" ajax="false"  update="@form" action="#{formtypesectionsUI.downlaodQuestionPaper}" title="Download"/>
+								
+										</h:panelGroup>
+										
+								 </p:panelGrid>
+								 
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+		
+	</ui:define>
+</ui:composition>

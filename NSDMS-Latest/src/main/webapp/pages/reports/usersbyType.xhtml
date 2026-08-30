@@ -1,0 +1,109 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui">
+
+
+
+
+<div class="ui-g-12 ui-md-12 ui-lg-12">
+    <h3 class="FontLight">Number of users by type</h3>
+ 	<p:dataTable value="#{operationalReportsUI.countUsersByType}" var="rv" reflow="true">
+ 	   <p:column headerText="Type">
+ 	     <h:outputText value="#{rv.description}"  styleClass="#{rv.active?'FontBold Fs15':null}"/>
+ 	   </p:column>
+ 	   <p:column headerText="Status" width="20%">
+ 	     <h:outputText value="#{rv.active?'Active':'Inactive'}"  styleClass="#{rv.active?'FontBold Fs15':null}"/>
+ 	   </p:column>
+	   <p:column headerText="Number of users" width="20%" style="text-align: center !important;">
+	   		<h:outputText value="#{rv.count}" styleClass="#{rv.active?'FontBold Fs15':null} Fright"/>
+	   </p:column>
+
+ 	</p:dataTable>
+
+     <h3 class="FontLight">Number of contacts</h3>
+ 	<p:dataTable value="#{operationalReportsUI.countContactsByAvtiveInactive}" var="rv" reflow="true">
+
+ 	   <p:column headerText="Status" width="20%">
+ 	     <h:outputText value="#{rv.active?'Active':'Inactive'}"  styleClass="#{rv.active?'FontBold Fs15':null}"/>
+ 	   </p:column>
+	   <p:column headerText="Number of contacts" width="20%" style="text-align: center !important;">
+	   		<h:outputText value="#{rv.count}" styleClass="#{rv.active?'FontBold Fs15':null} Fright"/>
+	   </p:column>
+
+ 	</p:dataTable>
+
+</div>
+
+<div class="ui-g-12 ui-md-6 ui-lg-12">
+
+
+		<div id="userCountContainer" style="min-width: 310px; height: 400px; margin: 0 auto"></div>
+</div>
+
+<div class="ui-g-12 ui-md-12 ui-lg-12">
+<p:panel>
+	<p:panelGrid columns="4" style="width:100%"  layout="grid" styleClass="ui-panelgrid-blank">
+       	<h:panelGroup>
+           <p:outputLabel value="Active Users:" styleClass="FontLight"/><p:spacer width="10"/> <p:outputLabel value="#{operationalReportsUI.activeU}" styleClass="FontBold Fs16"/>
+        </h:panelGroup>
+       	<h:panelGroup>
+           <p:outputLabel value="Inactive Users:" styleClass="FontLight"/><p:spacer width="10"/><p:outputLabel value="#{operationalReportsUI.inactiveU}" styleClass="Fs15"/>
+        </h:panelGroup>
+       	<h:panelGroup>
+           <p:outputLabel value="Total Number of Users:" styleClass="FontLight"/><p:spacer width="10"/><p:outputLabel value="#{operationalReportsUI.totalU}" styleClass="FontBold Fs18"/>
+        </h:panelGroup>
+       	<h:panelGroup>
+           <p:outputLabel value="Total Number of Contact Persons:" styleClass="FontLight"/><p:spacer width="10"/><p:outputLabel value="#{operationalReportsUI.noContacts}" styleClass="FontBold Fs18"/>
+        </h:panelGroup>
+    </p:panelGrid>
+ </p:panel>
+</div>
+
+<script type="text/javascript">
+//<![CDATA[
+$(document ).ready(function() {
+
+	 $(function () {
+
+		 Highcharts.setOptions({
+			    colors: ['#4D2600', '#999372', '#C5913E', '#C57901', '#F0C070', '#8B592E', '#1E4B88', '#767776', '#87C6E1']
+			});
+
+
+
+		 Highcharts.chart('userCountContainer', {
+			    chart: {
+			        type: 'pie',
+			        options3d: {
+			            enabled: true,
+			            alpha: 45
+			        }
+			    },
+			    title: {
+			        text: 'Number of Active/Inactive Users by Type'
+			    },
+			    credits: {
+		            enabled: false
+		        },
+			    plotOptions: {
+			        pie: {
+			            innerSize: 80,
+			            depth: 45
+			        }
+			    },
+			    series: [{
+			        name: 'Users',
+			        data: [#{operationalReportsUI.series}
+			        ]
+			    }]
+			});
+
+	 }); /* end of $(function ()  */
+});  /* end of document ready mainForm1:utaskTable_head  profile-menu */
+//]]>
+</script>
+
+
+</ui:composition>

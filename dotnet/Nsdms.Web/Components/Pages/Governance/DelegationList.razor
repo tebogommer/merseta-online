@@ -1,0 +1,255 @@
+@page "/governance/delegations"
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Web
+@using MudBlazor
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@inject IWorkflowGovernanceService GovernanceService
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+@inject IDialogService DialogService
+
+<PageTitle>Time-Bounded Delegations | MerSETA NSDMS</PageTitle>
+
+<!-- Sticky Top Bar -->
+<MudCard Class="mb-4 sticky-top border-b" Elevation="2" Style="top: var(--mud-appbar-height, 64px); z-index: 100; background: var(--mud-palette-surface);">
+    <MudCardContent Class="py-3 px-4 d-flex justify-space-between align-center">
+        <div class="d-flex align-center gap-2">
+            <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack" Color="Color.Default" OnClick='() => Navigation.NavigateTo("/tasks")'>Back to Tasks</MudButton>
+            <MudBreadcrumbs Items="_breadcrumbItems" Class="pa-0 ma-0" />
+        </div>
+        <div class="d-flex align-center gap-2">
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       OnClick='() => Navigation.NavigateTo("/governance/delegations/create")'>
+                Create New Delegation
+            </MudButton>
+        </div>
+    </MudCardContent>
+</MudCard>
+
+<!-- Main Master List -->
+<MudCard Elevation="3" Class="rounded-lg">
+    <MudCardHeader Class="pb-2">
+        <CardHeaderAvatar>
+            <MudAvatar Color="Color.Secondary" Variant="Variant.Filled">
+                <MudIcon Icon="@Icons.Material.Filled.AssignmentInd" />
+            </MudAvatar>
+        </CardHeaderAvatar>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">Time-Bounded Role & Module Delegations</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                Enterprise Acting Roles & Out-of-Office handover register (PFMA & King IV Compliance)
+            </MudText>
+        </CardHeaderContent>
+        <CardHeaderActions>
+            <MudChip T="string" Color="Color.Info" Variant="Variant.Outlined" Size="Size.Small" Icon="@Icons.Material.Filled.Shield">
+                Maker-Checker Enforced
+            </MudChip>
+        </CardHeaderActions>
+    </MudCardHeader>
+
+    <MudCardContent>
+        <!-- Search & Filter Controls -->
+        <div class="d-flex gap-4 mb-4 flex-wrap align-center">
+            <MudTextField @bind-Value="_searchString"
+                          Placeholder="Search by delegator, delegatee or reason..."
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          AdornmentAriaLabel="Search delegations"
+                          IconSize="Size.Medium"
+                          Class="flex-grow-1"
+                          Immediate="true" />
+            <MudSelect T="string" Label="Status Filter" @bind-Value="_selectedStatusFilter" Dense="true" Style="min-width: 180px;">
+                <MudSelectItem Value="@("ALL")">All Delegations</MudSelectItem>
+                <MudSelectItem Value="@("ACTIVE")">Active Now</MudSelectItem>
+                <MudSelectItem Value="@("EXPIRED")">Expired / Revoked</MudSelectItem>
+            </MudSelect>
+        </div>
+
+        <MudTable Items="@FilteredDelegations"
+                  Hover="true"
+                  Striped="true"
+                  Loading="@_loading"
+                  Elevation="0"
+                  T="WorkflowDelegation">
+            <HeaderContent>
+                <MudTh>ID</MudTh>
+                <MudTh>Delegator (Manager)</MudTh>
+                <MudTh>Delegatee (Acting Officer)</MudTh>
+                <MudTh>Valid Window</MudTh>
+                <MudTh>Delegated Modules</MudTh>
+                <MudTh>Reason / Justification</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh Style="text-align: right;">Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="ID">
+                    <MudText Typo="Typo.body2" Class="fw-bold">#@context.Id</MudText>
+                </MudTd>
+                <MudTd DataLabel="Delegator">
+                    <div class="d-flex align-center gap-2">
+                        <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Small" Color="Color.Primary" />
+                        <MudText Typo="Typo.body2" Class="fw-bold">@context.DelegatorUserName</MudText>
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="Delegatee">
+                    <div class="d-flex align-center gap-2">
+                        <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" Color="Color.Secondary" />
+                        <MudText Typo="Typo.body2">@context.DelegateeUserName</MudText>
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="Valid Window">
+                    <MudText Typo="Typo.caption" Class="d-block">
+                        <strong>From:</strong> @context.StartDate.ToLocalTime().ToString("yyyy-MM-dd")
+                    </MudText>
+                    <MudText Typo="Typo.caption" Class="d-block">
+                        <strong>To:</strong> @context.EndDate.ToLocalTime().ToString("yyyy-MM-dd")
+                    </MudText>
+                </MudTd>
+                <MudTd DataLabel="Delegated Modules">
+                    <MudChip T="string" Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small">
+                        @FormatModules(context.AllowedModulesJson)
+                    </MudChip>
+                </MudTd>
+                <MudTd DataLabel="Reason">
+                    <MudText Typo="Typo.body2">@context.Reason</MudText>
+                </MudTd>
+                <MudTd DataLabel="Status">
+                    @if (IsCurrentlyActive(context))
+                    {
+                        <MudChip T="string" Color="Color.Success" Size="Size.Small" Icon="@Icons.Material.Filled.CheckCircle">
+                            Active
+                        </MudChip>
+                    }
+                    else if (!context.IsActive)
+                    {
+                        <MudChip T="string" Color="Color.Error" Size="Size.Small" Icon="@Icons.Material.Filled.Cancel">
+                            Revoked
+                        </MudChip>
+                    }
+                    else
+                    {
+                        <MudChip T="string" Color="Color.Default" Size="Size.Small" Icon="@Icons.Material.Filled.History">
+                            Expired
+                        </MudChip>
+                    }
+                </MudTd>
+                <MudTd DataLabel="Actions" Style="text-align: right;">
+                    @if (context.IsActive)
+                    {
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Error"
+                                   Size="Size.Medium"
+                                   StartIcon="@Icons.Material.Filled.Block"
+                                   OnClick="() => ConfirmRevokeDelegation(context)">
+                            Revoke
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Inactive</MudText>
+                    }
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <MudText Typo="Typo.body2" Class="pa-4 text-center">No delegation records found.</MudText>
+            </NoRecordsContent>
+        </MudTable>
+    </MudCardContent>
+</MudCard>
+
+@code {
+    private bool _loading = true;
+    private string _searchString = "";
+    private string _selectedStatusFilter = "ALL";
+    private List<WorkflowDelegation> _delegations = new();
+
+    private List<BreadcrumbItem> _breadcrumbItems = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Governance", href: "#"),
+        new BreadcrumbItem("Delegations", href: null, disabled: true)
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _loading = true;
+        try
+        {
+            _delegations = await GovernanceService.GetAllDelegationsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading delegations: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private IEnumerable<WorkflowDelegation> FilteredDelegations => _delegations.Where(d =>
+    {
+        if (!string.IsNullOrWhiteSpace(_searchString))
+        {
+            bool matches = d.DelegatorUserName.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+                           d.DelegateeUserName.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+                           d.Reason.Contains(_searchString, StringComparison.OrdinalIgnoreCase);
+            if (!matches) return false;
+        }
+
+        if (_selectedStatusFilter == "ACTIVE")
+        {
+            return IsCurrentlyActive(d);
+        }
+        if (_selectedStatusFilter == "EXPIRED")
+        {
+            return !IsCurrentlyActive(d);
+        }
+
+        return true;
+    });
+
+    private bool IsCurrentlyActive(WorkflowDelegation d)
+    {
+        var now = DateTime.UtcNow;
+        return d.IsActive && d.StartDate <= now && d.EndDate >= now;
+    }
+
+    private string FormatModules(string json)
+    {
+        if (string.IsNullOrWhiteSpace(json)) return "All (*)";
+        if (json.Contains("*")) return "All Subsystems";
+        return json.Replace("[", "").Replace("]", "").Replace("\"", "").Replace(",", ", ");
+    }
+
+    private async Task ConfirmRevokeDelegation(WorkflowDelegation d)
+    {
+        bool? result = await DialogService.ShowMessageBoxAsync(
+            "Revoke Delegation",
+            $"Are you sure you want to revoke the delegation from {d.DelegatorUserName} to {d.DelegateeUserName}? This will immediately terminate all acting authority.",
+            yesText: "Revoke",
+            cancelText: "Cancel");
+
+        if (result == true)
+        {
+            var success = await GovernanceService.RevokeDelegationAsync(d.Id, "Admin Officer");
+            if (success)
+            {
+                Snackbar.Add("Delegation revoked successfully.", Severity.Warning);
+                await LoadDataAsync();
+            }
+            else
+            {
+                Snackbar.Add("Failed to revoke delegation.", Severity.Error);
+            }
+        }
+    }
+}

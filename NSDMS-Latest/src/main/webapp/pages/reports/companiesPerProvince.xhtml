@@ -1,0 +1,198 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui">
+
+
+
+
+    <div class="ui-g">
+
+    	 		<div class="ui-g-12 ui-md-4 ui-lg-4">
+				<div class="card card-w-title" style="height: 540px">
+				<H3>Provincial Distribution of Levy Paying Entities</H3>
+
+						<p:growl /> <p:tooltip position="left" />
+						<p:dataTable var="rowVar" value="#{operationalReportsUI.findEmpPerProv}"   reflow="true">
+
+           					<p:column headerText="#{lang['province.name']}">
+                        			<h:outputText value="#{rowVar.description}" styleClass="#{rowVar.description.equals('Total')?'FontBold':null}"/>
+            					</p:column>
+            					<p:column headerText="Registered Companies on NSDMS" width="100">
+                        			<h:outputText value="#{rowVar.count}" styleClass="#{rowVar.description.equals('Total')?'FontBold Fs16':null} Fright"/>
+            					</p:column>
+            					<p:column headerText="Approved Companies on NSDMS" width="100">
+                        			<h:outputText value="#{rowVar.count2}" styleClass="#{rowVar.description.equals('Total')?'FontBold Fs16':null} Fright"/>
+            					</p:column>
+						</p:dataTable>
+						<br/>
+
+                </div>
+            </div>
+
+        	<div class="ui-g-12 ui-md-8 ui-lg-8">
+				<div class="card card-w-title">
+  						<div id="companiesPerProvince" style="height: 500px"></div>
+                </div>
+         </div>
+
+     	 		<div class="ui-g-12 ui-md-4 ui-lg-4">
+				<div class="card card-w-title" style="height: 540px">
+				<H3>Provincial Distribution of Non-Levying Entities</H3>
+
+						<p:growl /> <p:tooltip position="left" />
+						<p:dataTable var="rowVar" value="#{operationalReportsUI.findEmpPerProvNonLevyPaying}"   reflow="true">
+
+           					<p:column headerText="#{lang['province.name']}">
+                        			<h:outputText value="#{rowVar.description}" styleClass="#{rowVar.description.equals('Total')?'FontBold':null}"/>
+            					</p:column>
+            					<p:column headerText="Registered Companies on NSDMS" width="100">
+                        			<h:outputText value="#{rowVar.count}" styleClass="#{rowVar.description.equals('Total')?'FontBold Fs16':null} Fright"/>
+            					</p:column>
+            					<p:column headerText="Approved Companies on NSDMS" width="100">
+                        			<h:outputText value="#{rowVar.count2}" styleClass="#{rowVar.description.equals('Total')?'FontBold Fs16':null} Fright"/>
+            					</p:column>
+						</p:dataTable>
+						<br/>
+
+                </div>
+            </div>
+
+        	<div class="ui-g-12 ui-md-8 ui-lg-8">
+				<div class="card card-w-title">
+  						<div id="companiesPerProvinceNonL" style="height: 500px"></div>
+                </div>
+         </div>
+     </div>
+
+
+<script type="text/javascript">
+//<![CDATA[
+$(document ).ready(function() {
+
+	 $(function () {
+
+		 Highcharts.setOptions({
+			    colors: ['#4D2600', '#999372', '#C5913E', '#C57901', '#F0C070', '#8B592E', '#1E4B88', '#767776', '#87C6E1']
+			});
+
+
+		 var data = [
+			 #{operationalReportsUI.provData}
+			];
+
+
+		 var dataNLP = [
+			 #{operationalReportsUI.provDataNonLevyPaying}
+			];
+
+		 $.getJSON('#{request.contextPath}/js/za-all.geo.json', function (geojson) {
+
+			    // Initiate the chart
+			    Highcharts.mapChart('companiesPerProvince', {
+			        chart: {
+			            map: geojson
+			        },
+
+			        title: {
+			            text: 'Provincial Distribution of Levy Paying Entities'
+			        },
+				    credits: {
+			            enabled: false
+			        },
+			        exporting: {
+			            enabled: false
+			        },
+			        mapNavigation: {
+			            enabled: true,
+			            buttonOptions: {
+			                verticalAlign: 'bottom'
+			            }
+			        },
+
+			        colorAxis: {
+			            min: 1,
+			            type: 'logarithmic',
+			            minColor: '#F0C070',
+			            maxColor: '#5B3718'
+			        },
+
+			        series: [{
+			        		animation: {
+			                duration: 1000
+			            },
+			            data: data,
+			            name: 'Companies',
+			            states: {
+			                hover: {
+			                    color: '#C5913E'
+			                }
+			            },
+			            dataLabels: {
+			                enabled: true,
+			                format: '{point.name}'
+			            }
+			        }]
+			    }); /* end of map */
+			});		/* end of gson */
+
+
+
+		 $.getJSON('#{request.contextPath}/js/za-all.geo.json', function (geojson) {
+
+			    // Initiate the chart
+			    Highcharts.mapChart('companiesPerProvinceNonL', {
+			        chart: {
+			            map: geojson
+			        },
+
+			        title: {
+			            text: 'Provincial Distribution of Non-Levying Entities'
+			        },
+				    credits: {
+			            enabled: false
+			        },
+			        exporting: {
+			            enabled: false
+			        },
+			        mapNavigation: {
+			            enabled: true,
+			            buttonOptions: {
+			                verticalAlign: 'bottom'
+			            }
+			        },
+
+			        colorAxis: {
+			            min: 1,
+			            type: 'logarithmic',
+			            minColor: '#F0C070',
+			            maxColor: '#5B3718'
+			        },
+
+			        series: [{
+			        		animation: {
+			                duration: 1000
+			            },
+			            data: dataNLP,
+			            name: 'Companies',
+			            states: {
+			                hover: {
+			                    color: '#C5913E'
+			                }
+			            },
+			            dataLabels: {
+			                enabled: true,
+			                format: '{point.name}'
+			            }
+			        }]
+			    }); /* end of map */
+			});		/* end of gson */
+
+
+	 }); /* end of $(function ()  */
+});  /* end of document ready mainForm1:utaskTable_head  profile-menu */
+//]]>
+</script>
+
+</ui:composition>

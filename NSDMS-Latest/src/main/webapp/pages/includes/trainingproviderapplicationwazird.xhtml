@@ -1,0 +1,76 @@
+<ui:composition  xmlns:o="http://omnifaces.org/ui" xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+		<p:importEnum type="haj.com.entity.enums.CompanyRegOrSDLEnum" var="regSDL"></p:importEnum>
+		<p:importEnum type="haj.com.entity.enums.AccreditationApplicationTypeEnum"></p:importEnum>
+		<p:importEnum type="haj.com.entity.enums.YesNoEnum"></p:importEnum>
+		<p:importEnum type="haj.com.entity.enums.SDPApplicationType"></p:importEnum>
+		
+	    <p:wizard flowListener="#{trainingproviderUI.onFlowProcess}"  id="wiz" widgetVar="wiz">
+	        <p:tab id="sdpRepresentative" title="#{lang['sdp.primary.representative']}">
+	        	<p:panel>
+					<ui:include src="/pages/includes/tpsdpprimaryrepresentatives.xhtml"/>
+				</p:panel>
+	        	<br/>
+	        </p:tab>
+	        
+	        <p:tab id="companyDetails" title="#{lang['company.details']}">
+	        	<p:panel>
+					<ui:include src="/pages/includes/tpcompanydetails.xhtml"/>
+	        	</p:panel>
+	        	<br/>
+	        </p:tab>
+	        
+	         <p:tab id="contactPersons" title="#{lang['contact.persons']}">
+	        	<p:panel>
+	        		<h:panelGroup rendered="#{trainingproviderUI.company.regDone}" id="cpPanel">
+						<ui:include  src="/pages/includes/tabinfo.xhtml">
+							<ui:param name="showInfoCircle" value="true" />
+							<ui:param name="cssClass" value="secondaryText Fs15" />
+							<ui:param name="helpTxt" value="#{lang['a.minimum.of.two.contact.persons.are.required']}" />
+						</ui:include>
+						<p:fieldset legend="Add Contact Person(s)" id="fsContactPerson" >
+							<ui:include  src="/pages/includes/tpContactPerson.xhtml">
+							</ui:include>
+						</p:fieldset>
+					</h:panelGroup>
+	        	</p:panel>
+	        	<br/>
+	        </p:tab>
+	        
+	         <p:tab id="assAndMod" title="#{lang['availability.of.assessor.and.moderator']}">
+	        	<p:panel>
+	        		<p:fieldset rendered="#{trainingproviderUI.doneContactPerson}" legend="Availability of Assessor and Moderator">
+					 <ui:include  src="/pages/includes/tpAvailailityOfFacAndAssessor.xhtml"/>
+				</p:fieldset>
+	        	</p:panel>
+	        	<br/>
+	        </p:tab>
+	        <br/>
+	        <p:tab id="qualificationDetails" title="#{lang['qualification.details']}">
+	        	<p:panel>
+	        	<h:panelGrid  id="qualUSGrid" style="width:100%">
+	        	<c:if test="#{trainingproviderUI.company.id ne null}">
+	        		<p:fieldset legend="#{lang['qualification.details']}"  rendered="#{trainingproviderUI.doneSMEReg and trainingproviderUI.company.id ne null}">
+						<ui:include src="/pages/includes/tpQualificationDetails.xhtml"/>
+					</p:fieldset>
+				</c:if>
+				<c:if test="#{trainingproviderUI.company.id eq null}">
+					<p:fieldset legend="#{lang['qualification.details']}"  rendered="#{trainingproviderUI.doneSMEReg and trainingproviderUI.company.id eq null}">
+						<ui:include src="/pages/includes/nonSetaTpQualificationDetails.xhtml"/>
+					</p:fieldset>
+				</c:if>
+				</h:panelGrid>
+		        </p:panel>
+	        	<br/>
+	        </p:tab>
+	        
+	        <p:tab id="codeOfConduct" title="#{lang['code.of.conduct']}">
+	        	<p:panel>
+	        		<ui:include src="/pages/includes/tpAuthorisation.xhtml"/>
+	        	</p:panel>
+	        	<br/>
+	        </p:tab>
+        </p:wizard>
+	
+	
+</ui:composition>

@@ -1,0 +1,614 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:pt="http://xmlns.jcp.org/jsf/passthrough" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui"
+	xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<h:panelGroup id="signoffGroup">
+		<h:form id="submitForm">
+				<p:panelGrid columns="2" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{initiatewspUI.wsp.wspStatusEnum ne WspStatusEnum.Draft}">
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="Training Deviation Less Than 60 Percent Implemented:"  />
+						</div>
+						<div>
+							<p:outputLabel value="NO" rendered="#{!initiatewspUI.wsp.grantDeviated}" />
+							<p:outputLabel value="YES" rendered="#{initiatewspUI.wsp.grantDeviated}" style="font-weigh: bold; color:red" />
+						</div>
+					</h:panelGroup>
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="% Training Implemented:" />
+						</div>
+						<div>
+							<p:outputLabel value="#{initiatewspUI.wsp.percentageCalculatedForDeviation}" rendered="#{initiatewspUI.wsp.percentageCalculatedForDeviation ne null}" />
+							<p:outputLabel value="No Data" rendered="#{initiatewspUI.wsp.percentageCalculatedForDeviation eq null}" />
+						</div>
+					</h:panelGroup>
+				</p:panelGrid>
+			<p:panelGrid columns="2" style="width:100%" id="signoffGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup>
+					<div>
+						<p:outputLabel value="#{lang['does.a.recognition.agreement.exist.between.the.organisation.and.labour.unions']}" for="recAgr" />
+					</div>
+					<div>
+						<p:selectOneRadio value="#{initiatewspUI.wsp.company.recognitionAgreement}" converter="YesNoLookupConvertor" columns="2" layout="grid" id="recAgr" disabled="true">
+							<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+						</p:selectOneRadio>
+					</div>
+				</h:panelGroup>
+				<p:outputPanel id="majUnion">
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="#{lang['majority.union']}?" for="w" />
+						</div>
+						<div>
+							<p:selectOneMenu id="w" converter="OrganisedLabourUnionConvertor" style="width:95%" required="true" value="#{initiatewspUI.wsp.company.majorityUnion}" disabled="true">
+								<f:selectItem itemLabel="-- #{lang['select.one']} --" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsOrganisedLabourUnion}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+				</p:outputPanel>
+			</p:panelGrid>
+			<div class="EmptyBox20"></div>
+			<p:panelGrid columns="1" style="width:100%">
+				<p>If a recognition agreement exists, immaterial of the size of the organisation, the nominated labour/union SDF must sign off on the application.</p>
+				<p>Where no recognition agreement exists, and the organisation has 50 or more employees, a nominated employee SDF must sign off on the application.</p>
+				<p>Please sign off once you have completed the application. The signoff will constitute a submission.</p>
+				<p>#{lang['the.grant.will.processed.if.approved.first.payment.will.made.subject.levies.being.received.merseta']}.</p>
+			</p:panelGrid>
+			<div class="EmptyBox20"></div>
+			<p:panelGrid columns="1" style="width:100%">
+				<B><h2>#{lang['declerations']}</h2>
+				<p style="color:Red;">
+					NOTE: CEO/CFO/HR Manager  –  The employee or labour SDFs can not form part of the management structure.  If this has been the case in previous years, please ensure that you remove the current labour or employee SDF and register the correct person prior to final sign off.
+				</p></B>
+				<h3>#{lang['by.checking.below']}</h3>
+				<p>#{lang['i.undersigned.confirm.have.authorised.this.organisation.submit.their.mandatory.grant.information']}.</p>
+				<p>#{lang['i.declare.best.knowledge.the.information.contained.herein.accurate.and.date']}.</p>
+				<p>#{lang['i.recognize.inaccurate.information.constitutes.fraud.that.will.subject.the.full.penalty.the.law']}.</p>
+				<p>
+					I acknowledge that I have read and understand the <a target="_blank" href="#{initiatewspUI.termsAndConditionsLink}" style="font-weight: bold;">Terms and Conditions</a>
+				</p>
+			</p:panelGrid>
+			<div class="EmptyBox10"></div>
+			<p:dataTable var="rv" value="#{initiatewspUI.wsp.wspSignoffs}" id="employeesimportList" rowKey="#{rowVar.id}" reflow="true" rendered="#{!sessionUI.allowableInternalUser}">
+				<p:column headerText="#{lang['signed.off.by']}">
+					<p:outputLabel value="#{rv.user.firstName} #{rv.user.lastName}" />
+				</p:column>
+				<p:column headerText="User Type">
+					<p:outputLabel value="#{rv.sdfType.description}" rendered="#{rv.sdfType ne null}" />
+					<p:outputLabel value="N/A" rendered="#{rv.sdfType eq null}" />
+				</p:column>
+				<p:column headerText="#{lang['date']}">
+					<p:outputLabel value="Pending Sign Off" rendered="#{rv.signOffDate eq null}" />
+					<p:outputLabel value="#{rv.signOffDate}" rendered="#{rv.signOffDate ne null}">
+						<f:convertDateTime pattern="dd/MM/yyyy HH:MM" />
+					</p:outputLabel>
+					<c:if test="false">
+						<p:outputLabel value="#{sessionUI.now}">
+							<f:convertDateTime pattern="dd/MM/yyyy" />
+						</p:outputLabel>
+					</c:if>
+				</p:column>
+				<p:column headerText="#{lang['acknowledge']}" rendered="#{initiatewspUI.wsp.wspStatusEnum ne WspStatusEnum.Draft}">
+					<div>
+						<p:selectBooleanCheckbox style="width:100%" value="#{rv.accept}" disabled="#{rv.user ne sessionUI.activeUser}" rendered="#{initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.PendingSignOff and not rv.accept and not rv.dispute}">
+						</p:selectBooleanCheckbox>
+						<p:selectBooleanCheckbox style="width:100%" value="#{rv.accept}" disabled="true" rendered="#{initiatewspUI.wsp.wspStatusEnum ne WspStatusEnum.PendingSignOff or rv.accept or rv.dispute}">
+						</p:selectBooleanCheckbox>
+					</div>
+					<div>
+						<p:outputLabel value="#{lang['i.acknowledge.read.understand.terms.and.conditions']}"></p:outputLabel>
+					</div>
+				</p:column>
+
+				<p:column headerText="#{lang['acknowledge']}" rendered="#{initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.Draft}">
+					<div>
+						<p:selectBooleanCheckbox value="#{rv.accept}" disabled="true">
+						</p:selectBooleanCheckbox>
+					</div>
+					<div>
+						<p:outputLabel value="#{lang['i.acknowledge.read.understand.terms.and.conditions']}"></p:outputLabel>
+					</div>
+				</p:column>
+			</p:dataTable>
+
+			<p:dataTable var="rv" value="#{initiatewspUI.wsp.wspSignoffs}" id="employeesimportListManual" rowKey="#{rowVar.id}" reflow="true" rendered="#{sessionUI.allowableInternalUser}">
+				<p:column headerText="#{lang['signed.off.by']}">
+					<p:outputLabel value="#{rv.user.firstName} #{rv.user.lastName}" />
+				</p:column>
+				<p:column headerText="User Type">
+					<p:outputLabel value="#{rv.sdfType.description}" rendered="#{rv.sdfType ne null}" />
+					<p:outputLabel value="N/A" rendered="#{rv.sdfType eq null}" />
+				</p:column>
+				<p:column headerText="#{lang['date']}">
+					<p:outputPanel  rendered="#{rv.signOffDate eq null}">
+						<h:panelGroup styleClass="md-inputfield">
+							<p:calendar navigator="true" id="mansingoffdate" value="#{rv.signOffDate}" size="19" showOn="button" 
+										pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" yearRange="c-100:c" required="false"  requiredMessage="#{lang['provide.manual.signoff.date']}">
+										<p:ajax event="dateSelect" />
+							</p:calendar>
+							<p:outputLabel value="#{lang['manual.signoff.date']}" for="mansingoffdate" />
+						</h:panelGroup>
+					</p:outputPanel>
+					<p:outputLabel value="#{rv.signOffDate}" rendered="#{rv.signOffDate ne null}">
+						<f:convertDateTime pattern="dd/MM/yyyy" />
+					</p:outputLabel>
+					<c:if test="false">
+						<p:outputLabel value="#{sessionUI.now}">
+							<f:convertDateTime pattern="dd/MM/yyyy" />
+						</p:outputLabel>
+					</c:if>
+				</p:column>
+				<p:column headerText="#{lang['acknowledge']}" rendered="#{initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.Draft}">
+					<div>
+						<p:selectBooleanCheckbox style="width:100%" value="#{rv.accept}" rendered="#{initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.Draft and not rv.accept and not rv.dispute}">
+						</p:selectBooleanCheckbox>
+					</div>
+					<div>
+						<p:outputLabel value="#{lang['i.acknowledge.read.understand.terms.and.conditions']}"></p:outputLabel>
+					</div>
+				</p:column>
+
+				<p:column headerText="#{lang['acknowledge']}" rendered="#{initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.PendingSignOff}">
+					<div>
+						<p:selectBooleanCheckbox style="width:100%" value="#{rv.accept}" rendered="#{initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.PendingSignOff and not rv.accept and not rv.dispute}">
+						</p:selectBooleanCheckbox>
+					</div>
+					<div>
+						<p:outputLabel value="#{lang['i.acknowledge.read.understand.terms.and.conditions']}"></p:outputLabel>
+					</div>
+				</p:column>
+
+				<p:column headerText="#{lang['acknowledge']}" rendered="#{(initiatewspUI.wsp.wspStatusEnum ne WspStatusEnum.Draft) and (initiatewspUI.wsp.wspStatusEnum ne WspStatusEnum.PendingSignOff)}">
+					<div>
+						<p:selectBooleanCheckbox style="width:100%" value="#{rv.accept}" disabled="#{rv.user ne sessionUI.activeUser}" rendered="#{initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.PendingSignOff and not rv.accept and not rv.dispute}">
+						</p:selectBooleanCheckbox>
+						<p:selectBooleanCheckbox style="width:100%" value="#{rv.accept}" disabled="true" rendered="#{initiatewspUI.wsp.wspStatusEnum ne WspStatusEnum.PendingSignOff or rv.accept or rv.dispute}">
+						</p:selectBooleanCheckbox>
+					</div>
+					<div>
+						<p:outputLabel value="#{lang['i.acknowledge.read.understand.terms.and.conditions']}"></p:outputLabel>
+					</div>
+				</p:column>
+			</p:dataTable>
+
+			<div class="EmptyBox20"></div>
+			<c:if test="#{sessionUI.employee}">
+				<p:fieldset legend="#{lang['mandatory.grant.approval']}"
+					rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval or (initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.Pending and sessionUI.task.processRole.rolePermission eq UserPermissionEnum.View) or (initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.Pending and sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve) or initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.Approved or initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.Rejected}">
+					<p:panelGrid columns="2" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group">
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="#{lang['extension.granted']}" styleClass="FontLight" />
+							</div>
+							<div>
+								<p:outputLabel value="#{initiatewspUI.wspChecklist.extensionGranted.yesNoName}" rendered="#{initiatewspUI.wspChecklist.extensionGranted ne null}" />
+								<p:outputLabel value="N/A" rendered="#{initiatewspUI.wspChecklist.extensionGranted eq null}" />
+							</div>
+						</h:panelGroup>
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="Workplace Skills Plan Y#{initiatewspUI.previousYearSmall} Submitted" styleClass="FontLight" />
+							</div>
+							<div>
+								<p:outputLabel value="#{initiatewspUI.wspChecklist.wspy18Submitted.yesNoName}" rendered="#{initiatewspUI.wspChecklist.wspy18Submitted ne null}" />
+								<p:outputLabel value="No Data" rendered="#{initiatewspUI.wspChecklist.wspy18Submitted eq null}" />
+							</div>
+						</h:panelGroup>
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="Workplace Skills Plan Y#{initiatewspUI.currentYearSmall} Submitted" styleClass="FontLight" />
+							</div>
+							<div>
+								<p:outputLabel value="#{initiatewspUI.wspChecklist.workplaceSkillsPlanSubmitted.yesNoName}" />
+							</div>
+						</h:panelGroup>
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="#{lang['annual.training.report.submitted']}" styleClass="FontLight" />
+							</div>
+							<div>
+								<p:outputLabel value="#{initiatewspUI.wspChecklist.atrSubmitted.yesNoName}" rendered="#{initiatewspUI.wspChecklist.atrSubmitted ne null}" />
+								<p:outputLabel value="No Data" rendered="#{initiatewspUI.wspChecklist.atrSubmitted eq null}" />
+							</div>
+						</h:panelGroup>
+
+						<h:panelGroup rendered="false">
+							<div>
+								<p:outputLabel value="#{lang['per.of.atr.implemented']}" for="atrImp" styleClass="FontLight" />
+							</div>
+							<div>
+								<p:selectOneMenu style="width:95%" value="#{initiatewspUI.wspChecklist.atrImplementedPercent}" converter="YesNoLookupConvertor" id="atrImp" disabled="#{initiatewspUI.wsp.wspStatusEnum ne WspStatusEnum.Pending}">
+									<f:selectItem itemLabel="--- #{lang['select.one']} ---" />
+									<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="#{lang['pivotal.plan.submitted']}" styleClass="FontLight" />
+							</div>
+							<div>
+								<p:outputLabel value="#{initiatewspUI.wspChecklist.pivitolPlanSubmitted.yesNoName}" rendered="#{initiatewspUI.wspChecklist.pivitolPlanSubmitted ne null}" />
+								<p:outputLabel value="No Data" rendered="#{initiatewspUI.wspChecklist.pivitolPlanSubmitted eq null}" />
+							</div>
+						</h:panelGroup>
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="Recognition Agreement" styleClass="FontLight" />
+							</div>
+							<div>
+								<p:outputLabel value="#{initiatewspUI.wspChecklist.signedRecognitionAgreement.yesNoName}" />
+							</div>
+						</h:panelGroup>
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="Majority Union name" styleClass="FontLight" />
+							</div>
+							<div>
+								<p:outputLabel value="#{initiatewspUI.wspChecklist.majorityUnion.description}" rendered="#{initiatewspUI.wspChecklist.majorityUnion ne null}" />
+								<p:outputLabel value="N/A" rendered="#{initiatewspUI.wspChecklist.majorityUnion eq null}" />
+							</div>
+						</h:panelGroup>
+
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="Non-NQF Training Motivation Submitted" styleClass="FontLight" />
+							</div>
+							<div>
+								<p:outputLabel value="#{initiatewspUI.wspChecklist.nonNqfMotivation.yesNoName}" rendered="#{initiatewspUI.wspChecklist.nonNqfMotivation ne null}" />
+								<p:outputLabel value="N/A" rendered="#{initiatewspUI.wspChecklist.nonNqfMotivation eq null}" />
+							</div>
+						</h:panelGroup>
+
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="Training Deviation Less Than 60 Percent Implemented" styleClass="FontLight" />
+							</div>
+							<div>
+								<p:outputLabel value="NO" rendered="#{!initiatewspUI.wspChecklist.grantDeviated}" />
+								<p:outputLabel value="YES" rendered="#{initiatewspUI.wspChecklist.grantDeviated}" style="font-weigh: bold; color:red" />
+							</div>
+						</h:panelGroup>
+
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="% Training Implemented" styleClass="FontLight" />
+							</div>
+							<div>
+								<p:outputLabel value="#{initiatewspUI.wspChecklist.percentageCalculated}" rendered="#{initiatewspUI.wspChecklist.percentageCalculated ne null}" />
+								<p:outputLabel value="No Data" rendered="#{initiatewspUI.wspChecklist.percentageCalculated eq null}" />
+							</div>
+						</h:panelGroup>
+
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="Training Deviation Motivation Submitted" styleClass="FontLight" />
+							</div>
+							<div>
+								<p:outputLabel value="#{initiatewspUI.wspChecklist.deviationMotivation.yesNoName}" rendered="#{initiatewspUI.wspChecklist.deviationMotivation ne null}" />
+								<p:outputLabel value="N/A" rendered="#{initiatewspUI.wspChecklist.deviationMotivation eq null}" />
+							</div>
+						</h:panelGroup>
+
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="Training Committee Minutes (2 sets) Submitted" styleClass="FontLight" />
+							</div>
+							<div>
+								<p:outputLabel value="#{initiatewspUI.wspChecklist.minutesUplaoded.yesNoName}" rendered="#{initiatewspUI.wspChecklist.minutesUplaoded ne null}" />
+								<p:outputLabel value="N/A" rendered="#{initiatewspUI.wspChecklist.minutesUplaoded eq null}" />
+							</div>
+						</h:panelGroup>
+
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="Training Deviation Motivation Approved" for="tdmaSelection" styleClass="FontLight" />
+							</div>
+							<div>
+								<p:selectOneMenu style="width:95%" value="#{initiatewspUI.wspChecklist.trainingDeviationMotivationApproved}" converter="YesNoLookupConvertor" id="tdmaSelection" disabled="#{initiatewspUI.wsp.wspStatusEnum ne WspStatusEnum.Pending}">
+									<f:selectItem itemLabel="N/A" />
+									<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="Non-NQF Training Motivation Approved" for="nonnqfSelection" styleClass="FontLight" />
+							</div>
+							<div>
+								<p:selectOneMenu style="width:95%" value="#{initiatewspUI.wspChecklist.nonNqfTrainingMotivationApproved}" converter="YesNoLookupConvertor" id="nonnqfSelection" disabled="#{initiatewspUI.wsp.wspStatusEnum ne WspStatusEnum.Pending}">
+									<f:selectItem itemLabel="N/A" />
+									<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="Training Committee Minutes Approved" for="tcmaSelection" styleClass="FontLight" />
+							</div>
+							<div>
+								<p:selectOneMenu style="width:95%" value="#{initiatewspUI.wspChecklist.trainingCommitteeMinutesApproved}" converter="YesNoLookupConvertor" id="tcmaSelection" disabled="#{initiatewspUI.wsp.wspStatusEnum ne WspStatusEnum.Pending}">
+									<f:selectItem itemLabel="N/A" />
+									<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="Trade Union/Labour part of Training Committee" for="tulpaotcSelection" styleClass="FontLight" />
+							</div>
+							<div>
+								<p:selectOneMenu style="width:95%" value="#{initiatewspUI.wspChecklist.tradePartOfTrainingCommittee}" converter="YesNoLookupConvertor" id="tulpaotcSelection" disabled="#{initiatewspUI.wsp.wspStatusEnum ne WspStatusEnum.Pending}">
+									<f:selectItem itemLabel="N/A" />
+									<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="Employee Representative part of Training Committee" for="eppotcSelection" styleClass="FontLight" />
+							</div>
+							<div>
+								<p:selectOneMenu style="width:95%" value="#{initiatewspUI.wspChecklist.employerRepresentativePartTrainingCommittee}" converter="YesNoLookupConvertor" id="eppotcSelection" disabled="#{initiatewspUI.wsp.wspStatusEnum ne WspStatusEnum.Pending}">
+									<f:selectItem itemLabel="N/A" />
+									<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+
+						<h:panelGroup rendered="false">
+							<div>
+								<p:outputLabel value="Signed Off By Required Party(ies)" for="signOffReq" styleClass="FontLight" />
+							</div>
+							<div>
+								<p:selectOneMenu style="width:95%" value="#{initiatewspUI.wspChecklist.signOffComplete}" converter="YesNoLookupConvertor" id="signOffReq" disabled="#{initiatewspUI.wsp.wspStatusEnum ne WspStatusEnum.Pending}">
+									<f:selectItem itemLabel="--- #{lang['select.one']} ---" />
+									<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+
+						<h:panelGroup rendered="false">
+							<div>
+								<p:outputLabel value="#{lang['non.nqf.aligned.motivation.uploaded']}" for="nonNQF" styleClass="FontLight" />
+							</div>
+							<div>
+								<p:selectOneMenu style="width:95%" value="#{initiatewspUI.wspChecklist.nonNqfMotivation}" converter="YesNoLookupConvertor" id="nonNQF" disabled="#{initiatewspUI.wsp.wspStatusEnum ne WspStatusEnum.Pending}">
+									<f:selectItem itemLabel="--- #{lang['select.one']} ---" />
+									<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+						<h:panelGroup rendered="false">
+							<div>
+								<p:outputLabel value="#{lang['sign.off.page.uploaded.electronic.signed.off']}" for="signOff" styleClass="FontLight" />
+							</div>
+							<div>
+								<p:selectOneMenu style="width:95%" value="#{initiatewspUI.wspChecklist.signOffComplete}" converter="YesNoLookupConvertor" id="signOff" disabled="#{initiatewspUI.wsp.wspStatusEnum ne WspStatusEnum.Pending}">
+									<f:selectItem itemLabel="--- #{lang['select.one']} ---" />
+									<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+						<h:panelGroup rendered="false">
+							<div>
+								<p:outputLabel value="#{lang['minutes.uploaded']}" for="minUploaded" styleClass="FontLight" />
+							</div>
+							<div>
+								<p:selectOneMenu style="width:95%" value="#{initiatewspUI.wspChecklist.minutesUplaoded}" converter="YesNoLookupConvertor" id="minUploaded" disabled="#{initiatewspUI.wsp.wspStatusEnum ne WspStatusEnum.Pending}">
+									<f:selectItem itemLabel="--- #{lang['select.one']} ---" />
+									<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+						<h:panelGroup rendered="false">
+							<div>
+								<p:outputLabel value="#{lang['deviation.motivation.uploaded']}" for="deviationUpload" styleClass="FontLight" />
+							</div>
+							<div>
+								<p:selectOneMenu style="width:95%" value="#{initiatewspUI.wspChecklist.deviationMotivation}" converter="YesNoLookupConvertor" id="deviationUpload" disabled="#{initiatewspUI.wsp.wspStatusEnum ne WspStatusEnum.Pending}">
+									<f:selectItem itemLabel="--- #{lang['select.one']} ---" />
+									<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+						<h:panelGroup rendered="false">
+							<div>
+								<p:outputLabel value="#{lang['extension.granted']}" for="ext" styleClass="FontLight" />
+							</div>
+							<div>
+								<p:selectOneMenu style="width:95%" value="#{initiatewspUI.wspChecklist.extensionGranted}" converter="YesNoLookupConvertor" id="ext" disabled="#{initiatewspUI.wsp.wspStatusEnum ne WspStatusEnum.Pending}">
+									<c:if test="#{initiatewspUI.wspChecklist.extensionGranted.id eq null}">
+										<f:selectItem itemLabel="#{lang['n.a']}" />
+									</c:if>
+									<c:if test="#{initiatewspUI.wspChecklist.extensionGranted eq null}">
+										<f:selectItem itemLabel="--- #{lang['select.one']} ---" />
+									</c:if>
+									<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+						<h:panelGroup rendered="false">
+							<div>
+								<p:outputLabel value="Grant Y#{initiatewspUI.previousYearSmall} submitted, approved or received for record purposes" for="wspy" styleClass="FontLight" />
+							</div>
+							<div>
+								<p:selectOneMenu style="width:95%" value="#{initiatewspUI.wspChecklist.wspy18Submitted}" converter="YesNoLookupConvertor" id="wspy" disabled="#{initiatewspUI.wsp.wspStatusEnum ne WspStatusEnum.Pending}">
+									<f:selectItem itemLabel="--- #{lang['select.one']} ---" />
+									<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+						<h:panelGroup rendered="false">
+							<div>
+								<p:outputLabel value="#{lang['annual.training.report.submitted']}" for="atr" styleClass="FontLight" />
+							</div>
+							<div>
+								<p:selectOneMenu style="width:95%" value="#{initiatewspUI.wspChecklist.atrSubmitted}" converter="YesNoLookupConvertor" id="atr" disabled="#{initiatewspUI.wsp.wspStatusEnum ne WspStatusEnum.Pending}">
+									<f:selectItem itemLabel="--- #{lang['select.one']} ---" />
+									<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+						<h:panelGroup rendered="false">
+							<div>
+								<p:outputLabel value="#{lang['pivotal.plan.submitted']}" for="pivotalPlan" styleClass="FontLight" />
+							</div>
+							<div>
+								<p:selectOneMenu style="width:95%" value="#{initiatewspUI.wspChecklist.pivitolPlanSubmitted}" converter="YesNoLookupConvertor" id="pivotalPlan" disabled="#{initiatewspUI.wsp.wspStatusEnum ne WspStatusEnum.Pending}">
+									<f:selectItem itemLabel="--- #{lang['select.one']} ---" />
+									<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+						<h:panelGroup rendered="false">
+							<div>
+								<p:outputLabel value="#{lang['company.has.a.signed.recognition.agreement.with.labour.union']}" for="signedRecognition" styleClass="FontLight" />
+							</div>
+							<div>
+								<p:selectOneMenu style="width:95%" value="#{initiatewspUI.wspChecklist.signedRecognitionAgreement}" converter="YesNoLookupConvertor" id="signedRecognition" disabled="#{initiatewspUI.wsp.wspStatusEnum ne WspStatusEnum.Pending}">
+									<f:selectItem itemLabel="--- #{lang['select.one']} ---" />
+									<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+						<h:panelGroup rendered="false">
+							<div>
+								<p:outputLabel value="#{lang['banking.details.checked.and.copies.of.original.documents.on.file']}" for="bkc" styleClass="FontLight" />
+							</div>
+							<div>
+								<p:selectOneMenu style="width:95%" value="#{initiatewspUI.wspChecklist.bankingDetailsChecked}" converter="YesNoLookupConvertor" id="bkc" disabled="#{initiatewspUI.wsp.wspStatusEnum ne WspStatusEnum.Pending}">
+									<f:selectItem itemLabel="--- #{lang['select.one']} ---" />
+									<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+						<h:panelGroup rendered="false">
+							<div>
+								<p:outputLabel value="#{lang['labour.employee.sdf.has.signed.depending.on.company.profile']}" for="otherSDF" styleClass="FontLight" />
+							</div>
+							<div>
+								<p:selectOneMenu style="width:95%" value="#{initiatewspUI.wspChecklist.otherSDFSigned}" converter="YesNoLookupConvertor" id="otherSDF" disabled="#{initiatewspUI.wsp.wspStatusEnum ne WspStatusEnum.Pending}">
+									<f:selectItem itemLabel="--- #{lang['select.one']} ---" />
+									<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+					</p:panelGrid>
+				</p:fieldset>
+			</c:if>
+
+			<div class="EmptyBox20"></div>
+			<p:panelGrid columns="2" style="width:100%; text-align: center" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.Draft and initiatewspUI.showSubmitButton}">			
+				<p:commandButton value="#{lang['submit']}" icon="fa fa-check" styleClass="green-btn flat Fs18" style="height: 50px;" process="submitForm" action="#{initiatewspUI.saveWSP}" update="tabView errorsForm" ajax="false" rendered="#{initiatewspUI.checkFinyear_vh(sessionUI.wspSession.finYear)}" />
+				<p:commandButton value="#{lang['submit.wsp.with.signoff']}" icon="fa fa-check" styleClass="green-btn flat Fs18" style="height: 50px;" process="submitForm" action="#{initiatewspUI.saveWSPBeforeSubmisisonWithSignoff}" update="tabView errorsForm submissionSignOffForm" rendered="#{!initiatewspUI.checkFinyear_vh(sessionUI.wspSession.finYear) and !sessionUI.isAllowableInternalUser() and !initiatewspUI.wsp.manuallyAdded}"/>
+				<p:commandButton value="#{lang['submit.manually']}" icon="fa fa-check" styleClass="green-btn flat Fs18" style="height: 50px;" process="submitForm" action="#{initiatewspUI.saveWSPBeforeSubmisisonWithSignoff}" update="tabView errorsForm submissionSignOffForm" rendered="#{!initiatewspUI.checkFinyear_vh(sessionUI.wspSession.finYear) and sessionUI.isAllowableInternalUser()}"/>
+				<p:commandButton value="#{lang['download.sign.off.form']}"  icon="fa fa-pencil" styleClass="blue-grey-btn flat Fs18" style="height: 50px;" process="@this" action="#{initiatewspUI.downloadReport}" update="tabView errorsForm :tabView:docForm" ajax="false" rendered="false" />
+			</p:panelGrid>
+
+			<p:panelGrid columns="2" style="width:100%; text-align: center" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.PendingSignOff and (initiatewspUI.wsp.activeSignOff ne null and initiatewspUI.wsp.activeSignOff.user eq sessionUI.activeUser and not initiatewspUI.wsp.activeSignOff.accept and not initiatewspUI.wsp.activeSignOff.dispute)}">
+				<p:commandButton value="#{lang['signoff.wsp']}" icon="fa fa-check" styleClass="green-btn flat Fs18" style="height: 50px;" process="submitForm" action="#{initiatewspUI.completeSignoff}" update=":tabView:signoffGroup :errorsForm :wspInfo" />
+			</p:panelGrid>
+
+			<p:panelGrid columns="2" style="width:100%; text-align: center" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.PendingSignOff and sessionUI.isAllowableInternalUser()}">
+				<p:commandButton value="#{lang['signoff.wsp.manually']}" icon="fa fa-check" styleClass="green-btn flat Fs18" style="height: 50px;" process="submitForm" action="#{initiatewspUI.completeSignoffManually}" update=":tabView:signoffGroup :errorsForm :wspInfo" />
+			</p:panelGrid>
+
+			<p:panelGrid columns="2" style="width:100%; text-align: center" layout="grid" styleClass="ui-panelgrid-blank form-group"
+				rendered="#{initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.Pending and not sessionUI.externalParty and sessionUI.task ne null and sessionUI.task.processRole.rolePermission eq UserPermissionEnum.View}">
+				<p:commandButton value="#{lang['application.reviewed']}" icon="fa fa-check" styleClass="green-btn flat Fs18" style="height: 50px;" process="submitForm" action="#{initiatewspUI.saveStatusUpdate}" update=":tabView:signoffGroup :errorsForm :wspInfo" />
+				<p:commandButton value="Reject" icon="fa fa-times" styleClass="red-btn flat Fs18" style="height: 50px;" process="submitForm" oncomplete="PF('rejectReasonForManager').show()" update="rejectReasonForManagerForm" />
+				<p:commandButton rendered="false" value="Re-open Grant Application" icon="fa fa-user-times" action="#{initiatewspUI.checkBeforeGrantReopen}" styleClass="flat Fs18" style="height: 50px;" process="submitForm" oncomplete="PF('reopenGrantApplicationDlg').show()" update="reopenGrantApplicationForm" />
+				<p:commandButton value="#{lang['send.back.to.sdf']}: Document Rejection" icon="fa fa-times" styleClass="red-btn flat Fs18" style="height: 50px;" process="submitForm" oncomplete="PF('rejectReasonDoc').show()" update="rejectReasonForm" />
+			</p:panelGrid>
+
+			<p:panelGrid columns="2" style="width:100%; text-align: center" layout="grid" styleClass="ui-panelgrid-blank form-group"
+				rendered="#{initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.Pending and not sessionUI.externalParty and sessionUI.task ne null and sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve}">
+				<p:commandButton value="#{lang['approve']}" icon="fa fa-check" styleClass="green-btn flat Fs18" style="height: 50px;" process="submitForm" action="#{initiatewspUI.saveStatusUpdate}" update=":tabView:signoffGroup :errorsForm :wspInfo" />
+				<p:commandButton value="Reject" icon="fa fa-times" styleClass="red-btn flat Fs18" style="height: 50px;" process="submitForm" oncomplete="PF('rejectReasonForManager').show()" update="rejectReasonForManagerForm" />
+				<p:commandButton rendered="false" value="Re-open Grant Application" icon="fa fa-user-times" action="#{initiatewspUI.checkBeforeGrantReopen}" styleClass="flat Fs18" style="height: 50px;" process="submitForm" oncomplete="PF('reopenGrantApplicationDlg').show()" update="reopenGrantApplicationForm" />
+				<p:commandButton value="#{lang['send.back.to.sdf']}: Document Rejection" icon="fa fa-times" styleClass="red-btn flat Fs18" style="height: 50px;" process="submitForm" oncomplete="PF('rejectReasonDoc').show()" update="rejectReasonForm" />
+			</p:panelGrid>
+
+			<p:outputPanel id="adminRejectionReason" rendered="#{initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.Pending and initiatewspUI.rejectReasonFound and not sessionUI.externalParty and sessionUI.task ne null and sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval and initiatewspUI.wsp.sdfAppealedGrant ne true}">
+				<h1>Rejection Reasons Provided:</h1>
+				<p:repeat var="rowVarRR" value="#{initiatewspUI.adminRejectionReasons}">
+					<p:outputLabel value="#{rowVarRR.description}" style="font-weight:bold; font-size: 20px; color: red;" />
+					<br />
+					<p:outputLabel value="#{rowVarRR.howTo}" style="color: grey;" />
+					<br />
+					<br />
+				</p:repeat>
+				<br />
+			</p:outputPanel>
+			<p:panelGrid columns="2" style="width:100%; text-align: center" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.Pending and not sessionUI.externalParty and sessionUI.task ne null and sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval and initiatewspUI.wsp.sdfAppealedGrant ne true}">
+				<p:commandButton value="Final Approve" icon="fa fa-check" styleClass="green-btn flat Fs18" style="height: 50px;" process="submitForm" action="#{initiatewspUI.finalApproveGrantApplication}" update=":tabView:signoffGroup :errorsForm :wspInfo" >
+					 <p:confirm header="Confirmation" message="Are you sure you want to Final Approve?" icon="pi pi-exclamation-triangle" />
+				</p:commandButton>
+				<p:commandButton value="Final Reject" icon="fa fa-times" styleClass="red-btn flat Fs18" style="height: 50px;" process="submitForm" action="#{initiatewspUI.prepRejectionToSdfToAppeal}" update="rejectReasonFinalForm" >
+					<p:confirm header="Confirmation" message="Are you sure you want to Final Reject?" icon="pi pi-exclamation-triangle" />
+				</p:commandButton>
+				<p:commandButton value="Re-open Grant Application" icon="fa fa-user-times" action="#{initiatewspUI.checkBeforeGrantReopen}" styleClass="flat Fs18" style="height: 50px;" process="submitForm" oncomplete="PF('reopenGrantApplicationDlg').show()" update="reopenGrantApplicationForm" >
+					<p:confirm header="Confirmation" message="Are you sure you want to Re-open Grant Application?" icon="pi pi-exclamation-triangle" />
+				</p:commandButton>
+			</p:panelGrid>
+
+			<p:outputPanel id="adminNonApprovalReason" rendered="#{initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.Pending and initiatewspUI.primarySdfForComapny and sessionUI.task ne null and sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload and initiatewspUI.wsp.grantRejected eq true and initiatewspUI.wsp.withSdf eq true}">
+				<!-- SDF Action -->
+				<h1>Non-Approval Reasons Provided:</h1>
+				<p:repeat var="rowVarNRR" value="#{initiatewspUI.adminRejectionReasons}">
+					<p:outputLabel value="#{rowVarNRR.description}" style="font-weight:bold; font-size: 20px; color: red;" />
+					<br />
+					<p:outputLabel value="#{rowVarNRR.howTo}" style="color: grey;" />
+					<br />
+					<br />
+				</p:repeat>
+				<br />
+				<p:panelGrid columns="2" style="width:100%; text-align: center" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<p:commandButton value="Accept MG Non-Approval" icon="fa fa-check" styleClass="green-btn flat Fs18" style="height: 50px;" action="#{initiatewspUI.sdfAcceptRejecion}" process="submitForm" update=":tabView:signoffGroup :errorsForm :wspInfo" />
+					<p:commandButton value="Appeal MG Non-Approval" icon="fa fa-user-times" styleClass="flat Fs18" style="height: 50px;" action="#{initiatewspUI.sdfAppealApplication}" process="submitForm" update=":tabView:signoffGroup :errorsForm :wspInfo" />
+				</p:panelGrid>
+			</p:outputPanel>
+			
+			
+
+			<p:outputPanel id="wspRejectionReason" rendered="#{initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.Pending and not sessionUI.externalParty and sessionUI.task ne null and sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval and initiatewspUI.wsp.sdfAppealedGrant eq true}">
+			
+				<!-- Final Action After Appeal -->
+				<p:outputPanel id="wspRejectionReason1" rendered="#{initiatewspUI.wspRejectionReasonsList ne null and initiatewspUI.wspRejectionReasonsList.size() gt 0}">
+					<h1>Rejection Reasons Provided:</h1>
+					<p:repeat var="rowVarRRA" value="#{initiatewspUI.wspRejectionReasonsList}">
+						<p:outputLabel value="#{rowVarRRA.rejectReason.description}" style="font-weight:bold; font-size: 20px; color: red;" />
+						<br />
+						<p:outputLabel value="#{rowVarRRA.rejectReason.howTo}" style="color: grey;" />
+						<br />
+						<br />
+					</p:repeat>
+					<br />
+				</p:outputPanel>
+				
+				
+				<p:panelGrid columns="2" style="width:100%; text-align: center" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<p:commandButton value="Final Approve After Appeal" icon="fa fa-check" styleClass="green-btn flat Fs18" style="height: 50px;" process="submitForm" oncomplete="PF('finalApproveDlg').show()" update="finalApproveForm" />
+					
+					<p:commandButton value="Final Reject After Appeal" icon="fa fa-times" styleClass="red-btn flat Fs18" style="height: 50px;" process="submitForm" oncomplete="PF('finalRejectDlg').show()" update="finalRejectForm" />
+					
+					<p:commandButton action="#{initiatewspUI.awaitingMancoApproval}" value="Awaiting MANCO Approval" icon="fa fa-pencil-square-o" styleClass=" flat Fs18" style="height: 50px;" process="submitForm" update="finalApproveForm" >
+						<p:confirm header="Confirmation" message="Set To Awaiting MANCO Approval?" icon="pi pi-exclamation-triangle" />
+					</p:commandButton>
+				</p:panelGrid>
+			</p:outputPanel>
+
+			<p:panelGrid columns="2" style="width:100%; text-align: center" layout="grid" styleClass="ui-panelgrid-blank form-group"
+				rendered="#{initiatewspUI.wsp.wspStatusEnum ne WspStatusEnum.Pending and not sessionUI.externalParty and sessionUI.task ne null and sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval and false}">
+				<p:commandButton value="Final Approve" icon="fa fa-check" styleClass="green-btn flat Fs18" style="height: 50px;" process="submitForm" action="#{initiatewspUI.approveSenior}" update=":tabView:signoffGroup :errorsForm :wspInfo" />
+				<p:commandButton value="Final Reject" icon="fa fa-times" styleClass="red-btn flat Fs18" style="height: 50px;" process="submitForm" action="#{initiatewspUI.rejectSenior}" update=":tabView:signoffGroup :errorsForm :wspInfo" />
+			</p:panelGrid>
+		</h:form>
+	</h:panelGroup>
+</ui:composition>

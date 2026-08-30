@@ -1,0 +1,350 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+		<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+		<p:importEnum type="haj.com.entity.enums.LearnerStatusEnum" />
+		<p:importEnum type="haj.com.entity.enums.YesNoEnum" />
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Legacy ARPL Applications Management</h1>
+					<p:growl sticky="false">
+						<p:autoUpdate /> 
+					</p:growl>
+					<h:form id="mainForm">
+						<p:dataTable var="var" id="arplList" value="#{viewCreateLegacyArplUI.companyLearnersTradeTestDataModel}" rowKey="#{var.id}" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20" reflow="true" lazy="true">
+							<f:facet name="header"> ARPL Applications </f:facet>
+							<p:column headerText="Reference ID" sortBy="#{var.id}">
+								<h:outputText value="#{var.id}" />
+							</p:column>
+							<p:column headerText="#{lang['first.name']}" filterBy="#{var.learner.firstName}" sortBy="#{var.learner.firstName}">
+								<h:outputText value="#{var.learner.firstName}" />
+							</p:column>
+							<p:column headerText="#{lang['last.name']}" filterBy="#{var.learner.lastName}" sortBy="#{var.learner.lastName}">
+								<h:outputText value="#{var.learner.lastName}" />
+							</p:column>
+							<p:column headerText="Identity Number" filterBy="#{var.learner.rsaIDNumber}" sortBy="#{var.learner.rsaIDNumber}">
+								<h:outputText value="#{var.learner.rsaIDNumber}" />
+								<h:outputText rendered="#{var.learner.rsaIDNumber.length() lt 1}" value="N/A"/>
+							</p:column>
+							<p:column headerText="Passport Number" filterBy="#{var.learner.rsaIDNumber}" sortBy="#{var.learner.rsaIDNumber}">
+								<h:outputText rendered="#{var.learner.passportNumber.length() lt 1}" value="N/A"/>
+								<h:outputText value="#{var.learner.passportNumber}"/>
+							</p:column>
+							<p:column headerText="Status" sortBy="#{var.status}">
+								<h:outputText value="#{var.status.friendlyName}" />
+							</p:column>
+							<p:column headerText="Qualification">
+								<h:outputText value="(#{var.qualification.code}) #{var.qualification.description}" />
+							</p:column>
+							<p:column headerText="Preferred Trade Test Center">
+								<h:outputText value="#{var.preferredTrainingCenter.companyName}" />
+							</p:column>
+							<p:column headerText="Serial Number" filterBy="#{var.serialNumber}">
+								<h:outputText value="#{var.serialNumber}" rendered="#{var.serialNumber ne null}" />
+								<h:outputText value="N/A" rendered="#{var.serialNumber eq null}" />
+							</p:column>
+							<p:column headerText="Actions" exportable="false" style="width:5%">
+								<p:commandButton icon="fa fa-search" title="View ARPL Information" update=":contractInformationForm" action="#{viewCreateLegacyArplUI.prepViewArpl}" rendered="true">
+									<f:setPropertyActionListener value="#{var}" target="#{viewCreateLegacyArplUI.viewCompanyLearnersTradeTest}" />
+								</p:commandButton>
+								<p:commandButton icon="fa fa-file-text-o" title="Apply ARPL" update="mainForm tradeTestRPLVersionTwoForm"  action="#{viewCreateLegacyArplUI.prepCompanyLearnersTradeTestArpl}" oncomplete="PF('dlgTradeTestRPLVTwo').show()" rendered="#{var.status eq ApprovalEnum.NA}">
+									<f:setPropertyActionListener value="#{var}" target="#{viewCreateLegacyArplUI.companyLearnersTradeTest}" />
+								</p:commandButton>
+								
+							</p:column>
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<h:form id="contractInformationForm">
+					<c:if test="#{viewCreateLegacyArplUI.viewCompanyLearnersTradeTest ne null}">
+						<div class="card card-w-title">
+							<h2>ARPL Application Selected. Reference ID: #{viewCreateLegacyArplUI.viewCompanyLearnersTradeTest.id}</h2>
+							<p:commandButton icon="fa fa-times" value="Close View" update=":contractInformationForm" onstart="uploadStart()" oncomplete="uploadDone()" action="#{viewCreateLegacyArplUI.closeViewArpl}" />
+							<div class="EmptyBox10" />
+							<p:tabView dynamic="true" cache="true">
+								<p:tab title="Learner Information" rendered="#{viewCreateLegacyArplUI.learnerInfoTab}">
+									<ui:include src="/pages/includes/arplLearnerInformationDisplay.xhtml">
+										<ui:param name="user" value="#{viewCreateLegacyArplUI.viewCompanyLearnersTradeTest.learner}" />
+										<ui:param name="CELLPHONE_FORMAT" value="#{viewCreateLegacyArplUI.CELLPHONE_FORMAT}" />
+										<ui:param name="FAX_NUMBER_FORMAT" value="#{viewCreateLegacyArplUI.FAX_NUMBER_FORMAT}" />
+										<ui:param name="TELPHONE_FORMAT" value="#{viewCreateLegacyArplUI.TELPHONE_FORMAT}" />
+									</ui:include>
+								</p:tab>
+								<p:tab title="Initiator Information" rendered="#{viewCreateLegacyArplUI.iniTab}">
+									<ui:include src="/pages/includes/arplLearnerInformationDisplay.xhtml">
+										<ui:param name="user" value="#{viewCreateLegacyArplUI.viewCompanyLearnersTradeTest.createUser}" />
+										<ui:param name="CELLPHONE_FORMAT" value="#{viewCreateLegacyArplUI.CELLPHONE_FORMAT}" />
+										<ui:param name="FAX_NUMBER_FORMAT" value="#{viewCreateLegacyArplUI.FAX_NUMBER_FORMAT}" />
+										<ui:param name="TELPHONE_FORMAT" value="#{viewCreateLegacyArplUI.TELPHONE_FORMAT}" />
+									</ui:include>
+								</p:tab>
+								<p:tab title="Application Information" rendered="#{viewCreateLegacyArplUI.applicationTab}">
+									<ui:include src="/pages/includes/arplApplicationInformation.xhtml">
+										<ui:param name="companylearnerstradetest" value="#{viewCreateLegacyArplUI.viewCompanyLearnersTradeTest}" />
+										<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+										<ui:param name="dataModelDetailsOfExperienceArpl" value="#{viewCreateLegacyArplUI.dataModelDetailsOfExperienceArpl}" />
+										<ui:param name="dataModelDetailsOfTrainingArpl" value="#{viewCreateLegacyArplUI.dataModelDetailsOfTrainingArpl}" />
+									</ui:include>
+								</p:tab>
+								<p:tab title="Employer Application Information" rendered="#{viewCreateLegacyArplUI.employerAppTab}">
+									<ui:include src="/pages/includes/arplEmployerInformation.xhtml">
+										<ui:param name="companylearnerstradetest" value="#{viewCreateLegacyArplUI.viewCompanyLearnersTradeTest}" />
+										<ui:param name="companyTradeTestEmployer" value="#{viewCreateLegacyArplUI.companyTradeTestEmployer}" />
+										<ui:param name="companyEmployer" value="#{viewCreateLegacyArplUI.viewCompanyLearnersTradeTest.companyEmployer}" />
+										<ui:param name="CELLPHONE_FORMAT" value="#{viewCreateLegacyArplUI.CELLPHONE_FORMAT}" />
+										<ui:param name="FAX_NUMBER_FORMAT" value="#{viewCreateLegacyArplUI.FAX_NUMBER_FORMAT}" />
+										<ui:param name="TELPHONE_FORMAT" value="#{viewCreateLegacyArplUI.TELPHONE_FORMAT}" />
+									</ui:include>
+								</p:tab>
+								<p:tab title="Trade Test Results" rendered="#{viewCreateLegacyArplUI.tradeTestTab}">
+									<ui:include src="/pages/includes/arplTradeTestInformation.xhtml">
+										<ui:param name="companylearnerstradetest" value="#{viewCreateLegacyArplUI.viewCompanyLearnersTradeTest}" />
+										<ui:param name="dataModelTradeTestTaskResult" value="#{viewCreateLegacyArplUI.dataModelTradeTestTaskResult}" />
+										<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+									</ui:include>
+								</p:tab>
+								<p:tab title="Sign Off Assigned" rendered="false">
+									<ui:include src="/pages/includes/signoffInclude.xhtml">
+										<ui:param name="SignOffList" value="#{viewCreateLegacyArplUI.signOffLists}" />
+										<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+										<ui:param name="acknowledge" value="#{lang['arpl.signoff.declaration.text']} " />
+									</ui:include>
+								</p:tab>
+								<p:tab title="Certificate Collection" rendered="#{viewCreateLegacyArplUI.viewCompanyLearnersTradeTest.collectionEnum ne null}">
+									<ui:include src="/pages/includes/arplTradeTestCollectionInformation.xhtml">
+										<ui:param name="companylearnerstradetest" value="#{viewCreateLegacyArplUI.viewCompanyLearnersTradeTest}" />
+										<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+									</ui:include>
+								</p:tab>
+								<p:tab title="Trade Test Documents" rendered="#{viewCreateLegacyArplUI.docTab}">
+									<ui:include src="/pages/includes/documents_info_display.xhtml">
+										<ui:param name="docs" value="#{viewCreateLegacyArplUI.viewCompanyLearnersTradeTest.docs}" />
+									</ui:include>
+								</p:tab>
+							</p:tabView>
+							<div class="EmptyBox10" />
+						</div>
+					</c:if>
+				</h:form>
+			</div>
+		</div>
+
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+
+		<p:dialog position="top" header="Recognition of Prior Learning Trade Test" widgetVar="dlgTradeTestRPLVTwo" resizable="false" hideEffect="clip" showEffect="clip" id="tradeTestVTwo" appendTo="@(body)" modal="true" width="70%" height="80vh" responsive="true" dynamic="true">
+			<h:form id="tradeTestRPLVersionTwoForm">
+				<p:fieldset legend="Recognition of Prior Learning Information">
+					<p:panelGrid columns="1" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{viewCreateLegacyArplUI.validationFailed}">
+						<h1>Validation Exception</h1>
+						<p:outputLabel style="color:red" value="Reason: #{viewCreateLegacyArplUI.validationErrors}" />
+						<div class="EmptyBox10" />
+					</p:panelGrid>
+					<p:panelGrid columns="2" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group" id="mainInfoGrid">
+
+						<h:panelGroup class="md-inputfield">
+							<p:autoComplete disabled="true" style="width:95%" required="true" requiredMessage="Provide Qualification" id="qualificationSelection" value="#{viewCreateLegacyArplUI.companyLearnersTradeTest.qualification}" completeMethod="#{autoCompleteUI.completeQualificationTrade}" var="rvq" itemLabel="#{rvq.description}"
+								itemValue="#{rvq}" forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+								<p:column headerText="SAQA ID" style="white-space: nowrap">#{rvq.code}</p:column>
+								<p:column headerText="#{lang['description']}" style="white-space: nowrap">#{rvq.description}</p:column>
+								<p:column headerText="NQF Level" style="white-space: nowrap">#{rvq.nqflevelg2description}</p:column>
+								<p:ajax event="itemSelect" update="@form" listener="#{viewCreateLegacyArplUI.companyLearnersTradeTestApplicationCheck}" />
+							</p:autoComplete>
+							<p:outputLabel value="#{lang['qualification']}" for="qualificationSelection"></p:outputLabel>
+						</h:panelGroup>
+						
+						<p:spacer rendered="#{viewCreateLegacyArplUI.companyLearnersTradeTest.attemptedTradeTest ne null}" />
+						<h:panelGroup rendered="#{viewCreateLegacyArplUI.companyLearnersTradeTest.attemptedTradeTest ne null}">
+							<div>
+								<p:outputLabel value="Have you attempted a trade test previously?" styleClass="gray" for="attemptTradeTest" />
+							</div>
+							<div>
+								<p:selectOneMenu id="attemptTradeTest" value="#{viewCreateLegacyArplUI.companyLearnersTradeTest.attemptedTradeTest}" style="width:95%" required="true" disabled="true">
+									<p:ajax update="@form"></p:ajax>
+									<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+									<f:selectItems value="#{enumUI.yesNoEnumDD}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield" rendered="#{viewCreateLegacyArplUI.companyLearnersTradeTest.attemptedTradeTest eq YesNoEnum.Yes}">
+							<p:calendar inputStyle="width:90%" id="preAttDateasd" value="#{viewCreateLegacyArplUI.companyLearnersTradeTest.previousAttemptDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" readonlyInput="true" required="true" disabled="true" />
+							<p:outputLabel value="Previous Attempt Date" for="preAttDateasd" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield" rendered="#{viewCreateLegacyArplUI.companyLearnersTradeTest.attemptedTradeTest eq YesNoEnum.Yes}">
+							<p:autoComplete style="width:95%" id="preTestCenterasd" value="#{viewCreateLegacyArplUI.companyLearnersTradeTest.previousTrainingCenter}" var="rv" itemLabel="#{rv.companyNameDisplay}" itemValue="#{rv}" forceSelection="true"
+								converter="CompanyConvertor" dropdown="true" maxResults="10" required="true" disabled="true">
+								<p:column headerText="#{lang['companyName']}" style="white-space: nowrap">#{rv.companyName}</p:column>
+								<p:column headerText="#{lang['entity.id']}" style="white-space: nowrap">#{rv.levyNumber}</p:column>
+							</p:autoComplete>
+							<p:outputLabel value="Previous Test Center" for="preTestCenterasd" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield" rendered="#{viewCreateLegacyArplUI.companyLearnersTradeTest.attemptedTradeTest eq YesNoEnum.Yes}">
+							<p:inputNumber value="#{viewCreateLegacyArplUI.companyLearnersTradeTest.attemptNumber}" maxValue="3" minValue="1" id="preAttDateasdasd" decimalPlaces="0" inputStyle="width:95%" required="true" disabled="true"></p:inputNumber>
+							<p:outputLabel value="Number of Previous Attempts" for="preAttDateasdasd" />
+						</h:panelGroup>
+					</p:panelGrid>
+				</p:fieldset>
+				
+				<p:fieldset legend="Preferred Trade Test Centre" rendered="#{viewCreateLegacyArplUI.companyLearnersTradeTest.qualification ne null}">
+					<p:panelGrid columns="1" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					
+						<h:panelGroup styleClass="md-inputfield">
+							<p:autoComplete id="company" style="width:95%" value="#{viewCreateLegacyArplUI.companyLearnersTradeTest.preferredTrainingCenter}" completeMethod="#{viewCreateLegacyArplUI.findCompaniesAssignedToQualification}" var="rv" itemLabel="#{rv.companyNameDisplay}" itemValue="#{rv}" forceSelection="true"
+								converter="CompanyConvertor" dropdown="true" minQueryLength="0" maxResults="10" required="true">
+								<p:column headerText="#{lang['companyName']}" style="white-space: nowrap">#{rv.companyName}</p:column>
+								<p:column headerText="#{lang['entity.id']}" style="white-space: nowrap">#{rv.levyNumber}</p:column>
+								<p:ajax event="itemSelect" update="@form" listener="#{viewCreateLegacyArplUI.checkRegion}" />
+							</p:autoComplete>
+							<p:outputLabel value="Preferred Trade Test Centre (#{viewCreateLegacyArplUI.avalibleTradeTestCenters} Center(s) Available) " for="company" />
+						</h:panelGroup>
+	
+						<h:panelGroup rendered="#{viewCreateLegacyArplUI.displayTradeTestCenter and viewCreateLegacyArplUI.avalibleTradeTestCenters eq 0}">
+							<p:outputLabel value="#{viewCreateLegacyArplUI.avalibleTradeTestCenters} Avalable Test Centers, unable to proceed." />
+						</h:panelGroup>
+						
+						<h:panelGroup rendered="#{viewCreateLegacyArplUI.companyLearnersTradeTest.preferredTrainingCenter ne null and viewCreateLegacyArplUI.companyLearnersTradeTest.preferredTrainingCenter.id ne null}">
+							<p:tabView>
+								<p:tab title="Preferred Trade Test Centre Trade Test Centre Information">
+									<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+										<ui:include src="/pages/includes/fullCompanyInformation.xhtml">
+											<ui:param name="company" value="#{viewCreateLegacyArplUI.companyLearnersTradeTest.preferredTrainingCenter}" />
+											<ui:param name="CELLPHONE_FORMAT" value="#{autoCompleteUICELLPHONE_FORMAT}" />
+											<ui:param name="FAX_NUMBER_FORMAT" value="#{autoCompleteUIFAX_NUMBER_FORMAT}" />
+											<ui:param name="TELPHONE_FORMAT" value="#{autoCompleteUITELPHONE_FORMAT}" />
+										</ui:include>
+									</p:panelGrid>
+								</p:tab>
+								<p:tab title="Trade Test Centre Addresses">
+									<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+										<c:if test="#{viewCreateLegacyArplUI.companyLearnersTradeTest.preferredTrainingCenter.residentialAddress ne null}">
+											<ui:include src="/pages/includes/addressInformation.xhtml">
+												<ui:param name="header" value="#{lang['residentialAddress']}" />
+												<ui:param name="address" value="#{viewCreateLegacyArplUI.companyLearnersTradeTest.preferredTrainingCenter.residentialAddress}" />
+											</ui:include>
+										</c:if>
+										<c:if test="#{viewCreateLegacyArplUI.companyLearnersTradeTest.preferredTrainingCenter.postalAddress ne null}">
+											<ui:include src="/pages/includes/addressInformation.xhtml">
+												<ui:param name="header" value="#{lang['postalAddress']}" />
+												<ui:param name="address" value="#{viewCreateLegacyArplUI.companyLearnersTradeTest.preferredTrainingCenter.postalAddress}" />
+											</ui:include>
+										</c:if>
+									</p:panelGrid>
+								</p:tab>
+							</p:tabView>
+						</h:panelGroup>
+					</p:panelGrid>
+				</p:fieldset>
+				<div class="EmptyBox10" />
+				<p:commandButton rendered="#{viewCreateLegacyArplUI.displayLastInfo}" process="tradeTestRPLVersionTwoForm" value="#{lang['submit']}" icon="fa fa-check" styleClass="flat" action="#{viewCreateLegacyArplUI.requestARPLTradeTestApplication}" update="@form :mainForm" onstart="uploadStart()" oncomplete="uploadDone()" />
+			</h:form>
+		</p:dialog>
+
+
+		<p:dialog position="top" header="Recognition of Prior Learning Trade Test" widgetVar="dlgTradeTestRPL" resizable="false" hideEffect="clip" showEffect="clip" id="tradeTestRPL" width="60%" responsive="true" modal="true" dynamic="true">
+			<h:form id="tradeTestFormRPL">
+				<p:panelGrid columns="2" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+					<h:panelGroup class="md-inputfield">
+						<p:autoComplete style="width:95%" required="true" requiredMessage="Provide Qualification" id="qualificationSelection" value="#{viewCreateLegacyArplUI.companyLearnersTradeTest.qualification}" completeMethod="#{autoCompleteUI.completeQualificationTrade}" var="rvq" itemLabel="#{rvq.description}"
+							itemValue="#{rvq}" forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+							<p:column headerText="SAQA ID" style="white-space: nowrap">#{rvq.code}</p:column>
+							<p:column headerText="#{lang['description']}" style="white-space: nowrap">#{rvq.description}</p:column>
+							<p:column headerText="NQF Level" style="white-space: nowrap">#{rvq.nqflevelg2description}</p:column>
+							<p:ajax event="itemSelect" update="@form" listener="#{viewCreateLegacyArplUI.companyLearnersTradeTestApplicationCheck}" />
+						</p:autoComplete>
+						<p:outputLabel value="#{lang['qualification']}" for="qualificationSelection"></p:outputLabel>
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield" rendered="#{viewCreateLegacyArplUI.displayTradeTestCenter and viewCreateLegacyArplUI.avalibleTradeTestCenters gt 0}">
+						<p:autoComplete id="company" style="width:95%" value="#{viewCreateLegacyArplUI.companyLearnersTradeTest.preferredTrainingCenter}" completeMethod="#{viewCreateLegacyArplUI.findCompaniesAssignedToQualification}" var="rv" itemLabel="#{rv.companyNameDisplay}" itemValue="#{rv}" forceSelection="true"
+							converter="CompanyConvertor" dropdown="true" minQueryLength="0" maxResults="10" required="true">
+							<p:column headerText="#{lang['companyName']}" style="white-space: nowrap">#{rv.companyName}</p:column>
+							<p:column headerText="#{lang['entity.id']}" style="white-space: nowrap">#{rv.levyNumber}</p:column>
+							<p:ajax event="itemSelect" update="@form" listener="#{viewCreateLegacyArplUI.checkRegion}" />
+						</p:autoComplete>
+						<p:outputLabel value="Preferred Trade Test Centre (#{viewCreateLegacyArplUI.avalibleTradeTestCenters} Center(s) Available) " for="company" />
+					</h:panelGroup>
+
+					<h:panelGroup rendered="#{viewCreateLegacyArplUI.displayTradeTestCenter and viewCreateLegacyArplUI.avalibleTradeTestCenters eq 0}">
+						<p:outputLabel value="#{viewCreateLegacyArplUI.avalibleTradeTestCenters} Avalable Test Centers, unable to proceed." />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield" rendered="false">
+						<p:calendar id="lrd" inputStyle="width:95%" value="#{viewCreateLegacyArplUI.companyLearnersTradeTest.learnerReadinessDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" readonlyInput="true" required="true" />
+						<p:outputLabel value="Learner Readiness Date" for="lrd" />
+					</h:panelGroup>
+
+					<h:panelGroup rendered="#{viewCreateLegacyArplUI.displayLastInfo and false}">
+						<div>
+							<p:outputLabel value="Foundational Learning Competence" styleClass="gray" for="gguage" />
+						</div>
+						<div>
+							<p:selectOneMenu id="gguage" value="#{viewCreateLegacyArplUI.companyLearnersTradeTest.flc}" style="width:95%" required="true">
+								<p:ajax />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{enumUI.yesNoEnumDD}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+
+					<h:panelGroup rendered="#{viewCreateLegacyArplUI.displayLastInfo}">
+						<div>
+							<p:outputLabel value="Have you attempted a trade test previously?" styleClass="gray" for="attemptTradeTest" />
+						</div>
+						<div>
+							<p:selectOneMenu id="attemptTradeTest" value="#{viewCreateLegacyArplUI.companyLearnersTradeTest.attemptedTradeTest}" style="width:95%" required="true" disabled="true">
+								<p:ajax update="@form"></p:ajax>
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{enumUI.yesNoEnumDD}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+				</p:panelGrid>
+				<p:panelGrid columns="2" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group" id="previousInformationOne" rendered="#{viewCreateLegacyArplUI.displayLastInfo}">
+					<h:panelGroup styleClass="md-inputfield" rendered="#{!viewCreateLegacyArplUI.check and viewCreateLegacyArplUI.companyLearnersTradeTest.attemptedTradeTest eq YesNoEnum.Yes}">
+						<p:calendar inputStyle="width:90%" id="preAttDateasd" value="#{viewCreateLegacyArplUI.companyLearnersTradeTest.previousAttemptDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" readonlyInput="true" required="true" disabled="true" />
+						<p:outputLabel value="Previous Attempt Date" for="preAttDateasd" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield" rendered="#{!viewCreateLegacyArplUI.check and viewCreateLegacyArplUI.companyLearnersTradeTest.attemptedTradeTest eq YesNoEnum.Yes}">
+						<p:autoComplete style="width:95%" id="preTestCenterasd" value="#{viewCreateLegacyArplUI.companyLearnersTradeTest.previousTrainingCenter}" completeMethod="#{viewCreateLegacyArplUI.findCompaniesAssignedToQualification}" var="rv" itemLabel="#{rv.companyNameDisplay}" itemValue="#{rv}" forceSelection="true"
+							converter="CompanyConvertor" dropdown="true" maxResults="10" required="true" disabled="true">
+							<p:column headerText="#{lang['companyName']}" style="white-space: nowrap">#{rv.companyName}</p:column>
+							<p:column headerText="#{lang['entity.id']}" style="white-space: nowrap">#{rv.levyNumber}</p:column>
+						</p:autoComplete>
+						<p:outputLabel value="Previous Test Center" for="preTestCenterasd" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield" rendered="#{!viewCreateLegacyArplUI.check and viewCreateLegacyArplUI.companyLearnersTradeTest.attemptedTradeTest eq YesNoEnum.Yes}">
+						<p:inputNumber value="#{viewCreateLegacyArplUI.companyLearnersTradeTest.attemptNumber}" maxValue="3" minValue="1" id="preAttDateasdasd" decimalPlaces="0" inputStyle="width:95%" required="true" disabled="true"></p:inputNumber>
+						<p:outputLabel value="Number of Previous Attempts" for="preAttDateasdasd" />
+					</h:panelGroup>
+				</p:panelGrid>
+				<p:panelGrid columns="1" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group" id="previousInformation">
+					<h:panelGroup styleClass="md-inputfield" rendered="#{viewCreateLegacyArplUI.check eq true}">
+						<p:calendar inputStyle="width:90%" id="preAttDate" value="#{viewCreateLegacyArplUI.companyLearnersTradeTest.previousAttemptDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" readonlyInput="true" required="true" disabled="true" />
+						<p:outputLabel value="Previous Attempt Date" for="preAttDate" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield" rendered="#{viewCreateLegacyArplUI.check eq true}">
+						<p:autoComplete style="width:95%" id="preTestCenter" value="#{viewCreateLegacyArplUI.companyLearnersTradeTest.previousTrainingCenter}" completeMethod="#{viewCreateLegacyArplUI.findCompaniesAssignedToQualification}" var="rv" itemLabel="#{rv.companyNameDisplay}" itemValue="#{rv}" forceSelection="true"
+							converter="CompanyConvertor" dropdown="true" maxResults="10" required="true" disabled="true">
+							<p:column headerText="#{lang['companyName']}" style="white-space: nowrap">#{rv.companyName}</p:column>
+							<p:column headerText="#{lang['entity.id']}" style="white-space: nowrap">#{rv.levyNumber}</p:column>
+						</p:autoComplete>
+						<p:outputLabel value="Previous Test Center" for="preTestCenter" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield" rendered="#{viewCreateLegacyArplUI.check eq true}">
+						<p:inputNumber value="#{viewCreateLegacyArplUI.companyLearnersTradeTest.attemptNumber}" decimalPlaces="0" inputStyle="width:95%" maxValue="3" minValue="1" required="true" disabled="true"></p:inputNumber>
+						<p:outputLabel value="Number of Previous Attempts" for="preAttDate" />
+					</h:panelGroup>
+				</p:panelGrid>
+				<p:commandButton rendered="#{viewCreateLegacyArplUI.displayLastInfo}" process="tradeTestFormRPL" value="#{lang['submit']}" icon="fa fa-check" styleClass="flat" action="#{viewCreateLegacyArplUI.requestARPLTradeTestApplication}" update="@form :mainForm" onstart="uploadStart()" oncomplete="uploadDone()" />
+			</h:form>
+
+		</p:dialog>
+
+
+	</ui:define>
+</ui:composition>

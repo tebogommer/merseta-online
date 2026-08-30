@@ -1,0 +1,150 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<p:growl>
+						<p:autoUpdate />
+					</p:growl>
+					<h:form id="mainForm">
+						<h1>Company Status Reporting</h1>
+						<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+							<p:tabView id="tabView" style="">
+								<p:ajax event="tabChange" listener="#{companyRegisterReportingUI.onTabChange}" update="@form" />
+								<p:tab title="Company NSDMS Status VS SARS Status" id="statusListTab">
+									<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+										<h3>Report To Display: Company NSDMS Status Against Lastest SARS Employer File Status</h3>
+										<p:commandButton icon="fa fa-list" update=":mainForm:tabView:resultsPanelStatusList" action="#{companyRegisterReportingUI.generateComapnyStatusReport}" value="Generate Report" onstart="uploadStart()" oncomplete="uploadDone()" />
+									</p:panelGrid>
+									<p:outputPanel id="resultsPanelStatusList">
+										<c:if test="#{companyRegisterReportingUI.displayCompanyStatusReport}">
+											<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+												<ui:include src="/pages/includes/download_lazy.xhtml">
+													<ui:param name="file_name" value="Company_Status_List" />
+													<ui:param name="target" value="dtStatusList" />
+												</ui:include>
+												<p:dataTable var="rvSub" value="#{companyRegisterReportingUI.companyStatusVsSarsStatusList}" id="dtStatusList" paginator="true" rows="10" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+													paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,15,20,25,50,100" reflow="true" lazy="false">
+													<p:column headerText="Entity ID">
+														<p:outputLabel value="#{rvSub.entityId}" />
+													</p:column>
+													<p:column headerText="Company Name">
+														<p:outputLabel value="#{rvSub.companyName}" />
+													</p:column>
+													<p:column headerText="Trading Name">
+														<p:outputLabel value="#{rvSub.tradingName}" />
+													</p:column>
+													<p:column headerText="NSDMS Status">
+														<p:outputLabel value="#{rvSub.nsdmsStatus}" />
+													</p:column>
+													<p:column headerText="Lastest SARS Employer File: Month">
+														<p:outputLabel value="#{companyRegisterReportingUI.lastestSarsFile.forMonth}">
+															<f:convertDateTime pattern="MMMM yyyy" />
+														</p:outputLabel>
+													</p:column>
+													<p:column headerText="SARS Status">
+														<p:outputLabel value="#{rvSub.sarsTradingStatus}" rendered="#{rvSub.sarsTradingStatus ne null and rvSub.sarsTradingStatus ne ''}" />
+														<p:outputLabel value="Not On File" rendered="#{rvSub.sarsTradingStatus eq null or rvSub.sarsTradingStatus eq ''}" />
+													</p:column>
+												</p:dataTable>
+											</p:panelGrid>
+										</c:if>
+									</p:outputPanel>
+								</p:tab>
+								<p:tab title="NSDMS Active Levy-Paying Companies By Chamber &amp; Size" id="chamberSizeTab">
+									<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+										<h3>Report To Display: Active NSDMS Levy-Paying Companies By Chamber &amp; Size</h3>
+										<p:commandButton icon="fa fa-list" update=":mainForm:tabView:resultsPanelChamberSizeList" action="#{companyRegisterReportingUI.generateCompanyChamberSizeReport}" value="Generate Report" onstart="uploadStart()" oncomplete="uploadDone()" />
+									</p:panelGrid>
+									<p:outputPanel id="resultsPanelChamberSizeList">
+										<c:if test="#{companyRegisterReportingUI.displayMersetaCompaniesByChamberSize}">
+
+											<ui:include src="/pages/includes/download_lazy.xhtml">
+													<ui:param name="file_name" value="NSDSM_Levy_Paying_Companies_By_Chamber_And_Size" />
+													<ui:param name="target" value="levyIncome" />
+												</ui:include>
+											<p:dataTable value="#{companyRegisterReportingUI.companiesByChamberSizeList}" var="rowVar" id="levyIncome" rowKey="#{rowVar.description}" paginator="true" rows="5" paginatorPosition="bottom"
+												paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+												<p:columnGroup type="header">
+													<p:row>
+														<p:column colspan="1" headerText="Size" width="25%" />
+														<p:column colspan="7" headerText="Chamber" />
+													</p:row>
+													<p:row>
+														<p:column headerText="" />
+														<p:column headerText="#{lang['auto']}" />
+														<p:column headerText="#{lang['metal']}" />
+														<p:column headerText="#{lang['motor']}" />
+														<p:column headerText="#{lang['new.tyre']}" />
+														<p:column headerText="#{lang['plastics']}" />
+														<p:column headerText="#{lang['unknown']}" />
+														<p:column headerText="#{lang['grand.total']}" />
+													</p:row>
+												</p:columnGroup>
+												<p:column headerText="Date Generated" style="display:none">
+													<h:outputText value="#{rowVar.dateGenerated}">
+														<f:convertDateTime pattern="dd MMMM yyyy HH:mm:ss" />
+													</h:outputText>
+												</p:column>
+												<p:column headerText="Size">
+													<h:outputText value="#{rowVar.description}" />
+												</p:column>
+												<p:column headerText="#{lang['auto']}" styleClass="number-column">
+													<h:outputText value="#{rowVar.auto}">
+														<f:convertNumber pattern="###,###,###,###,##0" />
+													</h:outputText>
+												</p:column>
+												<p:column headerText="#{lang['metal']}" styleClass="number-column">
+													<h:outputText value="#{rowVar.metal}">
+														<f:convertNumber pattern="###,###,###,###,##0" />
+													</h:outputText>
+												</p:column>
+												<p:column headerText="#{lang['motor']}" styleClass="number-column">
+													<h:outputText value="#{rowVar.motor}">
+														<f:convertNumber pattern="###,###,###,###,##0" />
+													</h:outputText>
+												</p:column>
+												<p:column headerText="#{lang['new.tyre']}" styleClass="number-column">
+													<h:outputText value="#{rowVar.newTyre}">
+														<f:convertNumber pattern="###,###,###,###,##0" />
+													</h:outputText>
+												</p:column>
+												<p:column headerText="#{lang['plastics']}" styleClass="number-column">
+													<h:outputText value="#{rowVar.plastic}">
+														<f:convertNumber pattern="###,###,###,###,##0" />
+													</h:outputText>
+												</p:column>
+												<p:column headerText="#{lang['unknown']}" styleClass="number-column">
+													<h:outputText value="#{rowVar.unknown}">
+														<f:convertNumber pattern="###,###,###,###,##0" />
+													</h:outputText>
+												</p:column>
+												<p:column headerText="#{lang['grand.total']}" styleClass="number-column">
+													<h:outputText value="#{rowVar.auto + rowVar.metal + rowVar.motor + rowVar.newTyre + rowVar.plastic + rowVar.unknown}">
+														<f:convertNumber pattern="###,###,###,###,##0" />
+													</h:outputText>
+												</p:column>
+												
+
+											</p:dataTable>
+
+										</c:if>
+									</p:outputPanel>
+								</p:tab>
+							</p:tabView>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+			<h:form>
+				<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+				<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+			</h:form>
+		</p:confirmDialog>
+
+	</ui:define>
+</ui:composition>

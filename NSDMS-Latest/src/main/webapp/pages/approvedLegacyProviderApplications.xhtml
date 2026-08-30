@@ -1,0 +1,236 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+	
+		<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+		<p:importEnum type="haj.com.entity.enums.UsersStatusEnum" />
+		<p:importEnum type="haj.com.entity.enums.QualificationTypeSelectionEnum" />
+
+		<p:growl showDetail="false" sticky="false" id="msg">
+			<p:autoUpdate />
+		</p:growl>
+
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Monitor Approved Legacy Provider Applications</h1>
+					<h:form id="mainForm">
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+						<p:dataTable var="rowVar" value="#{approvedLegacyProviderApplicationsUI.dataModelTrainingProviderApplication}" id="SDPList" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['company.name']}" filterBy="#{rowVar.company.companyName}" sortBy="#{rowVar.company.companyName}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.company.companyName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['tradingName']}" filterBy="#{rowVar.company.tradingName}" sortBy="#{rowVar.company.tradingName}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.company.tradingName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['entity.id']}" filterBy="#{rowVar.company.levyNumber}" sortBy="#{rowVar.company.levyNumber}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.company.levyNumber}" />
+							</p:column>
+
+							<p:column headerText="Accreditation Number" filterBy="#{rowVar.accreditationNumber}" sortBy="#{rowVar.accreditationNumber}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.accreditationNumber}" />
+							</p:column>
+
+							<p:column headerText="#{lang['type.of.application']}" sortBy="#{rowVar.accreditationApplicationTypeEnum}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.accreditationApplicationTypeEnum.friendlyName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['tp.application.status']}" sortBy="#{rowVar.approvalStatus}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.approvalStatus.friendlyName}" />
+							</p:column>
+
+							<p:column width="7%" styleClass="action-column" headerText="#{lang['view.edit']}">
+								<p:commandButton icon="fa fa-plus" title="Alter Information" update="actionForm" action="#{approvedLegacyProviderApplicationsUI.prepAlteration}" onstart="uploadStart()" oncomplete="uploadDone()">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{approvedLegacyProviderApplicationsUI.trainingProviderApplication}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+					</h:form>
+				</div>
+				
+				<h:form id="actionForm">
+					<c:if test="#{approvedLegacyProviderApplicationsUI.alterationUnderway}">
+						<div class="card card-w-title">
+							<h1>Alter Links To Application</h1>
+							
+							<span class="Fs13 gray"><i class="fa fa-info-circle" aria-hidden="true"></i> Select Section to alter. </span>
+							<div class="EmptyBox5"/>
+							<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+								<h:panelGroup>
+									<div>
+										<p:outputLabel value="Qualification Type" for="qualType" />
+									</div>
+									<div>
+										<p:selectOneMenu id="qualType" value="#{approvedLegacyProviderApplicationsUI.qualificationTypeSelectionEnum}" style="width:95%" required="true" requiredMessage="Provide: Qualfiication Type">
+											<p:ajax update=":actionForm:createGird :actionForm:reasonGrid" listener="#{approvedLegacyProviderApplicationsUI.changeTypeSelection}" />
+											<f:selectItem itemLabel="---Select Type---" itemValue="" styleClass="FontLight gray" noSelectionOption="true" />
+											<f:selectItems value="#{enumUI.qualificationTypeSelectionLegacyAppEnumDD}" />
+										</p:selectOneMenu>
+									</div>
+								</h:panelGroup>
+							</p:panelGrid>
+							<div class="EmptyBox10"/>
+							<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" id="createGird" layout="grid">
+								<h:panelGroup styleClass="md-inputfield" rendered="#{approvedLegacyProviderApplicationsUI.qualificationTypeSelectionEnum eq QualificationTypeSelectionEnum.Qualification}" style="margin-top: 19px">
+									<p:autoComplete required="true" id="qualSelection" value="#{approvedLegacyProviderApplicationsUI.qualificationSelected}" completeMethod="#{autoCompleteUI.completeQualification}" var="rv" itemLabel="#{rv.saqaQualification}" itemValue="#{rv}" forceSelection="true"
+										converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+										<p:ajax event="itemSelect" listener="#{approvedLegacyProviderApplicationsUI.qualificationSelection}" update="createGird" />
+										<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+										<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+										<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+									</p:autoComplete>
+									<p:outputLabel value="Qualification" for="qualSelection" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield" rendered="#{approvedLegacyProviderApplicationsUI.qualificationTypeSelectionEnum eq QualificationTypeSelectionEnum.UnitStandards}" style="margin-top: 19px">
+									<p:autoComplete required="true" id="unitStandard" value="#{approvedLegacyProviderApplicationsUI.unitStandardSelected}" completeMethod="#{autoCompleteUI.completeUnitStandards}" var="rv" itemLabel="#{rv.title}" itemValue="#{rv}" forceSelection="true" converter="UnitStandardsConvertor"
+										dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+										<p:ajax event="itemSelect" />
+										<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+										<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.title}</p:column>
+										<p:column headerText="NQF Level" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+									</p:autoComplete>
+									<p:outputLabel value="#{lang['unit.standard']}" for="unitStandard" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield" rendered="#{approvedLegacyProviderApplicationsUI.qualificationTypeSelectionEnum eq QualificationTypeSelectionEnum.SkillsProgram}" style="margin-top: 19px">
+									<p:autoComplete required="true" id="skillsProgram" value="#{approvedLegacyProviderApplicationsUI.skillsProgramSelected}" completeMethod="#{autoCompleteUI.completeSkillsProgram}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SkillsProgramConvertor"
+										dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+										<p:ajax event="itemSelect" listener="#{approvedLegacyProviderApplicationsUI.skillsProgrammeSelection}" update="createGird" />
+										<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+										<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+									</p:autoComplete>
+									<p:outputLabel value="Skills Program" for="skillsProgram" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield" rendered="#{approvedLegacyProviderApplicationsUI.qualificationTypeSelectionEnum eq QualificationTypeSelectionEnum.SkillsSet}" style="margin-top: 19px">
+									<p:autoComplete required="true" id="skillsSet" value="#{approvedLegacyProviderApplicationsUI.skillsSetSelected}" completeMethod="#{autoCompleteUI.completeSkillsSet}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SkillsSetConvertor" dropdown="true"
+										minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+										<p:ajax event="itemSelect" listener="#{approvedLegacyProviderApplicationsUI.skillsSetSelection}" update="createGird" />
+										<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+										<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+									</p:autoComplete>
+									<p:outputLabel value="Skills Set" for="skillsSet" />
+								</h:panelGroup>
+								
+								<c:if test="#{approvedLegacyProviderApplicationsUI.unitStandardList ne null and approvedLegacyProviderApplicationsUI.unitStandardList.size() gt 0}">
+								<div class="EmptyBox10"/>
+									<h:panelGroup style="margin-top: 19px">
+										<span class="Fs13 gray"><i class="fa fa-info-circle" aria-hidden="true"></i> If unit standard already assigned to application, it will not assign it.</span>
+										<div class="EmptyBox5"/>
+										<p:dataTable var="rowVarUS" value="#{approvedLegacyProviderApplicationsUI.unitStandardList}" id="unitStandardDT" rowKey="#{rowVarUS.id}" paginator="true" rows="5" paginatorPosition="bottom"
+											paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20" reflow="true">
+											<f:facet name="header">Unit Standards</f:facet>
+											<p:column headerText="#{lang['code']}">
+												<p:outputLabel value="#{rowVarUS.code}" />
+											</p:column>
+											<p:column headerText="Title">
+												<p:outputLabel value="#{rowVarUS.title}" />
+											</p:column>
+											<p:column headerText="NQF Level">
+												<p:outputLabel value="#{rowVarUS.nqflevelg2description}" />
+											</p:column>
+										</p:dataTable>
+									</h:panelGroup>
+								</c:if>
+							</p:panelGrid>
+							
+							<div class="EmptyBox10"/>
+							
+							<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" id="reasonGrid" style="width:100%" layout="grid">
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText value="#{approvedLegacyProviderApplicationsUI.reasonForAlteration}" style="width:95%" required="true" requiredMessage="Provide: Reason For Alteration" />
+									<p:outputLabel value="Reason For Alteration" />
+								</h:panelGroup>
+							</p:panelGrid>
+							
+
+							<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+								<p:outputLabel value="Please not that once you have added scope, you will not be able to remove and must contact Support for assistance should the need arise." style="font-weight:bold; font-size: 20px; color: red;" />
+							<div class="EmptyBox5"/>
+								<p:commandButton value="Submit" icon="fa fa-database" process="@form" update="@form :historyForm" action="#{approvedLegacyProviderApplicationsUI.addAlterationWithAudit}" onstart="uploadStart()" oncomplete="uploadDone()">
+									<p:confirm header="Confirmation" message="Are You Sure?" icon="fa fa-exclamation-triangle" />
+								</p:commandButton>
+							</p:panelGrid>
+						</div>
+					</c:if>
+				</h:form>
+
+			</div>
+
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="historyForm">
+						<h1>Action History</h1>
+						<ui:include src="/pages/includes/download_lazy.xhtml">
+							<ui:param name="file_name" value="Action_History" />
+							<ui:param name="target" value="historyListDT" />
+						</ui:include>
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+						<p:dataTable var="rowVarHist" value="#{approvedLegacyProviderApplicationsUI.dataModelLegacyProviderApplicationAlterationAudit}" id="historyListDT" rowKey="#{rowVarHist.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}" lazy="true"
+							paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+							<f:facet name="header">Action History</f:facet>
+							<p:column headerText="NSDMS REF ID" sortBy="#{rowVarHist.id}">
+								<h:outputText value="#{rowVarHist.id}" />
+							</p:column>
+							<p:column headerText="Action Date" sortBy="#{rowVarHist.createDate}">
+								<p:outputLabel value="#{rowVarHist.createDate}">
+									<f:convertDateTime pattern="dd MMMM yyyy (HH:mm:ss)" />
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="Action User" sortBy="#{rowVarHist.users}">
+								<h:outputText value="#{rowVarHist.users.firstName} #{rowVarHist.users.lastName} (#{rowVarHist.users.email})" />
+							</p:column>
+							<p:column headerText="Company Name" filterBy="#{rowVarHist.company.companyName}">
+								<h:outputText value="#{rowVarHist.company.companyName}" />
+							</p:column>
+							<p:column headerText="Entity ID" filterBy="#{rowVarHist.company.levyNumber}">
+								<h:outputText value="#{rowVarHist.company.levyNumber}" />
+							</p:column>
+							<p:column headerText="Accreditation Number" filterBy="#{rowVarHist.trainingProviderApplication.accreditationNumber}">
+								<h:outputText value="#{rowVarHist.trainingProviderApplication.accreditationNumber}" />
+							</p:column>
+							<p:column headerText="Link To Action History (NSDMS REF ID)">
+								<h:outputText value="#{rowVarHist.legacyProviderApplicationAlterationAudit.id}" rendered="#{rowVarHist.legacyProviderApplicationAlterationAudit ne null}" />
+								<h:outputText value="N/A" rendered="#{rowVarHist.legacyProviderApplicationAlterationAudit eq null}" />
+							</p:column>
+							<p:column headerText="Qualification Type">
+								<h:outputText value="#{rowVarHist.qualificationTypeSelectionEnum.friendlyName}" />
+							</p:column>
+							<p:column headerText="Qualification ID / SAQA ID">
+								<p:outputLabel value="#{rowVarHist.learnership.code}" rendered="#{rowVarHistlearnership ne null}" />
+								<p:outputLabel value="#{rowVarHist.qualification.code}" rendered="#{rowVarHist.qualification ne null}" />
+								<p:outputLabel value="#{rowVarHist.unitStandard.code}" rendered="#{rowVarHist.unitStandard ne null}" />
+								<p:outputLabel value="#{rowVarHist.skillsProgram.programmeID}" rendered="#{rowVarHist.skillsProgram ne null}" />
+								<p:outputLabel value="#{rowVarHist.skillsSet.code}" rendered="#{rowVarHist.skillsSet ne null}" />
+							</p:column>
+							<p:column headerText="Qualification Title">
+								<p:outputLabel value="#{rowVarHist.qualification.description}" rendered="#{rowVarHist.qualification ne null}" />
+								<p:outputLabel value="#{rowVarHist.unitStandard.title}" rendered="#{rowVarHist.unitStandard ne null}" />
+								<p:outputLabel value="#{rowVarHist.skillsProgram.description}" rendered="#{rowVarHist.skillsProgram ne null}" />
+								<p:outputLabel value="#{rowVarHist.skillsSet.description}" rendered="#{rowVarHist.skillsSet ne null}" />
+								<p:outputLabel value="#{rowVarHist.learnership.description}" rendered="#{rowVarHist.learnership ne null}" />
+							</p:column>
+							<p:column headerText="Reason For Alteration" filterBy="#{rowVarHist.reasonForAlteration}">
+								<h:outputText value="#{rowVarHist.reasonForAlteration}" />
+							</p:column>
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+			<h:form>
+				<p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="fa fa-check" />
+				<p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="fa fa-times" />
+			</h:form>
+		</p:confirmDialog>
+
+
+	</ui:define>
+</ui:composition>

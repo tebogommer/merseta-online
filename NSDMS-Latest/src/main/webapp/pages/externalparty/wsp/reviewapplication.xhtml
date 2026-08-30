@@ -1,0 +1,505 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:pt="http://xmlns.jcp.org/jsf/passthrough" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<style type="text/css">
+.error {
+	background-color: #F44336 !important;
+	color: white !important;
+	font-weight: 800;
+}
+
+.ui-tooltip {
+	max-width: calc(200px + 3vw) !important;
+}
+</style>
+		<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+		<p:importEnum type="haj.com.entity.enums.PivotNonPivotEnum" />
+		<p:importEnum type="haj.com.entity.enums.CompletedPlannedEnum" />
+		<p:importEnum type="haj.com.entity.enums.ConfigDocProcessEnum" />
+		<p:importEnum type="haj.com.entity.enums.WspStatusEnum" />
+		<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+		<p:importEnum type="haj.com.entity.enums.WspTypeEnum" />
+		<p:importEnum type="haj.com.entity.enums.IdPassportEnum" var="idpass" />
+		<p:importEnum type="haj.com.entity.enums.RsaCitizenTypeEnum" />
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+
+					<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+						<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+						<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+					</p:confirmDialog>
+
+					<p:outputPanel id="manualWspInfo" rendered="#{initiatewspUI.wsp.manuallyAdded}">
+						<h1>#{initiatewspUI.wsp.company.companyName} #{initiatewspUI.wsp.company.levyNumber}</h1>
+						<h4>#{lang['mandatory.grant.application']} #{sessionUI.wspSession.finYear} [#{sessionUI.wspSession.wspStatusEnum.friendlyName}]</h4>
+						<h4>Application Type: #{initiatewspUI.typeName}</h4>
+						<h4 class="blue">
+							Manually Submitted:
+							<p:selectBooleanCheckbox value="#{initiatewspUI.wsp.manuallyAdded}" disabled="true">
+							</p:selectBooleanCheckbox>
+						</h4>
+						<h4 class="blue">
+							Manually Submitted Date:
+							<p:outputLabel value="#{initiatewspUI.wsp.manuallySubmissionDate}">
+								<f:convertDateTime pattern="dd MMMM yyyy HH:mm:ss" />
+							</p:outputLabel>
+						</h4>
+						<h4 class="red">
+							Submission deadline:
+							<p:outputLabel value="#{initiatewspUI.closeOffDate}">
+								<f:convertDateTime pattern="dd MMMM yyyy HH:mm:ss" />
+							</p:outputLabel>
+						</h4>
+					</p:outputPanel>
+					<p:outputPanel id="wspInfo" rendered="#{initiatewspUI.wsp.manuallyAdded eq false}">
+						<h1>#{initiatewspUI.wsp.company.companyName} #{initiatewspUI.wsp.company.levyNumber}</h1>
+						<h4>#{lang['mandatory.grant.application']} #{sessionUI.wspSession.finYear} [#{sessionUI.wspSession.wspStatusEnum.friendlyName}]</h4>
+						<h4>Application Type: #{initiatewspUI.typeName}</h4>
+						<h4 class="red">
+							Submission deadline:
+							<p:outputLabel value="#{initiatewspUI.closeOffDate}">
+								<f:convertDateTime pattern="dd MMMM yyyy HH:mm:ss" />
+							</p:outputLabel>
+						</h4>
+					</p:outputPanel>
+					<h:form id="errorsForm">
+						<p:fieldset rendered="#{initiatewspUI.errors ne null}" styleClass="error Fs12" id="exceptions">
+							<h4>#{lang['action.required.message']}</h4>
+							<p:outputLabel value="#{initiatewspUI.errors}" escape="false"></p:outputLabel>
+						</p:fieldset>
+					</h:form>
+					<p:commandButton value="View Rejection Reasons" rendered="#{initiatewspUI.rejectReasonsChild.size() gt 0}" oncomplete="PF('rejectChildReason').show()">
+					</p:commandButton>
+					<p:spacer width="10" rendered="#{initiatewspUI.rejectReasonsChild.size() gt 0}" />
+					<p:tooltip position="left"></p:tooltip>
+					<ui:include src="/pages/includes/tabinfo.xhtml">
+						<ui:param name="showInfoCircle" value="false" />
+						<ui:param name="cssClass" value="secondaryText Fs15" />
+						<ui:param name="helpTxt" value="#{lang['The.system.will.auto-fill.based.selections']}" />
+					</ui:include>
+					<br /> <br />
+					<p:tabView id="tabView" cache="false" activeIndex="#{sessionUI.activeIndex}">
+						<p:tab title="#{lang['company.details']}">
+							<div class="EmptyBox10"></div>
+							<ui:include src="/pages/includes/tabinfo.xhtml">
+								<ui:param name="showInfoCircle" value="true" />
+								<ui:param name="cssClass" value="Fs15 secondaryText" />
+								<ui:param name="helpTxt" value="#{lang['company.details.description']}" />
+							</ui:include>
+							<ui:include src="/pages/externalparty/wsp/companydetails.xhtml" />
+						</p:tab>
+						<p:tab title="#{lang['company.data']}">
+							<div class="EmptyBox10"></div>
+							<ui:include src="/pages/includes/tabinfo.xhtml">
+								<ui:param name="showInfoCircle" value="true" />
+								<ui:param name="cssClass" value="Fs15 secondaryText" />
+								<ui:param name="helpTxt" value="#{lang['company.data.description']}" />
+							</ui:include>
+							<ui:include src="/pages/externalparty/wsp/linkorg.xhtml" />
+						</p:tab>
+						<p:tab title="#{lang['employment.data']}" rendered="#{not initiatewspUI.nonMersetaNonLevyPaying}">
+							<div class="EmptyBox10"></div>
+							<ui:include src="/pages/includes/tabinfo.xhtml">
+								<ui:param name="showInfoCircle" value="true" />
+								<ui:param name="cssClass" value="Fs15 secondaryText" />
+								<ui:param name="helpTxt" value="#{lang['employment.data.description']}" />
+							</ui:include>
+							<ui:include src="/pages/externalparty/wsp/employees.xhtml" />
+						</p:tab>
+						<p:tab title="#{lang['skills.requirements']}" rendered="#{not initiatewspUI.nonMersetaNonLevyPaying and (initiatewspUI.wspTypeEnum ne WspTypeEnum.IntersetaTransferMandGrant and initiatewspUI.wspTypeEnum ne WspTypeEnum.LegacyLinkedGrantApplication)}">
+							<div class="EmptyBox10"></div>
+							<ui:include src="/pages/includes/tabinfo.xhtml">
+								<ui:param name="showInfoCircle" value="true" />
+								<ui:param name="cssClass" value="Fs15 secondaryText" />
+								<ui:param name="helpTxt" value="#{lang['skills.requirements.description']}" />
+							</ui:include>
+							<ui:include src="/pages/externalparty/wsp/skillsrequirements.xhtml" />
+						</p:tab>
+						<p:tab title="#{lang['skills.gap']}" rendered="#{not initiatewspUI.nonMersetaNonLevyPaying and (initiatewspUI.wspTypeEnum ne WspTypeEnum.IntersetaTransferMandGrant and initiatewspUI.wspTypeEnum ne WspTypeEnum.LegacyLinkedGrantApplication)}">
+							<div class="EmptyBox10"></div>
+							<ui:include src="/pages/includes/tabinfo.xhtml">
+								<ui:param name="showInfoCircle" value="true" />
+								<ui:param name="cssClass" value="Fs15 secondaryText" />
+								<ui:param name="helpTxt" value="#{lang['skills.gap.description']}" />
+							</ui:include>
+							<ui:include src="/pages/externalparty/wsp/skillsgap.xhtml" />
+						</p:tab>
+						<p:tab title="#{lang['atr.full']}" rendered="#{not initiatewspUI.wsp.company.nonLevyPaying and (initiatewspUI.wspTypeEnum ne WspTypeEnum.IntersetaTransferMandGrant and initiatewspUI.wspTypeEnum ne WspTypeEnum.LegacyLinkedGrantApplication)}">
+							<div class="EmptyBox10"></div>
+							<ui:include src="/pages/includes/tabinfo.xhtml">
+								<ui:param name="showInfoCircle" value="true" />
+								<ui:param name="cssClass" value="Fs15 secondaryText" />
+								<ui:param name="helpTxt" value="#{lang['atr.tab.description']}" />
+							</ui:include>
+							<p:outputLabel escape="false" value="#{lang['atr.tab.extra.info']}" class="Fs13 gray"></p:outputLabel>
+							<ui:include src="/pages/externalparty/wsp/atr.xhtml" />
+						</p:tab>
+						<p:tab title="#{lang['pivitol.training.report']}" rendered="#{not initiatewspUI.wsp.company.nonLevyPaying and (initiatewspUI.wspTypeEnum ne WspTypeEnum.IntersetaTransferMandGrant and initiatewspUI.wspTypeEnum ne WspTypeEnum.LegacyLinkedGrantApplication)}">
+							<div class="EmptyBox10"></div>
+							<ui:include src="/pages/includes/tabinfo.xhtml">
+								<ui:param name="showInfoCircle" value="true" />
+								<ui:param name="cssClass" value="Fs15 secondaryText" />
+								<ui:param name="helpTxt" value="#{lang['pivitol.training.report.description']}" />
+							</ui:include>
+							<ui:include src="/pages/externalparty/wsp/pivitoltraining.xhtml" />
+						</p:tab>
+						<p:tab title="#{lang['training.with.other.seta']}" rendered="#{not initiatewspUI.wsp.company.nonLevyPaying and (initiatewspUI.wspTypeEnum ne WspTypeEnum.IntersetaTransferMandGrant and initiatewspUI.wspTypeEnum ne WspTypeEnum.LegacyLinkedGrantApplication)}">
+							<div class="EmptyBox10"></div>
+							<ui:include src="/pages/includes/tabinfo.xhtml">
+								<ui:param name="showInfoCircle" value="true" />
+								<ui:param name="cssClass" value="Fs15 secondaryText" />
+								<ui:param name="helpTxt" value="#{lang['other.seta.training.description']}" />
+							</ui:include>
+							<ui:include src="/pages/externalparty/wsp/trainingwithseta.xhtml" />
+						</p:tab>
+						<p:tab title="#{lang['impact.of.staff.training']}" rendered="false">
+							<div class="EmptyBox10"></div>
+							<ui:include src="/pages/includes/tabinfo.xhtml">
+								<ui:param name="showInfoCircle" value="true" />
+								<ui:param name="cssClass" value="Fs15 secondaryText" />
+								<ui:param name="helpTxt" value="#{lang['impact.of.staff.training.description']}" />
+							</ui:include>
+							<ui:include src="/pages/externalparty/wsp/impactoftraining.xhtml" />
+						</p:tab>
+						<p:tab title="#{lang['wsp.full']}" rendered="#{initiatewspUI.wspTypeEnum ne WspTypeEnum.IntersetaTransferMandGrant and initiatewspUI.wspTypeEnum ne WspTypeEnum.LegacyLinkedGrantApplication}">
+							<div class="EmptyBox10"></div>
+							<ui:include src="/pages/includes/tabinfo.xhtml">
+								<ui:param name="showInfoCircle" value="true" />
+								<ui:param name="cssClass" value="Fs15 secondaryText" />
+								<ui:param name="helpTxt" value="#{lang['wsp.tab.description']}" />
+							</ui:include>
+							<p:outputLabel escape="false" value="#{lang['wsp.tab.extra.info']}" class="Fs13 gray"></p:outputLabel>
+							<ui:include src="/pages/externalparty/wsp/wsp.xhtml" />
+						</p:tab>
+						<p:tab title="#{lang['pivotal.plan.dg']}" rendered="#{initiatewspUI.wspTypeEnum ne WspTypeEnum.IntersetaTransferMandGrant and initiatewspUI.wspTypeEnum ne WspTypeEnum.LegacyLinkedGrantApplication}">
+							<div class="EmptyBox10"></div>
+							<ui:include src="/pages/includes/tabinfo.xhtml">
+								<ui:param name="showInfoCircle" value="true" />
+								<ui:param name="cssClass" value="Fs15 secondaryText" />
+								<ui:param name="helpTxt" value="#{lang['pivotal.plan.tab.description']}" />
+							</ui:include>
+							<ui:include src="/pages/externalparty/wsp/pivitolplan.xhtml" />
+						</p:tab>
+						<p:tab title="#{lang['discretionary.grant.application']}" rendered="#{initiatewspUI.wspTypeEnum ne WspTypeEnum.Mandatory and initiatewspUI.wspTypeEnum ne WspTypeEnum.IntersetaTransferMandGrant and initiatewspUI.wspTypeEnum ne WspTypeEnum.LegacyLinkedGrantApplication}">
+							<div class="EmptyBox10"></div>
+							<ui:include src="/pages/includes/tabinfo.xhtml">
+								<ui:param name="showInfoCircle" value="true" />
+								<ui:param name="cssClass" value="Fs15 secondaryText" />
+								<ui:param name="helpTxt" value="#{lang['discretionary.grant.description']}" />
+							</ui:include>
+							<ui:include src="/pages/externalparty/wsp/discgrant.xhtml" />
+						</p:tab>
+						<p:tab title="#{lang['required.documents']}">
+							<div class="EmptyBox10"></div>
+							<ui:include src="/pages/includes/tabinfo.xhtml">
+								<ui:param name="showInfoCircle" value="true" />
+								<ui:param name="cssClass" value="Fs15 secondaryText" />
+								<ui:param name="helpTxt" value="#{lang['documents.description']}" />
+							</ui:include>
+							<ui:include src="/pages/externalparty/wsp/documents.xhtml" />
+						</p:tab>
+						<p:tab title="#{lang['sign.off']}">
+							<div class="EmptyBox10"></div>
+							<ui:include src="/pages/externalparty/wsp/signoff.xhtml" />
+						</p:tab>
+
+						<p:tab title="Lodged Dispute" rendered="#{initiatewspUI.wsp.wspStatusEnum ne WspStatusEnum.Draft and (initiatewspUI.wspTypeEnum ne WspTypeEnum.IntersetaTransferMandGrant and initiatewspUI.wspTypeEnum ne WspTypeEnum.LegacyLinkedGrantApplication)}">
+							<div class="EmptyBox10"></div>
+							<ui:include src="/pages/externalparty/wsp/mediationreportondisputelodged.xhtml" />
+						</p:tab>
+
+						<p:tab id="sdfMan" title="Company SDF" rendered="false">
+							<ui:include src="/pages/externalparty/wsp/includes/companysdf.xhtml">
+							</ui:include>
+						</p:tab>
+						
+						<p:tab title="Company History" rendered="#{initiatewspUI.historyFound}">
+					 		<br/>
+							<ui:include src="/pages/includes/companyHistoryDisplay.xhtml">
+								<ui:param name="company" value="#{initiatewspUI.wspCompanyHistory}" />
+								<ui:param name="dateTaken" value="#{initiatewspUI.wspCompanyHistory.wspCompanyMainHistory.createDate}" />
+								<ui:param name="CALENDER_PATTERN_DETAILED" value="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME_SECOND}" />
+								<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+							</ui:include>
+						</p:tab>
+						<p:tab title="Employee History" rendered="#{initiatewspUI.historyFound}">
+					 		<br/>
+							<ui:include src="/pages/includes/companyEmployeeDisplay.xhtml">
+								<ui:param name="dataModelList" value="#{initiatewspUI.dataModelWspCompanyEmployeesHistory}" />
+								<ui:param name="dateTaken" value="#{initiatewspUI.wspCompanyHistory.wspCompanyMainHistory.createDate}" />
+								<ui:param name="CALENDER_PATTERN_DETAILED" value="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME_SECOND}" />
+								<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+							</ui:include>
+						</p:tab>
+						<p:tab title="Training Committee History" rendered="#{initiatewspUI.historyFound}">
+					 		<br/>
+							<ui:include src="/pages/includes/companyTrainingCommitee.xhtml">
+								<ui:param name="dataModelListTC" value="#{initiatewspUI.dataModelWspCompanyTrainingComittee}" />
+								<ui:param name="dateTaken" value="#{initiatewspUI.wspCompanyHistory.wspCompanyMainHistory.createDate}" />
+								<ui:param name="CALENDER_PATTERN_DETAILED" value="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME_SECOND}" />
+								<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+							</ui:include>
+						</p:tab>
+						<p:tab title="SDF History" rendered="#{initiatewspUI.historyFound}">
+					 		<br/>
+							<ui:include src="/pages/includes/companySdfHistory.xhtml">
+								<ui:param name="dataModelListSDF" value="#{initiatewspUI.dataModelWspSdfCompanyHistory}" />
+								<ui:param name="dateTaken" value="#{initiatewspUI.wspCompanyHistory.wspCompanyMainHistory.createDate}" />
+								<ui:param name="CALENDER_PATTERN_DETAILED" value="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME_SECOND}" />
+								<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+							</ui:include>
+						</p:tab>
+
+					</p:tabView>
+				</div>
+			</div>
+		</div>
+
+		<p:dialog position="top" header="Re-open Grant Application" widgetVar="reopenGrantApplicationDlg" hideEffect="clip" showEffect="clip" id="dialogReopenGrantApplication" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="reopenGrantApplicationForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<p:outputPanel id="canReopen" rendered="#{!initiatewspUI.canReopen}">
+							<h4>Re-open Grant Application Unavailable</h4>
+							<div class="EmptyBox5" />
+							<p:outputLabel value="Unfortunately the grant application can not be re-opened due to being passed the close off date: " />
+							<p:spacer width="5" />
+							<p:outputLabel style="color:red;" value="#{initiatewspUI.closeOffDate}">
+								<f:convertDateTime pattern="dd MMMM yyyy" />
+							</p:outputLabel>
+							<div class="EmptyBox5" />
+							<p:outputLabel value="To Re-open the grant application and send it to the primary SDF: please create a extension request." />
+							<div class="EmptyBox5" />
+							<p:outputLabel value="If extension request created please provide sufficient amount of days for the users to view/alter and sign off the application." />
+						</p:outputPanel>
+						<p:outputPanel id="canReopen1" rendered="#{initiatewspUI.canReopen}">
+							<div class="ui-g-12">
+								<h4>Re-open Grant Application Available</h4>
+								<div class="EmptyBox5" />
+								<p:outputLabel value="The grant application can be Re-opened. The close off date for the grant is:" />
+								<p:spacer width="5" />
+								<p:outputLabel style="color:green" value="#{initiatewspUI.closeOffDate}">
+									<f:convertDateTime pattern="dd MMMM yyyy" />
+								</p:outputLabel>
+								<div class="EmptyBox5" />
+								<p:outputLabel value="Number of working days remaining till close off date: #{initiatewspUI.daysBetweenDays}" />
+								<div class="EmptyBox5" />
+								<p:outputLabel value="Additional Information For Re-opening Grant Application:" />
+								<ul>
+									<li>The grant's status will revert to not-started / in progress and the primary SDF can alter the grant information.</li>
+									<li>The grant will also have to go through the sign off process once again and must be submitted before the close off date: <p:outputLabel style="color:green" value="#{initiatewspUI.closeOffDate}">
+											<f:convertDateTime pattern="dd MMMM yyyy" />
+										</p:outputLabel>.
+									</li>
+									<li>If there is a DG verification assigned to the grant application: the DG verification data will be cleared and reset. The data will only be populated after the grant application has been approved.</li>
+								</ul>
+							</div>
+							<div class="ui-g-12">
+								<p:selectManyMenu value="#{initiatewspUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="200" style="width:100%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+									<f:selectItems value="#{initiatewspUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+									<p:column>
+										<h:outputText value="#{t.description}" />
+										<br />
+										<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+									</p:column>
+								</p:selectManyMenu>
+								<br />
+								<p:commandButton style="width:100%" value="Re-open Grant Application" action="#{initiatewspUI.sendBackToSDF}" update=":tabView:signoffGroup :errorsForm :wspInfo">
+								</p:commandButton>
+							</div>
+						</p:outputPanel>
+					</div>
+				</div>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="Reject Reasons" widgetVar="rejectReason" hideEffect="clip" showEffect="clip" id="dialogRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{initiatewspUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{initiatewspUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+
+							</p:selectManyMenu>
+							<br />
+							<br />
+							<p:outputLabel value="Rejection Remarks"></p:outputLabel>
+							<br />
+							<p:inputTextarea value="#{initiatewspUI.additionalInformation}"></p:inputTextarea>
+							<br />
+							<br />
+						</div>
+					</div>
+					<p:commandButton value="Reject" action="#{initiatewspUI.sendBackToSDF}" update=":tabView:signoffGroup :errorsForm :wspInfo">
+					</p:commandButton>
+				</div>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="Reject Reasons: Document Rejection" widgetVar="rejectReasonDoc" hideEffect="clip" showEffect="clip" id="dialogRejectReasonDoc" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonDocForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{initiatewspUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="tdoc" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{initiatewspUI.documentRejectReasons}" var="rvdoc" itemValue="#{rvdoc}" />
+
+								<p:column>
+									<h:outputText value="#{tdoc.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{tdoc.howTo}" />
+								</p:column>
+
+							</p:selectManyMenu>
+							<br />
+							<br />
+							<p:outputLabel value="Rejection Remarks"></p:outputLabel>
+							<br />
+							<p:inputTextarea value="#{initiatewspUI.additionalInformation}"></p:inputTextarea>
+							<br />
+							<br />
+						</div>
+					</div>
+					<p:commandButton value="Reject" action="#{initiatewspUI.sendBackToSDFDocumentRejection}" update=":tabView:signoffGroup :errorsForm :wspInfo">
+					</p:commandButton>
+				</div>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="Reject Reasons" widgetVar="rejectChildReason" hideEffect="clip" showEffect="clip" id="dialogRejectChildReason" appendTo="@(body)" modal="true" closable="true" width="75%" height="60vh" responsive="true" closeOnEscape="true">
+			<h:form id="rejectReasonChildForm">
+				<p:dataTable var="rowVar" value="#{initiatewspUI.rejectReasonsChild}" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+					rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+					<p:column headerText="Create Date">
+						<p:outputLabel value="#{rowVar.createDate}">
+							<f:convertDateTime pattern="dd MMMM yyyy" />
+						</p:outputLabel>
+					</p:column>
+					<p:column headerText="Reason for Rejection">
+						<p:outputLabel value="#{rowVar.rejectReasons.description}"></p:outputLabel>
+					</p:column>
+					<p:column headerText="How to fix">
+						<p:outputLabel value="#{rowVar.rejectReasons.howTo}"></p:outputLabel>
+					</p:column>
+				</p:dataTable>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="Reject Reasons For Manager" widgetVar="rejectReasonForManager" hideEffect="clip" showEffect="clip" id="dialogRejectReasonForManager" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonForManagerForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{initiatewspUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{initiatewspUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+
+							</p:selectManyMenu>
+							<br />
+							<br />
+							<p:outputLabel value="Rejection Remarks"></p:outputLabel>
+							<br />
+							<p:inputTextarea value="#{initiatewspUI.additionalInformation}"></p:inputTextarea>
+							<br />
+							<br />
+						</div>
+					</div>
+					<p:commandButton value="Reject" action="#{initiatewspUI.rejectToManager}" update="@form :tabView:signoffGroup :errorsForm :wspInfo">
+					</p:commandButton>
+				</div>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="Grant Non-Approval Reasons" widgetVar="rejectReasonFinal" hideEffect="clip" showEffect="clip" id="dialogRejectReasonFinal" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonFinalForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{initiatewspUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{initiatewspUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+
+							</p:selectManyMenu>
+							<br />
+							<br />
+							<p:outputLabel value="Rejection Remarks"></p:outputLabel>
+							<br />
+							<p:inputTextarea value="#{initiatewspUI.additionalInformation}"></p:inputTextarea>
+							<br />
+							<br />
+						</div>
+					</div>
+					<p:commandButton value="Reject" action="#{initiatewspUI.rejectToSdfToAppeal}" update="@form :tabView:signoffGroup :errorsForm :wspInfo">
+					</p:commandButton>
+				</div>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="Final Response: Rejection" widgetVar="finalRejectDlg" hideEffect="clip" showEffect="clip" id="dialogFinalReject" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="finalRejectForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<span style="color: grey"><i class="fa fa-info-circle" aria-hidden="true"></i> Provide final response for rejecting the application.</span> <br />
+							<p:inputTextarea required="true" requiredMessage="Provide Response Before Proceeding" id="finalResponseEntryReject" rows="3" value="#{initiatewspUI.wsp.finalResponse}">
+								<p:ajax />
+							</p:inputTextarea>
+						</div>
+					</div>
+					<p:commandButton value="Reject Application" id="finalRejectApplicationBtn" action="#{initiatewspUI.finalRejectGrantApplication}" />
+				</div>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="Final Response: Approve" widgetVar="finalApproveDlg" hideEffect="clip" showEffect="clip" id="dialogFinalApprove" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="finalApproveForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<span style="color: grey"><i class="fa fa-info-circle" aria-hidden="true"></i> Provide final response for approving the application.</span> <br />
+							<p:inputTextarea required="true" requiredMessage="Provide Response Before Proceeding" id="finalResponseEntryApprove" rows="3" value="#{initiatewspUI.wsp.finalResponse}">
+								<p:ajax />
+							</p:inputTextarea>
+						</div>
+					</div>
+					<p:commandButton value="Approve Application" id="finalApproveApplicationBtn" action="#{initiatewspUI.finalApproveGrantApplication}" />
+				</div>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog position="top" header="Grant Submission With Sign Off" widgetVar="grantSubWithSignOffDlg" hideEffect="clip" showEffect="clip" id="grantSubWithSignOffDIalog" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="submissionSignOffForm">
+				<h2>Submit Grant Application With Sign Off</h2>
+				<div class="EmptyBox5" />
+				<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<p:outputLabel style="font-weight:bold; color:red; font-size:18px" value="#{lang['i.acknowledge.read.understand.terms.and.conditions']}" />
+					<p:outputLabel value="#{lang['sign.off.submission.add.info']}" />
+				</p:panelGrid>
+				<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<p:commandButton onstart="uploadStart()" oncomplete="uploadDone()" icon="fa fa-check" styleClass="green-btn flat Fs18" style="height: 50px;" value="Submit With Sign Off" id="subitWithSignOffBtn" action="#{initiatewspUI.saveWSPSignoff}" process="submissionSignOffForm">
+					</p:commandButton>
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+	</ui:define>
+</ui:composition>

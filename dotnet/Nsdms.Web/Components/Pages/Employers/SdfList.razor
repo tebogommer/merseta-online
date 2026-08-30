@@ -1,0 +1,133 @@
+﻿@page "/employers/sdf"
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Domain.Entities
+@inject ISdfAppointmentService SdfService
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+
+<PageTitle>Skills Development Facilitators (SDF) | merSETA NSDMS</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
+    <!-- Top Bar -->
+    <MudCard Elevation="2" Class="mb-4">
+        <MudCardContent Class="d-flex align-center justify-space-between py-3">
+            <div>
+                <MudBreadcrumbs Items="_breadcrumbs" Class="pa-0 mb-1" />
+                <MudText Typo="Typo.h5" Class="fw-bold">Skills Development Facilitators (SDF) &amp; Appointments</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    Primary, Secondary, and Labour SDF registration, signed appointment letters, employer sign-offs, and WSP submission access delegations.
+                </MudText>
+            </div>
+            <MudStack Row="true" Spacing="2">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadDataAsync">
+                    Refresh
+                </MudButton>
+            </MudStack>
+        </MudCardContent>
+    </MudCard>
+
+    @if (_isLoading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+    }
+
+    <!-- Table -->
+    <MudCard Elevation="2">
+        <MudCardContent>
+            <MudTable Items="_appointments" Hover="true" Dense="true" Elevation="0" Filter="FilterSdf">
+                <ToolBarContent>
+                    <MudText Typo="Typo.h6">SDF Appointments (@_appointments.Count)</MudText>
+                    <MudSpacer />
+                    <MudTextField @bind-Value="_searchString" Placeholder="Search by facilitator, employer, role..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Immediate="true" />
+                </ToolBarContent>
+                <HeaderContent>
+                    <MudTh>Facilitator Name</MudTh>
+                    <MudTh>Organisation</MudTh>
+                    <MudTh>SDF Type</MudTh>
+                    <MudTh>Start Date</MudTh>
+                    <MudTh>WSP Access</MudTh>
+                    <MudTh>Status</MudTh>
+                    <MudTh Style="text-align: right;">Action</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Facilitator Name" Class="fw-bold">@(context.Person != null ? $"{context.Person.FirstName} {context.Person.LastName}" : "SDF Candidate")</MudTd>
+                    <MudTd DataLabel="Organisation">@(context.Organisation?.CompanyName ?? "Registered Employer")</MudTd>
+                    <MudTd DataLabel="SDF Type">
+                        <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">@context.SdfTypeCode SDF</MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Start Date">@context.AppointmentStartDate.ToString("dd MMM yyyy")</MudTd>
+                    <MudTd DataLabel="WSP Access">
+                        <MudChip T="string" Size="Size.Small" Color="@(context.AllowWspSubmission ? Color.Success : Color.Default)" Variant="Variant.Text">
+                            @(context.AllowWspSubmission ? "Authorized" : "Restricted")
+                        </MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Status">
+                        <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.SdfStatusCode)" Variant="Variant.Filled">
+                            @context.SdfStatusCode
+                        </MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Action" Style="text-align: right;">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Badge" OnClick="@(() => Nav.NavigateTo($"/employers/sdf/{context.Id}"))">
+                            View Appointment
+                        </MudButton>
+                    </MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager />
+                </PagerContent>
+            </MudTable>
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
+
+@code {
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Core Registries", href: "/employers"),
+        new BreadcrumbItem("SDF Appointments", href: null, disabled: true)
+    };
+
+    private List<SdfCompany> _appointments = new();
+    private bool _isLoading = true;
+    private string _searchString = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _appointments = await SdfService.GetSdfAppointmentsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to load SDF appointments: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private bool FilterSdf(SdfCompany s)
+    {
+        if (string.IsNullOrWhiteSpace(_searchString)) return true;
+        var personName = s.Person != null ? $"{s.Person.FirstName} {s.Person.LastName}" : "";
+        return personName.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+               (s.Organisation != null && s.Organisation.CompanyName.Contains(_searchString, StringComparison.OrdinalIgnoreCase)) ||
+               s.SdfTypeCode.Contains(_searchString, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private Color GetStatusColor(string status) => status switch
+    {
+        "Approved" => Color.Success,
+        "PendingApproval" => Color.Warning,
+        "Terminated" => Color.Error,
+        _ => Color.Default
+    };
+}

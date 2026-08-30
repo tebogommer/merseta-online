@@ -1,0 +1,220 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Mandatory Grants Transactions</h1>
+					<p:growl sticky="false">
+						<p:autoUpdate />
+					</p:growl>
+					<h:form id="mainForm">
+
+						<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<p:panelGrid id="schemeYearFilterGrid" layout="grid" columns="2" style="width:95%">
+								<h:panelGroup>
+									<p:outputLabel value="Apply: SARS DHET Scheme Year Filter" />
+									<p:spacer width="10" />
+									<p:selectBooleanCheckbox value="#{mandatoryGrantsTransactionGpUI.includeSchemeYearFilter}">
+										<p:ajax update="schemeYearFilterGrid" listener="#{mandatoryGrantsTransactionGpUI.clearSchemeYear}" />
+									</p:selectBooleanCheckbox>
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield" rendered="#{mandatoryGrantsTransactionGpUI.includeSchemeYearFilter}">
+									<p:inputMask requiredMessage="Provide: SARS DHET Scheme Year For Filter" value="#{mandatoryGrantsTransactionGpUI.schemeYearEntered}" style="width:95%" mask="#{mandatoryGrantsTransactionGpUI.YEAR_FORMAT}" />
+									<p:outputLabel value="SARS DHET Scheme Year" />
+								</h:panelGroup>
+							</p:panelGrid>
+						</p:panelGrid>
+
+						<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<p:commandButton icon="fa fa-search" value="View Available Entries Tally" update="availbleGrid" onstart="uploadStart()" oncomplete="uploadDone()" action="#{mandatoryGrantsTransactionGpUI.countAvalaibleEntries}" />
+						</p:panelGrid>
+
+						<p:panelGrid columns="2" id="availbleGrid" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup styleClass="md-inputfield" rendered="#{mandatoryGrantsTransactionGpUI.totalAvalibleEntries ne null}">
+								<p:inputText disabled="true" value="#{mandatoryGrantsTransactionGpUI.totalAvalibleEntries.dateGenerated}" style="width:95%">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</p:inputText>
+								<p:outputLabel value="Date Ran" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield" rendered="#{mandatoryGrantsTransactionGpUI.totalAvalibleEntries ne null}">
+								<p:inputText disabled="true" value="#{mandatoryGrantsTransactionGpUI.totalAvalibleEntries.count.intValue()}" style="width:95%" />
+								<p:outputLabel value="Total Avalaible Entries" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield" rendered="#{mandatoryGrantsTransactionGpUI.totalAvalibleEntries ne null}">
+								<p:inputText disabled="true" value="Yes" rendered="#{mandatoryGrantsTransactionGpUI.totalAvalibleEntries.schemeYearFilterApplied}" style="width:95%" />
+								<p:inputText disabled="true" value="No" rendered="#{!mandatoryGrantsTransactionGpUI.totalAvalibleEntries.schemeYearFilterApplied}" style="width:95%" />
+								<p:outputLabel value="Scheme Year Filter Applied" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield" rendered="#{mandatoryGrantsTransactionGpUI.totalAvalibleEntries ne null and mandatoryGrantsTransactionGpUI.totalAvalibleEntries.schemeYear ne null}">
+								<p:inputText disabled="true" value="#{mandatoryGrantsTransactionGpUI.totalAvalibleEntries.schemeYear}" style="width:95%" />
+								<p:outputLabel value="Scheme Year" />
+							</h:panelGroup>
+						</p:panelGrid>
+
+						<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<p:panelGrid layout="grid" columns="1" style="width:95%">
+								<span class="Fs15 gray"><i class="fa fa-info-circle" aria-hidden="true"></i> Batch Generation has been limited to: 1000 entries per batch for performance purposes.</span>
+								<div class="EmptyBox5" />
+								<p:commandButton value="Generate: Available MG Transactions" onstart="uploadStart()" oncomplete="uploadDone()" icon="ui-icon-save" update="@form :resultsForm" action="#{mandatoryGrantsTransactionGpUI.generateNewBatch}">
+									<p:confirm header="Confirmation" message="Are you sure? Action may take a few minutes to complete." icon="fa fa-exclamation-triangle" />
+								</p:commandButton>
+							</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Mandatory Grants Batch Transactions Generated</h1>
+					<h:form id="resultsForm">
+						<p:dataTable var="rowVar" value="#{mandatoryGrantsTransactionGpUI.dataModelGpGrantBatchList}" id="batchList" rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20,40" reflow="true" lazy="true">
+							<p:column headerText="Batch Number" sortBy="#{rowVar.batchNumber}">
+								<h:outputText value="MAND GRANTS #{rowVar.batchNumber}" />
+							</p:column>
+							<p:column headerText="Batch Description" filterBy="#{rowVar.batchNumber}">
+								<h:outputText value="#{rowVar.batchDescription}" />
+							</p:column>
+							<p:column headerText="Status" sortBy="#{rowVar.approvalEnum}">
+								<h:outputText value="#{rowVar.approvalEnum.friendlyName}" />
+							</p:column>
+							<p:column headerText="From Date Selected" sortBy="#{rowVar.approvalEnum}" exportable="false" rendered="false">
+								<h:outputText value="#{rowVar.fromDatePeriod}">
+									<f:convertDateTime pattern="dd MMMM yyyy" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="To Date Selected" sortBy="#{rowVar.approvalEnum}" exportable="false" rendered="false">
+								<h:outputText value="#{rowVar.toDatePeriod}">
+									<f:convertDateTime pattern="dd MMMM yyyy" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="GP Transaction Complete" exportable="false" styleClass="action-column">
+								<p:selectBooleanCheckbox value="#{rowVar.completedGpTransation}" disabled="true" />
+							</p:column>
+							<p:column headerText="GP Transaction Complete" style="display:none">
+								<h:outputText value="Completed" rendered="#{rowVar.completedGpTransation}" />
+								<h:outputText value="N/A" rendered="#{!rowVar.completedGpTransation}" />
+							</p:column>
+							<p:column headerText="GP Transaction Time">
+								<h:outputText value="#{rowVar.dateCompletedGpTransation}" rendered="#{rowVar.dateCompletedGpTransation ne null}">
+									<f:convertDateTime pattern="dd MMMM yyyy" />
+								</h:outputText>
+								<h:outputText value="N/A" rendered="#{rowVar.dateCompletedGpTransation eq null}">
+								</h:outputText>
+							</p:column>
+							<p:column width="30">
+								<p:commandButton icon="ui-icon-play-for-work" title="View Entries" action="#{mandatoryGrantsTransactionGpUI.selectBatchListToView}" update="resultsForm">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{mandatoryGrantsTransactionGpUI.gpGrantBatchList}" />
+								</p:commandButton>
+								<p:commandButton icon="fa fa-list" update="tasksViewForm" title="View Tasks Assigned" action="#{mandatoryGrantsTransactionGpUI.viewActiveContractsTasks}">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{mandatoryGrantsTransactionGpUI.gpGrantBatchListTaskView}" />
+								</p:commandButton>
+								<p:commandButton value="TEST GP" action="#{mandatoryGrantsTransactionGpUI.testBatchSend}" update="@form" rendered="false">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{mandatoryGrantsTransactionGpUI.gpGrantBatchList}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+						<div class="EmptyBox10" />
+						<p:panelGrid layout="grid" columns="1" style="width:100%" rendered="#{mandatoryGrantsTransactionGpUI.gpGrantBatchList ne null}">
+
+							<div class="EmptyBox10" />
+
+							<ui:include src="/pages/includes/download_lazy.xhtml">
+								<ui:param name="file_name" value="Entries_To_Be_Processed_From_Batch" />
+								<ui:param name="target" value="batchEntryList" />
+							</ui:include>
+
+							<div class="EmptyBox20" />
+
+							<p:dataTable var="rowVarE" value="#{mandatoryGrantsTransactionGpUI.dataModelGpGrantBatchEntry}" id="batchEntryList" rowKey="#{rowVarE.id}" paginator="true" rows="5" paginatorPosition="bottom"
+								paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20,40" reflow="true" lazy="true">
+								<p:column headerText="Reference ID" sortBy="#{rowVarE.id}">
+									<p:outputLabel value="#{rowVarE.id}" />
+								</p:column>
+								<p:column headerText="Creditor ID" sortBy="#{rowVarE.levyNumber}" filterBy="#{rowVarE.levyNumber}">
+									<p:outputLabel value="#{rowVarE.levyNumber}" />
+								</p:column>
+								<p:column headerText="Description">
+									<h:outputText value="#{rowVarE.description}">
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Batch Number">
+									<h:outputText value="GRANTS #{rowVarE.gpGrantBatchList.batchNumber}">
+									</h:outputText>
+								</p:column>
+								<p:column headerText="SARS DHET Scheme Year">
+									<h:outputText value="#{rowVarE.schemeYear}">
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Document Type">
+									<h:outputText value="#{rowVarE.documentTypeMandatory.friendlyName}">
+									</h:outputText>
+								</p:column>
+								<p:column headerText="SARS Date Received" sortBy="#{rowVarE.arrivalDateFromSars}">
+									<h:outputText value="#{rowVarE.arrivalDateFromSars}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Document Number">
+									<p:outputLabel value="#{rowVarE.documentNumber}" />
+								</p:column>
+								<p:column headerText="GP Document Number">
+									<p:outputLabel value="#{rowVarE.gpDocumentNumer}" />
+								</p:column>
+								<p:column headerText="Mandatory Levy">
+									<p:outputLabel value="#{rowVarE.mandatoryLevy}" styleClass="Fright">
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</p:outputLabel>
+								</p:column>
+								<p:column headerText="Levy (100%)" rendered="false">
+									<p:outputLabel value="#{rowVarE.fullLevyAmount}" styleClass="Fright">
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</p:outputLabel>
+								</p:column>
+								<p:column headerText="Levy (80%)" rendered="false">
+									<p:outputLabel value="#{rowVarE.total}" styleClass="Fright">
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</p:outputLabel>
+								</p:column>
+								<p:column headerText="Percentage" rendered="false">
+									<p:outputLabel value="#{rowVarE.fullPercentageCalculation}" styleClass="Fright">
+										<f:convertNumber maxFractionDigits="2" />
+									</p:outputLabel>
+								</p:column>
+								<p:column headerText="Loaded On To GP" sortBy="#{rowVarE.loadedToGp}">
+									<center>
+										<p:selectBooleanCheckbox disabled="true" value="#{rowVarE.loadedToGp}" />
+									</center>
+								</p:column>
+								<p:column headerText="Test GP" rendered="false">
+									<p:commandButton value="TEST GP" action="#{mandatoryGrantsTransactionGpUI.testGpSend}" update="@form">
+										<f:setPropertyActionListener value="#{rowVarE}" target="#{mandatoryGrantsTransactionGpUI.gpGrantBatchEntry}" />
+									</p:commandButton>
+								</p:column>
+							</p:dataTable>
+							<div class="EmptyBox10" />
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+			<h:form>
+				<p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="fa fa-check" />
+				<p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="fa fa-times" />
+			</h:form>
+		</p:confirmDialog>
+
+		<p:dialog position="top" header="Tasks View" widgetVar="tasksDlg" resizable="false" hideEffect="clip" showEffect="clip" id="tasksDialog" appendTo="@(body)" modal="true" width="70%" height="80vh" responsive="true" dynamic="true">
+			<h:form id="tasksViewForm">
+				<ui:include src="/pages/includes/taskInformationInclude.xhtml">
+					<ui:param name="TaskList" value="#{mandatoryGrantsTransactionGpUI.tasksDataModel}" />
+					<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+				</ui:include>
+				<div class="EmptyBox10" />
+				<p:commandButton value="Close View" icon="fa fa-times" process="@this" update="@form :mainForm" action="#{mandatoryGrantsTransactionGpUI.closeTaskView}" />
+			</h:form>
+		</p:dialog>
+	</ui:define>
+</ui:composition>

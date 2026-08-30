@@ -1,0 +1,213 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">				
+				<h:form id="mainForm">
+					<div class="card card-w-title">
+					<p:growl showDetail="false" sticky="false" id="msg">
+						<p:autoUpdate />
+					</p:growl>
+					<p:tooltip position="left" />
+					<h1>Search Company</h1>
+					<ui:include src="/pages/includes/filterGuide.xhtml" />
+					<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+					<p:importEnum type="haj.com.entity.enums.UsersStatusEnum" />
+					
+					<p:dataTable value="#{companyLearnersMentorRatiotUI.companies}" var="rv" reflow="true" emptyMessage="#{lang['no.records.found']}" paginatorPosition="bottom" rendered="#{companyLearnersMentorRatiotUI.companies ne null}"
+						 rows="10"  paginator="true"  paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+		                 rowsPerPageTemplate="10,20,30,40,50,60,70,80,90,100,150,200">
+
+						<p:column headerText="#{lang['companyName']}" filterBy="#{rv.companyName}" sortBy="#{rv.companyName}">
+							#{rv.companyName}
+						</p:column>
+						<p:column headerText="#{lang['companyRegistrationNumber']}" filterBy="#{rv.companyRegistrationNumber}" sortBy="#{rv.companyRegistrationNumber}">
+							#{rv.companyRegistrationNumber}
+						</p:column>
+						<p:column headerText="#{lang['entity.id']}" filterBy="#{rv.levyNumber}" sortBy="#{rv.levyNumber}">
+							#{rv.levyNumber}
+						</p:column>
+						<p:column headerText="#{lang['company.status']}" width="10%">#{lang[rv.companyStatus.registrationName]}</p:column>
+						<p:column headerText="Size of Company" width="10%">#{rv.sizeOfCompany.detailDescription}</p:column>
+						<p:column headerText="#{lang['levy.paying']}" width="110" style="text-align:center">
+							<p:outputPanel rendered="#{rv.nonLevyPaying}">
+								<i class="fa fa-times fa-3x red" aria-hidden="true"></i>
+							</p:outputPanel>
+							<p:outputPanel rendered="#{not rv.nonLevyPaying}">
+								<i class="fa fa-check fa-3x green" aria-hidden="true"></i>
+							</p:outputPanel>
+						</p:column>
+						<p:column headerText="#{lang['view.edit']}" width="110" style="text-align:center">
+							<p:commandButton icon="fa fa-search" title="View Requests" update="mainForm" action="#{companyLearnersMentorRatiotUI.learnersInfo()}" process="@this">
+								<f:setPropertyActionListener value="#{rv}" target="#{companyLearnersMentorRatiotUI.company}" />
+							</p:commandButton>
+						</p:column>
+					</p:dataTable>
+					
+					<p:dataTable var="rowVar" value="#{companyLearnersMentorRatiotUI.companyDataModel}" id="siccodeList" rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom" rendered="#{companyLearnersMentorRatiotUI.companyDataModel ne null}"
+						paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,20,40" reflow="true" lazy="true" selectionMode="single" selection="#{companyLearnersMentorRatiotUI.company}">
+						<p:ajax event="rowSelect" update="mainForm" listener="#{companyLearnersMentorRatiotUI.learnersInfo()}" />
+						<p:column headerText="#{lang['company.name']}" filterBy="#{rowVar.companyName}" sortBy="#{rowVar.companyName}" filterStyle="width: 95%">
+							<h:outputText value="#{rowVar.companyName}" />
+						</p:column>
+						<p:column headerText="#{lang['tradingName']}" filterBy="#{rowVar.tradingName}" sortBy="#{rowVar.tradingName}" filterStyle="width: 95%">
+							<h:outputText value="#{rowVar.tradingName}" />
+						</p:column>
+						<p:column headerText="#{lang['entity.id']}" filterBy="#{rowVar.levyNumber}" sortBy="#{rowVar.levyNumber}" filterStyle="width: 95%" width="10%">
+							<h:outputText value="#{rowVar.levyNumber}" />
+						</p:column>
+						<p:column headerText="#{lang['status']}" sortBy="#{rowVar.companyStatus}" width="10%">
+							<h:outputText value="#{lang[rowVar.companyStatus.registrationName]}" />
+						</p:column>
+					</p:dataTable>	
+					</div>
+					
+					<c:if test="#{companyLearnersMentorRatiotUI.company ne null and companyLearnersMentorRatiotUI.dataModel ne null}">
+						<div class="card card-w-title">
+						<H1>Learner Mentor Ratio List</H1>
+							<ui:include src="/pages/includes/download_lazy.xhtml">
+								<ui:param name="file_name" value="learnersList" />
+								<ui:param name="target" value="learnersList" />
+							</ui:include>
+							<ui:include src="/pages/includes/filterGuide.xhtml" />
+							<p:dataTable var="rowVar" value="#{companyLearnersMentorRatiotUI.dataModel}" filteredValue="#{companyLearnersMentorRatiotUI.learnersfilteredList}" id="learnersList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25"
+								reflow="true" lazy="true">
+
+								<p:column headerText="#{lang['first.name']}" filterBy="#{rowVar.user.firstName}" sortBy="#{rowVar.user.firstName}">
+									<h:outputText value="#{rowVar.user.firstName}" />
+								</p:column>
+								<p:column headerText="#{lang['last.name']}" filterBy="#{rowVar.user.lastName}" sortBy="#{rowVar.user.lastName}">
+									<h:outputText value="#{rowVar.user.lastName}" />
+								</p:column>
+								<p:column headerText="Identity Number" filterBy="#{rowVar.user.rsaIDNumber}" sortBy="#{rowVar.user.rsaIDNumber}">
+									<h:outputText value="#{rowVar.user.rsaIDNumber}" />
+									<h:outputText rendered="#{rowVar.user.rsaIDNumber.length() lt 1}" value="N/A" />
+								</p:column>
+								<p:column headerText="Passport Number" filterBy="#{rowVar.user.rsaIDNumber}" sortBy="#{rowVar.user.rsaIDNumber}">
+									<h:outputText rendered="#{rowVar.user.passportNumber.length() lt 1}" value="N/A" />
+									<h:outputText value="#{rowVar.user.passportNumber}" />
+								</p:column>
+								<p:column headerText="Employment Status" >
+									<h:outputText value="#{rowVar.employmentStatus.friendlyName}" />
+								</p:column>
+								<p:column headerText="Status">
+									<h:outputText value="#{rowVar.learnerStatus.friendlyName}" />
+								</p:column>
+								<p:column headerText="Intervention Type" filterBy="#{rowVar.interventionType.description}" sortBy="#{rowVar.interventionType.description}">
+									<h:outputText value="#{rowVar.interventionType.description}" />
+								</p:column>
+								
+								<p:column headerText="Course / Qualification" width="20%">
+									
+									<h:outputText value="(#{rowVar.learnership.code})" rendered="#{rowVar.learnership.code ne null}"/>
+									<h:outputText value="#{rowVar.learnership.description}" rendered="#{rowVar.learnership.description ne null}"/>
+									<p:spacer width="5" rendered="#{rowVar.learnership.description ne null}" />
+									<h:outputText value="(#{rowVar.learnership.qualification.codeString})" rendered="#{rowVar.learnership.qualification.codeString ne null}"/>
+									<h:outputText value="#{rowVar.learnership.qualification.description}" rendered="#{rowVar.learnership.qualification.description ne null}"/>
+									
+									<h:outputText value="(#{rowVar.skillsSet.programmeID})" rendered="#{rowVar.skillsSet ne null}" />
+									<h:outputText value="#{rowVar.skillsSet.description}" rendered="#{rowVar.skillsSet ne null}" />
+									
+									<h:outputText value="(#{rowVar.skillsProgram.programmeID})" rendered="#{rowVar.skillsProgram ne null}" />
+									<h:outputText value="#{rowVar.skillsProgram.description}" rendered="#{rowVar.skillsProgram ne null}" />
+									
+									<h:outputText value="(#{rowVar.unitStandard.code})" rendered="#{rowVar.unitStandard ne null}" />
+									<h:outputText value="#{rowVar.unitStandard.title}" rendered="#{rowVar.unitStandard ne null}" />
+									
+									<h:outputText value="#{rowVar.nonCredidBearingDescription}" rendered="#{rowVar.nonCredidBearingDescription ne null}" />
+									
+									<h:outputText value="(#{rowVar.qualification.code})" rendered="#{rowVar.qualification ne null and rowVar.skillsProgram eq null and rowVar.learnership eq null and rowVar.unitStandard eq null}"/>
+									<h:outputText value="#{rowVar.qualification.description}" rendered="#{rowVar.qualification ne null and rowVar.skillsProgram eq null and rowVar.learnership eq null and rowVar.unitStandard eq null}"/>
+								</p:column>
+								<p:column headerText="Completion Date" rendered="false">
+									<h:outputText value="#{rowVar.completionDate}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</h:outputText>
+								</p:column>
+
+								<p:column headerText="Registration Status Date">
+									<h:outputText value="#{rowVar.registeredDate}" rendered="#{rowVar.legacyRegistrationDate eq null}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</h:outputText>
+									<h:outputText value="#{rowVar.legacyRegistrationDate}" rendered="#{rowVar.legacyRegistrationDate ne null}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</h:outputText>
+								</p:column>
+								
+								<p:column headerText="Agreement End Date">
+									<h:outputText value="#{rowVar.completionDate}" rendered="#{rowVar.completionDate ne null}">
+									<f:convertDateTime pattern="dd MMMM yyyy" />
+									</h:outputText>
+								</p:column>
+
+								<p:column headerText="Agreement Number">
+									<h:outputText value="#{rowVar.registrationNumber}">
+									</h:outputText>
+								</p:column>
+								
+								<p:column headerText="Employer" filterBy="#{rowVar.employer.companyName}" sortBy="#{rowVar.employer.companyName}">
+									<h:outputText value="#{rowVar.employer.companyName}" rendered="#{rowVar.employer ne null}">
+									</h:outputText>
+								</p:column>
+								
+								<p:column headerText="Entity ID" filterBy="#{rowVar.employer.levyNumber}" sortBy="#{rowVar.employer.levyNumber}">
+									<h:outputText value="#{rowVar.employer.levyNumber}">
+									</h:outputText>
+								</p:column>
+
+								<p:column headerText="Provider" filterBy="#{rowVar.company.companyName}" sortBy="#{rowVar.company.companyName}" rendered="false">
+									<h:outputText value="#{rowVar.company.companyName}" rendered="#{rowVar.company ne null}">
+									</h:outputText>
+								</p:column>
+								
+								<p:column headerText="Accreditation Number" filterBy="#{rowVar.company.accreditationNumber}" sortBy="#{rowVar.company.accreditationNumber}" rendered="false">
+									<h:outputText value="#{rowVar.company.accreditationNumber}">
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Chamber">
+									<h:outputText value="#{rowVar.company.sicCode.chamber.description}">
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Region">
+									<h:outputText value="#{rowVar.company.region.description}">
+									</h:outputText>
+								</p:column>
+								
+								<p:column headerText="Mentor Name" sortBy="#{rowVar.smeQualification.sitesSme.firstName}" filterBy="#{rowVar.smeQualification.sitesSme.firstName}">
+									<h:outputText value="#{rowVar.sitesSme.firstName}" rendered="#{rowVar.sitesSme ne null}"/>
+									<h:outputText value="#{rowVar.smeQualification.sitesSme.firstName}" rendered="#{rowVar.smeQualification.sitesSme ne null}"/>
+								</p:column>
+								
+								<p:column headerText="Mentor Surname" sortBy="#{rowVar.smeQualification.sitesSme.lastName}" filterBy="#{rowVar.smeQualification.sitesSme.lastName}">
+									<h:outputText value="#{rowVar.sitesSme.lastName}" rendered="#{rowVar.sitesSme ne null}"/>
+									<h:outputText value="#{rowVar.smeQualification.sitesSme.lastName}" rendered="#{rowVar.smeQualification.sitesSme ne null}"/>
+								</p:column>
+								
+								<p:column headerText="Mentor ID Number" filterBy="#{rowVar.smeQualification.sitesSme.identityNumber}" sortBy="#{rowVar.smeQualification.sitesSme.identityNumber}">
+									<h:outputText value="#{rowVar.sitesSme.identityNumber}" rendered="#{rowVar.sitesSme ne null}"/>
+									<h:outputText value="#{rowVar.smeQualification.sitesSme.identityNumber}" rendered="#{rowVar.smeQualification.sitesSme ne null}"/>
+								</p:column>
+								
+								<p:column headerText="Mentor Passport Number" filterBy="#{rowVar.smeQualification.sitesSme.passportNumber}" sortBy="#{rowVar.smeQualification.sitesSme.passportNumber}">
+									<h:outputText value="#{rowVar.sitesSme.passportNumber}" rendered="#{rowVar.sitesSme ne null}"/>
+									<h:outputText value="#{rowVar.smeQualification.sitesSme.passportNumber}" rendered="#{rowVar.smeQualification.sitesSme ne null}"/>
+								</p:column>
+							</p:dataTable>
+							
+							
+							<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+								<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+								<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+							</p:confirmDialog>
+						</div>
+					</c:if>
+				</h:form>
+			</div>
+		</div>
+
+		<ui:include src="/pages/tp/includes/dialogs.xhtml" />
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+
+	</ui:define>
+
+</ui:composition>

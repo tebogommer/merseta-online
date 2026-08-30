@@ -1,0 +1,23 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:o="http://omnifaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:p="http://primefaces.org/ui">
+	<p:importEnum type="haj.com.entity.enums.IdPassportEnum" var="idPassportEnum"></p:importEnum>
+	<p:fieldset id="searchRsaIdOrPassport" legend="#{lang['enter.RSA.ID.number.or.passport.number']} For Legal Gaurdian">
+		<p:panelGrid id="searchRsaIdOrPassportPnl1" columns="3" styleClass="ui-panelgrid-blank form-group">
+			<p:selectOneRadio id="passNumID1" value="#{searchUserPassportOrIdUI.idpassport}" columns="1" layout="responsive">
+				<p:ajax update="@form" />
+				<f:selectItems value="#{enumUI.idPassportEnumDD}" var="idpassEnum" itemLabel="#{idpassEnum}" itemValue="#{idpassEnum}" />
+			</p:selectOneRadio>
+			<h:panelGroup id="rsaIDInput1" styleClass="md-inputfield" rendered="#{searchUserPassportOrIdUI.idpassport eq idPassportEnum.RsaId}">
+				<p:inputText id="rsaIdCriteria1"  maxlength="#{searchUserPassportOrIdUI.MAX_RSA_ID_NUMBER}" value="#{searchUserPassportOrIdUI.idnumber}" style="width:95%" requiredMessage="#{lang['rsa.id.number']} " required="true">
+				</p:inputText>
+				<p:outputLabel value="#{lang['rsa.id.number']}" for="rsaIdCriteria1" />
+			</h:panelGroup>
+			<h:panelGroup id="passportNumInput1" styleClass="md-inputfield" rendered="#{searchUserPassportOrIdUI.idpassport eq idPassportEnum.Passport}">
+				<p:inputText validatorMessage="#{lang['user.passport.length']}" id="passportNumCriteria1" maxlength="#{searchUserPassportOrIdUI.MAX_PASSPORT_NUMBER}" value="#{searchUserPassportOrIdUI.passportNumber}" style="width:95%" requiredMessage="#{lang['passport.number']}" required="true">
+				</p:inputText>
+				<h:message for="passportNumCriteria1" />
+				<p:outputLabel value="#{lang['passport.number']}" for="passportNumCriteria1" />
+			</h:panelGroup>
+			<p:commandButton id="idPassBtn1" icon="fa fa-search" value="Submit" process="searchRsaIdOrPassport" actionListener="#{searchUserPassportOrIdUI.findUserByIDOrPassport}" update="legalOutputPanel" rendered="#{searchUserPassportOrIdUI.idpassport ne null}" />
+		</p:panelGrid>
+	</p:fieldset>
+</ui:composition>

@@ -292,7 +292,7 @@ public class FinanceService : IFinanceService
         using var context = await _contextFactory.CreateDbContextAsync();
         var approvedWsps = await context.WspSubmissions
             .Include(w => w.Organisation)
-            .Where(w => w.FinYear == finYear && (w.StatusCode == "Approved" || w.StatusCode == "Approved by CLO" || w.StatusCode == "SUBMITTED"))
+            .Where(w => w.FinYear == finYear && (w.WspApprovalStatusCode == "Approved" || w.WspApprovalStatusCode == "Approved by CLO" || w.WspApprovalStatusCode == "SUBMITTED" || w.WspApprovalStatusCode == "APPROVED"))
             .ToListAsync();
 
         int createdCount = 0;

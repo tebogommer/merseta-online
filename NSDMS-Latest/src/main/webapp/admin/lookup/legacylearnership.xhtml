@@ -1,0 +1,439 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+		<p:growl sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+						<h1>Legacy Data: Learnership</h1>
+
+						<p:outputLabel value="Data Source: Learnership.xlsx " />
+						<br />
+						<p:outputLabel value="Tab: Learnership " />
+						<div class="EmptyBox10" />
+
+						<p:commandButton value="Upload CSV" oncomplete="PF('csvUploadDlg').show()" update=":uploadFormCSF" action="#{legacylearnershipUI.prepTypeSelection}" />
+						<div class="EmptyBox10" />
+
+						<p:commandButton value="Clear Uploaded Entries" update="@form" action="#{legacylearnershipUI.clearUploadedEntries}" onstart="uploadStart()" oncomplete="uploadDone()" />
+						<div class="EmptyBox10" />
+						
+						<p:commandButton update="@form" action="#{legacylearnershipUI.runValidiations}" value="Run Validiation" onstart="uploadStart()" oncomplete="uploadDone()" />
+						<div class="EmptyBox10" />
+						
+						<p:commandButton update="@form" action="#{legacylearnershipUI.runQualificationValidiations}" value="Run Learnership Validiation" onstart="uploadStart()" oncomplete="uploadDone()" />
+						<div class="EmptyBox10" />
+						
+						<p:commandButton value="Update Accreditaion" oncomplete="PF('uploadVerDlg').show()" process="@this" update="updateVer" action="#{legacylearnershipUI.prepAccreditaionUpdate}" />
+						<div class="EmptyBox10" />
+						
+						<p:commandButton value="Update Leanership" oncomplete="PF('uploadLeanershipDlg').show()" process="@this" update="updateLeanership" action="#{legacylearnershipUI.prepAccreditaionUpdate}" />
+						<div class="EmptyBox10" />
+						
+						<p:panelGrid columns="1" style="width:100%" id="downloadGrid" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{sessionUI.employee or sessionUI.activeUser.admin}">
+							<p:commandButton icon="fa fa-download" value="Download Report" ajax="false" action="#{legacylearnershipUI.downloadReport}" />
+						</p:panelGrid>
+
+						<p:dataTable var="rowVar" value="#{legacylearnershipUI.dataModel}" filteredValue="#{legacylearnershipUI.legacyLearnershipfilteredList}" id="legacylearnershipList" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+							<p:column style="width:5%" headerText="Expand">
+								<p:rowToggler />
+							</p:column>
+
+
+							<p:column headerText="NSDMS REF ID" style="width:3%">
+								<h:outputText value="#{rowVar.id}" />
+							</p:column>
+							<p:column headerText="AgreementId" style="width:3%">
+								<h:outputText value="#{rowVar.agreementId}" />
+							</p:column>
+							<p:column headerText="IDNo" style="width:5%" filterBy="#{rowVar.idNo}">
+								<h:outputText value="#{rowVar.idNo}" />
+							</p:column>
+							<p:column headerText="Firstname" style="width:5%" filterBy="#{rowVar.firstname}">
+								<h:outputText value="#{rowVar.firstname}" />
+							</p:column>
+							<p:column headerText="MiddleNames" style="width:5%">
+								<h:outputText value="#{rowVar.middleNames}" />
+							</p:column>
+							<p:column headerText="Surname" style="width:5%" filterBy="#{rowVar.surname}">
+								<h:outputText value="#{rowVar.surname}" />
+							</p:column>
+							<p:column headerText="LearnershipCode" style="width:10%">
+								<h:outputText value="#{rowVar.learnershipCode}" />
+							</p:column>
+							<p:column headerText="LearnershipTitle" style="width:15%">
+								<h:outputText value="#{rowVar.learnershipTitle}" />
+							</p:column>
+							<p:column headerText="LshipCode" style="width:5%">
+								<h:outputText value="#{rowVar.lShipCode}" />
+							</p:column>
+							<p:column headerText="AgreementRefNo" style="width:5%">
+								<h:outputText value="#{rowVar.agreementRefNo}" />
+							</p:column>
+							<p:column headerText="AgreementStartDate" style="width:5%">
+								<h:outputText value="#{rowVar.agreementStartDate}" />
+							</p:column>
+							<p:column headerText="EmployerSDL" style="width:5%" filterBy="#{rowVar.employerSdl}">
+								<h:outputText value="#{rowVar.employerSdl}" />
+							</p:column>
+							<p:column headerText="ProviderSDL" style="width:5%" filterBy="#{rowVar.providerSdl}">
+								<h:outputText value="#{rowVar.providerSdl}" />
+							</p:column>
+							<p:column headerText="AccreditationNumber" style="width:5%" filterBy="#{rowVar.accreditationNumber}">
+								<h:outputText value="#{rowVar.accreditationNumber}" />
+							</p:column>		
+							<p:column headerText="Learnership" style="width:20%">
+								<h:panelGroup styleClass="md-inputfield" style="margin-top: 19px" id="learnershipPanelReg">		
+									<p:autoComplete id="learnershipPanelRegistration" value="#{rowVar.learnership}" completeMethod="#{autoCompleteUI.completeLearnerships}" 
+													var="rv" itemLabel="#{rv.code}" itemValue="#{rv}" forceSelection="true" converter="LearnershipConvertor" required="false" requiredMessage="Please Select Learnership" dropdown="true" minQueryLength="3" maxResults="10"
+													inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+										<p:ajax event="itemSelect" />
+										<p:column headerText="Learnership #{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+										<p:column headerText="Learnership #{lang['description']}" style="white-space: nowrap">#{rv.description}</p:column>
+									</p:autoComplete>
+									<p:outputLabel value="Learnership" for="learnershipPanelRegistration" styleClass="gray" />
+								</h:panelGroup>
+							</p:column>							
+							<p:column style="width:3%" >
+								<p:commandButton icon="fa fa-save" title="#{lang['save']}" update=":mainForm:legacylearnershipList" action="#{legacylearnershipUI.legacylearnershipInsert()}" process="@this">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{legacylearnershipUI.legacylearnership}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:legacylearnershipList" action="#{legacylearnershipUI.legacylearnershipDelete}" rendered="false">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{legacylearnershipUI.legacylearnership}" />
+								</p:commandButton>
+							</p:column>
+							
+							<p:column width="80">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update="updateForm" oncomplete="PF('updateDialog').show()" action="#{legacylearnershipUI.prepareLegacyLearnership}" immediate="true">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{legacylearnershipUI.legacylearnership}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:legacylearnershipList" action="#{legacylearnershipUI.legacylearnershipDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{legacylearnershipUI.legacylearnership}" />
+								</p:commandButton>
+							</p:column>
+
+							<p:rowExpansion>
+								<p:fieldset legend="NSDMS REF ID: #{rowVar.id}" style="margin-bottom:20px">
+									<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rowVar.agreementEndDate}" style="width:95%" disabled="true" />
+											<p:outputLabel value="AgreementEndDate" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rowVar.agreementStatusDesc}" style="width:95%" disabled="true" />
+											<p:outputLabel value="AgreementStatusDesc" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rowVar.agreementStatusEffectiveDate}" style="width:95%" disabled="true" />
+											<p:outputLabel value="AgreementStatusEffectiveDate" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rowVar.lastDateChanged}" style="width:95%" disabled="true" />
+											<p:outputLabel value="LastDateChanged" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rowVar.created}" style="width:95%" disabled="true" />
+											<p:outputLabel value="Created" />
+										</h:panelGroup>
+										
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rowVar.organisationNameLegal}" style="width:95%" disabled="true" />
+											<p:outputLabel value="OrganisationNameLegal" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rowVar.organisationNameTrade}" style="width:95%" disabled="true" />
+											<p:outputLabel value="OrganisationNameTrade" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rowVar.providerSdl}" style="width:95%" disabled="true" />
+											<p:outputLabel value="ProviderSDL" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rowVar.accreditationNumber}" style="width:95%" disabled="true" />
+											<p:outputLabel value="AccreditationNumber" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rowVar.dolOrganisationNameLegal}" style="width:95%" disabled="true" />
+											<p:outputLabel value="DOLOrganisationNameLegal" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rowVar.funded}" style="width:95%" disabled="true" />
+											<p:outputLabel value="Funded" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rowVar.projectType}" style="width:95%" disabled="true" />
+											<p:outputLabel value="ProjectType" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rowVar.previousLearnership}" style="width:95%" disabled="true" />
+											<p:outputLabel value="PreviousLearnership" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rowVar.prevLearnershipTitle}" style="width:95%" disabled="true" />
+											<p:outputLabel value="PrevLearnershipTitle" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rowVar.prevLearnerhipCode}" style="width:95%" disabled="true" />
+											<p:outputLabel value="PrevLearnerhipCode" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rowVar.previousEmployed}" style="width:95%" disabled="true" />
+											<p:outputLabel value="PreviousEmployed" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rowVar.learnerEmployed}" style="width:95%" disabled="true" />
+											<p:outputLabel value="LearnerEmployed" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rowVar.durationLearnerEmployed}" style="width:95%" disabled="true" />
+											<p:outputLabel value="DurationLearneremployed" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rowVar.registrationDate}" style="width:95%" disabled="true" />
+											<p:outputLabel value="RegistrationDate" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rowVar.captureDate}" style="width:95%" disabled="true" />
+											<p:outputLabel value="CaptureDate" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rowVar.socioEcoStatusDesc}" style="width:95%" disabled="true" />
+											<p:outputLabel value="SocioEcoStatusDesc" />
+										</h:panelGroup>
+									</p:panelGrid>
+								</p:fieldset>
+							</p:rowExpansion>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+		<p:dialog widgetVar="csvUploadDlg" modal="true" width="50%" responsive="true">
+			<h:form id="uploadFormCSF" enctype="multipart/form-data">
+				<p:outputLabel value="CSV Type:" />
+				<p:selectOneMenu id="csvType" value="#{legacylearnershipUI.csvTypeSelection}" style="width:100%">
+					<f:selectItems value="#{legacylearnershipUI.csvTypeSelectionList}" />
+					<p:ajax />
+				</p:selectOneMenu>
+				<br />
+				<div class="EmptyBox10" />
+				<p:fileUpload fileUploadListener="#{legacylearnershipUI.handleFileUpload}" dragDropSupport="true" showButtons="false" label="Select CSV file to import" multiple="false" allowTypes="/(\.|\/)(csv|CSV)$/" fileLimit="1" auto="true" mode="advanced" update=":mainForm" oncomplete="PF('csvUploadDlg').hide()" />
+			</h:form>
+		</p:dialog>
+		
+		<p:dialog header="Update Legacy Learnership" widgetVar="updateDialog" resizable="false" hideEffect="clip" showEffect="clip" id="dlgID" width="70%" responsive="true" modal="true" dynamic="true">
+				<h:form id="updateForm">
+					<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacylearnershipUI.legacylearnership.agreementId}" style="width:95%" disabled="false" />
+							<p:outputLabel value="AgreementId" />
+						</h:panelGroup>
+						
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacylearnershipUI.legacylearnership.idNo}" style="width:95%" disabled="false" />
+							<p:outputLabel value="IDNo" />
+						</h:panelGroup>
+						
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacylearnershipUI.legacylearnership.firstname}" style="width:95%" disabled="false" />
+							<p:outputLabel value="Firstname" />
+						</h:panelGroup>
+						
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacylearnershipUI.legacylearnership.middleNames}" style="width:95%" disabled="false" />
+							<p:outputLabel value="MiddleNames" />
+						</h:panelGroup>
+						
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacylearnershipUI.legacylearnership.surname}" style="width:95%" disabled="false" />
+							<p:outputLabel value="Surname" />
+						</h:panelGroup>
+						
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacylearnershipUI.legacylearnership.learnershipCode}" style="width:95%" disabled="false" />
+							<p:outputLabel value="LearnershipCode" />
+						</h:panelGroup>
+							
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacylearnershipUI.legacylearnership.learnershipTitle}" style="width:95%" disabled="false" />
+							<p:outputLabel value="LearnershipTitle" />
+						</h:panelGroup>
+						
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacylearnershipUI.legacylearnership.lShipCode}" style="width:95%" disabled="false" />
+							<p:outputLabel value="LshipCode" />
+						</h:panelGroup>
+						
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacylearnershipUI.legacylearnership.agreementRefNo}" style="width:95%" disabled="false" />
+							<p:outputLabel value="AgreementRefNo" />
+						</h:panelGroup>
+							
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacylearnershipUI.legacylearnership.agreementStartDate}" style="width:95%" disabled="false" />
+							<p:outputLabel value="AgreementStartDate" />
+						</h:panelGroup>
+						
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacylearnershipUI.legacylearnership.agreementEndDate}" style="width:95%" disabled="false" />
+							<p:outputLabel value="AgreementEndDate" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacylearnershipUI.legacylearnership.agreementStatusDesc}" style="width:95%" disabled="false" />
+							<p:outputLabel value="AgreementStatusDesc" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacylearnershipUI.legacylearnership.agreementStatusEffectiveDate}" style="width:95%" disabled="false" />
+							<p:outputLabel value="AgreementStatusEffectiveDate" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacylearnershipUI.legacylearnership.lastDateChanged}" style="width:95%" disabled="false" />
+							<p:outputLabel value="LastDateChanged" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacylearnershipUI.legacylearnership.created}" style="width:95%" disabled="false" />
+							<p:outputLabel value="Created" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacylearnershipUI.legacylearnership.employerSdl}" style="width:95%" disabled="false" />
+							<p:outputLabel value="EmployerSDL" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacylearnershipUI.legacylearnership.organisationNameLegal}" style="width:95%" disabled="false" />
+							<p:outputLabel value="OrganisationNameLegal" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacylearnershipUI.legacylearnership.organisationNameTrade}" style="width:95%" disabled="false" />
+							<p:outputLabel value="OrganisationNameTrade" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacylearnershipUI.legacylearnership.providerSdl}" style="width:95%" disabled="false" />
+							<p:outputLabel value="ProviderSDL" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacylearnershipUI.legacylearnership.accreditationNumber}" style="width:95%" disabled="false" />
+							<p:outputLabel value="AccreditationNumber" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacylearnershipUI.legacylearnership.dolOrganisationNameLegal}" style="width:95%" disabled="false" />
+							<p:outputLabel value="DOLOrganisationNameLegal" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacylearnershipUI.legacylearnership.funded}" style="width:95%" disabled="false" />
+							<p:outputLabel value="Funded" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacylearnershipUI.legacylearnership.projectType}" style="width:95%" disabled="false" />
+							<p:outputLabel value="ProjectType" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacylearnershipUI.legacylearnership.previousLearnership}" style="width:95%" disabled="false" />
+							<p:outputLabel value="PreviousLearnership" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacylearnershipUI.legacylearnership.prevLearnershipTitle}" style="width:95%" disabled="false" />
+							<p:outputLabel value="PrevLearnershipTitle" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacylearnershipUI.legacylearnership.prevLearnerhipCode}" style="width:95%" disabled="false" />
+							<p:outputLabel value="PrevLearnerhipCode" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacylearnershipUI.legacylearnership.previousEmployed}" style="width:95%" disabled="false" />
+							<p:outputLabel value="PreviousEmployed" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacylearnershipUI.legacylearnership.learnerEmployed}" style="width:95%" disabled="false" />
+							<p:outputLabel value="LearnerEmployed" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacylearnershipUI.legacylearnership.durationLearnerEmployed}" style="width:95%" disabled="false" />
+							<p:outputLabel value="DurationLearneremployed" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacylearnershipUI.legacylearnership.registrationDate}" style="width:95%" disabled="false" />
+							<p:outputLabel value="RegistrationDate" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacylearnershipUI.legacylearnership.captureDate}" style="width:95%" disabled="false" />
+							<p:outputLabel value="CaptureDate" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacylearnershipUI.legacylearnership.socioEcoStatusDesc}" style="width:95%" disabled="false" />
+							<p:outputLabel value="SocioEcoStatusDesc" />
+						</h:panelGroup>
+						
+						<h:panelGroup styleClass="md-inputfield" style="margin-top: 19px" >		
+							<p:autoComplete id="learnershipPanelRegistrationUp" value="#{legacylearnershipUI.legacylearnership.learnership}" completeMethod="#{autoCompleteUI.completeLearnerships}" 
+											var="rv" itemLabel="#{rv.code}" itemValue="#{rv}" forceSelection="true" converter="LearnershipConvertor" required="false" requiredMessage="Please Select Learnership" dropdown="true" minQueryLength="3" maxResults="10"
+											inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+								<p:ajax event="itemSelect" />
+								<p:column headerText="Learnership #{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+								<p:column headerText="Learnership #{lang['description']}" style="white-space: nowrap">#{rv.description}</p:column>
+							</p:autoComplete>
+							<p:outputLabel value="Learnership" for="learnershipPanelRegistrationUp" styleClass="gray" />
+						</h:panelGroup>
+					</p:panelGrid>
+					<p:commandButton value="#{lang['submit']}" icon="fa fa-check" styleClass="flat" action="#{legacylearnershipUI.legacylearnershipUpdate}" update="mainForm" oncomplete="PF('updateDialog').hide()" />
+				</h:form>
+			</p:dialog>
+			
+			<p:dialog widgetVar="uploadVerDlg" modal="true" width="50%" responsive="true">
+				<h:form id="updateVer" enctype="multipart/form-data">
+					<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacylearnershipUI.levyNumber}" style="width:95%" disabled="false" />
+							<p:outputLabel value="Provider SDL" />
+						</h:panelGroup>	
+						
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacylearnershipUI.accreditationNumber}" style="width:95%" disabled="false" />
+							<p:outputLabel value="Accreditation Number" />
+						</h:panelGroup>
+					</p:panelGrid>
+					<p:commandButton value="#{lang['submit']}" icon="fa fa-check" styleClass="flat" action="#{legacylearnershipUI.legacyAccreditationUpdate}" update="mainForm" oncomplete="PF('uploadVerDlg').hide()" />
+				</h:form>
+			</p:dialog>
+			
+			<p:dialog widgetVar="uploadLeanershipDlg" modal="true" width="50%" responsive="true">
+				<h:form id="updateLeanership" enctype="multipart/form-data">
+					<p:panelGrid columns="3" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacylearnershipUI.legacyCode}" style="width:95%" disabled="false" />
+							<p:outputLabel value="Legacy learnership code" />
+						</h:panelGroup>	
+						
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacylearnershipUI.newCode}" style="width:95%" disabled="false" />
+							<p:outputLabel value="New learnership Code" />
+						</h:panelGroup>
+						
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacylearnershipUI.qualificationCode}" style="width:95%" disabled="false" />
+							<p:outputLabel value="Qualification Code" />
+						</h:panelGroup>
+					</p:panelGrid>
+					<p:commandButton value="#{lang['submit']}" icon="fa fa-check" styleClass="flat" action="#{legacylearnershipUI.legacyLearnershipUpdate}" update="mainForm" oncomplete="PF('uploadLeanershipDlg').hide()" />
+				</h:form>
+			</p:dialog>
+	</ui:define>
+	<!-- 
+_lang_
+-->
+</ui:composition>

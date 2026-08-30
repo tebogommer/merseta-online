@@ -1,0 +1,678 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.4.3.final using JasperReports Library version 6.4.3  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="LPM-TP-018-Cover-Letter-Apprenticeship-Application" pageWidth="595" pageHeight="842" columnWidth="515" leftMargin="40" rightMargin="40" topMargin="20" bottomMargin="20" uuid="ee556205-51af-4cdb-8e09-5df93bb14bf1">
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="src\main\webapp\reports\DataAdapter.xml"/>
+	<property name="com.jaspersoft.studio.property.dataset.dialog.DatasetDialog.sash.w1" value="454"/>
+	<property name="com.jaspersoft.studio.property.dataset.dialog.DatasetDialog.sash.w2" value="536"/>
+	<subDataset name="Dataset1" uuid="428da169-f144-47be-a56a-664b17616e5c">
+		<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+		<property name="com.jaspersoft.studio.data.defaultdataadapter" value="src\main\webapp\reports\DataAdapter.xml"/>
+		<queryString language="SQL">
+			<![CDATA[SELECT merseta.saqa_qualification.fielddescription 
+FROM merseta.saqa_qualification
+WHERE merseta.saqa_qualification.id <5]]>
+		</queryString>
+		<field name="fielddescription" class="java.lang.String">
+			<property name="com.jaspersoft.studio.field.label" value="fielddescription"/>
+			<property name="com.jaspersoft.studio.field.tree.path" value="saqa_qualification"/>
+		</field>
+		<group name="fielddescription">
+			<groupExpression><![CDATA[$F{fielddescription}]]></groupExpression>
+		</group>
+	</subDataset>
+	<parameter name="logo" class="java.awt.Image"/>
+	<parameter name="backround_image" class="java.awt.Image"/>
+	<parameter name="company_id" class="java.lang.Long"/>
+	<parameter name="user_id" class="java.lang.Long"/>
+	<parameter name="regional_office" class="java.lang.String"/>
+	<queryString language="SQL">
+		<![CDATA[SELECT  user.first_name,user.last_name,title.description AS title,
+company.company_name,company.levy_number,postalAddress.address_line_1,
+postalAddress.address_line_2,postalAddress.address_line_3,postalAddress.address_line_4,postalAddress.postcode,
+company.company_guid AS guid,town.description AS postal_add_town,saqa_qualification.qualificationtitle
+
+FROM merseta.users AS user
+
+LEFT JOIN merseta.company AS company
+ON company.id=$P{company_id}
+
+LEFT JOIN merseta.title AS title
+ON title.id=user.title_id
+
+LEFT JOIN merseta.address AS postalAddress
+ON postalAddress.id=company.postal_address_id
+
+LEFT JOIN merseta.towns AS town
+ON town.id=postalAddress.town_id
+
+LEFT JOIN merseta.user_qualifications AS userQual
+ON userQual.user_id=$P{user_id}
+
+LEFT JOIN merseta.saqa_qualification AS saqa_qualification
+ON saqa_qualification.id=userQual.qualification_id
+
+
+
+WHERE user.id=$P{user_id};]]>
+	</queryString>
+	<field name="first_name" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="first_name"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="users"/>
+	</field>
+	<field name="last_name" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="last_name"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="users"/>
+	</field>
+	<field name="title" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="title"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="title"/>
+	</field>
+	<field name="company_name" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="company_name"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="company"/>
+	</field>
+	<field name="levy_number" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="levy_number"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="company"/>
+	</field>
+	<field name="address_line_1" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="address_line_1"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="address_line_2" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="address_line_2"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="address_line_3" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="address_line_3"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="address_line_4" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="address_line_4"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="postcode" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="postcode"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="guid" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="guid"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="company"/>
+	</field>
+	<field name="postal_add_town" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="postal_add_town"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="towns"/>
+	</field>
+	<field name="qualificationtitle" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="qualificationtitle"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="saqa_qualification"/>
+	</field>
+	<group name="Group1">
+		<groupHeader>
+			<band height="157">
+				<textField>
+					<reportElement x="0" y="105" width="516" height="20" uuid="133e9816-5f11-45ce-90d5-2604e390bc15"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Dear "+$F{title}+" "+$F{last_name}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="0" y="125" width="516" height="10" uuid="5cbba224-6977-4642-b696-6a8790a0259c">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<text><![CDATA[]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="0" y="95" width="516" height="10" uuid="9d44344a-655b-4b3c-bd31-8c6d9e73b743">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<text><![CDATA[]]></text>
+				</staticText>
+				<textField isBlankWhenNull="true">
+					<reportElement x="1" y="16" width="280" height="13" uuid="c4cfb9db-e176-407a-bd91-4b8924bb62cd"/>
+					<textElement verticalAlignment="Bottom">
+						<font fontName="Arial" size="11"/>
+					</textElement>
+				</textField>
+				<textField>
+					<reportElement x="1" y="29" width="280" height="13" uuid="709d0435-bee1-475c-987f-5ee0aced8ec6"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{address_line_1}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="1" y="55" width="280" height="13" uuid="f550570d-ed73-443e-97ff-a0388e838c95"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{address_line_3}]]></textFieldExpression>
+				</textField>
+				<textField pattern="dd  MMMMM  yyyy">
+					<reportElement x="1" y="3" width="280" height="13" uuid="d952b86d-54e1-4827-a9e3-bb22b25eec7f"/>
+					<textElement verticalAlignment="Bottom">
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="1" y="68" width="280" height="13" uuid="182af4c4-8b90-4dd6-9c4b-654b1025f381"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{address_line_4}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="1" y="81" width="280" height="13" uuid="1a832d3f-7b5e-4e90-9c31-1a0cc27a6609"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{postcode}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="1" y="135" width="515" height="20" uuid="def0f861-51b3-4f13-8494-a89cb89971eb"/>
+					<textElement verticalAlignment="Middle" markup="html">
+						<font fontName="Arial" size="11" isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression><![CDATA["REGISTERING OF CONTRACT(S) OF APPRENTICESHIP AT  " + $F{company_name}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="1" y="42" width="280" height="13" uuid="2a1ef0ec-5bfa-4ec3-9e17-d23da65e2e8d"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{address_line_2}]]></textFieldExpression>
+				</textField>
+			</band>
+			<band height="318">
+				<textField isStretchWithOverflow="true">
+					<reportElement x="0" y="7" width="516" height="43" uuid="393f7afc-9fb5-4292-ae8e-b7cc8d29db36"/>
+					<textElement textAlignment="Justified">
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Your company has indicated that they wish to indenture an apprentice.  We attach the contracts to register an apprentice with the MERSETA.   You are required to sign the contracts, as per the undermentioned requirements and return it together with the relevant documentation.  "]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="0" y="77" width="35" height="30" uuid="339a4843-cd6c-46a6-aa3a-07dde01faea9">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.leftIndent" value="px"/>
+					</reportElement>
+					<textElement>
+						<font fontName="Arial" size="11"/>
+						<paragraph lineSpacing="AtLeast" leftIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA["2. "]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="0" y="57" width="35" height="20" uuid="4c62973d-a5ab-42aa-9c16-2b198d9db4a7">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.leftIndent" value="px"/>
+					</reportElement>
+					<textElement>
+						<font fontName="Arial" size="11"/>
+						<paragraph lineSpacing="AtLeast" leftIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA["1. "]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="35" y="77" width="480" height="30" uuid="30b074f3-1754-4328-8fab-fa748da059e4">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<textElement>
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Both contracts must be signed identically, and all contracting parties must initial each page of the contracts."]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="35" y="57" width="480" height="20" uuid="fe571ef4-735e-4f49-9efb-23cb6956d591">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<textElement>
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA["All sections must be completed in full."]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="0" y="107" width="35" height="30" uuid="dfe95346-c83a-4693-82c3-e015f4a60863">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.leftIndent" value="px"/>
+					</reportElement>
+					<textElement>
+						<font fontName="Arial" size="11"/>
+						<paragraph lineSpacing="AtLeast" leftIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA["3. "]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="35" y="107" width="480" height="30" uuid="b9799ccd-bceb-4367-b733-6e14c6466300">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<textElement markup="html">
+						<font fontName="SansSerif" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Attach <b>certified</b> copies of identity document, highest school qualification  and any further qualifications."]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="0" y="137" width="35" height="30" uuid="fa42eca1-60b0-4f57-9ce3-0c3b02f3b574">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.leftIndent" value="px"/>
+					</reportElement>
+					<textElement>
+						<font fontName="Arial" size="11"/>
+						<paragraph lineSpacing="AtLeast" leftIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA["4. "]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="35" y="137" width="480" height="30" uuid="c45b1cbe-6861-4d55-a56c-899fe07711c4">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<textElement>
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Should the prospective apprentice be under the age of 18, you are  required to furnish the guardian details and the guardian would be  required to sign the contract."]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="0" y="167" width="35" height="30" uuid="5bb4163d-0995-4500-aada-53dd77e3e25b">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.leftIndent" value="px"/>
+					</reportElement>
+					<textElement>
+						<font fontName="Arial" size="11"/>
+						<paragraph lineSpacing="AtLeast" leftIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA["5. "]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="35" y="167" width="480" height="30" uuid="4bf52fa8-2362-4f94-b22b-33bec8219f8a">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<textElement>
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Commencing date will be the starting date of commencement of the apprenticeship and not the employment date."]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="0" y="197" width="35" height="30" uuid="ac311547-18d0-4198-8427-1ab5444e615a">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.leftIndent" value="px"/>
+					</reportElement>
+					<textElement>
+						<font fontName="Arial" size="11"/>
+						<paragraph lineSpacing="AtLeast" leftIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA["6. "]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="35" y="197" width="480" height="30" uuid="b09ba50b-f6a1-40ce-bc1b-aa617452f47a">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<textElement>
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA["The initials and surname of each person signing the contracts must be written in pencil, in capital letters against each signature."]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="0" y="227" width="35" height="20" uuid="b58a5051-c56a-48e7-a9ce-c3e9af598277">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.leftIndent" value="px"/>
+					</reportElement>
+					<textElement>
+						<font fontName="Arial" size="11"/>
+						<paragraph lineSpacing="AtLeast" leftIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA["7. "]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="35" y="227" width="480" height="20" uuid="299a7fd2-48ee-40b0-9bfe-dfe7454ce7fc">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<textElement>
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA["All signatures must be in black ink."]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="0" y="247" width="35" height="20" uuid="adecace3-bcd6-4f5e-80dc-3234c1a637a8">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.leftIndent" value="px"/>
+					</reportElement>
+					<textElement>
+						<font fontName="Arial" size="11"/>
+						<paragraph lineSpacing="AtLeast" leftIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA["8. "]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="35" y="247" width="480" height="20" uuid="115296f4-3f2b-45d6-b88b-a163e7cd1b23">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<textElement>
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Contracting parties may not sign as witnesses.  Rubber stamps may not  be used."]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="0" y="267" width="35" height="20" uuid="c649c3a6-05d2-4f0c-bcac-629632120dea">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.leftIndent" value="px"/>
+					</reportElement>
+					<textElement>
+						<font fontName="Arial" size="11"/>
+						<paragraph lineSpacing="AtLeast" leftIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA["9. "]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="35" y="267" width="480" height="20" uuid="57a2ec1c-be81-40d6-ab85-06eecf8beaa8">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<textElement>
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Tippex or pen corrections will not be acceptable on the contracts."]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="0" y="287" width="35" height="30" uuid="8af2b036-442a-4746-a04a-effe244a8e05">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.leftIndent" value="px"/>
+					</reportElement>
+					<textElement>
+						<font fontName="Arial" size="11"/>
+						<paragraph lineSpacing="AtLeast" leftIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA["10. "]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="35" y="287" width="480" height="30" uuid="6b80f0a5-d8d7-44b8-b624-7d78a9cd26ae">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<textElement>
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA["The apprentice is required to undertake a medical examination.  The cost of the examination is to be born by the employer."]]></textFieldExpression>
+				</textField>
+			</band>
+			<band height="263">
+				<textField>
+					<reportElement x="0" y="28" width="515" height="72" uuid="3c1749e4-7af3-414c-900f-abfc5c821310"/>
+					<textElement>
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Once all required information has been completed the contracts together with abovementioned documentation and additional information form, must be submitted to the central administration unit at head office." +"\n\n"+
+
+"We attach the following additional documentation, which would be required during the apprenticeship:"]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="35" y="101" width="35" height="20" uuid="c94a0e96-14f4-43c7-bf83-218eb83044cf">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.leftIndent" value="px"/>
+					</reportElement>
+					<textElement>
+						<font fontName="Arial" size="11"/>
+						<paragraph lineSpacing="AtLeast" leftIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA["1. "]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="35" y="121" width="35" height="20" uuid="068213e3-d40a-4f2f-a398-5966d1e8ff73">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+						<property name="com.jaspersoft.studio.unit.width" value="px"/>
+						<property name="com.jaspersoft.studio.unit.leftIndent" value="px"/>
+					</reportElement>
+					<textElement>
+						<font fontName="Arial" size="11"/>
+						<paragraph lineSpacing="AtLeast" leftIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA["2. "]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="70" y="121" width="445" height="20" uuid="e3708c20-219e-457f-b62a-2530a9568801">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<textElement>
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Applicable training schedule"]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="70" y="101" width="445" height="20" uuid="0cd46d12-a019-4cd7-a79c-31a1ba1a0ab5">
+						<property name="com.jaspersoft.studio.unit.height" value="px"/>
+					</reportElement>
+					<textElement>
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Conditions of apprenticeship"]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="-1" y="145" width="515" height="115" uuid="d1e42437-20e3-4688-9dff-cd70fd2a2e53"/>
+					<textElement>
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Apprentices who are registered on the Motor Industry CBMT system are required to order their learning guides for each level.   We attach an order form." +"\n\n"+
+
+"Kindly note that it is the employer’s responsibility to ensure that the apprentice obtains the required National Technical Certificate and therefore you are required to make the arrangements directly with a Technical College."+"\n\n"+
+
+"Should you have any further queries, please do not hesitate to contact our office for assistance."]]></textFieldExpression>
+				</textField>
+			</band>
+			<band height="79">
+				<textField>
+					<reportElement x="-1" y="45" width="515" height="20" uuid="15c0da0b-f5d6-4a0d-ae46-0d582a100497"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement>
+						<font fontName="Arial" size="11" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Client Services Administrator"]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="-1" y="16" width="515" height="20" uuid="21ee371e-1c1c-483d-9603-a86c1aa71686"/>
+					<textElement>
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Yours sincerely,"]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupHeader>
+	</group>
+	<group name="Group2"/>
+	<background>
+		<band height="802" splitType="Stretch">
+			<image>
+				<reportElement x="247" y="183" width="270" height="450" uuid="2ddcdeb6-398e-46bd-bf23-f3a5b1173424"/>
+				<imageExpression><![CDATA[$P{backround_image}]]></imageExpression>
+			</image>
+		</band>
+	</background>
+	<title>
+		<band height="181" splitType="Stretch">
+			<image scaleImage="RetainShape">
+				<reportElement stretchType="ElementGroupHeight" x="180" y="0" width="160" height="160" uuid="5e634197-bb82-40ad-a65f-15b6ad9d496b"/>
+				<graphicElement fill="Solid"/>
+				<imageExpression><![CDATA[$P{logo}]]></imageExpression>
+			</image>
+		</band>
+	</title>
+	<pageFooter>
+		<band height="96" splitType="Stretch">
+			<staticText>
+				<reportElement x="47" y="40" width="117" height="15" forecolor="#404040" uuid="307aded6-832d-49f8-9338-b19f8381218e"/>
+				<box>
+					<topPen lineWidth="0.5" lineColor="#505050"/>
+					<leftPen lineWidth="0.5" lineColor="#505050"/>
+					<bottomPen lineWidth="0.5" lineColor="#505050"/>
+					<rightPen lineWidth="0.5" lineColor="#505050"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[Document Title]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="47" y="55" width="117" height="15" forecolor="#404040" uuid="ffcaf344-dfea-4b6b-9a96-dfb72e258a8e"/>
+				<box>
+					<topPen lineWidth="0.5" lineColor="#505050"/>
+					<leftPen lineWidth="0.5" lineColor="#505050"/>
+					<bottomPen lineWidth="0.5" lineColor="#505050"/>
+					<rightPen lineWidth="0.5" lineColor="#505050"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[Page Number]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="281" y="55" width="117" height="15" forecolor="#404040" uuid="1deb1c66-abf8-4642-9e09-86ffdf0d1cc0"/>
+				<box>
+					<topPen lineWidth="0.5" lineColor="#505050"/>
+					<leftPen lineWidth="0.5" lineColor="#505050"/>
+					<bottomPen lineWidth="0.5" lineColor="#505050"/>
+					<rightPen lineWidth="0.5" lineColor="#505050"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[Submission Date & Time]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="47" y="70" width="117" height="16" forecolor="#404040" uuid="ddfb3799-f081-4557-9765-d2f94c81528a"/>
+				<box>
+					<topPen lineWidth="0.5" lineColor="#505050"/>
+					<leftPen lineWidth="0.5" lineColor="#505050"/>
+					<bottomPen lineWidth="0.5" lineColor="#505050"/>
+					<rightPen lineWidth="0.5" lineColor="#505050"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[Document Number]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="281" y="70" width="117" height="16" forecolor="#404040" uuid="7c89df8d-30b1-49c3-b562-c6f1106b9bc8"/>
+				<box>
+					<topPen lineWidth="0.5" lineColor="#505050"/>
+					<leftPen lineWidth="0.5" lineColor="#505050"/>
+					<bottomPen lineWidth="0.5" lineColor="#505050"/>
+					<rightPen lineWidth="0.5" lineColor="#505050"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[Access]]></text>
+			</staticText>
+			<textField>
+				<reportElement mode="Opaque" x="164" y="55" width="117" height="15" forecolor="#404040" uuid="5ae9b104-d4ff-4c1c-abea-35c4d30936be"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Page " + $V{PAGE_NUMBER}+ " of  "+"2"]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd MMMMM yyyy H:mm:ss">
+				<reportElement x="398" y="55" width="117" height="15" forecolor="#404040" uuid="d813ec36-8372-46c7-b44a-a638a0c9eac7"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement>
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="0" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="164" y="40" width="351" height="15" forecolor="#404040" uuid="a3f6d064-de84-4837-9e8d-4b39a70dff09"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle" markup="html">
+					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[<b>Termination of Contract</b>]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="164" y="70" width="117" height="16" forecolor="#404040" uuid="9409d653-1778-4b3f-9d59-1754db72a936"/>
+				<box>
+					<topPen lineWidth="0.5" lineColor="#505050"/>
+					<leftPen lineWidth="0.5" lineColor="#505050"/>
+					<bottomPen lineWidth="0.5" lineColor="#505050"/>
+					<rightPen lineWidth="0.5" lineColor="#505050"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA["LPM–TP–017"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="398" y="70" width="117" height="16" forecolor="#404040" uuid="4981833e-b944-4c0f-9d1d-05b8531edaa2"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Controlled"]]></textFieldExpression>
+			</textField>
+			<frame>
+				<reportElement x="1" y="40" width="46" height="46" uuid="561f24b2-8db6-40cf-8c91-8be5875bb252"/>
+				<box>
+					<pen lineColor="#404040"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<componentElement>
+					<reportElement x="3" y="2" width="42" height="42" uuid="017a0d0b-5598-463e-9fb0-5cfa72439a0e"/>
+					<jr:QRCode xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
+						<jr:codeExpression><![CDATA[$F{guid}]]></jr:codeExpression>
+					</jr:QRCode>
+				</componentElement>
+			</frame>
+			<textField>
+				<reportElement x="60" y="7" width="400" height="33" uuid="7b0425ce-159d-495d-b3f6-66c66004f5ed"/>
+				<textElement textAlignment="Center" markup="html">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA["8 Hillside Road, Metropolitan Park, Block C Parktown, 2193 "+"<br/>"+"Telephone No: 0861 637 738 Website: <u>www.merseta.org.za</u>"]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+</jasperReport>

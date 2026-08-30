@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Nsdms.Application.Common;
 using Nsdms.Infrastructure.Data;
 
@@ -13,13 +13,15 @@ public class TestDbContextFactory : INsdmsDbContextFactory
         _options = new DbContextOptionsBuilder<NsdmsDbContext>()
             .UseInMemoryDatabase(databaseName: dbName)
             .Options;
+
+        using var ctx = new NsdmsDbContext(_options);
+        ctx.Database.EnsureCreated();
+        WorkflowDefinitionSeeder.SeedWorkflowDefinitionsAsync(ctx).GetAwaiter().GetResult();
     }
 
     public INsdmsDbContext CreateDbContext()
     {
-        var ctx = new NsdmsDbContext(_options);
-        ctx.Database.EnsureCreated();
-        return ctx;
+        return new NsdmsDbContext(_options);
     }
 
     public Task<INsdmsDbContext> CreateDbContextAsync(CancellationToken cancellationToken = default)

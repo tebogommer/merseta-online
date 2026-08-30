@@ -1,0 +1,163 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<h:panelGroup id="discgrantGroup">
+		<h:form id="discgrantTableForm">
+			<h2>#{lang['discretionary.grant']}</h2>
+			<p:remoteCommand update="@form" id="updateDiscGrant" name="updateDiscGrant" action="#{discgrantUI.pivitolInfo}" process="@this"></p:remoteCommand>
+			<c:if test="#{sessionUI.externalParty}">
+				<ui:include src="/pages/includes/download_lazy.xhtml">
+					<ui:param name="file_name" value="DISCRETIONARY_GRANT" />
+					<ui:param name="target" value="Discretionary_Grant_List" />
+				</ui:include>
+			</c:if>
+
+			<p:dataTable var="rowVar" value="#{discgrantUI.dataModel}" id="Discretionary_Grant_List" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25,50,100"
+				reflow="true" lazy="true">
+
+				<p:column headerText="#{lang['expand.row']}" width="45" exportable="false">
+					<p:rowToggler></p:rowToggler>
+				</p:column>
+				<p:column headerText="#{lang['recommendationLastOneQuantity']}" width="45" exportable="false">
+					<p:outputLabel value="#{discgrantUI.getLastEntryOfMandatoryGrantDetailRowRecommendationQuantity(rowVar.id)}" style="width:95%" />
+				</p:column>
+				<p:column headerText="#{lang['first.name']}" sortBy="#{rowVar.firstName}" rendered="#{initiatewspUI.showDetails}">
+					<p:outputLabel value="#{rowVar.firstName}" style="width:95%" />
+				</p:column>
+				<p:column headerText="#{lang['last.name']}" sortBy="#{rowVar.lastName}" rendered="#{initiatewspUI.showDetails}">
+					<p:outputLabel value="#{rowVar.lastName}" style="width:95%" />
+				</p:column>
+				<p:column headerText="RSA ID/Passport Number" rendered="#{initiatewspUI.showDetails}">
+					<p:outputLabel value="#{rowVar.idNumber}" />
+				</p:column>
+				<p:column headerText="#{lang['ofo.code']}">
+					<p:outputLabel value="#{rowVar.ofoCodes.ofoCodeParent} - #{rowVar.ofoCodes.description}" style="width:95%" rendered="#{rowVar.ofoCodes ne null}" />
+				</p:column>
+
+				<p:column headerText="#{lang['employment.status']}">
+					<p:outputLabel value="#{rowVar.employmentStatus.friendlyName}" style="width:95%" />
+				</p:column>
+				<p:column headerText="#{lang['municipality']}" rendered="false">
+					<p:outputLabel value="#{rowVar.municipality.municipalityDesc}" style="width:95%" />
+				</p:column>
+
+				<p:column headerText="#{lang['funding.method']}">
+					<p:outputLabel value="#{rowVar.funding.description}" style="width:95%" />
+				</p:column>
+				<p:column headerText="#{lang['intervention.type']}">
+					<p:outputLabel value="#{rowVar.interventionType.description}" style="width:95%" />
+				</p:column>
+				<p:column headerText="#{lang['pivotal.status']}">
+					<p:outputLabel value="#{rowVar.interventionType.pivotNonPivot.friendlyName}" style="width:95%" />
+				</p:column>
+				<p:column headerText="#{lang['basic.grant']}" rendered="false">
+					<h:outputText value="#{rowVar.interventionType.basicGrantAmount}">
+						<f:convertNumber currencySymbol="R" currencyCode="ZAR" pattern="R#,###.00" />
+					</h:outputText>
+				</p:column>
+				<p:column headerText="#{lang['disability.grant']}" rendered="false">
+					<h:outputText value="#{rowVar.interventionType.disabilityGrantAmount}">
+						<f:convertNumber currencySymbol="R" currencyCode="ZAR" pattern="R#,###.00" />
+					</h:outputText>
+				</p:column>
+
+				<p:rowExpansion>
+
+					<p:panelGrid columns="1" style="width:100%" id="s" layout="grid" styleClass="ui-panelgrid-blank form-group">
+						<p:fieldset legend="Discretionary Data" rendered="#{rowVar.pivotNonPivot eq PivotNonPivotEnum.Pivotal}">
+
+							<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar.nqfAligned.yesNoName}" disabled="true" />
+									<p:outputLabel value="#{lang['nqf.aligned']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar.qualification.code}" disabled="true" />
+									<p:outputLabel value="#{lang['saqa.id']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar.qualification.description}" decimalPlaces="0" disabled="true" />
+									<p:outputLabel value="#{lang['intervention.title']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" minValue="0" value="#{rowVar.nqfLevels.description}" decimalPlaces="0" disabled="true" />
+									<p:outputLabel value=" #{lang['nqf.level']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar.interventionLevel.description}" decimalPlaces="0" disabled="true" />
+									<p:outputLabel value="#{lang['level.of.training']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" minValue="0" value="#{rowVar.enrolmentStatus.description}" decimalPlaces="0" disabled="true" />
+									<p:outputLabel value="Enrolment Status" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" minValue="0" value="#{rowVar.etqa.description}" decimalPlaces="0" disabled="true" />
+									<p:outputLabel value=" #{lang['etqa']}" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar.providerType.description}" decimalPlaces="0" disabled="true" />
+									<p:outputLabel value="#{lang['provider.type']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" minValue="0" value="R#{rowVar.estimatedCost}" decimalPlaces="0" disabled="true" />
+									<p:outputLabel value=" #{lang['estimated.cost']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar.startDate}" decimalPlaces="0" disabled="true">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</p:inputText>
+									<p:outputLabel value="#{lang['start.date']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" minValue="0" value="#{rowVar.endDate}" decimalPlaces="0" disabled="true">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</p:inputText>
+									<p:outputLabel value=" #{lang['end.date']}" />
+								</h:panelGroup>
+
+							</p:panelGrid>
+						</p:fieldset>
+						<p:fieldset legend="Discretionary Data" rendered="#{rowVar.pivotNonPivot eq PivotNonPivotEnum.NonPivotal}">
+
+							<p:panelGrid columns="2" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar.interventionTitle}" decimalPlaces="0" disabled="true"></p:inputText>
+									<p:outputLabel value="#{lang['intervention.title']}" />
+								</h:panelGroup>
+
+
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar.providerType.description}" decimalPlaces="0" disabled="true" />
+									<p:outputLabel value="#{lang['provider.type']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" minValue="0" value="R#{rowVar.estimatedCost}" decimalPlaces="0" disabled="true" />
+									<p:outputLabel value=" #{lang['estimated.cost']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar.startDate}" decimalPlaces="0" disabled="true">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</p:inputText>
+									<p:outputLabel value="#{lang['start.date']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" minValue="0" value="#{rowVar.endDate}" decimalPlaces="0" disabled="true">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</p:inputText>
+									<p:outputLabel value=" #{lang['end.date']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield" rendered="#{rowVar.enrolmentStatus ne null}" >
+									<p:inputText style="width:95%; opacity:1 !important;" minValue="0" value="#{rowVar.enrolmentStatus.description}" decimalPlaces="0" disabled="true" />
+									<p:outputLabel value="Enrolment Status" />
+								</h:panelGroup>
+							</p:panelGrid>
+						</p:fieldset>
+					</p:panelGrid>
+				</p:rowExpansion>
+
+			</p:dataTable>
+		</h:form>
+	</h:panelGroup>
+</ui:composition>

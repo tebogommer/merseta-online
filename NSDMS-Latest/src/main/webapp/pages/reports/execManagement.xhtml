@@ -1,0 +1,96 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+
+
+
+	<h:panelGroup id="longPollDetail">
+
+		<p:poll interval="3" update="longPollDetail" stop="#{dashBoardSeniorManagerReportingUI.leviesByChamberAndSize ne null}" />
+
+		<h:panelGroup rendered="#{dashBoardSeniorManagerReportingUI.leviesByChamberAndSize eq null}">
+			<div class="ui-g">
+				<div class="ui-g-12 ui-md-12 ui-lg-12">
+
+					<center>
+						<p:graphicImage name="images/468.gif" library="hls" />
+					</center>
+
+				</div>
+			</div>
+		</h:panelGroup>
+
+		<h:panelGroup rendered="#{dashBoardSeniorManagerReportingUI.leviesByChamberAndSize ne null}">
+
+
+
+
+			<div class="ui-g">
+				<div class="ui-g-12 ui-md-6 ui-lg-6">
+					<div class="card card-w-title">
+
+						<H3 class="Fs14">Total number of companies registered on NSDMS in relation to total levy-paying companies by Chamber</H3>
+						<p:dataTable var="rowVar" value="#{dashBoardSeniorManagerReportingUI.regCompaniesVsSarsCompanies}" reflow="true" rendered="#{dashBoardSeniorManagerReportingUI.regCompaniesVsSarsCompanies ne null}">
+							<p:column headerText="Chamber" sortBy="#{rowVar.description}" width="50%">
+								<h:outputText value="#{rowVar.description}" styleClass="#{rowVar.description.equals('Total')?'FontBold':null}" />
+							</p:column>
+
+							<p:column headerText="Total Levy-paying" width="25%">
+								<h:outputText value="#{rowVar.count}" styleClass="#{rowVar.description.equals('Total')?'FontBold Fs16':null} Fright" />
+							</p:column>
+							<p:column headerText="Companies Registered" width="25%">
+								<h:outputText value="#{rowVar.count2}" styleClass="#{rowVar.description.equals('Total')?'FontBold Fs16':null} Fright" />
+							</p:column>
+						</p:dataTable>
+
+						<H3 class="Fs14">Total Levy contribution of the companies that have been registered on the NSDMS by Size of company</H3>
+						<p:dataTable var="rowVar" value="#{dashBoardSeniorManagerReportingUI.leviesBySize}" reflow="true" rendered="#{dashBoardSeniorManagerReportingUI.leviesBySize ne null}">
+
+							<p:column headerText="Size" sortBy="#{rowVar.description}">
+								<h:outputText value="#{rowVar.description}" styleClass="#{rowVar.description.equals('Total')?'FontBold':null}" />
+							</p:column>
+
+							<p:column headerText="Total levies">
+								<h:outputText value="#{rowVar.total lt 0 ? (rowVar.total *-1.0):rowVar.total}" styleClass="#{rowVar.description.equals('Total')?'FontBold Fs16':null} Fright">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</h:outputText>
+							</p:column>
+						</p:dataTable>
+						<H3 class="Fs14">Total Levy contribution of the companies that have been registered on the NSDMS by Chamber</H3>
+						<p:dataTable var="rowVar" value="#{dashBoardSeniorManagerReportingUI.leviesByChamber}" reflow="true" rendered="#{dashBoardSeniorManagerReportingUI.leviesByChamber ne null}">
+
+							<p:column headerText="Chamber" sortBy="#{rowVar.description}">
+								<h:outputText value="#{rowVar.description}" styleClass="#{rowVar.description.equals('Total')?'FontBold':null}" />
+							</p:column>
+
+							<p:column headerText="Total levies">
+								<h:outputText value="#{rowVar.total lt 0 ? (rowVar.total *-1.0):rowVar.total}" styleClass="#{rowVar.description.equals('Total')?'FontBold Fs16':null} Fright">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</h:outputText>
+							</p:column>
+						</p:dataTable>
+
+					</div>
+				</div>
+				<div class="ui-g-12 ui-md-6 ui-lg-6">
+					<div class="card card-w-title">
+						<H3 class="Fs14">Total Levy contribution of the companies that have been registered on the NSDMS by size of company and Chamber</H3>
+						<p:dataTable var="rowVar" value="#{dashBoardSeniorManagerReportingUI.leviesByChamberAndSize}" reflow="true" rendered="#{dashBoardSeniorManagerReportingUI.leviesByChamberAndSize ne null}">
+
+							<p:column headerText="Chamber" sortBy="#{rowVar.description}">
+								<h:outputText value="#{rowVar.description}" styleClass="#{rowVar.description.equals('Total')?'FontBold':null}" />
+							</p:column>
+							<p:column headerText="Size" sortBy="#{rowVar.descriptionTwo}">
+								<h:outputText value="#{rowVar.descriptionTwo}" />
+							</p:column>
+							<p:column headerText="Total levies">
+								<h:outputText value="#{rowVar.total lt 0 ? (rowVar.total *-1.0):rowVar.total}" styleClass="#{rowVar.description.equals('Total')?'FontBold Fs16':null} Fright">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</h:outputText>
+							</p:column>
+						</p:dataTable>
+					</div>
+				</div>
+			</div>
+		</h:panelGroup>
+	</h:panelGroup>
+</ui:composition>

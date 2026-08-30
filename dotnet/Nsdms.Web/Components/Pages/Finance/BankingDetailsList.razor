@@ -1,0 +1,140 @@
+﻿@page "/finance/banking-details"
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Domain.Entities
+@inject IBankingDetailsService BankingService
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+
+<PageTitle>Banking Details &amp; Dual-Signoff | merSETA NSDMS</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
+    <!-- Top Bar -->
+    <MudCard Elevation="2" Class="mb-4">
+        <MudCardContent Class="d-flex align-center justify-space-between py-3">
+            <div>
+                <MudBreadcrumbs Items="_breadcrumbs" Class="pa-0 mb-1" />
+                <MudText Typo="Typo.h5" Class="fw-bold">Banking Details Verification &amp; Dual-Signoff</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    Bank confirmation letter verification, dual-officer approval control, and ERP vendor disbursement synchronization.
+                </MudText>
+            </div>
+            <MudStack Row="true" Spacing="2">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadDataAsync">
+                    Refresh
+                </MudButton>
+            </MudStack>
+        </MudCardContent>
+    </MudCard>
+
+    @if (_isLoading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+    }
+
+    <!-- Table -->
+    <MudCard Elevation="2">
+        <MudCardContent>
+            <MudTable Items="_records" Hover="true" Dense="true" Elevation="0" Filter="FilterRecords">
+                <ToolBarContent>
+                    <MudText Typo="Typo.h6">Registered Bank Accounts (@_records.Count)</MudText>
+                    <MudSpacer />
+                    <MudTextField @bind-Value="_searchString" Placeholder="Search by account #, bank, entity..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Immediate="true" />
+                </ToolBarContent>
+                <HeaderContent>
+                    <MudTh>Entity / Payee</MudTh>
+                    <MudTh>Bank Name</MudTh>
+                    <MudTh>Branch Code</MudTh>
+                    <MudTh>Account Number</MudTh>
+                    <MudTh>Account Holder</MudTh>
+                    <MudTh>Type</MudTh>
+                    <MudTh>Approval Status</MudTh>
+                    <MudTh>ERP Status</MudTh>
+                    <MudTh Style="text-align: right;">Action</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Entity / Payee">@(context.Organisation?.CompanyName ?? context.TrainingProvider?.ProviderName ?? "Registered Entity")</MudTd>
+                    <MudTd DataLabel="Bank Name" Class="fw-bold">@context.BankName</MudTd>
+                    <MudTd DataLabel="Branch Code" Class="font-monospace">@context.BranchCode</MudTd>
+                    <MudTd DataLabel="Account Number" Class="font-monospace">@context.AccountNumber</MudTd>
+                    <MudTd DataLabel="Account Holder">@context.AccountHolderName</MudTd>
+                    <MudTd DataLabel="Type">@context.AccountTypeCode</MudTd>
+                    <MudTd DataLabel="Approval Status">
+                        <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.ApprovalStatusCode)" Variant="Variant.Filled">
+                            @context.ApprovalStatusCode
+                        </MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="ERP Status">
+                        @if (context.IsErpActive)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Outlined">SYNCED (@context.ErpVendorId)</MudChip>
+                        }
+                        else
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Text">Pending Dual-Approval</MudChip>
+                        }
+                    </MudTd>
+                    <MudTd DataLabel="Action" Style="text-align: right;">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Verified" OnClick="@(() => Nav.NavigateTo($"/finance/banking-details/{context.Id}"))">
+                            Verify &amp; Signoff
+                        </MudButton>
+                    </MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager />
+                </PagerContent>
+            </MudTable>
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
+
+@code {
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Finance & Disbursements", href: "/finance/grants"),
+        new BreadcrumbItem("Banking Details", href: null, disabled: true)
+    };
+
+    private List<BankingDetails> _records = new();
+    private bool _isLoading = true;
+    private string _searchString = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _records = await BankingService.GetBankingDetailsListAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to load banking details: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private bool FilterRecords(BankingDetails b)
+    {
+        if (string.IsNullOrWhiteSpace(_searchString)) return true;
+        return b.BankName.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+               b.AccountNumber.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+               b.AccountHolderName.Contains(_searchString, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private Color GetStatusColor(string status) => status switch
+    {
+        "FullyApproved" => Color.Success,
+        "FirstSignoffApproved" => Color.Info,
+        "PendingVerification" => Color.Warning,
+        "Rejected" => Color.Error,
+        _ => Color.Default
+    };
+}

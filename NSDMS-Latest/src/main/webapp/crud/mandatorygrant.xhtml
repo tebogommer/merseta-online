@@ -1,0 +1,108 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>MandatoryGrant</h1>
+					<h:form id="mandatorygrantInsForm">
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:panelGrid columns="1" style="width:100%" id="mandatorygrantInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="gender" value="#{mandatorygrantUI.mandatorygrant.gender}" style="width:95%" />
+								<p:outputLabel value="#{lang['gender']}" for="gender" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="equity" value="#{mandatorygrantUI.mandatorygrant.equity}" style="width:95%" />
+								<p:outputLabel value="#{lang['equity']}" for="equity" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="ageGroup" value="#{mandatorygrantUI.mandatorygrant.ageGroup}" style="width:95%" />
+								<p:outputLabel value="#{lang['ageGroup']}" for="ageGroup" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="amount" value="#{mandatorygrantUI.mandatorygrant.amount}" style="width:95%" />
+								<p:outputLabel value="#{lang['amount']}" for="amount" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="pivotNonPivot" value="#{mandatorygrantUI.mandatorygrant.pivotNonPivot}" style="width:95%" />
+								<p:outputLabel value="#{lang['pivotNonPivot']}" for="pivotNonPivot" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="disabilityStatus" value="#{mandatorygrantUI.mandatorygrant.disabilityStatus}" style="width:95%" />
+								<p:outputLabel value="#{lang['disabilityStatus']}" for="disabilityStatus" />
+							</h:panelGroup>
+
+
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:mandatorygrantList :mandatorygrantInsForm:mandatorygrantInsGrid" action="#{mandatorygrantUI.mandatorygrantInsert}" />
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="mandatorygrantInsGrid" process="@this" action="#{mandatorygrantUI.prepareNew}">
+									<p:resetInput target="mandatorygrantInsGrid" />
+								</p:commandButton>
+							</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{mandatorygrantUI.dataModel}" filteredValue="#{mandatorygrantUI.mandatoryGrantfilteredList}" id="mandatorygrantList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['gender']}">
+								<h:outputText value="#{rowVar.gender}" />
+							</p:column>
+							<p:column headerText="#{lang['equity']}">
+								<h:outputText value="#{rowVar.equity}" />
+							</p:column>
+							<p:column headerText="#{lang['ageGroup']}">
+								<h:outputText value="#{rowVar.ageGroup}" />
+							</p:column>
+							<p:column headerText="#{lang['amount']}">
+								<h:outputText value="#{rowVar.amount}" />
+							</p:column>
+							<p:column headerText="#{lang['pivotNonPivot']}">
+								<h:outputText value="#{rowVar.pivotNonPivot}" />
+							</p:column>
+							<p:column headerText="#{lang['disabilityStatus']}">
+								<h:outputText value="#{rowVar.disabilityStatus}" />
+							</p:column>
+
+
+							<p:column width="80">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":mandatorygrantInsForm:mandatorygrantInsGrid">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{mandatorygrantUI.mandatorygrant}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:mandatorygrantList" action="#{mandatorygrantUI.mandatorygrantDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{mandatorygrantUI.mandatorygrant}" />
+								</p:commandButton>
+							</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+	<!-- 
+gender = gender
+equity = equity
+ageGroup = ageGroup
+amount = amount
+pivotNonPivot = pivotNonPivot
+disabilityStatus = disabilityStatus
+
+-->
+</ui:composition>

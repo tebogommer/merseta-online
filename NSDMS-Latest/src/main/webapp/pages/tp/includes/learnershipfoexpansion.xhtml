@@ -1,0 +1,43 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<p:fieldset legend="Learnership Details">
+		<p:panelGrid columns="2" style="width:100%" id="ldeatils" layout="grid" styleClass="ui-panelgrid-blank form-group">
+			<h:panelGroup styleClass="md-inputfield">
+				<p:inputText disabled="true" value="#{learnershipRv.createDate}">
+						<f:convertDateTime pattern="dd MMMM yyyy HH:mm:ss" />
+				</p:inputText>
+				<p:outputLabel value="Create Date"></p:outputLabel>
+			</h:panelGroup>
+			<h:panelGroup styleClass="md-inputfield">
+				<p:inputText value="#{learnershipRv.designation}" disabled="true" style="width: 95%"></p:inputText>
+				<p:outputLabel value="Designation"></p:outputLabel>
+			</h:panelGroup>		
+		</p:panelGrid>
+	</p:fieldset>
+	
+	<p:fieldset legend="Documents">
+			<p:dataTable value="#{learnershipRv.docs}" var="rv1" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv1.id}">
+					<p:column headerText="#{lang['type']}" width="18%">#{rv1.configDoc.name}</p:column>
+					<p:column headerText="#{lang['original.file.name']}" priority="4">
+						<p:outputLabel value="#{rv1.originalFname}" styleClass="Fs12" rendered="#{rv1.originalFname ne null}" />
+						<p:outputLabel value="Document Not Uploaded" rendered="#{rv1.originalFname eq null or rv1.originalFname eq ''}" />
+					</p:column>
+					<p:column headerText="#{lang['uploaded.by']}">
+						<p:outputLabel value="#{rv1.users.firstName} #{rv1.users.lastName}" rendered="#{rv1.users ne null}" />
+						<p:outputLabel value="N/A" rendered="#{rv1.users eq null and rv1.originalFname eq null}" />
+						<p:outputLabel value="Awaiting Submission" rendered="#{rv1.users eq null and rv1.originalFname ne null}" />
+					</p:column>
+					<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+						<h:outputText value="#{rv1.createDate}" rendered="#{rv1.createDate ne null}">
+							<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+						</h:outputText>
+						<p:outputLabel value="N/A" rendered="#{rv1.createDate eq null and rv1.originalFname eq null}" />
+						<p:outputLabel value="Awaiting Submission" rendered="#{rv1.createDate eq null and rv1.originalFname ne null}" />
+					</p:column>
+					<p:column headerText="#{lang['version']}" width="11%" priority="4">
+						<h:outputText value="#{rv1.versionNo}" rendered="#{rv1.versionNo ne null}" />
+						<p:outputLabel value="N/A" rendered="#{rv1.versionNo eq null and rv1.originalFname eq null}" />
+						<p:outputLabel value="Awaiting Submission" rendered="#{rv1.versionNo eq null and rv1.originalFname ne null}" />
+					</p:column>
+				</p:dataTable>
+		</p:fieldset>
+</ui:composition>

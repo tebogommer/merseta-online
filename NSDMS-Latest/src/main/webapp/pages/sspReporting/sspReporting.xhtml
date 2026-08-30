@@ -1,0 +1,101 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<p:growl showDetail="false" sticky="false" id="msg">
+						<p:autoUpdate />
+					</p:growl>
+					<h1>SSP Reporting By Financial Year</h1>
+					<h:form id="mainForm">
+						<p:dataTable var="rowVarFinYear" value="#{grantSspReportingUI.financialYearsDataModel}" rowKey="#{rowVarFinYear}" id="finYearList" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20,40" lazy="true" reflow="true">
+							<f:facet name="header">Financial Years Selection</f:facet>
+							<p:column headerText="Financial Year">
+								<h:outputText value="#{rowVarFinYear.description}" />
+							</p:column>
+							<p:column headerText="Grant Focus Year">
+								<h:outputText value="#{rowVarFinYear.grantFocusYear}" />
+							</p:column>
+							<p:column width="30" exportable="false">
+								<p:commandButton onstart="uploadStart()" oncomplete="uploadDone()" icon="fa fa-tasks" title="Generate WSP Report" action="#{grantSspReportingUI.generateWspReportByFinYear}" update=":resultsForm">
+									<p:confirm header="Confirmation" message="WSP Report: This may take some time to generate. Are you sure?" icon="fa fa-exclamation-triangle" />
+									<f:setPropertyActionListener value="#{rowVarFinYear}" target="#{grantSspReportingUI.selectedFinancialYears}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton onstart="uploadStart()" oncomplete="uploadDone()" icon="fa fa-tasks" title="Generate ATR Report" action="#{grantSspReportingUI.generateAtrReportByFinYear}" update=":resultsForm">
+									<p:confirm header="Confirmation" message="ATR Report: This may take some time to generate. Are you sure?" icon="fa fa-exclamation-triangle" />
+									<f:setPropertyActionListener value="#{rowVarFinYear}" target="#{grantSspReportingUI.selectedFinancialYears}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+					</h:form>
+				</div>
+				<h:form id="resultsForm">
+					<c:if test="#{grantSspReportingUI.selectedFinancialYears ne null}">
+						<div class="card card-w-title">
+							<h3>#{grantSspReportingUI.reportType} Report Generated For Grant Year: #{grantSspReportingUI.selectedFinancialYears.grantFocusYear}.</h3>
+							<ui:include src="/pages/includes/download_lazy.xhtml">
+								<ui:param name="file_name" value="#{grantSspReportingUI.reportType} Report For Grant Year: #{grantSspReportingUI.selectedFinancialYears.grantFocusYear}" />
+								<ui:param name="target" value="dataReportDT" />
+							</ui:include>
+							<div class="EmptyBox10" />
+							<p:dataTable var="rowVar" value="#{grantSspReportingUI.reportList}" rowKey="rowVar" id="dataReportDT" paginator="true" rows="5" paginatorPosition="bottom"
+								paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="4,5,10,20,40" reflow="true">
+								<f:facet name="header">SSP Report</f:facet>
+								<p:column headerText="Grant Year">
+									<h:outputText value="#{rowVar.grantYear}" />
+								</p:column>
+								<p:column headerText="Grant Status">
+									<h:outputText value="#{rowVar.grantStatus}" />
+								</p:column>
+								<p:column headerText="Entity ID">
+									<h:outputText value="#{rowVar.entityId}" />
+								</p:column>
+								<p:column headerText="Organisation Name">
+									<h:outputText value="#{rowVar.companyName}" />
+								</p:column>
+								<p:column headerText="Organisation Trading Name">
+									<h:outputText value="#{rowVar.tradingName}" />
+								</p:column>
+								<p:column headerText="SIC Code">
+									<h:outputText value="#{rowVar.sicCode}" />
+								</p:column>
+								<p:column headerText="SIC Code Description">
+									<h:outputText value="#{rowVar.sicCodeDescription}" />
+								</p:column>
+								<p:column headerText="Chamber">
+									<h:outputText value="#{rowVar.chamber}" />
+								</p:column>
+								<p:column headerText="OFO Code">
+									<h:outputText value="#{rowVar.ofoCode}" />
+								</p:column>
+								<p:column headerText="OFO Description">
+									<h:outputText value="#{rowVar.ofoCodeDescription}" />
+								</p:column>
+								<p:column headerText="Intervention Type">
+									<h:outputText value="#{rowVar.interventionType}" />
+								</p:column>
+								<p:column headerText="Source of Funding">
+									<h:outputText value="#{rowVar.funding}" />
+								</p:column>
+								<p:column headerText="Number of Reported (#{grantSspReportingUI.reportType}) Beneficiaries">
+									<h:outputText value="#{rowVar.amount}" />
+								</p:column>
+							</p:dataTable>
+						</div>
+					</c:if>
+				</h:form>
+			</div>
+		</div>
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+			<h:form>
+				<p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="fa fa-check" />
+				<p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="fa fa-times" />
+			</h:form>
+		</p:confirmDialog>
+
+	</ui:define>
+</ui:composition>

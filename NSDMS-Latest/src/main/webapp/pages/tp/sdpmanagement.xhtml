@@ -1,0 +1,2145 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui"
+	template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<p:importEnum type="haj.com.entity.enums.PivotNonPivotEnum" />
+		<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+		<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+		<p:importEnum type="haj.com.entity.enums.NewExistingLearnershipEnum" />
+		<p:importEnum type="haj.com.entity.enums.YesNoEnum" />
+		<p:importEnum type="haj.com.entity.enums.AccreditationApplicationTypeEnum" />
+		<p:importEnum type="haj.com.entity.enums.AssessorModType" />
+		<p:importEnum type="haj.com.entity.enums.IdPassportEnum" var="idPassportEnum" />
+		<p:importEnum type="haj.com.entity.enums.RsaCitizenTypeEnum" />
+		<p:importEnum type="haj.com.entity.enums.AssessorModeratorAppTypeEnum" />
+		<p:growl showDetail="false" life="10000" sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>#{lang['sdps']}</h1>
+
+					<h:form id="sdpManagementForm">
+
+						<p:dataTable var="rv" value="#{sdpmanagementUI.tpDataModel}" id="tpList" rowKey="#{rv.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+							rowsPerPageTemplate="5,10" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['company.name']}" filterBy="#{rv.company.companyName}" sortBy="#{rv.company.companyName}" filterStyle="width: 95%">
+								<h:outputText value="#{rv.company.companyName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['tradingName']}" filterBy="#{rv.company.tradingName}" sortBy="#{rv.company.tradingName}" filterStyle="width: 95%">
+								<h:outputText value="#{rv.company.tradingName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['entity.id']}" filterBy="#{rv.company.levyNumber}" sortBy="#{rv.company.levyNumber}" filterStyle="width: 95%">
+								<h:outputText value="#{rv.company.levyNumber}" />
+							</p:column>
+
+							<p:column headerText="Training Site Name" filterStyle="width: 95%">
+								<h:outputText value="#{rv.trainingSite.siteName}" rendered="#{rv.trainingSite ne null}" />
+								<h:outputText value="N/A" rendered="#{rv.trainingSite eq null}" />
+							</p:column>
+
+							<p:column headerText="#{lang['accreditation.number']}" filterBy="#{rv.certificateNumber}" sortBy="#{rv.certificateNumber}" filterStyle="width: 95%">
+								<h:outputText rendered="#{rv.certificateNumber ne null}" value="#{rv.certificateNumber}" />
+								<h:outputText rendered="#{rv.certificateNumber eq null}" value="#{rv.accreditationNumber}" />
+								<h:outputText rendered="#{(rv.certificateNumber eq null or rv.certificateNumber eq '') and (rv.accreditationNumber eq null or rv.accreditationNumber eq '') }" value="N/A" />
+							</p:column>
+
+							<p:column headerText="#{lang['start.date']}" sortBy="#{rv.startDate}" filterStyle="width: 95%">
+								<h:outputText value="#{rv.startDate}">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</h:outputText>
+								<h:outputText rendered="#{rv.startDate eq null}" value="N/A" />
+							</p:column>
+
+							<p:column headerText="Accreditation End Date " sortBy="#{rv.expiriyDate}" filterStyle="width: 95%">
+								<h:outputText value="#{rv.expiriyDate}">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</h:outputText>
+								<h:outputText rendered="#{rv.expiriyDate eq null}" value="N/A" />
+							</p:column>
+
+							<p:column headerText="#{lang['review.committee.date']}" sortBy="#{rvwpa.approvalDate}">
+								<h:outputText value="#{rv.reviewCommitteeMeeting.fromDateTime}">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</h:outputText>
+								<h:outputText rendered="#{rv.reviewCommitteeMeeting.fromDateTime eq null}" value="N/A" />
+							</p:column>
+
+							<p:column headerText="#{lang['decision.number']}" sortBy="#{rv.reviewCommitteeMeetingAgenda.decisionNumber}">
+								<h:outputText rendered="#{rv.reviewCommitteeMeetingAgenda ne null}" value="#{rv.reviewCommitteeMeetingAgenda.decisionNumber}" />
+								<h:outputText rendered="#{rv.reviewCommitteeMeetingAgenda eq null}" value="N/A" />
+							</p:column>
+
+							<p:column headerText="#{lang['type.of.application']}" sortBy="#{rv.accreditationApplicationTypeEnum}" filterStyle="width: 95%">
+								<h:outputText value="#{rv.accreditationApplicationTypeEnum.friendlyName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['company.approval']}" sortBy="#{rv.company.companyStatus}" filterStyle="width: 95%" rendered="false">
+								<h:outputText value="#{lang[rv.company.companyStatus.registrationName]}" />
+							</p:column>
+
+							<p:column headerText="#{lang['tp.application.status']}" sortBy="#{rv.approvalStatus}" filterStyle="width: 95%">
+								<h:outputText value="#{rv.approvalStatus.friendlyName}" />
+							</p:column>
+
+							<p:column width="145" rendered="true" headerText="#{lang['view.edit']}">
+
+								<p:commandButton onstart="uploadStart()" oncomplete="uploadDone()" action="#{trainingproviderapplicationUI.prepareSelectTPfor(true)}" icon="fa fa-search-plus" title="View Details" update=":sdpInfoForm @form resubmissionForm mainForm :sdpTtcAssessorsForm">
+									<f:setPropertyActionListener value="#{rv}" target="#{trainingproviderapplicationUI.selectedTrainingProviderApplication}" />
+									<f:setPropertyActionListener value="#{true}" target="#{trainingproviderapplicationUI.editCompanyDetails}" />
+									<f:setPropertyActionListener value="#{null}" target="#{sdpextensionofscopeUI.selectTrainingProviderApplication}" />
+									<f:setPropertyActionListener value="#{null}" target="#{trainingProviderApplicationAssessorModLinkUI.tpa}" />
+								</p:commandButton>
+
+								<p:spacer width="5" rendered="#{rv.accreditationApplicationTypeEnum eq AccreditationApplicationTypeEnum.QCTOTradeTestCentre}" />
+								<p:commandButton action="#{trainingProviderApplicationAssessorModLinkUI.selectApplicationForTtcAssessorModView}" rendered="#{rv.accreditationApplicationTypeEnum eq AccreditationApplicationTypeEnum.QCTOTradeTestCentre}" icon="fa fa-users" title="TTC Assessor Moderators"
+									update="mainForm :sdpInfoForm :sdpTtcAssessorsForm resubmissionForm">
+									<f:setPropertyActionListener value="#{null}" target="#{trainingproviderapplicationUI.selectedTrainingProviderApplication}" />
+									<f:setPropertyActionListener value="#{null}" target="#{sdpextensionofscopeUI.selectTrainingProviderApplication}" />
+									<f:setPropertyActionListener value="#{rv}" target="#{trainingProviderApplicationAssessorModLinkUI.tpa}" />
+								</p:commandButton>
+
+								<p:spacer width="5" rendered="#{sdpmanagementUI.showExtensionOfScope(rv)}" />
+								<p:commandButton rendered="#{sdpmanagementUI.showExtensionOfScope(rv)}" actionListener="#{trainingproviderapplicationUI.clearSelectedTP}" action="#{sdpextensionofscopeUI.prepareExtensionOfScope}" icon="fa fa-plus" title="Extension Of Scope"
+									update="mainForm :sdpInfoForm resubmissionForm :sdpTtcAssessorsForm">
+									<f:setPropertyActionListener value="#{null}" target="#{trainingproviderapplicationUI.selectedTrainingProviderApplication}" />
+									<f:setPropertyActionListener value="#{rv}" target="#{sdpextensionofscopeUI.selectTrainingProviderApplication}" />
+									<f:setPropertyActionListener value="false" target="#{sdpextensionofscopeUI.nonSetaExOfScope}" />
+									<f:setPropertyActionListener value="#{null}" target="#{trainingProviderApplicationAssessorModLinkUI.tpa}" />
+								</p:commandButton>
+
+								<p:spacer width="5" rendered="#{sdpmanagementUI.showAddQualification(rv)}" />
+								<p:commandButton rendered="#{sdpmanagementUI.showAddQualification(rv)}" actionListener="#{trainingproviderapplicationUI.clearSelectedTP}" action="#{sdpextensionofscopeUI.prepareExtensionOfScope}" icon="fa fa-plus" title="Add Qualification(s)"
+									update="mainForm :sdpInfoForm resubmissionForm :sdpTtcAssessorsForm">
+									<f:setPropertyActionListener value="#{null}" target="#{trainingproviderapplicationUI.selectedTrainingProviderApplication}" />
+									<f:setPropertyActionListener value="#{rv}" target="#{sdpextensionofscopeUI.selectTrainingProviderApplication}" />
+									<f:setPropertyActionListener value="true" target="#{sdpextensionofscopeUI.nonSetaExOfScope}" />
+									<f:setPropertyActionListener value="#{null}" target="#{trainingProviderApplicationAssessorModLinkUI.tpa}" />
+								</p:commandButton>
+
+								<p:spacer width="5" rendered="#{sdpmanagementUI.showExtensionRequest(rv)}"></p:spacer>
+								<p:commandButton rendered="#{sdpmanagementUI.showExtensionRequest(rv)}" icon="fa fa-repeat" title="Re-Accreditation or Re-Approval" actionListener="#{trainingproviderapplicationUI.clearSelectedTP}" oncomplete="PF('codeOfConductDialog').show()"
+									update="codeOfConductDialog :sdpInfoForm mainForm :sdpTtcAssessorsForm">
+									<f:setPropertyActionListener value="#{null}" target="#{trainingproviderapplicationUI.selectedTrainingProviderApplication}" />
+									<f:setPropertyActionListener value="#{null}" target="#{sdpextensionofscopeUI.selectTrainingProviderApplication}" />
+									<f:setPropertyActionListener value="#{rv}" target="#{sdpreaccreditationUI.selectTrainingProviderApplication}" />
+									<f:setPropertyActionListener value="#{null}" target="#{trainingProviderApplicationAssessorModLinkUI.tpa}" />
+								</p:commandButton>
+
+								<p:spacer width="5" rendered="#{sdpmanagementUI.showReSumissionRequest(rv)}"></p:spacer>
+								<p:commandButton rendered="#{sdpmanagementUI.showReSumissionRequest(rv)}" action="#{sdpreaccreditationUI.prepareResubmissionData}" actionListener="#{trainingproviderapplicationUI.clearSelectedTP}" icon="fa fa-repeat" title="Re-submission"
+									update="resubmissionForm :sdpInfoForm mainForm :sdpTtcAssessorsForm">
+									<f:setPropertyActionListener value="#{rv}" target="#{sdpreaccreditationUI.selectTrainingProviderApplication}" />
+									<f:setPropertyActionListener value="#{null}" target="#{trainingProviderApplicationAssessorModLinkUI.tpa}" />
+									<f:setPropertyActionListener value="#{null}" target="#{sdpextensionofscopeUI.selectTrainingProviderApplication}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+
+			<h:form id="sdpTtcAssessorsForm" style="width:100%">
+				<h:panelGroup style="width:100%" rendered="#{trainingProviderApplicationAssessorModLinkUI.tpa.id != null}">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card card-w-title">
+								<h1>#{trainingProviderApplicationAssessorModLinkUI.tpa.company.companyName}: Trade Test Centre Assessors &amp; Moderators</h1>
+
+								<p:tabView id="tabViewTTCAssMod">
+									<p:ajax event="tabChange" listener="#{trainingProviderApplicationAssessorModLinkUI.onTabChange}" update=":sdpTtcAssessorsForm:tabViewTTCAssMod" />
+									<p:tab title="All Trade Test Centre Assessors &amp; Moderators" id="viewAllInfoTab">
+										<p:outputPanel id="ttcOutputPanel">
+											<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+
+												<span class="Fs13 gray"><i class="fa fa-info-circle" aria-hidden="true"></i> Changing the tab will clear information selected.</span>
+												<div class="EmptyBox5" />
+												<p:dataTable var="rvycc" value="#{trainingProviderApplicationAssessorModLinkUI.ttcAssessorModLinkDataModel}" id="ttcAssModDT" paginator="true" rows="5" paginatorPosition="bottom"
+													paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20,40,60,80,100" reflow="true" lazy="true">
+
+													<p:column headerText="NSDMS Link ID" style="width: 7%" sortBy="#{rvycc.assessorModeratorApplication.id}" filterStyle="width: 95%">
+														<h:outputText value="#{rvycc.id}" />
+													</p:column>
+
+													<p:column headerText="Full Name" sortBy="#{rvycc.assessorModeratorApplication.user.firstName}" filterStyle="width: 95%">
+														<h:outputText value="#{rvycc.assessorModeratorApplication.user.firstName} #{rvycc.assessorModeratorApplication.user.lastName}" />
+													</p:column>
+
+													<p:column headerText="Email" sortBy="#{rvycc.assessorModeratorApplication.user.email}" filterStyle="width: 95%">
+														<h:outputText value="#{rvycc.assessorModeratorApplication.user.email}" />
+													</p:column>
+
+													<p:column headerText="Designation Registration Number" sortBy="#{rvycc.assessorModeratorApplication.certificateNumber}" filterStyle="width: 95%">
+														<h:outputText value="#{rvycc.assessorModeratorApplication.certificateNumber}" />
+													</p:column>
+
+													<p:column headerText="Status" sortBy="#{rvycc.assessorModeratorApplication.status}" filterStyle="width: 95%" rendered="false">
+														<h:outputText value="#{rvycc.assessorModeratorApplication.status}" />
+													</p:column>
+
+													<p:column headerText="End Date" sortBy="#{rvycc.assessorModeratorApplication.endDate}" filterStyle="width: 95%">
+														<h:outputText value="#{rvycc.assessorModeratorApplication.endDate}">
+															<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+														</h:outputText>
+													</p:column>
+
+													<p:column headerText="Application Type" sortBy="#{rvycc.assessorModeratorApplication.applicationType.displayName}" filterStyle="width: 95%" exportable="false">
+														<h:outputText value="#{rvycc.assessorModeratorApplication.applicationType.displayName}" />
+													</p:column>
+
+													<p:column headerText="Edit / View" exportable="false" style="width: 7%" styleClass="action-column">
+														<p:commandButton update=":sdpTtcAssessorsForm:tabViewTTCAssMod:viewInfoAssessorModeratorPanel" icon="fa fa-search" action="#{trainingProviderApplicationAssessorModLinkUI.viewLinkInformation}" title="View Information">
+															<f:setPropertyActionListener value="#{rvycc}" target="#{trainingProviderApplicationAssessorModLinkUI.providerApplicationTradeTestAssessorsLinkView}" />
+														</p:commandButton>
+													</p:column>
+												</p:dataTable>
+											</p:panelGrid>
+										</p:outputPanel>
+
+										<p:outputPanel id="viewInfoAssessorModeratorPanel">
+
+											<c:if test="#{trainingProviderApplicationAssessorModLinkUI.providerApplicationTradeTestAssessorsLinkView ne null}">
+												<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+													<div class="EmptyBox10" />
+
+													<h3>#{trainingProviderApplicationAssessorModLinkUI.providerApplicationTradeTestAssessorsLinkView.assessorModeratorApplication.user.firstName} #{trainingProviderApplicationAssessorModLinkUI.providerApplicationTradeTestAssessorsLinkView.assessorModeratorApplication.user.lastName}
+														Selected</h3>
+
+													<p:fieldset legend="Accreditation Information">
+														<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+															<h:panelGroup styleClass="md-inputfield">
+																<p:inputText disabled="true" value="#{trainingProviderApplicationAssessorModLinkUI.assessorModeratorApplicationView.etqa.description}" style="width:95%">
+																	<p:ajax />
+																</p:inputText>
+																<p:outputLabel value="Primary ETQA" />
+															</h:panelGroup>
+															<h:panelGroup styleClass="md-inputfield">
+																<p:inputText disabled="true" value="#{trainingProviderApplicationAssessorModLinkUI.assessorModeratorApplicationView.applicationType.displayName}" style="width:95%">
+																	<p:ajax />
+																</p:inputText>
+																<p:outputLabel value="Application Type" />
+															</h:panelGroup>
+															<h:panelGroup styleClass="md-inputfield">
+																<p:inputText disabled="true" value="#{trainingProviderApplicationAssessorModLinkUI.assessorModeratorApplicationView.startDate}" style="width:95%">
+																	<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+																</p:inputText>
+																<p:outputLabel value="Designation: Start Date" />
+															</h:panelGroup>
+
+															<h:panelGroup styleClass="md-inputfield">
+																<p:inputText disabled="true" value="#{trainingProviderApplicationAssessorModLinkUI.assessorModeratorApplicationView.endDate}" style="width:95%">
+																	<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+																</p:inputText>
+																<p:outputLabel value="Designation: End Date" />
+															</h:panelGroup>
+
+															<h:panelGroup styleClass="md-inputfield">
+																<p:inputText disabled="true" value="#{trainingProviderApplicationAssessorModLinkUI.assessorModeratorApplicationView.certificateNumber}" style="width:95%">
+																</p:inputText>
+																<p:outputLabel value="Designation: Registration Number" />
+															</h:panelGroup>
+														</p:panelGrid>
+													</p:fieldset>
+
+													<p:fieldset legend="SAQA Qualifications Assigned">
+														<p:outputPanel id="assModQualsPanel">
+															<p:commandButton rendered="#{trainingProviderApplicationAssessorModLinkUI.canCreate}" id="newScopeBtn" icon="fa fa-plus" value="Add New Scope" process="@this" update=":assModScopeUpdForm" action="#{trainingProviderApplicationAssessorModLinkUI.prepNewQualificationScope}" />	
+															<div class="EmptyBox10" />
+															<p:dataTable var="rvqv" value="#{trainingProviderApplicationAssessorModLinkUI.qualificationListView}" id="tpViewList" rowKey="#{rvqv.id}" paginator="true" rows="5" paginatorPosition="bottom"
+																paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10" reflow="true">
+																<f:facet name="header">SAQA Qualifications Link/Assigned</f:facet>
+																<p:column headerText="#{lang['code']}">
+																	<h:outputText value="#{rvqv.code}" />
+																</p:column>
+																<p:column headerText="#{lang['qualification']}">
+																	<h:outputText value="#{rvqv.description}" />
+																</p:column>
+															</p:dataTable>
+														</p:outputPanel>
+													</p:fieldset>
+
+													<p:fieldset legend="Additional Information">
+														<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+															<h:panelGroup styleClass="md-inputfield">
+																<p:inputText disabled="true"
+																	value="#{trainingProviderApplicationAssessorModLinkUI.providerApplicationTradeTestAssessorsLinkView.createUser.firstName} #{trainingProviderApplicationAssessorModLinkUI.providerApplicationTradeTestAssessorsLinkView.createUser.lastName} (#{trainingProviderApplicationAssessorModLinkUI.providerApplicationTradeTestAssessorsLinkView.createUser.email})"
+																	style="width:100%">
+																</p:inputText>
+																<p:outputLabel value="Created By:" />
+															</h:panelGroup>
+
+															<h:panelGroup styleClass="md-inputfield">
+																<p:inputText disabled="true" value="#{trainingProviderApplicationAssessorModLinkUI.providerApplicationTradeTestAssessorsLinkView.createDate}" style="width:100%">
+																	<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME}" />
+																</p:inputText>
+																<p:outputLabel value="Date Created:" />
+															</h:panelGroup>
+
+															<h:panelGroup styleClass="md-inputfield" rendered="#{trainingProviderApplicationAssessorModLinkUI.providerApplicationTradeTestAssessorsLinkView.updateUser ne null}">
+																<p:inputText disabled="true"
+																	value="#{trainingProviderApplicationAssessorModLinkUI.providerApplicationTradeTestAssessorsLinkView.updateUser.firstName} #{trainingProviderApplicationAssessorModLinkUI.providerApplicationTradeTestAssessorsLinkView.updateUser.lastName} (#{trainingProviderApplicationAssessorModLinkUI.providerApplicationTradeTestAssessorsLinkView.updateUser.email})"
+																	style="width:100%">
+																</p:inputText>
+																<p:outputLabel value="Last Updated By:" />
+															</h:panelGroup>
+
+															<h:panelGroup styleClass="md-inputfield" rendered="#{trainingProviderApplicationAssessorModLinkUI.providerApplicationTradeTestAssessorsLinkView.updateUser ne null}">
+																<p:inputText disabled="true" value="#{trainingProviderApplicationAssessorModLinkUI.providerApplicationTradeTestAssessorsLinkView.updateDate}" style="width:100%">
+																	<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME}" />
+																</p:inputText>
+																<p:outputLabel value="Date Updated:" />
+															</h:panelGroup>
+
+
+														</p:panelGrid>
+													</p:fieldset>
+												</p:panelGrid>
+											</c:if>
+
+										</p:outputPanel>
+									</p:tab>
+									<p:tab title="Create New Link/Entry" id="createNewEntryTab" rendered="#{trainingProviderApplicationAssessorModLinkUI.canCreate}">
+										<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+											<p:outputPanel id="ttcAssModNewEntryOutputPanel">
+												<span class="Fs13 gray"><i class="fa fa-info-circle" aria-hidden="true"></i> Changing the tab will clear information below! Please complete new entry before changing tab view. </span>
+												<c:if test="#{trainingProviderApplicationAssessorModLinkUI.user eq null}">
+													<div class="EmptyBox5" />
+													<p:fieldset id="typeofReg" legend="Registration Type">
+														<p:panelGrid id="typeofRegGrid" columns="1" styleClass="ui-panelgrid-blank form-group">
+															<p:selectOneRadio id="typeSelectionSOR" value="#{trainingProviderApplicationAssessorModLinkUI.applicationType}" columns="1" layout="responsive">
+																<p:ajax update=":sdpTtcAssessorsForm:tabViewTTCAssMod:ttcAssModNewEntryOutputPanel" listener="#{trainingProviderApplicationAssessorModLinkUI.selectRegType}" />
+																<f:selectItems value="#{enumUI.assessorModeratorAppTypeEnumTccDD}" var="typeAssMod" itemLabel="#{typeAssMod}" itemValue="#{typeAssMod}" />
+															</p:selectOneRadio>
+														</p:panelGrid>
+													</p:fieldset>
+												</c:if>
+
+												<c:if test="#{trainingProviderApplicationAssessorModLinkUI.user eq null and trainingProviderApplicationAssessorModLinkUI.applicationType ne null}">
+													<div class="EmptyBox5" />
+													<p:fieldset id="searchRsaIdOrPassport" legend="#{lang['enter.RSA.ID.number.or.passport.number']}">
+														<p:panelGrid id="searchRsaIdOrPassportPnl" columns="3" styleClass="ui-panelgrid-blank form-group">
+															<p:selectOneRadio id="passNumID" value="#{trainingProviderApplicationAssessorModLinkUI.idpassport}" columns="1" layout="responsive">
+																<p:ajax update=":sdpTtcAssessorsForm:tabViewTTCAssMod:ttcAssModNewEntryOutputPanel" />
+																<f:selectItems value="#{enumUI.idPassportEnumDD}" var="idpassEnum" itemLabel="#{idpassEnum}" itemValue="#{idpassEnum}" />
+															</p:selectOneRadio>
+															<h:panelGroup id="rsaIDInput" styleClass="md-inputfield" rendered="#{trainingProviderApplicationAssessorModLinkUI.idpassport eq idPassportEnum.RsaId}">
+																<p:inputText id="rsaIdCriteria" maxlength="#{searchUserPassportOrIdUI.MAX_RSA_ID_NUMBER}" value="#{trainingProviderApplicationAssessorModLinkUI.idnumber}" style="width:95%" requiredMessage="#{lang['rsa.id.number']} " required="true">
+																</p:inputText>
+																<p:outputLabel value="#{lang['rsa.id.number']}" for="rsaIdCriteria" />
+															</h:panelGroup>
+															<h:panelGroup id="passportNumInput" styleClass="md-inputfield" rendered="#{trainingProviderApplicationAssessorModLinkUI.idpassport eq idPassportEnum.Passport}">
+																<p:inputText validatorMessage="#{lang['user.passport.length']}" id="passportNumCriteria" maxlength="#{searchUserPassportOrIdUI.MAX_PASSPORT_NUMBER}" value="#{trainingProviderApplicationAssessorModLinkUI.passportNumber}" style="width:95%" requiredMessage="#{lang['passport.number']}"
+																	required="true">
+																</p:inputText>
+																<h:message for="passportNumCriteria" />
+																<p:outputLabel value="#{lang['passport.number']}" for="passportNumCriteria" />
+															</h:panelGroup>
+															<p:commandButton id="idPassBtn" icon="fa fa-search" value="Submit" process="searchRsaIdOrPassport" actionListener="#{trainingProviderApplicationAssessorModLinkUI.findUserByIDOrPassport}" update=":sdpTtcAssessorsForm:tabViewTTCAssMod:ttcAssModNewEntryOutputPanel"
+																rendered="#{trainingProviderApplicationAssessorModLinkUI.idpassport ne null}" />
+														</p:panelGrid>
+													</p:fieldset>
+												</c:if>
+
+												<c:if test="#{trainingProviderApplicationAssessorModLinkUI.user ne null}">
+													<div class="EmptyBox10" />
+													<p:commandButton process="@this" action="#{trainingProviderApplicationAssessorModLinkUI.clearSearch}" update=":sdpTtcAssessorsForm:tabViewTTCAssMod:ttcAssModNewEntryOutputPanel" value="Clear Information" icon="fa fa-repeat">
+														<p:confirm header="#{lang['confirmation']}" message="Are you sure? This will clear all enetered information." icon="ui-icon-warning" />
+													</p:commandButton>
+													<div class="EmptyBox10" />
+													<p:fieldset id="userInfoFS" legend="User Information">
+														<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+															<h:panelGroup>
+																<div>
+																	<p:outputLabel value="#{lang['occupation.ofo.code']}" for="ofoCode" style="width:100%; color:#977949" />
+																</div>
+																<div>
+																	<p:autoComplete required="#{trainingProviderApplicationAssessorModLinkUI.user.updateBean.ofoCodes}" disabled="#{!trainingProviderApplicationAssessorModLinkUI.user.updateBean.ofoCodes}" id="ofoCode" value="#{trainingProviderApplicationAssessorModLinkUI.user.ofoCodes}"
+																		completeMethod="#{autoCompleteUI.completeOfoCodes}" var="rvofo" itemLabel="#{rvofo.ofoDescription}" itemValue="#{rvofo}" forceSelection="true" converter="OfoCodesConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 100%" style="width: 100%;"
+																		requiredMessage="#{lang['select.ofo.code']}">
+																		<p:ajax event="itemSelect" />
+																		<p:column headerText="OfoCodes" style="white-space: nowrap">#{rvofo.ofoCodeParent}</p:column>
+																		<p:column headerText="Description" style="white-space: nowrap">#{rvofo.description}</p:column>
+																	</p:autoComplete>
+																</div>
+															</h:panelGroup>
+
+															<h:panelGroup>
+																<div>
+																	<p:outputLabel value="#{lang['title']}" for="title" style="width:100%; color:#977949" />
+																</div>
+																<div>
+																	<p:selectOneMenu required="#{trainingProviderApplicationAssessorModLinkUI.user.updateBean.title}" disabled="#{!trainingProviderApplicationAssessorModLinkUI.user.updateBean.title}" id="title" value="#{trainingProviderApplicationAssessorModLinkUI.user.title}"
+																		converter="TitleConvertor" style="width:100%" requiredMessage="#{lang['select.title']}">
+																		<p:ajax event="itemSelect" />
+																		<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+																		<f:selectItems value="#{selectItemsUI.selectItemsTitles}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+																	</p:selectOneMenu>
+																</div>
+															</h:panelGroup>
+
+															<h:panelGroup styleClass="md-inputfield">
+																<p:inputText required="#{trainingProviderApplicationAssessorModLinkUI.user.updateBean.firstName}" disabled="#{!trainingProviderApplicationAssessorModLinkUI.user.updateBean.firstName}" id="userName" value="#{trainingProviderApplicationAssessorModLinkUI.user.firstName}"
+																	style="width:100%" requiredMessage="#{lang['enter.your.name']}">
+																	<p:ajax />
+																</p:inputText>
+																<p:outputLabel value="#{lang['first.name']}" for="userName" />
+															</h:panelGroup>
+
+															<h:panelGroup styleClass="md-inputfield">
+																<p:inputText id="otherNames" required="false" disabled="#{!trainingProviderApplicationAssessorModLinkUI.user.updateBean.middleName}" value="#{trainingProviderApplicationAssessorModLinkUI.user.middleName}" style="width:100%" requiredMessage="#{lang['enter.your.last.name']}">
+																	<p:ajax />
+																</p:inputText>
+																<p:outputLabel value="Other Names" for="otherNames" />
+															</h:panelGroup>
+
+															<h:panelGroup styleClass="md-inputfield">
+																<p:inputText required="#{trainingProviderApplicationAssessorModLinkUI.user.updateBean.lastName}" disabled="#{!trainingProviderApplicationAssessorModLinkUI.user.updateBean.lastName}" id="userSurname" value="#{trainingProviderApplicationAssessorModLinkUI.user.lastName}"
+																	style="width:100%" requiredMessage="#{lang['enter.your.last.name']}">
+																	<p:ajax />
+																</p:inputText>
+																<p:outputLabel value="#{lang['surname']}" for="userSurname" />
+															</h:panelGroup>
+
+															<h:panelGroup styleClass="md-inputfield">
+																<p:inputText required="#{trainingProviderApplicationAssessorModLinkUI.user.updateBean.email}" disabled="#{!trainingProviderApplicationAssessorModLinkUI.user.updateBean.email}" id="userEmail" value="#{trainingProviderApplicationAssessorModLinkUI.user.email}" style="width:100%"
+																	requiredMessage="#{lang['enter.your.email.address']}">
+																	<p:ajax />
+																</p:inputText>
+																<p:outputLabel value="#{lang['emails']}" for="userEmail" />
+															</h:panelGroup>
+
+															<h:panelGroup styleClass="md-inputfield">
+																<p:inputMask required="#{trainingProviderApplicationAssessorModLinkUI.user.updateBean.cellNumber}" disabled="#{!trainingProviderApplicationAssessorModLinkUI.user.updateBean.cellNumber}" id="cellNumber" mask="#{profileUI.CELLPHONE_FORMAT}"
+																	value="#{trainingProviderApplicationAssessorModLinkUI.user.cellNumber}" style="width: 100%" label="cellNumber" requiredMessage="Enter mobile number">
+																	<o:validator validatorId="javax.faces.Length" minimum="0" maximum="20" message="#{lang['user.cellnumber.length']}" />
+																	<p:ajax />
+																</p:inputMask>
+																<p:outputLabel value="#{lang['mobile.number']}" for="cellNumber" />
+															</h:panelGroup>
+
+															<h:panelGroup styleClass="md-inputfield">
+																<p:inputMask required="false" disabled="#{!trainingProviderApplicationAssessorModLinkUI.user.updateBean.telNumber}" id="telNumber" mask="#{profileUI.TELPHONE_FORMAT}" value="#{trainingProviderApplicationAssessorModLinkUI.user.telNumber}" style="width: 100%" label="telNumber"
+																	requiredMessage="Enter mobile number">
+																	<o:validator validatorId="javax.faces.Length" minimum="0" maximum="20" message="#{lang['user.tellnumber.length']}" />
+																	<p:ajax />
+																</p:inputMask>
+																<p:outputLabel value="#{lang['tel.number']}:" for="telNumber" />
+															</h:panelGroup>
+
+															<h:panelGroup styleClass="md-inputfield" rendered="#{trainingProviderApplicationAssessorModLinkUI.user.rsaIDNumber.length() gt 0}">
+																<p:inputText id="userIdNumber" value="#{trainingProviderApplicationAssessorModLinkUI.user.rsaIDNumber}" style="width:100%" disabled="true">
+																	<p:ajax />
+																</p:inputText>
+																<p:outputLabel value="#{lang['rsa.id.number']}" for="userIdNumber" />
+															</h:panelGroup>
+															<h:panelGroup styleClass="md-inputfield" rendered="#{trainingProviderApplicationAssessorModLinkUI.user.passportNumber.length() gt 0}">
+																<p:inputText id="userPassport" value="#{trainingProviderApplicationAssessorModLinkUI.user.passportNumber}" style="width:100%" disabled="true">
+																	<p:ajax />
+																</p:inputText>
+																<p:outputLabel value="#{lang['passport.number']}" for="userPassport" />
+															</h:panelGroup>
+
+															<h:panelGroup styleClass="md-inputfield" rendered="#{trainingProviderApplicationAssessorModLinkUI.user.rsaIDNumber.length() gt 0}">
+																<p:inputText value="#{trainingProviderApplicationAssessorModLinkUI.user.rsaCitizenTypeEnum.friendlyName}" style="width:100%" disabled="true">
+																	<p:ajax />
+																</p:inputText>
+																<p:outputLabel value="RSA Citizen Type" />
+															</h:panelGroup>
+
+															<h:panelGroup styleClass="md-inputfield" rendered="#{trainingProviderApplicationAssessorModLinkUI.user.rsaIDNumber.length() gt 0 and trainingProviderApplicationAssessorModLinkUI.user.rsaCitizenTypeEnum eq RsaCitizenTypeEnum.RsaCitizen}">
+																<p:autoComplete disabled="true" value="#{trainingProviderApplicationAssessorModLinkUI.user.nationality}" style="width:100%" id="nationalityDisplay" requiredMessage="#{lang['nationality.required']}" completeMethod="#{autoCompleteUI.completeNationality}" var="rv"
+																	itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="NationalityConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+																	<p:column headerText="#{lang['nationality']}" style="white-space: nowrap">#{rv.description}</p:column>
+																	<p:ajax event="itemSelect" />
+																</p:autoComplete>
+																<p:outputLabel value="#{lang['nationality']}" for="nationalityDisplay" />
+															</h:panelGroup>
+
+															<h:panelGroup styleClass="md-inputfield" rendered="#{trainingProviderApplicationAssessorModLinkUI.user.rsaIDNumber.length() gt 0 and trainingProviderApplicationAssessorModLinkUI.user.rsaCitizenTypeEnum ne RsaCitizenTypeEnum.RsaCitizen}">
+																<p:autoComplete required="#{trainingProviderApplicationAssessorModLinkUI.user.updateBean.nationality}" disabled="#{!trainingProviderApplicationAssessorModLinkUI.user.updateBean.nationality}" value="#{trainingProviderApplicationAssessorModLinkUI.user.nationality}" style="width:100%"
+																	id="nationalityNonRsaCitizen" requiredMessage="#{lang['nationality.required']}" completeMethod="#{autoCompleteUI.completeNationalityWithNonSelectable}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="NationalityConvertor" dropdown="true"
+																	minQueryLength="3" maxResults="10">
+																	<p:column headerText="#{lang['nationality']}" style="white-space: nowrap">#{rv.description}</p:column>
+																	<p:ajax event="itemSelect" />
+																</p:autoComplete>
+																<p:outputLabel value="#{lang['nationality']}" for="nationalityNonRsaCitizen" />
+															</h:panelGroup>
+
+															<h:panelGroup styleClass="md-inputfield" rendered="#{trainingProviderApplicationAssessorModLinkUI.user.passportNumber.length() gt 0}">
+																<p:autoComplete required="#{trainingProviderApplicationAssessorModLinkUI.user.updateBean.nationality}" disabled="#{!trainingProviderApplicationAssessorModLinkUI.user.updateBean.nationality}" value="#{trainingProviderApplicationAssessorModLinkUI.user.nationality}" style="width:100%"
+																	id="nationalityWithExclude" requiredMessage="#{lang['nationality.required']}" completeMethod="#{autoCompleteUI.completeNationalityWithNonSelectable}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="NationalityConvertor" dropdown="true"
+																	minQueryLength="3" maxResults="10">
+																	<p:column headerText="#{lang['nationality']}" style="white-space: nowrap">#{rv.description}</p:column>
+																	<p:ajax event="itemSelect" />
+																</p:autoComplete>
+																<p:outputLabel value="#{lang['nationality']}" for="nationalityWithExclude" />
+															</h:panelGroup>
+
+															<h:panelGroup styleClass="md-inputfield">
+																<p:autoComplete required="#{trainingProviderApplicationAssessorModLinkUI.user.updateBean.gender}" disabled="#{!trainingProviderApplicationAssessorModLinkUI.user.updateBean.gender}" value="#{trainingProviderApplicationAssessorModLinkUI.user.gender}" id="gender" style="width:100%"
+																	completeMethod="#{autoCompleteUI.completeGender}" var="rv" itemLabel="#{rv.genderName}" itemValue="#{rv}" forceSelection="true" converter="GenderConvertor" dropdown="true" minQueryLength="3" maxResults="10" requiredMessage="#{lang['provide.gender']}">
+																	<p:column headerText="Gender" style="white-space: nowrap">#{rv.genderName}</p:column>
+																	<p:ajax event="itemSelect" />
+																</p:autoComplete>
+																<p:outputLabel value="#{lang['gender']}" for="gender" />
+															</h:panelGroup>
+
+															<h:panelGroup styleClass="md-inputfield">
+																<p:autoComplete required="#{trainingProviderApplicationAssessorModLinkUI.user.updateBean.equity}" disabled="#{!trainingProviderApplicationAssessorModLinkUI.user.updateBean.equity}" value="#{trainingProviderApplicationAssessorModLinkUI.user.equity}" id="equity" style="width:100%"
+																	completeMethod="#{autoCompleteUI.completeEquityExcludeOtherAndUnkown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="EquityConvertor" dropdown="true" minQueryLength="3" maxResults="10" requiredMessage="#{lang['provide.equity']}">
+																	<p:column headerText="equity" style="white-space: nowrap">#{rv.description}</p:column>
+																	<p:ajax event="itemSelect" />
+																</p:autoComplete>
+																<p:outputLabel value="#{lang['equity']}" for="equity" />
+															</h:panelGroup>
+
+															<h:panelGroup styleClass="md-inputfield">
+																<p:calendar required="#{trainingProviderApplicationAssessorModLinkUI.user.updateBean.dateOfBirth}" disabled="#{!trainingProviderApplicationAssessorModLinkUI.user.updateBean.dateOfBirth}" value="#{trainingProviderApplicationAssessorModLinkUI.user.dateOfBirth}" id="dob" showOn="button"
+																	requiredMessage="#{lang['select.date.of.birth']}" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" inputStyle="width:90%">
+																	<p:ajax event="dateSelect"></p:ajax>
+																</p:calendar>
+																<p:outputLabel value="#{lang['date.of.birth']}" for="dob" style="width:100%" />
+															</h:panelGroup>
+
+															<h:panelGroup styleClass="md-inputfield">
+																<p:calendar required="#{trainingProviderApplicationAssessorModLinkUI.user.updateBean.lastSchoolYear}" disabled="#{!trainingProviderApplicationAssessorModLinkUI.user.updateBean.lastSchoolYear}" id="monthlastSchoolYear"
+																	value="#{trainingProviderApplicationAssessorModLinkUI.user.lastSchoolYear}" maxdate="#{workplaceapprovalUI.today}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" inputStyle="width:90%" requiredMessage="Select Last School Year Date">
+																	<p:ajax event="dateSelect"></p:ajax>
+																</p:calendar>
+																<p:outputLabel value="Last School Year Date" for="monthlastSchoolYear" style="width:100%" />
+															</h:panelGroup>
+
+															<h:panelGroup styleClass="md-inputfield">
+																<p:autoComplete required="#{trainingProviderApplicationAssessorModLinkUI.user.updateBean.previousSchools}" disabled="#{!trainingProviderApplicationAssessorModLinkUI.user.updateBean.previousSchools}" id="lastSchoolAttended"
+																	value="#{trainingProviderApplicationAssessorModLinkUI.user.previousSchools}" completeMethod="#{autoCompleteUI.completePreviousSchools}" var="rv" itemLabel="#{rv.officialInstitutionName}" itemValue="#{rv}" forceSelection="true" converter="PreviousSchoolsConvertor" dropdown="true"
+																	minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" resultsMessage="Select Last School Attended">
+																	<p:column headerText="EMIS Code" style="white-space: nowrap">#{rv.natEmis}</p:column>
+																	<p:column headerText="Official Institution Name" style="white-space: nowrap">#{rv.officialInstitutionName}</p:column>
+																	<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.townCity}</p:column>
+																	<p:column headerText="#{lang['province']}" style="white-space: nowrap">#{rv.province}</p:column>
+																	<p:ajax event="itemSelect" />
+																</p:autoComplete>
+																<p:outputLabel value="Last School Attended" for="lastSchoolAttended" styleClass="gray" />
+															</h:panelGroup>
+
+														</p:panelGrid>
+
+														<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+															<p:fieldset legend="#{lang['residentialAddress']}">
+																<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank" id="compAddrPcode">
+																	<h:panelGroup styleClass="md-inputfield">
+																		<p:inputText required="#{trainingProviderApplicationAssessorModLinkUI.user.residentialAddress.addressUpdateInfoBean.lineOne}" disabled="#{!trainingProviderApplicationAssessorModLinkUI.user.residentialAddress.addressUpdateInfoBean.lineOne}" id="addr1"
+																			value="#{trainingProviderApplicationAssessorModLinkUI.user.residentialAddress.addressLine1}" style="opacity: 1 !important; color: black; width:100%" requiredMessage="#{lang['enter.residential.address']}">
+																			<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['residentialAddress.lineone.length.error']}" />
+																			<p:ajax />
+																		</p:inputText>
+																		<p:outputLabel value="#{lang['address.line.1']}" for="addr1" />
+																	</h:panelGroup>
+																	<h:panelGroup styleClass="md-inputfield">
+																		<p:inputText required="#{trainingProviderApplicationAssessorModLinkUI.user.residentialAddress.addressUpdateInfoBean.lineTwo}" disabled="#{!trainingProviderApplicationAssessorModLinkUI.user.residentialAddress.addressUpdateInfoBean.lineTwo}" id="addr2"
+																			style="opacity: 1 !important; color: black; width:100%" value="#{trainingProviderApplicationAssessorModLinkUI.user.residentialAddress.addressLine2}" requiredMessage="Please enter address line 2">
+																			<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['residentialAddress.linetwo.length.error']}" />
+																			<p:ajax />
+																		</p:inputText>
+																		<p:outputLabel value="#{lang['address.line.2']}" for="addr2" />
+																	</h:panelGroup>
+																	<h:panelGroup styleClass="md-inputfield">
+																		<p:inputText required="false" disabled="#{!trainingProviderApplicationAssessorModLinkUI.user.residentialAddress.addressUpdateInfoBean.lineThree}" id="addr3" style="opacity: 1 !important; color: black; width:100%"
+																			value="#{trainingProviderApplicationAssessorModLinkUI.user.residentialAddress.addressLine3}">
+																			<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['residentialAddress.linethree.length.error']}" />
+																			<p:ajax />
+																		</p:inputText>
+																		<p:outputLabel value="#{lang['address.line.3']}" for="addr3" />
+																	</h:panelGroup>
+
+																	<h:panelGroup styleClass="md-inputfield">
+																		<p:autoComplete required="#{trainingProviderApplicationAssessorModLinkUI.user.residentialAddress.addressUpdateInfoBean.town}" disabled="#{!trainingProviderApplicationAssessorModLinkUI.user.residentialAddress.addressUpdateInfoBean.town}" id="town"
+																			value="#{trainingProviderApplicationAssessorModLinkUI.user.residentialAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3"
+																			maxResults="10" inputstyle="opacity: 1 !important; color: black; width: 100%" style="opacity: 1 !important; color: black; width: 100%" requiredMessage="#{lang['please.select.a.town']}">
+																			<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+																			<p:ajax event="itemSelect" />
+																		</p:autoComplete>
+																		<p:outputLabel value="#{lang['town']}" for="town" />
+																	</h:panelGroup>
+
+																	<h:panelGroup styleClass="md-inputfield">
+																		<p:inputText required="#{trainingProviderApplicationAssessorModLinkUI.user.residentialAddress.addressUpdateInfoBean.postCode}" disabled="#{!trainingProviderApplicationAssessorModLinkUI.user.residentialAddress.addressUpdateInfoBean.postCode}" id="pcode"
+																			style="opacity: 1 !important; color: black; width:100%" value="#{trainingProviderApplicationAssessorModLinkUI.user.residentialAddress.postcode}" requiredMessage="#{lang['provide.postcode']}">
+																			<o:validator validatorId="javax.faces.Length" minimum="0" maximum="4" message="#{lang['residentialAddress.code.length.error']}" />
+																			<p:ajax />
+																		</p:inputText>
+																		<p:outputLabel value="#{lang['post.code']}" for="pcode" />
+																	</h:panelGroup>
+
+																	<h:panelGroup styleClass="md-inputfield">
+																		<p:autoComplete required="#{trainingProviderApplicationAssessorModLinkUI.user.residentialAddress.addressUpdateInfoBean.muncipality}" disabled="#{!trainingProviderApplicationAssessorModLinkUI.user.residentialAddress.addressUpdateInfoBean.muncipality}" id="MunicipalityID"
+																			value="#{trainingProviderApplicationAssessorModLinkUI.user.residentialAddress.municipality}" completeMethod="#{sdfDetailUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityDesc}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true"
+																			minQueryLength="3" maxResults="10" inputstyle="opacity: 1 !important; color: black; width: 100%" style="opacity: 1 !important; color: black; width: 100%" requiredMessage="#{lang['select.municipality']}">
+																			<p:column headerText="#{lang['province']}" style="white-space: nowrap">#{rv.province.provinceDesc}</p:column>
+																			<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">#{rv.municipalityDesc}</p:column>
+																			<p:ajax event="itemSelect" update="resProvincePG"></p:ajax>
+																		</p:autoComplete>
+																		<p:outputLabel value="#{lang['municipality']}" for="MunicipalityID" />
+																	</h:panelGroup>
+
+																	<p:outputPanel id="resProvincePG">
+																		<h:panelGroup rendered="#{trainingProviderApplicationAssessorModLinkUI.user.residentialAddress.municipality ne null}" styleClass="md-inputfield">
+																			<p:inputText disabled="true" id="resProvince" value="#{trainingProviderApplicationAssessorModLinkUI.user.residentialAddress.municipality.province.provinceDesc}" style="opacity: 1 !important; color: black; width:100%">
+																				<p:ajax />
+																			</p:inputText>
+																			<p:outputLabel value="#{lang['province']}" for="resProvince" />
+																		</h:panelGroup>
+																	</p:outputPanel>
+																	<h:panelGroup styleClass="md-inputfield">
+																		<p:autoComplete required="#{trainingProviderApplicationAssessorModLinkUI.user.residentialAddress.addressUpdateInfoBean.statsSaAreaCode}" disabled="#{!trainingProviderApplicationAssessorModLinkUI.user.residentialAddress.addressUpdateInfoBean.statsSaAreaCode}" id="statsSaAreaCode"
+																			value="#{trainingProviderApplicationAssessorModLinkUI.user.residentialAddress.statsSaAreaCode}" completeMethod="#{autoCompleteUI.completeSTATSSAAreaCode}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="STATSSAAreaCodeConvertor"
+																			dropdown="true" minQueryLength="3" maxResults="10" inputstyle="opacity: 1 !important; color: black; width: 100%" style="opacity: 1 !important; color: black; width: 100%" requiredMessage="Select STATS SA Area Code">
+																			<p:ajax event="itemSelect" />
+																			<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+																			<p:column headerText="#{lang['description']}" style="white-space: nowrap">#{rv.description}</p:column>
+																		</p:autoComplete>
+																		<p:outputLabel value="STATS SA Area Code" for="statsSaAreaCode" />
+																	</h:panelGroup>
+																</p:panelGrid>
+															</p:fieldset>
+
+															<p:fieldset legend="#{lang['postalAddress']}">
+																<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank" id="compAddrPcodePostal">
+																	<h:panelGroup styleClass="md-inputfield" rendered="#{!trainingProviderApplicationAssessorModLinkUI.samePostal}">
+																		<p:inputText required="#{trainingProviderApplicationAssessorModLinkUI.user.postalAddress.addressUpdateInfoBean.lineOne}" disabled="#{!trainingProviderApplicationAssessorModLinkUI.user.postalAddress.addressUpdateInfoBean.lineOne}" id="addr1Postal"
+																			value="#{trainingProviderApplicationAssessorModLinkUI.user.postalAddress.addressLine1}" style="opacity: 1 !important; color: black; width:100%" requiredMessage="#{lang['enter.residential.address']}">
+																			<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['residentialAddress.lineone.length.error']}" />
+																			<p:ajax />
+																		</p:inputText>
+																		<p:outputLabel value="#{lang['address.line.1']}" for="addr1Postal" />
+																	</h:panelGroup>
+																	<h:panelGroup styleClass="md-inputfield" rendered="#{!trainingProviderApplicationAssessorModLinkUI.samePostal}">
+																		<p:inputText required="#{trainingProviderApplicationAssessorModLinkUI.user.postalAddress.addressUpdateInfoBean.lineTwo}" disabled="#{!trainingProviderApplicationAssessorModLinkUI.user.postalAddress.addressUpdateInfoBean.lineTwo}" id="addr2Postal"
+																			style="opacity: 1 !important; color: black; width:100%" value="#{trainingProviderApplicationAssessorModLinkUI.user.postalAddress.addressLine2}" requiredMessage="Please enter address line 2">
+																			<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['residentialAddress.linetwo.length.error']}" />
+																			<p:ajax />
+																		</p:inputText>
+																		<p:outputLabel value="#{lang['address.line.2']}" for="addr2Postal" />
+																	</h:panelGroup>
+																	<h:panelGroup styleClass="md-inputfield" rendered="#{!trainingProviderApplicationAssessorModLinkUI.samePostal}">
+																		<p:inputText required="false" disabled="#{!trainingProviderApplicationAssessorModLinkUI.user.postalAddress.addressUpdateInfoBean.lineThree}" id="addr3Postal" style="opacity: 1 !important; color: black; width:100%"
+																			value="#{trainingProviderApplicationAssessorModLinkUI.user.postalAddress.addressLine3}">
+																			<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['residentialAddress.linethree.length.error']}" />
+																			<p:ajax />
+																		</p:inputText>
+																		<p:outputLabel value="#{lang['address.line.3']}" for="addr3Postal" />
+																	</h:panelGroup>
+
+																	<h:panelGroup styleClass="md-inputfield" rendered="#{!trainingProviderApplicationAssessorModLinkUI.samePostal}">
+																		<p:autoComplete required="#{trainingProviderApplicationAssessorModLinkUI.user.postalAddress.addressUpdateInfoBean.town}" disabled="#{!trainingProviderApplicationAssessorModLinkUI.user.postalAddress.addressUpdateInfoBean.town}" id="townPostal"
+																			value="#{trainingProviderApplicationAssessorModLinkUI.user.postalAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3"
+																			maxResults="10" inputstyle="opacity: 1 !important; color: black; width: 100%" style="opacity: 1 !important; color: black; width: 100%" requiredMessage="#{lang['please.select.a.town']}">
+																			<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+																			<p:ajax event="itemSelect" />
+																		</p:autoComplete>
+																		<p:outputLabel value="#{lang['town']}" for="townPostal" />
+																	</h:panelGroup>
+
+																	<h:panelGroup styleClass="md-inputfield" rendered="#{!trainingProviderApplicationAssessorModLinkUI.samePostal}">
+																		<p:inputText required="#{trainingProviderApplicationAssessorModLinkUI.user.postalAddress.addressUpdateInfoBean.postCode}" disabled="#{!trainingProviderApplicationAssessorModLinkUI.user.postalAddress.addressUpdateInfoBean.postCode}" id="pcodePostal"
+																			style="opacity: 1 !important; color: black; width:100%" value="#{trainingProviderApplicationAssessorModLinkUI.user.postalAddress.postcode}" requiredMessage="#{lang['provide.postcode']}">
+																			<o:validator validatorId="javax.faces.Length" minimum="0" maximum="4" message="#{lang['residentialAddress.code.length.error']}" />
+																			<p:ajax />
+																		</p:inputText>
+																		<p:outputLabel value="#{lang['post.code']}" for="pcodePostal" />
+																	</h:panelGroup>
+
+																	<h:panelGroup styleClass="md-inputfield" rendered="#{!trainingProviderApplicationAssessorModLinkUI.samePostal}">
+																		<p:autoComplete required="#{trainingProviderApplicationAssessorModLinkUI.user.postalAddress.addressUpdateInfoBean.muncipality}" disabled="#{!trainingProviderApplicationAssessorModLinkUI.user.postalAddress.addressUpdateInfoBean.muncipality}" id="MunicipalityIDPostal"
+																			value="#{trainingProviderApplicationAssessorModLinkUI.user.postalAddress.municipality}" completeMethod="#{sdfDetailUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityDesc}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true"
+																			minQueryLength="3" maxResults="10" inputstyle="opacity: 1 !important; color: black; width: 100%" style="opacity: 1 !important; color: black; width: 100%" requiredMessage="#{lang['select.municipality']}">
+																			<p:column headerText="#{lang['province']}" style="white-space: nowrap">#{rv.province.provinceDesc}</p:column>
+																			<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">#{rv.municipalityDesc}</p:column>
+																			<p:ajax event="itemSelect" update="resProvincePGPostal"></p:ajax>
+																		</p:autoComplete>
+																		<p:outputLabel value="#{lang['municipality']}" for="MunicipalityIDPostal" />
+																	</h:panelGroup>
+
+																	<p:outputPanel id="resProvincePGPostal" rendered="#{!trainingProviderApplicationAssessorModLinkUI.samePostal}">
+																		<h:panelGroup rendered="#{trainingProviderApplicationAssessorModLinkUI.user.postalAddress.municipality ne null}" styleClass="md-inputfield">
+																			<p:inputText disabled="true" id="resProvincePostal" value="#{trainingProviderApplicationAssessorModLinkUI.user.postalAddress.municipality.province.provinceDesc}" style="opacity: 1 !important; color: black; width:100%">
+																				<p:ajax />
+																			</p:inputText>
+																			<p:outputLabel value="#{lang['province']}" for="resProvincePostal" />
+																		</h:panelGroup>
+																	</p:outputPanel>
+																</p:panelGrid>
+																<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank">
+																	<c:if test="#{trainingProviderApplicationAssessorModLinkUI.user.postalAddress.id ne null}">
+																		<div class="EmptyBox10" />
+																		<div class="EmptyBox10" />
+																	</c:if>
+																	<c:if test="#{trainingProviderApplicationAssessorModLinkUI.user.postalAddress.id eq null}">
+																		<h:panelGroup>
+																			<div>
+																				<p:outputLabel value="#{lang['same.as.my.address']}" styleClass="FontLight" />
+																			</div>
+																			<div>
+																				<p:selectBooleanCheckbox value="#{trainingProviderApplicationAssessorModLinkUI.samePostal}">
+																					<p:ajax update="compAddrPcodePostal" />
+																				</p:selectBooleanCheckbox>
+																			</div>
+																		</h:panelGroup>
+																	</c:if>
+																</p:panelGrid>
+															</p:fieldset>
+														</p:panelGrid>
+													</p:fieldset>
+
+													<div class="EmptyBox5" />
+													<p:fieldset id="userInfodisbalityFS" legend="User Disabilities">
+														<p:outputPanel id="disabilityEntryOP">
+															<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+																<h:panelGroup>
+																	<div>
+																		<p:outputLabel value="Does The User Have a Disability?" for="disabilitySelection" style="width:95%; color:#977949" />
+																	</div>
+																	<div>
+																		<p:selectOneMenu required="#{trainingProviderApplicationAssessorModLinkUI.user.updateBean.disability}" disabled="#{!trainingProviderApplicationAssessorModLinkUI.user.updateBean.disability}" id="disabilitySelection"
+																			value="#{trainingProviderApplicationAssessorModLinkUI.user.disability}" style="width:95%" requiredMessage="Provide if the user has a disability">
+																			<p:ajax event="itemSelect" update="disabilityEntryOP" listener="#{trainingProviderApplicationAssessorModLinkUI.prepNewDisabilityOnSelection}" />
+																			<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+																			<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+																		</p:selectOneMenu>
+																	</div>
+																</h:panelGroup>
+															</p:panelGrid>
+															<c:if test="#{trainingProviderApplicationAssessorModLinkUI.user.disability eq YesNoEnum.Yes}">
+																<c:if test="#{trainingProviderApplicationAssessorModLinkUI.alterUserDisability}">
+																	<div class="EmptyBox5" />
+																	<p:fieldset legend="Link/Assign Disability">
+																		<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+																			<h:panelGroup styleClass="md-inputfield">
+																				<p:autoComplete value="#{trainingProviderApplicationAssessorModLinkUI.selectedUserDisability.disabilityStatus}" completeMethod="#{autoCompleteUI.completeDisabilityCanSelect}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true"
+																					converter="DisabilityStatusConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputstyle="opacity: 1 !important; color: black; width: 95%" style="opacity: 1 !important; color: black; width: 95%">
+																					<p:column headerText="Disability" style="white-space: nowrap">#{rv.description}</p:column>
+																					<p:ajax event="itemSelect" update="disabilityEntryOP" />
+																				</p:autoComplete>
+																				<p:outputLabel value="#{lang['disability']}" />
+																			</h:panelGroup>
+
+																			<h:panelGroup rendered="#{trainingProviderApplicationAssessorModLinkUI.selectedUserDisability.disabilityStatus ne null}">
+																				<div>
+																					<p:outputLabel value="#{lang['disability.rating']}" style="width:95%; color:#977949" />
+																				</div>
+																				<div>
+																					<p:selectOneMenu value="#{trainingProviderApplicationAssessorModLinkUI.selectedUserDisability.disabilityRating}" style="width:95%" converter="DisabilityRatingConvertor">
+																						<p:ajax event="itemSelect" />
+																						<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+																						<f:selectItems value="#{trainingProviderApplicationAssessorModLinkUI.selectItemsUsersDisabilityRating}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+																					</p:selectOneMenu>
+																				</div>
+																			</h:panelGroup>
+																			<p:commandButton action="#{trainingProviderApplicationAssessorModLinkUI.addDisabilityToList}" process="disabilityEntryOP" value="Link/Assign Disability" icon="fa fa-plus" update=":sdpTtcAssessorsForm:tabViewTTCAssMod:ttcAssModNewEntryOutputPanel" />
+																		</p:panelGrid>
+																	</p:fieldset>
+																</c:if>
+
+																<div class="EmptyBox5" />
+
+																<p:dataTable var="rvd" value="#{trainingProviderApplicationAssessorModLinkUI.userDisabilityList}" id="disabilityList" rowKey="#{rvd.id}" paginator="true" rows="5" paginatorPosition="bottom"
+																	paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10" reflow="true">
+
+																	<f:facet name="header">User Disabilities</f:facet>
+
+																	<p:column headerText="#{lang['disability']}">
+																		<h:outputText value="#{rvd.disabilityStatus.description}" />
+																	</p:column>
+
+																	<p:column headerText="#{lang['disability.rating']}">
+																		<h:outputText value="#{rvd.disabilityRating.description}" />
+																	</p:column>
+
+																	<p:column headerText="Edit" exportable="false" width="7%" rendered="#{trainingProviderApplicationAssessorModLinkUI.alterUserDisability}">
+																		<p:commandButton process="@this" icon="fa fa-trash-o" title="Remove" update=":sdpTtcAssessorsForm:tabViewTTCAssMod:ttcAssModNewEntryOutputPanel" action="#{trainingProviderApplicationAssessorModLinkUI.removeDisability}">
+																			<f:setPropertyActionListener value="#{rvd}" target="#{trainingProviderApplicationAssessorModLinkUI.selectedUserDisability}" />
+																		</p:commandButton>
+																	</p:column>
+																</p:dataTable>
+															</c:if>
+
+														</p:outputPanel>
+													</p:fieldset>
+
+													<div class="EmptyBox5" />
+													<p:fieldset id="userInfoLanguageFS" legend="User Languages">
+														<p:outputPanel id="languageEntryOP">
+															<p:fieldset legend="Link/Assign Languages" rendered="#{trainingProviderApplicationAssessorModLinkUI.alterUserLanguages}">
+																<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+																	<h:panelGroup styleClass="md-inputfield">
+																		<p:autoComplete value="#{trainingProviderApplicationAssessorModLinkUI.selectedUserLanguage.language}" completeMethod="#{autoCompleteUI.completeLanguage}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="LanguageConvertor" dropdown="true"
+																			minQueryLength="3" maxResults="10" inputstyle="opacity: 1 !important; color: black; width: 95%" style="opacity: 1 !important; color: black; width: 95%">
+																			<p:column headerText="#{lang['language']}" style="white-space: nowrap">#{rv.description}</p:column>
+																			<p:ajax event="itemSelect" />
+																		</p:autoComplete>
+																		<p:outputLabel value="#{lang['language']}" />
+																	</h:panelGroup>
+																</p:panelGrid>
+																<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+																	<h:panelGroup rendered="true">
+																		<div>
+																			<p:outputLabel value="Speak?" style="width:95%; color:#977949" />
+																		</div>
+																		<div>
+																			<p:selectOneMenu value="#{trainingProviderApplicationAssessorModLinkUI.selectedUserLanguage.speark}" style="width:95%" converter="YesNoLookupConvertor">
+																				<p:ajax event="itemSelect" />
+																				<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+																				<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+																			</p:selectOneMenu>
+																		</div>
+																	</h:panelGroup>
+
+																	<h:panelGroup>
+																		<div>
+																			<p:outputLabel value="Read?" style="width:95%; color:#977949" />
+																		</div>
+																		<div>
+																			<p:selectOneMenu value="#{trainingProviderApplicationAssessorModLinkUI.selectedUserLanguage.read}" style="width:95%" converter="YesNoLookupConvertor">
+																				<p:ajax event="itemSelect" />
+																				<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+																				<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+																			</p:selectOneMenu>
+																		</div>
+																	</h:panelGroup>
+
+																	<h:panelGroup>
+																		<div>
+																			<p:outputLabel value="Write?" style="width:95%; color:#977949" />
+																		</div>
+																		<div>
+																			<p:selectOneMenu value="#{trainingProviderApplicationAssessorModLinkUI.selectedUserLanguage.write}" style="width:95%" converter="YesNoLookupConvertor">
+																				<p:ajax event="itemSelect" />
+																				<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+																				<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+																			</p:selectOneMenu>
+																		</div>
+																	</h:panelGroup>
+
+																	<h:panelGroup>
+																		<div>
+																			<p:outputLabel value="Home Language?" styleClass="FontLight" />
+																		</div>
+																		<div>
+																			<p:selectBooleanCheckbox value="#{trainingProviderApplicationAssessorModLinkUI.selectedUserLanguage.homeLanguage}" />
+																		</div>
+																	</h:panelGroup>
+
+																</p:panelGrid>
+																<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+																	<p:commandButton action="#{trainingProviderApplicationAssessorModLinkUI.addUserLanguageToList}" process="languageEntryOP" value="Link/Assign Language" icon="fa fa-plus" update="languageEntryOP" />
+																</p:panelGrid>
+															</p:fieldset>
+
+															<div class="EmptyBox5" />
+
+															<p:dataTable var="rvl" value="#{trainingProviderApplicationAssessorModLinkUI.userLanguageList}" id="languageList" rowKey="#{rvl.id}" paginator="true" rows="5" paginatorPosition="bottom"
+																paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10" reflow="true">
+
+																<f:facet name="header">User Languages</f:facet>
+
+																<p:column headerText="#{lang['language']}">
+																	<h:outputText value="#{rvl.language.description}" />
+																</p:column>
+
+																<p:column headerText="#{lang['speak']}">
+																	<h:outputText value="#{rvl.speark.yesNoName}" />
+																</p:column>
+
+																<p:column headerText="#{lang['read']}">
+																	<h:outputText value="#{rvl.read.yesNoName}" />
+																</p:column>
+
+																<p:column headerText="#{lang['write']}">
+																	<h:outputText value="#{rvl.write.yesNoName}" />
+																</p:column>
+
+																<p:column headerText="#{lang['home.language']}">
+																	<p:selectBooleanCheckbox disabled="true" value="#{rvl.homeLanguage}" />
+																</p:column>
+
+																<p:column headerText="Edit" exportable="false" width="7%" rendered="#{trainingProviderApplicationAssessorModLinkUI.alterUserLanguages}">
+																	<p:commandButton process="@this" icon="fa fa-trash-o" title="Remove" update=":sdpTtcAssessorsForm:tabViewTTCAssMod:ttcAssModNewEntryOutputPanel" action="#{trainingProviderApplicationAssessorModLinkUI.removeUserLanguage}">
+																		<f:setPropertyActionListener value="#{rvl}" target="#{trainingProviderApplicationAssessorModLinkUI.selectedUserLanguage}" />
+																	</p:commandButton>
+																</p:column>
+															</p:dataTable>
+														</p:outputPanel>
+													</p:fieldset>
+
+													<div class="EmptyBox5" />
+													<p:fieldset id="applicationInfoFS" legend="Application Information">
+														<p:outputPanel id="applicationInformationPanel">
+															<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+																<h:panelGroup>
+																	<div>
+																		<p:outputLabel value="Primary ETQA" style="width:100%; color:#977949" />
+																	</div>
+																	<div>
+																		<p:selectOneMenu disabled="true" value="#{trainingProviderApplicationAssessorModLinkUI.assessorModeratorApplication.etqa}" converter="EtqaConvertor" style="width:95%" required="true">
+																			<p:ajax event="itemSelect" />
+																			<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+																			<f:selectItems value="#{selectItemsUI.selectItemsEtqaRemoveMerSeta}" var="il" itemLabel="#{il.description}" />
+																		</p:selectOneMenu>
+																	</div>
+																</h:panelGroup>
+															</p:panelGrid>
+
+															<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+																<h:panelGroup styleClass="md-inputfield">
+																	<p:inputText disabled="true" value="#{trainingProviderApplicationAssessorModLinkUI.assessorModeratorApplication.applicationType.displayName}" style="width:95%">
+																		<p:ajax />
+																	</p:inputText>
+																	<p:outputLabel value="Application Type" />
+																</h:panelGroup>
+																<h:panelGroup styleClass="md-inputfield">
+																	<p:inputText disabled="#{!trainingProviderApplicationAssessorModLinkUI.canAlterApplicationInfo}" required="#{trainingProviderApplicationAssessorModLinkUI.canAlterApplicationInfo}" id="regNumberEntry"
+																		value="#{trainingProviderApplicationAssessorModLinkUI.assessorModeratorApplication.certificateNumber}" style="width:95%" requiredMessage="Provide: Registration Number">
+																		<p:ajax />
+																	</p:inputText>
+																	<p:outputLabel value="Designation: Registration Number" for="regNumberEntry" />
+																</h:panelGroup>
+																<h:panelGroup styleClass="md-inputfield">
+																	<p:calendar disabled="#{!trainingProviderApplicationAssessorModLinkUI.canAlterApplicationInfo}" required="#{trainingProviderApplicationAssessorModLinkUI.canAlterApplicationInfo}" value="#{trainingProviderApplicationAssessorModLinkUI.assessorModeratorApplication.startDate}"
+																		id="startDateEntry" showOn="button" maxdate="#{trainingProviderApplicationAssessorModLinkUI.startDateMaxDate}" navigator="true" mask="true" requiredMessage="#{lang['select.date.of.birth']}" pattern="#{autoCompleteUI.CALENDER_PATTERN}" inputStyle="width:90%">
+																		<p:ajax event="dateSelect" />
+																	</p:calendar>
+																	<p:outputLabel value="Designation: Start Date" for="startDateEntry" style="width:100%" />
+																</h:panelGroup>
+																<h:panelGroup styleClass="md-inputfield">
+																	<p:calendar disabled="#{!trainingProviderApplicationAssessorModLinkUI.canAlterApplicationInfo}" required="#{trainingProviderApplicationAssessorModLinkUI.canAlterApplicationInfo}" value="#{trainingProviderApplicationAssessorModLinkUI.assessorModeratorApplication.endDate}"
+																		id="endDateEntry" showOn="button" mindate="#{trainingProviderApplicationAssessorModLinkUI.startDateMaxDate}" navigator="true" mask="true" requiredMessage="Provide: Designation End Date" pattern="#{autoCompleteUI.CALENDER_PATTERN}" inputStyle="width:90%">
+																		<p:ajax event="dateSelect" />
+																	</p:calendar>
+																	<p:outputLabel value="Designation: End Date" for="endDateEntry" style="width:100%" />
+																</h:panelGroup>
+															</p:panelGrid>
+														</p:outputPanel>
+													</p:fieldset>
+													<div class="EmptyBox5" />
+													<p:fieldset id="saqaQualificationsEntryFS" legend="SAQA Qualifications">
+														<p:outputPanel id="qualificationEntryOP">
+															<p:fieldset legend="Link/Assign Qualifications" rendered="#{trainingProviderApplicationAssessorModLinkUI.canAlterApplicationInfo}">
+																<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+																	<span class="Fs13 gray"><i class="fa fa-info-circle" aria-hidden="true"></i> #{lang['qualification']} Limited To Trades</span>
+																	<div class="EmptyBox5" />
+																	<h:panelGroup>
+																		<div>
+																			<p:outputLabel value="#{lang['qualification']}" for="qualificationAuto" style="width:100%; color:#977949" />
+																		</div>
+																		<div>
+																			<p:autoComplete style="width:100%" inputStyle="width:50%" id="qualificationAuto" value="#{trainingProviderApplicationAssessorModLinkUI.selectedQualification}" completeMethod="#{autoCompleteUI.completeQualificationTrade}" var="rvqs" itemLabel="#{rvqs.description}"
+																				itemValue="#{rvqs}" forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+																				<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rvqs.code}</p:column>
+																				<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rvqs.description}</p:column>
+																				<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rvqs.nqflevelg2description}</p:column>
+																			</p:autoComplete>
+																		</div>
+																	</h:panelGroup>
+																	<p:commandButton process="qualificationEntryOP" icon="fa fa-plus" value="Link/Assign SAQA Qualification" update=":sdpTtcAssessorsForm:tabViewTTCAssMod:ttcAssModNewEntryOutputPanel" action="#{trainingProviderApplicationAssessorModLinkUI.addQualificationToList}" />
+																</p:panelGrid>
+															</p:fieldset>
+
+															<div class="EmptyBox5" />
+
+															<p:dataTable var="rvq" value="#{trainingProviderApplicationAssessorModLinkUI.qualificationList}" id="tpList" rowKey="#{rv.id}" paginator="true" rows="5" paginatorPosition="bottom"
+																paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10" reflow="true">
+
+																<f:facet name="header">SAQA Qualifications Link/Assigned</f:facet>
+																<p:column headerText="#{lang['code']}">
+																	<h:outputText value="#{rvq.code}" />
+																</p:column>
+																<p:column headerText="#{lang['qualification']}">
+																	<h:outputText value="#{rvq.description}" />
+																</p:column>
+
+																<p:column headerText="Edit" exportable="false" width="7%" rendered="#{trainingProviderApplicationAssessorModLinkUI.canAlterApplicationInfo}">
+																	<p:commandButton process="@this" icon="fa fa-trash-o" title="Remove" update=":sdpTtcAssessorsForm:tabViewTTCAssMod:ttcAssModNewEntryOutputPanel" action="#{trainingProviderApplicationAssessorModLinkUI.removeQualification}">
+																		<f:setPropertyActionListener value="#{rvq}" target="#{trainingProviderApplicationAssessorModLinkUI.selectedQualification}" />
+																	</p:commandButton>
+																</p:column>
+															</p:dataTable>
+														</p:outputPanel>
+													</p:fieldset>
+													<div class="EmptyBox5" />
+													<p:fieldset rendered="#{trainingProviderApplicationAssessorModLinkUI.setmisValidiation ne null and trainingProviderApplicationAssessorModLinkUI.setmisValidiation ne ''}" styleClass="error Fs12">
+														<h4>Validation Error(s):</h4>
+														<p:outputLabel value="#{trainingProviderApplicationAssessorModLinkUI.setmisValidiation}" escape="false"></p:outputLabel>
+														<div class="EmptyBox5" />
+													</p:fieldset>
+													<div class="EmptyBox5" />
+													<span class="Fs13 gray"><i class="fa fa-info-circle" aria-hidden="true"></i> Please ensure all information is correct before submission. You will not be able to alter the information after submission. </span>
+													<div class="EmptyBox5" />
+													<p:commandButton process="ttcAssModNewEntryOutputPanel" action="#{trainingProviderApplicationAssessorModLinkUI.submitEntry}" update=":sdpTtcAssessorsForm:tabViewTTCAssMod:ttcAssModNewEntryOutputPanel" value="Submit" icon="fa fa-database">
+														<p:confirm header="#{lang['confirmation']}" message="Are you sure? Please ensure all information is correct before proceeding." icon="ui-icon-warning" />
+													</p:commandButton>
+												</c:if>
+											</p:outputPanel>
+										</p:panelGrid>
+									</p:tab>
+								</p:tabView>
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+
+			<h:form id="sdpInfoForm" style="width:100%">
+				<h:panelGroup style="width:100%" rendered="#{trainingproviderapplicationUI.selectedTrainingProviderApplication.id != null}">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card card-w-title">
+								<h1>#{lang['sdp']} Details</h1>
+								<p:tabView id="sdpInfoTab">
+									<p:tab title="Holding Company Information">
+										<br />
+										<ui:include src="/pages/includes/tpCompanyUpdateViewOnly.xhtml" />
+									</p:tab>
+
+									<p:tab title="Training Site Information" rendered="#{trainingproviderapplicationUI.trainingSite ne null}">
+										<br />
+										<p:outputPanel id="trainingSitePanel">
+											<c:if test="#{!trainingproviderapplicationUI.canActionInformation or !trainingproviderapplicationUI.sdpType.alterSiteInfo}">
+												<ui:include src="/pages/includes/training_site_info_display.xhtml">
+													<ui:param name="trainingSite" value="#{trainingproviderapplicationUI.trainingSite}" />
+												</ui:include>
+												<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+													<p:outputPanel rendered="#{trainingproviderapplicationUI.trainingSite.residentialAddress ne null}">
+														<ui:include src="/pages/includes/addressInformation.xhtml">
+															<ui:param name="header" value="#{lang['residentialAddress']}" />
+															<ui:param name="address" value="#{trainingproviderapplicationUI.trainingSite.residentialAddress}" />
+														</ui:include>
+													</p:outputPanel>
+													<p:outputPanel rendered="#{trainingproviderapplicationUI.trainingSite.postalAddress ne null}">
+														<ui:include src="/pages/includes/addressInformation.xhtml">
+															<ui:param name="header" value="Postal Address" />
+															<ui:param name="address" value="#{trainingproviderapplicationUI.trainingSite.postalAddress}" />
+														</ui:include>
+													</p:outputPanel>
+												</p:panelGrid>
+											</c:if>
+											<c:if test="#{trainingproviderapplicationUI.canActionInformation and trainingproviderapplicationUI.sdpType.alterSiteInfo}">
+												<ui:include src="/pages/includes/training_site_info_alteration.xhtml">
+													<ui:param name="trainingSite" value="#{trainingproviderapplicationUI.trainingSite}" />
+												</ui:include>
+												<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+													<p:fieldset legend="#{lang['residentialAddress']}" style="margin-top: 20px">
+														<ui:include src="/pages/includes/address_alteration_with_geo.xhtml">
+															<ui:param name="address" value="#{trainingproviderapplicationUI.trainingSite.residentialAddress}" />
+															<ui:param name="disableEntry" value="#{!trainingproviderapplicationUI.sdpType.alterSiteInfo}" />
+														</ui:include>
+													</p:fieldset>
+													<p:fieldset legend="#{lang['postalAddress']}" style="margin-top: 20px">
+														<ui:include src="/pages/includes/address_alteration_postal.xhtml">
+															<ui:param name="address" value="#{trainingproviderapplicationUI.trainingSite.postalAddress}" />
+															<ui:param name="disableEntry" value="#{!trainingproviderapplicationUI.sdpType.alterSiteInfo}" />
+														</ui:include>
+													</p:fieldset>
+												</p:panelGrid>
+												<p:outputPanel>
+													<p:fieldset rendered="#{trainingproviderapplicationUI.trainingSiteSetmisValidiations ne null and trainingproviderapplicationUI.trainingSiteSetmisValidiations ne ''}" styleClass="error Fs12">
+														<h4>Validation Error(s):</h4>
+														<div class="EmptyBox5" />
+														<p:outputLabel value="#{trainingproviderapplicationUI.trainingSiteSetmisValidiations}" escape="false"></p:outputLabel>
+													</p:fieldset>
+												</p:outputPanel>
+												<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+													<p:commandButton value="Update" icon="fa fa-database" process="trainingSitePanel" update=":sdpInfoForm:sdpInfoTab:trainingSitePanel" action="#{trainingproviderapplicationUI.updateTrainingSiteInformation}" />
+												</p:panelGrid>
+											</c:if>
+										</p:outputPanel>
+									</p:tab>
+
+									<p:tab title="Application Submission User" style="width:100%">
+										<ui:include src="/pages/includes/searchTrainingProviderUserInfo.xhtml" />
+									</p:tab>
+
+									<p:tab title="#{lang['sdp.contact.persons']}" id="contactPersonsTab">
+										<ui:include src="/pages/includes/tpUpdateContactPersonNewStructure.xhtml" />
+										<div class="EmptyBox10" />
+									</p:tab>
+
+									<p:tab rendered="true" title="#{lang['assessor.moderator.details']}" id="assModInfo">
+										<ui:include src="/pages/includes/tpUpdateAvailailityOfFacAndAssessorNewStructure.xhtml" />
+										<div class="EmptyBox10" />
+									</p:tab>
+
+									<p:tab title="#{lang['qualification.and.unit.stands']}">
+										<ui:include src="/pages/includes/searchTPUnitStandrsAndQualification.xhtml" />
+									</p:tab>
+
+									<p:tab title="#{lang['etqa.review.committee.date.details']}" rendered="#{trainingproviderapplicationUI.selectedTrainingProviderApplication.reviewCommitteeMeeting ne null}">
+										<ui:include src="/pages/includes/searchTrainingProviderETQADates.xhtml" />
+									</p:tab>
+
+									<p:tab title="#{lang['documents']}">
+										<ui:include src="/pages/includes/tpDocumentsUpdate.xhtml" />
+									</p:tab>
+
+									<p:tab title="Company SDP Application(s)">
+										<ui:include src="/pages/includes/searchTPCompanyApplication.xhtml" />
+									</p:tab>
+
+									<p:tab title="Company SDP Legacy Accreditation">
+										<ui:include src="/pages/includes/providerlegacyaccreditation.xhtml">
+											<ui:param name="legacyDataModel" value="#{trainingproviderapplicationUI.legacyDataModel}" />
+										</ui:include>
+									</p:tab>
+								</p:tabView>
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+
+			<ui:include src="/pages/includes/amDocumentsHistory.xhtml">
+				<ui:param name="docHistDataModel" value="#{trainingproviderapplicationUI.docHistDataModel}" />
+			</ui:include>
+
+			<ui:include src="/pages/tp/includes/tpReAccreditationConductDialog.xhtml" />
+			<div class="ui-g-12">
+				<h:form id="resubmissionForm">
+					<c:if test="#{sdpreaccreditationUI.selectTrainingProviderApplication.id ne null}">
+						<div class="ui-g">
+							<div class="ui-g-12">
+								<div class="card card-w-title">
+									<h2>#{sdpreaccreditationUI.selectTrainingProviderApplication.company.companyName} Re-submission</h2>
+
+									<ui:include src="/pages/tp/includes/tpReSubmissionDetails.xhtml" />
+									<br /> <br />
+									<p:commandButton value="#{lang['submit']}" onstart="uploadStart()" icon="ui-icon-save" update="@form" action="#{sdpreaccreditationUI.requestResubmission}" process="@this" />
+									<p:spacer width="20"></p:spacer>
+									<p:commandButton value="#{lang['close']}" icon="fa fa-recycle" update="@form" action="#{sdpreaccreditationUI.clearResubmission}" process="@this">
+										<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									</p:commandButton>
+								</div>
+							</div>
+						</div>
+
+						<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUploadSupportingDoc" resizable="false" hideEffect="clip" showEffect="clip" id="dlgUploadSupportingDocID" width="80%" responsive="true" modal="true">
+							<h:form id="dlgUploadSupportingDocForm">
+								<h:panelGroup id="uploadGroup">
+									<div class="ui-g">
+										<div class="ui-g-12">
+											<div class="card">
+												<h1 style="font-weight: bold; font-size: 25px;">#{sdpreaccreditationUI.doc.configDoc.name}</h1>
+												<p:panel>
+													<h:panelGrid columns="2" style="width: 100%">
+														<p:outputLabel value="#{lang['notes']}:" for="note" />
+														<p:inputTextarea id="note" value="#{sdpreaccreditationUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+															<p:ajax />
+														</p:inputTextarea>
+													</h:panelGrid>
+
+													<div class="TexAlCenter">
+														<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+													</div>
+													<p:fileUpload update="resubmissionForm:trainingProviderTabView:pgResubmissionQualDetails dlgUploadSupportingDocForm" onstart="uploadStart()" oncomplete="uploadDone();PF('dlgUploadSupportingDoc').hide()" fileUploadListener="#{sdpreaccreditationUI.storeSupportingDoc}" mode="advanced"
+														dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" multiple="false" fileLimit="1" immediate="false" auto="true" />
+												</p:panel>
+												<div class="EmptyBox10" />
+											</div>
+										</div>
+									</div>
+								</h:panelGroup>
+							</h:form>
+						</p:dialog>
+
+					</c:if>
+				</h:form>
+			</div>
+			<div class="ui-g-12">
+				<h:form id="mainForm">
+					<c:if
+						test="#{sdpextensionofscopeUI.selectTrainingProviderApplication ne null and sdpextensionofscopeUI.nonSetaExOfScope and 
+					(sdpextensionofscopeUI.selectTrainingProviderApplication.accreditationApplicationTypeEnum ne AccreditationApplicationTypeEnum.NON_PRIMARY_FOCUS_ACCREDITATION_APPROVAL or
+					sdpextensionofscopeUI.selectTrainingProviderApplication.accreditationApplicationTypeEnum ne AccreditationApplicationTypeEnum.ACCREDITATIONAPPROVAL)}">
+						<div class="ui-g">
+							<div class="ui-g-12">
+								<div class="card card-w-title">
+									<h2>Submission To Update Qualification Accreditation Details For: #{sdpextensionofscopeUI.selectTrainingProviderApplication.company.companyName}</h2>
+									<h:panelGrid id="addQualUSGrid" style="width:100%">
+										<ui:include src="/pages/includes/tpQualificationDetailsExtensionOfScope.xhtml" />
+									</h:panelGrid>
+									<ui:include src="/pages/tp/includes/nonsetaaddqualification.xhtml" />
+									<br />
+									<h:panelGroup>
+										<p:commandButton id="btnRequestextOfScope" value="#{lang['submit']}" onstart="uploadStart()" icon="ui-icon-save" update="@form sdpManagementForm" action="#{sdpextensionofscopeUI.requestNonMerSETAExtensionOfScope}" process="@this" rendered="#{sdpextensionofscopeUI.doneQualification}" />
+										<p:spacer width="20" rendered="#{sdpextensionofscopeUI.doneQualification}"></p:spacer>
+										<p:commandButton id="btnRequestextOfScope1" value="#{lang['close']}" icon="fa fa-recycle" update="@form" action="#{sdpextensionofscopeUI.clearExtensionOfScope}" process="@this">
+											<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+										</p:commandButton>
+									</h:panelGroup>
+								</div>
+							</div>
+						</div>
+
+
+
+						<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUploadAddSupportingDoc" resizable="false" hideEffect="clip" showEffect="clip" id="dlgUploadAddSupportingDocID" width="80%" responsive="true" modal="true">
+							<h:form id="dlgUploadAddSupportingDocForm">
+								<h:panelGroup id="uploadGroup">
+									<div class="ui-g">
+										<div class="ui-g-12">
+											<div class="card">
+												<h1 style="font-weight: bold; font-size: 25px;">#{sdpextensionofscopeUI.doc.configDoc.name}</h1>
+												<p:panel>
+													<h:panelGrid columns="2" style="width: 100%">
+														<p:outputLabel value="#{lang['notes']}:" for="note" />
+														<p:inputTextarea id="note" value="#{sdpextensionofscopeUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+															<p:ajax />
+														</p:inputTextarea>
+													</h:panelGrid>
+
+													<div class="TexAlCenter">
+														<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+													</div>
+													<p:fileUpload update="mainForm:pgResubmissionQualDetails dlgUploadAddSupportingDocForm" onstart="uploadStart()" oncomplete="uploadDone();PF('dlgUploadAddSupportingDoc').hide()" fileUploadListener="#{sdpextensionofscopeUI.storeSupportingDoc}" mode="advanced" dragDropSupport="true"
+														showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" multiple="false" fileLimit="1" immediate="false" auto="true" />
+												</p:panel>
+												<div class="EmptyBox10" />
+											</div>
+										</div>
+									</div>
+								</h:panelGroup>
+							</h:form>
+						</p:dialog>
+
+					</c:if>
+
+					<c:if
+						test="#{sdpextensionofscopeUI.selectTrainingProviderApplication ne null and !sdpextensionofscopeUI.nonSetaExOfScope and
+					(sdpextensionofscopeUI.selectTrainingProviderApplication.accreditationApplicationTypeEnum eq AccreditationApplicationTypeEnum.NON_PRIMARY_FOCUS_ACCREDITATION_APPROVAL or
+					sdpextensionofscopeUI.selectTrainingProviderApplication.accreditationApplicationTypeEnum eq AccreditationApplicationTypeEnum.ACCREDITATIONAPPROVAL)}">
+						<div class="ui-g">
+							<div class="ui-g-12">
+								<div class="card card-w-title">
+									<h2>#{sdpextensionofscopeUI.selectTrainingProviderApplication.company.companyName} (#{sdpextensionofscopeUI.selectTrainingProviderApplication.company.levyNumber}) Extension Of Scope</h2>
+
+									<h:panelGrid id="qualUSGrid" style="width:100%">
+										<ui:include src="/pages/includes/tpQualificationDetailsExtensionOfScope.xhtml" />
+										<p:fieldset legend="#{lang['qualification.details']}" rendered="true">
+											<c:if test="false">
+												<!-- NOT IN USE -->
+												<h:panelGroup rendered="#{sdpextensionofscopeUI.selectTrainingProviderApplication.accreditationApplicationTypeEnum eq AccreditationApplicationTypeEnum.NON_PRIMARY_FOCUS_ACCREDITATION_APPROVAL}">
+													<ui:include src="/pages/includes/tpAddLearningProgrammeForExtensionOfScope.xhtml" />
+												</h:panelGroup>
+											</c:if>
+											<h:panelGroup rendered="true">
+												<p:fieldset legend="#{lang['qualifications']}" rendered="false" id="companyQualifications">
+													<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+														<h:panelGroup>
+															<div>
+																<p:outputLabel rendered="true" value="#{lang['qualification']}" for="qualificationAuto"></p:outputLabel>
+															</div>
+															<div>
+																<p:autoComplete rendered="true" style="width: 100%" id="qualificationAuto" value="#{sdpextensionofscopeUI.qualification}" completeMethod="#{autoCompleteUI.completeHostingCompanyQualification}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true"
+																	converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+																	<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+																	<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+																	<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+																</p:autoComplete>
+															</div>
+														</h:panelGroup>
+														<p:commandButton value="#{lang['add.qualification']}" update="companyQualifications @form fsSkillsProgram" process="@this companyQualifications" icon="ui-icon-plus" iconPos="right" styleClass="flat" action="#{sdpextensionofscopeUI.addQualificationToList}" />
+													</p:panelGrid>
+													<p:dataList value="#{sdpextensionofscopeUI.qualificationList}" var="company" rendered="#{sdpextensionofscopeUI.qualificationList.size() gt 0}">
+														<p:outputLabel value="#{company.saqaQualification}"></p:outputLabel>
+														<p:commandLink id="ajaxs" update="mainForm:companyQualifications @form" process="@this" action="#{sdpextensionofscopeUI.removeQualificationFromList}">
+															<span class="fa fa-times Fs12 grey"></span>
+															<f:setPropertyActionListener value="#{company}" target="#{sdpextensionofscopeUI.qualification}" />
+														</p:commandLink>
+													</p:dataList>
+												</p:fieldset>
+												<p:fieldset legend="#{lang['skills.programme']}" rendered="true" id="fsSkillsProgram">
+													<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+														<h:panelGroup styleClass="md-inputfield" id="pgSkillsP" rendered="true">
+															<p:autoComplete required="true" id="tpSkillsProgram" value="#{sdpextensionofscopeUI.skillsProgram}" completeMethod="#{autoCompleteUI.completeSkillsProgramLinkedToMerseta}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SkillsProgramConvertor"
+																dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 100%; opacity:1 !important;" style="width: 100%">
+																<p:ajax event="itemSelect" update="mainForm:fsSkillsProgram" />
+																<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+																<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+															</p:autoComplete>
+															<p:outputLabel value="Skills Program" for="pgSkillsP" styleClass="gray" />
+														</h:panelGroup>
+														<p:commandButton value="#{lang['add.skills.program']}" update="mainForm:fsSkillsProgram" process="@this fsSkillsProgram" icon="ui-icon-plus" iconPos="right" styleClass="flat" action="#{sdpextensionofscopeUI.addSkillsProgramToList}" />
+													</p:panelGrid>
+													<p:dataList value="#{sdpextensionofscopeUI.skillsProgramList}" var="sp" rendered="#{sdpextensionofscopeUI.skillsProgramList.size() gt 0}">
+														<p:outputLabel value="#{sp.description}"></p:outputLabel>
+														<p:commandLink id="ajaxs" update="mainForm:fsSkillsProgram" disabled="#{sp.cannotRemove}" process="@this" action="#{sdpextensionofscopeUI.removeSkillsProgramFromList}">
+															<span class="fa fa-times Fs12 grey"></span>
+															<f:setPropertyActionListener value="#{sp}" target="#{sdpextensionofscopeUI.skillsProgram}" />
+														</p:commandLink>
+													</p:dataList>
+												</p:fieldset>
+
+												<p:fieldset legend="#{lang['unit.standards']}" rendered="false" id="companyUnitStandards">
+													<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+														<h:panelGroup>
+															<div>
+																<p:outputLabel value="#{lang['unit.standard']}" for="companyUnitStandardsAuto"></p:outputLabel>
+															</div>
+															<div>
+																<p:autoComplete style="width: 100%" id="companyUnitStandardsAuto" value="#{sdpextensionofscopeUI.unitStandard}" completeMethod="#{sdpextensionofscopeUI.completeUnit}" var="rv" itemLabel="#{rv.title}" itemValue="#{rv}" forceSelection="true" converter="UnitStandardsConvertor"
+																	dropdown="true" minQueryLength="3" maxResults="10">
+																	<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+																	<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.title}</p:column>
+																	<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqf}</p:column>
+																	<p:ajax event="itemSelect" listener="#{sdpextensionofscopeUI.usQualificationValidation}" update="companyUnitStandards" />
+																</p:autoComplete>
+															</div>
+														</h:panelGroup>
+														<p:commandButton value="#{lang['add.unit.standard']}" process="companyUnitStandards" update="companyUnitStandards @form" icon="ui-icon-plus" iconPos="right" styleClass="flat" action="#{sdpextensionofscopeUI.addUnitToList}" />
+													</p:panelGrid>
+													<p:dataList value="#{sdpextensionofscopeUI.unitStandards}" var="us" rendered="#{sdpextensionofscopeUI.unitStandards.size() gt 0}">
+														<p:outputLabel value="(#{us.code})#{us.title}"></p:outputLabel>
+														<p:commandLink id="ajaxs" update="mainForm:companyQualifications @form" disabled="#{us.cannotRemove}" process="@this" action="#{sdpextensionofscopeUI.removeUnitFromList}">
+															<span class="fa fa-times Fs12 grey"></span>
+															<f:setPropertyActionListener value="#{us}" target="#{sdpextensionofscopeUI.unitStandard}" />
+														</p:commandLink>
+													</p:dataList>
+												</p:fieldset>
+												<br />
+												<p:fieldset rendered="true" legend="#{lang['skills.set']}" id="fsSkillsSet">
+													<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+														<h:panelGroup styleClass="md-inputfield" style="margin-top: 0px">
+															<p:autoComplete required="true" id="skillsSet" value="#{sdpextensionofscopeUI.skillsSet}" completeMethod="#{autoCompleteUI.completeSkillsSetLinkedToMerseta}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SkillsSetConvertor" dropdown="true"
+																minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 100%">
+																<p:ajax event="itemSelect" update="@form" />
+																<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+																<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+															</p:autoComplete>
+															<p:outputLabel value="Skills Set" for="skillsSet" styleClass="gray" />
+														</h:panelGroup>
+														<p:commandButton value="#{lang['add.skills.set']}" update="mainForm:fsSkillsSet @form" process="@this fsSkillsSet" icon="ui-icon-plus" iconPos="right" styleClass="flat" action="#{sdpextensionofscopeUI.addSkillsSetToList}" />
+													</p:panelGrid>
+													<p:dataList value="#{sdpextensionofscopeUI.skillsSetList}" var="sp" rendered="#{sdpextensionofscopeUI.skillsSetList.size() gt 0}">
+														<p:outputLabel value="(#{sp.programmeID}) #{sp.description}"></p:outputLabel>
+														<p:commandLink id="ajaxs" update="mainForm:fsSkillsSet" disabled="#{sp.cannotRemove}" process="@this" action="#{sdpextensionofscopeUI.removeSkillsSetFromList}">
+															<span class="fa fa-times Fs12 grey"></span>
+															<f:setPropertyActionListener value="#{sp}" target="#{sdpextensionofscopeUI.skillsSet}" />
+														</p:commandLink>
+													</p:dataList>
+												</p:fieldset>
+												<br />
+												<p:panelGrid columns="2" id="pgSkillsProg" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+													<h:panelGroup>
+														<p:outputLabel styleClass="FontBold Fs15" style="font-weight:bold" value="Please indicate if a skills programme route will be used for obtaining the unit standards?" />
+
+														<p:selectOneMenu id="useSkillProgrammeRoute" value="#{sdpextensionofscopeUI.sdpextensionofscope.useSkillProgrammeRoute}" style="width:100%" required="true" requiredMessage="#{lang['use.skill.programme.route.error.msg']}">
+															<p:ajax event="itemSelect" update="qualUSGrid" />
+															<f:selectItem itemLabel="#{lang['select.one']}" itemValue="" noSelectionOption="true" />
+															<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+														</p:selectOneMenu>
+													</h:panelGroup>
+
+													<h:panelGroup style="margin-top: -20px" rendered="#{sdpextensionofscopeUI.sdpextensionofscope.useSkillProgrammeRoute ne null and sdpextensionofscopeUI.sdpextensionofscope.useSkillProgrammeRoute eq YesNoEnum.Yes}">
+														<div>
+															<p:outputLabel value="Skills Program" for="qualSP" />
+														</div>
+														<div>
+															<p:selectOneMenu id="qualSP" value="#{sdpextensionofscopeUI.sdpextensionofscope.skillsProgram}" converter="SkillsProgramConvertor" style="width:100%" required="true" requiredMessage="#{lang['select.skills.program']}">
+																<p:ajax />
+																<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+																<f:selectItems value="#{sdpextensionofscopeUI.selectItemsSkillsProgram}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+																<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+																<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+															</p:selectOneMenu>
+														</div>
+													</h:panelGroup>
+												</p:panelGrid>
+											</h:panelGroup>
+										</p:fieldset>
+										<br />
+										<p:panelGrid columns="1" style="width:100%">
+											<h:outputText value="Declaration For Application With merSETA" styleClass="FontBold Fs15" />
+											<p>I, the undersigned, confirm that I am authorised by this organisation to submit the Skills Development Provider application. I declare that to the best of my knowledge, the information contained herein, is accurate and up to date.</p>
+											<div class="EmptyBox20"></div>
+											<p:panel header="#{lang['accept.code.of.conduct']}" style="text-align:center">
+												<h:form id="cocForm">
+													<p:panelGrid columns="6" id="pgAccept" style="width:100%">
+
+														<h:outputText value="#{lang['name']}:" styleClass="FontBold Fs15" />
+														<h:outputText value="#{sdpextensionofscopeUI.selectTrainingProviderApplication.users.firstName} #{sdpextensionofscopeUI.selectTrainingProviderApplication.users.lastName}" />
+
+														<h:outputText value="#{lang['accept']}:" styleClass="FontBold Fs15" />
+														<p:selectBooleanCheckbox style="width:100%" id="cbAccept" value="#{sdpextensionofscopeUI.selectTrainingProviderApplication.codeOfConductAccepted}">
+															<p:ajax></p:ajax>
+														</p:selectBooleanCheckbox>
+
+													</p:panelGrid>
+												</h:form>
+											</p:panel>
+										</p:panelGrid>
+										<br />
+										<h:panelGroup>
+											<p:commandButton id="btnRequestextOfScope" value="#{lang['submit']}" onstart="uploadStart()" icon="ui-icon-save" update="@form sdpManagementForm" action="#{sdpextensionofscopeUI.requestExtensionOfScope}" process="@this"
+												rendered="#{sdpextensionofscopeUI.unitStandards.size() gt 0 or sdpextensionofscopeUI.qualificationList.size() gt 0 or sdpextensionofscopeUI.skillsProgramList.size() gt 0  or  sdpextensionofscopeUI.skillsSetList.size() gt 0}" />
+											<p:spacer width="20"></p:spacer>
+											<p:commandButton id="btnRequestextOfScope1" value="#{lang['close']}" icon="fa fa-recycle" update="@form" action="#{sdpextensionofscopeUI.clearExtensionOfScope}" process="@this">
+												<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+											</p:commandButton>
+										</h:panelGroup>
+									</h:panelGrid>
+
+								</div>
+							</div>
+						</div>
+					</c:if>
+				</h:form>
+			</div>
+		</div>
+
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+		<ui:include src="/pages/includes/tpContactPersonChangeDialog.xhtml" />
+
+		<!--Company Info ChangeReason Dialog -->
+		<p:dialog closeOnEscape="true" header="#{lang['change.reason']}" widgetVar="dlgCompanyChangeReason" resizable="false" hideEffect="clip" showEffect="clip" width="60%" height="45vh" responsive="true" modal="true" position="center">
+			<h:form id="companyChangeReasonForm">
+				<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank">
+					<p:panel>
+						<h:panelGrid columns="2" style="width: 100%">
+							<p:outputLabel value="#{lang['notes']}:" for="note" />
+							<p:inputTextarea id="note" value="#{trainingproviderapplicationUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+								<p:ajax />
+							</p:inputTextarea>
+						</h:panelGrid>
+
+						<div class="TexAlCenter">
+							<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+						</div>
+						<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone(), PF('dlgCompanyChangeReason').hide()" fileUploadListener="#{trainingproviderapplicationUI.updateCompayAndCreateTask}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}"
+							fileLimitMessage="#{lang['file.to.big.to.upload']}" update="@form mainForm" multiple="false" fileLimit="1" sizeLimit="#{sdfUI.maxFileSize}" allowTypes="/(\.|\/)(gif|jpe?g|png|pdf|docx|txt)$/" immediate="false" auto="true" />
+					</p:panel>
+				</p:panelGrid>
+			</h:form>
+			<p:ajax event="open" listener="#{trainingproviderapplicationUI.prepChangeDoc}" update="companyChangeReasonForm" />
+		</p:dialog>
+
+		<!--Contact Person ChangeReason Dialog -->
+		<p:dialog closeOnEscape="true" header="#{lang['change.reason']}" widgetVar="dlgChangeReason" resizable="false" hideEffect="clip" showEffect="clip" width="60%" height="45vh" responsive="true" modal="true" position="center">
+			<h:form id="cpChangeReasonForm">
+				<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank">
+					<p:panel>
+						<h:panelGrid columns="2" style="width: 100%">
+							<p:outputLabel value="#{lang['notes']}:" for="note" />
+							<p:inputTextarea id="note" value="#{trainingproviderapplicationUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+								<p:ajax />
+							</p:inputTextarea>
+						</h:panelGrid>
+
+						<div class="TexAlCenter">
+							<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+						</div>
+						<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone(), PF('dlgChangeReason').hide()" fileUploadListener="#{trainingproviderapplicationUI.storeChangeNewFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}"
+							fileLimitMessage="#{lang['file.to.big.to.upload']}" update="@form mainForm dlgUploadAndCreateTaskForm" multiple="false" fileLimit="1" sizeLimit="#{sdfUI.maxFileSize}" allowTypes="/(\.|\/)(gif|jpe?g|png|pdf|docx|txt)$/" immediate="false" auto="true" />
+					</p:panel>
+				</p:panelGrid>
+			</h:form>
+			<p:ajax immediate="true" event="close" update="sdpManagementForm" />
+			<p:ajax event="open" listener="#{trainingproviderapplicationUI.prepChangeDoc}" update="cpChangeReasonForm" />
+		</p:dialog>
+
+		<p:dialog closeOnEscape="true" header="#{lang['upload.documents']}" widgetVar="dlgUploadAndCreateTask" resizable="false" hideEffect="clip" showEffect="clip" id="dlgUploadAndCreateTask" width="80%" responsive="true" modal="true" dynamic="true">
+			<h:form id="dlgUploadAndCreateTaskForm">
+				<h:panelGroup id="uploadandCreateTaskGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{trainingproviderapplicationUI.docChange.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{trainingproviderapplicationUI.docChange.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{trainingproviderapplicationUI.storeNewFileAndCreateTask}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}"
+										update="sdpInfoForm" multiple="false" fileLimit="1" sizeLimit="#{trainingproviderapplicationUI.maxFileSize}" allowTypes="/(\.|\/)(gif|jpe?g|png|pdf|docx|txt)$/" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true">
+			<h:form id="uploadForm">
+				<h:panelGroup id="uploadGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+
+								<h1 style="font-weight: bold; font-size: 25px;">#{uploadDocUI.doc.configDoc.name}</h1>
+
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{uploadDocUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone();PF('dlgUpload').hide()" fileUploadListener="#{uploadDocUI.safeFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}"
+										update="resubmissionForm" multiple="false" fileLimit="1" immediate="false" auto="true" />
+								</p:panel>
+
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+			<h:form>
+				<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+				<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+			</h:form>
+		</p:confirmDialog>
+
+		<p:dialog position="top" header="Update: SDP Contact Person Designation" dynamic="true" responsive="true" widgetVar="sdpUpdateDesignationDlg" resizable="false" hideEffect="clip" showEffect="clip" id="sdpUpdateDesignationDialog" appendTo="@(body)" modal="true" width="70%" height="80vh">
+			<h:form id="sdpUpdateDesForm">
+				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{trainingproviderapplicationUI.newAction.sdpUser.firstName}" />
+						<p:outputLabel value="SDP First Name" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{trainingproviderapplicationUI.newAction.sdpUser.lastName}" />
+						<p:outputLabel value="SDP Last Name" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{trainingproviderapplicationUI.newAction.sdpUser.email}" />
+						<p:outputLabel value="SDP Email Address" />
+					</h:panelGroup>
+				</p:panelGrid>
+				<div class="EmptyBox5" />
+				<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:95%" value="#{trainingproviderapplicationUI.newAction.currentDesignation.description}" />
+						<p:outputLabel value="Current #{lang['designation']}" />
+					</h:panelGroup>
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="New #{lang['designation']}" for="designation" />
+						</div>
+						<div>
+							<p:selectOneMenu disabled="false" id="designation" value="#{trainingproviderapplicationUI.newAction.newDesignation}" converter="SdpTypeConvertor" style="width:95%" required="true" requiredMessage="#{lang['select.designation']}">
+								<p:ajax event="itemSelect" />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.sdpTypeListExcludePrimary}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+				</p:panelGrid>
+
+				<div class="EmptyBox5" />
+
+				<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+					<p:commandButton process="@this" icon="fa fa-upload" value="Upload Supporting Documents" update=":uploadActionDocForm" action="#{trainingproviderapplicationUI.prepActionUpload}" />
+
+					<c:if test="#{trainingproviderapplicationUI.actionDocList ne null and trainingproviderapplicationUI.actionDocList.size() ne 0}">
+
+						<div class="EmptyBox10" />
+
+						<p:dataTable value="#{trainingproviderapplicationUI.actionDocList}" var="rv1" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+							<f:facet name="header"> Supporting Documents</f:facet>
+							<p:column headerText="#{lang['type']}" width="20%">Supporting Document</p:column>
+							<p:column headerText="#{lang['uploaded.by']}">
+								<p:outputLabel value="#{rv1.users.firstName} #{rv1.users.lastName}" rendered="#{rv1.users ne null}" />
+								<p:outputLabel value="Awaiting Submission" rendered="#{rv1.users eq null}" />
+							</p:column>
+							<p:column headerText="#{lang['uploaded']}" width="15%">
+								<h:outputText value="#{rv1.createDate}" rendered="#{rv1.createDate ne null}">
+									<f:convertDateTime pattern="dd MMM yyyy" />
+								</h:outputText>
+								<h:outputText value="Awaiting Submission" rendered="#{rv1.createDate eq null}">
+								</h:outputText>
+							</p:column>
+
+							<p:column headerText="Original File Name" width="150">
+								<h:outputText value="#{rv1.originalFname}">
+								</h:outputText>
+							</p:column>
+
+							<p:column headerText="Note" width="150">
+								<h:outputText value="#{rv1.note}">
+								</h:outputText>
+							</p:column>
+
+							<p:column headerText="#{lang['document.is.required']}" width="150" rendered="false">
+								<p:selectBooleanCheckbox value="#{rv1.configDoc.requiredDocument}" disabled="true" style="opacity: 1 !important" rendered="#{not rv1.required}"></p:selectBooleanCheckbox>
+								<p:selectBooleanCheckbox value="#{rv1.required}" disabled="true" style="opacity: 1 !important" rendered="#{rv1.required}"></p:selectBooleanCheckbox>
+							</p:column>
+
+							<p:column headerText="#{lang['original.required']}" width="150" rendered="false">
+								<p:selectBooleanCheckbox value="#{rv1.configDoc.originalRequired}" disabled="true" style="opacity: 1 !important" rendered="#{not rv1.configDoc.originalRequired}"></p:selectBooleanCheckbox>
+								<p:selectBooleanCheckbox value="#{rv1.configDoc.originalRequired}" disabled="true" style="opacity: 1 !important" rendered="#{rv1.configDoc.originalRequired}"></p:selectBooleanCheckbox>
+							</p:column>
+
+							<p:column headerText="#{lang['version']}" width="15%" rendered="false">
+								<h:outputText value="#{rv1.versionNo}">
+								</h:outputText>
+							</p:column>
+
+							<p:column width="5%" headerText="Actions">
+								<p:commandButton process="@this" ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}">
+									<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+									<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+								</p:commandButton>
+								<p:commandButton process="@this" ajax="false" icon="fa fa-download " action="#{uploadDocUI.download(rv1)}" id="dlbUserDocsMemory" rendered="#{rv1.id eq null}">
+									<p:tooltip for="dlbUserDocsMemory" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+					</c:if>
+				</p:panelGrid>
+
+				<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+					<p:commandButton value="Submit" icon="fa fa-database" process="@form" action="#{trainingproviderapplicationUI.submitUpdateDesignationSdp}" update=":sdpUpdateDesForm :sdpInfoForm">
+					</p:commandButton>
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog position="top" header="Remove / De-link SDP Contact Person" dynamic="true" responsive="true" widgetVar="sdpRemoveSdpDlg" resizable="false" hideEffect="clip" showEffect="clip" id="sdpRemoveSdpDialog" appendTo="@(body)" modal="true" width="70%" height="80vh">
+			<h:form id="sdpRemoveSdpForm">
+				<p:fieldset legend="SDP Contact Person Information">
+					<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{trainingproviderapplicationUI.newAction.sdpUser.firstName}" />
+							<p:outputLabel value="SDP First Name" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{trainingproviderapplicationUI.newAction.sdpUser.lastName}" />
+							<p:outputLabel value="SDP Last Name" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{trainingproviderapplicationUI.newAction.sdpUser.email}" />
+							<p:outputLabel value="SDP Email Address" />
+						</h:panelGroup>
+					</p:panelGrid>
+				</p:fieldset>
+				<div class="EmptyBox5" />
+				<p:fieldset legend="#{lang['designation']}">
+					<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:95%" value="#{trainingproviderapplicationUI.newAction.currentDesignation.description}" />
+							<p:outputLabel value="SDP Current #{lang['designation']}" />
+						</h:panelGroup>
+					</p:panelGrid>
+				</p:fieldset>
+				<div class="EmptyBox5" />
+				<p:fieldset legend="Reason">
+					<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText style="width: 95%" value="#{trainingproviderapplicationUI.newAction.reason}" required="true" requiredMessage="Provide: Reason">
+								<p:ajax />
+							</p:inputText>
+							<p:outputLabel value="Reason" />
+						</h:panelGroup>
+					</p:panelGrid>
+				</p:fieldset>
+				<div class="EmptyBox5" />
+				<p:fieldset legend="Supporting Documents">
+					<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+						<p:commandButton process="@this" icon="fa fa-upload" value="Upload Supporting Documents" update=":uploadActionDocForm" action="#{trainingproviderapplicationUI.prepActionUpload}" />
+
+						<c:if test="#{trainingproviderapplicationUI.actionDocList ne null and trainingproviderapplicationUI.actionDocList.size() ne 0}">
+
+							<div class="EmptyBox10" />
+
+							<p:dataTable value="#{trainingproviderapplicationUI.actionDocList}" var="rv1" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+								<f:facet name="header"> Supporting Documents</f:facet>
+								<p:column headerText="#{lang['type']}" width="20%">Supporting Document</p:column>
+								<p:column headerText="#{lang['uploaded.by']}">
+									<p:outputLabel value="#{rv1.users.firstName} #{rv1.users.lastName}" rendered="#{rv1.users ne null}" />
+									<p:outputLabel value="Awaiting Submission" rendered="#{rv1.users eq null}" />
+								</p:column>
+								<p:column headerText="#{lang['uploaded']}" width="15%">
+									<h:outputText value="#{rv1.createDate}" rendered="#{rv1.createDate ne null}">
+										<f:convertDateTime pattern="dd MMM yyyy" />
+									</h:outputText>
+									<h:outputText value="Awaiting Submission" rendered="#{rv1.createDate eq null}">
+									</h:outputText>
+								</p:column>
+
+								<p:column headerText="Original File Name" width="150">
+									<h:outputText value="#{rv1.originalFname}">
+									</h:outputText>
+								</p:column>
+
+								<p:column headerText="Note" width="150">
+									<h:outputText value="#{rv1.note}">
+									</h:outputText>
+								</p:column>
+
+								<p:column headerText="#{lang['document.is.required']}" width="150" rendered="false">
+									<p:selectBooleanCheckbox value="#{rv1.configDoc.requiredDocument}" disabled="true" style="opacity: 1 !important" rendered="#{not rv1.required}"></p:selectBooleanCheckbox>
+									<p:selectBooleanCheckbox value="#{rv1.required}" disabled="true" style="opacity: 1 !important" rendered="#{rv1.required}"></p:selectBooleanCheckbox>
+								</p:column>
+
+								<p:column headerText="#{lang['original.required']}" width="150" rendered="false">
+									<p:selectBooleanCheckbox value="#{rv1.configDoc.originalRequired}" disabled="true" style="opacity: 1 !important" rendered="#{not rv1.configDoc.originalRequired}"></p:selectBooleanCheckbox>
+									<p:selectBooleanCheckbox value="#{rv1.configDoc.originalRequired}" disabled="true" style="opacity: 1 !important" rendered="#{rv1.configDoc.originalRequired}"></p:selectBooleanCheckbox>
+								</p:column>
+
+								<p:column headerText="#{lang['version']}" width="15%" rendered="false">
+									<h:outputText value="#{rv1.versionNo}">
+									</h:outputText>
+								</p:column>
+
+								<p:column width="5%" headerText="Actions">
+									<p:commandButton process="@this" ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}">
+										<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+										<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:commandButton process="@this" ajax="false" icon="fa fa-download " action="#{uploadDocUI.download(rv1)}" id="dlbUserDocsMemory" rendered="#{rv1.id eq null}">
+										<p:tooltip for="dlbUserDocsMemory" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+									</p:commandButton>
+								</p:column>
+							</p:dataTable>
+						</c:if>
+					</p:panelGrid>
+				</p:fieldset>
+
+				<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+					<p:commandButton value="Submit" icon="fa fa-database" process="@form" action="#{trainingproviderapplicationUI.submitDelinkSdpContactPerson}" update="@form :sdpInfoForm">
+						<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+					</p:commandButton>
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog closable="false" position="top" header="New: SDP Contact Person" dynamic="true" responsive="true" widgetVar="sdpNewSdpDlg" resizable="false" hideEffect="clip" showEffect="clip" id="sdpNewSdpDialog" appendTo="@(body)" modal="true" width="70%" height="80vh">
+			<h:form id="sdpNewSdpForm">
+				<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{trainingproviderapplicationUI.newUserAssigned eq null and !trainingproviderapplicationUI.newUserAssigned.doneSearch}">
+					<ui:include src="/pages/includes/searchUserPassportOrID.xhtml" />
+				</p:panelGrid>
+				<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{trainingproviderapplicationUI.newUserAssigned.doneSearch}">
+					<p:commandButton process="@this" icon="fa fa-remove" value="Clear" action="#{trainingproviderapplicationUI.prepUserSearch}" update="@form" />
+					<div class="EmptyBox5" />
+				</p:panelGrid>
+				<p:fieldset legend="SDP Contact Information" rendered="#{trainingproviderapplicationUI.newUserAssigned.doneSearch}">
+					<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+						<h:panelGroup style="margin-top: -20px">
+							<div>
+								<p:outputLabel value="#{lang['title']}" for="cptitle" />
+							</div>
+							<div>
+								<p:selectOneMenu disabled="#{!trainingproviderapplicationUI.newUserAssigned.updateBean.title}" id="cptitle" value="#{trainingproviderapplicationUI.newUserAssigned.title}" converter="TitleConvertor" style="width:95%" required="true" requiredMessage="#{lang['select.title']}">
+									<p:ajax event="itemSelect" />
+									<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+									<f:selectItems value="#{selectItemsUI.selectItemsTitles}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText id="cpuserName" value="#{trainingproviderapplicationUI.newUserAssigned.firstName}" style="width:95%" required="true" disabled="#{!trainingproviderapplicationUI.newUserAssigned.updateBean.firstName}" requiredMessage="#{lang['enter.your.name']}">
+								<p:ajax />
+							</p:inputText>
+							<p:outputLabel value="#{lang['first.name']}" for="cpuserName" />
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText id="cpuserSurname" value="#{trainingproviderapplicationUI.newUserAssigned.lastName}" style="width:95%" required="true" disabled="#{!trainingproviderapplicationUI.newUserAssigned.updateBean.lastName}" requiredMessage="#{lang['enter.your.last.name']}">
+								<p:ajax />
+							</p:inputText>
+							<p:outputLabel value="#{lang['surname']}" for="cpuserSurname" />
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText id="cpuserEmail" value="#{trainingproviderapplicationUI.newUserAssigned.email}" style="width:95%" required="true" disabled="#{!trainingproviderapplicationUI.newUserAssigned.updateBean.email}" requiredMessage="#{lang['enter.your.email.address']}">
+								<p:ajax />
+							</p:inputText>
+							<p:outputLabel value="#{lang['emails']}" for="cpuserEmail" />
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield" rendered="#{trainingproviderapplicationUI.newUserAssigned.rsaIDNumber.length() gt 0}">
+							<p:inputText id="cpuserIdNumber" value="#{trainingproviderapplicationUI.newUserAssigned.rsaIDNumber}" style="width:95%" disabled="true" />
+							<p:outputLabel value="#{lang['rsa.id.number']}" for="cpuserIdNumber" />
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield" rendered="#{trainingproviderapplicationUI.newUserAssigned.passportNumber.length() gt 0}">
+							<p:inputText id="cpuserPassport" value="#{trainingproviderapplicationUI.newUserAssigned.passportNumber}" style="width:95%" disabled="true" />
+							<p:outputLabel value="#{lang['passport.number']}" for="cpuserPassport" />
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputMask disabled="#{!trainingproviderapplicationUI.newUserAssigned.updateBean.cellNumber}" id="cpcellNumber" mask="#{profileUI.CELLPHONE_FORMAT}" value="#{trainingproviderapplicationUI.newUserAssigned.cellNumber}" style="width: 95%" label="cellNumber" required="true"
+								requiredMessage="Enter mobile number">
+								<p:ajax />
+								<o:validator validatorId="javax.faces.Length" minimum="0" maximum="20" message="#{lang['user.cellnumber.length']}" />
+							</p:inputMask>
+							<p:outputLabel value="#{lang['mobile.number']}" for="cpcellNumber" />
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputMask disabled="#{!trainingproviderapplicationUI.newUserAssigned.updateBean.telNumber}" id="cptelNumber" mask="#{profileUI.TELPHONE_FORMAT}" value="#{trainingproviderapplicationUI.newUserAssigned.telNumber}" style="width: 95%" label="telNumber" required="false"
+								requiredMessage="Enter tel number">
+								<p:ajax />
+								<o:validator validatorId="javax.faces.Length" minimum="0" maximum="20" message="#{lang['user.tellnumber.length']}" />
+							</p:inputMask>
+							<p:outputLabel value="#{lang['tel.number']}:" for="cptelNumber" />
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputMask disabled="#{!trainingproviderapplicationUI.newUserAssigned.updateBean.faxNumber}" id="cpfax" mask="#{profileUI.CELLPHONE_FORMAT}" value="#{trainingproviderapplicationUI.newUserAssigned.faxNumber}" style="width: 95%" label="cellNumber" required="false"
+								requiredMessage="Enter fax number">
+								<p:ajax />
+							</p:inputMask>
+							<p:outputLabel value="#{lang['fax.number']}" for="cpfax" />
+						</h:panelGroup>
+
+					</p:panelGrid>
+					<p:outputPanel>
+						<p:fieldset rendered="#{trainingproviderapplicationUI.setmisValidiationErrors ne null and trainingproviderapplicationUI.setmisValidiationErrors ne ''}" styleClass="error Fs12">
+							<span class="gray  Fleft"> If you are unable to make the required alterations: Please contact user assigned if registered or contact merSETA support! </span>
+							<h4>Validation Error(s):</h4>
+							<div class="EmptyBox5" />
+							<p:outputLabel value="#{trainingproviderapplicationUI.setmisValidiationErrors}" escape="false"></p:outputLabel>
+						</p:fieldset>
+					</p:outputPanel>
+				</p:fieldset>
+				<p:fieldset legend="#{lang['designation']}" rendered="#{trainingproviderapplicationUI.newUserAssigned.doneSearch}">
+					<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="Select #{lang['designation']}" for="designation" />
+							</div>
+							<div>
+								<p:selectOneMenu disabled="false" id="designation" value="#{trainingproviderapplicationUI.newAction.newDesignation}" converter="SdpTypeConvertor" style="width:95%" required="true" requiredMessage="#{lang['select.designation']}">
+									<p:ajax event="itemSelect" />
+									<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+									<f:selectItems value="#{selectItemsUI.sdpTypeListExcludePrimary}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+					</p:panelGrid>
+				</p:fieldset>
+				<p:fieldset legend="Reason" rendered="#{trainingproviderapplicationUI.newUserAssigned.doneSearch}">
+					<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText style="width: 95%" value="#{trainingproviderapplicationUI.newAction.reason}" required="true" requiredMessage="Provide: Reason">
+								<p:ajax />
+							</p:inputText>
+							<p:outputLabel value="Reason" />
+						</h:panelGroup>
+					</p:panelGrid>
+				</p:fieldset>
+				<div class="EmptyBox5" />
+
+				<p:fieldset legend="Supporting Documents" rendered="#{trainingproviderapplicationUI.newUserAssigned.doneSearch}">
+					<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+						<p:commandButton process="@this" icon="fa fa-upload" value="Upload Supporting Documents" update=":uploadActionDocForm" action="#{trainingproviderapplicationUI.prepActionUpload}" />
+						<c:if test="#{trainingproviderapplicationUI.actionDocList ne null and trainingproviderapplicationUI.actionDocList.size() ne 0}">
+							<div class="EmptyBox10" />
+							<p:dataTable value="#{trainingproviderapplicationUI.actionDocList}" var="rv1" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+								<f:facet name="header"> Supporting Documents</f:facet>
+								<p:column headerText="#{lang['type']}" width="20%">Supporting Document</p:column>
+								<p:column headerText="#{lang['uploaded.by']}">
+									<p:outputLabel value="#{rv1.users.firstName} #{rv1.users.lastName}" rendered="#{rv1.users ne null}" />
+									<p:outputLabel value="Awaiting Submission" rendered="#{rv1.users eq null}" />
+								</p:column>
+								<p:column headerText="#{lang['uploaded']}" width="15%">
+									<h:outputText value="#{rv1.createDate}" rendered="#{rv1.createDate ne null}">
+										<f:convertDateTime pattern="dd MMM yyyy" />
+									</h:outputText>
+									<h:outputText value="Awaiting Submission" rendered="#{rv1.createDate eq null}">
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Original File Name" width="150">
+									<h:outputText value="#{rv1.originalFname}">
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Note" width="150">
+									<h:outputText value="#{rv1.note}">
+									</h:outputText>
+								</p:column>
+								<p:column headerText="#{lang['document.is.required']}" width="150" rendered="false">
+									<p:selectBooleanCheckbox value="#{rv1.configDoc.requiredDocument}" disabled="true" style="opacity: 1 !important" rendered="#{not rv1.required}"></p:selectBooleanCheckbox>
+									<p:selectBooleanCheckbox value="#{rv1.required}" disabled="true" style="opacity: 1 !important" rendered="#{rv1.required}"></p:selectBooleanCheckbox>
+								</p:column>
+								<p:column headerText="#{lang['original.required']}" width="150" rendered="false">
+									<p:selectBooleanCheckbox value="#{rv1.configDoc.originalRequired}" disabled="true" style="opacity: 1 !important" rendered="#{not rv1.configDoc.originalRequired}"></p:selectBooleanCheckbox>
+									<p:selectBooleanCheckbox value="#{rv1.configDoc.originalRequired}" disabled="true" style="opacity: 1 !important" rendered="#{rv1.configDoc.originalRequired}"></p:selectBooleanCheckbox>
+								</p:column>
+								<p:column headerText="#{lang['version']}" width="15%" rendered="false">
+									<h:outputText value="#{rv1.versionNo}">
+									</h:outputText>
+								</p:column>
+								<p:column width="5%" headerText="Actions">
+									<p:commandButton process="@this" ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}">
+										<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+										<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:commandButton process="@this" ajax="false" icon="fa fa-download " action="#{uploadDocUI.download(rv1)}" id="dlbUserDocsMemory" rendered="#{rv1.id eq null}">
+										<p:tooltip for="dlbUserDocsMemory" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+									</p:commandButton>
+								</p:column>
+							</p:dataTable>
+						</c:if>
+					</p:panelGrid>
+				</p:fieldset>
+				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+					<p:commandButton rendered="#{trainingproviderapplicationUI.newUserAssigned.doneSearch}" value="Submit" icon="fa fa-database" process="@form" action="#{trainingproviderapplicationUI.submitNewSdpContactPerson}" update="@form :sdpInfoForm">
+					</p:commandButton>
+					<p:commandButton value="Cancel and Close" icon="fa fa-remove" process="@this" action="#{trainingproviderapplicationUI.cancelNewSdpContactPerson}" update="@form :sdpInfoForm">
+					</p:commandButton>
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog closable="false" position="top" header="New: SDP Contact Person" dynamic="true" responsive="true" widgetVar="sdpAssModDlg" resizable="false" hideEffect="clip" showEffect="clip" id="sdpAssModDialog" appendTo="@(body)" modal="true" width="70%" height="80vh">
+			<h:form id="sdpAssModForm">
+				<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{trainingproviderapplicationUI.newUserAssigned eq null and !trainingproviderapplicationUI.newUserAssigned.doneSearch}">
+					<ui:include src="/pages/includes/searchUserPassportOrID.xhtml" />
+				</p:panelGrid>
+				<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{trainingproviderapplicationUI.newUserAssigned.doneSearch}">
+					<p:commandButton process="@this" icon="fa fa-remove" value="Clear" action="#{trainingproviderapplicationUI.prepUserSearch}" update="@form" />
+					<div class="EmptyBox5" />
+				</p:panelGrid>
+				<p:fieldset legend="SDP Contact Information" rendered="#{trainingproviderapplicationUI.newUserAssigned.doneSearch}">
+					<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+						<h:panelGroup style="margin-top: -20px">
+							<div>
+								<p:outputLabel value="#{lang['title']}" for="cptitle" />
+							</div>
+							<div>
+								<p:selectOneMenu disabled="true" id="cptitle" value="#{trainingproviderapplicationUI.newUserAssigned.title}" converter="TitleConvertor" style="width:95%" required="true" requiredMessage="#{lang['select.title']}">
+									<p:ajax event="itemSelect" />
+									<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+									<f:selectItems value="#{selectItemsUI.selectItemsTitles}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText id="cpuserName" value="#{trainingproviderapplicationUI.newUserAssigned.firstName}" style="width:95%" required="true" disabled="true" requiredMessage="#{lang['enter.your.name']}">
+								<p:ajax />
+							</p:inputText>
+							<p:outputLabel value="#{lang['first.name']}" for="cpuserName" />
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText id="cpuserSurname" value="#{trainingproviderapplicationUI.newUserAssigned.lastName}" style="width:95%" required="true" disabled="true" requiredMessage="#{lang['enter.your.last.name']}">
+								<p:ajax />
+							</p:inputText>
+							<p:outputLabel value="#{lang['surname']}" for="cpuserSurname" />
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText id="cpuserEmail" value="#{trainingproviderapplicationUI.newUserAssigned.email}" style="width:95%" required="true" disabled="true" requiredMessage="#{lang['enter.your.email.address']}">
+								<p:ajax />
+							</p:inputText>
+							<p:outputLabel value="#{lang['emails']}" for="cpuserEmail" />
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield" rendered="#{trainingproviderapplicationUI.newUserAssigned.rsaIDNumber.length() gt 0}">
+							<p:inputText id="cpuserIdNumber" value="#{trainingproviderapplicationUI.newUserAssigned.rsaIDNumber}" style="width:95%" disabled="true" />
+							<p:outputLabel value="#{lang['rsa.id.number']}" for="cpuserIdNumber" />
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield" rendered="#{trainingproviderapplicationUI.newUserAssigned.passportNumber.length() gt 0}">
+							<p:inputText id="cpuserPassport" value="#{trainingproviderapplicationUI.newUserAssigned.passportNumber}" style="width:95%" disabled="true" />
+							<p:outputLabel value="#{lang['passport.number']}" for="cpuserPassport" />
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputMask disabled="true" id="cpcellNumber" mask="#{profileUI.CELLPHONE_FORMAT}" value="#{trainingproviderapplicationUI.newUserAssigned.cellNumber}" style="width: 95%" label="cellNumber" required="true" requiredMessage="Enter mobile number">
+								<p:ajax />
+								<o:validator validatorId="javax.faces.Length" minimum="0" maximum="20" message="#{lang['user.cellnumber.length']}" />
+							</p:inputMask>
+							<p:outputLabel value="#{lang['mobile.number']}" for="cpcellNumber" />
+						</h:panelGroup>
+					</p:panelGrid>
+					<p:outputPanel>
+						<p:fieldset rendered="#{trainingproviderapplicationUI.setmisValidiationErrors ne null and trainingproviderapplicationUI.setmisValidiationErrors ne ''}" styleClass="error Fs12">
+							<span class="gray  Fleft"> If you are unable to make the required alterations: Please contact user assigned if registered or contact merSETA support! </span>
+							<h4>Validation Error(s):</h4>
+							<div class="EmptyBox5" />
+							<p:outputLabel value="#{trainingproviderapplicationUI.setmisValidiationErrors}" escape="false"></p:outputLabel>
+						</p:fieldset>
+					</p:outputPanel>
+				</p:fieldset>
+				<p:fieldset legend="Link type" rendered="#{trainingproviderapplicationUI.newUserAssigned.doneSearch}">
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="Type" for="type" />
+						</div>
+						<div>
+							<p:selectOneMenu id="type" value="#{trainingproviderapplicationUI.assessorModType}" style="width:95%" required="true">
+								<p:ajax />
+								<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+								<f:selectItems value="#{trainingproviderapplicationUI.assessorModTypeDDVersionTwo}" />
+								<p:ajax event="itemSelect" update="@form" listener="#{trainingproviderapplicationUI.checkIfIsAssOrModVersionTwo}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+				</p:fieldset>
+				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+					<p:commandButton rendered="#{trainingproviderapplicationUI.newUserAssigned.doneSearch}" value="Submit" icon="fa fa-database" process="@form" action="#{trainingproviderapplicationUI.createNewAssessorModeratorLink}" update="@form :sdpInfoForm">
+					</p:commandButton>
+					<p:commandButton value="Cancel and Close" icon="fa fa-remove" process="@this" action="#{trainingproviderapplicationUI.cancelNewAssessorModeratorLink}" update="@form :sdpInfoForm">
+					</p:commandButton>
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog closable="false" position="top" header="Update: TTC Scope" dynamic="true" responsive="true" widgetVar="assModScopeUpdDlg" resizable="false" hideEffect="clip" showEffect="clip" id="assModScopeUpdDialog" appendTo="@(body)" modal="true" width="70%" height="80vh">
+			<h:form id="assModScopeUpdForm">
+				<p:fieldset legend="User Information">
+					<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText disabled="true" value="#{trainingProviderApplicationAssessorModLinkUI.providerApplicationTradeTestAssessorsLinkView.assessorModeratorApplication.user.firstName}" style="width:95%">
+								<p:ajax />
+							</p:inputText>
+							<p:outputLabel value="First Name" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText disabled="true" value="#{trainingProviderApplicationAssessorModLinkUI.providerApplicationTradeTestAssessorsLinkView.assessorModeratorApplication.user.lastName}" style="width:95%">
+								<p:ajax />
+							</p:inputText>
+							<p:outputLabel value="Last Name" />
+						</h:panelGroup>
+					</p:panelGrid>
+				</p:fieldset>
+				<p:fieldset legend="Accreditation Information">
+					<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText disabled="true" value="#{trainingProviderApplicationAssessorModLinkUI.assessorModeratorApplicationView.etqa.description}" style="width:95%">
+								<p:ajax />
+							</p:inputText>
+							<p:outputLabel value="Primary ETQA" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText disabled="true" value="#{trainingProviderApplicationAssessorModLinkUI.assessorModeratorApplicationView.applicationType.displayName}" style="width:95%">
+								<p:ajax />
+							</p:inputText>
+							<p:outputLabel value="Application Type" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText disabled="true" value="#{trainingProviderApplicationAssessorModLinkUI.assessorModeratorApplicationView.startDate}" style="width:95%">
+								<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+							</p:inputText>
+							<p:outputLabel value="Designation: Start Date" />
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText disabled="true" value="#{trainingProviderApplicationAssessorModLinkUI.assessorModeratorApplicationView.endDate}" style="width:95%">
+								<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+							</p:inputText>
+							<p:outputLabel value="Designation: End Date" />
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText disabled="true" value="#{trainingProviderApplicationAssessorModLinkUI.assessorModeratorApplicationView.certificateNumber}" style="width:95%">
+							</p:inputText>
+							<p:outputLabel value="Designation: Registration Number" />
+						</h:panelGroup>
+					</p:panelGrid>
+				</p:fieldset>
+				<p:fieldset legend="Link/Assign Qualifications" >
+					<p:outputPanel id="newScopeGrid">
+						<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<span class="Fs13 gray"><i class="fa fa-info-circle" aria-hidden="true"></i> #{lang['qualification']} Limited To Trades</span>
+							<div class="EmptyBox5" />
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="#{lang['qualification']}" for="qualificationAutoNew" style="width:100%; color:#977949" />
+								</div>
+								<div>
+									<p:autoComplete style="width:100%" inputStyle="width:50%" id="qualificationAutoNew" value="#{trainingProviderApplicationAssessorModLinkUI.selectedQualification}" completeMethod="#{autoCompleteUI.completeQualificationTrade}" var="rvqs" itemLabel="#{rvqs.description}" itemValue="#{rvqs}"
+										forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+										<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rvqs.code}</p:column>
+										<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rvqs.description}</p:column>
+										<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rvqs.nqflevelg2description}</p:column>
+									</p:autoComplete>
+								</div>
+							</h:panelGroup>
+							<p:commandButton process="newScopeGrid" icon="fa fa-plus" value="Link/Assign SAQA Qualification" update=":assModScopeUpdForm:newScopeGrid" action="#{trainingProviderApplicationAssessorModLinkUI.addQualificationToNewScopeList}" />
+						</p:panelGrid>
+
+						<div class="EmptyBox5" />
+	
+						<p:dataTable var="rvqn" value="#{trainingProviderApplicationAssessorModLinkUI.qualificationList}" id="tpListNewScope" rowKey="#{rv.id}" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10" reflow="true">
+	
+							<f:facet name="header">New SAQA Qualifications</f:facet>
+							<p:column headerText="#{lang['code']}">
+								<h:outputText value="#{rvqn.code}" />
+							</p:column>
+							<p:column headerText="#{lang['qualification']}">
+								<h:outputText value="#{rvqn.description}" />
+							</p:column>
+	
+							<p:column headerText="Edit" exportable="false" width="7%">
+								<p:commandButton process="@this" icon="fa fa-trash-o" title="Remove" update=":assModScopeUpdForm:newScopeGrid" action="#{trainingProviderApplicationAssessorModLinkUI.removeQualification}">
+									<f:setPropertyActionListener value="#{rvqn}" target="#{trainingProviderApplicationAssessorModLinkUI.selectedQualification}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+					</p:outputPanel>
+				</p:fieldset>
+				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+					<p:commandButton value="Submit" icon="fa fa-database" process="@form" action="#{trainingProviderApplicationAssessorModLinkUI.addNewQualificationScope}" update="@form :sdpTtcAssessorsForm:tabViewTTCAssMod:viewInfoAssessorModeratorPanel">
+					</p:commandButton>
+					<p:commandButton value="Cancel and Close" icon="fa fa-remove" process="@this" action="#{trainingProviderApplicationAssessorModLinkUI.cancelNewScope}" update=":sdpTtcAssessorsForm:tabViewTTCAssMod:viewInfoAssessorModeratorPanel">
+					</p:commandButton>
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="uploadSupportingDocDlg" resizable="false" hideEffect="clip" showEffect="clip" id="uploadSupportingDocDialog" width="80%" responsive="true" modal="true">
+			<h:form id="uploadActionDocForm">
+				<h:panelGroup id="uploadGroupUser">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">Upload Supporting Documents</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{trainingproviderapplicationUI.actionDoc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{trainingproviderapplicationUI.storeNewActionFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}"
+										update="@form :sdpUpdateDesForm :sdpRemoveSdpForm :sdpNewSdpForm" multiple="false" fileLimit="1" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+
+	</ui:define>
+
+</ui:composition>

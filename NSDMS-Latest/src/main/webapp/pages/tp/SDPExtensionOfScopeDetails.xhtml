@@ -1,0 +1,1002 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+	<ui:define name="content">
+		<style>
+.borderless .ui-datalist-content {
+	border: none;
+}
+
+.error {
+	background-color: #F44336 !important;
+	color: white !important;
+	font-weight: bold;
+}
+</style>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<ui:include src="/pages/includes/taskdiagram.xhtml" />
+			</div>
+		</div>
+
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card">
+					<h:form id="mainForm">
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+
+						<!-- If error accrued or information not provided -->
+						<p:fieldset rendered="#{sdpextensionofscopeUI.exceptions ne null}" styleClass="error Fs12">
+							<h4>#{lang['action.required.message']}:</h4>
+							<p:outputLabel value="#{sdpextensionofscopeUI.exceptions}" escape="false"></p:outputLabel>
+						</p:fieldset>
+
+						<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+						<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+						<p:importEnum type="haj.com.entity.enums.ConfigDocProcessEnum" var="ConfigDocProcessEnum" />
+						<p:importEnum type="haj.com.entity.enums.YesNoEnum"></p:importEnum>
+						<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+
+
+
+						<p:fieldset legend="#{lang['rejection.reason']}" collapsed="false" toggleable="true"
+							rendered="#{sdpextensionofscopeUI.applicationRejectReasons.size() gt 0 and 
+						(sdpextensionofscopeUI.sdpextensionofscope.approvalStatus eq ApprovalEnum.Rejected or sdpextensionofscopeUI.sdpextensionofscope.approvalStatus eq ApprovalEnum.RejectedByEQTA  or 
+						sdpextensionofscopeUI.sdpextensionofscope.approvalStatus eq ApprovalEnum.PendingResubmition)}">
+							<c:if test="#{sdpextensionofscopeUI.applicationRejectReasons.size() gt 0}">
+								<h4>Status: #{sdpextensionofscopeUI.trainingProviderApplication.approvalStatus.friendlyName}</h4>
+							</c:if>
+							<c:if test="#{sdpextensionofscopeUI.applicationRejectReasons.size() gt 0}">
+								<p:dataTable var="rowVar" value="#{sdpextensionofscopeUI.applicationRejectReasons}" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+									paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+									<p:column headerText="Create Date">
+										<p:outputLabel value="#{rowVar.createDate}">
+											<f:convertDateTime pattern="dd MMMM yyyy" />
+										</p:outputLabel>
+									</p:column>
+									<p:column headerText="Reason for Rejection">
+										<p:outputLabel value="#{rowVar.description}"></p:outputLabel>
+									</p:column>
+									<p:column headerText="How to fix">
+										<p:outputLabel value="#{rowVar.howTo}"></p:outputLabel>
+									</p:column>
+								</p:dataTable>
+							</c:if>
+						</p:fieldset>
+						<div class="EmptyBox10" />
+
+						<!-- Tab View Start -->
+						<p:tabView style="width: 100%" id="trainingProviderTabView">
+
+							<p:tab title="#{lang['company.info']}" id="tpCompanyInfomation">
+								<!-- Company Information -->
+								<h:panelGrid id="compInfoPG" style="width:100%">
+									<br />
+									<p:fieldset id="compInfoFS" legend="#{lang['company.info']}" rendered="true">
+										<h:form id="companyInsForm">
+											<ui:include src="/pages/tp/trainingprovidercompanydetails.xhtml">
+												<ui:param name="company" value="#{sdpextensionofscopeUI.company}" />
+											</ui:include>
+										</h:form>
+									</p:fieldset>
+								</h:panelGrid>
+								
+								<p:fieldset legend="Training Site Information" rendered="#{sdpextensionofscopeUI.trainingSite ne null}">
+									
+									<ui:include src="/pages/includes/training_site_info_display.xhtml">
+										<ui:param name="trainingSite" value="#{sdpextensionofscopeUI.trainingSite}" />
+									</ui:include>
+									<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+										<p:outputPanel rendered="#{sdpextensionofscopeUI.trainingSite.residentialAddress ne null}">
+											<ui:include src="/pages/includes/addressInformation.xhtml">
+												<ui:param name="header" value="#{lang['residentialAddress']}" />
+												<ui:param name="address" value="#{sdpextensionofscopeUI.trainingSite.residentialAddress}" />
+											</ui:include>
+										</p:outputPanel>
+										<p:outputPanel rendered="#{sdpextensionofscopeUI.trainingSite.postalAddress ne null}">
+											<ui:include src="/pages/includes/addressInformation.xhtml">
+												<ui:param name="header" value="Postal Address" />
+												<ui:param name="address" value="#{sdpextensionofscopeUI.trainingSite.postalAddress}" />
+											</ui:include>
+										</p:outputPanel>
+									</p:panelGrid>
+									
+								</p:fieldset>
+
+								<p:fieldset legend="#{lang['company.documents']}" rendered="#{sdpextensionofscopeUI.company.docs.size() gt 0}">
+									<p:dataTable expandedRow="true" value="#{sdpextensionofscopeUI.companyList}" var="rv" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv.company.id}" reflow="true">
+										<p:column headerText="#{lang['expand.row']}" width="45">
+											<p:rowToggler rendered="#{rv.docs.size() gt 0}" />
+										</p:column>
+										<p:column headerText="#{lang['companyName']}">
+							               #{rv.companyName}
+							            </p:column>
+										<p:column headerText="#{lang['companyRegistrationNumber']}">
+							               #{rv.companyRegistrationNumber}
+							            </p:column>
+										<p:column headerText="#{lang['entity.id']}">
+							               #{rv.levyNumber}
+							            </p:column>
+										<p:column headerText="#{lang['company.status']}" width="10%">
+							               #{lang[rv.companyStatus.registrationName]}
+							            </p:column>
+										<p:column width="37" headerText="#{lang['RAG']}">
+											<h:graphicImage value="/resources/hls/images/red.svg" rendered="#{rv.companyStatus eq CompanyStatusEnum.Pending}" width="40" styleClass="animated pulse infinite" />
+										</p:column>
+
+
+										<p:rowExpansion>
+											<p:dataTable emptyMessage="#{lang['no.records.found']}" value="#{rv.docs}" var="rv1" rowKey="#{rv1.id}">
+												<p:column headerText="#{lang['type']}" width="20%">
+							                       #{rv1.configDoc.name}
+							                    </p:column>
+												<p:column headerText="#{lang['uploaded.by']}">
+							                       #{rv1.users.firstName} #{rv1.users.lastName}
+							                    </p:column>
+												<p:column headerText="#{lang['uploaded']}" width="15%">
+													<h:outputText value="#{rv1.createDate}">
+														<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+													</h:outputText>
+												</p:column>
+												<p:column headerText="#{lang['version']}" width="15%">
+													<h:outputText value="#{rv1.versionNo}">
+													</h:outputText>
+												</p:column>
+
+												<p:column width="180" headerText="#{lang['view.edit']}">
+													<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlb" rendered="#{rv1.id ne null}">
+														<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+													</p:commandButton>
+													<p:tooltip for="dlb" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+
+													<p:spacer width="5" rendered="#{rv1.id ne null}" />
+													<p:commandButton icon="fa fa-bars " id="dhist" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}">
+														<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+													</p:commandButton>
+													<p:tooltip for="dhist" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+
+													<p:commandButton rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload}" actionListener="#{sdpextensionofscopeUI.prepUploadCloseCompanyInformation}" icon="fa fa-upload" id="upload"
+														styleClass="#{rv1.originalFname eq null ? 'red-btn' : ''} flat" process="@this" oncomplete="PF('dlgUpload').show()" update=":uploadForm">
+														<f:setPropertyActionListener value="#{rv1}" target="#{sdpextensionofscopeUI.doc}" />
+													</p:commandButton>
+													<p:tooltip rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload}" for="upload" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+
+													<h:panelGroup id="panelGroupThree" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+														<p:spacer width="5" />
+														<p:commandButton icon="fa fa-comment-o " id="dnote" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+															<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+														</p:commandButton>
+														<p:tooltip for="dnote" value="#{lang['view.note']}" position="left" />
+													</h:panelGroup>
+
+													<h:panelGroup id="panelGroupFour" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+														<p:spacer width="5" />
+														<p:commandButton icon="fa fa-eye " id="viewerButton" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+															<f:setPropertyActionListener value="#{rv}" target="#{uploadDocUI.doc}" />
+														</p:commandButton>
+														<p:tooltip for="viewerButton" value="#{lang['view.document']} " position="left" />
+													</h:panelGroup>
+
+												</p:column>
+											</p:dataTable>
+										</p:rowExpansion>
+									</p:dataTable>
+								</p:fieldset>
+
+
+
+							</p:tab>
+							
+							
+
+							<p:tab title="#{lang['training.provider.information']}" id="tpUserInfomation">
+								<br />
+								<br />
+								<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+									<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+									<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+								</p:confirmDialog>
+
+								<p:fieldset legend="#{lang['raining.provider.representative']}">
+
+									<h:panelGrid id="gpUserInfoPG" style="width:100%">
+
+										<ui:include src="/pages/includes/user_info_display.xhtml">
+											<ui:param name="user" value="#{sdpextensionofscopeUI.trainingProviderUser}" />
+										</ui:include>
+									</h:panelGrid>
+
+								</p:fieldset>
+
+								<p:fieldset legend="#{lang['accreditation.detail']}">
+									<p:panelGrid columns="2" style="width:100%" id="accreditGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+										<h:panelGroup>
+											<div>
+												<p:outputLabel value="#{lang['etqa']}:" styleClass="gray" />
+											</div>
+											<div>
+												<p:selectOneMenu id="etqa" value="#{sdpextensionofscopeUI.trainingProviderApplication.etqa}" converter="EtqaConvertor" style="width:75%" required="true" disabled="true">
+													<p:ajax></p:ajax>
+													<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+													<f:selectItems value="#{selectItemsUI.selectItemsEtqa}" var="il" itemLabel="#{il.description}" />
+												</p:selectOneMenu>
+											</div>
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText id="AccreditationStatus" value="#{sdpextensionofscopeUI.trainingProviderApplication.accreditationNumber}" style="width:95%" required="true" disabled="true" requiredMessage="#{lang['enter.your.last.name']}" />
+											<p:outputLabel value="Accreditation Number" for="AccreditationStatus" />
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText id="AccreditationPeriod" value="#{sdpextensionofscopeUI.trainingProviderApplication.accreditationPeriod}" style="width:95%" required="true" disabled="true" requiredMessage="#{lang['enter.your.last.name']}" />
+											<p:outputLabel value="Accreditation Period" for="AccreditationPeriod" />
+										</h:panelGroup>
+
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:calendar id="ExpiryDate" value="#{sdpextensionofscopeUI.trainingProviderApplication.expiriyDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" style="width: 95%" disabled="true">
+												<p:ajax event="dateSelect">
+												</p:ajax>
+											</p:calendar>
+											<p:outputLabel value="Accreditation End Date" for="ExpiryDate" />
+										</h:panelGroup>
+
+									</p:panelGrid>
+								</p:fieldset>
+
+								<!-- User Documents -->
+								<p:fieldset legend="#{lang['raining.provider.representative.docs']}" id="userDocs" rendered="#{sdpextensionofscopeUI.trainingProviderUser.docs.size() gt 0}">
+									<p:dataTable emptyMessage="#{lang['no.records.found']}" value="#{sdpextensionofscopeUI.trainingProviderUser.docs}" var="rv1" rowKey="#{rv1.id}" rows="5" paginator="true" paginatorPosition="bottom"
+										paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25,50,100,150,300,600,900">
+
+										<p:column headerText="#{lang['type']}" width="20%">
+							                       #{rv1.configDoc.name}
+							                    </p:column>
+										<p:column headerText="#{lang['uploaded.by']}">
+							                       #{rv1.users.firstName} #{rv1.users.lastName}
+							                    </p:column>
+										<p:column headerText="#{lang['uploaded']}" width="15%">
+											<h:outputText value="#{rv1.createDate}">
+												<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+											</h:outputText>
+										</p:column>
+										<p:column headerText="#{lang['version']}" width="15%">
+											<h:outputText value="#{rv1.versionNo}">
+											</h:outputText>
+										</p:column>
+
+										<p:column width="180">
+											<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}">
+												<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+											</p:commandButton>
+											<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+
+											<p:spacer width="5" rendered="#{rv1.id ne null}" />
+											<p:commandButton icon="fa fa-bars" id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}">
+												<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+											</p:commandButton>
+											<p:tooltip for="dhistUserDocs" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+
+											<p:commandButton rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload}" icon="fa fa-upload" id="uploadUserDocs" styleClass="#{rv1.originalFname eq null ? 'red-btn' : ''} flat"
+												actionListener="#{sdpextensionofscopeUI.prepUploadCloseCompanyInformationForUser}" process="@this" oncomplete="PF('dlgUpload').show()" update=":uploadForm">
+												<f:setPropertyActionListener value="#{rv1}" target="#{sdpextensionofscopeUI.doc}" />
+											</p:commandButton>
+											<p:tooltip rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload}" for="uploadUserDocs" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}"
+												position="left" />
+
+											<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+												<p:spacer width="5" />
+												<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+													<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+												</p:commandButton>
+												<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+											</h:panelGroup>
+
+											<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+												<p:spacer width="5" />
+												<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+													<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+												</p:commandButton>
+												<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+											</h:panelGroup>
+
+										</p:column>
+									</p:dataTable>
+								</p:fieldset>
+								<br />
+								<p:panelGrid columns="1" style="width:100%">
+									<h:outputText value="Declaration For Application With merSETA" styleClass="FontBold Fs15" />
+									<p>I, the undersigned, confirm that I am authorised by this organisation to submit the Skills Development Provider application. I declare that to the best of my knowledge, the information contained herein, is accurate and up to date. I declare that we have not been granted primary
+										accreditation by or applied for primary accreditation to another Education and Training Quality Assurance Body/Quality Assurance Partner. I also declare that the primary focus of training falls within the scope of the merSETA.</p>
+									<div class="EmptyBox20"></div>
+									<p:panel header="#{lang['accept.code.of.conduct']}" style="text-align:center">
+										<h:form id="cocForm">
+											<p:panelGrid columns="6" id="pgAccept" style="width:100%">
+
+												<h:outputText value="#{lang['name']}:" styleClass="FontBold Fs15" />
+												<h:outputText value="#{sdpextensionofscopeUI.trainingProviderUser.firstName} #{sdpextensionofscopeUI.trainingProviderUser.lastName}" />
+
+												<h:outputText value="#{lang['date']}:" styleClass="FontBold Fs15" />
+
+												<h:outputText value="#{sdpextensionofscopeUI.trainingProviderApplication.codeOfConductAcceptDate}">
+													<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+												</h:outputText>
+
+												<h:outputText value="#{lang['accept']}:" styleClass="FontBold Fs15" />
+												<p:selectBooleanCheckbox style="width:100%" id="cbAccept" disabled="#{sdpextensionofscopeUI.trainingProviderApplication.codeOfConductAccepted}" value="#{sdpextensionofscopeUI.trainingProviderApplication.codeOfConductAccepted}">
+
+												</p:selectBooleanCheckbox>
+
+											</p:panelGrid>
+										</h:form>
+									</p:panel>
+								</p:panelGrid>
+
+
+								<div class="EmptyBox10" />
+							</p:tab>
+
+							<p:tab title="#{lang['training.provider.contact.persons']}" id="contactPersonsTab">
+								<br />
+								<br />
+								<ui:include src="/pages/tp/includes/tpExOfScopeContactPersonNewStructure.xhtml" />
+								<div class="EmptyBox10" />
+							</p:tab>
+
+							<p:tab rendered="true" title="Assessors And Moderator Information" id="assModInfo">
+								<br />
+								<br />
+								<ui:include src="/pages/tp/includes/tpExOfScopeAvailailityOfFacAndAssessorNewStructure.xhtml" />
+								<div class="EmptyBox10" />
+							</p:tab>
+
+							<p:tab rendered="true" title="#{lang['qualification.details']}" id="usUqual">
+								<br />
+								<br />
+								<p:fieldset legend="#{lang['qualifications']}">
+									<p:dataList var="rowVar" value="#{sdpextensionofscopeUI.newQualificationList}" rowKey="#{rowVar.id}" reflow="true" styleClass="borderless">
+										<p:outputLabel value="#{rowVar.qualification.description}" />
+									</p:dataList>
+								</p:fieldset>
+								<p:fieldset legend="#{lang['unit.standards']}">
+									<p:dataList var="rowVar" value="#{sdpextensionofscopeUI.newUnitStandards}" rowKey="#{rowVar.id}" reflow="true" styleClass="borderless">
+										<p:outputLabel value="#{rowVar.unitStandard.title}" />
+									</p:dataList>
+								</p:fieldset>
+								<p:fieldset legend="#{lang['skills.programme']}">
+									<p:dataList var="rowVar" value="#{sdpextensionofscopeUI.newSkillsProgramList}" rowKey="#{rowVar.id}" reflow="true" styleClass="borderless">
+										<p:outputLabel value="#{rowVar.skillsProgram.description}" />
+									</p:dataList>
+								</p:fieldset>
+
+								<p:fieldset legend="#{lang['skills.set']}">
+									<p:dataList var="rowVar" value="#{sdpextensionofscopeUI.tpSkillsSetList}" rowKey="#{rowVar.id}" reflow="true" styleClass="borderless">
+										<p:outputLabel value="#{rowVar.skillsSet.description}" />
+									</p:dataList>
+								</p:fieldset>
+
+								<p:fieldset legend="Skills programme route">
+									<p:panelGrid columns="3" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+										<h:panelGroup>
+											<p:outputLabel styleClass="FontBold Fs15" style="font-weight:bold" value="Skills programme route will be used for obtaining the unit standards?" />
+										</h:panelGroup>
+
+										<h:panelGroup rendered="#{sdpextensionofscopeUI.sdpextensionofscope.useSkillProgrammeRoute eq YesNoEnum.Yes}">
+											<p:selectOneMenu disabled="true" id="useSkillProgrammeRoute" value="#{sdpextensionofscopeUI.sdpextensionofscope.useSkillProgrammeRoute}" style="width:100%" required="true" requiredMessage="#{lang['use.skill.programme.route.error.msg']}">
+
+												<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+											</p:selectOneMenu>
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield" rendered="#{sdpextensionofscopeUI.sdpextensionofscope.useSkillProgrammeRoute eq YesNoEnum.Yes}">
+											<p:autoComplete disabled="true" required="true" id="tpSkillsProgram" value="#{sdpextensionofscopeUI.sdpextensionofscope.skillsProgram}" completeMethod="#{autoCompleteUI.completeSkillsProgram}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true"
+												converter="SkillsProgramConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+												<p:ajax event="itemSelect" update="@form" />
+												<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+												<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+											</p:autoComplete>
+											<p:outputLabel value="Skills Program" for="tpSkillsProgram" styleClass="gray" />
+										</h:panelGroup>
+									</p:panelGrid>
+								</p:fieldset>
+							</p:tab>
+
+							<p:tab title="#{lang['self.evaluation']}" id="selfEvaluation">
+								<br />
+								<br />
+								<p:outputPanel id="selfEvePanel">
+									<p:dataTable var="rowVarSE" value="#{sdpextensionofscopeUI.auditorMonitorReviewEvidanceRequiredDataModelList}" lazy="true" id="auditormonitorreviewListLazyLoad" rowKey="#{rowVarSE.id}" paginator="true" rows="5" paginatorPosition="bottom"
+										paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10" reflow="true">
+										<p:column headerText="#{lang['expand.row']}" width="45">
+											<p:rowToggler rendered="#{rowVarSE.docs.size() gt 0}"></p:rowToggler>
+										</p:column>
+										<p:column headerText="Accreditation Criteria">
+											<h:outputText value="#{rowVarSE.accreditationCriteria}" />
+										</p:column>
+										<p:column headerText="Evidence Requirements">
+											<h:outputText value="#{rowVarSE.evidenceRequirements}" escape="false" />
+										</p:column>
+										<p:column headerText="Evidence Available" width="200">
+											<center>
+												<p:selectOneButton value="#{rowVarSE.evidenceRequired}" layout="grid" columns="2" required="false" disabled="true">
+													<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+												</p:selectOneButton>
+											</center>
+										</p:column>
+
+										<p:column headerText="Evaluator Outcome: Evidence Available" width="200">
+											<center>
+												<p:selectOneButton disabled="true" id="evidenceRequired2" value="#{rowVarSE.evidenceRequiredEvaluatorOutcome}" layout="grid" columns="2">
+													<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+												</p:selectOneButton>
+											</center>
+										</p:column>
+
+										<p:column headerText="Comment">
+											<p:fieldset>
+												<p:inputText disabled="true" value="#{rowVarSE.comment}" style="width:100%">
+												</p:inputText>
+											</p:fieldset>
+										</p:column>
+										<p:column headerText="Upload Evidence" width="60" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload}">
+											<center>
+												<p:commandButton rendered="#{rowVarSE.docs.size() eq 0 and rowVarSE.evidenceRequiredEvaluatorOutcome eq YesNoEnum.No}" icon="fa fa-upload" id="uploadUserDocsLL" styleClass="#{rv1.originalFname eq null ? 'red-btn' : ''} flat" process="@this" oncomplete="PF('dlgUploadEvidenceV2').show()"
+													update=":uploadEvidenceV2Form">
+													<f:setPropertyActionListener value="#{rowVarSE}" target="#{sdpextensionofscopeUI.auditorMonitorReview}" />
+													<p:tooltip for="uploadUserDocsLL" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+												</p:commandButton>
+											</center>
+										</p:column>
+										<p:column style="width:7%" styleClass="action-column" headerText="Action"
+											rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Edit or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalEdit}">
+											<p:commandButton process="@this" icon="fa fa-database" title="Update Information" rendered="#{!rowVarSE.isNotRelevant}" action="#{tpDetailUI.prepUpdateAuditorMonitorReview}" update=":auditMonitorRevUpdForm">
+												<f:setPropertyActionListener value="#{rowVarSE}" target="#{sdpextensionofscopeUI.selectedAuditorMonitorReview}" />
+											</p:commandButton>
+										</p:column>
+										<p:rowExpansion>
+											<p:dataTable value="#{rowVarSE.docs}" var="rv1" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+												<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+												<p:column headerText="#{lang['uploaded']}" width="15%">
+													<h:outputText value="#{rv1.createDate}">
+														<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+													</h:outputText>
+												</p:column>
+												<p:column headerText="#{lang['version']}" width="15%">
+													<h:outputText value="#{rv1.versionNo}">
+													</h:outputText>
+												</p:column>
+												<p:column headerText="Upload Evidence" width="180">
+													<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}">
+														<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+													</p:commandButton>
+													<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+
+													<p:spacer width="5" rendered="#{rv1.id ne null}" />
+													<p:commandButton icon="fa fa-bars " id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}">
+														<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+													</p:commandButton>
+													<p:tooltip for="dhistUserDocs" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+
+													<!-- only with permission to upload can upload a new version -->
+													<p:commandButton rendered="#{rowVarSE.evidenceRequired eq YesNoEnum.Yes and (sessionUI.task.processRole eq null or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload)}" icon="fa fa-upload"
+														id="uploadUserDocsLL" styleClass="#{rv1.originalFname eq null ? 'red-btn' : ''} flat" process="@this" oncomplete="PF('dlgUploadEvidenceV2').show()" update=":uploadEvidenceV2Form">
+														<f:setPropertyActionListener value="#{rv1}" target="#{sdpextensionofscopeUI.doc}" />
+														<p:tooltip for="uploadUserDocsLL" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+													</p:commandButton>
+													
+													<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+														<p:spacer width="5" />
+														<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+															<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+														</p:commandButton>
+														<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+													</h:panelGroup>
+
+													<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+														<p:spacer width="5" />
+														<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+															<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+														</p:commandButton>
+														<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+													</h:panelGroup>
+												</p:column>
+											</p:dataTable>
+										</p:rowExpansion>
+									</p:dataTable>
+								</p:outputPanel>
+
+
+
+								<p:dataTable var="rowVar" rendered="false" value="#{sdpextensionofscopeUI.auditorMonitorReviewDataModelList}" id="auditormonitorreviewList" rowKey="#{rowVar.id}" reflow="true" sortBy="#{rowVar.section}">
+
+									<p:column headerText="#{lang['expand.row']}" width="45">
+										<p:rowToggler rendered="#{rowVar.docs.size() gt 0}">
+										</p:rowToggler>
+									</p:column>
+
+									<p:column headerText="Accreditation Criteria">
+										<h:outputText value="#{rowVar.accreditationCriteria}" />
+									</p:column>
+
+									<p:column headerText="Evidence Requirements">
+										<h:outputText value="#{rowVar.evidenceRequirements}" escape="false" />
+									</p:column>
+
+									<p:column headerText="Evidence Available" width="200">
+										<center>
+											<p:selectOneButton rendered="true" id="evidenceRequired" value="#{rowVar.evidenceRequired}" layout="grid" columns="2" required="false"
+												disabled="#{(sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload) or rowVar.isNotRelevant}">
+												<p:ajax></p:ajax>
+												<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+											</p:selectOneButton>
+										</center>
+									</p:column>
+
+									<p:column headerText="Evaluator Outcome: Evidence Available" width="200">
+										<center>
+											<p:selectOneButton rendered="true" disabled="#{!sdpextensionofscopeUI.onAfterSiteVistDate}" id="evidenceRequired2" value="#{rowVar.evidenceRequiredEvaluatorOutcome}" layout="grid" columns="2" required="false">
+												<p:ajax></p:ajax>
+												<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+											</p:selectOneButton>
+										</center>
+									</p:column>
+
+									<p:column headerText="Comment">
+										<p:fieldset>
+											<p:inputText disabled="#{!sdpextensionofscopeUI.onAfterSiteVistDate and (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalEdit or rowVar.isNotRelevant or !sdpextensionofscopeUI.onAfterSiteVistDate)}" id="companyName" value="#{rowVar.comment}" style="width:100%"
+												required="true">
+												<p:ajax></p:ajax>
+											</p:inputText>
+										</p:fieldset>
+									</p:column>
+
+									<p:column headerText="Upload Evidence" width="60" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload}">
+										<center>
+											<p:commandButton rendered="#{rowVar.docs.size() eq 0 and rowVar.evidenceRequiredEvaluatorOutcome eq YesNoEnum.No}" icon="fa fa-upload" id="uploadUserDocs" styleClass="#{rv1.originalFname eq null ? 'red-btn' : ''} flat" process="@this" oncomplete="PF('dlgUploadEvidence').show()"
+												update=":uploadEvidenceForm">
+												<f:setPropertyActionListener value="#{rowVar}" target="#{sdpextensionofscopeUI.auditorMonitorReview}" />
+											</p:commandButton>
+											<p:tooltip for="uploadUserDocs" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+										</center>
+									</p:column>
+
+									<p:rowExpansion>
+										<p:dataTable value="#{rowVar.docs}" var="rv1" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+											<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+											<p:column headerText="#{lang['uploaded']}" width="15%">
+												<h:outputText value="#{rv1.createDate}">
+													<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+												</h:outputText>
+											</p:column>
+											<p:column headerText="#{lang['version']}" width="15%">
+												<h:outputText value="#{rv1.versionNo}">
+												</h:outputText>
+											</p:column>
+											<p:column headerText="Upload Evidence" width="180">
+												<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}">
+													<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+												</p:commandButton>
+												<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+
+												<p:spacer width="5" rendered="#{rv1.id ne null}" />
+												<p:commandButton icon="fa fa-bars " id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}">
+													<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+												</p:commandButton>
+												<p:tooltip for="dhistUserDocs" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+
+												<!-- only with permission to upload can upload a new version -->
+												<p:commandButton rendered="#{rowVar.evidenceRequired eq YesNoEnum.Yes and (sessionUI.task.processRole eq null or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload)}" icon="fa fa-upload"
+													id="uploadUserDocs" styleClass="#{rv1.originalFname eq null ? 'red-btn' : ''} flat" process="@this" oncomplete="PF('dlgUploadEvidence').show()" update=":uploadEvidenceForm">
+													<f:setPropertyActionListener value="#{rv1}" target="#{tpDetailUI.doc}" />
+												</p:commandButton>
+												<p:tooltip for="uploadUserDocs" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+
+												<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+													<p:spacer width="5" />
+													<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+														<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+													</p:commandButton>
+													<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+												</h:panelGroup>
+
+												<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+													<p:spacer width="5" />
+													<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+														<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+													</p:commandButton>
+													<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+												</h:panelGroup>
+											</p:column>
+										</p:dataTable>
+									</p:rowExpansion>
+								</p:dataTable>
+							</p:tab>
+							<p:tab title="Site Visit" id="siteVisit" rendered="true">
+								<br />
+								<br />
+								<ui:include src="/pages/tp/includes/ExOfScopeSitevisit.xhtml" />
+							</p:tab>
+
+						</p:tabView>
+						<!-- Tab View End -->
+
+					</h:form>
+
+				</div>
+
+				<div class="card card-w-title">
+
+					<h:form id="actionForm">
+						<c:if test="#{sessionUI.task.workflowProcess ne ConfigDocProcessEnum.SDPExtensionOfScopeETQAApproval}">
+							<p:panelGrid columns="3" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve}">
+								<p:commandButton onstart="uploadStart()" value="#{lang['approve']}" icon="ui-icon-save" update="@form" action="#{sdpextensionofscopeUI.approveTask}" styleClass="flat green-btn Fs18" style="height: 50px;">
+								</p:commandButton>
+								<p:commandButton value="#{lang['reject.task']}" onstart="uploadStart()" rendered="#{!sessionUI.task.firstInProcess}" icon="ui-icon-save" update="@form" oncomplete="PF('rejectReasonsDlg').show();uploadDone()" styleClass="flat red-btn Fs18" style="height: 50px;" process="@this">
+								</p:commandButton>
+								<p:commandButton value="#{lang['final.reject']}" icon="ui-icon-save" update="@form" oncomplete="PF('finalRejectReasonsDlg').show()" styleClass="flat red-btn Fs18" style="height: 50px;" process="@this">
+								</p:commandButton>
+							</p:panelGrid>
+
+							<p:panelGrid columns="3" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval}">
+								<p:commandButton onstart="uploadStart()" oncomplete="PF('dateSchedule').show();uploadDone()" value="#{lang['approve']}" icon="ui-icon-save" update="@form" styleClass="flat green-btn Fs18" style="height: 50px;">
+								</p:commandButton>
+								<p:commandButton value="#{lang['reject.task']}" icon="ui-icon-save" rendered="#{!sessionUI.task.firstInProcess}" update="@form" oncomplete="PF('rejectReasonsDlg').show();uploadDone()" styleClass="flat red-btn Fs18" style="height: 50px;" process="@this">
+								</p:commandButton>
+								<p:commandButton value="#{lang['final.reject']}" icon="ui-icon-save" update="@form" oncomplete="PF('finalRejectReasonsDlg').show()" styleClass="flat red-btn Fs18" style="height: 50px;" process="@this">
+								</p:commandButton>
+							</p:panelGrid>
+
+							<p:panelGrid columns="3" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Approve and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalApproval}">
+								<p:commandButton onstart="uploadStart()" value="#{lang['complete.task']}" icon="ui-icon-save" update=":mainForm" action="#{sdpextensionofscopeUI.completeTask}" styleClass="flat green-btn Fs18" style="height: 50px;"></p:commandButton>
+								<p:commandButton value="#{lang['reject.task']}" icon="ui-icon-save" onstart="uploadStart()" update="@form" oncomplete="PF('rejectReasonsDlg').show();uploadDone()" styleClass="flat red-btn Fs18" style="height: 50px;"
+									rendered="#{(sessionUI.task.processRole.rolePermission eq UserPermissionEnum.View or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalEdit) and !sessionUI.task.firstInProcess}">
+								</p:commandButton>
+								<p:commandButton value="#{lang['final.reject']}" icon="ui-icon-save" update="@form" oncomplete="PF('finalRejectReasonsDlg').show()" styleClass="flat red-btn Fs18" style="height: 50px;" process="@this"
+									rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.View or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalEdit}">
+								</p:commandButton>
+							</p:panelGrid>
+						</c:if>
+
+						<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.workflowProcess eq ConfigDocProcessEnum.SDPExtensionOfScopeETQAApproval}">
+							<p:commandButton onstart="uploadStart()" rendered="#{sdpextensionofscopeUI.sdpextensionofscope.approvalStatus eq ApprovalEnum.ApprovedByETQA}" value="#{lang['approve']}" action="#{sdpextensionofscopeUI.extensionOfScopeETQAFinalApproval}" icon="ui-icon-save" update="@form"
+								styleClass="flat green-btn Fs18" style="height: 50px;">
+							</p:commandButton>
+							<p:commandButton onstart="uploadStart()" rendered="#{sdpextensionofscopeUI.sdpextensionofscope.approvalStatus eq ApprovalEnum.RejectedByEQTA}" value="#{lang['final.reject']}" action="#{sdpextensionofscopeUI.finalRejection}" icon="ui-icon-save" update="@form" styleClass="flat red-btn Fs18"
+								style="height: 50px;" process="@this">
+							</p:commandButton>
+						</p:panelGrid>
+					</h:form>
+				</div>
+
+
+			</div>
+		</div>
+
+
+
+		<p:dialog rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval}" header="#{lang['review.committee.date.scheduling']}" widgetVar="dateSchedule" hideEffect="clip" showEffect="clip" id="dateSchedule" appendTo="@(body)" modal="true" closable="true" width="80%"
+			height="50vh" responsive="true">
+			<h:form id="tableForm">
+				<h:panelGroup rendered="false">
+					<p:commandButton icon="fa fa-calendar" value="Add New Schedule" update="@form" action="#{amDetailUI.redirectToSchedule}">
+					</p:commandButton>
+					<br />
+					<br />
+				</h:panelGroup>
+				<h:panelGroup rendered="#{sdpextensionofscopeUI.getTPReviewCommitteeMeetingList().size() lt 1}">
+					<ui:include src="/pages/includes/tabinfo.xhtml">
+						<ui:param name="showInfoCircle" value="true" />
+						<ui:param name="cssClass" value="secondaryText Fs15" />
+						<ui:param name="helpTxt" value="No review committee meeting available, Please advice employee that is responsible for scheduling meetings to login and schedule a meeting " />
+					</ui:include>
+					<ui:include src="/pages/includes/tabinfo.xhtml">
+						<ui:param name="showInfoCircle" value="true" />
+						<ui:param name="cssClass" value="secondaryText Fs15" />
+						<ui:param name="helpTxt" value="A meeting date can only be scheduled to take place after the selected site visit date" />
+					</ui:include>
+				</h:panelGroup>
+				<p:dataTable var="var" value="#{sdpextensionofscopeUI.getTPReviewCommitteeMeetingList()}" widgetVar="scheduleTable" rows="5" paginator="true" paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+					rowsPerPageTemplate="5,10,15" paginatorPosition="bottom">
+					<f:facet name="header">
+						<p:outputPanel>
+							<h:outputText value="Select Review Committee Date" />
+						</p:outputPanel>
+					</f:facet>
+
+					<p:column filterBy="#{var.title}" sortBy="#{var.title}" headerText="#{lang['title']}">
+						<h:outputText value="#{var.title}" />
+					</p:column>
+
+					<p:column filterBy="#{var.fromDateTime}" sortBy="#{var.fromDateTime}" headerText="#{lang['from']}">
+						<h:outputText value="#{var.fromDateTime}">
+							<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME}" />
+						</h:outputText>
+					</p:column>
+
+					<p:column filterBy="#{var.toDateTime}" sortBy="#{var.toDateTime}" headerText="#{lang['to']}">
+						<h:outputText value="#{var.toDateTime}">
+							<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME}" />
+						</h:outputText>
+					</p:column>
+
+					<p:column filterBy="#{var.venue}" sortBy="#{var.venue}" headerText="#{lang['venue']}">
+						<h:outputText value="#{var.venue}" />
+					</p:column>
+
+					<p:column style="width:120px">
+						<p:commandButton onstart="uploadStart()" value="#{lang['schedule']}" icon="ui-icon-check" update="@form" action="#{sdpextensionofscopeUI.approveTask}" styleClass="flat green-btn Fs18">
+							<f:setPropertyActionListener value="#{var}" target="#{sdpextensionofscopeUI.reviewCommitteeMeeting}" />
+						</p:commandButton>
+					</p:column>
+
+				</p:dataTable>
+
+			</h:form>
+			<br />
+			<p:fieldset rendered="false" legend="#{lang['add.review.committee.date.schedule']}" collapsed="true" toggleable="true">
+				<ui:include src="/pages/etqaReviewCommittee/include/scheduleDetails.xhtml">
+				</ui:include>
+			</p:fieldset>
+
+		</p:dialog>
+
+		<p:dialog closeOnEscape="true" header="ETQA Review Committee Date" widgetVar="dlgReviewComDateApprove" resizable="false" hideEffect="clip" showEffect="clip" id="dlgReviewComDateApprove" responsive="true" modal="true">
+			<h:form id="revcomForm">
+
+				<p:calendar id="inline" mode="inline" value="#{sdpextensionofscopeUI.trainingProviderApplication.etqaReviewCommitteeDate}" />
+				<br />
+				<p:commandButton oncomplete="PF('dlgReviewComDateApprove').hide()" value="#{lang['submit']}" icon="ui-icon-save" update="mainForm" action="#{sdpextensionofscopeUI.approveTtApplicationAndSendCertificate}">
+				</p:commandButton>
+
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="Reject Reasons" widgetVar="rejectReasonsDlg" hideEffect="clip" showEffect="clip" id="dialogRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{sdpextensionofscopeUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:100%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{sdpextensionofscopeUI.tpRejectReasons}" var="rv" itemValue="#{rv}" />
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+							</p:selectManyMenu>
+						</div>
+					</div>
+					<p:commandButton onstart="uploadStart()" value="Reject Training Provider" action="#{sdpextensionofscopeUI.rejectTask}" update="@form" />
+				</div>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="Reject Reasons" widgetVar="finalRejectReasonsDlg" hideEffect="clip" showEffect="clip" id="finalRejectReasonsDlg" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="finalRejectReasonForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{sdpextensionofscopeUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:100%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{sdpextensionofscopeUI.tpRejectReasons}" var="rv" itemValue="#{rv}" />
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+							</p:selectManyMenu>
+						</div>
+					</div>
+					<p:commandButton onstart="uploadStart()" value="Reject Training Provider" action="#{sdpextensionofscopeUI.finalRejection()}" update="@form" />
+				</div>
+			</h:form>
+		</p:dialog>
+
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true">
+			<h:form id="uploadForm">
+				<h:panelGroup id="uploadGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{sdpextensionofscopeUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{sdpextensionofscopeUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{sdpextensionofscopeUI.storeFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update="mainForm"
+										multiple="false" fileLimit="1" immediate="false" auto="true" />
+								</p:panel>
+
+
+								<div class="EmptyBox10" />
+
+
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+
+
+		<p:dialog header="Amend Site Visit Date" widgetVar="dlgReviewDate" hideEffect="clip" showEffect="clip" id="dialogReviewDate" modal="true" closable="true" width="50%" responsive="true">
+			<h:form id="reviewDateForm">
+				<div class="ui-g">
+					<div class="ui-g-12">
+						<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+							<h:panelGroup style="width:100%" rendered="true">
+								<div>
+									<p:outputLabel value="Review Date:" for="dateUpdatedSelection" />
+								</div>
+								<div>
+									<p:calendar id="dateUpdatedSelection" value="#{sdpextensionofscopeUI.sdpextensionofscope.siteVisitDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true">
+										<p:ajax event="dateSelect" />
+									</p:calendar>
+								</div>
+							</h:panelGroup>
+							<p:selectManyMenu rendered="true" value="#{sdpextensionofscopeUI.dateChangeReasonSelectionList}" converter="DateChangeReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Provide A Minium Of One Reason For Date Change Before Proceeding"
+								showCheckbox="true">
+								<f:selectItems value="#{sdpextensionofscopeUI.dateChangeReasonAvalibleSelectionList}" var="rv" itemValue="#{rv}" />
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value=" t.howTo " rendered="false" />
+								</p:column>
+								<p:ajax />
+							</p:selectManyMenu>
+							<p:commandButton value="Amend" action="#{sdpextensionofscopeUI.siteVisitDateUpdate}" update="@form mainForm actionForm">
+
+							</p:commandButton>
+						</p:panelGrid>
+					</div>
+				</div>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUploadEvidence" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOADEvidence" width="80%" responsive="true" modal="true" dynamic="true">
+			<h:form id="uploadEvidenceForm">
+				<h:panelGroup id="uploadGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{sdpextensionofscopeUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{sdpextensionofscopeUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{sdpextensionofscopeUI.storeEvidenceFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}"
+										update="mainForm:trainingProviderTabView:auditormonitorreviewList" multiple="false" fileLimit="1" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog closable="false" position="top" header="Update: #{lang['self.evaluation']}" dynamic="true" responsive="true" widgetVar="auditMonitorRevUpdDlg" resizable="false" hideEffect="clip" showEffect="clip" id="auditMonitorRevUpdDialog" appendTo="@(body)" modal="true" width="70%" height="80vh">
+			<h:form id="auditMonitorRevUpdForm">
+				<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+					<p:fieldset legend="Information">
+						<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:95%" layout="grid">
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="Accreditation Criteria" style="font-weight:bold" />
+								</div>
+								<div>
+									<h:outputText value="#{sdpextensionofscopeUI.selectedAuditorMonitorReview.accreditationCriteria}" escape="false" />
+								</div>
+							</h:panelGroup>
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="Evidence Requirements" style="font-weight:bold" />
+								</div>
+								<div>
+									<h:outputText value="#{sdpextensionofscopeUI.selectedAuditorMonitorReview.evidenceRequirements}" escape="false" />
+								</div>
+							</h:panelGroup>
+						</p:panelGrid>
+					</p:fieldset>
+					<p:fieldset legend="Provide Further Detail">
+						<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:95%" layout="grid">
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="Evidence Available" style="font-weight:bold" />
+								</div>
+								<div>
+									<p:selectOneButton value="#{sdpextensionofscopeUI.selectedAuditorMonitorReview.evidenceRequired}" layout="grid" columns="2"
+										disabled="#{(sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload) or sdpextensionofscopeUI.selectedAuditorMonitorReview.isNotRelevant}">
+										<p:ajax />
+										<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+									</p:selectOneButton>
+								</div>
+							</h:panelGroup>
+							<h:panelGroup rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalEdit}">
+								<div>
+									<p:outputLabel value="Evaluator Outcome: Evidence Available" style="font-weight:bold" />
+								</div>
+								<div>
+									<p:selectOneButton disabled="#{!sdpextensionofscopeUI.onAfterSiteVistDate}" value="#{sdpextensionofscopeUI.selectedAuditorMonitorReview.evidenceRequiredEvaluatorOutcome}" layout="grid" columns="2" required="false">
+										<p:ajax />
+										<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+									</p:selectOneButton>
+								</div>
+							</h:panelGroup>
+						</p:panelGrid>
+					</p:fieldset>
+					<p:fieldset legend="Comment" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalEdit}">
+						<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:95%" layout="grid">
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="Comment" style="font-weight:bold" />
+								</div>
+								<div>
+									<p:inputText disabled="#{!sdpextensionofscopeUI.onAfterSiteVistDate}" value="#{sdpextensionofscopeUI.selectedAuditorMonitorReview.comment}" style="width:100%">
+										<p:ajax />
+									</p:inputText>
+								</div>
+							</h:panelGroup>
+						</p:panelGrid>
+					</p:fieldset>
+				</p:panelGrid>
+				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+					<p:commandButton onstart="uploadStart()" oncomplete="uploadDone()" value="Submit" icon="fa fa-database" action="#{sdpextensionofscopeUI.updateAuditorMonitorReview}" update=":mainForm:trainingProviderTabView:selfEvePanel">
+					</p:commandButton>
+					<p:commandButton onstart="uploadStart()" oncomplete="uploadDone()" value="Cancel and Close" icon="fa fa-remove" process="@this" action="#{sdpextensionofscopeUI.closeAuditorMonitorReviewView}" update=":mainForm:trainingProviderTabView:selfEvePanel">
+					</p:commandButton>
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUploadEvidenceV2" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOADEvidenceDialog" width="80%" responsive="true" modal="true" dynamic="true">
+			<h:form id="uploadEvidenceV2Form">
+				<h:panelGroup id="uploadGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{sdpextensionofscopeUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{sdpextensionofscopeUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{sdpextensionofscopeUI.storeEvidenceFileVersionTwo}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}"
+										update=":mainForm:trainingProviderTabView:selfEvePanel" multiple="false" fileLimit="1" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+
+	</ui:define>
+
+</ui:composition>

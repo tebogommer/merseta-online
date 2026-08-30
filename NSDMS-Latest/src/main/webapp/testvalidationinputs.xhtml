@@ -1,0 +1,87 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml" xmlns:tie="http://tiefaces.org/tiefaces">
+
+	<ui:define name="content">
+
+
+		<style type="text/css">
+div.ui-treenode-children {
+	padding-left: 0px !important
+}
+/*.ui-treenode-content{background-color: red !important}*/
+.hsGreen { {
+	background-color: green !important;
+	color: white !important;
+}
+}
+</style>
+
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card">
+					<h1 id="headerOne">Test Input Validations</h1>
+					<h:form id="testInsForm">
+
+						<p:commandButton value="User Inset Validation" onclick="PF('userInput').show()" update="uploadFormUser" />
+
+					</h:form>
+
+				</div>
+			</div>
+		</div>
+
+		<p:dialog header="User Input" widgetVar="userInput" resizable="false" hideEffect="clip" showEffect="clip" id="userInput" width="80%" responsive="true" modal="true">
+			<h:form id="uploadFormUser">
+				<p:panelGrid columns="1" style="width:100%" id="usersInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="firstName" maxlength="#{usersUI.MAX_FIRST_NAME_SIZE}" value="#{testinputUI.users.firstName}" style="width:95%" required="false" />
+						<p:outputLabel value="#{lang['first.name']}" for="firstName" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="lastName" maxlength="#{usersUI.MAX_LAST_NAME_SIZE}" value="#{testinputUI.users.lastName}" style="width:95%" required="false" />
+						<p:outputLabel value="#{lang['surname']}" for="lastName" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="email" maxlength="#{usersUI.MAX_EMAIL_SIZE}" value="#{testinputUI.users.email}" style="width:95%" required="false" />
+						<p:outputLabel value="#{lang['email']}" for="email" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="active" value="#{testinputUI.users.active}" style="width:95%" required="false" />
+						<p:outputLabel value="#{lang['active']}" for="active" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="idNumber" maxlength="#{usersUI.MAX_RSA_ID_NUMBER}" value="#{testinputUI.users.rsaIDNumber}" size="13" required="false" />
+						<p:outputLabel value="#{lang['rsa.id.number']}" for="idNumber" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="passportNumber" maxlength="#{usersUI.MAX_PASSPORT_NUMBER}" value="#{testinputUI.users.passportNumber}" style="width:95%" required="false">
+						</p:inputText>
+						<p:outputLabel value="#{lang['passport.number']}" for="passportNumber" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputMask id="telNumber" mask="#{usersUI.CELLPHONE_FORMAT}" value="#{testinputUI.users.telNumber}" style="width:95%" required="false" />
+						<p:outputLabel value="#{lang['tel.number']}" for="telNumber" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputMask id="cellNumber" mask="#{usersUI.TELPHONE_FORMAT}" value="#{testinputUI.users.cellNumber}" style="width:95%" required="false" />
+						<p:outputLabel value="#{lang['cell.number']}" for="cellNumber" />
+					</h:panelGroup>
+					<p:commandButton value="User Inset Validation" action="#{testinputUI.usersInsert}" oncomplete="PF('userInput').hide()" update="uploadFormUser testInsForm" />
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+
+
+		<script>
+			function scrollToDiv() {
+				alert('ready');
+			}
+		</script>
+
+	</ui:define>
+
+</ui:composition>

@@ -1,0 +1,135 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+	<ui:define name="content">
+		<style>
+.borderless .ui-datalist-content {
+	border: none;
+}
+
+.error {
+	background-color: #F44336 !important;
+	color: white !important;
+	font-weight: bold;
+}
+</style>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Available Companies</h1>
+					<h:form id="mainForm">
+						<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+						<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+						<p:growl></p:growl>
+						<p:dataTable value="#{skillsregistrationUI.companies}" var="rv" reflow="true" emptyMessage="#{lang['no.records.found']}">
+
+							<p:column width="20">
+								<p:rowToggler>
+								</p:rowToggler>
+							</p:column>
+
+							<p:column headerText="#{lang['companyName']}">#{rv.companyName}</p:column>
+							<p:column headerText="#{lang['companyRegistrationNumber']}">#{rv.companyRegistrationNumber}</p:column>
+							<p:column headerText="#{lang['entity.id']}">#{rv.levyNumber}</p:column>
+							<p:column headerText="#{lang['company.status']}" width="10%">#{lang[rv.companyStatus.registrationName]}</p:column>
+							<p:column headerText="Size of Company" width="10%">#{rv.sizeOfCompany.detailDescription}</p:column>
+
+							<p:column headerText="#{lang['levy.paying']}" width="110" style="text-align:center">
+								<p:outputPanel rendered="#{rv.nonLevyPaying}">
+									<i class="fa fa-times fa-3x red" aria-hidden="true"></i>
+								</p:outputPanel>
+								<p:outputPanel rendered="#{not rv.nonLevyPaying}">
+									<i class="fa fa-check fa-3x green" aria-hidden="true"></i>
+								</p:outputPanel>
+							</p:column>
+
+							<p:column headerText="#{lang['RAG']}" width="37">
+								<h:graphicImage value="/resources/hls/images/red.svg" rendered="#{rv.companyStatus eq CompanyStatusEnum.Pending}" width="40" styleClass="animated pulse infinite" />
+								<h:graphicImage value="/resources/hls/images/green.svg" rendered="#{rv.companyStatus eq CompanyStatusEnum.Active}" width="30" />
+							</p:column>
+
+							<p:column width="40" rendered="true" headerText="#{lang['view.edit']}">
+								<p:commandButton icon="fa fa-plus" title="#{lang['learner.registration']}" update="providerMonitoringAuditingForm">
+									<f:setPropertyActionListener value="#{rv}" target="#{skillsregistrationUI.selectedCompany}" />
+								</p:commandButton>
+							</p:column>
+
+							<p:rowExpansion>
+								<p:dataTable value="#{rv.skillsRegistrations}" var="skillsReg" reflow="true" emptyMessage="#{lang['no.records.found']}">
+									<p:column headerText="Skills Registration Name">
+										<p:outputLabel value="#{skillsReg.proposedTitle}"></p:outputLabel>
+									</p:column>
+									<p:column headerText="Skills Registration Type">
+										<p:outputLabel value="#{skillsReg.skillsType.friendlyName}"></p:outputLabel>
+									</p:column>
+									<p:column headerText="Approval Date">
+										<p:outputLabel value="#{skillsReg.approvalDate}">
+											<f:convertDateTime pattern="dd MMMM yyyy" />
+										</p:outputLabel>
+									</p:column>
+									<p:column headerText="Status">
+										<p:outputLabel value="#{skillsReg.approvalEnum.friendlyName}"></p:outputLabel>
+									</p:column>
+								</p:dataTable>
+							</p:rowExpansion>
+
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="providerMonitoringAuditingForm">
+						<p:tabView>
+							<p:tab title="General Information">
+								<ui:include src="/pages/tp/includes/generalinformation.xhtml" />
+							</p:tab>
+							<p:tab title="Registration In Terms of Applicable Legislation">
+								<ui:include src="/pages/tp/includes/registrationintermsofapplicablelegislation.xhtml" />
+							</p:tab>
+						</p:tabView>
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true">
+			<h:form id="uploadForm">
+				<h:panelGroup id="uploadGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{tpDetailUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{tpDetailUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span>
+										<br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{tpDetailUI.storeFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update="@form" multiple="false" fileLimit="1" immediate="false" auto="true" />
+								</p:panel>
+
+
+								<div class="EmptyBox10" />
+
+
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+
+	</ui:define>
+
+</ui:composition>

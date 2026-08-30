@@ -5,13 +5,18 @@ using System.Security.Claims;
 
 namespace Nsdms.Application.Services;
 
+/// <summary>
+/// Implements the universal Workflow &amp; BPM state machine engine with decoupled entity status synchronization and audit logging.
+/// </summary>
 public class WorkflowEngineService : IWorkflowEngineService
 {
     private readonly INsdmsDbContextFactory _contextFactory;
+    private readonly IRealtimeNotificationService? _notificationService;
 
-    public WorkflowEngineService(INsdmsDbContextFactory contextFactory)
+    public WorkflowEngineService(INsdmsDbContextFactory contextFactory, IRealtimeNotificationService? notificationService = null)
     {
         _contextFactory = contextFactory;
+        _notificationService = notificationService;
     }
 
     public async Task<WorkflowInstance?> GetInstanceByEntityAsync(string processCode, int entityId)
@@ -22,9 +27,6 @@ public class WorkflowEngineService : IWorkflowEngineService
             .Include(i => i.CurrentWorkflowState)
             .Include(i => i.Tasks)
             .Include(i => i.History)
-                .ThenInclude(h => h.FromState)
-            .Include(i => i.History)
-                .ThenInclude(h => h.ToState)
             .FirstOrDefaultAsync(i => i.WorkflowDefinition!.Code == processCode && i.EntityId == entityId);
     }
 
@@ -36,10 +38,32 @@ public class WorkflowEngineService : IWorkflowEngineService
             .Include(i => i.CurrentWorkflowState)
             .Include(i => i.Tasks)
             .Include(i => i.History)
-                .ThenInclude(h => h.FromState)
-            .Include(i => i.History)
-                .ThenInclude(h => h.ToState)
             .FirstOrDefaultAsync(i => i.Id == instanceId);
+    }
+
+    public async Task<List<WorkflowState>> GetWorkflowDefinitionStatesAsync(string processCode)
+    {
+        using var context = await _contextFactory.CreateDbContextAsync();
+        return await context.WorkflowStates
+            .Include(s => s.WorkflowDefinition)
+            .Where(s => s.WorkflowDefinition!.Code == processCode)
+            .OrderBy(s => s.StepOrder)
+            .ToListAsync();
+    }
+
+    public async Task<WorkflowInstance?> GetOrInitiateInstanceAsync(
+        string processCode, 
+        int entityId, 
+        string entityTitle, 
+        string entityRef, 
+        string initiatorUserId, 
+        string initiatorName)
+    {
+        var existing = await GetInstanceByEntityAsync(processCode, entityId);
+        if (existing != null) return existing;
+
+        var startResult = await StartWorkflowAsync(processCode, entityId, entityTitle, entityRef, initiatorUserId, initiatorName);
+        return startResult.Instance;
     }
 
     public async Task<List<WorkflowTransition>> GetAvailableTransitionsAsync(int instanceId, ClaimsPrincipal? user)
@@ -71,19 +95,20 @@ public class WorkflowEngineService : IWorkflowEngineService
         string initiatorName)
     {
         using var context = await _contextFactory.CreateDbContextAsync();
+
         var def = await context.WorkflowDefinitions
             .Include(d => d.States)
             .FirstOrDefaultAsync(d => d.Code == processCode && d.IsActive);
 
         if (def == null)
         {
-            return new WorkflowActionResult(false, $"Workflow process definition '{processCode}' not found.");
+            return new WorkflowActionResult(false, $"Workflow definition '{processCode}' not found or inactive.");
         }
 
         var initialState = def.States.FirstOrDefault(s => s.IsInitial) ?? def.States.OrderBy(s => s.StepOrder).FirstOrDefault();
         if (initialState == null)
         {
-            return new WorkflowActionResult(false, $"Initial state for process '{processCode}' not defined.");
+            return new WorkflowActionResult(false, $"Workflow definition '{processCode}' has no configured initial state.");
         }
 
         var instance = new WorkflowInstance
@@ -96,7 +121,7 @@ public class WorkflowEngineService : IWorkflowEngineService
             InitiatorUserId = initiatorUserId,
             InitiatorName = initiatorName,
             InitiatedDate = DateTime.UtcNow,
-            IsCompleted = false
+            IsCompleted = initialState.IsTerminal
         };
 
         context.WorkflowInstances.Add(instance);
@@ -119,6 +144,18 @@ public class WorkflowEngineService : IWorkflowEngineService
             context.WorkflowTasks.Add(task);
             await context.SaveChangesAsync();
         }
+
+        // Double-write to AuditLog
+        context.AuditLogs.Add(new AuditLog
+        {
+            EntityName = "WorkflowInstance",
+            RecordId = instance.Id,
+            ActionName = "START_WORKFLOW",
+            Actor = initiatorUserId,
+            Timestamp = DateTime.UtcNow,
+            MetadataJson = $"{{\"processCode\":\"{processCode}\",\"entityId\":{entityId},\"initialState\":\"{initialState.StateName}\"}}"
+        });
+        await context.SaveChangesAsync();
 
         return new WorkflowActionResult(true, "Workflow started successfully.", instance, initialState.StateName);
     }
@@ -201,9 +238,10 @@ public class WorkflowEngineService : IWorkflowEngineService
         context.WorkflowHistories.Add(history);
 
         // 4. Create next task if not terminal
+        WorkflowTask? nextTask = null;
         if (!toState.IsTerminal && !string.IsNullOrEmpty(toState.AllowedGroupRole))
         {
-            var nextTask = new WorkflowTask
+            nextTask = new WorkflowTask
             {
                 WorkflowInstanceId = instance.Id,
                 TaskTitle = $"{instance.WorkflowDefinition!.Name}: {instance.EntityTitle}",
@@ -250,7 +288,38 @@ public class WorkflowEngineService : IWorkflowEngineService
 
         await context.SaveChangesAsync();
 
+        if (_notificationService != null)
+        {
+            _ = _notificationService.NotifyWorkflowTransitionAsync(instance.WorkflowDefinition?.TargetEntityName ?? "Entity", instance.EntityId, fromStateId.ToString(), toState.StateName, actorName);
+            if (nextTask != null)
+            {
+                _ = _notificationService.NotifyTaskAssignedAsync(nextTask.Id.ToString(), nextTask.TaskTitle, nextTask.AssignedGroupRole ?? "All", nextTask.Priority);
+            }
+        }
+
         return new WorkflowActionResult(true, $"Workflow successfully advanced to '{toState.StateName}'.", instance, toState.StateName);
+    }
+
+    public async Task<bool> SyncEntityStatusAsync(string processCode, int entityId, string statusCode, string actor = "SYSTEM")
+    {
+        using var context = await _contextFactory.CreateDbContextAsync();
+        var def = await context.WorkflowDefinitions.FirstOrDefaultAsync(d => d.Code == processCode);
+        if (def == null) return false;
+
+        await PushStatusToParentEntityAsync(context, def.TargetEntityName, entityId, statusCode);
+
+        context.AuditLogs.Add(new AuditLog
+        {
+            EntityName = def.TargetEntityName,
+            RecordId = entityId,
+            ActionName = "SYNC_ENTITY_STATUS",
+            Actor = actor,
+            Timestamp = DateTime.UtcNow,
+            MetadataJson = $"{{\"processCode\":\"{processCode}\",\"newStatus\":\"{statusCode}\"}}"
+        });
+
+        await context.SaveChangesAsync();
+        return true;
     }
 
     public async Task<List<WorkflowTask>> GetUserTasksAsync(string? userRole = null, string? userId = null)
@@ -283,10 +352,7 @@ public class WorkflowEngineService : IWorkflowEngineService
     {
         using var context = await _contextFactory.CreateDbContextAsync();
         var task = await context.WorkflowTasks.FirstOrDefaultAsync(t => t.Id == taskId);
-        if (task == null || task.TaskStatus == "Completed")
-        {
-            return null;
-        }
+        if (task == null || task.TaskStatus != "Open") return null;
 
         task.AssignedUserId = userId;
         task.AssignedUserName = userName;
@@ -294,6 +360,16 @@ public class WorkflowEngineService : IWorkflowEngineService
         task.ClaimedDate = DateTime.UtcNow;
         task.ModifiedAt = DateTime.UtcNow;
         task.ModifiedBy = userId;
+
+        context.AuditLogs.Add(new AuditLog
+        {
+            EntityName = "WorkflowTask",
+            RecordId = task.Id,
+            ActionName = "CLAIM_TASK",
+            Actor = userId,
+            Timestamp = DateTime.UtcNow,
+            MetadataJson = $"{{\"taskId\":{task.Id},\"claimedBy\":\"{userName}\"}}"
+        });
 
         await context.SaveChangesAsync();
         return task;
@@ -313,14 +389,11 @@ public class WorkflowEngineService : IWorkflowEngineService
     public async Task<List<WorkflowNotification>> GetUserNotificationsAsync(string userId, bool unreadOnly = false)
     {
         using var context = await _contextFactory.CreateDbContextAsync();
-        var query = context.WorkflowNotifications
-            .Where(n => n.RecipientUserId == userId);
-
+        var query = context.WorkflowNotifications.Where(n => n.RecipientUserId == userId);
         if (unreadOnly)
         {
             query = query.Where(n => !n.IsRead);
         }
-
         return await query.OrderByDescending(n => n.CreatedDate).ToListAsync();
     }
 
@@ -352,7 +425,9 @@ public class WorkflowEngineService : IWorkflowEngineService
             "TrainingProvider" => $"/sdp/{entityId}",
             "WorkplaceApproval" => $"/workplace-approvals/{entityId}",
             "CompanyLearner" => $"/learners/{entityId}",
+            "GrantMoa" => $"/finance/grants/{entityId}",
             "LearnerTradeTest" => $"/trade-tests",
+            "InterSetaTransfer" => $"/inter-seta-transfers",
             _ => "/"
         };
     }
@@ -363,15 +438,19 @@ public class WorkflowEngineService : IWorkflowEngineService
         {
             case "Organisation":
                 var org = await context.Organisations.FirstOrDefaultAsync(o => o.Id == entityId);
-                if (org != null) org.StatusCode = statusCode;
+                if (org != null) org.OrganisationStatusCode = statusCode;
                 break;
             case "WspSubmission":
                 var wsp = await context.WspSubmissions.FirstOrDefaultAsync(w => w.Id == entityId);
-                if (wsp != null) wsp.StatusCode = statusCode;
+                if (wsp != null) wsp.WspApprovalStatusCode = statusCode;
                 break;
             case "GrantApplication":
                 var grant = await context.GrantApplications.FirstOrDefaultAsync(g => g.Id == entityId);
-                if (grant != null) grant.StatusCode = statusCode;
+                if (grant != null) grant.ApplicationStatusCode = statusCode;
+                break;
+            case "GrantMoa":
+                var moa = await context.GrantMoas.FirstOrDefaultAsync(m => m.Id == entityId);
+                if (moa != null) moa.MoaStatusCode = statusCode;
                 break;
             case "TrainingProvider":
                 var provider = await context.TrainingProviders.FirstOrDefaultAsync(p => p.Id == entityId);
@@ -383,7 +462,15 @@ public class WorkflowEngineService : IWorkflowEngineService
                 break;
             case "CompanyLearner":
                 var learner = await context.CompanyLearners.FirstOrDefaultAsync(l => l.Id == entityId);
-                if (learner != null) learner.StatusCode = statusCode;
+                if (learner != null) learner.EnrolmentStatusCode = statusCode;
+                break;
+            case "LearnerTradeTest":
+                var test = await context.LearnerTradeTests.FirstOrDefaultAsync(t => t.Id == entityId);
+                if (test != null) test.ResultStatusCode = statusCode;
+                break;
+            case "InterSetaTransfer":
+                var transfer = await context.InterSetaTransfers.FirstOrDefaultAsync(t => t.Id == entityId);
+                if (transfer != null) transfer.TransferStatusCode = statusCode;
                 break;
         }
     }

@@ -1,0 +1,156 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui">
+
+	<c:if test="#{trainingproviderUI.formUser.doneSearch and !trainingproviderUI.contactPerson.doneSearch and !trainingproviderUI.doneContactPerson}">
+		<ui:include src="/pages/includes/searchUserPassportOrID.xhtml" />
+	</c:if>
+
+	<p:commandButton process="@this" value="#{lang['add.contact.person']}" rendered="#{trainingproviderUI.doneContactPerson and false}" update="@form" icon="fa fa-plus" styleClass="flat" action="#{trainingproviderUI.resetAddContactPerson}" />
+	<br />
+	<p:fieldset legend="Contact Person" rendered="#{trainingproviderUI.newSdpCompany.sdp.doneSearch}">
+		<p:panelGrid columns="2" style="width:100%" id="cpInsGrid" layout="grid" rendered="#{trainingproviderUI.newSdpCompany.sdp.doneSearch}" styleClass="ui-panelgrid-blank form-group">
+			<h:panelGroup style="margin-top: -20px">
+				<div>
+					<p:outputLabel value="#{lang['designation']}" for="designation" />
+				</div>
+				<div>
+					<p:selectOneMenu disabled="false" id="designation" value="#{trainingproviderUI.newSdpCompany.sdpType}" converter="SdpTypeConvertor" style="width:95%" required="true" requiredMessage="#{lang['select.designation']}">
+						<p:ajax />
+						<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+						<f:selectItems value="#{selectItemsUI.sdpTypeList}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+					</p:selectOneMenu>
+				</div>
+			</h:panelGroup>
+
+			<h:panelGroup style="margin-top: -20px">
+				<div>
+					<p:outputLabel value="#{lang['title']}" for="cptitle" />
+				</div>
+				<div>
+					<p:selectOneMenu disabled="#{!trainingproviderUI.newSdpCompany.sdp.updateBean.title}" id="cptitle" value="#{trainingproviderUI.newSdpCompany.sdp.title}" converter="TitleConvertor" style="width:95%" required="true" requiredMessage="#{lang['select.title']}">
+						<p:ajax />
+						<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+						<f:selectItems value="#{selectItemsUI.selectItemsTitles}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+					</p:selectOneMenu>
+				</div>
+			</h:panelGroup>
+
+			<h:panelGroup styleClass="md-inputfield">
+				<br />
+				<p:inputText id="cpuserName" value="#{trainingproviderUI.newSdpCompany.sdp.firstName}" style="width:95%" required="true" disabled="#{trainingproviderUI.newSdpCompany.sdp.existingUser}" requiredMessage="#{lang['enter.your.name']}" />
+				<p:outputLabel value="#{lang['first.name']}" for="cpuserName" />
+			</h:panelGroup>
+
+			<h:panelGroup styleClass="md-inputfield">
+				<p:inputText id="cpuserSurname" value="#{trainingproviderUI.newSdpCompany.sdp.lastName}" style="width:95%" required="true" disabled="#{trainingproviderUI.newSdpCompany.sdp.existingUser}" requiredMessage="#{lang['enter.your.last.name']}" />
+				<p:outputLabel value="#{lang['surname']}" for="cpuserSurname" />
+			</h:panelGroup>
+
+			<h:panelGroup styleClass="md-inputfield">
+				<p:inputText id="cpuserEmail" value="#{trainingproviderUI.newSdpCompany.sdp.email}" style="width:95%" required="true" disabled="#{trainingproviderUI.contactPerson.existingUser}" requiredMessage="#{lang['enter.your.email.address']}" />
+				<p:outputLabel value="#{lang['emails']}" for="cpuserEmail" />
+			</h:panelGroup>
+
+			<h:panelGroup styleClass="md-inputfield" rendered="##{trainingproviderUI.newSdpCompany.sdp.rsaIDNumber.length() gt 0}">
+				<p:inputText id="cpuserIdNumber" value="#{trainingproviderUI.newSdpCompany.sdp.rsaIDNumber}" style="width:95%" disabled="true" />
+				<p:outputLabel value="#{lang['rsa.id.number']}" for="cpuserIdNumber" />
+			</h:panelGroup>
+
+			<h:panelGroup styleClass="md-inputfield" rendered="#{trainingproviderUI.newSdpCompany.sdp.passportNumber.length() gt 0}">
+				<p:inputText id="cpuserPassport" value="#{trainingproviderUI.newSdpCompany.sdp.passportNumber}" style="width:95%" disabled="true" />
+				<p:outputLabel value="#{lang['passport.number']}" for="cpuserPassport" />
+			</h:panelGroup>
+
+			<h:panelGroup styleClass="md-inputfield">
+				<p:inputMask disabled="#{trainingproviderUI.newSdpCompany.sdp.existingUser}" id="cpcellNumber" mask="#{profileUI.CELLPHONE_FORMAT}" value="#{trainingproviderUI.newSdpCompany.sdp.cellNumber}" style="width: 95%" label="cellNumber" required="true" requiredMessage="Enter mobile number">
+					<o:validator validatorId="javax.faces.Length" minimum="0" maximum="20" message="#{lang['user.cellnumber.length']}" />
+				</p:inputMask>
+				<p:outputLabel value="#{lang['mobile.number']}" for="cpcellNumber" />
+			</h:panelGroup>
+
+			<h:panelGroup styleClass="md-inputfield">
+				<p:inputMask disabled="#{trainingproviderUI.newSdpCompany.sdp.existingUser}" id="cptelNumber" mask="#{profileUI.TELPHONE_FORMAT}" value="#{trainingproviderUI.newSdpCompany.sdp.telNumber}" style="width: 95%" label="telNumber" required="false" requiredMessage="Enter tel number">
+					<o:validator validatorId="javax.faces.Length" minimum="0" maximum="20" message="#{lang['user.tellnumber.length']}" />
+				</p:inputMask>
+				<p:outputLabel value="#{lang['tel.number']}:" for="cptelNumber" />
+			</h:panelGroup>
+
+			<h:panelGroup styleClass="md-inputfield">
+				<p:inputMask disabled="#{trainingproviderUI.newSdpCompany.sdp.existingUser}" id="cpfax" mask="#{profileUI.CELLPHONE_FORMAT}" value="#{trainingproviderUI.newSdpCompany.sdp.faxNumber}" style="width: 95%" label="cellNumber" required="false" requiredMessage="Enter fax number">
+				</p:inputMask>
+				<p:outputLabel value="#{lang['fax.number']}" for="cpfax" />
+			</h:panelGroup>
+
+			<h:panelGroup styleClass="md-inputfield">
+				<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update="@form newSdpList" process="cpInsGrid" action="#{trainingproviderUI.addNewSdpLink}" />
+				<p:spacer width="10"/>
+				<p:commandButton value="#{lang['clear']}" icon="ui-icon-save" process="@this" update="@form newSdpList" action="#{trainingproviderUI.clearContactPerson}" />
+			</h:panelGroup>
+		</p:panelGrid>
+	</p:fieldset>
+
+	<p:outputPanel id="contactPersonErrors">
+		<p:fieldset rendered="#{trainingproviderUI.userErrors(trainingproviderUI.newSdpCompany.sdp) ne null}">
+			<p:outputLabel escape="false" value="#{trainingproviderUI.userErrors(trainingproviderUI.newSdpCompany.sdp)}" />
+		</p:fieldset>
+	</p:outputPanel>
+
+	<br />
+
+	<p:fieldset legend="Application Assigned Contact Person(s)">
+		<p:dataTable var="rvNewSdp" value="#{trainingproviderUI.newSDPCompanyList}" id="newSdpList" rowKey="#{rvNewSdp.id}" paginator="true" rows="5" paginatorPosition="bottom"
+			paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" reflow="true">
+			<f:facet name="header">Application Assigned Contact Person(s)</f:facet>
+			<p:column headerText="Designation">
+				<p:outputLabel value="#{rvNewSdp.sdpType.description}" />
+			</p:column>
+			<p:column headerText="Title">
+				<p:outputLabel value="#{rvNewSdp.sdp.title.description}" />
+			</p:column>
+			<p:column headerText="First Name">
+				<p:outputLabel value="#{rvNewSdp.sdp.firstName}"></p:outputLabel>
+			</p:column>
+			<p:column headerText="Last Name">
+				<p:outputLabel value="#{rvNewSdp.sdp.lastName}"></p:outputLabel>
+			</p:column>
+			<p:column headerText="Identity Number">
+				<p:outputLabel value="#{rvNewSdp.sdp.rsaIDNumber}"></p:outputLabel>
+				<p:outputLabel value="#{rvNewSdp.sdp.passportNumber}"></p:outputLabel>
+			</p:column>
+			<p:column headerText="Email">
+				<p:outputLabel value="#{rvNewSdp.sdp.email}"></p:outputLabel>
+			</p:column>
+			<p:column headerText="Cell Number">
+				<p:outputLabel value="#{rvNewSdp.sdp.cellNumber}"></p:outputLabel>
+			</p:column>
+			<p:column headerText="Tel Number">
+				<p:outputLabel value="#{rvNewSdp.sdp.telNumber}"></p:outputLabel>
+			</p:column>
+			<p:column headerText="Fax Number">
+				<p:outputLabel value="#{rvNewSdp.sdp.faxNumber}"></p:outputLabel>
+			</p:column>
+			<p:column width="90">
+				<p:commandButton process="@this" update="@form" icon="fa fa-trash-o" action="#{trainingproviderUI.removedSdpAssigned}" rendered="#{rvNewSdp.canAlter}">
+					<f:setPropertyActionListener value="#{rvNewSdp}" target="#{trainingproviderUI.newSdpCompany}" />
+					<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+				</p:commandButton>
+			</p:column>
+		</p:dataTable>
+	</p:fieldset>
+
+	<p:fieldset legend="Currently Assigned Contact Person(s)">
+		<p:dataTable var="rvSDP" id="sdpDM" value="#{trainingproviderUI.sdpCompanyDataModel}" rowKey="#{rvSDP.id}" paginator="true" rows="5" paginatorPosition="bottom"
+			paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" reflow="true" lazy="true">
+			<f:facet name="header"> Currently Assigned Contact Person(s) </f:facet>
+			<p:column headerText="SDP Full Name">
+				<p:outputLabel value="#{rvSDP.sdp.firstName} #{rvSDP.sdp.lastName}" />
+			</p:column>
+			<p:column headerText="Designation" sortBy="#{rvSDP.sdpType}">
+				<p:outputLabel value="#{rvSDP.sdpType.description}" />
+			</p:column>
+		</p:dataTable>
+	</p:fieldset>
+	<br />
+	<br />
+	<p:commandButton id="btnComntact" rendered="#{!trainingproviderUI.doneContactPerson}" process="@this" value="#{lang['continue']}" update="companyInsForm" icon="ui-icon-fast-forward" action="#{trainingproviderUI.doneAddingContactPersonV2}" iconPos="right" styleClass="flat" />
+
+</ui:composition>

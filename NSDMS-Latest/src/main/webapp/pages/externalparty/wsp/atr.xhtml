@@ -1,0 +1,725 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<h:panelGroup id="atrGroup">
+		<h:form id="atrFormWspEntry">
+			<p:fieldset id="questionFormWspa" legend="#{lang['atr.questions']}" rendered="#{initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.Draft}" toggleable="true" collapsed="false">
+				<h:panelGroup style="width:100%">
+					<p:outputLabel value="Have you completed any training in the current reporting period?" for="completedTraining" />
+					<div class="EmptyBox10" />
+					<p:selectOneRadio disabled="#{initiatewspUI.wsp.wspStatusEnum ne WspStatusEnum.Draft}" value="#{initiatewspUI.wsp.completedTraining}" required="true" id="completedTraining" converter="YesNoLookupConvertor" columns="2" layout="grid">
+						<p:ajax listener="#{initiatewspUI.updateWspDeviatedWorkplaceSkillsPlan}" update="@form tabView:atrForm tabView:atrTableForm :tabView:docForm :tabView:atrCSVGroup" />
+						<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+					</p:selectOneRadio>
+					<br />
+					<h:panelGroup style="width:100%">
+						<p:outputLabel value="Have you deviated from the Workplace Skills Plan?" for="deviatedWSKPperiodOne" />
+						<div class="EmptyBox10" />
+						<p:selectOneRadio disabled="#{initiatewspUI.wsp.wspStatusEnum ne WspStatusEnum.Draft}" value="#{initiatewspUI.wsp.deviatedWorkplaceSkillsPlan}" required="true" id="deviatedWSKPperiodOne" converter="YesNoLookupConvertor" columns="2" layout="grid">
+							<p:ajax listener="#{initiatewspUI.updateWspDeviatedWorkplaceSkillsPlan}" update=":tabView:docForm" />
+							<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+						</p:selectOneRadio>
+					</h:panelGroup>
+				</h:panelGroup>
+			</p:fieldset>
+			<div class="EmptyBox20" />
+		</h:form>
+		<h:form id="atrForm">
+			<p:fieldset legend="#{lang['atr']}" rendered="#{initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.Draft and initiatewspUI.wsp.completedTraining.yesNoName.toLowerCase() eq 'yes'}" toggleable="true" collapsed="false">
+
+				<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<h:panelGroup style="width:100%">
+						<p:outputLabel style="color:red;" value="#{lang['where.implemented.training.aligned.nqf']}" />
+					</h:panelGroup>
+				</p:panelGrid>
+
+				<p:panelGrid columns="2" style="width:100%" id="discretionaryGrantGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<p:outputPanel>
+						<h:panelGroup styleClass="md-inputfield" style="margin-top:19px;">
+							<p:inputText id="firstName" value="#{atrUI.mandatoryGrant.firstName}" style="width:95%; opacity:1 !important;" required="true" requiredMessage="#{lang['provide.first.name']}">
+								<p:ajax></p:ajax>
+							</p:inputText>
+							<p:outputLabel value="#{lang['first.name']}" for="firstName" />
+						</h:panelGroup>
+					</p:outputPanel>
+					<p:outputPanel>
+						<h:panelGroup styleClass="md-inputfield" style="margin-top:19px;">
+							<p:inputText id="lastName" value="#{atrUI.mandatoryGrant.lastName}" style="width:95%; opacity:1 !important;" required="true" requiredMessage="#{lang['provide.last.name']}">
+								<p:ajax></p:ajax>
+							</p:inputText>
+							<p:outputLabel value="#{lang['last.name']}" for="lastName" />
+						</h:panelGroup>
+					</p:outputPanel>
+
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="ID Type" for="idType" />
+						</div>
+						<div>
+							<p:selectOneMenu id="idType" value="#{atrUI.mandatoryGrant.idType}" style="width:95%" required="true" requiredMessage="#{lang['provide.type.of.id']}">
+								<p:ajax update="idInput rsaCitizenTypepanel adateOfBirth agender anationality" listener="#{atrUI.clearInfoPassportRsaIdSelection}" />
+								<f:selectItem itemLabel="---#{lang['select.id.type']}---" itemValue="" styleClass="FontLight gray" noSelectionOption="true" />
+								<f:selectItems value="#{enumUI.idPassportEnumDD}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					<p:spacer />
+					<p:outputPanel id="idInput">
+						<h:panelGroup id="rsaPnl" styleClass="md-inputfield" rendered="#{atrUI.mandatoryGrant.idType eq idpass.RsaId}">
+							<p:inputText id="rsaIDNumber" value="#{atrUI.mandatoryGrant.idNumber}" style="width:95%" required="true" requiredMessage="#{lang['rsa.id.number']}" maxlength="#{searchUserPassportOrIdUI.MAX_RSA_ID_NUMBER}">
+								<p:ajax event="change" update="rsaCitizenTypepanel adateOfBirth agender anationality" listener="#{atrUI.setDOBGenderNationality}" execute="" />
+							</p:inputText>
+							<p:outputLabel value="#{lang['rsa.id.number']}" for="rsaIDNumber" />
+						</h:panelGroup>
+						<h:panelGroup id="passPnl" styleClass="md-inputfield" rendered="#{atrUI.mandatoryGrant.idType eq idpass.Passport}" required="true" requiredMessage="#{lang['passport.number']}">
+							<p:inputText id="passportNumber" value="#{atrUI.mandatoryGrant.idNumber}" style="width:95%" validatorMessage="#{lang['user.passport.length']}" maxlength="#{searchUserPassportOrIdUI.MAX_PASSPORT_NUMBER}">
+								<p:ajax />
+							</p:inputText>
+							<h:message for="passportNumber" />
+							<p:outputLabel value="#{lang['passport.number']}" for="passportNumber" />
+						</h:panelGroup>
+					</p:outputPanel>
+					<p:outputPanel id="rsaCitizenTypepanel">
+						<h:panelGroup id="citizenDisplayType" styleClass="md-inputfield" rendered="#{atrUI.mandatoryGrant.idType eq idpass.RsaId}">
+							<p:inputText id="citizenType" value="#{atrUI.mandatoryGrant.rsaCitizenTypeEnum.friendlyName}" style="width:95%" disabled="true">
+							</p:inputText>
+							<p:outputLabel value="RSA Citizen Type" for="citizenType" />
+						</h:panelGroup>
+					</p:outputPanel>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:calendar id="adateOfBirth" value="#{atrUI.mandatoryGrant.dateOfBirth}" disabled="#{atrUI.mandatoryGrant.idType eq idpass.RsaId}" size="19" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" readonlyInput="true" navigator="true" yearRange="c-100:c" required="true"
+							requiredMessage="#{lang['provide.date.of.birth']}">
+							<p:ajax event="dateSelect" />
+						</p:calendar>
+
+						<p:outputLabel value="#{lang['date.of.birth']}" for="adateOfBirth" />
+					</h:panelGroup>
+
+					<h:panelGroup id="agender">
+						<div>
+							<p:outputLabel value="Gender" for="gen" />
+						</div>
+						<div>
+							<p:selectOneMenu id="gen" value="#{atrUI.mandatoryGrant.gender}" disabled="#{atrUI.mandatoryGrant.idType eq idpass.RsaId}" style="width:95%" required="true" requiredMessage="#{lang['select.gender']}" converter="GenderConvertor">
+								<p:ajax />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsGender}" var="rv" itemLabel="#{rv.genderName}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="#{lang['equity']}" for="eq" styleClass="gray" />
+						</div>
+						<div>
+							<p:autoComplete id="eq" value="#{atrUI.mandatoryGrant.equity}" style="width:95%" completeMethod="#{autoCompleteUI.completeEquityExcludeOtherAndUnkown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="EquityConvertor" dropdown="true" minQueryLength="3"
+								maxResults="10" requiredMessage="#{lang['provide.equity']}" required="true">
+								<p:ajax event="itemSelect" />
+								<p:column headerText="#{lang['equity']}" style="white-space: nowrap">#{rv.description}</p:column>
+							</p:autoComplete>
+						</div>
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield" id="anationality">
+						<p:autoComplete id="nationality" value="#{atrUI.mandatoryGrant.nationality}" disabled="#{atrUI.mandatoryGrant.idType eq idpass.RsaId and atrUI.mandatoryGrant.rsaCitizenTypeEnum eq RsaCitizenTypeEnum.RsaCitizen}" required="true" requiredMessage="#{lang['nationality.required']}"
+							completeMethod="#{autoCompleteUI.completeNationality}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="NationalityConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+							<p:ajax event="itemSelect" />
+							<p:column headerText="#{lang['nationality']}" style="white-space: nowrap">#{rv.description}</p:column>
+						</p:autoComplete>
+						<p:outputLabel value="#{lang['nationality']}:" for="nationality" />
+					</h:panelGroup>
+
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="Enrolment Status" for="es" />
+						</div>
+						<div>
+							<p:selectOneMenu id="es" value="#{atrUI.mandatoryGrant.enrolmentStatus}" style="width:95%" required="true" requiredMessage="Select Enrolment Status" converter="EnrolmentStatusConvertor">
+								<p:ajax />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.enrolmentStatusATR}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:autoComplete id="disability" value="#{atrUI.mandatoryGrant.disability}" completeMethod="#{autoCompleteUI.completeDisabilityStatusCanSelect}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="DisabilityStatusConvertor" dropdown="true"
+							minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true" requiredMessage="Please Select Disability">
+							<p:column headerText="Description" style="white-space: nowrap">#{rv.description}</p:column>
+							<p:ajax event="itemSelect" />
+						</p:autoComplete>
+						<p:outputLabel value="#{lang['disability']}" for="disability" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:autoComplete id="ofoCode" value="#{atrUI.mandatoryGrant.ofoCodes}" completeMethod="#{initiatewspUI.completeOfoCodesAtrByDescAndYear}" var="rv" itemLabel="#{rv.ofoDescription}" itemValue="#{rv}" forceSelection="true" converter="OfoCodesConvertor" dropdown="true" minQueryLength="3"
+							maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true" requiredMessage="#{lang['select.ofo.code']}">
+							<p:column headerText="OfoCodes" style="white-space: nowrap">#{rv.ofoCodeParent}</p:column>
+							<p:column headerText="Description" style="white-space: nowrap">#{rv.description}</p:column>
+							<p:ajax event="itemSelect" />
+						</p:autoComplete>
+						<p:outputLabel value="#{lang['ofo.code']}" for="ofoCode" />
+					</h:panelGroup>
+
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="#{lang['employment.status']}" for="proc" styleClass="gray" />
+						</div>
+						<div>
+							<p:selectOneMenu id="proc" value="#{atrUI.mandatoryGrant.employmentStatus}" style="width:95%" required="true" requiredMessage="#{lang['select.employment.status']}">
+								<p:ajax />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" itemValue="" noSelectionOption="true" />
+								<f:selectItems value="#{enumUI.employmentStatusEnumDD}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield" style="margin-top: 19px" rendered="true">
+						<p:autoComplete id="muni" value="#{atrUI.mandatoryGrant.municipality}" completeMethod="#{autoCompleteUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityProvince}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true" minQueryLength="3"
+							maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%" required="true" requiredMessage="#{lang['select.ofo.code']}">
+							<p:ajax event="itemSelect" />
+							<p:column headerText="Municipality" style="white-space: nowrap">#{rv.municipalityProvince}</p:column>
+						</p:autoComplete>
+						<p:outputLabel value="#{lang['municipality']}" for="muni" />
+					</h:panelGroup>
+
+
+					<h:panelGroup rendered="#{atrUI.mandatoryGrant.wsp.wspType eq WspTypeEnum.Both}">
+						<div>
+							<p:outputLabel value="#{lang['funding.method']}" for="fund" />
+						</div>
+						<div>
+							<p:selectOneMenu id="fund" value="#{atrUI.mandatoryGrant.funding}" style="width:95%" required="true" requiredMessage="#{lang['select.planned']}" converter="FundingConvertor">
+								<p:ajax event="itemSelect" listener="#{atrUI.checkDateLimits}" update="startDate endDate estimatedOutput" />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsFundingWSP}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+
+					<h:panelGroup rendered="#{atrUI.mandatoryGrant.wsp.wspType eq WspTypeEnum.Discretionary}">
+						<div>
+							<p:outputLabel value="#{lang['funding.method']}" for="fund2" />
+						</div>
+						<div>
+							<p:selectOneMenu id="fund2" value="#{atrUI.mandatoryGrant.funding}" style="width:95%" required="true" requiredMessage="#{lang['select.planned']}" converter="FundingConvertor">
+								<p:ajax event="itemSelect" listener="#{atrUI.checkDateLimits}" update="startDate endDate estimatedOutput" />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsFundingDisc}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+
+					<h:panelGroup rendered="#{atrUI.mandatoryGrant.wsp.wspType ne WspTypeEnum.Discretionary and atrUI.mandatoryGrant.wsp.wspType ne WspTypeEnum.Both}">
+						<div>
+							<p:outputLabel value="#{lang['funding.method']}" for="fund3" />
+						</div>
+						<div>
+							<p:selectOneMenu id="fund3" value="#{atrUI.mandatoryGrant.funding}" style="width:95%" required="true" requiredMessage="#{lang['select.planned']}" converter="FundingConvertor">
+								<p:ajax event="itemSelect" listener="#{atrUI.checkDateLimits}" update="startDate endDate estimatedOutput @form" />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsFundingDiscWSP}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="#{lang['intervention.type']}" for="intType" />
+						</div>
+						<div>
+							<p:selectOneMenu id="intType" value="#{atrUI.mandatoryGrant.interventionType}" style="width:95%" required="true" requiredMessage="#{lang['select.planned']}" converter="InterventionTypeConvertor">
+								<p:ajax event="itemSelect" listener="#{atrUI.applyInterventionData}" update="@form" />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsInterventionTypeAtrSelection}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="#{lang['pivotal.non.pivotal.trainig']}" styleClass="gray" />
+						</div>
+						<div>
+							<p:selectOneMenu value="#{atrUI.mandatoryGrant.pivotNonPivot}" style="width:75%" disabled="true">
+								<p:ajax update="@form" />
+								<f:selectItem itemLabel="--- #{lang['select.one']} ---" itemValue="" styleClass="FontLight gray" noSelectionOption="true" />
+								<f:selectItems value="#{enumUI.pivotalNonPivotalDD}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+
+					<h:panelGroup rendered="#{atrUI.mandatoryGrant.pivotNonPivot eq PivotNonPivotEnum.Pivotal}">
+						<div>
+							<p:outputLabel value="#{lang['nqf.aligned']}" for="nqf" />
+						</div>
+						<div>
+							<p:selectOneMenu id="nqf" value="#{atrUI.mandatoryGrant.nqfAligned}" style="width:95%" required="true" requiredMessage="#{lang['select.planned']}" converter="YesNoLookupConvertor" disabled="true">
+								<p:ajax />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="rv" itemLabel="#{rv.yesNoName}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield" rendered="#{atrUI.mandatoryGrant.pivotNonPivot eq PivotNonPivotEnum.Pivotal and not atrUI.skillsSet and not atrUI.skillsProgram and not atrUI.shortCreditBearing}" style="margin-top: 19px">
+						<p:autoComplete required="true" id="highestQualTitle" value="#{atrUI.mandatoryGrant.qualification}" completeMethod="#{autoCompleteUI.completeQualification}" var="rv" itemLabel="#{rv.saqaQualification}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor" dropdown="true"
+							minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+							<p:ajax event="itemSelect" listener="#{atrUI.applySaqaData}" update="@form" />
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+							<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+							<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+						</p:autoComplete>
+						<p:outputLabel value="#{lang['saqa.id']}" for="highestQualTitle" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield" rendered="#{atrUI.mandatoryGrant.pivotNonPivot eq PivotNonPivotEnum.Pivotal and atrUI.skillsProgram}" style="margin-top: 19px">
+						<p:autoComplete required="true" id="skillsProgram" value="#{atrUI.mandatoryGrant.skillsProgram}" completeMethod="#{autoCompleteUI.completeSkillsProgram}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SkillsProgramConvertor" dropdown="true"
+							minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+							<p:ajax event="itemSelect" listener="#{atrUI.applySaqaData}" update="@form" />
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+							<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+						</p:autoComplete>
+						<p:outputLabel value="Skills Program" for="skillsProgram" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield" rendered="#{atrUI.mandatoryGrant.pivotNonPivot eq PivotNonPivotEnum.Pivotal and atrUI.shortCreditBearing}" style="margin-top: 19px">
+						<p:autoComplete required="true" id="unitStandard" value="#{atrUI.mandatoryGrant.unitStandard}" completeMethod="#{autoCompleteUI.completeUnitStandards}" var="rv" itemLabel="#{rv.title}" itemValue="#{rv}" forceSelection="true" converter="UnitStandardsConvertor" dropdown="true" minQueryLength="3"
+							maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+							<p:ajax event="itemSelect" listener="#{atrUI.applySaqaData}" update="@form" />
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+							<p:column headerText="Unit Standard" style="white-space: nowrap">#{rv.title}</p:column>
+							<p:column headerText="NQF Level" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+						</p:autoComplete>
+						<p:outputLabel value="#{lang['unit.standard']}" for="unitStandard" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield" rendered="#{atrUI.mandatoryGrant.pivotNonPivot eq PivotNonPivotEnum.Pivotal and atrUI.skillsSet}" style="margin-top: 19px">
+						<p:autoComplete required="true" id="skillsSet" value="#{atrUI.mandatoryGrant.skillsSet}" completeMethod="#{autoCompleteUI.completeSkillsSet}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SkillsSetConvertor" dropdown="true" minQueryLength="3"
+							maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+							<p:ajax event="itemSelect" listener="#{atrUI.applySaqaData}" update="@form" />
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+							<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+						</p:autoComplete>
+						<p:outputLabel value="Skills Set" for="skillsSet" />
+					</h:panelGroup>
+
+					<h:panelGroup rendered="#{atrUI.mandatoryGrant.pivotNonPivot eq PivotNonPivotEnum.Pivotal}">
+						<div>
+							<p:outputLabel value="#{lang['nqf.level']}" for="nqflevel" />
+						</div>
+						<div>
+							<p:selectOneMenu id="nqflevel" value="#{atrUI.mandatoryGrant.nqfLevels}" style="width:95%" required="true" requiredMessage="Select NQF LEVEL" converter="NqfLevelsConvertor"
+								disabled="#{atrUI.mandatoryGrant.qualification ne null or atrUI.mandatoryGrant.skillsProgram ne null or atrUI.mandatoryGrant.skillsSet ne null}">
+								<p:ajax update="interventionLvl" listener="#{atrUI.applyNQFData}" />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsNqfLevels}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+
+					<h:panelGroup id="interventionLvl" rendered="#{atrUI.mandatoryGrant.pivotNonPivot eq PivotNonPivotEnum.Pivotal}">
+						<div>
+							<p:outputLabel value="#{lang['level.of.training']}" for="intlevel" />
+						</div>
+						<div>
+							<p:selectOneMenu id="intlevel" value="#{atrUI.mandatoryGrant.interventionLevel}" style="width:95%" required="true" requiredMessage="Select Level of training" converter="InterventionLevelConvertor"
+								disabled="#{atrUI.mandatoryGrant.nqfLevels ne null and atrUI.mandatoryGrant.nqfLevels.interventionLevel ne null}">
+								<p:ajax />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsInterventionLevel}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+
+					<h:panelGroup rendered="#{atrUI.mandatoryGrant.pivotNonPivot eq PivotNonPivotEnum.Pivotal}">
+						<div>
+							<p:outputLabel value="#{lang['etqa']}" for="etqa" />
+						</div>
+						<div>
+							<p:selectOneMenu id="etqa" value="#{atrUI.mandatoryGrant.etqa}" style="width:95%" required="true" requiredMessage="Select Etqa" converter="EtqaConvertor"
+								disabled="#{atrUI.mandatoryGrant.qualification.etqaid ne null or atrUI.mandatoryGrant.skillsProgram ne null or atrUI.mandatoryGrant.skillsSet ne null}">
+								<p:ajax />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsEtqa}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+
+					<h:panelGroup rendered="#{atrUI.mandatoryGrant.pivotNonPivot eq PivotNonPivotEnum.NonPivotal}">
+						<div>
+							<p:outputLabel value="#{lang['intervention.title']}" for="intTitle" />
+						</div>
+						<div>
+							<p:selectOneMenu id="intTitle" value="#{atrUI.mandatoryGrant.nonCreditBearingIntervationTitle}" style="width:95%" required="true" requiredMessage="Select Intervation Title" converter="NonCreditBearingIntervationTitleConvertor"
+								disabled="#{atrUI.mandatoryGrant.qualification.etqaid ne null or atrUI.mandatoryGrant.skillsProgram ne null or atrUI.mandatoryGrant.skillsSet ne null}">
+								<p:ajax />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsNonCreditBearingIntervationTitle}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield" style="margin-top: 19px" rendered="false">
+						<p:inputText value="#{atrUI.mandatoryGrant.interventionTitle}" id="s" required="true" requiredMessage="Intervention title is Required" style="width: 95%">
+							<p:ajax></p:ajax>
+						</p:inputText>
+						<p:outputLabel value="#{lang['intervention.title']}" for="s" />
+					</h:panelGroup>
+
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="#{lang['provider.type']}" for="provType" />
+						</div>
+						<div>
+							<p:selectOneMenu id="provType" value="#{atrUI.mandatoryGrant.providerType}" style="width:95%" required="true" requiredMessage="Select Provider Type" converter="ProviderTypeConvertor">
+								<p:ajax />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsProviderType}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					<p:outputPanel id="estimatedOutput">
+						<h:panelGroup styleClass="md-inputfield" style="margin-top: 19px">
+							<p:inputNumber id="estimated" minValue="0" value="#{atrUI.mandatoryGrant.estimatedCost}" decimalPlaces="0" inputStyle="width: 95%; opacity:1 !important;" required="true" requiredMessage="Estimated Cost is required">
+								<p:ajax></p:ajax>
+							</p:inputNumber>
+							<p:outputLabel value="#{lang['training.cost']}" for="estimated" />
+						</h:panelGroup>
+					</p:outputPanel>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:datePicker id="startDate" value="#{atrUI.mandatoryGrant.startDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" style="width: 95%" mask="true" requiredMessage="#{'provide.start.date'}" yearNavigator="true" readonlyInput="true" required="true" yearRange="2023:2023">
+							<p:ajax update="duration" event="dateSelect"></p:ajax>
+						</p:datePicker>
+						<p:outputLabel value="#{lang['start.date']}" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:datePicker id="endDate" value="#{atrUI.mandatoryGrant.endDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" style="width: 95%" mask="true" required="true" requiredMessage="#{'provide.start.date'}" yearNavigator="true" readonlyInput="true" yearRange="2023:2023">
+							<p:ajax update="duration" event="dateSelect"></p:ajax>
+						</p:datePicker>
+						<p:outputLabel value="#{lang['end.date']}" for="endDate" />
+					</h:panelGroup>
+					<p:outputPanel id="duration">
+						<h:panelGroup styleClass="md-inputfield" style="margin-top:19px;">
+							<p:inputText value="#{atrUI.mandatoryGrant.duration} Days" disabled="true" style="width:95%; opacity:1 !important;" />
+							<p:outputLabel value="#{lang['duration']}" />
+						</h:panelGroup>
+					</p:outputPanel>
+
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="#{lang['delivery.method.training']}" for="delMethod" />
+						</div>
+						<div>
+							<p:selectOneMenu id="delMethod" value="#{atrUI.mandatoryGrant.trainingDeliveryMethod}" style="width:95%" required="true" requiredMessage="Select Provider Type" converter="TrainingDeliveryMethodConvertor">
+								<p:ajax />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsTrainingDeliveryMethod}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+
+				</p:panelGrid>
+
+			</p:fieldset>
+			<br />
+			<p:outputPanel id="dataForm4">
+				<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.Draft and initiatewspUI.wsp.completedTraining.yesNoName.toLowerCase() eq 'yes'}">
+					<p:commandButton styleClass="Fs14 FontLight" value="#{lang['submit']}" icon="ui-icon-save" update="@form :tabView:atrTableForm :tabView:atrCSVTableForm :tabView:docForm" action="#{atrUI.generateEmployeesEmployed}" process="@form">
+					</p:commandButton>
+					<p:commandButton styleClass="Fs14 FontLight" value="Clear" icon="ui-icon-close" update="@form :tabView:atrTableForm :tabView:atrCSVTableForm :tabView:docForm" action="#{atrUI.clear}" process="@this">
+					</p:commandButton>
+				</p:panelGrid>
+			</p:outputPanel>
+			<br />
+		</h:form>
+		<h:form id="atrTableForm">
+			<!-- Two deletes one to delete all entries one to delete errors -->
+
+			<p:commandButton value="#{lang['delete.all']}" icon="ui-icon-delete-forever" styleClass="secondary Fs18 flat Fright" style="height: 50px" process="@this" update="@form" action="#{atrUI.deleteAll}" rendered="#{initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.Draft}">
+				<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+			</p:commandButton>
+			<br />
+			<p:remoteCommand name="calCosts" id="calcCosts" action="#{initiatewspUI.calcCosts}" update=":tabView:investmentForm"></p:remoteCommand>
+
+			<h2>#{lang['atr']}</h2>
+
+			<c:if test="#{sessionUI.externalParty and false}">
+				<ui:include src="/pages/includes/download_lazy.xhtml">
+					<ui:param name="file_name" value="ATR_DATA" />
+					<ui:param name="target" value="ATR_List_download" />
+				</ui:include>
+			</c:if>
+			<p:dataTable var="rowVarDownload" value="#{atrUI.dataModel}" id="ATR_List_download" style="display: none" paginator="true" rows="5" paginatorPosition="bottom"
+				paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,20,40,80,160,320" reflow="true" lazy="true">
+				<p:column headerText="#{lang['first.name']}" rendered="#{initiatewspUI.showDetails}">
+					<p:outputLabel value="#{rowVarDownload.firstName}" style="width:95%" />
+				</p:column>
+				<p:column headerText="#{lang['last.name']}" rendered="#{initiatewspUI.showDetails}">
+					<p:outputLabel value="#{rowVarDownload.lastName}" style="width:95%" />
+				</p:column>
+				<p:column headerText="RSA ID/Passport Number" rendered="#{initiatewspUI.showDetails}">
+					<p:outputLabel value="#{rowVarDownload.idNumber}" />
+				</p:column>
+				<p:column headerText="#{lang['ofo.code']}">
+					<p:outputLabel value="#{rowVarDownload.ofoCodes.ofoCodeParent} - #{rowVarDownload.ofoCodes.description}" style="width:95%" rendered="#{rowVarDownload.ofoCodes ne null}" />
+				</p:column>
+				<p:column headerText="#{lang['employment.status']}">
+					<p:outputLabel value="#{rowVarDownload.employmentStatus.friendlyName}" style="width:95%" />
+				</p:column>
+				<p:column headerText="#{lang['municipality']}" rendered="false">
+					<p:outputLabel value="#{rowVarDownload.municipality.municipalityDesc}" style="width:95%" />
+				</p:column>
+				<p:column headerText="#{lang['funding.method']}">
+					<p:outputLabel value="#{rowVarDownload.funding.description}" style="width:95%" />
+				</p:column>
+				<p:column headerText="#{lang['intervention.type']}">
+					<p:outputLabel value="#{rowVarDownload.interventionType.description}" style="width:95%" />
+				</p:column>
+				<p:column headerText="#{lang['pivotal.status']}">
+					<p:outputLabel value="#{rowVarDownload.interventionType.pivotNonPivot.friendlyName}" style="width:95%" />
+				</p:column>
+				<p:column headerText="#{lang['nqf.aligned']}" style="display:none">
+					<p:outputLabel value="#{rowVarDownload.nqfAligned.yesNoName}" rendered="#{rowVarDownload.pivotNonPivot eq PivotNonPivotEnum.Pivotal}" />
+					<p:outputLabel value="N/A" rendered="#{rowVarDownload.pivotNonPivot ne PivotNonPivotEnum.Pivotal}" />
+				</p:column>
+				<p:column headerText="#{lang['qualification']}" style="display: none">
+					<p:outputLabel value="#{rowVarDownload.qualification.saqaQualification}" rendered="#{rowVarDownload.pivotNonPivot eq PivotNonPivotEnum.Pivotal and rowVarDownload.qualification ne null}" />
+					<p:outputLabel value="N/A" rendered="#{rowVarDownload.pivotNonPivot eq PivotNonPivotEnum.Pivotal and rowVarDownload.qualification eq null}" />
+					<p:outputLabel value="N/A" rendered="#{rowVarDownload.pivotNonPivot ne PivotNonPivotEnum.Pivotal}" />
+				</p:column>
+				<p:column headerText="#{lang['saqa.id']}" style="display: none">
+					<p:outputLabel value="#{rowVarDownload.qualification.code}" rendered="#{rowVarDownload.pivotNonPivot eq PivotNonPivotEnum.Pivotal and rowVarDownload.qualification ne null}" />
+					<p:outputLabel value="N/A" rendered="#{rowVarDownload.pivotNonPivot eq PivotNonPivotEnum.Pivotal and rowVarDownload.qualification eq null}" />
+					<p:outputLabel value="N/A" rendered="#{rowVarDownload.pivotNonPivot ne PivotNonPivotEnum.Pivotal}" />
+				</p:column>
+				<p:column headerText="#{lang['nqf.level']}" style="display: none">
+					<p:outputLabel value="#{rowVarDownload.nqfLevels.description}" rendered="#{rowVarDownload.pivotNonPivot eq PivotNonPivotEnum.Pivotal}" />
+					<p:outputLabel value="N/A" rendered="#{rowVarDownload.pivotNonPivot ne PivotNonPivotEnum.Pivotal}" />
+				</p:column>
+				<p:column headerText="#{lang['level.of.training']}" style="display: none">
+					<p:outputLabel value="#{rowVarDownload.interventionLevel.description}" rendered="#{rowVarDownload.pivotNonPivot eq PivotNonPivotEnum.Pivotal}" />
+					<p:outputLabel value="N/A" rendered="#{rowVarDownload.pivotNonPivot ne PivotNonPivotEnum.Pivotal}" />
+				</p:column>
+				<p:column headerText="#{lang['etqa']}" style="display: none">
+					<p:outputLabel value="#{rowVarDownload.etqa.description}" rendered="#{rowVarDownload.pivotNonPivot eq PivotNonPivotEnum.Pivotal}" />
+					<p:outputLabel value="N/A" rendered="#{rowVarDownload.pivotNonPivot ne PivotNonPivotEnum.Pivotal}" />
+				</p:column>
+				<p:column headerText="#{lang['provider.type']}" style="display: none">
+					<p:outputLabel value="#{rowVarDownload.providerType.description}" rendered="#{rowVarDownload.pivotNonPivot eq PivotNonPivotEnum.Pivotal}" />
+					<p:outputLabel value="#{rowVarDownload.providerType.description}" rendered="#{rowVarDownload.pivotNonPivot eq PivotNonPivotEnum.NonPivotal}" />
+				</p:column>
+				<p:column headerText="#{lang['estimated.cost']}" style="display: none">
+					<p:outputLabel value="R#{rowVarDownload.estimatedCost}" rendered="#{rowVarDownload.pivotNonPivot eq PivotNonPivotEnum.Pivotal}" />
+					<p:outputLabel value="R#{rowVarDownload.estimatedCost}" rendered="#{rowVarDownload.pivotNonPivot eq PivotNonPivotEnum.NonPivotal}" />
+				</p:column>
+				<p:column headerText="#{lang['intervention.title']}" style="display: none">
+					<p:outputLabel value="#{rowVarDownload.interventionTitle}" rendered="#{rowVarDownload.pivotNonPivot eq PivotNonPivotEnum.NonPivotal}" />
+					<p:outputLabel value="N/A" rendered="#{rowVarDownload.pivotNonPivot ne PivotNonPivotEnum.NonPivotal}" />
+				</p:column>
+				<p:column headerText="#{lang['start.date']}" style="display: none">
+					<p:outputLabel value="#{rowVarDownload.startDate}">
+						<f:convertDateTime pattern="dd MMMM yyyy" />
+					</p:outputLabel>
+				</p:column>
+				<p:column headerText="#{lang['end.date']}" style="display: none">
+					<p:outputLabel value="#{rowVarDownload.endDate}">
+						<f:convertDateTime pattern="dd MMMM yyyy" />
+					</p:outputLabel>
+				</p:column>
+			</p:dataTable>
+
+			<p:dataTable var="rowVar" value="#{atrUI.dataModel}" id="ATR_List" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+				rowsPerPageTemplate="10,20,40,80,160,320" reflow="true" lazy="true">
+				<p:column headerText="#{lang['expand.row']}" width="45" exportable="false">
+					<p:rowToggler></p:rowToggler>
+				</p:column>
+				<p:column headerText="#{lang['first.name']}" sortBy="#{rowVar.firstName}" rendered="#{initiatewspUI.showDetails}">
+					<p:outputLabel value="#{rowVar.firstName}" style="width:95%" />
+				</p:column>
+				<p:column headerText="#{lang['last.name']}" sortBy="#{rowVar.lastName}" rendered="#{initiatewspUI.showDetails}">
+					<p:outputLabel value="#{rowVar.lastName}" style="width:95%" />
+				</p:column>
+				<p:column headerText="RSA ID/Passport Number" rendered="#{initiatewspUI.showDetails}">
+					<p:outputLabel value="#{rowVar.idNumber}" />
+				</p:column>
+				<p:column headerText="#{lang['ofo.code']}">
+					<p:outputLabel value="#{rowVar.ofoCodes.ofoCodeParent} - #{rowVar.ofoCodes.description}" style="width:95%" rendered="#{rowVar.ofoCodes ne null}" />
+				</p:column>
+				<p:column headerText="#{lang['employment.status']}">
+					<p:outputLabel value="#{rowVar.employmentStatus.friendlyName}" style="width:95%" />
+				</p:column>
+				<p:column headerText="#{lang['municipality']}" rendered="false">
+					<p:outputLabel value="#{rowVar.municipality.municipalityDesc}" style="width:95%" />
+				</p:column>
+				<p:column headerText="#{lang['funding.method']}">
+					<p:outputLabel value="#{rowVar.funding.description}" style="width:95%" />
+				</p:column>
+				<p:column headerText="#{lang['intervention.type']}">
+					<p:outputLabel value="#{rowVar.interventionType.description}" style="width:95%" />
+				</p:column>
+				<p:column headerText="#{lang['pivotal.status']}">
+					<p:outputLabel value="#{rowVar.interventionType.pivotNonPivot.friendlyName}" style="width:95%" />
+				</p:column>
+				<p:column width="80" rendered="#{initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.Draft}" exportable="false">
+					<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":tabView:atrForm" process="@this" action="#{atrUI.applyInterventionData}">
+						<f:setPropertyActionListener value="#{rowVar}" target="#{atrUI.mandatoryGrant}" />
+					</p:commandButton>
+					<p:spacer width="3" />
+					<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update="@form" process="@this" oncomplete="updatePivotalTraining(), updateNonSetaTraining()" action="#{atrUI.deleteMandatory}">
+						<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure.you.want.to.delete.the.atr']}" icon="ui-icon-warning" />
+						<f:setPropertyActionListener value="#{rowVar}" target="#{atrUI.mandatoryGrant}" />
+					</p:commandButton>
+				</p:column>
+				<p:rowExpansion>
+					<p:panelGrid columns="1" style="width:100%" id="s" layout="grid" styleClass="ui-panelgrid-blank form-group">
+						<p:fieldset legend="#{lang['atr.data']}" rendered="#{rowVar.pivotNonPivot eq PivotNonPivotEnum.Pivotal}">
+							<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar.nqfAligned.yesNoName}" disabled="true" />
+									<p:outputLabel value="#{lang['nqf.aligned']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield" rendered="#{rowVar.qualification ne null}">
+									<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar.qualification.saqaQualification}" disabled="true" />
+									<p:outputLabel value="#{lang['qualification']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield" rendered="#{rowVar.qualification ne null}">
+									<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar.qualification.code}" disabled="true" />
+									<p:outputLabel value="#{lang['saqa.id']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" minValue="0" value="#{rowVar.nqfLevels.description}" decimalPlaces="0" disabled="true" />
+									<p:outputLabel value=" #{lang['nqf.level']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar.interventionLevel.description}" decimalPlaces="0" disabled="true" />
+									<p:outputLabel value="#{lang['level.of.training']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" minValue="0" value="#{rowVar.etqa.description}" decimalPlaces="0" disabled="true" />
+									<p:outputLabel value=" #{lang['etqa']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar.providerType.description}" decimalPlaces="0" disabled="true" />
+									<p:outputLabel value="#{lang['provider.type']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" minValue="0" value="R#{rowVar.estimatedCost}" decimalPlaces="0" disabled="true" />
+									<p:outputLabel value=" #{lang['estimated.cost']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar.startDate}" decimalPlaces="0" disabled="true">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</p:inputText>
+									<p:outputLabel value="#{lang['start.date']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" minValue="0" value="#{rowVar.endDate}" decimalPlaces="0" disabled="true">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</p:inputText>
+									<p:outputLabel value=" #{lang['end.date']}" />
+								</h:panelGroup>
+							</p:panelGrid>
+						</p:fieldset>
+						<p:fieldset legend="#{lang['atr.data']}" rendered="#{rowVar.pivotNonPivot eq PivotNonPivotEnum.NonPivotal}">
+							<p:panelGrid columns="2" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group">
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar.nonCreditBearingIntervationTitle.description}" decimalPlaces="0" disabled="true"></p:inputText>
+									<p:outputLabel value="#{lang['intervention.title']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar.providerType.description}" decimalPlaces="0" disabled="true" />
+									<p:outputLabel value="#{lang['provider.type']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" minValue="0" value="R#{rowVar.estimatedCost}" decimalPlaces="0" disabled="true" />
+									<p:outputLabel value=" #{lang['estimated.cost']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" value="#{rowVar.startDate}" decimalPlaces="0" disabled="true">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</p:inputText>
+									<p:outputLabel value="#{lang['start.date']}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText style="width:95%; opacity:1 !important;" minValue="0" value="#{rowVar.endDate}" decimalPlaces="0" disabled="true">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</p:inputText>
+									<p:outputLabel value=" #{lang['end.date']}" />
+								</h:panelGroup>
+							</p:panelGrid>
+						</p:fieldset>
+					</p:panelGrid>
+				</p:rowExpansion>
+			</p:dataTable>
+			<p:panelGrid columns="1" style="width:100%; text-align:left" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<p:commandButton value="Download CSV" icon="fa fa-download" styleClass="Fs18 flat" style="height: 50px" process="@this" update="@form" action="#{atrUI.downloadCSV1}" ajax="false">
+				</p:commandButton>
+			</p:panelGrid>
+
+			<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+				<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+				<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+			</p:confirmDialog>
+
+		</h:form>
+	</h:panelGroup>
+
+
+	<ui:include src="/pages/externalparty/wsp/atrCSV.xhtml" />
+
+	<h:form id="investmentForm">
+		<div class="EmptyBox20"></div>
+
+		<p:fieldset id="questionFormWsp" legend="Training Investment" rendered="#{initiatewspUI.wsp.completedTraining.yesNoName.toLowerCase() eq 'yes'}" toggleable="true" collapsed="false">
+			<p:panelGrid columns="1" style="width:100%" id="wspQuestionsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+				<h:panelGroup style="width:100%">
+					<p:outputLabel value="Payroll 1 April #{initiatewspUI.previousYear} to 31 March #{initiatewspUI.currentYear}" for="payroll" />
+					<div class="EmptyBox10" />
+					<p:inputNumber inputStyle="width: 95%; opacity:1 !important;" disabled="#{initiatewspUI.wsp.wspStatusEnum ne WspStatusEnum.Draft}" id="payroll" value="#{initiatewspUI.wsp.totalPayroll}" minValue="0" required="true" requiredMessage="#{lang['required.msg.tot.training.cost']}">
+						<p:ajax oncomplete="calCosts()" />
+					</p:inputNumber>
+				</h:panelGroup>
+				<h:panelGroup style="width:100%">
+					<p:outputLabel value="#{lang['tot.estimated.cost.wsp.application']}" for="totalEstimatedCostInput" />
+					<div class="EmptyBox10" />
+					<p:inputNumber inputStyle="width: 95%; opacity:1 !important;" disabled="true" id="totalEstimatedCostInput" minValue="0" value="#{initiatewspUI.wsp.totalEstimatedCostTraining}">
+						<p:ajax />
+					</p:inputNumber>
+				</h:panelGroup>
+				<h:panelGroup style="width:100%">
+					<p:outputLabel value="#{lang['tot.training.cost']}" for="totalTrainingCostsInput" />
+					<div class="EmptyBox10" />
+					<p:inputNumber inputStyle="width: 95%; opacity:1 !important;" disabled="true" id="totalTrainingCostsInput" value="#{initiatewspUI.wsp.totalTrainingCosts}" minValue="0">
+						<p:ajax />
+					</p:inputNumber>
+				</h:panelGroup>
+				<h:panelGroup style="width:100%">
+					<p:outputLabel value="#{lang['percentage.training.cost.spent.training']}" for="totalPercentageSpentTrainingInput" />
+					<div class="EmptyBox10" />
+					<p:inputNumber inputStyle="width: 95%; opacity:1 !important;" disabled="true" id="totalPercentageSpentTrainingInput" value="#{initiatewspUI.wsp.percentageTrainingCostSpentTraining}" symbolPosition="s" symbol="%">
+						<p:ajax />
+					</p:inputNumber>
+				</h:panelGroup>
+				<h:panelGroup style="width:100%">
+					<p:outputLabel value="#{lang['percentage.payroll.spent.training']}" for="totalPercentagePayrollInput" />
+					<div class="EmptyBox10" />
+					<p:inputNumber inputStyle="width: 95%; opacity:1 !important;" disabled="true" id="totalPercentagePayrollInput" value="#{initiatewspUI.wsp.percentagePayrollSpent}" symbolPosition="s" symbol="%">
+						<p:ajax />
+					</p:inputNumber>
+				</h:panelGroup>
+				<h:panelGroup style="width:100%" rendered="false">
+					<p:outputLabel style="color:red;" value="#{lang['programme.grant.entires.required']}" />
+				</h:panelGroup>
+			</p:panelGrid>
+			<br />
+			<h:panelGroup style="width:100%">
+				<p:commandButton styleClass="Fs14 FontLight" value="#{lang['save']}" icon="ui-icon-save" action="#{initiatewspUI.updateWspAtr}" rendered="#{initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.Draft}" process="@form" />
+			</h:panelGroup>
+		</p:fieldset>
+	</h:form>
+
+</ui:composition>

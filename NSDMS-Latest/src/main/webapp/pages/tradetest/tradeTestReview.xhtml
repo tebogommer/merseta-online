@@ -1,0 +1,128 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+		<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+		<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+		<p:importEnum type="haj.com.entity.enums.LearnerStatusEnum" />
+		<p:importEnum type="haj.com.entity.enums.YesNoEnum" />
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Trade Test Applications</h1>
+					<p:growl sticky="false">
+						<p:autoUpdate />
+					</p:growl>
+					<h:form id="mainForm">
+						<p:dataTable var="var" id="arplList" value="#{tradeTestManagerViewUI.companyLearnersTradeTestDataModel}" rowKey="#{var.id}" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20" reflow="true" lazy="true">
+							<f:facet name="header"> All Trade Test Applications </f:facet>
+							<p:column headerText="Reference ID" sortBy="#{var.id}">
+								<h:outputText value="#{var.id}" />
+							</p:column>
+							<p:column headerText="Learner" sortBy="#{var.learner}">
+								<h:outputText value="#{var.learner.firstName} #{var.learner.lastName}" />
+							</p:column>
+							<p:column headerText="Initiator" sortBy="#{var.createUser}">
+								<h:outputText value="#{var.createUser.firstName} #{var.createUser.lastName}" />
+							</p:column>
+							<p:column headerText="Status" sortBy="#{var.status}">
+								<h:outputText value="#{var.status.friendlyName}" />
+							</p:column>
+							<p:column headerText="Qualification" sortBy="#{var.qualification}">
+								<h:outputText value="(#{var.qualification.code}) #{var.qualification.description}" />
+							</p:column>
+							<p:column headerText="Preferred Trade Test Center">
+								<h:outputText value="#{var.preferredTrainingCenter.companyName}" />
+							</p:column>
+							<p:column headerText="Serial Number" filterBy="#{var.serialNumber}">
+								<h:outputText value="#{var.serialNumber}" rendered="#{var.serialNumber ne null}" />
+								<h:outputText value="N/A" rendered="#{var.serialNumber eq null}" />
+							</p:column>
+							<p:column headerText="Actions" exportable="false">
+								<p:commandButton icon="fa fa-search" title="View Trade Test Information" update=":contractInformationForm" action="#{tradeTestManagerViewUI.prepViewArpl}" rendered="true">
+									<f:setPropertyActionListener value="#{var}" target="#{tradeTestManagerViewUI.viewCompanyLearnersTradeTest}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<h:form id="contractInformationForm">
+					<c:if test="#{tradeTestManagerViewUI.viewCompanyLearnersTradeTest ne null}">
+						<div class="card card-w-title">
+							<h2>Trade Test Application Selected. Reference ID: #{tradeTestManagerViewUI.viewCompanyLearnersTradeTest.id}</h2>
+							<p:commandButton icon="fa fa-times" value="Close View" update=":contractInformationForm" onstart="uploadStart()" oncomplete="uploadDone()" action="#{tradeTestManagerViewUI.closeViewArpl}" />
+							<div class="EmptyBox10" />
+							<p:tabView dynamic="true" cache="true" >
+								<p:tab title="Learner Information" rendered="#{tradeTestManagerViewUI.learnerInfoTab}" >
+									<ui:include src="/pages/includes/arplLearnerInformationDisplay.xhtml">
+										<ui:param name="user" value="#{tradeTestManagerViewUI.viewCompanyLearnersTradeTest.learner}" />
+										<ui:param name="CELLPHONE_FORMAT" value="#{tradeTestManagerViewUI.CELLPHONE_FORMAT}" />
+										<ui:param name="FAX_NUMBER_FORMAT" value="#{tradeTestManagerViewUI.FAX_NUMBER_FORMAT}" />
+										<ui:param name="TELPHONE_FORMAT" value="#{tradeTestManagerViewUI.TELPHONE_FORMAT}" />
+									</ui:include>
+								</p:tab>
+								<p:tab title="Initiator Information" rendered="#{tradeTestManagerViewUI.iniTab}" >
+									<ui:include src="/pages/includes/arplLearnerInformationDisplay.xhtml">
+										<ui:param name="user" value="#{tradeTestManagerViewUI.viewCompanyLearnersTradeTest.createUser}" />
+										<ui:param name="CELLPHONE_FORMAT" value="#{tradeTestManagerViewUI.CELLPHONE_FORMAT}" />
+										<ui:param name="FAX_NUMBER_FORMAT" value="#{tradeTestManagerViewUI.FAX_NUMBER_FORMAT}" />
+										<ui:param name="TELPHONE_FORMAT" value="#{tradeTestManagerViewUI.TELPHONE_FORMAT}" />
+									</ui:include>
+								</p:tab>
+								<p:tab title="Application Information" rendered="#{tradeTestManagerViewUI.applicationTab}" >
+									<ui:include src="/pages/includes/arplApplicationInformation.xhtml">
+										<ui:param name="companylearnerstradetest" value="#{tradeTestManagerViewUI.viewCompanyLearnersTradeTest}" />
+										<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+										<ui:param name="dataModelDetailsOfExperienceArpl" value="#{tradeTestManagerViewUI.dataModelDetailsOfExperienceArpl}" />
+										<ui:param name="dataModelDetailsOfTrainingArpl" value="#{tradeTestManagerViewUI.dataModelDetailsOfTrainingArpl}" />
+									</ui:include>
+								</p:tab>
+								<p:tab title="Employer Application Information" rendered="#{tradeTestManagerViewUI.employerAppTab}" >
+									<ui:include src="/pages/includes/arplEmployerInformation.xhtml">
+										<ui:param name="companylearnerstradetest" value="#{tradeTestManagerViewUI.viewCompanyLearnersTradeTest}" />
+										<ui:param name="companyTradeTestEmployer" value="#{tradeTestManagerViewUI.companyTradeTestEmployer}" />
+										<ui:param name="companyEmployer" value="#{tradeTestManagerViewUI.viewCompanyLearnersTradeTest.companyEmployer}" />
+										<ui:param name="CELLPHONE_FORMAT" value="#{tradeTestManagerViewUI.CELLPHONE_FORMAT}" />
+										<ui:param name="FAX_NUMBER_FORMAT" value="#{tradeTestManagerViewUI.FAX_NUMBER_FORMAT}" />
+										<ui:param name="TELPHONE_FORMAT" value="#{tradeTestManagerViewUI.TELPHONE_FORMAT}" />
+									</ui:include>
+								</p:tab>
+								<p:tab title="Trade Test Results" rendered="#{tradeTestManagerViewUI.tradeTestTab}" >
+									<ui:include src="/pages/includes/arplTradeTestInformation.xhtml">
+										<ui:param name="companylearnerstradetest" value="#{tradeTestManagerViewUI.viewCompanyLearnersTradeTest}" />
+										<ui:param name="dataModelTradeTestTaskResult" value="#{tradeTestManagerViewUI.dataModelTradeTestTaskResult}" />
+										<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+									</ui:include>
+								</p:tab>
+								<p:tab title="Sign Off Assigned" rendered="#{tradeTestManagerViewUI.signOffTab}" >
+									<ui:include src="/pages/includes/signoffInclude.xhtml">
+										<ui:param name="SignOffList" value="#{tradeTestManagerViewUI.signOffLists}" />
+										<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+										<ui:param name="acknowledge" value="#{lang['tradetest.signoff.declaration.text']} " />
+									</ui:include>
+								</p:tab>
+								<p:tab title="Trade Test Documents" rendered="#{tradeTestManagerViewUI.docTab}">
+									<ui:include src="/pages/includes/documents_info_display.xhtml">
+										<ui:param name="docs" value="#{tradeTestManagerViewUI.viewCompanyLearnersTradeTest.docs}" />
+									</ui:include>
+								</p:tab>
+								<p:tab title="Task History">
+									<ui:include src="/pages/includes/taskInformationInclude.xhtml">
+										<ui:param name="TaskList" value="#{tradeTestManagerViewUI.dataModelTasks}" />
+										<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+									</ui:include>
+								</p:tab>
+							</p:tabView>
+							<div class="EmptyBox10" />
+						</div>
+					</c:if>
+				</h:form>
+			</div>
+		</div>
+		
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+
+
+	</ui:define>
+</ui:composition>

@@ -1,0 +1,231 @@
+@page "/governance/delegations/create"
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Web
+@using MudBlazor
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@inject IWorkflowGovernanceService GovernanceService
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<PageTitle>Create Delegation | MerSETA NSDMS</PageTitle>
+
+<!-- Sticky Top Bar -->
+<MudCard Class="mb-4 sticky-top border-b" Elevation="2" Style="top: var(--mud-appbar-height, 64px); z-index: 100; background: var(--mud-palette-surface);">
+    <MudCardContent Class="py-3 px-4 d-flex justify-space-between align-center">
+        <div class="d-flex align-center gap-2">
+            <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Size="Size.Small" OnClick='() => Navigation.NavigateTo("/governance/delegations")' />
+            <MudBreadcrumbs Items="_breadcrumbItems" Class="pa-0 ma-0" />
+        </div>
+        <div class="d-flex align-center gap-2">
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Default"
+                       StartIcon="@Icons.Material.Filled.Cancel"
+                       OnClick='() => Navigation.NavigateTo("/governance/delegations")'>
+                Cancel
+            </MudButton>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Save"
+                       Disabled="@_saving"
+                       OnClick="SaveDelegationAsync">
+                @if (_saving)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                    <span>Saving...</span>
+                }
+                else
+                {
+                    <span>Save Delegation</span>
+                }
+            </MudButton>
+        </div>
+    </MudCardContent>
+</MudCard>
+
+<!-- Form Card -->
+<MudCard Elevation="3" Class="rounded-lg">
+    <MudCardHeader>
+        <CardHeaderAvatar>
+            <MudAvatar Color="Color.Primary" Variant="Variant.Filled">
+                <MudIcon Icon="@Icons.Material.Filled.AssignmentInd" />
+            </MudAvatar>
+        </CardHeaderAvatar>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">Create Time-Bounded Role Delegation</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                Assign temporary acting authority to another registered officer with module-specific constraints
+            </MudText>
+        </CardHeaderContent>
+    </MudCardHeader>
+
+    <MudCardContent>
+        <MudGrid Spacing="3">
+            <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="_delegatorUserName"
+                              Label="Delegator Email / Username *"
+                              HelperText="Officer granting authority (e.g. manager going on leave)"
+                              Variant="Variant.Outlined"
+                              Required="true" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="_delegateeUserName"
+                              Label="Delegatee Email / Username *"
+                              HelperText="Acting officer receiving authority"
+                              Variant="Variant.Outlined"
+                              Required="true" />
+            </MudItem>
+
+            <MudItem xs="12" md="6">
+                <MudDatePicker Label="Effective Start Date *"
+                               @bind-Date="_startDate"
+                               Variant="Variant.Outlined"
+                               HelperText="Delegation becomes valid on this date"
+                               Required="true" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudDatePicker Label="Expiration End Date *"
+                               @bind-Date="_endDate"
+                               Variant="Variant.Outlined"
+                               HelperText="Delegation automatically terminates at the end of this date"
+                               Required="true" />
+            </MudItem>
+
+            <!-- Module Specificity Selection -->
+            <MudItem xs="12">
+                <MudText Typo="Typo.subtitle1" Class="fw-bold mb-2">
+                    <MudIcon Icon="@Icons.Material.Filled.Rule" Size="Size.Small" Class="mr-1" />
+                    Delegated Workflow Modules (Question 2: Select Specific Modules)
+                </MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                    Choose whether to delegate all system authority or restrict the acting officer to specific modules.
+                </MudText>
+
+                <div class="d-flex gap-4 flex-wrap pa-3 rounded border">
+                    <MudCheckBox T="bool" @bind-Value="_selectAllModules" Color="Color.Primary" Label="All Subsystems (*)" />
+                    @if (!_selectAllModules)
+                    {
+                        <MudCheckBox T="bool" @bind-Value="_moduleGrants" Color="Color.Secondary" Label="Grants & MOAs" />
+                        <MudCheckBox T="bool" @bind-Value="_moduleWsp" Color="Color.Secondary" Label="WSP & ATR" />
+                        <MudCheckBox T="bool" @bind-Value="_moduleFinance" Color="Color.Secondary" Label="Finance Disbursements" />
+                        <MudCheckBox T="bool" @bind-Value="_moduleEtqa" Color="Color.Secondary" Label="ETQA & Accreditation" />
+                        <MudCheckBox T="bool" @bind-Value="_moduleWorkplace" Color="Color.Secondary" Label="Workplace Approvals" />
+                        <MudCheckBox T="bool" @bind-Value="_moduleLearners" Color="Color.Secondary" Label="Learners Administration" />
+                        <MudCheckBox T="bool" @bind-Value="_moduleCompliance" Color="Color.Secondary" Label="Statutory & Compliance" />
+                    }
+                </div>
+            </MudItem>
+
+            <MudItem xs="12">
+                <MudTextField @bind-Value="_reason"
+                              Label="Delegation Reason & Justification *"
+                              Lines="3"
+                              Variant="Variant.Outlined"
+                              HelperText="Statutory justification for King IV & AGSA audit compliance (e.g., Annual leave handover, Acting HOD appointment)"
+                              Required="true" />
+            </MudItem>
+        </MudGrid>
+    </MudCardContent>
+</MudCard>
+
+@code {
+    private bool _saving = false;
+    private string _delegatorUserName = "manager@merseta.org.za";
+    private string _delegateeUserName = "";
+    private DateTime? _startDate = DateTime.Today;
+    private DateTime? _endDate = DateTime.Today.AddDays(14);
+    private string _reason = "Acting appointment during executive leave period (Approved by CEO)";
+
+    private bool _selectAllModules = true;
+    private bool _moduleGrants = true;
+    private bool _moduleWsp = false;
+    private bool _moduleFinance = false;
+    private bool _moduleEtqa = false;
+    private bool _moduleWorkplace = false;
+    private bool _moduleLearners = false;
+    private bool _moduleCompliance = false;
+
+    private List<BreadcrumbItem> _breadcrumbItems = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Governance", href: "#"),
+        new BreadcrumbItem("Delegations", href: "/governance/delegations"),
+        new BreadcrumbItem("Create", href: null, disabled: true)
+    };
+
+    private async Task SaveDelegationAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_delegatorUserName) || string.IsNullOrWhiteSpace(_delegateeUserName))
+        {
+            Snackbar.Add("Delegator and Delegatee are required.", Severity.Warning);
+            return;
+        }
+
+        if (!_startDate.HasValue || !_endDate.HasValue)
+        {
+            Snackbar.Add("Start date and end date are required.", Severity.Warning);
+            return;
+        }
+
+        if (_endDate.Value < _startDate.Value)
+        {
+            Snackbar.Add("End date cannot be prior to start date.", Severity.Warning);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_reason))
+        {
+            Snackbar.Add("Reason/justification is required.", Severity.Warning);
+            return;
+        }
+
+        _saving = true;
+        try
+        {
+            var allowedModules = new List<string>();
+            if (_selectAllModules)
+            {
+                allowedModules.Add("*");
+            }
+            else
+            {
+                if (_moduleGrants) allowedModules.Add("Grants");
+                if (_moduleWsp) allowedModules.Add("Wsp");
+                if (_moduleFinance) allowedModules.Add("Finance");
+                if (_moduleEtqa) allowedModules.Add("Etqa");
+                if (_moduleWorkplace) allowedModules.Add("Workplace");
+                if (_moduleLearners) allowedModules.Add("Learners");
+                if (_moduleCompliance) allowedModules.Add("Compliance");
+
+                if (allowedModules.Count == 0)
+                {
+                    Snackbar.Add("Please select at least one module for delegation.", Severity.Warning);
+                    _saving = false;
+                    return;
+                }
+            }
+
+            await GovernanceService.CreateDelegationAsync(
+                delegatorUserId: 1,
+                delegatorUserName: _delegatorUserName,
+                delegateeUserId: 2,
+                delegateeUserName: _delegateeUserName,
+                startDate: _startDate.Value,
+                endDate: _endDate.Value,
+                allowedModules: allowedModules,
+                reason: _reason,
+                createdBy: "Admin Officer");
+
+            Snackbar.Add("Time-bounded role delegation created successfully.", Severity.Success);
+            Navigation.NavigateTo("/governance/delegations");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error creating delegation: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+}

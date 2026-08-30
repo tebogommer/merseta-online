@@ -1,0 +1,108 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Temp Sign off</h1>
+					<h:form id="tempsignoffInsForm">
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:panelGrid columns="1" style="width:100%" id="tempsignoffInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="idNumber" value="#{tempsignoffUI.tempsignoff.idNumber}" style="width:95%" />
+								<p:outputLabel value="#{lang['id.number']}" for="idNumber" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="createDate" value="#{tempsignoffUI.tempsignoff.createDate}" style="width:95%" />
+								<p:outputLabel value="#{lang['createDate']}" for="createDate" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="middleName" value="#{tempsignoffUI.tempsignoff.middleName}" style="width:95%" />
+								<p:outputLabel value="#{lang['middle.name']}" for="middleName" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="lastName" value="#{tempsignoffUI.tempsignoff.lastName}" style="width:95%" />
+								<p:outputLabel value="#{lang['last.name']}" for="lastName" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="firstName" value="#{tempsignoffUI.tempsignoff.firstName}" style="width:95%" />
+								<p:outputLabel value="#{lang['first.name']}" for="firstName" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="email" value="#{tempsignoffUI.tempsignoff.email}" style="width:95%" />
+								<p:outputLabel value="#{lang['email']}" for="email" />
+							</h:panelGroup>
+
+
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:tempsignoffList :tempsignoffInsForm:tempsignoffInsGrid" action="#{tempsignoffUI.tempsignoffInsert}" />
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="tempsignoffInsGrid" process="@this" action="#{tempsignoffUI.prepareNew}">
+									<p:resetInput target="tempsignoffInsGrid" />
+								</p:commandButton>
+							</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{tempsignoffUI.dataModel}" filteredValue="#{tempsignoffUI.tempSignofffilteredList}" id="tempsignoffList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['id.number']}">
+								<h:outputText value="#{rowVar.idNumber}" />
+							</p:column>
+							<p:column headerText="#{lang['createDate']}">
+								<h:outputText value="#{rowVar.createDate}" />
+							</p:column>
+							<p:column headerText="#{lang['middle.name']}">
+								<h:outputText value="#{rowVar.middleName}" />
+							</p:column>
+							<p:column headerText="#{lang['last.name']}">
+								<h:outputText value="#{rowVar.lastName}" />
+							</p:column>
+							<p:column headerText="#{lang['first.name']}">
+								<h:outputText value="#{rowVar.firstName}" />
+							</p:column>
+							<p:column headerText="#{lang['email']}">
+								<h:outputText value="#{rowVar.email}" />
+							</p:column>
+
+
+							<p:column width="80">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":tempsignoffInsForm:tempsignoffInsGrid">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{tempsignoffUI.tempsignoff}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:tempsignoffList" action="#{tempsignoffUI.tempsignoffDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{tempsignoffUI.tempsignoff}" />
+								</p:commandButton>
+							</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+	<!-- 
+idNumber = idNumber
+createDate = createDate
+middleName = middleName
+lastName = lastName
+firstName = firstName
+email = email
+
+-->
+</ui:composition>

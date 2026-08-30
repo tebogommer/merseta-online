@@ -1,0 +1,320 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<p:growl sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+		<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+		<p:importEnum type="haj.com.entity.enums.ProviderSusActionsEnum" />
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+						<h1>Provider Applications: Suspension &amp; De-Accredited</h1>
+						<ui:include src="/pages/includes/download_lazy_with_page.xhtml">
+							<ui:param name="file_name" value="Provider_Alteration_list" />
+							<ui:param name="target" value="actionList" />
+						</ui:include>
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+						<p:dataTable var="rowVarPD" value="#{providerSuspensionDeAcredUI.providerApplicationSuspensionDeActivatedDataModel}" expandableRowGroups="true" id="actionList" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" reflow="true" lazy="true">
+							<p:column headerText="#{lang['expand.row']}" width="45" exportable="false" styleClass="action-column">
+								<p:rowToggler rendered="#{rowVarPD.doc.size() gt 0}"></p:rowToggler>
+							</p:column>
+							<p:column headerText="NSDMS REF ID" sortBy="#{rowVarPD.id}" style="width:5%">
+								<p:outputLabel value="#{rowVarPD.id}" />
+							</p:column>
+							<p:column headerText="Action Date" sortBy="#{rowVarPD.createDate}">
+								<p:outputLabel value="#{rowVarPD.createDate}">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME_SECOND}" />
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="Action User" sortBy="#{rowVarPD.createUser}">
+								<p:outputLabel value="#{rowVarPD.createUser.firstName} #{rowVarPD.createUser.lastName} (#{rowVarPD.createUser.email})" />
+							</p:column>
+							<p:column headerText="Company Name" filterBy="#{rowVarPD.company.companyName}" sortBy="#{rowVar.company.companyName}">
+								<p:outputLabel value="#{rowVarPD.company.companyName}" />
+							</p:column>
+							<p:column headerText="Entity ID" filterBy="#{rowVar.company.levyNumber}" sortBy="#{rowVar.company.levyNumber}">
+								<p:outputLabel value="#{rowVarPD.company.levyNumber}" />
+							</p:column>
+							<p:column headerText="Action" sortBy="#{rowVarPD.providerSusActions.friendlyName}">
+								<p:outputLabel value="#{rowVarPD.providerSusActions.friendlyName}" />
+							</p:column>
+							<p:column headerText="Application Accreditation Number At Capture" filterBy="#{rowVarPD.accreditationNumberAtTime}">
+								<p:outputLabel value="#{rowVarPD.accreditationNumberAtTime}" />
+							</p:column>
+							<p:column headerText="Current Application Accreditation Number" filterBy="#{rowVarPD.trainingProviderApplication.accreditationNumber}">
+								<p:outputLabel value="#{rowVarPD.trainingProviderApplication.accreditationNumber}" />
+							</p:column>
+							<p:column headerText="Application Status Before Action" sortBy="#{rowVarPD.previousProviderStatus}">
+								<p:outputLabel value="#{rowVarPD.previousProviderStatus.friendlyName}" />
+							</p:column>
+							<p:column headerText="Application Status After Action" sortBy="#{rowVarPD.statusAssigned}">
+								<p:outputLabel value="#{rowVarPD.statusAssigned.friendlyName}" />
+							</p:column>
+							<p:column headerText="Reason" filterBy="#{rowVarPD.reason}">
+								<p:outputLabel value="#{rowVarPD.reason}" />
+							</p:column>
+							<p:rowExpansion>
+								<p:dataTable value="#{rowVarPD.doc}" var="rowVarLiDocList" rowKey="#{rowVarLiDocList.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+									<f:facet name="Header">Documents</f:facet>
+									<p:column headerText="#{lang['uploaded.by']}">#{rowVarLiDocList.users.firstName} #{rowVarLiDocList.users.lastName}</p:column>
+									<p:column headerText="Type">Supporting Document</p:column>
+									<p:column headerText="Orginal File Name">#{rowVarLiDocList.originalFname}</p:column>
+									<p:column headerText="#{lang['uploaded']}" width="15%">
+										<h:outputText value="#{rowVarLiDocList.createDate}">
+											<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+										</h:outputText>
+									</p:column>
+									<p:column headerText="#{lang['version']}" width="15%">
+										<h:outputText value="#{rowVarLiDocList.versionNo}">
+										</h:outputText>
+									</p:column>
+									<p:column width="180" headerText="#{lang['view.edit']}" styleClass="action-column">
+										<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" rendered="#{rowVarLiDocList.id ne null}">
+											<f:setPropertyActionListener value="#{rowVarLiDocList}" target="#{uploadDocUI.doc}" />
+											<p:tooltip value="#{lang['download.the.file']}" position="left" rendered="#{rowVarLiDocList.id ne null}" />
+										</p:commandButton>
+
+										<p:commandButton icon="fa fa-bars" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rowVarLiDocList.id ne null and sessionUI.employee}">
+											<f:setPropertyActionListener value="#{rowVarLiDocList}" target="#{uploadDocUI.doc}" />
+											<p:tooltip value="#{lang['document.tracker']}" position="left" rendered="#{rowVarLiDocList.id ne null}" />
+										</p:commandButton>
+
+										<p:commandButton rendered="#{rowVarLiDocList.note ne null and rowVarLiDocList.note.length() gt 0}" icon="fa fa-comment-o" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+											<f:setPropertyActionListener value="#{rowVarLiDocList}" target="#{uploadDocUI.doc}" />
+											<p:tooltip value="#{lang['view.note']}" position="left" />
+										</p:commandButton>
+
+										<p:commandButton rendered="#{rowVarLiDocList.extension.toLowerCase() eq 'pdf' or rowVarLiDocList.extension.toLowerCase() eq 'png' or rowVarLiDocList.extension.toLowerCase() eq 'jpg' or rowVarLiDocList.extension.toLowerCase() eq 'jpeg' or rowVarLiDocList.extension.toLowerCase() eq 'gif'}"
+											icon="fa fa-eye " oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+											<f:setPropertyActionListener value="#{rowVarLiDocList}" target="#{uploadDocUI.doc}" />
+											<p:tooltip value="#{lang['view.document']} " position="left" />
+										</p:commandButton>
+									</p:column>
+								</p:dataTable>
+							</p:rowExpansion>
+						</p:dataTable>
+					</h:form>
+				</div>
+
+				<h:form id="newEntryForm" rendered="#{providerSuspensionDeAcredUI.canAlter}">
+				
+					<div class="card card-w-title">
+					
+						<h2>Action Provider Applications: Suspension &amp; De-Accredited</h2>
+						
+						<p:fieldset id="selectActionGrid" legend="Select Action" rendered="#{providerSuspensionDeAcredUI.selectedAction eq null}">
+							<p:panelGrid id="searchRsaIdOrPassportPnl" columns="3" styleClass="ui-panelgrid-blank form-group">
+								<p:selectOneRadio id="passNumID" value="#{providerSuspensionDeAcredUI.selectedAction}" columns="1" layout="responsive">
+									<p:ajax update="@form" listener="#{providerSuspensionDeAcredUI.selectAction}" />
+									<f:selectItems value="#{enumUI.providerSusActionsEnumDD}" var="idpassEnum" itemLabel="#{idpassEnum}" itemValue="#{idpassEnum}" />
+								</p:selectOneRadio>
+							</p:panelGrid>
+						</p:fieldset>
+
+						<c:if test="#{providerSuspensionDeAcredUI.selectedAction ne null}">
+							<h3>Selected: #{providerSuspensionDeAcredUI.selectedAction.friendlyName}</h3>
+							<p:commandButton icon="fa fa-times" value="Cancel Selection" update="@form" process="@this" action="#{providerSuspensionDeAcredUI.clearAction}" />
+
+							<div class="EmptyBox10" />
+							<ui:include src="/pages/includes/filterGuide.xhtml" />
+							<p:dataTable var="rowVar" value="#{providerSuspensionDeAcredUI.trainingProviderApplicationDataModel}" id="SDPList" rowKey="#{rowVar.id}" sortBy="#{rowVar.company.id}" paginator="true" rows="5" paginatorPosition="bottom"
+								paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10" reflow="true" lazy="true">
+
+								<p:column headerText="NSDMS REF ID" sortBy="#{rowVar.id}">
+									<h:outputText value="#{rowVar.id}" />
+								</p:column>
+
+								<p:column headerText="#{lang['company.name']}" filterBy="#{rowVar.company.companyName}" sortBy="#{rowVar.company.companyName}" filterStyle="width: 95%">
+									<h:outputText value="#{rowVar.company.companyName}" />
+								</p:column>
+
+								<p:column headerText="#{lang['tradingName']}" filterBy="#{rowVar.company.tradingName}" sortBy="#{rowVar.company.tradingName}" filterStyle="width: 95%">
+									<h:outputText value="#{rowVar.company.tradingName}" />
+								</p:column>
+
+								<p:column headerText="#{lang['entity.id']}" filterBy="#{rowVar.company.levyNumber}" sortBy="#{rowVar.company.levyNumber}" filterStyle="width: 95%">
+									<h:outputText value="#{rowVar.company.levyNumber}" />
+								</p:column>
+
+								<p:column headerText="#{lang['accreditation.number']}" filterBy="#{rowVar.certificateNumber}" sortBy="#{rowVar.certificateNumber}" filterStyle="width: 95%">
+									<h:outputText rendered="#{rowVar.certificateNumber ne null}" value="#{rowVar.certificateNumber}" />
+									<h:outputText rendered="#{rowVar.certificateNumber eq null}" value="#{rowVar.accreditationNumber}" />
+									<h:outputText rendered="#{(rowVar.certificateNumber eq null or rowVar.certificateNumber eq '') and (rowVar.accreditationNumber eq null or rowVar.accreditationNumber eq '') }" value="N/A" />
+								</p:column>
+
+								<p:column headerText="#{lang['start.date']}" sortBy="#{rowVar.startDate}" filterStyle="width: 95%">
+									<h:outputText value="#{rowVar.startDate}">
+										<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+									</h:outputText>
+									<h:outputText rendered="#{rowVar.startDate eq null}" value="N/A" />
+								</p:column>
+
+								<p:column headerText="Accreditation End Date " sortBy="#{rowVar.expiriyDate}" filterStyle="width: 95%">
+									<h:outputText value="#{rowVar.expiriyDate}">
+										<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+									</h:outputText>
+									<h:outputText rendered="#{rowVar.expiriyDate eq null}" value="N/A" />
+								</p:column>
+
+								<p:column headerText="#{lang['type.of.application']}" sortBy="#{rowVar.accreditationApplicationTypeEnum}" filterStyle="width: 95%">
+									<h:outputText value="#{rowVar.accreditationApplicationTypeEnum.friendlyName}" />
+								</p:column>
+
+								<p:column headerText="#{lang['tp.application.status']}" sortBy="#{rowVar.approvalStatus}" filterStyle="width: 95%">
+									<h:outputText value="#{rowVar.approvalStatus.friendlyName}" />
+								</p:column>
+
+								<p:column exportable="false">
+									<p:commandButton icon="fa fa-check" process="@this" update=":newEntryForm:finalActionPanel" title="Select Application" action="#{providerSuspensionDeAcredUI.selectProviderApplication}">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{providerSuspensionDeAcredUI.selectedTrainingProviderApplication}" />
+									</p:commandButton>
+								</p:column>
+
+							</p:dataTable>
+
+							<p:outputPanel id="finalActionPanel">
+								<c:if test="#{providerSuspensionDeAcredUI.providerApplicationSuspensionDeActivated ne null}">
+									<div class="EmptyBox10" />
+									<h3>Provider Application Selected. NSDMS REF ID: #{providerSuspensionDeAcredUI.selectedTrainingProviderApplication.id}</h3>
+									<p:commandButton icon="fa fa-times" value="Cancel Selection" update=":newEntryForm:finalActionPanel" process="@this" action="#{providerSuspensionDeAcredUI.clearProviderSelection}" />
+									<div class="EmptyBox10" />
+									<p:fieldset id="infoFS" legend="#{providerSuspensionDeAcredUI.selectedAction.friendlyName} Application REF ID: #{providerSuspensionDeAcredUI.selectedTrainingProviderApplication.id}" style="width:95%">
+										<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+											<h:panelGroup rendered="#{providerSuspensionDeAcredUI.selectedAction eq ProviderSusActionsEnum.SuspendDeactivate}">
+												<div>
+													<p:outputLabel value="Assigned Status" for="statusAssign" />
+												</div>
+												<div>
+													<p:selectOneMenu id="statusAssign" value="#{providerSuspensionDeAcredUI.providerApplicationSuspensionDeActivated.statusAssigned}" style="width:95%" required="true" requiredMessage="Provide: Status">
+														<p:ajax event="itemSelect" />
+														<f:selectItems value="#{enumUI.providerSuspensionDeAcredListEnumDD}" />
+													</p:selectOneMenu>
+												</div>
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield" style="margin-top:19px;">
+												<p:inputText style="width: 95%" value="#{providerSuspensionDeAcredUI.providerApplicationSuspensionDeActivated.reason}" required="true" requiredMessage="Provide: Reason">
+													<p:ajax />
+												</p:inputText>
+												<p:outputLabel value="Reason" />
+											</h:panelGroup>
+										</p:panelGrid>
+										<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+
+											<p:commandButton process="@this" icon="fa fa-upload" value="Upload Supporting Documents" oncomplete="PF('uploadSupportingDocDlg').show()" update=":uploadSupportingDocForm" action="#{providerSuspensionDeAcredUI.prepUpload}" />
+
+											<c:if test="#{providerSuspensionDeAcredUI.supportingDocs ne null and providerSuspensionDeAcredUI.supportingDocs.size() gt 0}">
+
+												<div class="EmptyBox10" />
+
+												<p:dataTable value="#{providerSuspensionDeAcredUI.supportingDocs}" var="rv1" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+													<f:facet name="header"> Supporting Documents</f:facet>
+													<p:column headerText="#{lang['type']}" width="20%">Supporting Document</p:column>
+													<p:column headerText="#{lang['uploaded.by']}">
+														<p:outputLabel value="#{rv1.users.firstName} #{rv1.users.lastName}" rendered="#{rv1.users ne null}" />
+														<p:outputLabel value="Awaiting Submission" rendered="#{rv1.users eq null}" />
+													</p:column>
+													<p:column headerText="#{lang['uploaded']}" width="15%">
+														<h:outputText value="#{rv1.createDate}" rendered="#{rv1.createDate ne null}">
+															<f:convertDateTime pattern="dd MMM yyyy" />
+														</h:outputText>
+														<h:outputText value="Awaiting Submission" rendered="#{rv1.createDate eq null}">
+														</h:outputText>
+													</p:column>
+
+													<p:column headerText="Original File Name" width="150">
+														<h:outputText value="#{rv1.originalFname}">
+														</h:outputText>
+													</p:column>
+
+													<p:column headerText="Note" width="150">
+														<h:outputText value="#{rv1.note}">
+														</h:outputText>
+													</p:column>
+
+													<p:column headerText="#{lang['document.is.required']}" width="150" rendered="false">
+														<p:selectBooleanCheckbox value="#{rv1.configDoc.requiredDocument}" disabled="true" style="opacity: 1 !important" rendered="#{not rv1.required}"></p:selectBooleanCheckbox>
+														<p:selectBooleanCheckbox value="#{rv1.required}" disabled="true" style="opacity: 1 !important" rendered="#{rv1.required}"></p:selectBooleanCheckbox>
+													</p:column>
+
+													<p:column headerText="#{lang['original.required']}" width="150" rendered="false">
+														<p:selectBooleanCheckbox value="#{rv1.configDoc.originalRequired}" disabled="true" style="opacity: 1 !important" rendered="#{not rv1.configDoc.originalRequired}"></p:selectBooleanCheckbox>
+														<p:selectBooleanCheckbox value="#{rv1.configDoc.originalRequired}" disabled="true" style="opacity: 1 !important" rendered="#{rv1.configDoc.originalRequired}"></p:selectBooleanCheckbox>
+													</p:column>
+
+													<p:column headerText="#{lang['version']}" width="15%" rendered="false">
+														<h:outputText value="#{rv1.versionNo}">
+														</h:outputText>
+													</p:column>
+
+													<p:column width="5%" headerText="Actions">
+														<p:commandButton process="@this" ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}">
+															<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+															<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+														</p:commandButton>
+														<p:commandButton process="@this" ajax="false" icon="fa fa-download " action="#{uploadDocUI.download(rv1)}" id="dlbUserDocsMemory" rendered="#{rv1.id eq null}">
+															<p:tooltip for="dlbUserDocsMemory" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+														</p:commandButton>
+														<p:spacer width="5" />
+														<p:commandButton process="@this" rendered="#{rv1.id eq null}" update=":newEntryForm:finalActionPanel" icon="fa fa-times" title="Remove Entry" action="#{providerSuspensionDeAcredUI.removeDocFromList}">
+															<p:confirm header="Confirmation" message="Are You Sure?" icon="fa fa-exclamation-triangle" />
+															<f:setPropertyActionListener value="#{rv1}" target="#{providerSuspensionDeAcredUI.doc}" />
+														</p:commandButton>
+													</p:column>
+												</p:dataTable>
+											</c:if>
+										</p:panelGrid>
+										<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+											<p:commandButton icon="fa fa-database" value="Submit" update=":newEntryForm :mainForm" action="#{providerSuspensionDeAcredUI.submitNewEntry}">
+												<p:confirm header="Confirmation" message="Are You Sure?" icon="fa fa-exclamation-triangle" />
+											</p:commandButton>
+										</p:panelGrid>
+									</p:fieldset>
+								</c:if>
+							</p:outputPanel>
+						</c:if>
+					</div>
+				</h:form>
+			</div>
+		</div>
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+			<h:form>
+				<p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="fa fa-check" />
+				<p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="fa fa-times" />
+			</h:form>
+		</p:confirmDialog>
+
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="uploadSupportingDocDlg" resizable="false" hideEffect="clip" showEffect="clip" id="uploadSupportingDocDialog" width="80%" responsive="true" modal="true">
+			<h:form id="uploadSupportingDocForm">
+				<h:panelGroup id="uploadGroupUser">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">Upload Supporting Documents</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{providerSuspensionDeAcredUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{providerSuspensionDeAcredUI.storeNewFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}"
+										update="@form :newEntryForm" multiple="false" fileLimit="1" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+	</ui:define>
+</ui:composition>

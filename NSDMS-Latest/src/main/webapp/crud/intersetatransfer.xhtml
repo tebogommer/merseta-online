@@ -1,0 +1,39 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+		<p:importEnum type="haj.com.entity.enums.CompanyRegOrSDLEnum" var="regSDL"></p:importEnum>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Inter-SETA Transfer</h1>
+					<h:form id="intersetaForm">
+						<p:growl showDetail="false" sticky="false" escape="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:panelGrid id="searchCompanyPnl" columns="3" styleClass="ui-panelgrid-blank form-group" rendered="#{!interSetaTransferUI.company.doneSearch}">
+							<p:selectOneRadio value="#{searchCompanyUI.companyRegOrSDLEnum}" columns="1" layout="responsive" rendered="#{!searchCompanyUI.searchNGO}">
+								<p:ajax update="searchCompanyPnl" />
+								<f:selectItems value="#{enumUI.companyRegOrSDLEnumDD}" var="idpassEnum" itemLabel="#{idpassEnum}" itemValue="#{idpassEnum}" />
+							</p:selectOneRadio>
+							<h:panelGroup id="regNumInput" styleClass="md-inputfield" rendered="#{searchCompanyUI.companyRegOrSDLEnum eq regSDL.REG or searchCompanyUI.searchNGO}">
+								<p:inputText id="regNumCriteria" value="#{searchCompanyUI.criteria}" style="width:95%" requiredMessage="#{lang['enter.reg.number']}" required="true" />
+								<p:outputLabel value="#{lang['company.reg.number']}" for="regNumCriteria" />
+							</h:panelGroup>
+							<h:panelGroup id="sdlNumInput" styleClass="md-inputfield" rendered="#{searchCompanyUI.companyRegOrSDLEnum eq regSDL.SDLNumber and !searchCompanyUI.searchNGO}">
+								<p:inputText id="sdlNumCriteria" value="#{searchCompanyUI.criteria}" style="width:95%" requiredMessage="#{lang['enter.sdl.number']}" required="true" />
+								<p:outputLabel value="#{lang['sdl.number']}" for="sdlNumCriteria" />
+							</h:panelGroup>
+							<p:commandButton id="idSearch" icon="fa fa-search" process="searchCompanyPnl" actionListener="#{searchCompanyUI.find}" update="intersetaForm" rendered="#{searchCompanyUI.companyRegOrSDLEnum eq regSDL.REG or searchCompanyUI.searchNGO}" />
+							<p:commandButton id="idSearch2" icon="fa fa-search" process="searchCompanyPnl" actionListener="#{searchCompanyUI.findBySDL}" update="intersetaForm" rendered="#{searchCompanyUI.companyRegOrSDLEnum eq regSDL.SDLNumber and !searchCompanyUI.searchNGO}" />
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+</ui:composition>

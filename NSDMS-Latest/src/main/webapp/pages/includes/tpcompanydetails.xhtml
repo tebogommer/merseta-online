@@ -1,0 +1,87 @@
+<ui:composition xmlns:o="http://omnifaces.org/ui" xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+	<p:outputPanel id="companyDetails00" styleClass="card" rendered="#{trainingproviderUI.formUser.regFieldsDone}">
+		<h1>#{lang['company.main.heading']}</h1>
+		<p:outputPanel id="pgCompanyDetails">
+			<p:panelGrid columns="4" styleClass="ui-panelgrid-blank" style="width:50%">
+				<!--  and !searchCompanyUI.nonMersetaCompany -->
+
+				<p:panelGrid id="pgSearchOptions" columns="1" styleClass="ui-panelgrid-blank" rendered="#{!trainingproviderUI.company.doneSearch}">
+					<h:panelGroup>
+						<p:outputLabel id="nonLevyPaying" value="Levy Paying Entity" />
+						<p:spacer width="45"></p:spacer>
+						<p:selectBooleanCheckbox id="nonLevyPaying1" value="#{searchCompanyUI.searchNNumber}">
+							<p:ajax update="pgCompanyDetails" event="change" listener="#{searchCompanyUI.searchByNNumber}" />
+						</p:selectBooleanCheckbox>
+					</h:panelGroup>
+
+					<h:panelGroup>
+						<p:outputLabel id="nonLevyPayingEntity" value="Non-levy Paying Entity" />
+						<p:spacer width="20"></p:spacer>
+						<p:selectBooleanCheckbox id="nonLevyPayingEntity1" value="#{searchCompanyUI.searchEntityId}">
+							<p:ajax update="pgCompanyDetails" event="change" listener="#{searchCompanyUI.searchByEntityId}" />
+						</p:selectBooleanCheckbox>
+					</h:panelGroup>
+
+					<h:panelGroup rendered="#{trainingproviderUI.trainingProviderApplication.accreditationApplicationTypeEnum eq AccreditationApplicationTypeEnum.Non_MerSETA_Focused_Provider and false}">
+						<p:outputLabel id="nonMesetaCompanyLabel" value="Non-merSETA Scope Company" />
+						<p:spacer width="10"></p:spacer>
+						<p:selectBooleanCheckbox id="nonMesetaCompany" value="#{searchCompanyUI.nonMersetaCompany}">
+							<p:ajax update="pgCompanyDetails" event="change" listener="#{searchCompanyUI.findByNonSetaCompany}" />
+						</p:selectBooleanCheckbox>
+					</h:panelGroup>
+					<!-- rendered="#{trainingproviderUI.trainingProviderApplication.accreditationApplicationTypeEnum eq AccreditationApplicationTypeEnum.QCTOSkillsDevelopmentProvider  or trainingproviderUI.trainingProviderApplication.accreditationApplicationTypeEnum eq AccreditationApplicationTypeEnum.QCTOTradeTestCentre or trainingproviderUI.trainingProviderApplication.accreditationApplicationTypeEnum eq AccreditationApplicationTypeEnum.Non_MerSETA_Focused_Provider}" -->
+					<h:panelGroup rendered="falses">
+						<p:outputLabel value="Non-merSETA Scope Company" />
+						<p:spacer width="10"></p:spacer>
+						<p:selectBooleanCheckbox value="#{searchCompanyUI.searchNGO}">
+							<p:ajax update="pgCompanyDetails" listener="#{searchCompanyUI.prepareNonSetaCompany}" event="change"></p:ajax>
+						</p:selectBooleanCheckbox>
+					</h:panelGroup>
+				</p:panelGrid>
+				<p:panelGrid id="searchCompanyPnl" columns="2" styleClass="ui-panelgrid-blank" rendered="#{!trainingproviderUI.company.doneSearch}" style="width:100%">
+
+					<h:panelGroup id="sdlNumInput" styleClass="md-inputfield" rendered="#{searchCompanyUI.searchNNumber}">
+						<p:inputMask id="sdlNumCriteria" mask="#{searchCompanyUI.companyLevyNumberFormat}" value="#{searchCompanyUI.criteria}" style="width:95%" requiredMessage="#{lang['enter.sdl.number']}" required="true">
+							<p:ajax />
+						</p:inputMask>
+						<p:outputLabel value="#{lang['sdl.number']}" for="sdlNumCriteria" />
+					</h:panelGroup>
+
+					<h:panelGroup id="sdlNumInput2" styleClass="md-inputfield" rendered="#{searchCompanyUI.searchEntityId}">
+						<p:inputMask id="sdlNumCriteriaNonLNum" mask="#{searchCompanyUI.companyNNumberFormat}" value="#{searchCompanyUI.criteria}" style="width:95%" requiredMessage="#{lang['enter.sdl.number']}" required="true">
+							<p:ajax />
+						</p:inputMask>
+						<p:outputLabel value="#{lang['sdl.number']}" for="sdlNumCriteriaNonLNum" />
+					</h:panelGroup>
+					<h:panelGroup id="regNumInput" styleClass="md-inputfield" rendered="#{searchCompanyUI.companyRegOrSDLEnum eq regSDL.REG or searchCompanyUI.searchNGO}">
+						<p:inputMask mask="#{searchCompanyUI.companyRegistrationNumberFormat}" id="regNumCriteria" style="width:100%" value="#{searchCompanyUI.criteria}" requiredMessage="#{lang['enter.reg.number']}" required="true">
+						</p:inputMask>
+						<p:outputLabel value="#{lang['company.reg.number']}" for="regNumCriteria" />
+					</h:panelGroup>
+
+					<p:commandButton id="idSearch" icon="fa fa-search" value="Submit" process="searchCompanyPnl" actionListener="#{searchCompanyUI.findForNewRegNumber}" rendered="#{searchCompanyUI.companyRegOrSDLEnum eq regSDL.REG or searchCompanyUI.searchNGO}" update="companyGrid1 pgCompanyDetails" />
+					<p:commandButton rendered="#{searchCompanyUI.searchNNumber or searchCompanyUI.searchEntityId}" id="idSearch1" icon="fa fa-search" value="Submit" process="searchCompanyPnl" actionListener="#{searchCompanyUI.findBySDLTrainingProviderRegistartionMethod}" update="companyGrid1 pgCompanyDetails" />
+				</p:panelGrid>
+			</p:panelGrid>
+
+			<h:panelGroup id="companyGrid1">
+				<h:panelGroup rendered="#{!searchCompanyUI.nonMersetaCompany}">
+					<ui:include src="/pages/includes/tplevyandnonlevycompanyWithSites.xhtml">
+					</ui:include>
+				</h:panelGroup>
+			</h:panelGroup>
+
+			<p:commandButton process="@this" value="Clear" update="companyDetails" align="right" id="btnClearCompany" title="Clear" icon="fa fa-times" styleClass="Fright  Fs18" action="#{trainingproviderUI.searchNotDonde}">
+				<f:setPropertyActionListener value="false" target="#{searchCompanyUI.nonMersetaCompany}" />
+				<f:setPropertyActionListener value="false" target="#{searchCompanyUI.searchEntityId}" />
+				<f:setPropertyActionListener value="false" target="#{searchCompanyUI.searchNNumber}" />
+				<f:setPropertyActionListener value="false" target="#{searchCompanyUI.searchNGO}" />
+			</p:commandButton>
+
+			<br />
+			<br />
+		</p:outputPanel>
+	</p:outputPanel>
+
+</ui:composition>

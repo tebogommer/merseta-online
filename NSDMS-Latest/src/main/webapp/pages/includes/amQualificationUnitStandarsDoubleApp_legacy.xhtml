@@ -1,0 +1,115 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui">
+
+<p:panelGrid rendered="#{assesorModiratorUI.continueReg}" columns="1" style="width:100%">
+	<h:panelGroup >
+		<h:outputText value="#{lang['double.app.ass.desc']}" styleClass="FontBold Fs15" />
+	</h:panelGroup>
+	<h:panelGroup>
+		<p:fieldset legend="#{lang['double.app.ass.qual.desc']}" rendered="#{assesorModiratorUI.continueReg}" id="assQualifications">
+			<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup>
+					<div>
+						<p:outputLabel value="#{lang['qualification']}" for="qualificationAuto"></p:outputLabel>
+					</div>
+					<div>
+						<p:autoComplete style="width:100%" inputStyle="width:50%" id="qualificationAuto" value="#{assesorModiratorUI.assAppQualification}" completeMethod="#{assesorModiratorUI.completeMersetaQualification}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+							 <p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+							 <p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+							 <p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+						</p:autoComplete>
+					</div>
+				</h:panelGroup>
+				<p:commandButton value="#{lang['add.qualification']}" update="assQualifications amInsForm:submitPanel" process="@this assQualifications" icon="ui-icon-plus" iconPos="right" styleClass="flat" action="#{assesorModiratorUI.addAssAPpQualificationToList}" />
+			</p:panelGrid>
+			<p:dataList value="#{assesorModiratorUI.assAppQualificationList}" var="qual" rendered="#{assesorModiratorUI.assAppQualificationList.size() gt 0}">
+				<p:outputLabel value="(#{qual.code}) #{qual.description}"></p:outputLabel>
+				<p:commandLink id="ajaxs" update="amInsForm:assQualifications amInsForm:submitPanel" process="@this" action="#{assesorModiratorUI.removeAssAppQualificationFromList}">
+					<span class="fa fa-times Fs12 grey"></span>
+					<f:setPropertyActionListener value="#{qual}" target="#{assesorModiratorUI.assAppQualification}" />
+				</p:commandLink>
+			</p:dataList>
+		</p:fieldset>
+		<p:fieldset legend="#{lang['double.app.ass.us.desc']}"  rendered="#{assesorModiratorUI.continueReg}" id="companyUnitStandards">
+			<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup>
+					<div>
+						<p:outputLabel value="#{lang['unit.standard']}" for="companyUnitStandardsAuto"></p:outputLabel>
+					</div>
+					<div>
+						<p:autoComplete style="width:100%" inputStyle="width:50%" id="companyUnitStandardsAuto" value="#{assesorModiratorUI.assAppUnitStandard}" completeMethod="#{assesorModiratorUI.completeUnit}" var="rv" itemLabel="#{rv.title}" itemValue="#{rv}" forceSelection="true" converter="UnitStandardsConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+							 <p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+							 <p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.title}</p:column>
+							 <p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqf}</p:column>
+						</p:autoComplete>
+					</div>
+				</h:panelGroup>
+				<p:commandButton value="#{lang['add.unit.standard']}" process="companyUnitStandards" update="companyUnitStandards amInsForm:submitPanel" icon="ui-icon-plus" iconPos="right" styleClass="flat" action="#{assesorModiratorUI.addAssAppUnitToList}" />
+			</p:panelGrid>
+			<p:dataList value="#{assesorModiratorUI.assAppUnitStandards}" var="us" rendered="#{assesorModiratorUI.assAppUnitStandards.size() gt 0}">
+				<p:outputLabel value="(#{us.code}) #{us.title}"></p:outputLabel>
+				<p:commandLink id="ajaxs" update="amInsForm:companyUnitStandards amInsForm:submitPanel" process="@this" action="#{assesorModiratorUI.removeAssAppUnitFromList}">
+					<span class="fa fa-times Fs12 grey"></span>
+					<f:setPropertyActionListener value="#{us}" target="#{assesorModiratorUI.assAppUnitStandard}" />
+				</p:commandLink>
+			</p:dataList>
+		</p:fieldset>
+	</h:panelGroup>
+</p:panelGrid>
+<br/>
+<p:panelGrid columns="1" style="width:100%" rendered="#{assesorModiratorUI.continueReg}">
+	<h:panelGroup >
+		<h:outputText value="#{lang['double.app.mod.desc']}" styleClass="FontBold Fs15" />
+	</h:panelGroup>
+	<h:panelGroup>
+		<p:fieldset legend="#{lang['double.app.mod.qual.desc']}" rendered="#{assesorModiratorUI.continueReg}" id="modQualifications">
+			<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup>
+					<div>
+						<p:outputLabel value="#{lang['qualification']}" for="modQualificationAuto"></p:outputLabel>
+					</div>
+					<div>
+						<p:autoComplete style="width:100%" inputStyle="width:50%" id="modQualificationAuto" value="#{assesorModiratorUI.modAppQualification}" completeMethod="#{assesorModiratorUI.completeMersetaQualification}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+							 <p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+							 <p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+						</p:autoComplete>
+					</div>
+				</h:panelGroup>
+				<p:commandButton value="#{lang['add.qualification']}" update="modQualifications amInsForm:submitPanel" process="@this modQualifications" icon="ui-icon-plus" iconPos="right" styleClass="flat" action="#{assesorModiratorUI.addModAppQualificationToList}" />
+			</p:panelGrid>
+			<p:dataList value="#{assesorModiratorUI.modAppQualificationList}" var="qual" rendered="#{assesorModiratorUI.modAppQualificationList.size() gt 0}">
+				<p:outputLabel value="(#{qual.code}) #{qual.description}"></p:outputLabel>
+				<p:commandLink id="cmLink" update="amInsForm:modQualifications amInsForm:submitPanel" process="@this" action="#{assesorModiratorUI.removeModAppQualificationFromList}">
+					<span class="fa fa-times Fs12 grey"></span>
+					<f:setPropertyActionListener value="#{qual}" target="#{assesorModiratorUI.modAppQualification}" />
+				</p:commandLink>
+			</p:dataList>
+		</p:fieldset>
+		<p:fieldset legend="#{lang['double.app.mod.us.desc']}"  rendered="#{assesorModiratorUI.continueReg}" id="modUnitStandards">
+			<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup>
+					<div>
+						<p:outputLabel value="#{lang['unit.standard']}" for="modUnitStandardsAuto"></p:outputLabel>
+					</div>
+					<div>
+						<p:autoComplete style="width:100%" inputStyle="width:50%" id="modUnitStandardsAuto" value="#{assesorModiratorUI.modAppUnitStandard}" completeMethod="#{assesorModiratorUI.completeUnit}" var="rv" itemLabel="#{rv.title}" itemValue="#{rv}" forceSelection="true" converter="UnitStandardsConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+							 <p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+							 <p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.title}</p:column>
+							 <p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqf}</p:column>
+						</p:autoComplete>
+					</div>
+				</h:panelGroup>
+				<p:commandButton value="#{lang['add.unit.standard']}" process="modUnitStandards" update="modUnitStandards amInsForm:submitPanel" icon="ui-icon-plus" iconPos="right" styleClass="flat" action="#{assesorModiratorUI.addModAppUnitToList}" />
+			</p:panelGrid>
+			<p:dataList value="#{assesorModiratorUI.modAppUnitStandards}" var="us" rendered="#{assesorModiratorUI.modAppUnitStandards.size() gt 0}">
+				<p:outputLabel value="(#{us.code}) #{us.title}"></p:outputLabel>
+				<p:commandLink id="cmLink2" update="amInsForm:modUnitStandards amInsForm:submitPanel" process="@this" action="#{assesorModiratorUI.removeModAppUnitFromList}">
+					<span class="fa fa-times Fs12 grey"></span>
+					<f:setPropertyActionListener value="#{us}" target="#{assesorModiratorUI.modAppUnitStandard}" />
+				</p:commandLink>
+			</p:dataList>
+		</p:fieldset>
+	</h:panelGroup>
+</p:panelGrid>
+
+</ui:composition>

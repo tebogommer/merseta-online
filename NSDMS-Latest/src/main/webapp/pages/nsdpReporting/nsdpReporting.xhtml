@@ -1,0 +1,300 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<p:growl showDetail="false" sticky="false" id="msg">
+						<p:autoUpdate />
+					</p:growl>
+					<h1>NSDP Reporting By Financial Year</h1>
+					<h:form id="mainForm">
+						<p:dataTable var="rowVarFinYear" value="#{nsdpReportingUI.financialYearsDataModel}" rowKey="#{rowVarFinYear}" id="finYearList" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20,40" lazy="true" reflow="true">
+							<f:facet name="header">Financial Years Selection</f:facet>
+							<p:column headerText="Financial Year">
+								<h:outputText value="#{rowVarFinYear.description}" />
+							</p:column>
+							<p:column width="30" exportable="false">
+								<p:commandButton onstart="uploadStart()" oncomplete="uploadDone()" icon="fa fa-tasks" title="Select Financial Year" action="#{nsdpReportingUI.selectFinancialYear}" update=":reportSelectionForm :resultsForm">
+									<f:setPropertyActionListener value="#{rowVarFinYear}" target="#{nsdpReportingUI.selectedFinancialYears}" />
+								</p:commandButton>
+								<p:spacer  />
+								<p:commandButton id="downloadByFinYear" ajax="false" process="@this" icon="fa fa-download" title="Download Report" action="#{nsdpReportingUI.downloadReportByFinancialYear}" >
+									<f:setPropertyActionListener value="#{rowVarFinYear}" target="#{nsdpReportingUI.selectedFinancialYearsForDownload}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+					</h:form>
+				</div>
+				<h:form id="reportSelectionForm">
+					<c:if test="#{nsdpReportingUI.selectedFinancialYears ne null}">
+						<div class="card card-w-title">
+							<h3>Financial Year Selected: #{nsdpReportingUI.selectedFinancialYears.description}.</h3>
+							<p:dataTable var="rowVarRepCon" value="#{nsdpReportingUI.nsdpReportConfigDataModel}" rowKey="#{rowVarRepCon}" id="reportConfigList" paginator="true" rows="5" paginatorPosition="bottom"
+								paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20,40" lazy="true" reflow="true">
+								<f:facet name="header">NSDP Report Selection</f:facet>
+								<p:column headerText="NSDP Outcomes">
+									<h:outputText value="#{rowVarRepCon.nsdpOutcomes}" />
+								</p:column>
+								<p:column headerText="NSDP Sub-Outcomes">
+									<h:outputText value="#{rowVarRepCon.nsdpSubOutcomes}" />
+								</p:column>
+								<p:column headerText="Output Indicator">
+									<h:outputText value="#{rowVarRepCon.description}" />
+								</p:column>
+								<p:column headerText="Annual Target">
+									<h:outputText value="#{rowVarRepCon.targetAmount}" styleClass="Fright">
+										<f:convertNumber pattern="###,###,###,###,##0" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Manual Capture">
+									<p:selectBooleanCheckbox disabled="true" value="#{rowVarRepCon.manualCapture}" />
+								</p:column>
+								<p:column width="30" exportable="false">
+									<p:commandButton onstart="uploadStart()" oncomplete="uploadDone()" icon="fa fa-tasks" title="Select NSDP Report" action="#{nsdpReportingUI.viewReportData}" update="resultsForm">
+										<f:setPropertyActionListener value="#{rowVarRepCon}" target="#{nsdpReportingUI.selectedNsdpReportConfig}" />
+									</p:commandButton>
+									<p:spacer />
+									<p:commandButton id="downloadByReport" ajax="false" process="@this" icon="fa fa-download" title="Download Report For Report" action="#{nsdpReportingUI.downloadReportByConfig}" >
+										<f:setPropertyActionListener value="#{rowVarRepCon}" target="#{nsdpReportingUI.selectedNsdpReportConfigForDownload}" />
+									</p:commandButton>
+								</p:column>
+							</p:dataTable>
+						</div>
+					</c:if>
+				</h:form>
+				<h:form id="resultsForm">
+					<c:if test="#{nsdpReportingUI.selectedNsdpReportConfig ne null}">
+						<div class="card card-w-title">
+							<h3>Report Selected: #{nsdpReportingUI.selectedNsdpReportConfig.description}.</h3>
+							<p:fieldset legend="Summary">
+								<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid" id="summaryGrid">
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputTextarea rows="1" value="#{nsdpReportingUI.selectedNsdpReportConfig.description}" style="width:95%" disabled="true" />
+										<p:outputLabel value="Description" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{nsdpReportingUI.selectedNsdpReportConfig.financialYears.description}" style="width:95%" disabled="true" />
+										<p:outputLabel value="Financial Year:" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{nsdpReportingUI.selectedNsdpReportConfig.targetAmount}" style="width:95%" disabled="true">
+											<f:convertNumber pattern="###,###,###,###,##0" />
+										</p:inputText>
+										<p:outputLabel value="Annual Target:" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{nsdpReportingUI.nsdpSummaryReportBean.overallAchived}" style="width:95%" disabled="true">
+											<f:convertNumber pattern="###,###,###,###,##0" />
+										</p:inputText>
+										<p:outputLabel value="Overall Achieved" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{nsdpReportingUI.nsdpSummaryReportBean.overallPercentage}" style="width:95%" disabled="true">
+											<f:convertNumber pattern="###,###,###,###,##0.00" />
+										</p:inputText>
+										<p:outputLabel value="Overall Percentage (%)" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{nsdpReportingUI.nsdpSummaryReportBean.overallVariance}" style="width:95%" disabled="true">
+											<f:convertNumber pattern="###,###,###,###,##0" />
+										</p:inputText>
+										<p:outputLabel value="Overall Variance" />
+									</h:panelGroup>
+
+									<h:panelGroup>
+										<div>
+											<p:outputLabel value="Annual Target Matches Quarters Targets" />
+										</div>
+										<div>
+											<h:graphicImage value="/resources/hls/images/red.svg" rendered="#{!nsdpReportingUI.nsdpSummaryReportBean.targetsMatch}" width="33" styleClass="animated pulse infinite" />
+											<h:graphicImage value="/resources/hls/images/green.svg" rendered="#{nsdpReportingUI.nsdpSummaryReportBean.targetsMatch}" width="22" />
+										</div>
+									</h:panelGroup>
+
+									<h:panelGroup>
+										<div>
+											<p:outputLabel value="Overall RAG" />
+										</div>
+										<div>
+											<h:graphicImage value="/resources/hls/images/red.svg" rendered="#{nsdpReportingUI.nsdpSummaryReportBean.overallPercentage lt 100}" width="33" styleClass="animated pulse infinite" />
+											<h:graphicImage value="/resources/hls/images/green.svg" rendered="#{nsdpReportingUI.nsdpSummaryReportBean.overallPercentage eq 100 or nsdpReportingUI.nsdpSummaryReportBean.overallPercentage gt 100}" width="22" />
+										</div>
+									</h:panelGroup>
+
+								</p:panelGrid>
+							</p:fieldset>
+							<div class="EmptyBox5" />
+							<p:fieldset legend="Quarter Data">
+								<ui:include src="/pages/includes/download_lazy.xhtml">
+									<ui:param name="file_name" value="#{nsdpReportingUI.selectedNsdpReportConfig.description} Quarter Report" />
+									<ui:param name="target" value="dataReportDT" />
+								</ui:include>
+								<div class="EmptyBox10" />
+								<p:dataTable var="rowVarDT" value="#{nsdpReportingUI.nsdpQuarterReportingDataModel}" rowKey="#{rowVarDT}" id="dataReportDT" paginator="true" rows="5" paginatorPosition="bottom"
+									paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="4,5,10,20,40" lazy="true" reflow="true">
+									<f:facet name="header">Quarter Data</f:facet>
+									<p:column headerText="Description">
+										<h:outputText value="#{rowVarDT.nsdpReportConfig.description}" />
+									</p:column>
+									<p:column headerText="Financial Year" style="display:none">
+										<h:outputText value="#{rowVarDT.nsdpReportConfig.financialYears.description}" />
+									</p:column>
+									<p:column headerText="Quarter" sortBy="#{rowVarDT.finYearQuarters.friendlyName}">
+										<h:outputText value="#{rowVarDT.finYearQuarters.friendlyName}" />
+									</p:column>
+									<p:column headerText="From Date">
+										<h:outputText value="#{rowVarDT.fromDate}">
+											<f:convertDateTime pattern="dd MMMM yyyy" />
+										</h:outputText>
+									</p:column>
+									<p:column headerText="To Date">
+										<h:outputText value="#{rowVarDT.toDate}">
+											<f:convertDateTime pattern="dd MMMM yyyy" />
+										</h:outputText>
+									</p:column>
+									<p:column headerText="Last Action Date" >
+										<h:outputText value="#{rowVarDT.lastActionDate}" rendered="#{rowVarDT.lastActionDate ne null}">
+											<f:convertDateTime pattern="dd MMMM yyyy HH:mm:ss" />
+										</h:outputText>
+										<h:outputText value="N/A" rendered="#{rowVarDT.lastActionDate eq null}" />
+										
+									</p:column>
+									<p:column headerText="Last Action User" >
+										<h:outputText value="#{rowVarDT.lastActionUser.firstName} #{rowVarDT.lastActionUser.lastName}" rendered="#{rowVarDT.lastActionUser ne null}" >
+											<f:convertDateTime pattern="dd MMMM yyyy HH:mm:ss" />
+										</h:outputText>
+										<h:outputText value="N/A" rendered="#{rowVarDT.lastActionUser eq null}" />
+									</p:column>
+									<p:column headerText="Date Count Generated" rendered="#{!nsdpReportingUI.selectedNsdpReportConfig.manualCapture}">
+										<h:outputText value="#{rowVarDT.dataAutoPopulationRan}" >
+											<f:convertDateTime pattern="dd MMMM yyyy HH:mm:ss" />
+										</h:outputText>
+									</p:column>
+									<p:column headerText="Annual Target">
+										<h:outputText value="#{rowVarDT.nsdpReportConfig.targetAmount}" styleClass="Fright">
+											<f:convertNumber pattern="###,###,###,###,##0" />
+										</h:outputText>
+									</p:column>
+									<p:column headerText="Quarter Target">
+										<h:outputText value="#{rowVarDT.quarterTargetAmount}" styleClass="Fright">
+											<f:convertNumber pattern="###,###,###,###,##0" />
+										</h:outputText>
+									</p:column>
+									
+									<p:column headerText="Amount Achieved">
+										<h:outputText value="#{rowVarDT.quarterAchivedAmount}" styleClass="Fright">
+											<f:convertNumber pattern="###,###,###,###,##0" />
+										</h:outputText>
+									</p:column>
+									<p:column headerText="Percentage (%)">
+										<h:outputText value="#{rowVarDT.percentageAchived}" styleClass="Fright">
+											<f:convertNumber pattern="###,###,###,###,##0.00" />
+										</h:outputText>
+									</p:column>
+									<p:column headerText="Variance">
+										<h:outputText value="#{rowVarDT.varinace}" styleClass="Fright">
+											<f:convertNumber pattern="###,###,###,###,##0" />
+										</h:outputText>
+									</p:column>
+									<p:column headerText="RAG status" exportable="false" width="5%" styleClass="Fs13">
+										<center>
+											<h:graphicImage value="/resources/hls/images/red.svg" rendered="#{rowVarDT.percentageAchived lt 100}" width="33" styleClass="animated pulse infinite" />
+											<h:graphicImage value="/resources/hls/images/green.svg" rendered="#{rowVarDT.percentageAchived eq 100 or rowVarDT.percentageAchived gt 100}" width="22" />
+										</center>
+									</p:column>
+									<p:column headerText="RAG status" style="display:none">
+										<p:outputLabel value="Red" rendered="#{rowVarDT.percentageAchived lt 100}" />
+										<p:outputLabel value="Green" rendered="#{rowVarDT.percentageAchived eq 100 or rowVarDT.percentageAchived gt 100}" />
+									</p:column>
+									<p:column headerText="Edit / Action" exportable="false">
+										<p:commandButton rendered="#{sessionUI.user.nsdpReportEdit}" icon="fa fa-database" title="Update Information" update="updateQuarterInfoForm" action="#{nsdpReportingUI.prepUpdateQuarterInformation}">
+											<f:setPropertyActionListener value="#{rowVarDT}" target="#{nsdpReportingUI.selectedNsdpQuarterReporting}" />
+										</p:commandButton>
+									</p:column>
+								</p:dataTable>
+							</p:fieldset>
+						</div>
+					</c:if>
+				</h:form>
+			</div>
+		</div>
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+			<h:form>
+				<p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="fa fa-check" />
+				<p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="fa fa-times" />
+			</h:form>
+		</p:confirmDialog>
+
+		<p:dialog position="top" header="Update: Quarter Information" dynamic="true" responsive="true" widgetVar="updateQuarterInfoDlg" resizable="false" hideEffect="clip" showEffect="clip" id="updateQuarterInfoDialog" appendTo="@(body)" modal="true" width="70%" height="80vh">
+			<h:form id="updateQuarterInfoForm">
+				<p:fieldset legend="Information">
+					<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank" layout="grid" id="quarterInfoGrid">
+						<h:panelGroup styleClass="md-inputfield" >
+							<p:inputTextarea rows="1" value="#{nsdpReportingUI.selectedNsdpQuarterReporting.nsdpReportConfig.description}" style="width:95%" disabled="true" />
+							<p:outputLabel value="Description" />
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{nsdpReportingUI.selectedNsdpQuarterReporting.nsdpReportConfig.financialYears.description}" style="width:95%" disabled="true" />
+							<p:outputLabel value="Financial Year" />
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{nsdpReportingUI.selectedNsdpQuarterReporting.nsdpReportConfig.targetAmount}" style="width:95%" disabled="true">
+								<f:convertNumber pattern="###,###,###,###,##0" />
+							</p:inputText>
+							<p:outputLabel value="Annual Target" />
+						</h:panelGroup>
+						
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{nsdpReportingUI.selectedNsdpQuarterReporting.finYearQuarters.friendlyName}" style="width:95%" disabled="true" />
+							<p:outputLabel value="Quarter" />
+						</h:panelGroup>
+						
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{nsdpReportingUI.selectedNsdpQuarterReporting.fromDate}" style="width:95%" disabled="true" >
+								<f:convertDateTime pattern="dd MMMM yyyy"/>
+							</p:inputText>
+							<p:outputLabel value="From Date" />
+						</h:panelGroup>
+						
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{nsdpReportingUI.selectedNsdpQuarterReporting.toDate}" style="width:95%" disabled="true" >
+								<f:convertDateTime pattern="dd MMMM yyyy"/>
+							</p:inputText>
+							<p:outputLabel value="To Date" />
+						</h:panelGroup>
+					</p:panelGrid>
+				</p:fieldset>
+				<p:fieldset legend="Action">
+					<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank" layout="grid" id="actionsGrid">
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText id="quarterTargetEntry" value="#{nsdpReportingUI.selectedNsdpQuarterReporting.quarterTargetAmount}" style="width:95%" required="true">
+								<f:convertNumber pattern="###,###,###,###,##0" />
+							</p:inputText>
+							<p:outputLabel value="Quarter Target" for="quarterTargetEntry" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText id="amountAchievedEntry" value="#{nsdpReportingUI.selectedNsdpQuarterReporting.quarterAchivedAmount}" style="width:95%" required="true" disabled="#{!nsdpReportingUI.selectedNsdpQuarterReporting.nsdpReportConfig.manualCapture}">
+								<f:convertNumber pattern="###,###,###,###,##0" />
+							</p:inputText>
+							<p:outputLabel value="Amount Achieved" for="amountAchievedEntry" />
+						</h:panelGroup>
+					</p:panelGrid>
+				</p:fieldset>
+				<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:95%" layout="grid">
+					<p:commandButton value="Update" icon="fa fa-database" process="updateQuarterInfoForm" update="@form :resultsForm" action="#{nsdpReportingUI.updateQuarterInformation}" onstart="uploadStart()" oncomplete="uploadDone()" />
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+
+	</ui:define>
+</ui:composition>

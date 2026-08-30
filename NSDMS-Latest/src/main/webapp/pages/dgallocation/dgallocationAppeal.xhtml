@@ -1,0 +1,454 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+
+		<p:growl showDetail="false" sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<ui:include src="/pages/includes/taskdiagram.xhtml" />
+			</div>
+		</div>
+
+		<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+		<p:importEnum type="haj.com.entity.enums.UsersStatusEnum" />
+		<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+			<p:commandButton id="confYes" value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+			<p:commandButton id="confNo" value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+		</p:confirmDialog>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>DG Allocation Appeal</h1>
+					<h:form id="mainForm">
+						<p:tabView id="tabView">
+							<p:tab title="#{lang['company.details']}">
+								<p:panelGrid columns="3" style="width:100%" id="companyInsGrid" layout="grid" styleClass="ui-panelgrid-blank">
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['companyName']}" for="companyName" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel id="companyName" value="#{dgAllocationAppealUI.company.companyName}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.company.name']}" />
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['tradingName']}" for="tradingName" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel id="tradingName" value="#{dgAllocationAppealUI.company.tradingName}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.trading.name']}" />
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['reg.number']}" for="regNumber" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel id="regNumber" value="#{dgAllocationAppealUI.company.companyRegistrationNumber}" style="width:95%" />
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['levy.number']}" for="levyNum" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel id="levyNum" value="#{dgAllocationAppealUI.company.levyNumber}" style="width:95%" />
+									</h:panelGroup>
+
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['telNumber']}" for="telNumberComp" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel id="telNumberComp" value="#{dgAllocationAppealUI.company.telNumber}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.tel.number']}" />
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['faxNumber']}" for="faxNumberComp" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel id="faxNumberComp" value="#{dgAllocationAppealUI.company.faxNumber}" style="width:95%" rendered="#{dgAllocationAppealUI.company.faxNumber ne null and discretionarygrantverificationUI.company.faxNumber.length() gt 0}" />
+										<p:outputLabel id="faxNumberComp2" value="#{lang['n.a']}" style="width:95%" rendered="#{dgAllocationAppealUI.company.faxNumber eq null or discretionarygrantverificationUI.company.faxNumber.length() eq 0}" />
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['email']}" for="emailComp" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel id="emailComp" value="#{dgAllocationAppealUI.company.email}" style="width:95%" />
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['sicCode']}" for="sicCode" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel id="sicCode" value="#{dgAllocationAppealUI.company.sicCode.description}" style="width:95%" required="true" requiredMessage="#{lang['enter.sic.code']}" />
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['chamber']}" for="chamberDisplay" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{dgAllocationAppealUI.company.sicCode eq null or discretionarygrantverificationUI.company.sicCode.chamber eq null}" />
+										<p:outputLabel id="chamberDisplay" value="#{dgAllocationAppealUI.company.sicCode.chamber.description}" style="width:95%" rendered="#{dgAllocationAppealUI.company.sicCode ne null and discretionarygrantverificationUI.company.sicCode.chamber ne null}" />
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['organisation.type']}" for="organisationType" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel value="#{lang['n.a']}" rendered="#{dgAllocationAppealUI.company.organisationType eq null}" />
+										<p:outputLabel id="organisationType" value="#{dgAllocationAppealUI.company.organisationType.description}" style="width:95%" rendered="#{dgAllocationAppealUI.company.organisationType ne null}" />
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['numberOfEmployees']}" for="numberOfEmployees" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel id="numberOfEmployees" value="#{dgAllocationAppealUI.company.numberOfEmployees}" style="width:95%" />
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['recognition.agreement']}" for="recAgr" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel value="#{lang['n.a']}" rendered="#{dgAllocationAppealUI.company.recognitionAgreement eq null}" style="width:95%" />
+										<p:outputLabel id="recAgr" value="#{dgAllocationAppealUI.company.recognitionAgreement.yesNoName}" style="width:95%" rendered="#{dgAllocationAppealUI.company.recognitionAgreement ne null}" />
+									</h:panelGroup>
+								</p:panelGrid>
+								<p:panelGrid columns="2" style="width:100%" id="companyInsGrida" layout="grid" styleClass="ui-panelgrid-blank">
+									<p:fieldset legend="#{lang['residentialAddress']}">
+										<p:panelGrid columns="1" style="width : 95%" styleClass="ui-panelgrid-blank" id="addrPcode">
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['address.line.1']}" for="addr1" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="addr1" value="#{dgAllocationAppealUI.company.residentialAddress.addressLine1}" style="width:95%" required="true" requiredMessage="#{lang['enter.residential.address']}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['address.line.2']}" for="addr2" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{dgAllocationAppealUI.company.residentialAddress.addressLine2 eq null or discretionarygrantverificationUI.company.residentialAddress.addressLine2.length() eq 0}" />
+												<p:outputLabel id="addr2" style="width:95%" value="#{dgAllocationAppealUI.company.residentialAddress.addressLine2}" rendered="#{dgAllocationAppealUI.company.residentialAddress.addressLine2 ne null and discretionarygrantverificationUI.company.residentialAddress.addressLine2.length() gt 0}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['address.line.3']}" for="addr3" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="addr3" style="width:95%" value="#{dgAllocationAppealUI.company.residentialAddress.addressLine3}" rendered="#{dgAllocationAppealUI.company.residentialAddress.addressLine3 ne null and discretionarygrantverificationUI.company.residentialAddress.addressLine3.length() gt 0}" />
+												<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{dgAllocationAppealUI.company.residentialAddress.addressLine3 eq null or discretionarygrantverificationUI.company.residentialAddress.addressLine3.length() eq 0}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['address.line.4']}" for="addr4" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="addr4" style="width:95%" value="#{dgAllocationAppealUI.company.residentialAddress.addressLine4}" rendered="#{dgAllocationAppealUI.company.residentialAddress.addressLine4 ne null and discretionarygrantverificationUI.company.residentialAddress.addressLine4.length() gt 0}" />
+												<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{dgAllocationAppealUI.company.residentialAddress.addressLine4 eq null or discretionarygrantverificationUI.company.residentialAddress.addressLine4.length() eq 0}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['post.code']}" for="pcode" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="pcode" style="width:95%" value="#{dgAllocationAppealUI.company.residentialAddress.postcode}" rendered="#{dgAllocationAppealUI.company.residentialAddress.postcode ne null and discretionarygrantverificationUI.company.residentialAddress.postcode.length() gt 0}" />
+												<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{dgAllocationAppealUI.company.residentialAddress.postcode eq null or discretionarygrantverificationUI.company.residentialAddress.postcode.length() eq 0}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['town.area']}" for="addressTown" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel value="#{lang['n.a']}" rendered="#{dgAllocationAppealUI.company.residentialAddress.town eq null and false}" />
+												<p:outputLabel id="addressTown" value="#{dgAllocationAppealUI.company.residentialAddress.town.description}" style="width:95%" rendered="#{dgAllocationAppealUI.company.residentialAddress.town ne null}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<h:outputLabel value="#{lang['municipality']}" for="MunicipalityID" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="MunicipalityID" style="width:95%" value="#{dgAllocationAppealUI.company.residentialAddress.municipality.municipalityDesc}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<h:outputLabel value="#{lang['province.name']}" for="addressProvince" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="addressProvince" style="width:95%" value="#{dgAllocationAppealUI.company.residentialAddress.municipality.province.provinceDesc}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<div class="EmptyBox40"></div>
+											</h:panelGroup>
+										</p:panelGrid>
+									</p:fieldset>
+
+									<p:fieldset legend="#{lang['postalAddress']}">
+										<p:panelGrid columns="1" style="width : 95%" styleClass="ui-panelgrid-blank" id="postalAddress">
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['address.line.1']}" for="postalAddressaddr1" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="postalAddressaddr1" value="#{dgAllocationAppealUI.company.postalAddress.addressLine1}" style="width:95%" required="true" requiredMessage="#{lang['enter.postal.address']}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['address.line.2']}" for="postalAddressaddr2" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="postalAddressaddr2" style="width:95%" value="#{dgAllocationAppealUI.company.postalAddress.addressLine2}" />
+												<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{dgAllocationAppealUI.company.postalAddress.addressLine2 eq null or discretionarygrantverificationUI.company.postalAddress.addressLine2.length() eq 0}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['address.line.3']}" for="postalAddressaddr3" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="postalAddressaddr3" style="width:95%" value="#{dgAllocationAppealUI.company.postalAddress.addressLine3}" />
+												<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{dgAllocationAppealUI.company.postalAddress.addressLine3 eq null or discretionarygrantverificationUI.company.postalAddress.addressLine3.length() eq 0}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['address.line.4']}" for="postalAddressaddr4" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="postalAddressaddr4" style="width:95%" value="#{dgAllocationAppealUI.company.postalAddress.addressLine4}" />
+												<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{dgAllocationAppealUI.company.postalAddress.addressLine4 eq null or discretionarygrantverificationUI.company.postalAddress.addressLine4.length() eq 0}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['post.code']}" for="postalAddressPcode" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="postalAddressPcode" style="width:95%" value="#{dgAllocationAppealUI.company.postalAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}" />
+												<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{dgAllocationAppealUI.company.postalAddress.postcode eq null or discretionarygrantverificationUI.company.postalAddress.postcode.length() eq 0}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['town.area']}" for="postalAddressTown" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel value="#{lang['n.a']}" rendered="#{dgAllocationAppealUI.company.postalAddress.town eq null and false}" />
+												<p:outputLabel id="postalAddressTown" value="#{dgAllocationAppealUI.company.postalAddress.town.description}" style="width:95%" rendered="#{dgAllocationAppealUI.company.postalAddress.town ne null}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<h:outputLabel value="#{lang['municipality']}" for="postalAddressMunicipalityID" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="postalAddressMunicipalityID" style="width:95%" value="#{dgAllocationAppealUI.company.postalAddress.municipality.municipalityDesc}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<h:outputLabel value="#{lang['province.name']}" for="postalAddressProvince" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="postalAddressProvince" style="width:95%" value="#{dgAllocationAppealUI.company.postalAddress.municipality.province.provinceDesc}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<div>
+													<p:outputLabel value="#{lang['same.as.my.address']}" styleClass="Fs12 FontLight" />
+												</div>
+												<div>
+													<p:selectBooleanCheckbox value="#{dgAllocationAppealUI.company.postalAddress.sameAddress}" disabled="true">
+													</p:selectBooleanCheckbox>
+												</div>
+											</h:panelGroup>
+										</p:panelGrid>
+									</p:fieldset>
+								</p:panelGrid>
+							</p:tab>
+							<p:tab title="Allocation Information">
+								<p:panelGrid columns="1" style="width:100%" id="allocationInfoGrid" layout="grid" styleClass="ui-panelgrid-blank">
+									<c:if test="false">
+										<ui:include src="/pages/includes/download_lazy.xhtml" rendered="#{dgAllocationAppealUI.wspDgAllocationsList.size() ne null}">
+											<ui:param name="file_name" value="DG Allocation" />
+											<ui:param name="target" value="skill4" />
+										</ui:include>
+									</c:if>
+									<p:dataTable var="dgallo" rows="#{dgAllocationAppealUI.wspDgAllocationsList.size()}" emptyMessage="#{lang['no.records.found']}" value="#{dgAllocationAppealUI.wspDgAllocationsList}" id="skill4" expandableRowGroups="true" sortBy="#{dgallo.dgAllocationParent.id}">
+										<p:headerRow>
+											<p:column colspan="5" rendered="#{sessionUI.externalParty}">
+												<h:outputText value="#{dgallo.mandatoryGrant.wsp.company.companyNameDisplay}" />
+											</p:column>
+											<p:column colspan="12" rendered="#{not sessionUI.externalParty}">
+												<h:outputText value="#{dgallo.mandatoryGrant.wsp.company.companyNameDisplay}" />
+											</p:column>
+										</p:headerRow>
+										<p:columnGroup type="header">
+											<p:row rendered="#{not sessionUI.externalParty}">
+												<p:column colspan="6" headerText="Learner Information" />
+												<p:column colspan="6" headerText="Total Allocation" />
+											</p:row>
+											<p:row>
+												<p:column colspan="1" headerText="Intervention" />
+												<p:column colspan="1" headerText="Recommended Intervention" />
+												<p:column colspan="1" headerText="Requested Learners" />
+												<p:column colspan="1" headerText="Recommended Learners" rendered="#{not sessionUI.externalParty}" />
+												<p:column colspan="1" headerText="Awarded Learners" />
+												<p:column colspan="1" headerText="Intervention Cost" rendered="#{not sessionUI.externalParty}" />
+												<p:column colspan="1" headerText="Requested Amount" rendered="#{not sessionUI.externalParty}" />
+												<p:column colspan="1" headerText="Recommended Amount" rendered="#{not sessionUI.externalParty}" />
+												<p:column colspan="1" headerText="Award Amount" rendered="#{not sessionUI.externalParty}" />
+												<p:column colspan="1" headerText="Running Total" rendered="#{not sessionUI.externalParty}" />
+												<p:column colspan="1" headerText="Disabled Grant Amount" rendered="#{not sessionUI.externalParty}" />
+												<p:column colspan="1" headerText="Total Awarded" />
+											</p:row>
+										</p:columnGroup>
+										<p:column headerText="Company" style="display: none !important;" exportable="true">
+											<p:outputLabel value="#{dgallo.mandatoryGrant.wsp.company.companyNameDisplay}"></p:outputLabel>
+										</p:column>
+										<p:column headerText="Intervention">
+											<p:outputLabel value="#{dgallo.mandatoryGrant.interventionType.description}"></p:outputLabel>
+										</p:column>
+										<p:column headerText="Recommended Intervention">
+											<p:outputLabel value="#{dgallo.interventionType.description}"></p:outputLabel>
+										</p:column>
+										<p:column headerText="Requested Learners">
+											<p:outputLabel value="#{dgallo.totalLearners}"></p:outputLabel>
+										</p:column>
+										<p:column headerText="Recommended Learners" rendered="#{not sessionUI.externalParty}">
+											<p:outputLabel value="#{dgallo.numberOfLearners}"></p:outputLabel>
+										</p:column>
+										<p:column headerText="Awarded Learners">
+											<p:outputLabel value="#{dgallo.maxPossibleLearners}" rendered="#{not sessionUI.externalParty}"></p:outputLabel>
+											<p:outputLabel value="#{dgallo.maxPossibleLearners + dgallo.coFundingLearnersAwarded}" rendered="#{sessionUI.externalParty}"></p:outputLabel>
+										</p:column>
+										<p:column headerText="Intervention Cost" rendered="#{not sessionUI.externalParty}">
+											<p:outputLabel value="#{dgallo.interventionType.basicGrantAmount}"></p:outputLabel>
+										</p:column>
+										<p:column headerText="Requested Amount" rendered="#{not sessionUI.externalParty}">
+											<p:outputLabel value="#{dgallo.requestedAmount}">
+												<f:convertNumber type="currency" pattern="###,###,###,###,##0.00" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="Recommended Amount" rendered="#{not sessionUI.externalParty}">
+											<p:outputLabel value="#{dgallo.recommendedAmount}">
+												<f:convertNumber type="currency" pattern="###,###,###,###,##0.00" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="Award Amount" rendered="#{not sessionUI.externalParty}">
+											<p:outputLabel value="#{dgallo.awardAmount}" styleClass="FontBold" style="color: #5ecf80" rendered="#{dgallo.awardAmount gt 0}">
+												<f:convertNumber type="currency" pattern="###,###,###,###,##0.00" />
+											</p:outputLabel>
+											<p:outputLabel value="#{dgallo.awardAmount}" styleClass="FontBold" rendered="#{dgallo.awardAmount lt 0.1}">
+												<f:convertNumber type="currency" pattern="###,###,###,###,##0.00" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="Running Total" rendered="#{not sessionUI.externalParty}">
+											<p:outputLabel value="#{dgallo.runningTotal}">
+												<f:convertNumber type="currency" pattern="###,###,###,###,##0.00" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="Disabled Grant Amount" rendered="#{not sessionUI.externalParty}">
+											<p:outputLabel value="#{dgallo.disabledGrantAmount}">
+												<f:convertNumber type="currency" pattern="R###,###,###,###,##0.00" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="Total Awarded" styleClass="FontBold">
+											<p:outputLabel value="#{dgallo.totalAwardAmount}" styleClass="FontBold" style="color: #5ecf80" rendered="#{dgallo.totalAwardAmount gt 0}">
+												<f:convertNumber type="currency" pattern="R###,###,###,###,##0.00" />
+											</p:outputLabel>
+											<p:outputLabel value="#{dgallo.totalAwardAmount}" styleClass="FontBold" rendered="#{dgallo.totalAwardAmount lt 0.1}">
+												<f:convertNumber type="currency" pattern="R###,###,###,###,##0.00" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="#{lang['RAG']}" width="37" exportable="false" rendered="false">
+											<h:graphicImage value="/resources/hls/images/red.svg" rendered="#{dgallo.awardAmount.doubleValue() eq 0 and dgallo.coFundingAwardAmount.doubleValue() eq 0}" width="40" styleClass="animated pulse infinite" />
+											<h:graphicImage value="/resources/hls/images/amber.svg" rendered="#{dgallo.coFundingAwardAmount.doubleValue() ne 0}" width="35" />
+											<h:graphicImage value="/resources/hls/images/green.svg" rendered="#{dgallo.awardAmount.doubleValue() ne 0 and dgallo.coFundingAwardAmount.doubleValue() eq 0}" width="30" />
+										</p:column>
+										<p:summaryRow listener="#{dgAllocationAppealUI.onSummaryRow}" rendered="#{not sessionUI.externalParty}">
+											<p:column colspan="5"></p:column>
+											<p:column colspan="1">
+												<h:outputText value="Total:" />
+											</p:column>
+											<p:column colspan="1">
+												<p:outputLabel value="#{dgAllocationAppealUI.totalRequestedAmount}">
+													<f:convertNumber type="currency" pattern="R###,###,###,###,##0.00" />
+												</p:outputLabel>
+											</p:column>
+											<p:column colspan="1">
+												<p:outputLabel value="#{dgAllocationAppealUI.totalRecommendedAmount}">
+													<f:convertNumber type="currency" pattern="R###,###,###,###,##0.00" />
+												</p:outputLabel>
+											</p:column>
+											<p:column colspan="2">
+											</p:column>
+											<p:column colspan="1" style="text-align:right">
+												<p:outputLabel value="#{dgAllocationAppealUI.totalAwardAmountDisabled}">
+													<f:convertNumber type="currency" pattern="R###,###,###,###,##0.00" />
+												</p:outputLabel>
+											</p:column>
+											<p:column>
+												<p:outputLabel value="#{dgAllocationAppealUI.total}">
+													<f:convertNumber type="currency" pattern="R###,###,###,###,##0.00" />
+												</p:outputLabel>
+											</p:column>
+										</p:summaryRow>
+									</p:dataTable>
+									<div class="EmptyBox10" />
+									
+									<c:if test="#{dgAllocationAppealUI.rejectReasonsChild.size() gt 0}">
+										<h3>Reject Reasons</h3>
+										<p:dataTable var="rowVar" value="#{dgAllocationAppealUI.rejectReasonsChild}" 
+													rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" 
+													paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" 
+													rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+											<p:column headerText="Create Date">
+												<p:outputLabel value="#{rowVar.createDate}">
+													<f:convertDateTime pattern="dd MMMM yyyy" />
+												</p:outputLabel>
+											</p:column>
+											<p:column headerText="Reason for Rejection">
+												<p:outputLabel value="#{rowVar.rejectReasons.description}"></p:outputLabel>
+											</p:column>
+											<p:column headerText="Additional Information">
+												<p:outputLabel value="#{rowVar.additionalInformation}"></p:outputLabel>
+											</p:column>
+											<p:column headerText="How to fix">
+												<p:outputLabel value="#{rowVar.rejectReasons.howTo}"></p:outputLabel>
+											</p:column>
+										</p:dataTable>
+									</c:if>
+									
+
+									<div class="EmptyBox10" />
+
+									<h3>Documents</h3>
+									<p:dataTable value="#{dgAllocationAppealUI.dgAllocationParent.docs}" var="rv1" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv1.id}">
+										<p:column headerText="#{lang['type']}" width="18%">#{rv1.configDoc.name}</p:column>
+										<p:column headerText="#{lang['original.file.name']}" priority="4">
+											<p:outputLabel value="#{rv1.originalFname}" styleClass="Fs12"></p:outputLabel>
+										</p:column>
+										<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+										<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+											<h:outputText value="#{rv1.createDate}">
+												<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+											</h:outputText>
+										</p:column>
+										<p:column headerText="#{lang['version']}" width="10%" priority="4">
+											<h:outputText value="#{rv1.versionNo}">
+											</h:outputText>
+										</p:column>
+										<p:column headerText="#{lang['original.required']}" rendered="false">
+											<center>
+												<h:panelGroup rendered="#{rv1.configDoc.originalRequired}" styleClass="green">
+													<i class="fa fa-files-o fa-3x" aria-hidden="true"></i>
+												</h:panelGroup>
+												<h:panelGroup rendered="#{not rv1.configDoc.originalRequired}" styleClass="red">
+													<i class="fa fa-times fa-3x" aria-hidden="true"></i>
+												</h:panelGroup>
+											</center>
+										</p:column>
+										<p:column width="180" headerText="#{lang['view.edit']}">
+											<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}">
+												<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+											</p:commandButton>
+											<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+											<p:spacer width="5" rendered="#{rv1.id ne null}" />
+											<p:commandButton icon="fa fa-bars " id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}">
+												<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+											</p:commandButton>
+											<p:tooltip for="dhistUserDocs" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+											<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+												<p:spacer width="5" />
+												<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+													<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+												</p:commandButton>
+												<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+											</h:panelGroup>
+											<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+												<p:spacer width="5" />
+												<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+													<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+												</p:commandButton>
+												<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+											</h:panelGroup>
+										</p:column>
+									</p:dataTable>
+								</p:panelGrid>
+								<p:panelGrid columns="2" style="width:100%" id="allocationActionsGrid" layout="grid" styleClass="ui-panelgrid-blank" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval}">
+									<p:commandButton id="finApproveAppealBtn" value="Final Approve" action="#{dgAllocationAppealUI.finalApproveAppeal}" icon="fa fa-check" process="@form" styleClass="Fs18 flat green-btn" style="height: 50px" />
+									<p:commandButton id="finRejectAppealBtn" value="Final Reject" oncomplete="PF('rejectReasonsDlg').show()" process="@this" icon="fa fa-times" styleClass="Fs18 flat red-btn" style="height: 50px" />
+								</p:panelGrid>
+							</p:tab>
+						</p:tabView>
+					</h:form>
+				</div>
+			</div>
+		</div>
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+		
+		<p:dialog header="Reject Reasons" widgetVar="rejectReasonsDlg" hideEffect="clip" showEffect="clip" id="dialogRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{dgAllocationAppealUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{dgAllocationAppealUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+							</p:selectManyMenu>
+							<br />
+						</div>
+					</div>
+					<p:commandButton value="Reject" action="#{dgAllocationAppealUI.finalRejectAppeal}" update="@form">
+					</p:commandButton>
+				</div>
+			</h:form>
+		</p:dialog>
+		
+	</ui:define>
+</ui:composition>

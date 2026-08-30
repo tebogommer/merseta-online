@@ -1,0 +1,136 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum"></p:importEnum>
+		<p:importEnum type="haj.com.entity.enums.UsersStatusEnum" />
+		<p:growl showDetail="false" sticky="false" id="msg">
+			<p:autoUpdate />
+		</p:growl>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Monitor MOA Contracts</h1>
+					<h:form id="mainForm">
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+						<p:dataTable var="rowVarCompany" value="#{monitorContractsUI.dataModelComapny}" id="companyList" rowKey="#{rowVarCompany.id}" paginator="true" rows="10" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20,40" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['company.name']}" filterBy="#{rowVarCompany.companyName}" sortBy="#{rowVarCompany.companyName}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVarCompany.companyName}" />
+							</p:column>
+							<p:column headerText="#{lang['tradingName']}" filterBy="#{rowVarCompany.tradingName}" sortBy="#{rowVarCompany.tradingName}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVarCompany.tradingName}" />
+							</p:column>
+							<p:column headerText="#{lang['entity.id']}" filterBy="#{rowVarCompany.levyNumber}" sortBy="#{rowVarCompany.levyNumber}" filterStyle="width: 95%" width="10%">
+								<h:outputText value="#{rowVarCompany.levyNumber}" />
+							</p:column>
+							<p:column headerText="#{lang['status']}" sortBy="#{rowVarCompany.companyStatus}" width="10%">
+								<h:outputText value="#{lang[rowVarCompany.companyStatus.registrationName]}" />
+							</p:column>
+							<p:column width="7%" headerText="Actions">
+								<p:commandButton icon="fa fa-tasks" title="View Company Grant Applications" action="#{monitorContractsUI.selectCompany}" update=":wspForm">
+									<f:setPropertyActionListener value="#{rowVarCompany}" target="#{monitorContractsUI.selectedCompany}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<h:form id="wspForm">
+					<c:if test="#{monitorContractsUI.selectedCompany ne null and monitorContractsUI.selectedCompany.id ne null}">
+						<div class="card card-w-title">
+							<h1>Company: #{monitorContractsUI.selectedCompany.companyName} (#{monitorContractsUI.selectedCompany.levyNumber}) Grant Applications</h1>
+							<ui:include src="/pages/includes/filterGuide.xhtml" />
+							<p:dataTable var="rowVarWsp" value="#{monitorContractsUI.dataModelWsp}" id="wspList" rowKey="#{rowVarWsp.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+								paginatorTemplate="#{lang['page']} {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+								<f:facet name="header"> Grant Applications </f:facet>
+								<p:column headerText="#{lang['id']}" width="8%">
+									<p:outputLabel value="#{rowVarWsp.id}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="#{lang['from.date']}" rendered="false">
+									<p:outputLabel value="#{rowVarWsp.fromDatePeriod}">
+										<f:convertDateTime pattern="dd-MMM-yyyy" />
+									</p:outputLabel>
+								</p:column>
+								<p:column headerText="#{lang['to.date']}" rendered="false">
+									<p:outputLabel value="#{rowVarWsp.toDatePeriod}">
+										<f:convertDateTime pattern="dd-MMM-yyyy" />
+									</p:outputLabel>
+								</p:column>
+								<p:column headerText="#{lang['fin.year']}" rendered="true">
+									<p:outputLabel value="#{rowVarWsp.finYear}">
+									</p:outputLabel>
+								</p:column>
+								<p:column headerText="Application Type" rendered="true">
+									<p:outputLabel value="Mandatory and Discretionary" rendered="#{rowVarWsp.wspType eq WspTypeEnum.Both}">
+									</p:outputLabel>
+									<p:outputLabel value="#{rowVarWsp.wspType.friendlyName}" rendered="#{rowVarWsp.wspType ne WspTypeEnum.Both}">
+									</p:outputLabel>
+								</p:column>
+								<p:column headerText="Grant #{lang['status']}" rendered="true">
+									<p:outputLabel value="#{rowVarWsp.wspStatusEnum.friendlyName}">
+									</p:outputLabel>
+									<p:outputLabel rendered="#{rowVarWsp.wspStatusEnum.friendlyName eq 'Rejected'}" value=" - #{rowVarWsp.rejectionReasons}">
+									</p:outputLabel>
+								</p:column>
+								<p:column headerText="Appealed" rendered="true">
+									<p:outputLabel value="N/A" rendered="#{!rowVarWsp.grantRejected or rowVarWsp.systemApprovalRejection}" />
+									<p:outputLabel value="Application Rejected, Awaiting Appeal" rendered="#{(rowVarWsp.withSdf and !rowVarWsp.sdfAppealedGrant and rowVarWsp.grantRejected and !rowVarWsp.systemApprovalRejection)}" />
+									<p:outputLabel value="Appeal Submitted" rendered="#{(!rowVarWsp.withSdf and rowVarWsp.sdfAppealedGrant and rowVarWsp.grantRejected and !rowVarWsp.systemApprovalRejection)}" />
+								</p:column>
+								<p:column headerText="#{lang['decision.date']}">
+									<p:outputLabel value="#{rowVarWsp.approvedDate}" rendered="#{rowVarWsp.wspStatusEnum.friendlyName eq 'Rejected' or rowVarWsp.wspStatusEnum.friendlyName eq 'Approved'}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</p:outputLabel>
+									<p:outputLabel value="N/A" rendered="#{rowVarWsp.wspStatusEnum.friendlyName ne 'Rejected' and rowVarWsp.wspStatusEnum.friendlyName ne 'Approved'}" />
+								</p:column>
+								<p:column headerText="Barcode" width="400" rendered="false">
+									<p:barcode value="#{rowVarWsp.wspGuid}" type="code39" />
+								</p:column>
+								<p:column headerText="Applied for extension" style="text-align:center">
+									<p:outputPanel rendered="#{rowVarWsp.extensionRequests.size() eq 0}">
+										<i class="fa fa-times fa-3x red" aria-hidden="true"></i>
+									</p:outputPanel>
+									<p:outputPanel rendered="#{rowVarWsp.extensionRequests.size() gt 0}">
+										<i class="fa fa-check fa-3x green" aria-hidden="true"></i>
+									</p:outputPanel>
+								</p:column>
+								<p:column headerText="DG Verification Status" rendered="true" exportable="false">
+									<p:outputLabel value="#{rowVarWsp.dgVerificationStatus.friendlyName}" rendered="#{rowVarWsp.dgVerificationStatus ne null}"></p:outputLabel>
+									<p:outputLabel rendered="#{rowVarWsp.dgVerification.status.friendlyName eq 'Rejected'}" value=" - #{rowVarWsp.dgVerification.dgVerificationRejectionReasons}">
+									</p:outputLabel>
+									<p:outputLabel value="N/A" rendered="#{rowVarWsp.dgVerificationStatus eq null}">
+									</p:outputLabel>
+								</p:column>
+								<p:column width="7%" headerText="Actions">
+									<p:commandButton icon="fa fa-tasks" title="View Contract Information" action="#{monitorContractsUI.selectCompany}" update=":wspForm">
+										<f:setPropertyActionListener value="#{rowVarWsp}" target="#{monitorContractsUI.selectedWsp}" />
+									</p:commandButton>
+								</p:column>
+							</p:dataTable>
+						</div>
+					</c:if>
+				</h:form>
+			</div>
+		</div>
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+			<h:form>
+				<p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="pi pi-check" />
+				<p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="pi pi-times" />
+			</h:form>
+		</p:confirmDialog>
+		
+		<script type="text/javascript">
+			function scrollTo() {
+				setTimeout(function() {
+					$('html,body').animate({
+						scrollTop : $('#publisherSectionDiv').offset().top
+					}, 1000);
+				}, 0);
+			}
+		</script>
+
+	</ui:define>
+</ui:composition>

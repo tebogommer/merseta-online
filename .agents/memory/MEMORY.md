@@ -1,6 +1,7 @@
 # Memory Index
 
 ## Project
+- [project] Base all porting on NSDMS-Latest (never modify NSDMS-Latest folder) → project-conventions.md
 - [project] Always create a new dedicated branch for major code changes → project-conventions.md
 - [project] AG Kit only supports Gemini CLI and Google Antigravity (not other AI coding tools) → project-conventions.md
 - [project] Use Organisation (not Company) across DB, entities, services, and UI (covers NPOs, NGOs, public entities, corporations) → project-conventions.md

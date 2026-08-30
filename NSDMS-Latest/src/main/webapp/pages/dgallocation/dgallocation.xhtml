@@ -1,0 +1,315 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+		<h:panelGroup id="discgrantGroup">
+			<h:form id="discgrantTableForm">
+				<p:growl showDetail="false" sticky="false">
+					<p:autoUpdate />
+				</p:growl>
+				<p:importEnum type="haj.com.entity.enums.PivotNonPivotEnum" />
+				<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+				<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+				<p:importEnum type="haj.com.entity.enums.AllocationStatusEnum" />
+				<style>
+.myTabview.ui-tabs {
+	position: static;
+}
+</style>
+				<div class="card card-w-title">
+					<h1>Discretionary Grant Allocation</h1>
+					<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+						<h:panelGroup>
+							<p:outputLabel value="Total Requested Amount" styleClass="Fs15 FontBold"></p:outputLabel>
+							<p:outputLabel value="#{dgallocationUI.totalRequested}" styleClass="secondaryText Fs20 FontBold Fright">
+								<f:convertNumber type="currency" currencySymbol="R" />
+							</p:outputLabel>
+						</h:panelGroup>
+						<p:spacer></p:spacer>
+						<h:panelGroup>
+							<p:outputLabel value="Max Allocation Amount" styleClass="Fs15 FontBold"></p:outputLabel>
+							<p:outputLabel value="#{dgallocationUI.maxAlloccation}" styleClass="secondaryText Fs20 FontBold Fright">
+								<f:convertNumber type="currency" currencySymbol="R" />
+							</p:outputLabel>
+						</h:panelGroup>
+						<p:spacer></p:spacer>
+						<h:panelGroup>
+							<p:outputLabel value="Total Allocation" styleClass="Fs15 FontBold"></p:outputLabel>
+							<p:outputLabel value="#{dgallocationUI.totalAllocated}" styleClass="secondaryText Fs20 FontBold Fright">
+								<f:convertNumber type="currency" currencySymbol="R" />
+							</p:outputLabel>
+						</h:panelGroup>
+						<p:spacer></p:spacer>
+						<h:panelGroup>
+							<p:outputLabel value="Remaining Allocation" styleClass="Fs15 FontBold"></p:outputLabel>
+							<p:outputLabel value="#{dgallocationUI.maxAlloccation - dgallocationUI.totalAllocated}" styleClass="secondaryText Fs20 FontBold Fright">
+								<f:convertNumber type="currency" currencySymbol="R" />
+							</p:outputLabel>
+						</h:panelGroup>
+					</p:panelGrid>
+				</div>
+				<div class="card">
+					<p:panelGrid columns="1" style="width:100%" id="extensionrequestInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+						<h:panelGroup styleClass="md-inputfield" rendered="#{sessionUI.user.allocateDG}">
+							<p:autoComplete id="company" value="#{dgallocationUI.wsp}" completeMethod="#{autoCompleteUI.completeCompanyApprovedWSPAndFinYear}" var="rv" itemLabel="#{rv.company.companyNameDisplay}" itemValue="#{rv}" forceSelection="true" converter="WspConvertor" dropdown="false" minQueryLength="3" maxResults="10" style="width:100%" inputStyle="width:95%">
+								<p:column headerText="#{lang['companyName']}" style="white-space: nowrap">#{rv.company.companyName}</p:column>
+								<p:column headerText="#{lang['trading.name']}" style="white-space: nowrap">#{rv.company.tradingName}</p:column>
+								<p:column headerText="#{lang['entity.id']}" style="white-space: nowrap">#{rv.company.levyNumber}</p:column>
+								<p:column headerText="#{lang['grant.year']}" style="white-space: nowrap">#{rv.finYear}</p:column>
+							</p:autoComplete>
+							<p:outputLabel value="#{lang['grant.application']}" for="company" />
+						</h:panelGroup>
+						<p:commandButton onstart="uploadStart()" oncomplete="uploadDone()" rendered="#{sessionUI.user.allocateDG}" value="Do Allocation" icon="ui-icon-save" update="@form" action="#{dgallocationUI.doAllocation}" styleClass="flat">
+						</p:commandButton>
+					</p:panelGrid>
+					<p:tabView id="tabView" styleClass="myTabview" activeIndex="#{dgallocationUI.activeIndex}">
+						<p:ajax event="tabChange" listener="#{dgallocationUI.onTabChange}" update="discgrantTableForm" oncomplete="toggleAllTabs()" />
+						<p:tab title="Trades Allocation" rendered="false">
+							<h:panelGroup rendered="false">
+								<div>
+									<p:outputLabel value="Hide/Show All" styleClass="gray" />
+								</div>
+								<div>
+									<p:selectBooleanButton offIcon="fa fa-eye" onIcon="fa fa-eye-slash" onLabel="Hide All" offLabel="Show All" onchange="toggleAll('discgrantTableForm:tabView:skill1')">
+									</p:selectBooleanButton>
+								</div>
+							</h:panelGroup>
+							<br />
+							<ui:include src="/pages/dgallocation/trrades_allocation.xhtml">
+								<ui:param name="showInput" value="#{true}" />
+							</ui:include>
+						</p:tab>
+						<p:tab title="PIVOTAL learnerships" rendered="false">
+							<h:panelGroup rendered="false">
+								<div>
+									<p:outputLabel value="Hide/Show All" styleClass="gray" />
+								</div>
+								<div>
+									<p:selectBooleanButton offIcon="fa fa-eye" onIcon="fa fa-eye-slash" onLabel="Hide All" offLabel="Show All" onchange="toggleAll('discgrantTableForm:tabView:skill2')">
+									</p:selectBooleanButton>
+								</div>
+							</h:panelGroup>
+							<br />
+							<ui:include src="/pages/dgallocation/pivotal_learnerships.xhtml">
+								<ui:param name="showInput" value="#{true}" />
+							</ui:include>
+						</p:tab>
+						<p:tab title="PIVOTAL other" rendered="false">
+							<h:panelGroup rendered="false">
+								<div>
+									<p:outputLabel value="Hide/Show All" styleClass="gray" />
+								</div>
+								<div>
+									<p:selectBooleanButton offIcon="fa fa-eye" onIcon="fa fa-eye-slash" onLabel="Hide All" offLabel="Show All" onchange="toggleAll('discgrantTableForm:tabView:skill3')">
+									</p:selectBooleanButton>
+								</div>
+							</h:panelGroup>
+							<br />
+							<ui:include src="/pages/dgallocation/pivotal_other.xhtml">
+								<ui:param name="showInput" value="#{true}" />
+							</ui:include>
+						</p:tab>
+						<p:tab title="Main Skills Gap Report" rendered="false">
+							<ui:include src="/pages/dgallocation/main_skills_gap_report.xhtml">
+								<ui:param name="showInput" value="#{true}" />
+							</ui:include>
+						</p:tab>
+						<p:tab title="Skills Gap Reasons Report" rendered="false">
+							<ui:include src="/pages/dgallocation/main_skills_gap_reason_report.xhtml">
+								<ui:param name="showInput" value="#{true}" />
+							</ui:include>
+						</p:tab>
+						<p:tab title="Allocation List">
+							<h:panelGroup rendered="false">
+								<div>
+									<p:outputLabel value="Hide/Show All" styleClass="gray" />
+								</div>
+								<div>
+									<p:selectBooleanButton offIcon="fa fa-eye" onIcon="fa fa-eye-slash" onLabel="Hide All" offLabel="Show All" onchange="toggleAll('discgrantTableForm:tabView:skill7')">
+									</p:selectBooleanButton>
+								</div>
+							</h:panelGroup>
+							<br />
+							<ui:include src="/pages/dgallocation/allocation_list.xhtml">
+								<ui:param name="showInput" value="#{sessionUI.user.allocateDG}" />
+							</ui:include>
+						</p:tab>
+						<p:tab title="DG Allocation ">
+							<h:panelGroup rendered="false">
+								<div>
+									<p:outputLabel value="Hide/Show All" styleClass="gray" />
+								</div>
+								<div>
+									<p:selectBooleanButton offIcon="fa fa-eye" onIcon="fa fa-eye-slash" onLabel="Hide All" offLabel="Show All" onchange="toggleAll('discgrantTableForm:tabView:skill4')">
+									</p:selectBooleanButton>
+								</div>
+							</h:panelGroup>
+							<ui:include src="/pages/dgallocation/dg_allocation.xhtml">
+								<ui:param name="showInput" value="#{true}" />
+								<ui:param name="allocations" value="#{dgallocationUI.allocations}" />
+								<ui:param name="id" value="skill4" />
+							</ui:include>
+						</p:tab>
+						<p:tab title="Platinum Allocation List">
+							<h:panelGroup rendered="false">
+								<div>
+									<p:outputLabel value="Hide/Show All" styleClass="gray" />
+								</div>
+								<div>
+									<p:selectBooleanButton offIcon="fa fa-eye" onIcon="fa fa-eye-slash" onLabel="Hide All" offLabel="Show All" onchange="toggleAll('discgrantTableForm:tabView:skill4')">
+									</p:selectBooleanButton>
+								</div>
+							</h:panelGroup>
+							<ui:include src="/pages/dgallocation/dg_allocation.xhtml">
+								<ui:param name="showInput" value="#{false}" />
+								<ui:param name="allocations" value="#{dgallocationUI.allocationsPlatinum}" />
+								<ui:param name="id" value="skill8" />
+							</ui:include>
+						</p:tab>
+						<p:tab title="Gold Allocation List">
+							<h:panelGroup rendered="false">
+								<div>
+									<p:outputLabel value="Hide/Show All" styleClass="gray" />
+								</div>
+								<div>
+									<p:selectBooleanButton offIcon="fa fa-eye" onIcon="fa fa-eye-slash" onLabel="Hide All" offLabel="Show All" onchange="toggleAll('discgrantTableForm:tabView:skill4')">
+									</p:selectBooleanButton>
+								</div>
+							</h:panelGroup>
+							<ui:include src="/pages/dgallocation/dg_allocation.xhtml">
+								<ui:param name="showInput" value="#{false}" />
+								<ui:param name="allocations" value="#{dgallocationUI.allocationsGold}" />
+								<ui:param name="id" value="skill9" />
+							</ui:include>
+						</p:tab>
+						<p:tab title="Silver Allocation List">
+							<h:panelGroup rendered="false">
+								<div>
+									<p:outputLabel value="Hide/Show All" styleClass="gray" />
+								</div>
+								<div>
+									<p:selectBooleanButton offIcon="fa fa-eye" onIcon="fa fa-eye-slash" onLabel="Hide All" offLabel="Show All" onchange="toggleAll('discgrantTableForm:tabView:skill4')">
+									</p:selectBooleanButton>
+								</div>
+							</h:panelGroup>
+							<ui:include src="/pages/dgallocation/dg_allocation.xhtml">
+								<ui:param name="showInput" value="#{false}" />
+								<ui:param name="allocations" value="#{dgallocationUI.allocationsSilver}" />
+								<ui:param name="id" value="skill10" />
+							</ui:include>
+						</p:tab>
+					</p:tabView>
+				</div>
+				<div class="card card-w-title">
+					<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve}">
+						<p:commandButton value="#{lang['submit']}" id="btnSubmin" onstart="uploadStart()" oncomplete="uploadDone()" rendered="#{sessionUI.user.allocateDG}" icon="ui-icon-save" update="@form" action="#{dgallocationUI.requesteWorkflow}" styleClass="flat green-btn Fs18" style="height: 50px;">
+						</p:commandButton>
+					</p:panelGrid>
+				</div>
+			</h:form>
+		</h:panelGroup>
+		<p:dialog header="Change and Reject Reasons" widgetVar="rejectChildReason2" hideEffect="clip" showEffect="clip" id="dialogRejectChildReason2" appendTo="@(body)" modal="true" closable="true" width="75%" height="60vh" responsive="true" closeOnEscape="true">
+			<h:form id="rejectReasonChildForm2">
+				<c:if test="#{dgallocationUI.reasons.size() gt 0}">
+					<h3>Allocation Change Reasons</h3>
+					<p:dataTable var="rowVar" value="#{dgallocationUI.reasons}" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+						<p:column headerText="Create Date">
+							<p:outputLabel value="#{rowVar.createDate}">
+								<f:convertDateTime pattern="dd MMMM yyyy" />
+							</p:outputLabel>
+						</p:column>
+						<p:column headerText="Change Reason">
+							<p:outputLabel value="#{rowVar.allocationChange.description}"></p:outputLabel>
+						</p:column>
+						<p:column headerText="Change Type]">
+							<p:outputLabel value="#{rowVar.allocationChange.allocationChangeTypeEnum.friendlyName}"></p:outputLabel>
+						</p:column>
+					</p:dataTable>
+				</c:if>
+				<c:if test="#{dgallocationUI.rejectReasonsChild.size() gt 0}">
+					<h3>Reject Reasons</h3>
+					<p:dataTable var="rowVar" value="#{dgallocationUI.rejectReasonsChild}" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+						<p:column headerText="Create Date">
+							<p:outputLabel value="#{rowVar.createDate}">
+								<f:convertDateTime pattern="dd MMMM yyyy" />
+							</p:outputLabel>
+						</p:column>
+						<p:column headerText="Reason for Rejection">
+							<p:outputLabel value="#{rowVar.rejectReasons.description}"></p:outputLabel>
+						</p:column>
+						<p:column headerText="Additional Information">
+							<p:outputLabel value="#{rowVar.additionalInformation}"></p:outputLabel>
+						</p:column>
+						<p:column headerText="How to fix">
+							<p:outputLabel value="#{rowVar.rejectReasons.howTo}"></p:outputLabel>
+						</p:column>
+					</p:dataTable>
+				</c:if>
+			</h:form>
+		</p:dialog>
+		<p:dialog header="Reject Reasons" widgetVar="rejectReason" hideEffect="clip" showEffect="clip" id="dialogRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{dgallocationUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{dgallocationUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+							</p:selectManyMenu>
+							<br />
+						</div>
+					</div>
+					<p:commandButton value="Reject" action="#{dgallocationUI.rejectAllocation}" oncomplete="PF('rejectReason').hide()" update="discgrantTableForm:tabView:skill4">
+					</p:commandButton>
+				</div>
+			</h:form>
+		</p:dialog>
+		<p:dialog header="Reject Reasons" widgetVar="rejectChildReason" hideEffect="clip" showEffect="clip" id="dialogRejectChildReason" appendTo="@(body)" modal="true" closable="true" width="75%" height="60vh" responsive="true" closeOnEscape="true">
+			<h:form id="rejectReasonChildForm">
+				<p:dataTable var="rowVar" value="#{dgallocationUI.rejectReasonsChild}" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+					<p:column headerText="Create Date">
+						<p:outputLabel value="#{rowVar.createDate}">
+							<f:convertDateTime pattern="dd MMMM yyyy" />
+						</p:outputLabel>
+					</p:column>
+					<p:column headerText="Reason for Rejection">
+						<p:outputLabel value="#{rowVar.rejectReasons.description}"></p:outputLabel>
+					</p:column>
+					<p:column headerText="Additional Information">
+						<p:outputLabel value="#{rowVar.additionalInformation}"></p:outputLabel>
+					</p:column>
+					<p:column headerText="How to fix">
+						<p:outputLabel value="#{rowVar.rejectReasons.howTo}"></p:outputLabel>
+					</p:column>
+				</p:dataTable>
+			</h:form>
+		</p:dialog>
+		<script>
+	$( document ).ready(function() {
+		toggleAllTabs();
+	});
+
+	function toggleAllTabs(){
+		toggleAll('discgrantTableForm:tabView:skill1');
+		toggleAll('discgrantTableForm:tabView:skill2');
+		toggleAll('discgrantTableForm:tabView:skill3');
+		toggleAll('discgrantTableForm:tabView:skill4');
+		toggleAll('discgrantTableForm:tabView:skill7');
+		toggleAll('discgrantTableForm:tabView:skill8');
+		toggleAll('discgrantTableForm:tabView:skill9');
+		toggleAll('discgrantTableForm:tabView:skill10');
+	}
+
+	function toggleAll(type){
+		$(PrimeFaces.escapeClientId(type)).find('a.ui-rowgroup-toggler').each(function() {
+			this.click();
+		});
+		/* showSummary('discgrantTableForm:tabView:skill4'); */
+	}
+
+	
+	</script>
+	</ui:define>
+</ui:composition>

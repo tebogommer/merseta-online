@@ -1,0 +1,151 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+
+			<div class="ui-g-12 ui-md-6 ui-lg-7">
+				<div class="card card-w-title">
+					<h1>#{lang['SARS.inter.SETA.transfer.levies']} Summary by Scheme Year</h1>
+					<h:form id="summaryForm">
+						<div align="right">
+							<SPAN class="Fleft FontLight Fs16 black"><i class="fa fa-info-circle" aria-hidden="true" /> Click on a row to show breakdown</SPAN>
+							<h:commandLink id="eExcel">
+								<i class="fa fa-file-excel-o fa-lg" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+								<p:dataExporter type="xls" target="isetasummary" fileName="Inter_Seta_Transfer_Summary" pageOnly="false" />
+							</h:commandLink>
+							<p:tooltip for="eExcel" value="#{lang['export.search.results.to.excel']}" position="left" />
+
+						</div>
+						<br />
+						<p:dataTable var="rv" value="#{historicalintersetatransfersUI.summary}" rowKey="#{rv.amount}" paginator="true" rows="10" paginatorPosition="bottom" id="isetasummary"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,20,40,60,80,100" reflow="true" selectionMode="single" selection="#{historicalintersetatransfersUI.ingterSetaTransferBean}">
+							<p:ajax event="rowSelect" update=":dtlForm" listener="#{historicalintersetatransfersUI.doBreakdown}" />
+							<p:column headerText="merSETA #{lang['scheme.year']}" width="15%" sortBy="#{rv.schemeYear}">
+								<h:outputText value="#{rv.schemeYear}" />
+							</p:column>
+							<p:column headerText="#{lang['transfer.type']}" width="15%">
+								<h:outputText value="#{rv.description}" />
+							</p:column>
+							<p:column headerText="Amount #{lang['80%']}">
+								<h:outputText value="#{rv.amount}" styleClass="Fright">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</h:outputText>
+							</p:column>
+						</p:dataTable>
+
+
+					</h:form>
+				</div>
+			</div>
+
+			<div class="ui-g-12 ui-md-6 ui-lg-5">
+				<h:form id="dtlForm">
+					<h:panelGroup rendered="#{historicalintersetatransfersUI.ingterSetaTransferBean ne null}">
+						<div class="card card-w-title">
+							<SPAN class="Fs16 FontLight">Breakdown for <h:outputText value="#{historicalintersetatransfersUI.ingterSetaTransferBean.schemeYear} (#{historicalintersetatransfersUI.ingterSetaTransferBean.description})" styleClass="FontBold" />
+							</SPAN><br /> <br />
+							<p:dataTable var="rv" value="#{historicalintersetatransfersUI.breakdown}" rowKey="#{rv.amount}" reflow="true">
+
+
+								<p:column headerText="Grant Type" width="25%">
+									<h:outputText value="#{rv.description2}" styleClass="#{rv.description2 eq 'Total'?'FontBold Fs16':null}" />
+								</p:column>
+								<p:column headerText="Amount #{lang['80%']}">
+									<h:outputText value="#{rv.amount}" styleClass="Fright #{rv.description2 eq 'Total'?'FontBold Fs16':null}">
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</h:outputText>
+								</p:column>
+							</p:dataTable>
+						</div>
+
+					</h:panelGroup>
+
+				</h:form>
+			</div>
+
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>#{lang['SARS.inter.SETA.transfer.levies']} Detail</h1>
+					<h:form id="mainForm">
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+						<p:dataTable var="rowVar" value="#{historicalintersetatransfersUI.dataModel}" filteredValue="#{historicalintersetatransfersUI.historicalIntersetaTransfersfilteredList}" id="historicalintersetatransfersList" rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,20,40,60,80,100" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['sdl.number']}" sortBy="#{rowVar.refNo}" filterBy="#{rowVar.refNo}" filterStyle="width:98%" width="120">
+								<h:outputText value="#{rowVar.refNo}" />
+							</p:column>
+
+							<p:column headerText="#{lang['transfer.type']}" sortBy="#{rowVar.transactionType}" width="10%">
+								<h:outputText value="#{rowVar.transactionType}" />
+							</p:column>
+							<p:column headerText="TrnsfrNo" width="60">
+								<h:outputText value="#{rowVar.trnsfrNo}" />
+							</p:column>
+							<p:column headerText="#{lang['seta.code']}" width="30">
+								<h:outputText value="#{rowVar.seta}" />
+							</p:column>
+							<p:column headerText="#{lang['seta.name']}" sortBy="#{rowVar.setaName}" filterBy="#{rowVar.setaName}" filterStyle="width:98%">
+								<h:outputText value="#{rowVar.setaName}" />
+							</p:column>
+							<p:column headerText="#{lang['transaction.date']}" width="90">
+								<h:outputText value="#{rowVar.transactionDate}" />
+							</p:column>
+							<p:column headerText="Grant Type" width="10%" sortBy="#{rowVar.grantType}">
+								<h:outputText value="#{rowVar.grantType}" />
+							</p:column>
+							<p:column headerText="Amount #{lang['80%']}" width="20%">
+								<h:outputText value="#{rowVar.amount}" styleClass="Fright">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="merSETA #{lang['scheme.year']}" width="90" sortBy="#{rowVar.mersetaSchemeYear}">
+								<h:outputText value="#{rowVar.mersetaSchemeYear}" />
+							</p:column>
+
+
+						</p:dataTable>
+
+						<div class="ui-g">
+							<div class="ui-g-12">
+								<div class="card card-w-title">
+									<!-- <h1>Process InterSeta Transfers</h1> -->
+									<p:growl showDetail="false" sticky="false">
+										<p:autoUpdate />
+									</p:growl>
+									<p:panelGrid layout="grid" columns="1" styleClass="ui-panelgrid-blank">
+										<p:commandButton value="Process Transfer OUT" action="#{chamberrevenuebymonthUI.populateBean}" update="@form" rendered="false" />
+										<p:commandButton value="Process Transfer IN" action="#{chamberrevenuebymonthUI.populateBean}" update="@form" rendered="false" />
+
+										<p:dataTable rendered="false" var="rowVar" value="#{chamberrevenuebymonthUI.chamberrevenuebymonth}" id="levyIncome" rowKey="#{rowVar.description}" paginator="true" rows="6" paginatorPosition="bottom"
+											paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+
+											<p:column headerText="#{lang['transaction.date']}">
+												<h:outputText value="#{rowVar.description}" />
+											</p:column>
+											<p:column selectionMode="multiple" style="width:16px;text-align:center" />
+										</p:dataTable>
+									</p:panelGrid>
+								</div>
+							</div>
+						</div>
+
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+	<!--
+refNo = refNo
+seta = seta
+transactionType = transactionType
+trnsfrNo = trnsfrNo
+setaName = setaName
+transactionDate = transactionDate
+grantType = grantType
+amount = amount
+mersetaSchemeYear = mersetaSchemeYear
+
+-->
+</ui:composition>

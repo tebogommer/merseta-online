@@ -24,6 +24,18 @@ public interface IDatabaseDocumentationService
     /// </summary>
     /// <returns>Formatted Markdown document string.</returns>
     Task<string> ExportMarkdownDataDictionaryAsync();
+
+    /// <summary>
+    /// Generates an idempotent T-SQL script containing all sp_addextendedproperty / sp_updateextendedproperty commands.
+    /// </summary>
+    /// <returns>T-SQL migration script string.</returns>
+    Task<string> GenerateSqlExtendedPropertiesScriptAsync();
+
+    /// <summary>
+    /// Synchronizes all table and column MS_Description extended properties directly to SQL Server Express.
+    /// </summary>
+    /// <returns>Total number of table and column extended properties updated.</returns>
+    Task<int> SyncExtendedPropertiesToDatabaseAsync();
 }
 
 /// <summary>

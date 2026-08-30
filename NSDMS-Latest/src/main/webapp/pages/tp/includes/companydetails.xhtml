@@ -1,0 +1,238 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui">
+
+	<h:panelGroup styleClass="md-inputfield">
+		<p:inputText maxlength="#{sdfDetailUI.MAX_COMPANY_NAME_SIZE}" id="companyName" value="#{learnerRegistrationFormUI.company.companyName}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.company.name']}">
+		</p:inputText>
+		<p:outputLabel value="#{lang['companyName']}" for="companyName" />
+	</h:panelGroup>
+
+	<h:panelGroup styleClass="md-inputfield">
+		<p:inputText id="tradingName" value="#{learnerRegistrationFormUI.company.tradingName}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.trading.name']}">
+		</p:inputText>
+		<p:outputLabel value="#{lang['tradingName']}" for="tradingName" />
+	</h:panelGroup>
+
+	<h:panelGroup styleClass="md-inputfield">
+		<p:inputMask mask="#{sdfDetailUI.TELPHONE_FORMAT}" id="telNumber" value="#{learnerRegistrationFormUI.company.telNumber}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.tel.number']}">
+		</p:inputMask>
+		<p:outputLabel value="#{lang['telNumber']}" for="telNumber" />
+	</h:panelGroup>
+
+	<h:panelGroup styleClass="md-inputfield">
+		<p:inputMask id="faxNumber" mask="#{sdfDetailUI.FAX_NUMBER_FORMAT}" validatorMessage="#{lang['user.faxnumber.length']}" value="#{sdfUI.formUser.faxNumber}" maxlength="#{sdfUI.MAX_FAX_NUMBER}" style="width:95%" required="false" requiredMessage="#{lang['fax.number']}">
+		</p:inputMask>
+		<p:outputLabel value="#{lang['faxNumber']}" for="faxNumber" />
+	</h:panelGroup>
+
+	<p:fieldset legend="#{lang['residentialAddress']}" style="margin-top: 20px">
+		<p:panelGrid columns="1" style="width : 95%" styleClass="ui-panelgrid-blank" id="addrPcode">
+			<h:panelGroup styleClass="md-inputfield">
+				<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" id="addr1" value="#{learnerRegistrationFormUI.company.residentialAddress.addressLine1}" style="width:95%" required="true" requiredMessage="#{lang['enter.residential.address']}">
+				</p:inputText>
+				<p:outputLabel value="#{lang['address.line.1']}" for="addr1" />
+			</h:panelGroup>
+			<h:panelGroup styleClass="md-inputfield">
+				<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" id="addr2" style="width:95%" value="#{learnerRegistrationFormUI.company.residentialAddress.addressLine2}">
+				</p:inputText>
+				<p:outputLabel value="#{lang['address.line.2']}" for="addr2" />
+			</h:panelGroup>
+			<h:panelGroup styleClass="md-inputfield">
+				<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" id="addr3" style="width:95%" value="#{learnerRegistrationFormUI.company.residentialAddress.addressLine3}">
+				</p:inputText>
+				<p:outputLabel value="#{lang['address.line.3']}" for="addr3" />
+			</h:panelGroup>
+
+			<h:panelGroup>
+				<div>
+					<h:outputLabel value="#{lang['town']}" for="town" />
+				</div>
+				<div>
+					<p:autoComplete id="town" value="#{learnerRegistrationFormUI.company.residentialAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true"
+						requiredMessage="#{lang['please.select.a.town']}">
+						<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+					</p:autoComplete>
+				</div>
+			</h:panelGroup>
+
+			<h:panelGroup styleClass="md-inputfield">
+				<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_CODE_SIZE}" id="pcode" style="width:95%" value="#{learnerRegistrationFormUI.company.residentialAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}">
+				</p:inputText>
+				<p:outputLabel value="#{lang['post.code']}" for="pcode" />
+			</h:panelGroup>
+
+			<h:panelGroup>
+				<div>
+					<h:outputLabel value="#{lang['municipality']}" for="MunicipalityID" />
+				</div>
+				<div>
+					<p:autoComplete id="MunicipalityID" value="#{learnerRegistrationFormUI.company.residentialAddress.municipality}" required="true" completeMethod="#{sdfDetailUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityProvince}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%"
+						style="width: 95%" requiredMessage="#{lang['select.municipality']}">
+						<p:column headerText="#{lang['province']}" style="white-space: nowrap">
+								#{rv.province.provinceDesc}
+							</p:column>
+						<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">
+								#{rv.municipalityDesc}
+							</p:column>
+					</p:autoComplete>
+				</div>
+			</h:panelGroup>
+
+			<h:panelGroup styleClass="md-inputfield">
+				<div class="EmptyBox40"></div>
+			</h:panelGroup>
+		</p:panelGrid>
+	</p:fieldset>
+
+	<p:fieldset legend="#{lang['postalAddress']}" style="margin-top: 20px">
+		<p:panelGrid columns="1" style="width : 95%" styleClass="ui-panelgrid-blank" id="postalAddress">
+			<h:panelGroup styleClass="md-inputfield" rendered="#{not sdfDetailUI.copyAddress}">
+				<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" id="postalAddressaddr1" value="#{learnerRegistrationFormUI.company.postalAddress.addressLine1}" style="width:95%" required="true" requiredMessage="#{lang['enter.postal.address']}">
+				</p:inputText>
+				<p:outputLabel value="#{lang['address.line.1']}" for="postalAddressaddr1" />
+			</h:panelGroup>
+			<h:panelGroup styleClass="md-inputfield" rendered="#{not sdfDetailUI.copyAddress}">
+				<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" id="postalAddressaddr2" style="width:95%" value="#{learnerRegistrationFormUI.company.postalAddress.addressLine2}">
+
+				</p:inputText>
+				<p:outputLabel value="#{lang['address.line.2']}" for="postalAddressaddr2" />
+			</h:panelGroup>
+			<h:panelGroup styleClass="md-inputfield" rendered="#{not sdfDetailUI.copyAddress}">
+				<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" id="postalAddressaddr3" style="width:95%" value="#{learnerRegistrationFormUI.company.postalAddress.addressLine3}">
+
+				</p:inputText>
+				<p:outputLabel value="#{lang['address.line.3']}" for="postalAddressaddr3" />
+			</h:panelGroup>
+			<h:panelGroup rendered="#{not sdfDetailUI.copyAddress}">
+				<div>
+					<h:outputLabel value="#{lang['town']}" for="townPostal" />
+				</div>
+				<div>
+					<p:autoComplete id="townPostal" value="#{learnerRegistrationFormUI.company.postalAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true"
+						requiredMessage="#{lang['please.select.a.town']}">
+						<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+					</p:autoComplete>
+				</div>
+			</h:panelGroup>
+
+			<h:panelGroup styleClass="md-inputfield" rendered="#{not sdfDetailUI.copyAddress}">
+				<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_CODE_SIZE}" id="postalAddressPcode" style="width:95%" value="#{learnerRegistrationFormUI.company.postalAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}">
+					<o:validator validatorId="javax.faces.Length" minimum="0" maximum="4" message="#{lang['postalAddress.code.length.error']}" />
+				</p:inputText>
+				<p:outputLabel value="#{lang['post.code']}" for="postalAddressPcode" />
+			</h:panelGroup>
+
+			<h:panelGroup rendered="#{not sdfDetailUI.copyAddress}">
+				<div>
+					<h:outputLabel value="#{lang['municipality']}" for="postalAddressMunicipalityID" />
+				</div>
+				<div>
+					<p:autoComplete id="postalAddressMunicipalityID" required="true" value="#{learnerRegistrationFormUI.company.postalAddress.municipality}" completeMethod="#{sdfDetailUI.completeMunicipality}" var="rv" requiredMessage="Municipality is Required" itemLabel="#{rv.municipalityProvince}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true" minQueryLength="3"
+						maxResults="10" inputStyle="width: 95%" style="width: 95%">
+						<p:column headerText="#{lang['province']}" style="white-space: nowrap">
+								#{rv.province.provinceDesc}
+							</p:column>
+						<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">
+								#{rv.municipalityDesc}
+							</p:column>
+					</p:autoComplete>
+				</div>
+			</h:panelGroup>
+
+			<h:panelGroup>
+				<div>
+					<p:outputLabel value="#{lang['same.as.my.address']}" styleClass="FontLight" />
+				</div>
+				<div>
+					<p:selectBooleanCheckbox value="#{sdfDetailUI.copyAddress}">
+						<p:ajax update=":learnerRegUserForm:postalAddress" listener="#{sdfDetailUI.clearPostal}" />
+					</p:selectBooleanCheckbox>
+				</div>
+			</h:panelGroup>
+		</p:panelGrid>
+	</p:fieldset>
+
+	<h:panelGroup styleClass="md-inputfield" rendered="#{not learnerRegistrationFormUI.company.nonLevyPaying}">
+		<p:inputMask mask="#{sdfDetailUI.companyRegistrationNumberFormat}" id="companyRegistrationNumber" value="#{learnerRegistrationFormUI.company.companyRegistrationNumber}" style="width:95%" required="true" requiredMessage="#{lang['enter.company.registration.number']}">
+		</p:inputMask>
+		<p:outputLabel value="#{lang['companyRegistrationNumber']}" for="companyRegistrationNumber" />
+	</h:panelGroup>
+
+	<h:panelGroup styleClass="md-inputfield" rendered="#{learnerRegistrationFormUI.company.nonLevyPaying}">
+		<p:inputMask id="companyRegistrationNumbera" value="#{learnerRegistrationFormUI.company.companyRegistrationNumber}" style="width:95%" required="true" requiredMessage="#{lang['enter.company.registration.number']}">
+		</p:inputMask>
+		<p:outputLabel value="#{lang['companyRegistrationNumber']}" for="companyRegistrationNumbera" />
+	</h:panelGroup>
+
+	<h:panelGroup styleClass="md-inputfield">
+		<p:inputText maxlength="#{sdfDetailUI.MAX_EMAIL_SIZE}" id="email" value="#{learnerRegistrationFormUI.company.email}" style="width:95%" required="true" requiredMessage="#{lang['enter.email.address']}">
+		</p:inputText>
+		<p:outputLabel value="#{lang['email']}" for="email" />
+	</h:panelGroup>
+
+	<h:panelGroup styleClass="md-inputfield" rendered="#{not learnerRegistrationFormUI.company.nonLevyPaying}">
+		<p:inputMask mask="#{sdfDetailUI.companyLevyNumberFormat}" disabled="true" id="levyNumber" value="#{learnerRegistrationFormUI.company.levyNumber}" style="width:95%" required="true" requiredMessage="#{lang['enter.levy.number']}">
+		</p:inputMask>
+		<p:outputLabel value="#{lang['levyNumber']}" for="levyNumber" />
+	</h:panelGroup>
+
+
+	<h:panelGroup>
+		<div style="margin-top: -20px !important;">
+			<p:outputLabel value="#{lang['organisation.type']}" for="organisationType" styleClass="gray Fs12" style="margin-left:5px" />
+		</div>
+		<div>
+			<p:selectOneMenu id="organisationType" value="#{learnerRegistrationFormUI.company.organisationType}" converter="OrganisationTypeConvertor" style="width:95%" required="true" requiredMessage=" #{lang['select.organisation.type']}">
+				<f:selectItem itemLabel="-- #{lang['select.one']} --" noSelectionOption="true" />
+				<f:selectItems value="#{sdfDetailUI.organisationTypeList}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+			</p:selectOneMenu>
+		</div>
+	</h:panelGroup>
+
+
+	<h:panelGroup>
+		<div style="margin-top: -20px !important;">
+			<p:outputLabel value="#{lang['sicCode']}" for="sicCodeNew" styleClass="gray Fs12" style="margin-left:5px">
+			</p:outputLabel>
+		</div>
+		<div>
+			<p:autoComplete id="sicCodeNew" value="#{learnerRegistrationFormUI.company.sicCode}" style="width: 95%" completeMethod="#{autoCompleteUI.completeSIC}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SICCodeConvertor" dropdown="true" minQueryLength="1" maxResults="10" required="true" requiredMessage="#{lang['sic.code.error']}">
+				<p:ajax update="chambers" event="itemSelect"></p:ajax>
+				<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+				<p:column headerText="#{lang['description']}" style="white-space: nowrap">#{rv.description}</p:column>
+
+			</p:autoComplete>
+
+		</div>
+	</h:panelGroup>
+
+	<h:panelGroup id="chambers">
+		<div style="margin-top: -20px !important;">
+			<p:outputLabel value="#{lang['chamber']}" for="chamber" styleClass="gray Fs12" style="margin-left:5px" />
+		</div>
+		<div>
+			<p:selectOneMenu disabled="true" id="chamber" value="#{learnerRegistrationFormUI.company.sicCode.chamber}" converter="ChamberConvertor" style="width:95%" required="true" requiredMessage="#{lang['select.a.chamber']}">
+				<f:selectItem itemLabel="-- #{lang['select.one']} --" noSelectionOption="true" />
+				<f:selectItems value="#{sdfDetailUI.chambers}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+			</p:selectOneMenu>
+		</div>
+	</h:panelGroup>
+
+	<h:panelGroup styleClass="md-inputfield">
+		<p:inputText maxlength="#{sdfDetailUI.MAX_NUMBER_OF_EMPLOYEES_SIZE}" id="numberOfEmployees" value="#{learnerRegistrationFormUI.company.numberOfEmployees}" style="width:95%" required="true" requiredMessage="#{lang['enter.number.of.employees']}">
+		</p:inputText>
+		<p:outputLabel value="#{lang['numberOfEmployees']}" for="numberOfEmployees" />
+	</h:panelGroup>
+	
+	<h:panelGroup id="etqa">
+		<div style="margin-top: -20px !important;">
+			<p:outputLabel value="#{lang['etqa']}" for="companyEtqa" styleClass="gray Fs12" style="margin-left:5px" />
+		</div>
+		<div>
+			<p:selectOneMenu  id="companyEtqa" value="#{learnerRegistrationFormUI.company.etqa}" converter="EtqaConvertor" style="width:95%" >
+				<f:selectItem itemLabel="-- #{lang['select.one']} --" noSelectionOption="true" />
+				<f:selectItems value="#{selectItemsUI.selectItemsEtqa}" var="il" itemLabel="#{il.description}" />
+			</p:selectOneMenu>
+		</div>
+	</h:panelGroup>
+
+</ui:composition>

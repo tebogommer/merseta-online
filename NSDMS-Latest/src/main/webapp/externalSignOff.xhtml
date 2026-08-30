@@ -1,0 +1,114 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml" xmlns:tie="http://tiefaces.org/tiefaces"
+	xmlns:pt="http://xmlns.jcp.org/jsf/passthrough" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+	<ui:define name="content">
+
+
+		<style type="text/css">
+div.ui-treenode-children {
+	padding-left: 0px !important
+}
+/*.ui-treenode-content{background-color: red !important}*/
+.hsGreen { {
+	background-color: green !important;
+	color: white !important;
+}
+}
+</style>
+
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card">
+					<h:form id="meditionReportOnDisputeLodgedForm">
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<h1 id="headerOne">Sign Off</h1>
+						<c:if test="#{signoffUI.signoff eq null}">
+							<ui:include src="/pages/includes/tabinfo.xhtml">
+								<ui:param name="showInfoCircle" value="false" />
+								<ui:param name="cssClass" value="red Fs25 FontBold" />
+								<ui:param name="helpTxt" value="Invalid link contact support" />
+							</ui:include>
+						</c:if>
+						<c:if test="#{signoffUI.signoff ne null}">
+
+							<c:if test="#{not signoffUI.signoff.completed}">
+
+								<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText id="email" value="#{signoffUI.email}" style="width:95%" required="true" disabled="#{signoffUI.confirmedDetails}" />
+										<p:outputLabel value="#{lang['email']}" for="email" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText id="idNumber" value="#{signoffUI.idNumber}" style="width:95%" required="true" disabled="#{signoffUI.confirmedDetails}" />
+										<p:outputLabel value="Identification Number" for="idNumber" />
+									</h:panelGroup>
+									<c:if test="#{not signoffUI.confirmedDetails}">
+										<p:panelGrid columns="1" style="width:100%; text-align: center" layout="grid" styleClass="ui-panelgrid-blank form-group">
+											<p:commandButton value="Submit" styleClass="green-btn flat Fs18" style="height: 50px;" process="meditionReportOnDisputeLodgedForm" action="#{signoffUI.confirmDetails}" update="meditionReportOnDisputeLodgedForm" />
+										</p:panelGrid>
+									</c:if>
+								</p:panelGrid>
+								<c:if test="#{signoffUI.confirmedDetails}">
+									<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+										<p:panel rendered="#{signoffUI.signoff.user ne null}">
+											<h:panelGroup>
+												<p:selectBooleanCheckbox value="#{signoffUI.signoff.accept}" itemLabel="I acknowledge and accept the above" style="width:100%" styleClass="gray" disabled="#{signoffUI.signoff.completed}">
+													<p:ajax></p:ajax>
+												</p:selectBooleanCheckbox>
+												<br />
+												<br />
+												<p:outputLabel value="#{signoffUI.signoff.user.firstName} #{signoffUI.signoff.user.lastName}" />
+												<br />
+												<p:outputLabel value="#{signoffUI.signoff.signOffTitle}" />
+												<br />
+												<p:outputLabel value="#{sessionUI.now}">
+													<f:convertDateTime pattern="dd MMMM yyyy" />
+												</p:outputLabel>
+											</h:panelGroup>
+										</p:panel>
+										<p:panel rendered="#{signoffUI.signoff.tempSignoff ne null}">
+											<h:panelGroup>
+
+												<p:selectBooleanCheckbox value="#{signoffUI.signoff.accept}" itemLabel="I acknowledge and accept the above" style="width:100%" styleClass="gray" disabled="#{signoffUI.signoff.completed}">
+													<p:ajax></p:ajax>
+												</p:selectBooleanCheckbox>
+												<br />
+												<br />
+												<p:outputLabel value="#{signoffUI.signoff.tempSignoff.firstName} #{signoffUI.signoff.tempSignoff.lastName}" />
+												<br />
+												<p:outputLabel value="#{signoffUI.signoff.signOffTitle}" />
+												<br />
+												<p:outputLabel value="#{sessionUI.now}">
+													<f:convertDateTime pattern="dd MMMM yyyy" />
+												</p:outputLabel>
+											</h:panelGroup>
+										</p:panel>
+									</p:panelGrid>
+
+									<p:panelGrid columns="1" style="width:100%; text-align: center" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{not signoffUI.signoff.completed}">
+										<p:commandButton value="Sign Off" styleClass="green-btn flat Fs18" style="height: 50px;" process="meditionReportOnDisputeLodgedForm" disabled="#{signoffUI.signoff.completed}" action="#{signoffUI.saveSignOff}" update="meditionReportOnDisputeLodgedForm" />
+									</p:panelGrid>
+								</c:if>
+							</c:if>
+							<c:if test="#{signoffUI.signoff.completed}">
+								<ui:include src="/pages/includes/tabinfo.xhtml">
+									<ui:param name="showInfoCircle" value="false" />
+									<ui:param name="cssClass" value="red Fs15 FontBold" />
+									<ui:param name="helpTxt" value="The sign off has already been completed." />
+								</ui:include>
+							</c:if>
+						</c:if>
+					</h:form>
+
+				</div>
+			</div>
+		</div>
+
+
+	</ui:define>
+
+</ui:composition>

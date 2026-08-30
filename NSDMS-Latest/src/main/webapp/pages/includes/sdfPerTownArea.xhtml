@@ -1,0 +1,24 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+
+							<div align="right">
+							    <div class="Fleft Fs17"> SDF per City/Town</div>
+								<h:commandLink id="eExcel">
+									<i class="fa fa-file-excel-o fa-lg" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+									<p:dataExporter type="xls" target="findSDFPerArea" fileName="SDFperCityTown" pageOnly="false" />
+								</h:commandLink>
+							</div><br/>
+
+						<p:dataTable var="rowVar" value="#{operationalReportsUI.findSDFPerArea}"  paginator="true" rows="9" paginatorPosition="bottom" id="findSDFPerArea"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="9,15,20,25,50" reflow="true" >
+
+           					<p:column headerText="#{lang['ctown']}" filterBy="#{rowVar.description}" sortBy="#{rowVar.description}">
+                        			<h:outputText value="#{rowVar.description}" styleClass="#{rowVar.description.equals('Total')?'FontBold':null}"/>
+            					</p:column>
+            					<p:column headerText="#{lang['numberOfSDF']}" sortBy="#{rowVar.count}">
+                        			<h:outputText value="#{rowVar.count}" styleClass="#{rowVar.description.equals('Total')?'FontBold Fs16':null} Fright"/>
+            					</p:column>
+						</p:dataTable>
+
+
+</ui:composition>

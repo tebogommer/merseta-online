@@ -1,0 +1,82 @@
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
+using Nsdms.Application.Services;
+using Nsdms.Web.Hubs;
+
+namespace Nsdms.Web.Services;
+
+public class RealtimeNotificationService : IRealtimeNotificationService
+{
+    private readonly IHubContext<NsdmsNotificationHub, INsdmsNotificationClient> _hubContext;
+    private readonly ILogger<RealtimeNotificationService> _logger;
+
+    public static event Action<string, string, string, string>? GlobalTaskAssigned;
+    public static event Action<string, int, string, string, string>? GlobalWorkflowTransition;
+
+    public event Action<string, string, string, string>? TaskAssignedReceived
+    {
+        add => GlobalTaskAssigned += value;
+        remove => GlobalTaskAssigned -= value;
+    }
+
+    public event Action<string, int, string, string, string>? WorkflowTransitionReceived
+    {
+        add => GlobalWorkflowTransition += value;
+        remove => GlobalWorkflowTransition -= value;
+    }
+
+    public RealtimeNotificationService(
+        IHubContext<NsdmsNotificationHub, INsdmsNotificationClient> hubContext,
+        ILogger<RealtimeNotificationService> logger)
+    {
+        _hubContext = hubContext;
+        _logger = logger;
+    }
+
+    public async Task NotifyTaskAssignedAsync(string taskId, string taskTitle, string assignedRole, string priority)
+    {
+        try
+        {
+            GlobalTaskAssigned?.Invoke(taskId, taskTitle, assignedRole, priority);
+
+            if (!string.IsNullOrEmpty(assignedRole))
+            {
+                await _hubContext.Clients.Group(assignedRole).ReceiveTaskNotification(taskId, taskTitle, assignedRole, priority);
+            }
+            await _hubContext.Clients.All.ReceiveTaskNotification(taskId, taskTitle, assignedRole, priority);
+            _logger.LogInformation("SignalR: Dispatched task assignment notification for '{Title}' to role '{Role}'", taskTitle, assignedRole);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to broadcast SignalR task assignment notification.");
+        }
+    }
+
+    public async Task NotifyWorkflowTransitionAsync(string entityType, int entityId, string fromState, string toState, string actor)
+    {
+        try
+        {
+            GlobalWorkflowTransition?.Invoke(entityType, entityId, fromState, toState, actor);
+
+            await _hubContext.Clients.All.ReceiveWorkflowTransition(entityType, entityId, fromState, toState, actor);
+            _logger.LogInformation("SignalR: Dispatched workflow transition notification for {EntityType} #{EntityId} ({From} -> {To})", entityType, entityId, fromState, toState);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to broadcast SignalR workflow transition notification.");
+        }
+    }
+
+    public async Task BroadcastAlertAsync(string message, string severity)
+    {
+        try
+        {
+            await _hubContext.Clients.All.ReceiveSystemAlert(message, severity);
+            _logger.LogInformation("SignalR: Dispatched system-wide alert: {Message}", message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to broadcast SignalR system alert.");
+        }
+    }
+}

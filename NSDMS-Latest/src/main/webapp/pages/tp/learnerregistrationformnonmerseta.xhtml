@@ -1,0 +1,272 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:o="http://omnifaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+		<p:growl showDetail="false" sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+		<h:panelGroup id="laernerPG">
+		<h:form id="learnerRegUserForm">
+			<p:importEnum type="haj.com.entity.enums.CompanyRegOrSDLEnum" var="regSDL"></p:importEnum>
+			<p:importEnum type="haj.com.entity.enums.YesNoEnum"></p:importEnum>
+			<p:importEnum type="haj.com.entity.enums.PivotNonPivotEnum" />
+			<p:importEnum type="haj.com.entity.enums.IdPassportEnum"></p:importEnum>
+			<p:importEnum type="haj.com.entity.enums.EmploymentStatusEnum"></p:importEnum>
+			<p:importEnum type="haj.com.entity.enums.InterventionTypeEnum"></p:importEnum>
+			<p:importEnum type="haj.com.entity.enums.HighestEducationEnum"></p:importEnum>
+			<div class="ui-g ">
+				<div class="ui-g-12">
+					<c:if test="#{learnerRegistrationNonMersetaFormUI.user.id eq null}">
+						<div class="card">
+							<p:fieldset legend="#{lang['intervention.type']}" style="margin-top: 20px">
+								<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+									<h:panelGroup>
+										<div>
+											<p:outputLabel value="#{lang['intervention.type']}" for="intType1" styleClass="gray" />
+										</div>
+										<div>
+											<p:selectOneMenu id="intType1" value="#{learnerRegistrationNonMersetaFormUI.interventionType}" style="width:95%" required="true" requiredMessage="#{lang['select.planned']}" converter="InterventionTypeConvertor">
+												<p:ajax event="itemSelect" listener="#{learnerRegistrationNonMersetaFormUI.clearInputFields}" update="@form" />
+												<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+												<f:selectItems value="#{selectItemsUI.selectItemsInterventionTypeByNonMerseta}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+											</p:selectOneMenu>
+										</div>
+									</h:panelGroup>
+									
+									<h:panelGroup styleClass="md-inputfield" style="margin-top: 19px" id="learnershipPanelReg" rendered="#{learnerRegistrationNonMersetaFormUI.interventionType.interventionTypeEnum eq InterventionTypeEnum.Learnership}">									
+										
+										<p:autoComplete id="learnershipPanelRegistration" value="#{learnerRegistrationNonMersetaFormUI.companylearners.learnership}" completeMethod="#{autoCompleteUI.completeLearnershipQualification}" var="rv" itemLabel="#{rv.qualification.saqaQualification}" itemValue="#{rv}" forceSelection="true" converter="LearnershipConvertor" required="true" requiredMessage="Please Select Learnership Qualification" dropdown="true" minQueryLength="3" maxResults="10"
+											inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+											<p:ajax event="itemSelect" update="@form" />
+											<p:column headerText="Learnership #{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+											<p:column headerText="Qualification #{lang['code']}" style="white-space: nowrap">#{rv.qualification.code}</p:column>
+											<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.qualification.description}</p:column>
+											<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.qualification.nqflevelg2description}</p:column>
+										</p:autoComplete>
+										<p:outputLabel value="Learnership Qualification" for="learnershipPanelRegistration" styleClass="gray" />
+									</h:panelGroup>
+									
+									<h:panelGroup styleClass="md-inputfield" style="margin-top: 19px" id="learnershipPanelRegApprenticeship" rendered="#{learnerRegistrationNonMersetaFormUI.interventionType.interventionTypeEnum eq InterventionTypeEnum.Apprenticeship}">									
+										
+										<p:autoComplete id="learnershipPanelRegistrationApprenticeship" value="#{learnerRegistrationNonMersetaFormUI.selectedQualification}" completeMethod="#{autoCompleteUI.completeQualificationTrade}" var="rv" itemLabel="#{rv.saqaQualification}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor" required="true" requiredMessage="Please Select Learnership Qualification" dropdown="true" minQueryLength="3" maxResults="10"
+											inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+											<p:ajax event="itemSelect" update="@form" />
+											<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+											<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+											<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+										</p:autoComplete>
+										<p:outputLabel value="Trade" for="learnershipPanelRegistrationApprenticeship" styleClass="gray" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield" style="margin-top: 19px" rendered="#{learnerRegistrationNonMersetaFormUI.showQual eq true}">
+										<p:autoComplete id="highestQualTitle1" value="#{learnerRegistrationNonMersetaFormUI.selectedQualification}" completeMethod="#{autoCompleteUI.completeQualification}" var="rv" itemLabel="#{rv.saqaQualification}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor" required="true" requiredMessage="Please Select Qualification" dropdown="true" minQueryLength="3" maxResults="10"
+											inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+											<p:ajax event="itemSelect" update="@form" />
+											<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+											<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+											<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+										</p:autoComplete>
+										<p:outputLabel value="#{lang['saqa.id']}" for="highestQualTitle1" styleClass="gray" />
+									</h:panelGroup>
+									
+									<h:panelGroup styleClass="md-inputfield" style="margin-top: 19px" rendered="#{learnerRegistrationNonMersetaFormUI.interventionType.id eq 55}">
+										<p:autoComplete id="occupationalCertificateQualification" value="#{learnerRegistrationNonMersetaFormUI.selectedQualification}" completeMethod="#{autoCompleteUI.completeQualificationEnrolmentDateAndIsOccupationalCertificate}" var="rv" itemLabel="#{rv.saqaQualification}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor" required="true" requiredMessage="Please Select Qualification" dropdown="true" minQueryLength="3" maxResults="10"
+											inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+											<p:ajax event="itemSelect" update="@form" />
+											<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+											<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+											<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+										</p:autoComplete>
+										<p:outputLabel value="#{lang['saqa.id']}" for="occupationalCertificateQualification" styleClass="gray" />
+									</h:panelGroup>
+									
+									<h:panelGroup styleClass="md-inputfield" rendered="#{learnerRegistrationNonMersetaFormUI.interventionType.id eq 37 or learnerRegistrationNonMersetaFormUI.interventionType.id eq 90 or learnerRegistrationNonMersetaFormUI.interventionType.id eq 91}" style="margin-top: 19px">
+										<p:autoComplete id="skillsProgram37" value="#{learnerRegistrationNonMersetaFormUI.selectedSkillsProgram}" completeMethod="#{autoCompleteUI.completeSkillsProgram}" 
+														var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SkillsProgramConvertor" dropdown="true" minQueryLength="3" 
+														maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%" required="true" requiredMessage="Select Skills Programme">
+											<p:ajax event="itemSelect"  update="@form" />
+											<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+											<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+										</p:autoComplete>
+										<p:outputLabel value="Skills Programme" for="skillsProgram37" styleClass="gray" />
+									</h:panelGroup>
+									
+									<h:panelGroup styleClass="md-inputfield" rendered="#{learnerRegistrationNonMersetaFormUI.interventionType.id eq 38 or learnerRegistrationNonMersetaFormUI.interventionType.id eq 92 or learnerRegistrationNonMersetaFormUI.interventionType.id eq 93}" style="margin-top: 19px">
+										<p:autoComplete id="skillsSet38" value="#{learnerRegistrationNonMersetaFormUI.selectedSkillsSet}" completeMethod="#{autoCompleteUI.completeSkillsSet}" var="rv" 
+										itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SkillsSetConvertor" dropdown="true" minQueryLength="3" maxResults="10" 
+										inputStyle="width: 95%; opacity:1 !important;" style="width: 95%" required="true" requiredMessage="Select Skills Set">
+											<p:ajax event="itemSelect"  update="@form" />
+											<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+											<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+										</p:autoComplete>
+										<p:outputLabel value="Skills Set" for="skillsSet38" styleClass="gray" />
+									</h:panelGroup>
+									
+									<h:panelGroup styleClass="md-inputfield" rendered="#{learnerRegistrationNonMersetaFormUI.interventionType.id eq 28}" style="margin-top: 19px">
+										<p:autoComplete id="unitStandard" value="#{learnerRegistrationNonMersetaFormUI.selectedUnitStandards}" completeMethod="#{autoCompleteUI.completeUnitStandards}" var="rv" itemLabel="#{rv.title}" itemValue="#{rv}" forceSelection="true" converter="UnitStandardsConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%"
+											required="true" requiredMessage="Select Unit Standards">
+											<p:ajax event="itemSelect" listener="#{learnerRegistrationNonMersetaFormUI.clearSelectedUnitStandartQualification}" update="@form" />
+											<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+											<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.title}</p:column>
+										</p:autoComplete>
+										<p:outputLabel value="#{lang['unit.standard']}" for="unitStandard" styleClass="gray" />
+									</h:panelGroup>
+									
+									<h:panelGroup styleClass="md-inputfield" style="margin-top: 19px" rendered="#{learnerRegistrationNonMersetaFormUI.selectedUnitStandards.id ne null}">
+										<p:autoComplete id="unitStandartQualification" value="#{learnerRegistrationNonMersetaFormUI.selectedQualification}" completeMethod="#{learnerRegistrationNonMersetaFormUI.completeUnitStandartQualification}" var="rv" itemLabel="#{rv.saqaQualification}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor" required="true" requiredMessage="Please Select Qualification" dropdown="true" minQueryLength="3" maxResults="10"
+											inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+											<p:ajax event="itemSelect" update="@form" />
+											<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+											<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+											<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+										</p:autoComplete>
+										<p:outputLabel value="#{lang['saqa.id']}" for="unitStandartQualification" styleClass="gray" />
+									</h:panelGroup>
+									
+									<h:panelGroup styleClass="md-inputfield" style="margin-top: 19px" rendered="#{learnerRegistrationNonMersetaFormUI.interventionType.id eq 48}">
+										<p:inputText id="nonCredidBearingDescription" value="#{learnerRegistrationNonMersetaFormUI.nonCredidBearingDescription}" style="width:95%" required="true" requiredMessage="Provide Non-Credit Bearing Description" >
+											<p:ajax />
+										</p:inputText>
+										<p:outputLabel value="Non Credit Bearing Title:" for="nonCredidBearingDescription" styleClass="gray" />
+									</h:panelGroup>
+									
+					
+
+
+								</p:panelGrid>
+								<br />
+								<br />
+								<p:commandButton value="Continue" action="#{learnerRegistrationNonMersetaFormUI.continueRegistration}" update="learnerRegUserForm" rendered="#{!learnerRegistrationNonMersetaFormUI.showInfo}"/>
+							</p:fieldset>
+							<c:if test="#{learnerRegistrationNonMersetaFormUI.showInfo}">
+								<p:fieldset legend="Search For Company" style="margin-top: 20px" rendered="#{!learnerRegistrationNonMersetaFormUI.company.doneSearch}">
+									<br />
+										<ui:include src="/pages/includes/nonmersetacompanydetails.xhtml" />
+									<br />
+								</p:fieldset>
+							</c:if>
+							
+							<c:if test="#{learnerRegistrationNonMersetaFormUI.showInfo and learnerRegistrationNonMersetaFormUI.company.doneSearch}">
+								<br />
+								<ui:include src="/pages/includes/searchUserPassportOrID.xhtml" />	
+								<br />
+								<p:commandButton value="#{lang['clear']}" icon="fa fa-recycle" styleClass="flat red-btn Fs18" style="height: 50px;" actionListener="#{learnerRegistrationNonMersetaFormUI.clearCurrentLearner}" process="@this" update="@form" />							
+							</c:if>
+						</div>
+					</c:if>
+
+					<c:if test="#{learnerRegistrationNonMersetaFormUI.user.doneSearch}">
+						
+						<ui:include src="/pages/tp/includes/nonmersetacompanyapplicationform.xhtml">
+							<ui:param name="disableFields" value="false" />
+						</ui:include>
+						
+						
+						<p:outputPanel styleClass="card" id="learnerRegUploadForm" style="width: 100%" rendered="#{learnerRegistrationNonMersetaFormUI.companylearners.docs.size() gt 0}">
+							<h:panelGroup id="docList">
+								<p:fieldset legend="#{lang['documents']}" id="userDocs" rendered="#{learnerRegistrationNonMersetaFormUI.companylearners.docs.size() gt 0}">
+									<p:dataTable value="#{learnerRegistrationNonMersetaFormUI.companylearners.docs}" var="rv1" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+										<p:column headerText="#{lang['type']}" width="20%">
+											<p:outputLabel value="#{rv1.configDoc.name} #{rv1.configDoc.requiredDocument ? '*' : ''}"></p:outputLabel>
+										</p:column>
+										<p:column headerText="#{lang['uploaded.by']}">
+											<p:outputLabel value="#{rv1.users.firstName} #{rv1.users.lastName}"></p:outputLabel>
+										</p:column>
+										<p:column headerText="#{lang['uploaded']}" width="15%">
+											<h:outputText value="#{rv1.createDate}">
+												<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+											</h:outputText>
+										</p:column>
+										<p:column headerText="#{lang['version']}" width="15%">
+											<h:outputText value="#{rv1.versionNo}">
+											</h:outputText>
+										</p:column>
+		
+										<p:column width="180" headerText="#{lang['view.edit']}">
+											<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null and rv1.originalFname ne null}">
+												<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+											</p:commandButton>
+											<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null and rv1.originalFname ne null}" />
+		
+											<p:spacer width="5" rendered="#{rv1.id ne null}" />
+											<p:commandButton icon="fa fa-bars " id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null and rv1.originalFname ne null}">
+												<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+											</p:commandButton>
+											<p:tooltip for="dhistUserDocs" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null and rv1.originalFname ne null}" />
+		
+											<!-- only with permission to upload can upload a new version -->
+											<p:commandButton rendered="#{sessionUI.task.processRole eq null or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload}" icon="fa fa-upload" id="uploadUserDocs" styleClass="#{rv1.originalFname eq null ? 'red-btn' : ''} flat" process="@this" oncomplete="PF('dlgUpload').show()"
+												update=":uploadForm">
+												<f:setPropertyActionListener value="#{rv1}" target="#{learnerRegistrationNonMersetaFormUI.doc}" />
+											</p:commandButton>
+											<p:tooltip for="uploadUserDocs" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+		
+											<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+												<p:spacer width="5" />
+												<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+													<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+												</p:commandButton>
+												<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+											</h:panelGroup>
+		
+											<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+												<p:spacer width="5" />
+												<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+													<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+												</p:commandButton>
+												<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+											</h:panelGroup>
+		
+										</p:column>
+									</p:dataTable>
+								</p:fieldset>
+		
+							</h:panelGroup>
+						</p:outputPanel>
+				
+						<div class="ui-g-12">
+							<div class="card">
+								<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+									<p:commandButton value="#{lang['submit']}" icon="fa fa-check" styleClass="flat green-btn Fs18" style="height: 50px;" actionListener="#{learnerRegistrationNonMersetaFormUI.submitLearnerRegistration}" update="@form" />
+
+									<p:commandButton value="#{lang['clear']}" icon="fa fa-recycle" styleClass="flat red-btn Fs18" style="height: 50px;" actionListener="#{learnerRegistrationNonMersetaFormUI.clearCurrentLearner}" process="@this" update="@form" />
+								</p:panelGrid>
+							</div>
+						</div>
+					</c:if>
+				</div>
+			</div>
+		</h:form>
+
+
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true" dynamic="true">
+			<h:form id="uploadForm">
+				<h:panelGroup id="uploadGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{learnerRegistrationNonMersetaFormUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{learnerRegistrationNonMersetaFormUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span>
+										<br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{learnerRegistrationNonMersetaFormUI.storeFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update="learnerRegUserForm:learnerRegUploadForm" multiple="false" fileLimit="1" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+		</h:panelGroup>
+	</ui:define>
+</ui:composition>

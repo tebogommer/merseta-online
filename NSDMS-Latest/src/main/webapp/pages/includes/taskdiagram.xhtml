@@ -1,0 +1,50 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<style type="text/css">
+div.ui-treenode-children {
+	padding-left: 0px !important
+}
+</style>
+	<h:form>
+		<c:if test="#{sessionUI.task ne null}">
+			<h:outputText value="#{lang['task']}: " styleClass="FontBold Fs15" />
+			<h:outputText value="#{sessionUI.task.description}" styleClass="FontLight Fs15" />
+			<div class="EmptyBox5" />
+			<p:tree value="#{taskDiagramUI.root}" var="node" orientation="horizontal">
+				<p:treeNode type="notstarted">
+					<h:outputText value="#{node.roles.description} (Days To Complete #{node.numberOfDays != null ? node.numberOfDays : 5})" rendered="#{node.roles.description ne null}" />
+					<h:outputText value="#{lang[node.companyUserType.type]} (Days To Complete #{node.numberOfDays != null ? node.numberOfDays : 5})" rendered="#{node.roles.description eq null}" />
+				</p:treeNode>
+				<p:treeNode type="underway">
+					<h:outputText value="#{node.roles.description} (Days To Complete #{node.numberOfDays != null ? node.numberOfDays : 5})" rendered="#{node.roles.description ne null}" />
+					<h:outputText value="#{lang[node.companyUserType.type]} (Days To Complete #{node.numberOfDays != null ? node.numberOfDays : 5})" rendered="#{node.roles.description eq null}" />
+				</p:treeNode>
+				<p:treeNode type="completed">
+					<h:outputText value="#{node.roles.description} (Days To Complete #{node.numberOfDays != null ? node.numberOfDays : 5})" rendered="#{node.roles.description ne null}" />
+					<h:outputText value="#{lang[node.companyUserType.type]} (Days To Complete #{node.numberOfDays != null ? node.numberOfDays : 5})" rendered="#{node.roles.description eq null}" />
+				</p:treeNode>
+				<p:treeNode type="none">
+					<h:outputText value="#{node.roles.description}" rendered="#{node.roles.description ne null}" />
+					<h:outputText value="#{lang[node.companyUserType.type]}" rendered="#{node.roles.description eq null}" />
+				</p:treeNode>
+				<p:treeNode>
+					<h:outputText value="#{node.roles.description} (Days To Complete #{node.numberOfDays != null ? node.numberOfDays : 5})" rendered="#{node.roles.description ne null}" />
+					<h:outputText value="#{lang[node.companyUserType.type]} (Days To Complete #{node.numberOfDays != null ? node.numberOfDays : 5})" rendered="#{node.roles.description eq null}" />
+				</p:treeNode>
+			</p:tree>
+		</c:if>
+	</h:form>
+	<script>
+$( document ).ready(function() {
+
+  	$('[data-nodetype="none"]').children().css( {"background-color": "#C5913E !important", "color": "white"}  );
+    $('[data-nodetype="none"]  .ui-tree-toggler').css( "color", "white" );
+    
+    $('[data-nodetype="notstarted"]').children().css(  {"background-color": "#E22412", "color": "white"}  );
+    $('[data-nodetype="notstarted"]  .ui-tree-toggler').css( "color", "white" );
+    $('[data-nodetype="underway"]').children().css(  {"background-color": "#FFB90B", "color": "black"}  );
+    $('[data-nodetype="underway"]  .ui-tree-toggler').css( "color", "black" );
+    $('[data-nodetype="completed"]').children().css(  {"background-color": "#20D90A", "color": "white"}  );
+    $('[data-nodetype="completed"]  .ui-tree-toggler').css( "color", "white" );	    
+});
+</script>
+</ui:composition>

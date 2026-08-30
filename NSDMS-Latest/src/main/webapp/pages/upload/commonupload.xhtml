@@ -1,0 +1,42 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui" xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:p="http://primefaces.org/ui">
+
+
+
+	<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true">
+		<h:form id="uploadForm">
+			<h:panelGroup id="uploadGroup">
+				<div class="ui-g">
+					<div class="ui-g-12">
+						<div class="card">
+							<h1 style="font-weight: bold; font-size: 25px;">#{sessionUI.uploadHeading}</h1> 
+							<p:panel>
+								<h:panelGrid columns="2" style="width: 100%">
+									<p:outputLabel value="#{lang['notes']}:" for="note" />
+									<p:inputTextarea id="note" value="#{uploadDocUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+										<p:ajax />
+									</p:inputTextarea>
+								</h:panelGrid>
+
+								<div class="TexAlCenter">
+									<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span><br />
+								</div>
+								<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{uploadDocUI.safeFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update="@form" multiple="false" fileLimit="1" immediate="false"
+									auto="true" />
+							</p:panel>
+
+
+							<div class="EmptyBox10" />
+
+							<ui:include src="/pages/upload/commonuploadTable.xhtml" />
+
+						</div>
+					</div>
+				</div>
+			</h:panelGroup>
+		</h:form>
+	</p:dialog>
+
+	<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+
+</ui:composition>

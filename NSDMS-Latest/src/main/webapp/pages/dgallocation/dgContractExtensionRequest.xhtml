@@ -1,0 +1,517 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<ui:include src="/pages/includes/taskdiagram.xhtml" />
+				<br />
+			</div>
+		</div>
+		<p:growl sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+		<h:form id="extensionRequestMainForm">
+			<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+			<div class="ui-g">
+				<div class="ui-g-12">
+
+					<div class="card card-w-title">
+						<h1>Contract Extension Request</h1>
+						<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText disabled="true" value="#{activeContractExtensionRequestWorkflowUI.activeContractExtensionRequest.requestUser.firstName} #{activeContractExtensionRequestWorkflowUI.activeContractExtensionRequest.requestUser.lastName} (#{activeContractExtensionRequestWorkflowUI.activeContractExtensionRequest.requestUser.email})" style="width:95%">
+								</p:inputText>
+								<p:outputLabel value="Request User" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield" >
+								<p:inputText disabled="true" value="#{activeContractExtensionRequestWorkflowUI.activeContractExtensionRequest.createDate}" style="width:95%">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}"/>
+								</p:inputText>
+								<p:outputLabel value="Date Requested" />
+							</h:panelGroup>
+							<h:panelGroup rendered="false">
+								<div>
+									<p:outputLabel value="Use System Generated Date:" styleClass="Fs14 FontLight" />
+								</div>	
+								<div>	
+									<p:selectBooleanCheckbox disabled="true" value="#{activeContractExtensionRequestWorkflowUI.activeContractExtensionRequest.useSystemGeneratedDate}" />
+								</div>
+							</h:panelGroup>
+							<p:spacer rendered="#{!activeContractExtensionRequestWorkflowUI.canEditAbstract}"/>
+							<p:commandButton icon="fa fa-database" value="Update Extension Date" update=":extensionRequestMainForm :updateDateForm" rendered="#{activeContractExtensionRequestWorkflowUI.canEditAbstract and false}" action="#{activeContractExtensionRequestWorkflowUI.prepUpdateOfExtensionRequestDate}" />
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText disabled="true" value="#{activeContractExtensionRequestWorkflowUI.activeContractExtensionRequest.orginalDueDate}" style="width:95%">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}"/>
+								</p:inputText>
+								<p:outputLabel value="Orginal Deadline Date" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield" rendered="#{activeContractExtensionRequestWorkflowUI.activeContractExtensionRequest.useSystemGeneratedDate}"> 
+								<p:inputText disabled="true" value="#{activeContractExtensionRequestWorkflowUI.activeContractExtensionRequest.extenionDate}" style="width:95%">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}"/>
+								</p:inputText>
+								<p:outputLabel value="Generated Extension Date" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield" rendered="#{!activeContractExtensionRequestWorkflowUI.activeContractExtensionRequest.useSystemGeneratedDate}">
+								<p:inputText disabled="true" value="#{activeContractExtensionRequestWorkflowUI.activeContractExtensionRequest.enteredDate}" style="width:95%">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}"/>
+								</p:inputText>
+								<p:outputLabel value="Date Manually Entered" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield" rendered="#{activeContractExtensionRequestWorkflowUI.activeContractExtensionRequest.userUpdatedDate ne null}">
+								<p:inputText disabled="true" value="#{activeContractExtensionRequestWorkflowUI.activeContractExtensionRequest.userUpdatedDate.firstName} #{activeContractExtensionRequestWorkflowUI.activeContractExtensionRequest.userUpdatedDate.lastName} (#{activeContractExtensionRequestWorkflowUI.activeContractExtensionRequest.userUpdatedDate.email})" style="width:95%">
+								</p:inputText>
+								<p:outputLabel value="User Updated Extension Request Date" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield" rendered="#{activeContractExtensionRequestWorkflowUI.activeContractExtensionRequest.dateUpdatedExtensionDate ne null}">
+								<p:inputText disabled="true" value="#{activeContractExtensionRequestWorkflowUI.activeContractExtensionRequest.dateUpdatedExtensionDate}" style="width:95%">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}"/>
+								</p:inputText>
+								<p:outputLabel value="Date Updated" />
+							</h:panelGroup>
+						</p:panelGrid>
+						
+						<!-- Extension Request Information -->
+
+
+						<!-- Tab layout for active contract -->
+						<c:if test="#{activeContractExtensionRequestWorkflowUI.activeContracts ne null and activeContractExtensionRequestWorkflowUI.activeContracts.id ne null}">
+							<h2>Contract Information</h2>
+							<p:commandButton icon="fa fa-download" value="Download MOA Agreement" immediate="true" ajax="false" action="#{activeContractExtensionRequestWorkflowUI.downloadMoaVersionTwo}" update="@form" />
+							<div class="EmptyBox10" />
+							<p:tabView dynamic="true" cache="true">
+								<p:tab title="Company Information">
+									<p:outputPanel id="activeContractCompanyInfoPanel">
+										<ui:include src="/pages/includes/companyInformationDisplay.xhtml">
+											<ui:param name="company" value="#{activeContractExtensionRequestWorkflowUI.activeContracts.dgAllocationParent.wsp.company}" />
+											<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+										</ui:include>
+										<c:if test="false">
+											<ui:include src="/pages/tp/includes/company.xhtml">
+												<ui:param name="title" value="Company Details" />
+												<ui:param name="company" value="#{activeContractExtensionRequestWorkflowUI.activeContracts.dgAllocationParent.wsp.company}" />
+											</ui:include>
+										</c:if>
+									</p:outputPanel>
+								</p:tab>
+								<p:tab title="Contract Information">
+									<p:outputPanel id="activeContractContractInfoPanel">
+									</p:outputPanel>
+								</p:tab>
+								<p:tab title="Project Implementation Plan">
+									<p:outputPanel id="activeContractPIPInfoPanel">
+										<p:dataTable var="rowVar" value="#{activeContractExtensionRequestWorkflowUI.projectImplementationPlanDataModel}" id="projectimplementationplanList" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+											paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20,40,50" reflow="true" lazy="true">
+
+											<p:column>
+												<f:facet name="header">
+													<label style="text-align: top; position: relative;">#{lang['recommendedIntervention']}</label>
+												</f:facet>
+												<h:outputText value="#{rowVar.interventionTypeDescription}" />
+											</p:column>
+											
+											<p:column>
+												<f:facet name="header">
+													<label style="text-align: top; position: relative;">#{lang['awarded.learners']}</label>
+												</f:facet>
+												<h:outputText value="#{rowVar.fullyFundedLearnerAwarded + rowVar.coFundingLearnersAwarded}" />
+											</p:column>
+
+											<p:column>
+												<f:facet name="header">
+													<label style="text-align: top; position: relative;">#{lang['projectedRecruitmentDate1']}</label>
+													<p style="color: orange; text-align: top;">Before Projected Registration Date</p>
+												</f:facet>
+												<div>
+													<p:outputLabel value="#{rowVar.projectedRecruitmentDate}" rendered="#{rowVar.projectedRecruitmentDate ne null}">
+														<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+													</p:outputLabel>
+													<p:outputLabel value="Not Provided" rendered="#{rowVar.projectedRecruitmentDate eq null}">
+													</p:outputLabel>
+												</div>
+											</p:column>
+
+											<p:column>
+												<f:facet name="header">
+													<label style="text-align: top; position: relative;">#{lang['projectedInductionDate1']}</label>
+													<p style="color: orange; text-align: top;">Before Projected Registration Date</p>
+												</f:facet>
+												<div>
+													<p:outputLabel value="#{rowVar.projectedInductionDate}" rendered="#{rowVar.projectedInductionDate ne null}">
+														<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+													</p:outputLabel>
+													<p:outputLabel value="Not Provided" rendered="#{rowVar.projectedInductionDate eq null}">
+													</p:outputLabel>
+												</div>
+											</p:column>
+
+											<p:column>
+												<f:facet name="header">
+													<label style="text-align: top; position: relative;">#{lang['projectedRegistrationDate1']}</label>
+													<p style="color: orange; text-align: top;">#{activeContractExtensionRequestWorkflowUI.projectedRegistrationDisplayDate}</p>
+												</f:facet>
+												<div>
+													<p:outputLabel value="#{rowVar.projectedRegistrationDate}" rendered="#{rowVar.projectedRegistrationDate ne null}">
+														<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+													</p:outputLabel>
+													<p:outputLabel value="Not Provided" rendered="#{rowVar.projectedRegistrationDate eq null}">
+													</p:outputLabel>
+												</div>
+											</p:column>
+
+											<p:column>
+												<f:facet name="header">
+													<label style="text-align: top; position: relative;">#{lang['estimatedProgressDate1']}</label>
+													<p style="color: orange; text-align: top;">Within MOA period</p>
+												</f:facet>
+												<div>
+													<p:outputLabel value="#{rowVar.estimatedProgressDate}" rendered="#{rowVar.estimatedProgressDate ne null}">
+														<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+													</p:outputLabel>
+													<p:outputLabel value="Not Provided" rendered="#{rowVar.estimatedProgressDate eq null}">
+													</p:outputLabel>
+												</div>
+											</p:column>
+
+											<p:column headerText="">
+												<f:facet name="header">
+													<label style="text-align: top; position: relative;">#{lang['estimatedCompletionDate1']}</label>
+													<p style="color: orange; text-align: top;">Within MOA period</p>
+												</f:facet>
+												<div>
+													<p:outputLabel value="#{rowVar.estimatedCompletionDate}" rendered="#{rowVar.estimatedCompletionDate ne null}">
+														<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+													</p:outputLabel>
+													<p:outputLabel value="Not Provided" rendered="#{rowVar.estimatedCompletionDate eq null}">
+													</p:outputLabel>
+												</div>
+											</p:column>
+
+											<p:column>
+												<f:facet name="header">
+													<label style="text-align: top; position: relative;">#{lang['logisticalAspectsAddressed']}</label>
+												</f:facet>
+												<p:outputLabel value="#{rowVar.logisticalAspectsAddressed.friendlyName}" rendered="#{rowVar.logisticalAspectsAddressed ne null}">
+												</p:outputLabel>
+												<p:outputLabel value="Not Provided" rendered="#{rowVar.logisticalAspectsAddressed eq null}">
+												</p:outputLabel>
+											</p:column>
+
+											<p:column>
+												<f:facet name="header">
+													<label style="text-align: top; position: relative;">#{lang['accreditedProviderIdentified']}</label>
+												</f:facet>
+												<p:outputLabel value="#{rowVar.accreditedProviderIdentified.friendlyName}" rendered="#{rowVar.accreditedProviderIdentified ne null}">
+												</p:outputLabel>
+												<p:outputLabel value="Not Provided" rendered="#{rowVar.accreditedProviderIdentified eq null}">
+												</p:outputLabel>
+											</p:column>
+										</p:dataTable>
+									</p:outputPanel>
+								</p:tab>
+								<p:tab title="Sign Off List" rendered="#{activeContractExtensionRequestWorkflowUI.signOffUserList ne null and activeContractExtensionRequestWorkflowUI.signOffUserList.size() gt 0}">
+									<p:outputPanel id="activeContractSignOffInfoPanel">
+
+										<p:dataTable var="rvso" value="#{activeContractExtensionRequestWorkflowUI.signOffUserList}" id="signoffList" reflow="true">
+											<p:column headerText="#{lang['signed.off.by']}">
+												<p:outputLabel value="#{rvso.user.firstName} #{rvso.user.lastName}" rendered="#{rvso.user ne null}" />
+												<p:outputLabel value="Awaiting Assignment" rendered="#{rvso.user eq null}" />
+											</p:column>
+											<p:column headerText="#{lang['date']}">
+												<p:outputLabel value="Pending Sign Off" rendered="#{rvso.signOffDate eq null}" />
+												<p:outputLabel value="#{rvso.signOffDate}" rendered="#{rvso.signOffDate ne null}">
+													<f:convertDateTime pattern="dd/MM/yyyy HH:MM" />
+												</p:outputLabel>
+											</p:column>
+											<p:column headerText="#{lang['acknowledge']}">
+												<div>
+													<p:selectBooleanCheckbox value="#{rvso.accept}" disabled="true">
+													</p:selectBooleanCheckbox>
+												</div>
+												<div>
+													<p:outputLabel value="#{lang['i.acknowledge.read.understand.terms.and.conditions']}"></p:outputLabel>
+												</div>
+											</p:column>
+										</p:dataTable>
+									</p:outputPanel>
+								</p:tab>
+								<p:tab title="Contract Documents" rendered="#{activeContractExtensionRequestWorkflowUI.activeContracts.docs ne null and activeContractExtensionRequestWorkflowUI.activeContracts.docs.size() gt 0}">
+									<p:outputPanel id="activeContractDocumentsInfoPanel">
+										<p:dataTable value="#{activeContractExtensionRequestWorkflowUI.activeContracts.docs}" var="rv1" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+											<p:column headerText="#{lang['type']}" width="20%">#{rv1.configDoc.name}</p:column>
+											<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+											<p:column headerText="#{lang['uploaded']}" width="15%">
+												<h:outputText value="#{rv1.createDate}">
+													<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+												</h:outputText>
+											</p:column>
+											<p:column headerText="#{lang['version']}" width="15%">
+												<h:outputText value="#{rv1.versionNo}">
+												</h:outputText>
+											</p:column>
+											<p:column width="180" headerText="#{lang['view.edit']}">
+												<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}">
+													<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+												</p:commandButton>
+												<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+												<p:spacer width="5" rendered="#{rv1.id ne null}" />
+												<p:commandButton icon="fa fa-bars " id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}">
+													<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+												</p:commandButton>
+												<p:tooltip for="dhistUserDocs" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+												<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+													<p:spacer width="5" />
+													<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+														<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+													</p:commandButton>
+													<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+												</h:panelGroup>
+												<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+													<p:spacer width="5" />
+													<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+														<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+														<f:setPropertyActionListener value="#{sessionUI.activeUser}" target="#{uploadDocUI.viewUser}" />
+													</p:commandButton>
+													<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+												</h:panelGroup>
+											</p:column>
+										</p:dataTable>
+									</p:outputPanel>
+								</p:tab>
+							</p:tabView>
+						</c:if>
+					</div>
+
+					<c:if test="#{activeContractExtensionRequestWorkflowUI.activeContractExtensionRequest.docs.size() gt 0}">
+						<div class="card card-w-title">
+							<h2>Extension Required Documents</h2>
+							<p:dataTable value="#{activeContractExtensionRequestWorkflowUI.activeContractExtensionRequest.docs}" var="rvDoc" rowKey="#{rvDoc.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+								<p:column headerText="#{lang['type']}" width="20%">#{rvDoc.configDoc.name}</p:column>
+								<p:column headerText="#{lang['uploaded.by']}">#{rvDoc.users.firstName} #{rvDoc.users.lastName}</p:column>
+								<p:column headerText="#{lang['uploaded']}" width="15%">
+									<h:outputText value="#{rvDoc.createDate}">
+										<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="#{lang['version']}" width="15%">
+									<h:outputText value="#{rvDoc.versionNo}">
+									</h:outputText>
+								</p:column>
+								<p:column width="180" headerText="#{lang['view.edit']}">
+									<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rvDoc.id ne null}">
+										<f:setPropertyActionListener value="#{rvDoc}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rvDoc.id ne null}" />
+									<p:spacer width="5" rendered="#{rvDoc.id ne null}" />
+									<p:commandButton icon="fa fa-bars " id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rvDoc.id ne null}">
+										<f:setPropertyActionListener value="#{rvDoc}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="dhistUserDocs" value="#{lang['document.tracker']}" position="left" rendered="#{rvDoc.id ne null}" />
+
+									<p:commandButton rendered="#{activeContractExtensionRequestWorkflowUI.canUploadAbstract}" icon="fa fa-upload" id="uploadUserDocs" styleClass="#{rvDoc.originalFname eq null ? 'red-btn' : ''} flat" process="@this" oncomplete="PF('dlgUpload').show()" update=":uploadForm">
+										<f:setPropertyActionListener value="#{rvDoc}" target="#{activeContractExtensionRequestWorkflowUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="uploadUserDocs" value="#{rvDoc.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+
+									<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rvDoc.note ne null and rvDoc.note.length() gt 0}">
+										<p:spacer width="5" />
+										<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+											<f:setPropertyActionListener value="#{rvDoc}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+									</h:panelGroup>
+									<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rvDoc.extension.toLowerCase() eq 'pdf' or rvDoc.extension.toLowerCase() eq 'png' or rvDoc.extension.toLowerCase() eq 'jpg' or rvDoc.extension.toLowerCase() eq 'jpeg' or rvDoc.extension.toLowerCase() eq 'gif'}">
+										<p:spacer width="5" />
+										<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+											<f:setPropertyActionListener value="#{rvDoc}" target="#{uploadDocUI.doc}" />
+											<f:setPropertyActionListener value="#{sessionUI.activeUser}" target="#{uploadDocUI.viewUser}" />
+										</p:commandButton>
+										<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+									</h:panelGroup>
+								</p:column>
+							</p:dataTable>
+						</div>
+					</c:if>
+
+					<c:if test="#{activeContractExtensionRequestWorkflowUI.taskRejectionReasonsList.size() ne 0}">
+						<div class="card card-w-title">
+							<h2>Rejection Reasons:</h2>
+							<p:repeat var="rowVarRR" value="#{activeContractExtensionRequestWorkflowUI.taskRejectionReasonsList}">
+								<p:outputLabel value="#{rowVarRR.description}" style="font-weight:bold; font-size: 20px; color: red;" />
+								<br />
+								<p:outputLabel value="#{rowVarRR.howTo}" style="color: grey;" />
+								<br />
+								<br />
+							</p:repeat>
+							<br />
+						</div>
+					</c:if>
+
+
+					<div class="card card-w-title">
+						<!-- task Actions -->
+
+						<c:if test="#{sessionUI.task.processRole eq null}">
+							<!-- No process role identified -->
+							<p:commandButton value="Complete Task" icon="fa fa-check" styleClass="green-btn flat Fs18" style="height: 50px;" action="#{activeContractExtensionRequestWorkflowUI.completeTask}" update="@form">
+								<p:confirm header="Confirmation" message="Are You Sure You Wish To Proceed? " icon="fa fa-exclamation-triangle" />
+							</p:commandButton>
+						</c:if>
+
+						<c:if test="#{sessionUI.task.processRole ne null}">
+							<!-- Complete Task -->
+							<p:panelGrid columns="2" style="width:100%; text-align: center" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{activeContractExtensionRequestWorkflowUI.canCompleteTaskAbstract}">
+								
+								<p:commandButton value="Complete Task" icon="fa fa-check" styleClass="green-btn flat Fs18" style="height: 50px;" action="#{activeContractExtensionRequestWorkflowUI.completeTask}" update="@form">
+									<p:confirm header="Confirmation" message="Are You Sure You Wish To Proceed? " icon="fa fa-exclamation-triangle" />
+								</p:commandButton>
+								
+								<p:commandButton value="Reject Task" rendered="#{sessionUI.task.firstInProcess ne null and !sessionUI.task.firstInProcess}" icon="fa fa-times" styleClass="red-btn flat Fs18" style="height: 50px;" oncomplete="PF('dialogRejectReason').show()" update=":rejectReasonForm" action="#{activeContractExtensionRequestWorkflowUI.prepRejection}" />
+							
+							</p:panelGrid>
+
+							<!-- Approve Task -->
+							<p:panelGrid columns="2" style="width:100%; text-align: center" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{activeContractExtensionRequestWorkflowUI.canApproveTaskAbstract}">
+								
+								<p:commandButton value="Approve" icon="fa fa-check" styleClass="green-btn flat Fs18" style="height: 50px;" action="#{activeContractExtensionRequestWorkflowUI.approveTask}" update="@form">
+									<p:confirm header="Confirmation" message="Are You Sure You Wish To Proceed? " icon="fa fa-exclamation-triangle" />
+								</p:commandButton>
+								
+								<p:commandButton value="Reject Task" rendered="#{sessionUI.task.firstInProcess ne null and !sessionUI.task.firstInProcess}" icon="fa fa-times" styleClass="red-btn flat Fs18" style="height: 50px;" oncomplete="PF('dialogRejectReason').show()" update=":rejectReasonForm" action="#{activeContractExtensionRequestWorkflowUI.prepRejection}" />
+							
+							</p:panelGrid>
+ 
+							<!-- Final Approve Task -->
+							<p:panelGrid columns="2" style="width:100%; text-align: center" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{activeContractExtensionRequestWorkflowUI.canFinalApproveTaskAbstract}">
+								
+								<p:commandButton value="Final Approve" icon="fa fa-check" styleClass="green-btn flat Fs18" style="height: 50px;" action="#{activeContractExtensionRequestWorkflowUI.finalApproveTask}" update="@form">
+									<p:confirm header="Confirmation" message="Are You Sure You Wish To Proceed? " icon="fa fa-exclamation-triangle" />
+								</p:commandButton>
+
+								<p:commandButton value="Final Reject" icon="fa fa-times" styleClass="red-btn flat Fs18" style="height: 50px;" oncomplete="PF('finalRejectReasonsDlg').show()" update=":finalRejectReasonForm" action="#{activeContractExtensionRequestWorkflowUI.prepRejection}">
+									<p:confirm header="Confirmation" message="Are You Sure You Wish To Proceed? " icon="fa fa-exclamation-triangle" />
+								</p:commandButton>
+								
+								<p:commandButton value="Reject Task" rendered="#{sessionUI.task.firstInProcess ne null and !sessionUI.task.firstInProcess}" icon="fa fa-times" styleClass="red-btn flat Fs18" style="height: 50px;" oncomplete="PF('dialogRejectReason').show()" update=":rejectReasonForm" action="#{activeContractExtensionRequestWorkflowUI.prepRejection}" />
+							</p:panelGrid>
+						</c:if>
+					</div>
+				</div>
+			</div>
+		</h:form>
+
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+			<h:form>
+				<p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="fa fa-check" />
+				<p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="fa fa-times" />
+			</h:form>
+		</p:confirmDialog>
+		
+		<p:dialog header="Update Extension Request Date" position="top" widgetVar="dlgUpdExtDate" resizable="false" hideEffect="clip" showEffect="clip" id="dialogUpdExtDate" width="70%" responsive="true" modal="true" dynamic="true" closeOnEscape="true">
+			<h:form id="updateDateForm">
+				<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+				
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="Use System Generated Date:" styleClass="Fs14 FontLight" />
+						</div>	
+						<div>	
+							<p:selectBooleanCheckbox disabled="false" value="#{activeContractExtensionRequestWorkflowUI.useSystemGeneratedDate}" >
+								<p:ajax update="@form"/>
+							</p:selectBooleanCheckbox>
+						</div>
+					</h:panelGroup>
+					
+					<h:panelGroup styleClass="md-inputfield" rendered="#{!activeContractExtensionRequestWorkflowUI.useSystemGeneratedDate}">
+						<p:calendar mask="true" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" id="newExtensionDate" value="#{activeContractExtensionRequestWorkflowUI.newExtensionDate}" required="true"  requiredMessage="Provide Date before Proceeding" inputStyle="width:95%" />
+						<p:outputLabel value="Extension Date" for="newExtensionDate" pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+					</h:panelGroup>
+					
+					<h:panelGroup styleClass="md-inputfield" rendered="#{activeContractExtensionRequestWorkflowUI.useSystemGeneratedDate}"> 
+						<p:inputText disabled="true" value="#{activeContractExtensionRequestWorkflowUI.activeContractExtensionRequest.extenionDate}" style="width:95%">
+							<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}"/>
+						</p:inputText>
+						<p:outputLabel value="Generated Extension Date" />
+					</h:panelGroup>
+				</p:panelGrid>
+				<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+					<p:commandButton icon="fa fa-database" value="Update Extension Date" update="@form :extensionRequestMainForm" action="#{activeContractExtensionRequestWorkflowUI.updateExtensionRequestDate}">
+						<p:confirm header="Confirmation" message="Are You Sure You Wish To Proceed? " icon="fa fa-exclamation-triangle" />
+					</p:commandButton>
+					<p:commandButton icon="fa fa-times" value="Cancel" update="@form :extensionRequestMainForm">
+					</p:commandButton>
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="Reject Reasons" widgetVar="finalRejectReasonsDlg" hideEffect="clip" showEffect="clip" id="dialogFinalRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="finalRejectReasonForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{activeContractExtensionRequestWorkflowUI.selectedRejectionReasons}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{activeContractExtensionRequestWorkflowUI.rejectionReasonsForSelection}" var="rv" itemValue="#{rv}" />
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+							</p:selectManyMenu>
+						</div>
+					</div>
+					<p:commandButton value="Final Reject" action="#{activeContractExtensionRequestWorkflowUI.finalRejectTask}" update="@form" />
+				</div>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="Reject Reasons" widgetVar="rejectReasonsDlg" hideEffect="clip" showEffect="clip" id="dialogRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{activeContractExtensionRequestWorkflowUI.selectedRejectionReasons}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{activeContractExtensionRequestWorkflowUI.rejectionReasonsForSelection}" var="rv" itemValue="#{rv}" />
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+							</p:selectManyMenu>
+						</div>
+					</div>
+					<p:commandButton value="Reject Task" action="#{activeContractExtensionRequestWorkflowUI.rejectTask}" update="@form" />
+				</div>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true" dynamic="true">
+			<h:form id="uploadForm">
+				<h:panelGroup id="uploadGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{activeContractExtensionRequestWorkflowUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{activeContractExtensionRequestWorkflowUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{activeContractExtensionRequestWorkflowUI.storeNewFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update=":uploadForm :extensionRequestMainForm" multiple="false" fileLimit="1" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+
+
+	</ui:define>
+</ui:composition>

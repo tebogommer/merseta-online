@@ -1,0 +1,371 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+	<ui:define name="content">
+		<style>
+			.borderless .ui-datalist-content {
+				border: none;
+			}
+			
+			.error {
+				background-color: #F44336 !important;
+				color: white !important;
+				font-weight: bold;
+			}
+		</style>
+		
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<h:form id="filterCoursewareFRM">	
+					<p:growl showDetail="false" sticky="false">
+						<p:autoUpdate />
+					</p:growl>
+					<div class="card card-w-title">
+						<h1>All Skills programmes / Skills Sets Registered Report</h1>
+						<ui:include src="/pages/includes/download_lazy.xhtml">
+							<ui:param name="file_name" value="Skills_Registration_List" />
+							<ui:param name="target" value="allSkillsList" />
+						</ui:include>
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+						<p:dataTable var="rowVar"  value="#{skillsRegistrationReportingUI.dataModel}"  id="allSkillsList" rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" emptyMessage="No Skills Registration information found" rowsPerPageTemplate="10,15,20,25,50,100" reflow="true" lazy="true">
+							
+							 <p:column style="width:16px" exportable="false">
+					            <p:rowToggler />
+					        </p:column>
+							<p:column headerText="Skills Type" sortBy="#{rowVar.skillsType.friendlyName}">
+								<h:outputText value="#{rowVar.skillsType.friendlyName}" /> 
+							</p:column>
+							
+							<p:column headerText="Proposed Title" sortBy="#{rowVar.proposedTitle}" filterBy="#{rowVar.proposedTitle}">
+								<h:outputText value="#{rowVar.proposedTitle}" /> 
+							</p:column>
+							
+							<p:column headerText="Amended Title" sortBy="#{rowVar.amendedTitle}" filterBy="#{rowVar.amendedTitle}">
+								<h:outputText rendered="#{rowVar.amendedTitle ne null}" value="#{rowVar.amendedTitle}" /> 
+								<h:outputText rendered="#{rowVar.amendedTitle eq null}" value="N/A"/>
+							</p:column>
+							
+							<p:column headerText="Fit Career" sortBy="#{rowVar.fitCareer}" filterBy="#{rowVar.fitCareer}" rendered="false" exportable="false">
+								<h:outputText value="#{rowVar.fitCareer}" /> 
+							</p:column>
+							
+							<p:column headerText="Research Sammary" sortBy="#{rowVar.fitCareer}" filterBy="#{rowVar.fitCareer}" rendered="false" exportable="false">
+								<h:outputText value="#{rowVar.researchSummary}" /> 
+							</p:column>
+							
+							<p:column headerText="OFO Code" sortBy="#{rowVar.ofoCodes.description}" filterBy="#{rowVar.ofoCodes.description}">
+								<h:outputText value="#{rowVar.ofoCodes.description}" /> 
+							</p:column>
+							
+							<p:column headerText="Skills Identification">
+								<h:outputText value="#{rowVar.skillsIdentification.description}" /> 
+							</p:column>
+							
+							<p:column headerText="How Will Assist" rendered="false" exportable="false">
+								<h:outputText value="#{rowVar.howWillAssist}" /> 
+							</p:column>
+							
+							
+							<p:column headerText="Qualification">
+								<h:outputText escape="false" value="#{skillsRegistrationReportingUI.getQualHTML(rowVar.qualification)}" rendered="#{rowVar.qualification ne null}" /> 
+								<h:outputText escape="false" value="#{skillsRegistrationReportingUI.skillsRegHTML(rowVar.skillsRegistrationQualificationUnitStandards)}" rendered="#{rowVar.qualification eq null}" />
+							</p:column>
+							
+							<p:column headerText="Applicant">
+								<h:outputText value="#{rowVar.user.firstName} #{rowVar.user.lastName}" /> 
+							</p:column>
+							
+							<p:column headerText="Approved Date">
+								<h:outputText value="#{rowVar.approvalDate}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+								</h:outputText> 
+								<h:outputText rendered="#{rowVar.approvalDate eq null}" value="N/A"/>
+							</p:column>
+							
+							<p:column headerText="Status">
+								<h:outputText value="#{rowVar.approvalEnum.friendlyName}" /> 
+							</p:column>
+							
+							 <p:rowExpansion>
+							 	<h:panelGroup id="unitList">
+									<div>
+										<br />
+										<p:fieldset legend="Skills Programme / Skills Set Application details" id="fsSkillsInfo">
+											<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+											
+												<h:panelGroup styleClass="md-inputfield">
+													<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{rowVar.skillsType}" />
+													<p:outputLabel value="#{lang['skillsType']}" />
+												</h:panelGroup>
+												
+												
+												<h:panelGroup styleClass="md-inputfield">
+													<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{rowVar.skillsIdentification.description}" />
+													<p:outputLabel value="How did you identify the need for this skills programme?" />
+												</h:panelGroup>
+												
+												
+												<h:panelGroup styleClass="md-inputfield">
+													<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{rowVar.researchSummary}" />
+													<p:outputLabel value="#{lang['researchSummary']}" />
+												</h:panelGroup>
+												
+												
+												<h:panelGroup styleClass="md-inputfield">
+													<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{rowVar.fitCareer}" />
+													<p:outputLabel value="#{lang['fitCareer']}" />
+												</h:panelGroup>
+												
+												
+												<h:panelGroup styleClass="md-inputfield">
+													<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{rowVar.proposedTitle}" />
+													<p:outputLabel value="#{lang['proposedTitle']}" />
+												</h:panelGroup>
+												
+												
+												<h:panelGroup styleClass="md-inputfield">
+													<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{rowVar.howWillAssist}" />
+													<p:outputLabel value="#{lang['howWillAssist']}" />
+												</h:panelGroup>
+												
+												
+												<h:panelGroup styleClass="md-inputfield">
+													<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{rowVar.ofoCodes.description}" />
+													<p:outputLabel value="#{lang['ofo.code']}" />
+												</h:panelGroup>
+												
+												
+											</p:panelGrid>
+										</p:fieldset>
+										<br />
+										<p:dataTable rendered="#{rowVar.skillsRegistrationUnitStandards.size() gt 0 and rowVar.skillsRegistrationQualificationUnitStandards.size() lt 1}" var="t" value="#{rowVar.skillsRegistrationUnitStandards}" id="usList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+											<p:column headerText="Qualification Code"  rendered="false">
+												<h:outputText value="#{skillsregistrationUI.skillsregistration.qualification.code}" />
+											</p:column>												
+											<p:column headerText="Qualification Title" rendered="false">
+												<h:outputText value="#{skillsregistrationUI.skillsregistration.qualification.description}" />
+											</p:column>
+											
+											<p:column headerText="Unit Standard Code">
+												<h:outputText value="#{t.unitStandards.code}" />
+											</p:column>
+											
+											<p:column headerText="Unit Standard Title">
+												<h:outputText value="#{t.unitStandards.title}" />
+											</p:column>
+											
+											<p:column headerText="NQF Level">
+												<h:outputText value="#{t.unitStandards.nqflevelg2description}" />
+											</p:column>
+											<p:column headerText="Credits">
+												<h:outputText value="#{t.unitStandards.unitstdnumberofcredits}" />
+											</p:column>
+											
+										</p:dataTable>
+										
+										<p:dataTable rendered="#{rowVar.skillsRegistrationQualificationUnitStandards.size() gt 0}" var="t" value="#{rowVar.skillsRegistrationQualificationUnitStandards}" id="usList1" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+											<p:column headerText="Qualification Code">
+												<h:outputText value="#{t.qualification.code}" />
+											</p:column>												
+											<p:column headerText="Qualification Title">
+												<h:outputText value="#{t.qualification.description}" />
+											</p:column>
+											
+											<p:column headerText="Unit Standard Code">
+												<h:outputText value="#{t.unitStandards.code}" />
+											</p:column>
+											
+											<p:column headerText="Unit Standard Title">
+												<h:outputText value="#{t.unitStandards.title}" />
+											</p:column>
+											
+											<p:column headerText="NQF Level">
+												<h:outputText value="#{t.unitStandards.nqflevelg2description}" />
+											</p:column>
+											<p:column headerText="Credits">
+												<h:outputText value="#{t.unitStandards.unitstdnumberofcredits}" />
+											</p:column>
+											
+										</p:dataTable>
+									</div>
+							</h:panelGroup>
+							
+							<p:fieldset legend="Document(s)">
+				    			<ui:include src="/pages/includes/documents_info_display.xhtml">
+										<ui:param name="docs" value="#{rowVar.docs}" />
+							    </ui:include>
+				    		</p:fieldset>
+						
+							 </p:rowExpansion>
+							
+							
+						</p:dataTable>
+						
+					</div>
+					
+					<div class="card card-w-title">
+						<h1>Skills Registration Monthly And Yearly Report</h1>
+						<p:fieldset>
+							<br/>
+							<p:panelGrid columns="3" style="width:100%" id="bankInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+								<h:panelGroup>
+									 <p:outputLabel value="Select Month: " for="month" />
+	       							 <p:datePicker id="month" showIcon="true" style="width:100%"  view="month" value="#{skillsRegistrationReportingUI.searchMonth}" pattern="MMMM" yearNavigator="true" yearRange="2017:2060" />
+								</h:panelGroup>
+								<h:panelGroup >
+									<p:outputLabel value="Enter Year: " for="year" />
+									<p:inputText id="year" value="#{skillsRegistrationReportingUI.searchYear}" type="number" style="width:100%" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:commandButton value="Search" icon="ui-icon-search" update="@form" action="#{skillsRegistrationReportingUI.searchSkillsByYearOrMon}" />
+									<p:spacer width="20"></p:spacer>
+									<p:commandButton value="Clear" icon="fa fa-recycle" update="@form" action="#{skillsRegistrationReportingUI.clearYearAndMon}" />
+								</h:panelGroup>
+							</p:panelGrid>
+						</p:fieldset>
+						<br/>
+						
+						<ui:include src="/pages/includes/download_lazy.xhtml">
+							<ui:param name="file_name" value="Skills_Registration_List" />
+							<ui:param name="target" value="ymList" />
+						</ui:include>
+						<h:panelGroup rendered="#{skillsRegistrationReportingUI.searching}">
+							<ui:include src="/pages/includes/filterGuide.xhtml" />	
+						</h:panelGroup>	
+						<p:dataTable rendered="#{skillsRegistrationReportingUI.searching}" var="rowVar"  value="#{skillsRegistrationReportingUI.dataModelMonthlyYearlyReport}"  id="ymList" rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" emptyMessage="No Skills Registration information found" rowsPerPageTemplate="10,15,20,25,50,100" reflow="true" lazy="true">
+							
+							 <p:column style="width:16px" exportable="false">
+					            <p:rowToggler />
+					        </p:column>
+							<p:column headerText="Skills Type" sortBy="#{rowVar.skillsType.friendlyName}">
+								<h:outputText value="#{rowVar.skillsType.friendlyName}" /> 
+							</p:column>
+							
+							<p:column headerText="Proposed Title" sortBy="#{rowVar.proposedTitle}" filterBy="#{rowVar.proposedTitle}">
+								<h:outputText value="#{rowVar.proposedTitle}" /> 
+							</p:column>
+							
+							<p:column headerText="Amended Title" sortBy="#{rowVar.amendedTitle}" filterBy="#{rowVar.amendedTitle}">
+								<h:outputText rendered="#{rowVar.amendedTitle ne null}" value="#{rowVar.amendedTitle}" /> 
+								<h:outputText rendered="#{rowVar.amendedTitle eq null}" value="N/A"/>
+							</p:column>
+							
+							<p:column headerText="Fit Career" sortBy="#{rowVar.fitCareer}" filterBy="#{rowVar.fitCareer}" rendered="false" exportable="false">
+								<h:outputText value="#{rowVar.fitCareer}" /> 
+							</p:column>
+							
+							<p:column headerText="Research Sammary" sortBy="#{rowVar.fitCareer}" filterBy="#{rowVar.fitCareer}" rendered="false" exportable="false">
+								<h:outputText value="#{rowVar.researchSummary}" /> 
+							</p:column>
+							
+							<p:column headerText="OFO Code" sortBy="#{rowVar.ofoCodes.description}" filterBy="#{rowVar.ofoCodes.description}">
+								<h:outputText value="#{rowVar.ofoCodes.description}" /> 
+							</p:column>
+							
+							<p:column headerText="Skills Identification">
+								<h:outputText value="#{rowVar.skillsIdentification.description}" /> 
+							</p:column>
+							
+							<p:column headerText="How Will Assist" rendered="false" exportable="false">
+								<h:outputText value="#{rowVar.howWillAssist}" /> 
+							</p:column>
+							
+							
+							<p:column headerText="Qualification">
+								<h:outputText escape="false" value="#{skillsRegistrationReportingUI.getQualHTML(rowVar.qualification)}" rendered="#{rowVar.qualification ne null}" /> 
+								<h:outputText escape="false" value="#{skillsRegistrationReportingUI.skillsRegHTML(rowVar.skillsRegistrationQualificationUnitStandards)}" rendered="#{rowVar.qualification eq null}" />
+							</p:column>
+							
+							<p:column headerText="Applicant">
+								<h:outputText value="#{rowVar.user.firstName} #{rowVar.user.lastName}" /> 
+							</p:column>
+							
+							<p:column headerText="Approved Date">
+								<h:outputText value="#{rowVar.approvalDate}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+								</h:outputText> 
+								<h:outputText rendered="#{rowVar.approvalDate eq null}" value="N/A"/>
+							</p:column>
+							
+							<p:column headerText="Status">
+								<h:outputText value="#{rowVar.approvalEnum.friendlyName}" /> 
+							</p:column>
+							
+							 <p:rowExpansion>
+								 	<h:panelGroup id="unitList">
+										<div><br />
+											<p:dataTable rendered="#{rowVar.skillsRegistrationUnitStandards.size() gt 0 and rowVar.skillsRegistrationQualificationUnitStandards.size() lt 1}" var="t" value="#{rowVar.skillsRegistrationUnitStandards}" id="usList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+												<p:column headerText="Qualification Code"  rendered="false">
+													<h:outputText value="#{skillsregistrationUI.skillsregistration.qualification.code}" />
+												</p:column>												
+												<p:column headerText="Qualification Title" rendered="false">
+													<h:outputText value="#{skillsregistrationUI.skillsregistration.qualification.description}" />
+												</p:column>
+												
+												<p:column headerText="Unit Standard Code">
+													<h:outputText value="#{t.unitStandards.code}" />
+												</p:column>
+												
+												<p:column headerText="Unit Standard Title">
+													<h:outputText value="#{t.unitStandards.title}" />
+												</p:column>
+												
+												<p:column headerText="NQF Level">
+													<h:outputText value="#{t.unitStandards.nqflevelg2description}" />
+												</p:column>
+												<p:column headerText="Credits">
+													<h:outputText value="#{t.unitStandards.unitstdnumberofcredits}" />
+												</p:column>
+												
+											</p:dataTable>
+											
+											<p:dataTable rendered="#{rowVar.skillsRegistrationQualificationUnitStandards.size() gt 0}" var="t" value="#{rowVar.skillsRegistrationQualificationUnitStandards}" id="usList1" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+												<p:column headerText="Qualification Code">
+													<h:outputText value="#{t.qualification.code}" />
+												</p:column>												
+												<p:column headerText="Qualification Title">
+													<h:outputText value="#{t.qualification.description}" />
+												</p:column>
+												
+												<p:column headerText="Unit Standard Code">
+													<h:outputText value="#{t.unitStandards.code}" />
+												</p:column>
+												
+												<p:column headerText="Unit Standard Title">
+													<h:outputText value="#{t.unitStandards.title}" />
+												</p:column>
+												
+												<p:column headerText="NQF Level">
+													<h:outputText value="#{t.unitStandards.nqflevelg2description}" />
+												</p:column>
+												<p:column headerText="Credits">
+													<h:outputText value="#{t.unitStandards.unitstdnumberofcredits}" />
+												</p:column>
+												
+											</p:dataTable>
+										</div>
+								</h:panelGroup>
+								<p:fieldset legend="Document(s)">
+					    			<ui:include src="/pages/includes/documents_info_display.xhtml">
+											<ui:param name="docs" value="#{rowVar.docs}" />
+								    </ui:include>
+					    		</p:fieldset>
+							 </p:rowExpansion>
+							
+							
+						</p:dataTable>
+						
+						
+						
+					</div>
+				</h:form>
+				
+			</div>
+		</div>
+		
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+
+	</ui:define>
+
+</ui:composition>

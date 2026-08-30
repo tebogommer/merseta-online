@@ -1,0 +1,134 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+		<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+		<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+		<p:importEnum type="haj.com.entity.enums.LearnerStatusEnum" />
+		<p:importEnum type="haj.com.entity.enums.YesNoEnum" />
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>ARPL Applications Management</h1>
+					<p:growl sticky="false">
+						<p:autoUpdate />
+					</p:growl>
+					<h:form id="mainForm">
+						<p:dataTable var="var" id="arplList" value="#{arplManagerViewUI.companyLearnersTradeTestDataModel}" rowKey="#{var.id}" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20" reflow="true" lazy="true">
+							<f:facet name="header"> All ARPL Applications </f:facet>
+							<p:column headerText="Reference ID" sortBy="#{var.id}">
+								<h:outputText value="#{var.id}" />
+							</p:column>
+							<p:column headerText="Learner" sortBy="#{var.learner}">
+								<h:outputText value="#{var.learner.firstName} #{var.learner.lastName}" />
+							</p:column>
+							<p:column headerText="Initiator" sortBy="#{var.createUser}">
+								<h:outputText value="#{var.createUser.firstName} #{var.createUser.lastName}" />
+							</p:column>
+							<p:column headerText="Status" sortBy="#{var.status}">
+								<h:outputText value="#{var.status.friendlyName}" />
+							</p:column>
+							<p:column headerText="Qualification" sortBy="#{var.qualification}">
+								<h:outputText value="(#{var.qualification.code}) #{var.qualification.description}" />
+							</p:column>
+							<p:column headerText="Preferred Trade Test Center">
+								<h:outputText value="#{var.preferredTrainingCenter.companyName}" />
+							</p:column>
+							<p:column headerText="Serial Number" filterBy="#{var.serialNumber}">
+								<h:outputText value="#{var.serialNumber}" rendered="#{var.serialNumber ne null}" />
+								<h:outputText value="N/A" rendered="#{var.serialNumber eq null}" />
+							</p:column>
+							<p:column headerText="Actions" exportable="false">
+								<p:commandButton icon="fa fa-search" title="View ARPL Information" update=":contractInformationForm" action="#{arplManagerViewUI.prepViewArpl}" rendered="true">
+									<f:setPropertyActionListener value="#{var}" target="#{arplManagerViewUI.viewCompanyLearnersTradeTest}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<h:form id="contractInformationForm">
+					<c:if test="#{arplManagerViewUI.viewCompanyLearnersTradeTest ne null}">
+						<div class="card card-w-title">
+							<h2>ARPL Application Selected. Reference ID: #{arplManagerViewUI.viewCompanyLearnersTradeTest.id}</h2>
+							<p:commandButton icon="fa fa-times" value="Close View" update=":contractInformationForm" onstart="uploadStart()" oncomplete="uploadDone()" action="#{arplManagerViewUI.closeViewArpl}" />
+							<div class="EmptyBox10" />
+							<p:tabView dynamic="true" cache="true" >
+								<p:tab title="Learner Information" rendered="#{arplManagerViewUI.learnerInfoTab}" >
+									<ui:include src="/pages/includes/arplLearnerInformationDisplay.xhtml">
+										<ui:param name="user" value="#{arplManagerViewUI.viewCompanyLearnersTradeTest.learner}" />
+										<ui:param name="CELLPHONE_FORMAT" value="#{arplManagerViewUI.CELLPHONE_FORMAT}" />
+										<ui:param name="FAX_NUMBER_FORMAT" value="#{arplManagerViewUI.FAX_NUMBER_FORMAT}" />
+										<ui:param name="TELPHONE_FORMAT" value="#{arplManagerViewUI.TELPHONE_FORMAT}" />
+									</ui:include>
+								</p:tab>
+								<p:tab title="Initiator Information" rendered="#{arplManagerViewUI.iniTab}" >
+									<ui:include src="/pages/includes/arplLearnerInformationDisplay.xhtml">
+										<ui:param name="user" value="#{arplManagerViewUI.viewCompanyLearnersTradeTest.createUser}" />
+										<ui:param name="CELLPHONE_FORMAT" value="#{arplManagerViewUI.CELLPHONE_FORMAT}" />
+										<ui:param name="FAX_NUMBER_FORMAT" value="#{arplManagerViewUI.FAX_NUMBER_FORMAT}" />
+										<ui:param name="TELPHONE_FORMAT" value="#{arplManagerViewUI.TELPHONE_FORMAT}" />
+									</ui:include>
+								</p:tab>
+								<p:tab title="Application Information" rendered="#{arplManagerViewUI.applicationTab}" >
+									<ui:include src="/pages/includes/arplApplicationInformation.xhtml">
+										<ui:param name="companylearnerstradetest" value="#{arplManagerViewUI.viewCompanyLearnersTradeTest}" />
+										<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+										<ui:param name="dataModelDetailsOfExperienceArpl" value="#{arplManagerViewUI.dataModelDetailsOfExperienceArpl}" />
+										<ui:param name="dataModelDetailsOfTrainingArpl" value="#{arplManagerViewUI.dataModelDetailsOfTrainingArpl}" />
+									</ui:include>
+								</p:tab>
+								<p:tab title="Employer Application Information" rendered="#{arplManagerViewUI.employerAppTab}" >
+									<ui:include src="/pages/includes/arplEmployerInformation.xhtml">
+										<ui:param name="companylearnerstradetest" value="#{arplManagerViewUI.viewCompanyLearnersTradeTest}" />
+										<ui:param name="companyTradeTestEmployer" value="#{arplManagerViewUI.companyTradeTestEmployer}" />
+										<ui:param name="companyEmployer" value="#{arplManagerViewUI.viewCompanyLearnersTradeTest.companyEmployer}" />
+										<ui:param name="CELLPHONE_FORMAT" value="#{arplManagerViewUI.CELLPHONE_FORMAT}" />
+										<ui:param name="FAX_NUMBER_FORMAT" value="#{arplManagerViewUI.FAX_NUMBER_FORMAT}" />
+										<ui:param name="TELPHONE_FORMAT" value="#{arplManagerViewUI.TELPHONE_FORMAT}" />
+									</ui:include>
+								</p:tab>
+								<p:tab title="Trade Test Results" rendered="#{arplManagerViewUI.tradeTestTab}" >
+									<ui:include src="/pages/includes/arplTradeTestInformation.xhtml">
+										<ui:param name="companylearnerstradetest" value="#{arplManagerViewUI.viewCompanyLearnersTradeTest}" />
+										<ui:param name="dataModelTradeTestTaskResult" value="#{arplManagerViewUI.dataModelTradeTestTaskResult}" />
+										<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+									</ui:include>
+								</p:tab>
+								<p:tab title="Sign Off Assigned" rendered="#{arplManagerViewUI.signOffTab}" >
+									<ui:include src="/pages/includes/signoffInclude.xhtml">
+										<ui:param name="SignOffList" value="#{arplManagerViewUI.signOffLists}" />
+										<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+										<ui:param name="acknowledge" value="#{lang['arpl.signoff.declaration.text']} " />
+									</ui:include>
+								</p:tab>
+								<p:tab title="Certificate Collection" rendered="#{arplManagerViewUI.viewCompanyLearnersTradeTest.collectionEnum ne null}">
+									<ui:include src="/pages/includes/arplTradeTestCollectionInformation.xhtml">
+										<ui:param name="companylearnerstradetest" value="#{arplManagerViewUI.viewCompanyLearnersTradeTest}" />
+										<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+									</ui:include> 
+								</p:tab>
+								<p:tab title="Trade Test Documents" rendered="#{arplManagerViewUI.docTab}">
+									<ui:include src="/pages/includes/documents_info_display.xhtml">
+										<ui:param name="docs" value="#{arplManagerViewUI.viewCompanyLearnersTradeTest.docs}" />
+									</ui:include>
+								</p:tab>
+								<p:tab title="Task History">
+									<ui:include src="/pages/includes/taskInformationInclude.xhtml">
+										<ui:param name="TaskList" value="#{arplManagerViewUI.dataModelTasks}" />
+										<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+									</ui:include>
+								</p:tab>
+							</p:tabView>
+							<div class="EmptyBox10" />
+						</div>
+					</c:if>
+				</h:form>
+			</div>
+		</div>
+		
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+
+
+	</ui:define>
+</ui:composition>

@@ -1,0 +1,123 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<style type="text/css">
+.ui-organigram .ui-organigram-node {
+	background: #572b00;
+}
+
+.ui-organigram .ui-organigram-node.employee {
+	background: #572b00;
+}
+
+.ui-organigram .ui-organigram-node.department {
+	background: #7d7008;
+}
+
+.ui-organigram .ui-organigram-node.na {
+	background: #666666;
+}
+
+div.ui-treenode-children {
+	padding-left: 0px !important
+}
+</style>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card" style="width: 3020px">
+					<h1>Org chart</h1>
+
+					<h:form id="createDiagramForm">
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="#{lang['hostingCompany']}" styleClass="gray" />
+							</div>
+							<div>
+								<p:autoComplete id="hostCompanyAutoComplete" value="#{hostingcompanydepartmentsUI.hostingCompany}" completeMethod="#{hostingCompanyEmployeesUI.completeHostingCompany}" converter="HostingCompanyConvertor" var="rv" itemLabel="#{rv.companyName}" itemValue="#{rv}" forceSelection="true"
+									dropdown="true" minQueryLength="1" maxResults="10" required="true" requiredMessage="#{lang['select.host.company']}">
+									<p:ajax event="itemSelect" update="@form" process="@this" listener="#{hostingcompanydepartmentsUI.createDiagram}" />
+								</p:autoComplete>
+							</div>
+						</h:panelGroup>
+						<br />
+
+						<p:organigram id="organigram" widgetVar="organigram" value="#{hostingcompanydepartmentsUI.rootNode}" var="node" selection="#{hostingcompanydepartmentsUI.selection}" zoom="true" rendered="#{hostingcompanydepartmentsUI.hostingCompany ne null}" style="width: 3000px">
+							<p:ajax event="dragdrop" process="@this" update="@form" listener="#{hostingcompanydepartmentsUI.nodeDragDropListener}" />
+							<p:ajax event="select" process="@this" listener="#{hostingcompanydepartmentsUI.nodeSelectListener}" update="@form" />
+							<p:ajax event="contextmenu" process="@this" update="@form" />
+							<p:organigramNode type="root">
+								<h:outputText value="#{node.data}" />
+							</p:organigramNode>
+
+							<p:organigramNode type="department">
+								<h:outputText value="#{node.data.department}" />
+							</p:organigramNode>
+							<p:organigramNode type="employee" icon="ui-icon-person">
+								<h:outputText value="#{node.data.hostingCompanyEmployees.users.firstName} #{node.data.hostingCompanyEmployees.users.lastName}" />
+								<h:outputText value=" (#{node.data.role.description})" rendered="#{node.data.role ne null}" />
+
+							</p:organigramNode>
+							<p:organigramNode type="na" icon="ui-icon-person">
+								<h:outputText value="#{node.data}" />
+							</p:organigramNode>
+
+						</p:organigram>
+
+
+						<p:contextMenu for="organigram" nodeType="root">
+							<p:menuitem value="#{lang['add.department']}" update="@form :addDeptForm" icon="ui-icon-plus" oncomplete="PF('addDepartmentDialog').show()" />
+						</p:contextMenu>
+
+						<p:contextMenu for="organigram" nodeType="department">
+							<p:menuitem value="#{lang['add.department']}" update="@form :addDeptForm" icon="ui-icon-plus" oncomplete="PF('addDepartmentDialog').show()" />
+							<p:menuitem value="#{lang['remove.department']}" update="@form" icon="ui-icon-close" action="#{hostingcompanydepartmentsUI.removeDepartment}" />
+							<p:menuitem value="#{lang['add.employee']}" icon="ui-icon-plus" oncomplete="PF('addEmployeeDialog').show();" update="@form :addEmployeeForm" />
+						</p:contextMenu>
+
+						<p:contextMenu for="organigram" nodeType="employee">
+							<p:menuitem value="#{lang['remove.employee']}" icon="ui-icon-close" ajax="false" action="#{hostingcompanydepartmentsUI.removeUser}" upate=":createDiagramForm" />
+
+						</p:contextMenu>
+					</h:form>
+
+				</div>
+			</div>
+		</div>
+		<p:dialog id="addEmployeeDialog" widgetVar="addEmployeeDialog" header="#{lang['employee.name']}" modal="true" width="60%">
+			<h:form id="addEmployeeForm">
+				<p:panelGrid columns="1" style="width :100%" layout="grid" styleClass="ui-panelgrid-blank">
+					<h:outputLabel value="#{lang['employee.name']}" for="empName" />
+
+					<p:selectOneMenu converter="HostingCompanyEmployeesConvertor" id="empName" value="#{hostingcompanydepartmentsUI.employee.hostingCompanyEmployees}" style="width:95%">
+						<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+						<f:selectItems value="#{hostingcompanydepartmentsUI.employees}" var="rv" itemLabel="#{rv.users.firstName} #{rv.users.lastName}" itemValue="#{rv}" />
+					</p:selectOneMenu>
+					<p:selectOneMenu converter="RolesConvertor" id="role" value="#{hostingcompanydepartmentsUI.employee.role}" style="width:95%">
+						<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+						<f:selectItems value="#{hostingcompanydepartmentsUI.roles}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+					</p:selectOneMenu>
+					<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update="@form :createDiagramForm" action="#{hostingcompanydepartmentsUI.addEmployee}" />
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog id="ddDepartmentDialog" widgetVar="addDepartmentDialog" header="#{lang['add.a.new.department']}" modal="true" width="60%">
+			<h:form id="addDeptForm">
+				<h4>
+					<h:outputText value="#{lang['parent']}: #{hostingcompanydepartmentsUI.hostingcompanydepartments.parentDepartment.department}" rendered="#{hostingcompanydepartmentsUI.hostingcompanydepartments.parentDepartment ne null}" />
+				</h4>
+				<br />
+				<p:panelGrid layout="grid" columns="2">
+					<p:outputLabel value="#{lang['department']}:" />
+					<p:inputText value="#{hostingcompanydepartmentsUI.hostingcompanydepartments.department}" style="width: 98%" />
+					<p:spacer />
+					<p:commandButton value="#{lang['save']}" action="#{hostingcompanydepartmentsUI.saveDepartment}" update="createDiagramForm" />
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+	</ui:define>
+
+</ui:composition>

@@ -1,0 +1,48 @@
+package @@@;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import org.primefaces.model.LazyDataModel;
+import org.primefaces.model.SortOrder;
+
+import haj.com.entity.###;
+import haj.com.service.###Service;
+
+public class ###Datamodel extends LazyDataModel<###> {
+
+	private static final long serialVersionUID = 1L;
+	private List<###> retorno = new ArrayList<###>();
+	private ###Service service = new ###Service();
+
+	public ###Datamodel() {
+		super();
+	}
+
+	@Override
+	public List<###> load(int first, int pageSize, String sortField, SortOrder sortOrder, Map<String, Object> filters) {
+
+		try {
+			retorno = service.all###(###.class, first, pageSize, sortField, sortOrder, filters);
+			setRowCount(service.count(###.class, filters));
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return retorno;
+	}
+
+	@Override
+	public Object getRowKey(### obj) {
+		return obj.getId();
+	}
+
+	@Override
+	public ### getRowData(String rowKey) {
+		for (### obj : retorno) {
+			if (obj.getId().equals(Long.valueOf(rowKey))) return obj;
+		}
+		return null;
+	}
+
+}

@@ -1,0 +1,227 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Reassign Tasks</h1>
+					<h:form id="taskForm">
+
+						<p:importEnum type="haj.com.entity.enums.RagEnum" />
+
+						<br />
+
+						<h:panelGroup styleClass="md-inputfield" id="anationality" rendered="false">
+							<p:autoComplete id="nationality" value="#{reassigntasksUI.selectedUser}" completeMethod="#{autoCompleteUI.completeUser}" var="rv" itemLabel="#{rv.firstName} #{rv.lastName}" itemValue="#{rv}" forceSelection="true" converter="UsersConvertor" dropdown="true" minQueryLength="3" maxResults="25">
+								<p:column headerText="#{lang['user']}" style="white-space: nowrap">#{rv.firstName} #{rv.lastName}</p:column>
+								<p:ajax update="tasksList" listener="#{reassigntasksUI.tasksInfo}" event="itemSelect"></p:ajax>
+							</p:autoComplete>
+							<p:outputLabel value="User:" for="nationality" />
+						</h:panelGroup>
+
+
+						<p:dataTable var="rowVarUser" value="#{reassigntasksUI.userDataModel}" id="usersList" emptyMessage="#{lang['no.records.found']}" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20" reflow="true" lazy="true">
+							<f:facet name="header"> Users </f:facet>
+							<p:column headerText="NSDMS ID" sortBy="#{rowVarUser.id}">
+								<h:outputText value="#{rowVarUser.id}" />
+							</p:column>
+							<p:column headerText="First Name" filterBy="#{rowVarUser.firstName}">
+								<h:outputText value="#{rowVarUser.firstName}" />
+							</p:column>
+							<p:column headerText="Last Name" filterBy="#{rowVarUser.lastName}">
+								<h:outputText value="#{rowVarUser.lastName}" />
+							</p:column>
+							<p:column headerText="Email" filterBy="#{rowVarUser.email}">
+								<h:outputText value="#{rowVarUser.email}" />
+							</p:column>
+							<p:column headerText="Action">
+								<p:commandButton update=":taskForm:tasksList" icon="fa fa-check-square" title="View Users Tasks" action="#{reassigntasksUI.viewUsersTasks}">
+									<f:setPropertyActionListener value="#{rowVarUser}" target="#{reassigntasksUI.selectedUser}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+
+						<br />
+
+						<ui:include src="/pages/includes/download_lazy_with_page.xhtml">
+							<ui:param name="file_name" value="Wsp_Status_report" />
+							<ui:param name="target" value="tasksList" />
+						</ui:include>
+						<br />
+						<p:dataTable var="rowVar" value="#{reassigntasksUI.dataModel}" id="tasksList" emptyMessage="#{lang['no.records.found']}" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" reflow="true" lazy="true">
+
+							<p:column headerText="NSDMS ID" width="50">
+								<h:outputText value="#{rowVar.id}" />
+							</p:column>
+
+							<p:column headerText="#{lang['process.name']}">
+								<h:outputText value="#{lang[rowVar.workflowProcess.registrationName]}" />
+							</p:column>
+
+							<p:column headerText="#{lang['description']}" width="30%" filterBy="#{rowVar.description}">
+								<h:outputText value="#{rowVar.description}" />
+							</p:column>
+
+							<p:column headerText="#{lang['last.action.user']}">
+								<h:outputText value="#{rowVar.actionUser.firstName} #{rowVar.actionUser.lastName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['status']}" width="120">
+								<h:outputText value="#{lang[rowVar.taskStatus.registrationName]}" />
+							</p:column>
+
+							<p:column headerText="#{lang['create.date']}" width="120">
+								<h:outputText value="#{rowVar.createDate}">
+									<f:convertDateTime pattern="dd MMM yyyy" />
+								</h:outputText>
+							</p:column>
+
+							<p:column headerText="#{lang['dueDate']}" width="120">
+								<h:outputText value="#{rowVar.dueDate}">
+									<f:convertDateTime pattern="dd MMM yyyy" />
+								</h:outputText>
+							</p:column>
+
+							<p:column headerText="#{lang['RAG']}" exportable="false" width="5%" styleClass="Fs13">
+								<center>
+									<h:graphicImage value="/resources/hls/images/red.svg" rendered="#{rowVar.rag eq RagEnum.Red}" width="33" styleClass="animated pulse infinite" />
+									<h:graphicImage value="/resources/hls/images/amber.svg" rendered="#{rowVar.rag eq RagEnum.Amber}" width="31" />
+									<h:graphicImage value="/resources/hls/images/green.svg" rendered="#{rowVar.rag eq RagEnum.Green}" width="22" />
+								</center>
+							</p:column>
+
+							<p:column width="120" exportable="false">
+								<p:commandButton title="View Users Assigned" icon="fa fa-users" action="#{reassigntasksUI.findTaskUsers}" update="userAssignedForm" oncomplete="PF('assignedTaskUsers').show()">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{reassigntasksUI.tasks}" />
+								</p:commandButton>
+								<p:spacer width="5"></p:spacer>
+								<p:commandButton title="Reassign Task" icon="fa fa-user" action="#{reassigntasksUI.taskSelect}" update="userForm" oncomplete="PF('assignUsers').show()">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{reassigntasksUI.tasks}" />
+								</p:commandButton>
+								<p:spacer width="5"></p:spacer>
+								<p:commandButton title="Remove Users" icon="fa fa-trash" action="#{reassigntasksUI.removeUserSelect}" update="removeUserForm" oncomplete="PF('removeUsers').show()">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{reassigntasksUI.tasks}" />
+								</p:commandButton>
+								<p:spacer width="5"></p:spacer>
+								<p:commandButton title="Update Task Status" icon="fa fa-history" action="#{reassigntasksUI.removeUserSelect}" update="updateTaskStatusForm" oncomplete="PF('updateTaskStatus').show()">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{reassigntasksUI.tasks}" />
+								</p:commandButton>
+							</p:column>
+
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+
+			<p:dialog header="Users Assigned" position="top" width="50%" widgetVar="assignedTaskUsers" resizable="false" hideEffect="clip" showEffect="clip" id="dialogAssignedUsers" appendTo="@(body)" modal="true" closeOnEscape="true">
+				<h:form id="userAssignedForm">
+					<p:dataTable var="rowVarTU" value="#{reassigntasksUI.taskUsersAssigned}" id="taskUsersAssignedDT" emptyMessage="#{lang['no.records.found']}" rowKey="#{rowVarTU.id}" paginator="true" rows="5" paginatorPosition="bottom"
+						paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="1,3,5" reflow="true">
+						<f:facet name="header">Assigned Users</f:facet>
+						<p:column headerText="First Name">
+							<h:outputText value="#{rowVarTU.user.firstName}" />
+						</p:column>
+						<p:column headerText="Last Name">
+							<h:outputText value="#{rowVarTU.user.lastName}" />
+						</p:column>
+						<p:column headerText="Email Address">
+							<h:outputText value="#{rowVarTU.user.email}" />
+						</p:column>
+					</p:dataTable>
+					<div class="EmptyBox10" />
+					<p:commandButton icon="fa fa-times" value="Close" update="userAssignedForm taskForm" oncomplete="PF('assignedTaskUsers').hide()" />
+				</h:form>
+			</p:dialog>
+
+			<p:dialog header="Assign Users" width="50%" widgetVar="assignUsers" resizable="false" hideEffect="clip" showEffect="clip" id="dialogProcessRoles" appendTo="@(body)" modal="true" closeOnEscape="true">
+				<h:form id="userForm">
+					<h:panelGroup id="userGrid" rendered="#{reassigntasksUI.usersRoles.size() gt 0}">
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="Available Users" for="userRes" styleClass="gray" />
+							</div>
+							<div>
+								<p:selectManyMenu id="userRes" value="#{reassigntasksUI.selectedUsersRoles}" converter="UsersRoleConvertor" required="true" requiredMessage="Select contact person responsibility" var="t" filter="true" filterMatchMode="contains" showCheckbox="true" style="width:95%;">
+									<f:selectItems value="#{reassigntasksUI.usersRoles}" var="rv" itemLabel="#{rv.users.firstName} #{rv.users.lastName}" itemValue="#{rv}" />
+									<p:column>
+										<h:outputText value="#{t.users.firstName} #{t.users.lastName}" />
+									</p:column>
+								</p:selectManyMenu>
+							</div>
+						</h:panelGroup>
+						<br />
+						<br />
+						<p:commandButton value="Assign Users" action="#{reassigntasksUI.reassignTask}" update="taskForm" oncomplete="PF('assignUsers').hide()">
+						</p:commandButton>
+					</h:panelGroup>
+
+					<c:if test="#{reassigntasksUI.usersRoles.size() eq 0}">
+						<ui:include src="/pages/includes/tabinfo.xhtml">
+							<ui:param name="showInfoCircle" value="false" />
+							<ui:param name="cssClass" value="red Fs15 FontBold" />
+							<ui:param name="helpTxt" value="All available users are already assigned to the task" />
+						</ui:include>
+					</c:if>
+
+				</h:form>
+			</p:dialog>
+
+			<p:dialog header="Remove Users" width="50%" widgetVar="removeUsers" resizable="false" hideEffect="clip" showEffect="clip" id="dialogremove" appendTo="@(body)" modal="true" closeOnEscape="true">
+				<h:form id="removeUserForm">
+					<h:panelGroup id="userGrid" rendered="#{reassigntasksUI.taskUsers.size() gt 0}">
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="Current Users" for="userRes" styleClass="gray" />
+							</div>
+							<div>
+								<p:selectManyMenu id="userRes" value="#{reassigntasksUI.selectedTaskUsers}" converter="TaskUsersConvertor" required="true" requiredMessage="Select contact person responsibility" var="t" filter="true" filterMatchMode="contains" showCheckbox="true" style="width:95%;">
+									<f:selectItems value="#{reassigntasksUI.taskUsers}" var="rv" itemLabel="#{rv.user.firstName} #{rv.user.lastName}" itemValue="#{rv}" />
+									<p:column>
+										<h:outputText value="#{t.user.firstName} #{t.user.lastName}" />
+									</p:column>
+								</p:selectManyMenu>
+							</div>
+						</h:panelGroup>
+						<br />
+						<br />
+						<p:commandButton value="Remove Users" action="#{reassigntasksUI.removeUsers}" update="taskForm" oncomplete="PF('removeUsers').hide()">
+						</p:commandButton>
+					</h:panelGroup>
+
+					<c:if test="#{reassigntasksUI.taskUsers.size() eq 0}">
+						<ui:include src="/pages/includes/tabinfo.xhtml">
+							<ui:param name="showInfoCircle" value="false" />
+							<ui:param name="cssClass" value="red Fs15 FontBold" />
+							<ui:param name="helpTxt" value="No users assigned to the task" />
+						</ui:include>
+					</c:if>
+				</h:form>
+			</p:dialog>
+
+			<p:dialog header="Update Task Status" width="50%" widgetVar="updateTaskStatus" resizable="false" hideEffect="clip" showEffect="clip" id="updateTaskStatus" appendTo="@(body)" modal="true" closeOnEscape="true">
+				<h:form id="updateTaskStatusForm">
+					<h:panelGroup id="userGrid">
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="Task Status" for="permission" styleClass="gray" />
+							</div>
+							<div>
+								<p:selectOneMenu id="permission" value="#{reassigntasksUI.tasks.taskStatus}" style="width:75%" required="true">
+									<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+									<f:selectItems value="#{enumUI.taskStatusEnumDD}" var="rv" itemLabel="#{rv.description}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+						<br />
+						<br />
+						<p:commandButton value="Change Status" action="#{reassigntasksUI.tasksUpdate}" update="taskForm" oncomplete="PF('updateTaskStatus').hide()">
+						</p:commandButton>
+					</h:panelGroup>
+				</h:form>
+			</p:dialog>
+
+		</div>
+	</ui:define>
+</ui:composition>

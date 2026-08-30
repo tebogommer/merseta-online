@@ -1,0 +1,546 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.4.0.final using JasperReports Library version 6.4.1  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="Sign_Off" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="fc681da2-ca07-4f08-8c5e-3bd4b174c12a">
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="DataAdapter.xml"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w1" value="312"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w2" value="683"/>
+	<parameter name="backround_image" class="java.awt.Image"/>
+	<parameter name="logo" class="java.awt.Image"/>
+	<parameter name="company_id" class="java.lang.Long"/>
+	<queryString language="SQL">
+		<![CDATA[SELECT users.first_name AS firstname, 
+	   users.last_name AS Lastname,
+       
+       labourunion.description AS labouruniondescription,
+       
+       company.company_name AS companyname,
+	   company.levy_number AS levynumber,
+       company.company_registration_number AS registrationnumber,
+       company.trading_name AS tradingname,
+	   company.tel_number AS telnumber,
+       company.fax_number AS faxnumber,
+       company.email AS email,
+       (CASE WHEN company.company_status = 1 THEN "YES"
+             WHEN company.company_status = 0 THEN "NO"
+       END)AS statuss
+       
+FROM merseta.users AS users
+
+LEFT JOIN merseta.wsp_signoff AS signoff
+ON users.id = signoff.user_id
+
+LEFT JOIN merseta.wsp AS wsp
+ON signoff.wsp_id = wsp.id
+
+LEFT JOIN merseta.company AS company
+ON company.id = wsp.company_id
+
+LEFT JOIN merseta.organised_labour_union AS labourunion
+ON labourunion.id = company.majority_union_id
+
+WHERE wsp.id = $P{company_id}]]>
+	</queryString>
+	<field name="firstname" class="java.lang.String"/>
+	<field name="Lastname" class="java.lang.String"/>
+	<field name="labouruniondescription" class="java.lang.String"/>
+	<field name="companyname" class="java.lang.String"/>
+	<field name="levynumber" class="java.lang.String"/>
+	<field name="registrationnumber" class="java.lang.String"/>
+	<field name="tradingname" class="java.lang.String"/>
+	<field name="telnumber" class="java.lang.String"/>
+	<field name="faxnumber" class="java.lang.String"/>
+	<field name="email" class="java.lang.String"/>
+	<field name="statuss" class="java.lang.String"/>
+	<group name="Group1"/>
+	<group name="Group2"/>
+	<group name="Group3"/>
+	<group name="Group4"/>
+	<group name="DetailInfo"/>
+	<background>
+		<band height="802" splitType="Stretch">
+			<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+			<image scaleImage="FillFrame" hAlign="Right" vAlign="Bottom">
+				<reportElement x="220" y="130" width="331" height="509" uuid="d3c3f86c-0c3e-42c3-8dc9-dc583e3acf4e"/>
+				<imageExpression><![CDATA[$P{backround_image}]]></imageExpression>
+			</image>
+		</band>
+	</background>
+	<title>
+		<band height="638" splitType="Stretch">
+			<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+			<staticText>
+				<reportElement mode="Transparent" x="99" y="60" width="454" height="26" backcolor="#FFFFFF" uuid="43bacb8c-ce13-4f9c-86ae-c5cc80b5d959"/>
+				<box>
+					<pen lineWidth="0.5" lineStyle="Solid" lineColor="#FFFFFF"/>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Bottom">
+					<font fontName="Arial" size="18" isBold="true"/>
+					<paragraph firstLineIndent="0"/>
+				</textElement>
+				<text><![CDATA[WORKPLACE SKILLS PLAN  (WSP)  SIGN OFF]]></text>
+			</staticText>
+			<image scaleImage="FillFrame" hAlign="Center" vAlign="Middle" onErrorType="Blank">
+				<reportElement mode="Transparent" x="-1" y="1" width="91" height="88" backcolor="#DCDCDC" uuid="969e3772-1f79-40a4-b993-88ae393ed7e5"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<imageExpression><![CDATA[$P{logo}]]></imageExpression>
+			</image>
+			<rectangle>
+				<reportElement x="100" y="87" width="453" height="1" backcolor="#CC851F" uuid="5cd22318-2225-4594-9684-18d200249099"/>
+				<graphicElement>
+					<pen lineColor="#CC851F"/>
+				</graphicElement>
+			</rectangle>
+			<staticText>
+				<reportElement mode="Opaque" x="2" y="102" width="181" height="20" backcolor="#DCDCDC" uuid="0f26d375-f5dc-4a6d-9a9b-e929170cb547"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="14" isBold="true"/>
+					<paragraph lineSpacing="1_1_2" firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[COMPANY NAME]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="2" y="122" width="181" height="20" backcolor="#DCDCDC" uuid="2f45af4a-e61b-4abf-a1af-eee8d78efa1e"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="14" isBold="true"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[TRADING NAME]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement x="183" y="102" width="371" height="20" uuid="3cf4fce3-2690-4ab0-8f4c-9f854db195a1"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="14"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{companyname}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="183" y="122" width="371" height="20" uuid="6b7221d4-4ae6-4bb2-a2da-18a8fad18567"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="14"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{tradingname}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement mode="Opaque" x="2" y="142" width="181" height="20" backcolor="#DCDCDC" uuid="4128757e-957d-4a1b-a3e9-889951995cdb"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="14" isBold="true"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[TELEPHONE NUMBER]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="2" y="162" width="181" height="20" backcolor="#DCDCDC" uuid="11803011-cc67-40e7-befa-d2a6e1cf7e1c"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="14" isBold="true"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[FAX NUMBER]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="2" y="182" width="181" height="20" backcolor="#DCDCDC" uuid="c3d110d6-4959-474d-9122-1c69674dc0d2"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="14" isBold="true"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[EMAIL ADDRESS]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement x="183" y="142" width="371" height="20" uuid="5dc1f4fb-489a-4e65-a0c5-22da4e959a1f"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="14"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{telnumber}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="183" y="162" width="371" height="20" uuid="bbc53cf9-9ae7-4130-8b11-25bdcd3eb984"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="14"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{faxnumber}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="183" y="182" width="371" height="20" uuid="1eba8901-555c-4890-9ff2-97601cc34fc0"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="14"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{email}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement mode="Opaque" x="2" y="202" width="181" height="20" backcolor="#DCDCDC" uuid="77063e3c-f99f-4fcd-b457-e1219ff3fff5"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="14" isBold="true"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[LEVY NUMBER]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement x="183" y="202" width="371" height="20" uuid="de64bd7b-5c17-4ae3-9da5-944156d1dd8a"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="14"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{levynumber}]]></textFieldExpression>
+			</textField>
+			<rectangle>
+				<reportElement mode="Transparent" x="2" y="231" width="552" height="400" uuid="e51c9ffe-aaa0-40c9-a4a2-72ec8a02cb04"/>
+			</rectangle>
+			<staticText>
+				<reportElement mode="Transparent" x="7" y="272" width="500" height="20" forecolor="#FF0000" backcolor="#DCDCDC" uuid="632567f5-9952-4947-a1ab-180cdbfb50fa"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="13" isBold="false" isItalic="false"/>
+					<paragraph lineSpacing="1_1_2"/>
+				</textElement>
+				<text><![CDATA[Does a recognition agreement exist between the organisation and labour (Unions) ?]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="507" y="272" width="40" height="20" forecolor="#FF0000" uuid="e9f54e7d-2f53-4a9e-80b2-79a80fcb3cfb"/>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="13" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{statuss}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="10" y="303" width="537" height="180" uuid="404ff615-1145-4d68-a062-4741931b4fe5"/>
+				<textElement textAlignment="Justified">
+					<font fontName="Arial" size="13"/>
+				</textElement>
+				<textFieldExpression><![CDATA["If a recognition agreement exists, immaterial of the size of the organisation, the nominated labour/union SDF must sign off on the application.\n\n"+
+
+"Where no recognition agreement exists, and the organisation has 50 or more employees, a nominated employee SDF must sign off on the application.\n\n"+
+
+"Please sign off once you have completed the application. The signoff will constitute a submission.\n\n"+
+
+"The grant will be processed and if approved the first payment will be made subject to your levies being received by MERSETA."]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement mode="Opaque" x="7" y="242" width="181" height="20" backcolor="#DCDCDC" uuid="428f6bfd-b285-4cb5-a13e-3e29ff639cb8"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="14" isBold="true"/>
+					<paragraph lineSpacing="1_1_2" firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[MAJORITY UNION]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement x="188" y="242" width="359" height="20" uuid="23ec6570-7956-496a-9a23-07f18f6fe1c9"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="14"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{labouruniondescription}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement mode="Opaque" x="10" y="491" width="534" height="20" backcolor="#DCDCDC" uuid="ba5543c5-3e3f-40c5-9515-4bd64c4f74b9"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="14" isBold="true"/>
+					<paragraph lineSpacing="1_1_2" firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[SIGN OFF]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="10" y="521" width="534" height="70" uuid="d8209351-e4d4-4d59-aac8-e4ed567440c7"/>
+				<textElement textAlignment="Justified">
+					<font fontName="Arial" size="13"/>
+				</textElement>
+				<text><![CDATA[I, the undersigned,confirm that I have been authorised by this organisation to submit their Mandatory Grant information. I declare that to the best of my knowledge the information contained herein is accurate and up to date. I recognize that inaccurate information constitutes fraud and that it will be subject to the full penalty of the law.]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Transparent" x="10" y="596" width="534" height="20" forecolor="#FF0000" backcolor="#DCDCDC" uuid="861285a2-5fa9-4848-afc1-2fe78d8ba5cf"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="13" isBold="false" isItalic="false"/>
+					<paragraph lineSpacing="1_1_2" firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[I acknowledge that I have read and Understand with Terms and Conditions ]]></text>
+			</staticText>
+		</band>
+	</title>
+	<detail>
+		<band height="161" splitType="Stretch">
+			<rectangle>
+				<reportElement mode="Transparent" x="1" y="35" width="555" height="120" uuid="bb73bb39-0194-4f46-8f71-854778689267"/>
+			</rectangle>
+			<staticText>
+				<reportElement mode="Opaque" x="10" y="45" width="173" height="20" backcolor="#DCDCDC" uuid="a00a5ca7-9c62-410a-9a41-6fada33a1420"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="14" isBold="true"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[FULL NAME]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement x="183" y="45" width="364" height="20" uuid="356138e9-21f7-49b8-8142-971e4379c0cf"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="14"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{firstname}+" "+$F{Lastname}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="10" y="76" width="537" height="24" uuid="d8097452-7793-4018-af52-59dd88786a8f"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="13"/>
+				</textElement>
+				<text><![CDATA[Signed at_________________________this_________day of_____________201________]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="10" y="113" width="537" height="29" uuid="a7d11898-e6c5-4f15-83d2-fdee7c01657f">
+					<property name="com.jaspersoft.studio.unit.x" value="pixel"/>
+				</reportElement>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="13"/>
+				</textElement>
+				<text><![CDATA[Signature __________________________________________________________________
+]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="1" y="15" width="555" height="20" backcolor="#DCDCDC" uuid="07c1d0af-e10d-4342-bd0e-6dc7ed375cff"/>
+				<box>
+					<pen lineWidth="1.0" lineStyle="Solid"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="14" isBold="true"/>
+					<paragraph lineSpacing="1_1_2" firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[SIGNED OFF BY]]></text>
+			</staticText>
+		</band>
+	</detail>
+	<pageFooter>
+		<band height="36" splitType="Stretch">
+			<rectangle>
+				<reportElement x="-1" y="2" width="555" height="34" backcolor="#FFFFFF" uuid="e0d07685-0ae6-401f-9dc8-6f28ca3d799e"/>
+				<graphicElement>
+					<pen lineStyle="Dotted" lineColor="#DCDCDC"/>
+				</graphicElement>
+			</rectangle>
+			<staticText>
+				<reportElement x="180" y="3" width="200" height="10" forecolor="#616161" uuid="f46ebc47-9b7e-46ce-b8a6-9c31eb06042b"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[SWP Sign Off]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="180" y="23" width="60" height="10" forecolor="#616161" uuid="bbd97eb1-05e4-4b55-af7b-7c7cefaf8fa4"/>
+				<box>
+					<pen lineWidth="1.0" lineStyle="Dashed" lineColor="#DCDCDC"/>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Page " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="180" y="13" width="100" height="10" forecolor="#616161" uuid="4c87a18b-0d4e-4358-a5df-cab84a47d4e4"/>
+				<box>
+					<pen lineWidth="1.0" lineStyle="Dotted" lineColor="#DCDCDC"/>
+					<topPen lineWidth="0.5" lineStyle="Dotted"/>
+					<leftPen lineWidth="0.5" lineStyle="Dotted"/>
+					<bottomPen lineWidth="0.5" lineStyle="Dotted"/>
+					<rightPen lineWidth="0.5" lineStyle="Dotted"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Page Number]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="280" y="13" width="100" height="10" forecolor="#616161" uuid="fee04e55-1f36-4489-81e6-10ef789cb8ce"/>
+				<box>
+					<pen lineWidth="1.0" lineStyle="Dotted" lineColor="#DCDCDC"/>
+					<topPen lineWidth="0.5" lineStyle="Dotted"/>
+					<leftPen lineWidth="0.5" lineStyle="Dotted"/>
+					<bottomPen lineWidth="0.5" lineStyle="Dotted"/>
+					<rightPen lineWidth="0.5" lineStyle="Dotted"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="8" isBold="true"/>
+				</textElement>
+				<text><![CDATA[Date Compiled]]></text>
+			</staticText>
+			<textField pattern="MMMMM dd, yyyy">
+				<reportElement x="280" y="23" width="100" height="10" forecolor="#616161" uuid="ce19a304-f08b-4189-b781-40dc1166559c"/>
+				<box>
+					<pen lineWidth="1.0" lineStyle="Dotted" lineColor="#DCDCDC"/>
+					<topPen lineWidth="0.5" lineColor="#DCDCDC"/>
+					<leftPen lineWidth="0.5" lineColor="#DCDCDC"/>
+					<bottomPen lineWidth="0.5" lineColor="#DCDCDC"/>
+					<rightPen lineWidth="0.5" lineColor="#DCDCDC"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report">
+				<reportElement x="240" y="23" width="40" height="10" forecolor="#616161" uuid="55b0b6ed-7919-4746-b558-65b34fc18422"/>
+				<box>
+					<pen lineWidth="0.5" lineStyle="Dashed"/>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+				<textFieldExpression><![CDATA[" of " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<textField pattern="MMMMM dd, yyyy" isBlankWhenNull="true">
+				<reportElement mode="Transparent" x="180" y="23" width="100" height="10" forecolor="#616161" uuid="086dde44-619e-4220-b259-f640379bef94"/>
+				<box>
+					<pen lineWidth="1.0" lineStyle="Dotted" lineColor="#DCDCDC"/>
+					<topPen lineWidth="0.5" lineColor="#DCDCDC"/>
+					<leftPen lineWidth="0.5" lineColor="#DCDCDC"/>
+					<bottomPen lineWidth="0.5" lineColor="#DCDCDC"/>
+					<rightPen lineWidth="0.5" lineColor="#DCDCDC"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font fontName="Arial" size="8"/>
+				</textElement>
+			</textField>
+		</band>
+	</pageFooter>
+</jasperReport>

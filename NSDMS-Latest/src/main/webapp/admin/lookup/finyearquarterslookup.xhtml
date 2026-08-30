@@ -1,0 +1,153 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+
+					<h1>Financial Year: Quarters Look Up</h1>
+
+					<h:form id="finyearquarterslookupInsForm">
+
+						<p:growl sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+
+						<p:panelGrid columns="1" style="width:100%" id="finyearquarterslookupInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="description" value="#{finyearquarterslookupUI.finyearquarterslookup.description}" style="width:95%" />
+								<p:outputLabel value="#{lang['description']}" for="description" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="orderNumber" value="#{finyearquarterslookupUI.finyearquarterslookup.orderNumber}" style="width:95%" >
+									<f:convertNumber />
+								</p:inputText>
+								<p:outputLabel value="Order Number" for="orderNumber" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:calendar navigator="true" id="fromDate" value="#{finyearquarterslookupUI.finyearquarterslookup.fromDate}" size="19" showOn="button" pattern="dd MMMM" mask="true" required="true" requiredMessage="Provide: From Date">
+									<p:ajax event="dateSelect" />
+								</p:calendar>
+								<p:outputLabel value="From Date" for="fromDate" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:calendar navigator="true" id="toDate" value="#{finyearquarterslookupUI.finyearquarterslookup.toDate}" size="19" showOn="button" pattern="dd MMMM" mask="true" required="true" requiredMessage="Provide: To Date">
+									<p:ajax event="dateSelect" />
+								</p:calendar>
+								<p:outputLabel value="To Date" for="toDate" />
+							</h:panelGroup>
+							<h:panelGroup>
+								<p:outputLabel value="Quarter Assigned" for="quarterTypeSelection" styleClass="gray" />
+								<br />
+								<p:spacer width="10" />
+								<br />
+								<p:selectOneMenu id="quarterTypeSelection" value="#{finyearquarterslookupUI.finyearquarterslookup.finYearQuarters}" style="width: 95%">
+									<f:selectItems value="#{enumUI.finYearQuartersEnumDD}" />
+								</p:selectOneMenu>
+							</h:panelGroup>
+							<h:panelGroup>
+								<p:selectBooleanCheckbox id="finYear" value="#{finyearquarterslookupUI.finyearquarterslookup.useNextYear}">
+									<p:ajax />
+								</p:selectBooleanCheckbox>
+								<p:outputLabel value="Use Next Years Fin Year" for="finYear" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield" rendered="false">
+								<p:inputText id="smsCode" value="#{finyearquarterslookupUI.finyearquarterslookup.smsCode}" style="width:95%" />
+								<p:outputLabel value="#{lang['smsCode']}" for="smsCode" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield" rendered="false">
+								<p:inputText id="code" value="#{finyearquarterslookupUI.finyearquarterslookup.code}" style="width:95%" />
+								<p:outputLabel value="#{lang['code']}" for="code" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield" rendered="false">
+								<p:inputText id="nlrdCode" value="#{finyearquarterslookupUI.finyearquarterslookup.nlrdCode}" style="width:95%" />
+								<p:outputLabel value="#{lang['nlrdCode']}" for="nlrdCode" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield" rendered="false">
+								<p:inputText id="setmisCode" value="#{finyearquarterslookupUI.finyearquarterslookup.setmisCode}" style="width:95%" />
+								<p:outputLabel value="#{lang['setmisCode']}" for="setmisCode" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield" rendered="false">
+								<p:inputText id="createDate" value="#{finyearquarterslookupUI.finyearquarterslookup.createDate}" style="width:95%" />
+								<p:outputLabel value="#{lang['createDate']}" for="createDate" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield" rendered="false">
+								<p:inputText id="qctoCode" value="#{finyearquarterslookupUI.finyearquarterslookup.qctoCode}" style="width:95%" />
+								<p:outputLabel value="#{lang['qctoCode']}" for="qctoCode" />
+							</h:panelGroup>
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:finyearquarterslookupList :finyearquarterslookupInsForm:finyearquarterslookupInsGrid" action="#{finyearquarterslookupUI.finyearquarterslookupInsert}" />
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="finyearquarterslookupInsGrid" process="@this" action="#{finyearquarterslookupUI.prepareNew}">
+									<p:resetInput target="finyearquarterslookupInsGrid" />
+								</p:commandButton>
+							</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+						<p:dataTable var="rowVar" value="#{finyearquarterslookupUI.dataModel}" filteredValue="#{finyearquarterslookupUI.finYearQuartersLookUpfilteredList}" id="finyearquarterslookupList" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+							<p:column headerText="#{lang['description']}">
+								<h:outputText value="#{rowVar.description}" />
+							</p:column>
+							<p:column headerText="From Date">
+								<h:outputText value="#{rowVar.fromDate}">
+									<f:convertDateTime pattern="dd MMMM" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="To Date">
+								<h:outputText value="#{rowVar.toDate}">
+									<f:convertDateTime pattern="dd MMMM" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="Quarter Assigned">
+								<h:outputText value="#{rowVar.finYearQuarters.friendlyName}" />
+							</p:column>
+							<p:column headerText="#{lang['smsCode']}" rendered="false">
+								<h:outputText value="#{rowVar.smsCode}" />
+							</p:column>
+							<p:column headerText="#{lang['code']}" rendered="false">
+								<h:outputText value="#{rowVar.code}" />
+							</p:column>
+							<p:column headerText="#{lang['nlrdCode']}" rendered="false">
+								<h:outputText value="#{rowVar.nlrdCode}" />
+							</p:column>
+							<p:column headerText="#{lang['setmisCode']}" rendered="false">
+								<h:outputText value="#{rowVar.setmisCode}" />
+							</p:column>
+							<p:column headerText="#{lang['createDate']}">
+								<h:outputText value="#{rowVar.createDate}">
+									<f:convertDateTime pattern="dd MMMM yyyy HH:mm:ss" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['qctoCode']}" rendered="false">
+								<h:outputText value="#{rowVar.qctoCode}" />
+							</p:column>
+							<p:column width="80">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":finyearquarterslookupInsForm:finyearquarterslookupInsGrid">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{finyearquarterslookupUI.finyearquarterslookup}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:finyearquarterslookupList" action="#{finyearquarterslookupUI.finyearquarterslookupDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{finyearquarterslookupUI.finyearquarterslookup}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+			<h:form>
+				<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+				<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+			</h:form>
+		</p:confirmDialog>
+
+	</ui:define>
+</ui:composition>

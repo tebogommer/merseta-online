@@ -1,0 +1,188 @@
+<ui:composition  xmlns:pt="http://xmlns.jcp.org/jsf/passthrough" xmlns:o="http://omnifaces.org/ui" xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+	<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+	<p:importEnum type="haj.com.entity.enums.QCDTemplateTypeEnum" />
+	<p:importEnum type="haj.com.entity.enums.PivotNonPivotEnum" />
+	<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+	<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+	
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+			  <div class="card card-w-title">
+			  <h:form id="companyInfoForm">
+			  	  <p:growl showDetail="false" sticky="false">
+					  <p:autoUpdate />
+				  </p:growl>
+			      <h2>#{lang['qcd']}</h2>
+				  
+				  
+				 <c:if test="#{!qualificationRequestsUI.company.doneSearch}">
+					<ui:include src="/pages/includes/tabinfo.xhtml">
+						<ui:param name="showInfoCircle" value="true" />
+						<ui:param name="cssClass" value="secondaryText Fs15" />
+						<ui:param name="helpTxt" value="#{lang['The.system.will.auto-fill.based.selections']}" />
+					</ui:include>
+				</c:if>
+				<p:fieldset legend="#{lang['search.company.by']}" rendered="#{!qualificationRequestsUI.company.doneSearch}">
+				 
+				 	
+					    <h:panelGrid columns="2" style="margin-bottom:10px" cellpadding="5">
+					        <p:selectOneRadio id="searchType" value="#{qualificationRequestsUI.searchType}">
+					            <f:selectItem itemLabel="#{lang['companyRegistrationNumber']}" itemValue="companyRegistrationNumber" />
+					            <f:selectItem itemLabel="#{lang['levyNumber']}" itemValue="levyNumber" />
+					            <p:ajax update="companyInfoForm"></p:ajax>
+					        </p:selectOneRadio>
+					    </h:panelGrid>
+					  
+					  <p:panelGrid id="pgSearchType">
+						  <p:panelGrid id="searchCompanyByRegNumPnl" columns="2" style="opacity: 1 !important; color: black; width:50%" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{qualificationRequestsUI.searchType == 'companyRegistrationNumber'}">
+							  	<h:panelGroup id="regNumPg" styleClass="md-inputfield" rendered="true" style="width:100%">
+									<p:inputMask id="searchCompRegNum" maxlength="50" mask="#{searchCompanyUI.companyRegistrationNumberFormat}" value="#{searchCompanyUI.criteria}" style="width:95%" requiredMessage="Enter Registration Number" required="true" />
+									<p:outputLabel value="#{lang['companyRegistrationNumber']}" for="searchCompRegNum" />
+								</h:panelGroup>
+								
+								<h:panelGroup  styleClass="md-inputfield" rendered="true">
+									<p:commandButton  icon="fa fa-search" update="@form" value="Submit" process="searchCompanyByRegNumPnl"  actionListener="#{searchCompanyUI.find}"  rendered="#{qualificationRequestsUI.searchType == 'companyRegistrationNumber'}"/>
+								</h:panelGroup>
+						  </p:panelGrid>
+						  
+						  <p:panelGrid id="searchCompanyByLevyNumPnl" columns="2" style="opacity: 1 !important; color: black; width:50%" layout="grid" styleClass="ui-panelgrid-blank form-group"  rendered="#{qualificationRequestsUI.searchType == 'levyNumber'}">
+							  	<h:panelGroup id="levyNumPg" styleClass="md-inputfield" rendered="true" style="width:100%">
+									<p:inputMask id="searchCompLevyNum" maxlength="50" mask="#{searchCompanyUI.companyLevyNumberFormat}"  value="#{searchCompanyUI.criteria}" style="width:95%" requiredMessage="Enter Entity ID" required="true" />
+									<p:outputLabel value="#{lang['levyNumber']}" for="searchCompLevyNum" />
+								</h:panelGroup>
+								
+								<h:panelGroup  styleClass="md-inputfield" rendered="true">
+									<p:commandButton  icon="fa fa-search" value="Submit" update="@form" process="searchCompanyByLevyNumPnl" actionListener="#{searchCompanyUI.findBySDL}"   rendered="#{qualificationRequestsUI.searchType == 'levyNumber'}" />
+								</h:panelGroup>
+						  </p:panelGrid>
+					  </p:panelGrid>
+				</p:fieldset>
+				 
+				<p:fieldset legend="#{lang['company.details']}" toggleable="true"  rendered="#{qualificationRequestsUI.company.doneSearch}">
+				<p:panelGrid rendered="#{qualificationRequestsUI.company.doneSearch}" columns="2" style="opacity: 1 !important; color: black; width:100%" id="companyInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText disabled="#{qualificationRequestsUI.company.companyName.length() gt 0}"  id="companyName" value="#{qualificationRequestsUI.company.companyName}" style="opacity: 1 !important; color: black; width:95%" required="true" requiredMessage="#{lang['enter.the.company.name']}">
+							<o:validator validatorId="javax.faces.Length" minimum="0" maximum="70" message="#{lang['company.name.length.error']}" />
+						</p:inputText>
+						<p:outputLabel value="#{lang['companyName']}" for="companyName" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText disabled="#{qualificationRequestsUI.company.tradingName.length() gt 0}" id="tradingName" value="#{qualificationRequestsUI.company.tradingName}" style="opacity: 1 !important; color: black; width:95%" required="true" requiredMessage="#{lang['enter.the.trading.name']}">
+							<o:validator validatorId="javax.faces.Length" minimum="0" maximum="70" message="#{lang['company.tradename.length.error']}" />
+						</p:inputText>
+						<p:outputLabel value="#{lang['tradingName']}" for="tradingName" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText disabled="#{qualificationRequestsUI.company.telNumber.length() gt 0}" id="telNumber" value="#{qualificationRequestsUI.company.telNumber}" style="opacity: 1 !important; color: black; width:95%" required="true" requiredMessage="#{lang['enter.the.tel.number']}">
+							<o:validator validatorId="javax.faces.Length" minimum="0" maximum="20" message="#{lang['user.tellnumber.length']}" />
+						</p:inputText>
+						<p:outputLabel value="#{lang['telNumber']}" for="telNumber" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputMask disabled="#{qualificationRequestsUI.company.companyRegistrationNumber.length() gt 0}"  mask="#{searchCompanyUI.companyRegistrationNumberFormat}" id="companyRegistrationNumber" value="#{qualificationRequestsUI.company.companyRegistrationNumber}" style="opacity: 1 !important; color: black; width:95%" required="true" requiredMessage="#{lang['enter.company.registration.number']}">
+							<o:validator validatorId="javax.faces.Length" minimum="0" maximum="20" message="#{lang['company.reg.length.error']}" />
+						</p:inputMask>
+						<p:outputLabel value="#{lang['companyRegistrationNumber']}" for="companyRegistrationNumber" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText disabled="#{qualificationRequestsUI.company.email.length() gt 0}"    id="email" value="#{qualificationRequestsUI.company.email}" style="opacity: 1 !important; color: black; width:95%" required="true" requiredMessage="#{lang['enter.email.address']}">
+							<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['user.email.length']}" />
+						</p:inputText>
+						<p:outputLabel value="#{lang['email']}" for="email" />
+					</h:panelGroup>
+					
+					<h:panelGroup>
+							<div style="margin-top: -20px !important;">
+								<p:outputLabel value="#{lang['organisation.type']}" for="organisationType" styleClass="gray Fs12" style="margin-left:5px" />
+							</div>
+							<div>
+								<p:selectOneMenu disabled="#{qualificationRequestsUI.company.organisationType ne null}"  id="organisationType" value="#{qualificationRequestsUI.company.organisationType}" converter="OrganisationTypeConvertor" style="opacity: 1 !important; color: black; width:95%" required="true" requiredMessage="Select: Organisation Type">
+									<f:selectItem itemLabel="-- #{lang['select.one']} --" noSelectionOption="true" />
+									<f:selectItems value="#{sdfDetailUI.organisationTypeList}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+
+
+						<h:panelGroup>
+							<div style="margin-top: -20px !important;">
+								<p:outputLabel value="#{lang['sicCode']}" for="sicCodeNew" styleClass="gray Fs12" style="margin-left:5px">
+								</p:outputLabel>
+							</div>
+							<div>
+								<p:autoComplete disabled="#{qualificationRequestsUI.company.sicCode ne null}"  id="sicCodeNew" value="#{qualificationRequestsUI.company.sicCode}" style="opacity: 1 !important; color: black; width: 95%" completeMethod="#{autoCompleteUI.completeSIC}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SICCodeConvertor" dropdown="true" minQueryLength="1"
+									maxResults="10" inputStyle="opacity: 1 !important; color: black;" required="true" requiredMessage="#{lang['select.sic.code']}">
+									<p:ajax update="chambers" event="itemSelect"></p:ajax>
+									<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+									<p:column headerText="#{lang['description']}" style="white-space: nowrap">#{rv.description}</p:column>
+								</p:autoComplete>
+
+							</div>
+						</h:panelGroup>
+
+						<h:panelGroup id="chambers">
+							<div style="margin-top: -20px !important;">
+								<p:outputLabel value="#{lang['chamber']}" for="chamber" styleClass="gray Fs12" style="margin-left:5px" />
+							</div>
+							<div>
+								<p:selectOneMenu disabled="true" id="chamber" value="#{qualificationRequestsUI.company.sicCode.chamber}" converter="ChamberConvertor" style="opacity: 1 !important; color: black; width:95%">
+									<f:selectItem itemLabel="-- #{lang['select.one']} --" noSelectionOption="true" />
+									<f:selectItems value="#{sdfDetailUI.chambers}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+											
+					<p:commandButton rendered="#{!qualificationRequestsUI.doneWithCompanyInfo}" id="submitt" value="#{lang['continue']}"  update="@form companyInfoForm" icon="ui-icon-fast-forward" iconPos="right"  process="@form" actionListener="#{qualificationRequestsUI.prepNewExternalQualification}">
+					</p:commandButton>	
+					</p:panelGrid>
+				</p:fieldset>
+					
+				<p:fieldset legend="Qualification deatils" rendered="#{qualificationRequestsUI.doneWithCompanyInfo}">
+					<c:if test="#{qualificationRequestsUI.doneWithCompanyInfo}">						
+						<ui:include src="/pages/includes/qualificationsCurriculumDevelopmentRequest.xhtml" />
+						<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update="@form qualificationsCurriculumDevelopmentInsGrid" action="#{qualificationRequestsUI.submitQualificationsCurriculumDevelopment}" styleClass="flat green-btn Fs18" style="height: 50px;" />	
+						<p:commandButton styleClass="flat Fs18" style="height: 50px;" immediate="true" icon="fa fa-times" action="#{qualificationRequestsUI.cancelExternalInsert}" value="Cancel" update="companyInfoForm" />
+						</p:panelGrid>					
+					</c:if>	
+				</p:fieldset>
+		</h:form>
+	</div>
+			
+			</div>
+
+			<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true">
+				<h:form id="uploadForm">
+					<h:panelGroup id="uploadGroup">
+						<div class="ui-g">
+							<div class="ui-g-12">
+								<div class="card">
+									<h1 style="font-weight: bold; font-size: 25px;">#{qualificationRequestsUI.doc.configDoc.name}</h1>
+									<p:panel>
+										<h:panelGrid columns="2" style="width: 100%">
+											<p:outputLabel value="#{lang['notes']}:" for="note" />
+											<p:inputTextarea id="note" value="#{qualificationRequestsUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+												<p:ajax />
+											</p:inputTextarea>
+										</h:panelGrid>
+										<div class="TexAlCenter">
+											<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+										</div>
+										<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{qualificationRequestsUI.storeNewFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update=":companyInfoForm"
+											multiple="false" fileLimit="1" allowTypes="/(\.|\/)(gif|jpe?g|png|pdf|docx|txt)$/" immediate="false" auto="true" />
+									</p:panel>
+									<div class="EmptyBox10" />
+								</div>
+							</div>
+						</div>
+					</h:panelGroup>
+				</h:form>
+			</p:dialog>
+		</div>
+	</ui:define>
+</ui:composition>

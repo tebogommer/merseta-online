@@ -1,0 +1,120 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+
+					<p:growl showDetail="false" sticky="false" id="msg">
+						<p:autoUpdate />
+					</p:growl>
+
+					<p:importEnum type="haj.com.entity.enums.CompanyRegOrSDLEnum" var="regSDL"></p:importEnum>
+					<p:importEnum type="haj.com.entity.enums.YesNoEnum"></p:importEnum>
+					<p:importEnum type="haj.com.entity.enums.PivotNonPivotEnum" />
+					<p:importEnum type="haj.com.entity.enums.IdPassportEnum"></p:importEnum>
+					<p:importEnum type="haj.com.entity.enums.EmploymentStatusEnum"></p:importEnum>
+					<p:importEnum type="haj.com.entity.enums.AccreditationApplicationTypeEnum"></p:importEnum>
+					<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+
+					<h1>Monitor Provider Applications</h1>
+					<h:form id="mainForm">
+						<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<p:outputLabel value="Display only final approved and primary acc:" />
+							<p:selectBooleanCheckbox value="#{monitorTrainingProvidersUI.filterByApprovedApplications}">
+								<p:ajax update="mainForm" />
+							</p:selectBooleanCheckbox>
+						</p:panelGrid>
+
+						<div class="EmptyBox10" />
+						
+						<p:commandButton onstart="uploadStart()" oncomplete="uploadDone()" value="Re-send Statment of Qualification To Approved Applications" styleClass="red-btn" action="#{monitorTrainingProvidersUI.reSendStatementOfQualToAllApprovedProviderApplications}" icon="fa fa-envelope" update="@form" title="Resend statement of qualification">
+							<p:confirm header="Confirmation" message="Are you sure you wish to re-send statement of qualification" icon="fa fa-exclamation-triangle" />
+						</p:commandButton>
+
+						<div class="EmptyBox10" />
+
+						<p:dataTable var="rowVar" value="#{monitorTrainingProvidersUI.dataModelTrainingProviderApplication}" id="SDPList" rowKey="#{rowVar.id}" sortBy="#{rowVar.company.id}" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20,40,60,80,100" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['company.name']}" filterBy="#{rowVar.company.companyName}" sortBy="#{rowVar.company.companyName}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.company.companyName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['tradingName']}" filterBy="#{rowVar.company.tradingName}" sortBy="#{rowVar.company.tradingName}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.company.tradingName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['entity.id']}" filterBy="#{rowVar.company.levyNumber}" sortBy="#{rowVar.company.levyNumber}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.company.levyNumber}" />
+							</p:column>
+
+							<p:column headerText="#{lang['accreditation.number']}" filterBy="#{rowVar.certificateNumber}" sortBy="#{rowVar.certificateNumber}" filterStyle="width: 95%">
+								<h:outputText rendered="#{rowVar.certificateNumber ne null}" value="#{rowVar.certificateNumber}" />
+								<h:outputText rendered="#{rowVar.certificateNumber eq null}" value="#{rowVar.accreditationNumber}" />
+								<h:outputText rendered="#{(rowVar.certificateNumber eq null or rowVar.certificateNumber eq '') and (rowVar.accreditationNumber eq null or rowVar.accreditationNumber eq '') }" value="N/A" />
+							</p:column>
+
+							<p:column headerText="#{lang['start.date']}" sortBy="#{rowVar.startDate}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.startDate}">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</h:outputText>
+								<h:outputText rendered="#{rowVar.startDate eq null}" value="N/A" />
+							</p:column>
+
+							<p:column headerText="Accreditation End Date " sortBy="#{rowVar.expiriyDate}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.expiriyDate}">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</h:outputText>
+								<h:outputText rendered="#{rowVar.expiriyDate eq null}" value="N/A" />
+							</p:column>
+
+							<p:column headerText="#{lang['review.committee.date']}" sortBy="#{rvwpa.approvalDate}">
+								<h:outputText value="#{rowVar.reviewCommitteeMeeting.fromDateTime}">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</h:outputText>
+								<h:outputText rendered="#{rowVar.reviewCommitteeMeeting.fromDateTime eq null}" value="N/A" />
+
+							</p:column>
+
+							<p:column headerText="#{lang['decision.number']}" sortBy="#{rowVar.reviewCommitteeMeetingAgenda.decisionNumber}">
+								<h:outputText rendered="#{rowVar.reviewCommitteeMeetingAgenda ne null}" value="#{rowVar.reviewCommitteeMeetingAgenda.decisionNumber}" />
+								<h:outputText rendered="#{rowVar.reviewCommitteeMeetingAgenda eq null}" value="N/A" />
+							</p:column>
+
+							<p:column headerText="#{lang['type.of.application']}" sortBy="#{rowVar.accreditationApplicationTypeEnum}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.accreditationApplicationTypeEnum.friendlyName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['company.approval']}" sortBy="#{rowVar.company.companyStatus}" filterStyle="width: 95%" rendered="false">
+								<h:outputText value="#{lang[rowVar.company.companyStatus.registrationName]}" />
+							</p:column>
+
+							<p:column headerText="#{lang['tp.application.status']}" sortBy="#{rowVar.approvalStatus}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.approvalStatus.friendlyName}" />
+							</p:column>
+
+							<p:column width="45" rendered="true" headerText="#{lang['view.edit']}">
+
+								<p:commandButton onstart="uploadStart()" oncomplete="uploadDone()" rendered="#{rowVar.approvalStatus eq ApprovalEnum.Approved and rowVar.accreditationApplicationTypeEnum eq AccreditationApplicationTypeEnum.ACCREDITATIONAPPROVAL}" styleClass="red-btn" action="#{monitorTrainingProvidersUI.reSendStatementOfQual}" icon="fa fa-envelope" update="@form" title="Resend statement of qualification">
+									<p:confirm header="Confirmation" message="Are you sure you wish to re-send statement of qualification" icon="fa fa-exclamation-triangle" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{monitorTrainingProvidersUI.trainingProviderApplication}" />
+								</p:commandButton>
+
+							</p:column>
+
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+			<h:form>
+				<p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="fa fa-check" />
+				<p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="fa fa-times" />
+			</h:form>
+		</p:confirmDialog>
+
+	</ui:define>
+</ui:composition>

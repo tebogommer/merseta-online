@@ -1,0 +1,136 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+	<br />
+
+
+	<c:if test="false">
+		<!-- 
+			companylearnerstradetest entity
+		-->
+		<!--  
+			<ui:include src="/pages/includes/arplApplicationInformation.xhtml">
+				<ui:param name="companylearnerstradetest" value=" var.companyLearners.company " />
+				<ui:param name="CALENDER_PATTERN" value=" autoCompleteUI.CALENDER_PATTERN " />
+				<ui:param name="dataModelDetailsOfExperienceArpl" value=" dataModelDetailsOfExperienceArpl " />
+				<ui:param name="dataModelDetailsOfTrainingArpl" value=" dataModelDetailsOfTrainingArpl " />
+			</ui:include> 
+		-->
+	
+	</c:if>
+	<p:importEnum type="haj.com.entity.enums.YesNoEnum" var="YesNoVar" />
+	<h4>Application Information</h4>
+	<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText value="#{companylearnerstradetest.preferredTrainingCenter.companyNameDisplay}" style="width:95%" disabled="true" />
+			<p:outputLabel value="Preferred Trade Test Centre:" />
+		</h:panelGroup>
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText value="(#{companylearnerstradetest.qualification.codeString}) #{companylearnerstradetest.qualification.description}" style="width:95%" disabled="true" />
+			<p:outputLabel value="Trade test applying for (trade title):" />
+		</h:panelGroup>
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText value="#{companylearnerstradetest.flcEnglish.friendlyName}" style="width:95%" disabled="true" />
+			<p:outputLabel value="Foundational Learning Competence: English" />
+		</h:panelGroup>
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText value="#{companylearnerstradetest.flcMathsLit.friendlyName}" style="width:95%" disabled="true" />
+			<p:outputLabel value="Foundational Learning Competence: Mathematical Literacy" />
+		</h:panelGroup>
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText value="#{companylearnerstradetest.attemptedTradeTest.friendlyName}" style="width:95%" disabled="true" />
+			<p:outputLabel value="Have you attempted a trade test previously?" />
+		</h:panelGroup>
+		<h:panelGroup styleClass="md-inputfield" rendered="#{companylearnerstradetest.attemptedTradeTest eq YesNoVar.Yes}">
+			<p:inputText value="#{companylearnerstradetest.previousTrainingCenter.companyNameDisplay}" style="width:95%" disabled="true" />
+			<p:outputLabel value="Previous Test Center:" />
+		</h:panelGroup>
+		<h:panelGroup styleClass="md-inputfield" rendered="#{companylearnerstradetest.attemptedTradeTest eq YesNoVar.Yes}">
+			<p:inputText value="#{companylearnerstradetestUI.companylearnerstradetest.previousAttemptDate}" style="width:95%" disabled="true">
+				<f:convertDateTime pattern="CALENDER_PATTERN" />
+			</p:inputText>
+			<p:outputLabel value="Previous Attempt Date: " />
+		</h:panelGroup>
+		<h:panelGroup styleClass="md-inputfield" rendered="#{companylearnerstradetest.attemptedTradeTest eq YesNoVar.Yes}">
+			<p:inputText value="#{companylearnerstradetest.attemptNumber}" style="width:95%" disabled="true" />
+			<p:outputLabel value="Number of Attempts:" />
+		</h:panelGroup>
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText value="#{companylearnerstradetest.learnerAgreement.friendlyName}" style="width:95%" disabled="true" />
+			<p:outputLabel value="Are you currently bound by a learner agreement?" />
+		</h:panelGroup>
+		<h:panelGroup styleClass="md-inputfield" rendered="#{companylearnerstradetest.learnerAgreement eq YesNoVar.Yes}">
+			<p:inputText value="#{companylearnerstradetest.releventSeta.description}" style="width:95%" disabled="true" />
+			<p:outputLabel value="Relevent SETA:" />
+		</h:panelGroup>
+		<h:panelGroup styleClass="md-inputfield" rendered="#{companylearnerstradetest.learnerAgreement eq YesNoVar.Yes}">
+			<p:inputText value="#{companylearnerstradetest.learnerAgreementNumber}" style="width:95%" disabled="true" />
+			<p:outputLabel value="Learner Agreement No:" />
+		</h:panelGroup>
+	</p:panelGrid>
+	<p:panelGrid columns="1" style="width:100%" styleClass="ui-panelgrid-blank form-group" layout="grid" rendered="#{dataModelDetailsOfExperienceArpl ne null}">
+		<p:dataTable var="doeRv" value="#{dataModelDetailsOfExperienceArpl}" rowKey="#{doeRv.id}" paginator="true" rows="5" paginatorPosition="bottom"
+			paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20" reflow="true" lazy="true">
+			<f:facet name="header">Details of Experience</f:facet>
+			<p:column headerText="Name and address of workplace">
+				<h:outputText value="#{doeRv.nameAddressWorkplace}" />
+			</p:column>
+			<p:column headerText="From Date">
+				<h:outputText value="#{doeRv.fromDate}">
+					<f:convertDateTime pattern="dd MMMM yyyy" />
+				</h:outputText>
+			</p:column>
+			<p:column headerText="To Date">
+				<h:outputText value="#{doeRv.toDate}">
+					<f:convertDateTime pattern="dd MMMM yyyy" />
+				</h:outputText>
+			</p:column>
+			<p:column headerText="Detail of practical tasks">
+				<h:outputText value="#{doeRv.detail}">
+				</h:outputText>
+			</p:column>
+		</p:dataTable>
+	</p:panelGrid>
+	<p:panelGrid columns="1" style="width:100%" styleClass="ui-panelgrid-blank form-group" layout="grid" rendered="#{dataModelDetailsOfExperienceArpl ne null}">
+		<p:dataTable var="dotRv" value="#{dataModelDetailsOfTrainingArpl}" rowKey="#{dotRv.id}" paginator="true" rows="5" paginatorPosition="bottom"
+			paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20" reflow="true" lazy="true">
+			<f:facet name="header">Details of Training (Knowledge and Skills Training)</f:facet>
+			<p:column headerText="Name of Skills Development Provider">
+				<h:outputText value="#{dotRv.nameSkillsProvider}" />
+			</p:column>
+			<p:column headerText="From Date">
+				<h:outputText value="#{dotRv.fromDate}">
+					<f:convertDateTime pattern="dd MMMM yyyy" />
+				</h:outputText>
+			</p:column>
+			<p:column headerText="To Date">
+				<h:outputText value="#{dotRv.toDate}">
+					<f:convertDateTime pattern="dd MMMM yyyy" />
+				</h:outputText>
+			</p:column>
+			<p:column headerText="Course">
+				<h:outputText value="#{dotRv.course}">
+				</h:outputText>
+			</p:column>
+		</p:dataTable>
+	</p:panelGrid>
+	<h4>Medical Information</h4>
+	<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid" >
+		<h:panelGroup styleClass="md-inputfield" >
+			<p:inputText value="#{companylearnerstradetest.medicalInfo.friendlyName}" style="width:95%" disabled="true" />
+			<p:outputLabel value="Medical disorder or allergy:" />
+		</h:panelGroup>
+		<h:panelGroup styleClass="md-inputfield" rendered="#{companylearnerstradetest.medicalInfo eq YesNoVar.Yes}">
+			<p:inputText value="#{companylearnerstradetest.natureMedicalInfo}" style="width:95%" disabled="true" />
+			<p:outputLabel value="State the nature:" />
+		</h:panelGroup>
+		<h:panelGroup styleClass="md-inputfield" >
+			<p:inputText value="#{companylearnerstradetest.disability.friendlyName}" style="width:95%" disabled="true" />
+			<p:outputLabel value="Have any disability:" />
+		</h:panelGroup>
+		<h:panelGroup styleClass="md-inputfield" rendered="#{companylearnerstradetest.disability eq YesNoVar.Yes}">
+			<p:inputText value="#{companylearnerstradetest.disabilityInfo}" style="width:95%" disabled="true" />
+			<p:outputLabel value="State the nature:" />
+		</h:panelGroup>
+	</p:panelGrid>
+	<br />
+</ui:composition>

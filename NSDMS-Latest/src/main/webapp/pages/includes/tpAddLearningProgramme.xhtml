@@ -1,0 +1,59 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:pt="http://xmlns.jcp.org/jsf/passthrough" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui"
+	xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+
+	<p:fieldset legend="#{lang['qualifications']}">
+		<p:outputPanel id="lpQualifications">
+			<p:panelGrid columns="2" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup>
+					<div>
+						<p:outputLabel rendered="true" value="#{lang['qualification']}" for="lpMersetaQualification"></p:outputLabel>
+					</div>
+					<div>
+					<p:autoComplete
+						style="width: 100%" id="lpMersetaQualification" value="#{tpDetailUI.learningProgrammeQualification}" completeMethod="#{autoCompleteUI.completeHostingCompanyQualification}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="3"
+						maxResults="10">
+						<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+						<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+						<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+						<p:ajax event="itemSelect" update="pgLP"/>
+					</p:autoComplete>
+					</div>
+				</h:panelGroup>
+				
+				<p:commandButton style="float:left;" value="Clear" update="pgLP lpQualifications" process="@this" icon="fa fa-recycle" iconPos="left" styleClass="flat Fright" action="#{tpDetailUI.clearLearningProgrammeQualification}" />
+			
+			</p:panelGrid>
+		</p:outputPanel>
+	</p:fieldset>
+	
+	<h:panelGroup id="pgLP">
+		<p:fieldset legend="Learning Programme" id="fsLeaningProg" rendered="#{tpDetailUI.learningProgrammeQualification.id ne null}">
+			<p:outputPanel id="lpCompanyQualifications"  >
+				<p:panelGrid columns="2" layout="grid" styleClass="ui-panelgrid-blank form-group" >
+					<h:panelGroup>
+						<div>
+							<p:outputLabel rendered="true" value="Select Learning Programme" for="lpAualificationAuto"></p:outputLabel>
+						</div>
+						<div>
+							<p:autoComplete
+								style="width: 100%" id="lpAualificationAuto" value="#{tpDetailUI.qualification}" completeMethod="#{tpDetailUI.completeLeaningProgrameQualification}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="3"
+								maxResults="10">
+								<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+								<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+								<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+								<p:ajax event="itemSelect"/>
+							</p:autoComplete>
+							
+						</div>
+					</h:panelGroup>
+					<p:commandButton style="float:left;" value="#{lang['add.qualification']}" update="companyQualifications pgSkillsProg" process="lpCompanyQualifications" icon="ui-icon-plus" iconPos="right" styleClass="flat Fright" action="#{tpDetailUI.addQualificationToList}" />
+			
+				</p:panelGrid>
+				
+			</p:outputPanel>
+		</p:fieldset>
+	</h:panelGroup>
+	<br/><br/>
+	
+</ui:composition>

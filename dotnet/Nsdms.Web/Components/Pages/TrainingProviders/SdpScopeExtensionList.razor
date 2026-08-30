@@ -1,0 +1,174 @@
+@page "/sdp/extensions"
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Domain.Entities
+@inject ISdpScopeExtensionService ScopeService
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+
+<PageTitle>SDP Extension of Scope &amp; Re-Accreditation | merSETA NSDMS</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
+    <!-- Top Bar -->
+    <MudCard Elevation="2" Class="mb-4">
+        <MudCardContent Class="d-flex align-center justify-space-between py-3">
+            <div>
+                <MudBreadcrumbs Items="_breadcrumbs" Class="pa-0 mb-1" />
+                <MudText Typo="Typo.h5" Class="fw-bold">SDP Extension of Scope &amp; Re-Accreditation</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    Skills Development Provider (SDP) applications for additional qualification scope and 5-year cyclical re-accreditation reviews.
+                </MudText>
+            </div>
+            <MudStack Row="true" Spacing="2">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadDataAsync">
+                    Refresh
+                </MudButton>
+            </MudStack>
+        </MudCardContent>
+    </MudCard>
+
+    @if (_isLoading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+    }
+
+    <!-- Tabs -->
+    <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Color="Color.Primary">
+        <!-- Tab 1: Scope Extensions -->
+        <MudTabPanel Text="Extension of Scope Applications" Icon="@Icons.Material.Filled.AddBusiness">
+            <MudTable Items="_extensions" Hover="true" Dense="true" Elevation="0"
+                      OnRowClick="@((TableRowClickEventArgs<SdpExtensionOfScope> e) => { if (e.Item?.Id > 0) Nav.NavigateTo($"/etqa/scope-extensions/{e.Item.Id}"); })"
+                      RowClass="cursor-pointer" T="SdpExtensionOfScope">
+                <HeaderContent>
+                    <MudTh>App #</MudTh>
+                    <MudTh>Training Provider</MudTh>
+                    <MudTh>Accreditation #</MudTh>
+                    <MudTh>Inspection Req.</MudTh>
+                    <MudTh>Status</MudTh>
+                    <MudTh Style="text-align: right;">Action</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="App #" Class="font-monospace fw-bold">@context.ApplicationNumber</MudTd>
+                    <MudTd DataLabel="Training Provider" Class="fw-semibold">@(context.TrainingProvider?.ProviderName ?? "SDP Provider")</MudTd>
+                    <MudTd DataLabel="Accreditation #" Class="font-monospace">@(context.TrainingProvider?.AccreditationNumber ?? "N/A")</MudTd>
+                    <MudTd DataLabel="Inspection Req.">
+                        <MudCheckBox Value="context.SiteInspectionRequired" Color="Color.Info" ReadOnly="true" />
+                    </MudTd>
+                    <MudTd DataLabel="Status">
+                        <MudChip T="string" Size="Size.Small" Color="@(context.StatusCode == "Approved" ? Color.Success : Color.Warning)" Variant="Variant.Filled">
+                            @context.StatusCode
+                        </MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Action" Style="text-align: right;">
+                        @if (context.StatusCode == "Submitted")
+                        {
+                            <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Filled.CheckCircle" OnClick="@(() => ApproveScopeAsync(context.Id))">
+                                Approve Scope
+                            </MudButton>
+                        }
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudTabPanel>
+
+        <!-- Tab 2: Re-Accreditations -->
+        <MudTabPanel Text="5-Year Re-Accreditation Reviews" Icon="@Icons.Material.Filled.Verified">
+            <MudTable Items="_reAccreditations" Hover="true" Dense="true" Elevation="0">
+                <HeaderContent>
+                    <MudTh>App #</MudTh>
+                    <MudTh>Training Provider</MudTh>
+                    <MudTh>Current Expiry</MudTh>
+                    <MudTh>Requested Term</MudTh>
+                    <MudTh>Audit Score</MudTh>
+                    <MudTh>Status</MudTh>
+                    <MudTh Style="text-align: right;">Action</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="App #" Class="font-monospace fw-bold">@context.ApplicationNumber</MudTd>
+                    <MudTd DataLabel="Training Provider" Class="fw-semibold">@(context.TrainingProvider?.ProviderName ?? "SDP Provider")</MudTd>
+                    <MudTd DataLabel="Current Expiry">@context.CurrentAccreditationEndDate.ToString("yyyy-MM-dd")</MudTd>
+                    <MudTd DataLabel="Requested Term">@context.RequestedDurationYears Years</MudTd>
+                    <MudTd DataLabel="Audit Score">
+                        <MudText Typo="Typo.body2" Class="fw-bold" Color="Color.Success">@context.AuditScorePercentage%</MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Status">
+                        <MudChip T="string" Size="Size.Small" Color="@(context.StatusCode == "Approved" ? Color.Success : Color.Warning)" Variant="Variant.Filled">
+                            @context.StatusCode
+                        </MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Action" Style="text-align: right;">
+                        @if (context.StatusCode == "Submitted")
+                        {
+                            <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Filled.Verified" OnClick="@(() => ApproveReAccredAsync(context.Id))">
+                                Grant Re-Accreditation
+                            </MudButton>
+                        }
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudTabPanel>
+    </MudTabs>
+</MudContainer>
+
+@code {
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Core Registries", href: "/sdp"),
+        new BreadcrumbItem("Scope Extensions & Re-Accreditation", href: null, disabled: true)
+    };
+
+    private List<SdpExtensionOfScope> _extensions = new();
+    private List<SdpReAccreditation> _reAccreditations = new();
+    private bool _isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _extensions = await ScopeService.GetExtensionOfScopeApplicationsAsync();
+            _reAccreditations = await ScopeService.GetReAccreditationsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to load scope applications: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task ApproveScopeAsync(int id)
+    {
+        try
+        {
+            await ScopeService.ReviewExtensionOfScopeAsync(id, true, "Site audit confirmed assessor capacity and workshop tooling.", "EtqaManager");
+            Snackbar.Add("Extension of scope approved.", Severity.Success);
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task ApproveReAccredAsync(int id)
+    {
+        try
+        {
+            await ScopeService.ReviewReAccreditationAsync(id, true, "5-year cyclical re-accreditation renewal granted.", "EtqaManager");
+            Snackbar.Add("SDP re-accreditation approved for 5 years.", Severity.Success);
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+}

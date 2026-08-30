@@ -1,0 +1,376 @@
+﻿@page "/admin/settings"
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Domain.Entities
+@inject IFeatureFlagService FeatureFlags
+@inject ISystemConfigurationService ConfigService
+@inject IErpIntegrationService ErpService
+@inject IPdfDocumentService PdfService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<PageTitle>System Settings & Feature Flags | merSETA NSDMS</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
+    <!-- Top Bar -->
+    <MudCard Elevation="2" Class="mb-4">
+        <MudCardContent Class="d-flex align-center justify-space-between py-3">
+            <div>
+                <MudBreadcrumbs Items="_breadcrumbs" Class="pa-0 mb-1" />
+                <MudText Typo="Typo.h5" Class="fw-bold">System Configuration & Feature Flags</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    Cascading enterprise configuration engine. Dynamic database overrides with double-write audit logging.
+                </MudText>
+            </div>
+            <MudStack Row="true" Spacing="2">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadDataAsync">
+                    Refresh
+                </MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenNewConfigDrawer">
+                    Add Parameter
+                </MudButton>
+            </MudStack>
+        </MudCardContent>
+    </MudCard>
+
+    @if (_isLoading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+    }
+
+    <!-- Tabs -->
+    <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6" Color="Color.Primary">
+        <!-- Tab 1: Feature Flags -->
+        <MudTabPanel Text="Feature Flags & Integrations" Icon="@Icons.Material.Filled.ToggleOn">
+            <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-4">
+                <strong>Zero-Risk Policy:</strong> Third-party integrations (Dynamics GP, Sage ERP, Live DHET SFTP, Live SARS FTP, SMS OTP) are <strong>OFF by default</strong>. Workflows automatically execute in mock simulation mode when disabled.
+            </MudAlert>
+
+            <MudGrid>
+                @foreach (var flag in _featureFlags)
+                {
+                    <MudItem xs="12" md="6">
+                        <MudCard Outlined="true" Class="pa-3 h-100">
+                            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                                <div>
+                                    <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                        <MudText Typo="Typo.subtitle1" Class="fw-bold">@flag.FeatureName</MudText>
+                                        <MudChip T="string" Size="Size.Small" Color="@(flag.Category == "Integrations" ? Color.Warning : Color.Info)" Variant="Variant.Outlined">
+                                            @flag.Category
+                                        </MudChip>
+                                    </MudStack>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block mt-1">@flag.Description</MudText>
+                                    <MudText Typo="Typo.caption" Class="font-monospace text-muted">Key: @flag.FeatureKey</MudText>
+                                </div>
+                                <MudSwitch T="bool" Value="@flag.IsEnabled" ValueChanged="@((bool val) => ToggleFeatureAsync(flag, val))" Color="Color.Success" />
+                            </MudStack>
+                        </MudCard>
+                    </MudItem>
+                }
+            </MudGrid>
+        </MudTabPanel>
+
+        <!-- Tab 2: System Configurations -->
+        <MudTabPanel Text="System Configurations" Icon="@Icons.Material.Filled.Settings">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3" Spacing="2">
+                <MudChipSet T="string" @bind-SelectedValue="_selectedCategory" SelectionMode="SelectionMode.SingleSelection">
+                    <MudChip T="string" Value="@("All")" Color="Color.Primary" Variant="@(_selectedCategory == "All" ? Variant.Filled : Variant.Outlined)">All</MudChip>
+                    <MudChip T="string" Value="@("Finance")" Color="Color.Success" Variant="@(_selectedCategory == "Finance" ? Variant.Filled : Variant.Outlined)">Finance</MudChip>
+                    <MudChip T="string" Value="@("Governance")" Color="Color.Info" Variant="@(_selectedCategory == "Governance" ? Variant.Filled : Variant.Outlined)">Governance</MudChip>
+                    <MudChip T="string" Value="@("Compliance")" Color="Color.Warning" Variant="@(_selectedCategory == "Compliance" ? Variant.Filled : Variant.Outlined)">Compliance</MudChip>
+                    <MudChip T="string" Value="@("Storage")" Color="Color.Dark" Variant="@(_selectedCategory == "Storage" ? Variant.Filled : Variant.Outlined)">Storage</MudChip>
+                    <MudChip T="string" Value="@("Integrations")" Color="Color.Secondary" Variant="@(_selectedCategory == "Integrations" ? Variant.Filled : Variant.Outlined)">Integrations</MudChip>
+                    <MudChip T="string" Value="@("General")" Color="Color.Default" Variant="@(_selectedCategory == "General" ? Variant.Filled : Variant.Outlined)">General</MudChip>
+                </MudChipSet>
+            </MudStack>
+
+            <MudTable Items="_configs" Hover="true" Dense="true" Elevation="0" Outlined="true" Filter="FilterConfigs">
+                <ToolBarContent>
+                    <MudText Typo="Typo.h6">Configuration Parameters</MudText>
+                    <MudSpacer />
+                    <MudTextField @bind-Value="_searchConfig" Placeholder="Search setting key or value..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Immediate="true" />
+                </ToolBarContent>
+                <HeaderContent>
+                    <MudTh>Key</MudTh>
+                    <MudTh>Category</MudTh>
+                    <MudTh>Value</MudTh>
+                    <MudTh>Type</MudTh>
+                    <MudTh>Description</MudTh>
+                    <MudTh Style="text-align: right;">Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Key" Class="font-monospace fw-semibold">@context.ConfigKey</MudTd>
+                    <MudTd DataLabel="Category">
+                        <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Text">@context.Category</MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Value">
+                        <MudText Typo="Typo.body2" Class="font-monospace">@context.ConfigValue</MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Type">@context.DataType</MudTd>
+                    <MudTd DataLabel="Description">@context.Description</MudTd>
+                    <MudTd DataLabel="Actions" Style="text-align: right;">
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" OnClick="@(() => OpenEditConfigDrawer(context))" Title="Edit Parameter" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteConfigAsync(context.ConfigKey))" Title="Deactivate" />
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudTabPanel>
+
+        <!-- Tab 3: Integration Diagnostics -->
+        <MudTabPanel Text="Integration Diagnostics" Icon="@Icons.Material.Filled.Speed">
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudCard Outlined="true" Class="pa-4">
+                        <MudText Typo="Typo.h6" Class="fw-bold mb-2">ERP Ledger Integration Status</MudText>
+                        <MudText Typo="Typo.body2" Class="mb-3">
+                            Active Provider: <strong>@ErpService.GetActiveProviderName()</strong>
+                        </MudText>
+                        <MudButton Variant="Variant.Filled" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Payment" OnClick="TestErpDisbursementAsync">
+                            Run Test ERP Disbursement
+                        </MudButton>
+                        @if (_erpTestResult != null)
+                        {
+                            <MudAlert Severity="@(_erpTestResult.IsSimulated ? Severity.Info : Severity.Success)" Class="mt-3" Dense="true">
+                                <strong>Status:</strong> @_erpTestResult.StatusMessage<br />
+                                <strong>Batch:</strong> @_erpTestResult.BatchNumber | <strong>Trx:</strong> @_erpTestResult.TransactionReference
+                            </MudAlert>
+                        }
+                    </MudCard>
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudCard Outlined="true" Class="pa-4">
+                        <MudText Typo="Typo.h6" Class="fw-bold mb-2">PDF Document Generation Diagnostics</MudText>
+                        <MudText Typo="Typo.body2" Class="mb-3">
+                            Engine: <strong>QuestPDF 2026.8.0</strong> • Vector rendering with merSETA headers.
+                        </MudText>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PictureAsPdf" OnClick="TestPdfGenerationAsync">
+                            Generate Sample Trade Test PDF
+                        </MudButton>
+                        @if (_pdfGeneratedBytes > 0)
+                        {
+                            <MudAlert Severity="Severity.Success" Class="mt-3" Dense="true">
+                                Successfully generated PDF document byte stream (<strong>@(_pdfGeneratedBytes / 1024) KB</strong>).
+                            </MudAlert>
+                        }
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
+        </MudTabPanel>
+    </MudTabs>
+
+    <!-- Configuration Edit/Create Drawer -->
+    <MudDrawer @bind-Open="_drawerOpen" Anchor="Anchor.End" Elevation="4" Variant="DrawerVariant.Temporary" Width="480px" Class="pa-4">
+        <MudDrawerHeader>
+            <MudText Typo="Typo.h6" Class="fw-bold">@(_isNewConfig ? "Add New Parameter" : "Edit Parameter")</MudText>
+        </MudDrawerHeader>
+        <MudStack Spacing="3">
+            <MudTextField @bind-Value="_editModel.ConfigKey" Label="Configuration Key" Variant="Variant.Outlined" Disabled="@(!_isNewConfig)" HelperText="Hierarchical key, e.g. Finance:Tranche1Percentage" Required="true" />
+            
+            <MudSelect @bind-Value="_editModel.ConfigCategory" Label="Category" Variant="Variant.Outlined">
+                <MudSelectItem Value="@("Finance")">Finance</MudSelectItem>
+                <MudSelectItem Value="@("Governance")">Governance</MudSelectItem>
+                <MudSelectItem Value="@("Compliance")">Compliance</MudSelectItem>
+                <MudSelectItem Value="@("Storage")">Storage</MudSelectItem>
+                <MudSelectItem Value="@("Integrations")">Integrations</MudSelectItem>
+                <MudSelectItem Value="@("General")">General</MudSelectItem>
+            </MudSelect>
+
+            <MudSelect @bind-Value="_editModel.DataType" Label="Data Type" Variant="Variant.Outlined">
+                <MudSelectItem Value="@("String")">String</MudSelectItem>
+                <MudSelectItem Value="@("Integer")">Integer</MudSelectItem>
+                <MudSelectItem Value="@("Decimal")">Decimal</MudSelectItem>
+                <MudSelectItem Value="@("Boolean")">Boolean</MudSelectItem>
+                <MudSelectItem Value="@("Json")">Json</MudSelectItem>
+            </MudSelect>
+
+            <MudTextField @bind-Value="_editModel.ConfigValue" Label="Configuration Value" Variant="Variant.Outlined" Lines="@(_editModel.DataType == "Json" ? 4 : 1)" Required="true" />
+
+            <MudTextField @bind-Value="_editModel.Description" Label="Description / Operational Rationale" Variant="Variant.Outlined" Lines="2" />
+
+            <MudStack Row="true" Spacing="2" Class="mt-4">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveConfigAsync">
+                    Save Parameter
+                </MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="@(() => _drawerOpen = false)">
+                    Cancel
+                </MudButton>
+            </MudStack>
+        </MudStack>
+    </MudDrawer>
+</MudContainer>
+
+@code {
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Administration", href: "/admin/lookups"),
+        new BreadcrumbItem("System Settings", href: null, disabled: true)
+    };
+
+    private List<SystemFeatureFlag> _featureFlags = new();
+    private List<SystemConfig> _configs = new();
+    private bool _isLoading = true;
+    private string _searchConfig = string.Empty;
+    private string _selectedCategory = "All";
+    private ErpDisbursementResult? _erpTestResult;
+    private int _pdfGeneratedBytes = 0;
+
+    // Drawer state
+    private bool _drawerOpen = false;
+    private bool _isNewConfig = false;
+    private SystemConfig _editModel = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await FeatureFlags.SeedDefaultFeatureFlagsAsync();
+        await ConfigService.SeedDefaultConfigsAsync();
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _featureFlags = await FeatureFlags.GetAllFeatureFlagsAsync();
+            _configs = await ConfigService.GetAllConfigsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to load settings: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task ToggleFeatureAsync(SystemFeatureFlag flag, bool isEnabled)
+    {
+        try
+        {
+            await FeatureFlags.SetFeatureFlagAsync(flag.FeatureKey, isEnabled, flag.FeatureName, flag.Category, flag.Description, "AdminUser");
+            flag.IsEnabled = isEnabled;
+            Snackbar.Add($"Feature '{flag.FeatureName}' set to {(isEnabled ? "ENABLED" : "DISABLED")}.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error toggling feature: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private bool FilterConfigs(SystemConfig config)
+    {
+        if (_selectedCategory != "All" && config.Category != _selectedCategory) return false;
+
+        if (string.IsNullOrWhiteSpace(_searchConfig)) return true;
+        return config.ConfigKey.Contains(_searchConfig, StringComparison.OrdinalIgnoreCase) ||
+               (config.ConfigValue != null && config.ConfigValue.Contains(_searchConfig, StringComparison.OrdinalIgnoreCase)) ||
+               config.Category.Contains(_searchConfig, StringComparison.OrdinalIgnoreCase) ||
+               (config.Description != null && config.Description.Contains(_searchConfig, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private void OpenNewConfigDrawer()
+    {
+        _isNewConfig = true;
+        _editModel = new SystemConfig
+        {
+            ConfigCategory = "General",
+            DataType = "String"
+        };
+        _drawerOpen = true;
+    }
+
+    private void OpenEditConfigDrawer(SystemConfig config)
+    {
+        _isNewConfig = false;
+        _editModel = new SystemConfig
+        {
+            Id = config.Id,
+            ConfigKey = config.ConfigKey,
+            ConfigValue = config.ConfigValue,
+            ConfigCategory = config.ConfigCategory,
+            Description = config.Description,
+            DataType = config.DataType
+        };
+        _drawerOpen = true;
+    }
+
+    private async Task SaveConfigAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_editModel.ConfigKey) || string.IsNullOrWhiteSpace(_editModel.ConfigValue))
+        {
+            Snackbar.Add("Key and Value are required.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            await ConfigService.SetConfigAsync(
+                _editModel.ConfigKey,
+                _editModel.ConfigValue,
+                _editModel.ConfigCategory,
+                _editModel.Description,
+                _editModel.DataType,
+                "AdminUser");
+
+            Snackbar.Add($"Parameter '{_editModel.ConfigKey}' saved successfully.", Severity.Success);
+            _drawerOpen = false;
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to save parameter: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task DeleteConfigAsync(string key)
+    {
+        var confirm = await DialogService.ShowMessageBoxAsync("Confirm Deactivation", $"Are you sure you want to deactivate configuration '{key}'?", yesText: "Deactivate", cancelText: "Cancel");
+        if (confirm == true)
+        {
+            await ConfigService.DeleteConfigAsync(key, "AdminUser");
+            Snackbar.Add($"Configuration '{key}' deactivated.", Severity.Info);
+            await LoadDataAsync();
+        }
+    }
+
+    private async Task TestErpDisbursementAsync()
+    {
+        try
+        {
+            _erpTestResult = await ErpService.DisbursePaymentAsync("SDL-TEST-001", 75000m, "Test ERP Disbursement Diagnostic", "AdminUser");
+            Snackbar.Add("ERP disbursement diagnostic completed successfully.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"ERP test failed: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task TestPdfGenerationAsync()
+    {
+        try
+        {
+            var sampleTest = new LearnerTradeTest
+            {
+                TradeTitle = "Automotive Motor Mechanic",
+                SerialCertificateNumber = "CERT-2026-009988",
+                CertificateIssueDate = DateTime.UtcNow,
+                TestCenterName = "merSETA Gauteng Regional Assessment Centre",
+                CompanyLearner = new CompanyLearner
+                {
+                    Person = new Person { FirstName = "Sipho", LastName = "Nkosi", RsaIdNumber = "9805125009081" }
+                }
+            };
+
+            var bytes = await PdfService.GenerateTradeTestCertificateAsync(sampleTest);
+            _pdfGeneratedBytes = bytes.Length;
+            Snackbar.Add($"Generated PDF certificate ({bytes.Length:N0} bytes).", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"PDF generation failed: {ex.Message}", Severity.Error);
+        }
+    }
+}

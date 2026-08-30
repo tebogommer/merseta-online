@@ -1,0 +1,160 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+	<p:fieldset legend="Site Visit Information">
+		<p:panelGrid columns="2" style="width:100%" id="siteVisitGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+			<h:panelGroup styleClass="md-inputfield">
+				<p:calendar id="siteVIsitDate" mindate="#{sdpreaccreditationUI.nextDate}" value="#{sdpreaccreditationUI.trainingProviderApplication.siteVisitDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" inputStyle="width: 75%" style="width: 75%" required="true"  disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalEdit}">
+					<p:ajax event="dateSelect" update="siteVisitGrid">
+					</p:ajax>
+				</p:calendar>
+				<p:outputLabel value="Site Visit Date" for="siteVIsitDate" />
+			</h:panelGroup>
+			
+			<h:panelGroup styleClass="md-inputfield" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalEdit}">
+				<p:commandButton value="Set Visit Date" immediate="true" rendered="#{sdpreaccreditationUI.noDateProvided}" icon="fa fa-calendar-check-o" action="#{sdpreaccreditationUI.setSiteVisitDate}" update="siteVisitGrid">
+					<p:confirm header="Confirmation" message="Are you sure?" icon="pi pi-exclamation-triangle" />
+				</p:commandButton>
+				<p:commandButton immediate="true" value="Amend Site Visit Date"  rendered="#{!sdpreaccreditationUI.noDateProvided}" action="#{sdpreaccreditationUI.prepSiteVisitDateUpdate}" icon="fa fa-calendar-check-o" update="reviewDateForm">
+					<p:confirm header="Confirmation" message="Are you sure?" icon="pi pi-exclamation-triangle" />
+				</p:commandButton>
+			</h:panelGroup>
+			
+			<p:spacer rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalEdit}"/>
+			<p:spacer rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalEdit}"/>
+			
+			<h:panelGroup styleClass="md-inputfield">
+				<p:calendar id="siteVIsitReportDate" mindate="#{sdpreaccreditationUI.nextDate}" value="#{sdpreaccreditationUI.trainingProviderApplication.siteVisitReportDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" inputStyle="width: 75%" style="width: 75%" required="true"  disabled="true">
+					<p:ajax event="dateSelect"/>
+				</p:calendar>
+				<p:outputLabel value="Date of Report" for="siteVIsitReportDate" />
+			</h:panelGroup>
+			
+			<h:panelGroup styleClass="md-inputfield" rendered="#{sdpreaccreditationUI.onAfterSiteVistDate}">
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText id="comment" value="#{sdpreaccreditationUI.trainingProviderApplication.siteVisitComment}" disabled="#{!sdpreaccreditationUI.onAfterSiteVistDate}" style="width:95%">
+						<p:ajax></p:ajax>
+					</p:inputText>
+					<p:outputLabel value="Comment" for="comment" />
+				</h:panelGroup>
+			</h:panelGroup>
+
+			<h:panelGroup styleClass="md-inputfield">
+				<p:inputText value="Assessment Only" rendered="#{sdpreaccreditationUI.trainingProviderApplication.assessmentOnly}" disabled="true" style="width: 75%;  color: black;" />
+				<p:inputText value="Training and Assessment" rendered="#{sdpreaccreditationUI.trainingProviderApplication.trainingAssessment}" disabled="true" style="width: 75%;color: black;" />
+				<p:outputLabel value="Purpose of Visit" for="siteVIsitReportDate" />
+			</h:panelGroup>
+		</p:panelGrid>
+		
+		
+	</p:fieldset>
+
+	<p:fieldset legend="#{lang['qualifications']}">
+		<p:dataTable var="rowVar" value="#{sdpreaccreditationUI.companyQualifications}" rowKey="#{rowVar.id}" reflow="true" styleClass="borderless">
+			<p:column headerText="Qualification Code" width="150">
+				<p:outputLabel value="#{rowVar.qualification.code}" />
+			</p:column>
+			<p:column headerText="Qualification Description">
+				<p:outputLabel value="#{rowVar.qualification.description}" />
+			</p:column>
+			<p:column headerText="Approve" width="60">
+				<center>
+					<p:selectBooleanCheckbox value="#{rowVar.accept}" disabled="#{!sdpreaccreditationUI.onAfterSiteVistDate}">
+						<p:ajax></p:ajax>
+					</p:selectBooleanCheckbox>
+				</center>
+			</p:column>
+		</p:dataTable>
+	</p:fieldset>
+
+	<p:fieldset legend="#{lang['unit.standards']}">
+		<p:dataTable var="rowVar" value="#{sdpreaccreditationUI.unitStandards}" rowKey="#{rowVar.id}" reflow="true" styleClass="borderless">
+			
+			<p:column headerText="Unit Standard Code" width="150">
+				<p:outputLabel value="#{rowVar.unitStandard.code}" />
+			</p:column>
+			<p:column headerText="Unit Standard Description">
+				<p:outputLabel value="#{rowVar.unitStandard.title}" />
+			</p:column>
+			<p:column headerText="Approve" width="60">
+				<center>
+					<p:selectBooleanCheckbox value="#{rowVar.accept}" disabled="#{!sdpreaccreditationUI.onAfterSiteVistDate}">
+						<p:ajax></p:ajax>
+					</p:selectBooleanCheckbox>
+				</center>
+			</p:column>
+		</p:dataTable>
+	</p:fieldset>
+	
+	<p:fieldset legend="#{lang['skills.programme']}">
+		
+		<p:dataTable var="rowVar" value="#{sdpreaccreditationUI.tpSkillsProgramList}" rowKey="#{rowVar.id}" reflow="true" styleClass="borderless">
+			<p:column headerText="Programme ID" width="150">
+				<p:outputLabel value="#{rowVar.skillsProgram.programmeID}" />
+			</p:column>
+			<p:column headerText="Skills Program">
+				<p:outputLabel value="#{rowVar.skillsProgram.description}" />
+			</p:column>
+			<p:column headerText="Approve" width="60">
+				<center>
+					<p:selectBooleanCheckbox value="#{rowVar.accept}" disabled="#{!sdpreaccreditationUI.onAfterSiteVistDate}">
+						<p:ajax></p:ajax>
+					</p:selectBooleanCheckbox>
+				</center>
+			</p:column>
+		</p:dataTable>
+		
+	</p:fieldset>
+	
+	<p:fieldset legend="#{lang['skills.set']}">
+		<p:dataTable var="rowVar" value="#{sdpreaccreditationUI.tpSkillsSetList}" rowKey="#{rowVar.id}" reflow="true" styleClass="borderless">
+			
+			<p:column headerText="Programme ID" width="150">
+				<p:outputLabel value="#{rowVar.skillsSet.programmeID}" />
+			</p:column>
+			
+			<p:column headerText="Skills Set">
+				<p:outputLabel value="#{rowVar.skillsSet.description}" />
+			</p:column>
+			<p:column headerText="Approve" width="60">
+				<center>
+					<p:selectBooleanCheckbox value="#{rowVar.accept}" disabled="#{!sdpreaccreditationUI.onAfterSiteVistDate}">
+						<p:ajax></p:ajax>
+					</p:selectBooleanCheckbox>
+				</center>
+			</p:column>
+		</p:dataTable>
+		
+	</p:fieldset>
+	
+    <p:fieldset legend="Skills programme route">
+		<p:panelGrid columns="3" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+			<h:panelGroup>
+				<p:outputLabel  styleClass="FontBold Fs15" style="font-weight:bold" value="Skills programme route will be used for obtaining the unit standards?"  />
+			</h:panelGroup>
+			
+			<h:panelGroup>
+				<p:selectOneMenu disabled="true"  id="svUseSkillProgrammeRoute" value="#{sdpreaccreditationUI.trainingProviderApplication.useSkillProgrammeRoute}" style="width:100%" required="true" requiredMessage="#{lang['use.skill.programme.route.error.msg']}">
+					<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+				</p:selectOneMenu>
+			</h:panelGroup>
+	
+			<h:panelGroup styleClass="md-inputfield" id="spPg" rendered="#{sdpreaccreditationUI.trainingProviderApplication.useSkillProgrammeRoute eq YesNoEnum.Yes}">
+				<p:autoComplete required="true" disabled="true" id="skillsProgram" value="#{sdpreaccreditationUI.trainingProviderApplication.skillsProgram}" completeMethod="#{autoCompleteUI.completeSkillsProgram}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true"
+					converter="SkillsProgramConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+					<p:ajax event="itemSelect" update="@form" />
+					<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+					<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+				</p:autoComplete>
+				<p:outputLabel value="Skills Program" for="skillsProgram" styleClass="gray" />
+			</h:panelGroup>
+		</p:panelGrid>
+	</p:fieldset>
+	<br/>
+	<p:commandButton icon="fa fa-download" rendered="#{sdpreaccreditationUI.trainingProviderApplication.siteVisitDone and false}" value="Download Site Visit Report"
+			action="#{sdpreaccreditationUI.downloadETQTP004AccreditationSiteVisitReport()}" ajax="false"
+			title="Download Site Visit Report">
+	</p:commandButton>
+	
+
+
+</ui:composition>

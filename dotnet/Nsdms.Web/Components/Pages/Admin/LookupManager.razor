@@ -1,18 +1,19 @@
-﻿@page "/admin/lookups/{TableName}"
+@page "/admin/lookups/{TableName}"
 @inject LookupService LookupService
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
 @rendermode InteractiveServer
 
-<div class="sticky-top bg-white pa-3 mb-4 border-bottom elevation-1 d-flex justify-space-between align-center">
+<MudPaper Elevation="1" Class="sticky-top pa-3 mb-4 rounded-lg d-flex justify-space-between align-center" Style="top: var(--mud-appbar-height, 64px); z-index: 10;">
     <div class="d-flex align-center gap-2">
         <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack" OnClick="BackToHub">Back to Lookups Hub</MudButton>
         <MudText Typo="Typo.h6">lookup.@TableName</MudText>
+        <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Outlined">@_totalCount items</MudChip>
     </div>
     <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenCreateDialog">
         Add New Code
     </MudButton>
-</div>
+</MudPaper>
 
 @if (_editingItem != null)
 {
@@ -22,20 +23,20 @@
         </MudText>
         <MudGrid>
             <MudItem xs="12" md="3">
-                <MudTextField T="string" Label="Code (Primary Key, varchar 15)" Required="true" Disabled="@(!_isNew)" @bind-Value="_editingItem.Code" MaxLength="15" HelperText="Uppercase unique identifier" />
+                <MudTextField T="string" Label="Code (Primary Key, varchar 50)" Required="true" Disabled="@(!_isNew)" @bind-Value="_editingItem.Code" MaxLength="50" HelperText="Unique code identifier" />
             </MudItem>
             <MudItem xs="12" md="4">
-                <MudTextField T="string" Label="Display Name" Required="true" @bind-Value="_editingItem.Name" />
+                <MudTextField T="string" Label="Display Name" Required="true" @bind-Value="_editingItem.Name" MaxLength="250" />
             </MudItem>
             <MudItem xs="12" md="5">
-                <MudTextField T="string" Label="Description" @bind-Value="_editingItem.Description" />
+                <MudTextField T="string" Label="Description" @bind-Value="_editingItem.Description" MaxLength="500" />
             </MudItem>
             <MudItem xs="12">
                 <MudSwitch T="bool" @bind-Value="_editingItem.Active" Color="Color.Success" Label="Active Status" />
             </MudItem>
             <MudItem xs="12" Class="d-flex gap-2">
                 <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveItem">Save Code</MudButton>
-                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="CancelEdit">Cancel</MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Cancel" OnClick="CancelEdit">Cancel</MudButton>
             </MudItem>
         </MudGrid>
     </MudCard>
@@ -43,7 +44,7 @@
 
 <MudPaper Class="pa-4" Elevation="1">
     <div class="d-flex justify-space-between align-center mb-3">
-        <MudTextField @bind-Value="_searchString" Placeholder="Filter codes and names..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true" />
+        <MudTextField @bind-Value="_searchString" Placeholder="Filter codes and names..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true" OnKeyUp="HandleSearch" Clearable="true" OnClearButtonClick="HandleSearch" />
     </div>
 
     @if (_loading)
@@ -52,7 +53,7 @@
     }
     else
     {
-        <MudTable Items="@FilteredItems" Hover="true" Dense="true" T="LookupItemDto">
+        <MudTable Items="@_items" Hover="true" Dense="true" T="LookupItemDto">
             <HeaderContent>
                 <MudTh>Code (PK)</MudTh>
                 <MudTh>Name</MudTh>
@@ -74,7 +75,7 @@
                 </MudTd>
             </RowTemplate>
             <PagerContent>
-                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
+                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
             </PagerContent>
         </MudTable>
     }
@@ -85,6 +86,7 @@
 
     private List<LookupItemDto> _items = new();
     private string _searchString = string.Empty;
+    private int _totalCount = 0;
     private bool _loading = true;
     private LookupItemDto? _editingItem;
     private bool _isNew;
@@ -97,15 +99,15 @@
     private async Task LoadData()
     {
         _loading = true;
-        _items = await LookupService.GetLookupItemsAsync(TableName);
+        _totalCount = await LookupService.GetLookupItemsCountAsync(TableName, _searchString);
+        _items = await LookupService.GetLookupItemsAsync(TableName, _searchString, 0, 500);
         _loading = false;
     }
 
-    private IEnumerable<LookupItemDto> FilteredItems =>
-        string.IsNullOrWhiteSpace(_searchString)
-            ? _items
-            : _items.Where(x => x.Code.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
-                                x.Name.Contains(_searchString, StringComparison.OrdinalIgnoreCase));
+    private async Task HandleSearch()
+    {
+        await LoadData();
+    }
 
     private void BackToHub()
     {

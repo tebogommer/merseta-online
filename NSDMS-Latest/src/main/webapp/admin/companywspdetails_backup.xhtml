@@ -1,0 +1,213 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                template="/WEB-INF/template.xhtml">
+
+    <ui:define name="content">
+    	
+	    <p:importEnum type="haj.com.entity.enums.WspStatusEnum"></p:importEnum>
+	    <p:importEnum type="haj.com.entity.enums.WSPSearchType"></p:importEnum>
+        <div class="ui-g">
+            <div class="ui-g-12">
+                <div class="card">
+                     <h1>Grant Approval History</h1>
+                     	<h:form id="mainForm">
+                     		<p:fieldset legend="Select Search Type">
+                     			<p:panelGrid columns="2" style="width:100%" id="gpSearchType" layout="grid" styleClass="ui-panelgrid-blank form-group">
+	                     			<h:panelGroup rendered="true">
+										<p:outputLabel value="Select Search Type" for="searchType" />
+										<br/>
+										<p:selectOneMenu required="true" id="searchType" value="#{wspReportingUI.searchType}" requiredMessage="Select Search Type" style="width:100%">
+											<f:selectItem itemLabel="---#{lang['select.one']}---" itemValue="" noSelectionOption="true" />
+											<f:selectItems value="#{enumUI.wspSearchTypeDD}" var="rv" itemLabel="#{searchType}" itemValue="#{rv}" />
+											<p:ajax update="@form"/>
+										</p:selectOneMenu>
+									</h:panelGroup>
+                     			</p:panelGrid>
+                     		</p:fieldset>
+		                    <p:fieldset legend="Search Grant Approval History By Company" rendered="#{wspReportingUI.searchType==WSPSearchType.searchByCompany}">
+			                   	    <br/>
+				                    <p:panelGrid columns="2" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group">
+						                  <h:panelGroup styleClass="md-inputfield"  style="width:100%;">
+											<br />
+											<p:autoComplete  style="width:100%;" id="company" value="#{wspReportingUI.company}" completeMethod="#{autoCompleteUI.completeCompany}" var="rv" itemLabel="#{rv.companyNameDisplay}" itemValue="#{rv}" forceSelection="true" converter="CompanyConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+												<p:column headerText="#{lang['companyName']}" style="white-space: nowrap">#{rv.companyName}</p:column>
+												<p:column headerText="#{lang['entity.id']}" style="white-space: nowrap">#{rv.levyNumber}</p:column>
+											</p:autoComplete>
+											<p:outputLabel value="#{lang['company']}" for="company" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:commandButton value="#{lang['submit']}" icon="ui-icon-search" update="@form" action="#{wspReportingUI.prepareCompanyWSPList()}" />
+											<p:spacer width="10"></p:spacer>
+											<p:commandButton value="#{lang['clear']}" icon="fa fa-recycle" update="@form" action="#{wspReportingUI.clearWSPSearchHistory()}" />
+										</h:panelGroup>
+									</p:panelGrid>
+		                  </p:fieldset>
+		                  
+		                  <p:fieldset legend="Search Grant Approval History By Financial Year" rendered="#{wspReportingUI.searchType==WSPSearchType.searchByFinancialYear}">
+		                  	<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+		                  		<h:panelGroup>
+		                  			<p:outputLabel for="year" value="Select Financial Year"></p:outputLabel><br/>
+		                  			<p:selectOneMenu id="year" value="#{wspReportingUI.selectedYear}" style="width:100%">
+		                  				<f:selectItem itemLabel="---Select One---" itemValue="" noSelectionOption="true" />
+           								<f:selectItems value="#{wspReportingUI.financialYears}" />
+           								<p:ajax update="@form"></p:ajax>
+		                  		    </p:selectOneMenu>
+		                  		</h:panelGroup>
+		                    	<h:panelGroup styleClass="md-inputfield">
+									<p:commandButton value="#{lang['submit']}" icon="ui-icon-search" update="@form" action="#{wspReportingUI.searchWspByFinYearInfo()}" />
+									<p:spacer width="10"></p:spacer>
+									<p:commandButton value="#{lang['clear']}" icon="fa fa-recycle" update="@form" action="#{wspReportingUI.clearWSPSearchHistory()}" />
+								</h:panelGroup>
+							</p:panelGrid>
+		                  </p:fieldset>
+		                  
+		                  <p:fieldset legend="Search Grant Approval History By Financial Year" rendered="#{wspReportingUI.searchType==WSPSearchType.searchByYearRange}">
+		                   		<br/>
+		                   		<p:panelGrid columns="3" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group">
+		                   		 	<h:panelGroup>
+			                  			<p:outputLabel for="startYear" value="Select Start Year"></p:outputLabel><br/>
+			                  			<p:selectOneMenu id="startYear" value="#{wspReportingUI.fromYear}" style="width:100%">
+			                  				<f:selectItem itemLabel="---Select One---" itemValue="" noSelectionOption="true" />
+	           								<f:selectItems value="#{wspReportingUI.financialYears}" />
+	           								<p:ajax update="@form"></p:ajax>
+			                  		    </p:selectOneMenu>
+			                  		</h:panelGroup>
+			                  		
+			                  		<h:panelGroup>
+			                  			<p:outputLabel for="endYear" value="Select End Year"></p:outputLabel><br/>
+			                  			<p:selectOneMenu id="endYear" value="#{wspReportingUI.toYear}" style="width:100%">
+			                  				<f:selectItem itemLabel="---Select One---" itemValue="" noSelectionOption="true" />
+	           								<f:selectItems value="#{wspReportingUI.financialYears}" />
+	           								<p:ajax update="@form"></p:ajax>
+			                  		    </p:selectOneMenu>
+			                  		</h:panelGroup>
+			                  	<h:panelGroup styleClass="md-inputfield">
+									<p:commandButton value="#{lang['submit']}" icon="ui-icon-search" update="@form" action="#{wspReportingUI.searchWspByFinYearRangeInfo()}" />
+									<p:spacer width="10"></p:spacer>
+									<p:commandButton value="#{lang['clear']}" icon="fa fa-recycle" update="@form" action="#{wspReportingUI.clearWSPSearchHistory()}" />
+								</h:panelGroup>
+		                   		</p:panelGrid>
+		                    	
+		                  </p:fieldset>
+		                  <br/>
+		                  <p:fieldset  rendered="#{wspReportingUI.searchType==WSPSearchType.searchByYearRange}"  legend="WSP Details From #{wspReportingUI.fromYear eq null ? '?' : wspReportingUI.fromYear} To #{wspReportingUI.toYear eq null ? '?' : wspReportingUI.toYear}">
+		                  	   <ui:include src="/pages/includes/download_lazy.xhtml">
+									<ui:param name="file_name" value="WSP_List" />
+									<ui:param name="target" value="wspByRangeTable" />
+								</ui:include>
+		                  	  <p:dataTable var="wsp" value="#{wspReportingUI.financialYearRangeDataModel}" paginator="true" rows="10"
+				                 paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {CurrentPageReport} {NextPageLink} {LastPageLink}"
+				                 rowsPerPageTemplate="10,15,20,25,30,35,40,45,50,100,150,200,250" id="wspByRangeTable" lazy="true" paginatorPosition="bottom">
+				                 
+				                 	 <p:column headerText="Company Name" filterBy="#{wsp.company.companyName}" sortBy="#{wsp.company.companyName}">
+								        <h:outputText value="#{wsp.company.companyName}" />
+								    </p:column>
+								    
+								     <p:column headerText="Levy Number" filterBy="#{wsp.company.levyNumber}" sortBy="#{wsp.company.levyNumber}">
+								        <h:outputText value="#{wsp.company.levyNumber}" />
+								    </p:column>
+				                 
+				                  <p:column headerText="Financial Year" filterBy="#{wsp.finYear}" sortBy="#{wsp.finYear}">
+								        <h:outputText value="#{wsp.finYear}" />
+								    </p:column>
+								    
+								     <p:column headerText="Grant Type" sortBy="#{wsp.wspType}">
+								        <h:outputText value="#{wsp.wspType.friendlyName}" />
+								        <h:outputText rendered="#{wsp.wspType eq null}" value="N/A" />
+								    </p:column>
+								 
+								    <p:column headerText="Status" sortBy="#{wsp.wspStatusEnum.friendlyName}">
+								        <h:outputText value="#{wsp.wspStatusEnum.friendlyName}" />
+								    </p:column>
+								    
+								     <p:column width="40" headerText="RAG" exportable="false">
+										<h:graphicImage value="/resources/hls/images/green.svg" rendered="#{wsp.wspStatusEnum eq WspStatusEnum.Approved}" width="40" />
+										<h:graphicImage value="/resources/hls/images/red.svg" rendered="#{wsp.wspStatusEnum eq WspStatusEnum.Rejected}" width="40" styleClass="animated pulse infinite" />
+										<h:graphicImage value="/resources/hls/images/amber.svg" rendered="#{wsp.wspStatusEnum ne WspStatusEnum.Approved and wsp.wspStatusEnum ne WspStatusEnum.Rejected}" width="40" styleClass="animated pulse infinite" />
+								    </p:column>
+				                 
+				              </p:dataTable>
+		                  </p:fieldset>
+		                  <br/>
+		                  <p:fieldset rendered="#{wspReportingUI.searchType==WSPSearchType.searchByFinancialYear  and wspReportingUI.selectedYear ne null}" legend="WSP Details For Financial Year: #{wspReportingUI.selectedYear}">
+		                  	  <ui:include src="/pages/includes/download_lazy.xhtml">
+									<ui:param name="file_name" value="WSP_List" />
+									<ui:param name="target" value="finYearTable" />
+								</ui:include>
+		                  	  <p:dataTable var="wsp" value="#{wspReportingUI.financialYearDataModel}" paginator="true" rows="5"
+				                 paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {CurrentPageReport} {NextPageLink} {LastPageLink}"
+				                 rowsPerPageTemplate="5,10,15,20,25,30,35,40,45,50,100,150,200,250" id="finYearTable" lazy="true" paginatorPosition="bottom">
+				                 	
+				                 	 <p:column headerText="Company Name" filterBy="#{wsp.company.companyName}" sortBy="#{wsp.company.companyName}">
+								        <h:outputText value="#{wsp.company.companyName}" />
+								    </p:column>
+								    
+								     <p:column headerText="Levy Number" filterBy="#{wsp.company.levyNumber}" sortBy="#{wsp.company.levyNumber}">
+								        <h:outputText value="#{wsp.company.levyNumber}" />
+								    </p:column>
+								    
+				                     <p:column headerText="Financial Year" filterBy="#{wsp.finYear}" sortBy="#{wsp.finYear}">
+								        <h:outputText value="#{wsp.finYear}" />
+								    </p:column>
+								    
+								     <p:column headerText="Grant Type" sortBy="#{wsp.wspType}">
+								        <h:outputText value="#{wsp.wspType.friendlyName}" />
+								        <h:outputText rendered="#{wsp.wspType eq null}" value="N/A" />
+								    </p:column>
+								 
+								    <p:column headerText="Status" sortBy="#{wsp.wspStatusEnum.friendlyName}">
+								        <h:outputText value="#{wsp.wspStatusEnum.friendlyName}" />
+								    </p:column>
+								    
+								     <p:column width="40" headerText="RAG" exportable="false">
+										<h:graphicImage value="/resources/hls/images/green.svg" rendered="#{wsp.wspStatusEnum eq WspStatusEnum.Approved}" width="40" />
+										<h:graphicImage value="/resources/hls/images/red.svg" rendered="#{wsp.wspStatusEnum eq WspStatusEnum.Rejected}" width="40" styleClass="animated pulse infinite" />
+										<h:graphicImage value="/resources/hls/images/amber.svg" rendered="#{wsp.wspStatusEnum ne WspStatusEnum.Approved and wsp.wspStatusEnum ne WspStatusEnum.Rejected}" width="40" styleClass="animated pulse infinite" />
+								    </p:column>
+				                 
+				              </p:dataTable>
+		                  </p:fieldset>
+		                  
+		                  <br/>
+		                  
+		                  <p:fieldset legend="WSP Details" rendered="#{wspReportingUI.searchType==WSPSearchType.searchByCompany}">
+			                    <ui:include src="/pages/includes/download_lazy.xhtml">
+									<ui:param name="file_name" value="WSP_List" />
+									<ui:param name="target" value="wspList" />
+								</ui:include>
+								<p:dataTable var="wsp" id="wspList" value="#{wspReportingUI.companyWSPList}"  rows="5"
+					                 paginator="true" paginatorPosition="bottom"
+					                 paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+					                 rowsPerPageTemplate="5,10,15">
+								    <p:column headerText="Financial Year" filterBy="#{wsp.finYear}" sortBy="#{wsp.finYear}">
+								        <h:outputText value="#{wsp.finYear}" />
+								    </p:column>
+								    
+								     <p:column headerText="Grant Type" sortBy="#{wsp.wspType}">
+								        <h:outputText value="#{wsp.wspType.friendlyName}" />
+								        <h:outputText rendered="#{wsp.wspType eq null}" value="N/A" />
+								    </p:column>
+								 
+								    <p:column headerText="Status" sortBy="#{wsp.wspStatusEnum.friendlyName}">
+								        <h:outputText value="#{wsp.wspStatusEnum.friendlyName}" />
+								    </p:column>
+								    
+								     <p:column width="40" headerText="RAG" exportable="false">
+										<h:graphicImage value="/resources/hls/images/green.svg" rendered="#{wsp.wspStatusEnum eq WspStatusEnum.Approved}" width="40" />
+										<h:graphicImage value="/resources/hls/images/red.svg" rendered="#{wsp.wspStatusEnum eq WspStatusEnum.Rejected}" width="40" styleClass="animated pulse infinite" />
+										<h:graphicImage value="/resources/hls/images/amber.svg" rendered="#{wsp.wspStatusEnum ne WspStatusEnum.Approved and wsp.wspStatusEnum ne WspStatusEnum.Rejected}" width="40" styleClass="animated pulse infinite" />
+								    </p:column>
+								    
+								</p:dataTable>
+			              </p:fieldset>
+	                   </h:form>
+                </div>
+            </div>
+        </div>
+        
+    </ui:define>
+
+</ui:composition>

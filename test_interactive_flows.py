@@ -89,7 +89,7 @@ def run_interactive_suite():
         # Flow 6: Company Learners & Trade Testing Certification
         try:
             print("[Flow 6/6] Testing Company Learner & Trade Test Records...")
-            page.goto(f"{BASE_URL}/trade-tests", wait_until="networkidle", timeout=15000)
+            page.goto(f"{BASE_URL}/tradetests", wait_until="networkidle", timeout=15000)
             body_text = page.locator("body").inner_text()
             assert "Trade Test" in body_text or "Competent" in body_text or "Certificate" in body_text
             print("   [PASS] Trade testing certification and competency records verified.")

@@ -1,0 +1,582 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+
+		<p:growl showDetail="false" sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+		<h:panelGroup id="discgrantGroup">
+
+			<div class="ui-g">
+				<div class="ui-g-12">
+					<ui:include src="/pages/includes/taskdiagram.xhtml" />
+					<br />
+					<ui:include src="/pages/includes/tabinfo.xhtml">
+						<ui:param name="showInfoCircle" value="true" />
+						<ui:param name="cssClass" value="secondaryText Fs15" />
+						<ui:param name="helpTxt" value="#{lang['The.system.will.auto-fill.based.selections']}" />
+					</ui:include>
+				</div>
+			</div>
+			<h:form id="siteSmeApprovalForm">
+				<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+				<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+				<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+				<div class="card">
+					<h2>#{siteSmeApprovalUI.company.companyName} Mentor Approval</h2>
+					<p:tabView id="tabView">
+						<p:tab title="Company Details">
+							<p:panelGrid columns="3" style="width:100%" id="companyInsGrid" layout="grid" styleClass="ui-panelgrid-blank">
+								<h:panelGroup>
+									<p:outputLabel value="#{lang['companyName']}" for="companyName" styleClass="Fs12 FontLight" />
+									<br />
+									<p:outputLabel id="companyName" value="#{siteSmeApprovalUI.company.companyName}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.company.name']}" />
+								</h:panelGroup>
+								<h:panelGroup>
+									<p:outputLabel value="#{lang['tradingName']}" for="tradingName" styleClass="Fs12 FontLight" />
+									<br />
+									<p:outputLabel id="tradingName" value="#{siteSmeApprovalUI.company.tradingName}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.trading.name']}" />
+								</h:panelGroup>
+								<h:panelGroup>
+									<p:outputLabel value="#{lang['telNumber']}" for="telNumberComp" styleClass="Fs12 FontLight" />
+									<br />
+									<p:outputLabel id="telNumberComp" value="#{siteSmeApprovalUI.company.telNumber}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.tel.number']}" />
+								</h:panelGroup>
+								<h:panelGroup>
+									<p:outputLabel value="#{lang['faxNumber']}" for="faxNumberComp" styleClass="Fs12 FontLight" />
+									<br />
+									<p:outputLabel id="faxNumberComp" value="#{siteSmeApprovalUI.company.faxNumber}" style="width:95%" rendered="#{siteSmeApprovalUI.company.faxNumber ne null and siteSmeApprovalUI.company.faxNumber.length() gt 0}" />
+									<p:outputLabel id="faxNumberComp2" value="#{lang['n.a']}" style="width:95%" rendered="#{siteSmeApprovalUI.company.faxNumber eq null or siteSmeApprovalUI.company.faxNumber.length() eq 0}" />
+								</h:panelGroup>
+								<h:panelGroup>
+									<p:outputLabel value="#{lang['companyRegistrationNumber']}" for="companyRegistrationNumber" styleClass="Fs12 FontLight" />
+									<br />
+									<p:outputLabel id="companyRegistrationNumber" value="#{siteSmeApprovalUI.company.companyRegistrationNumber}" style="width:95%" />
+								</h:panelGroup>
+								<h:panelGroup>
+									<p:outputLabel value="#{lang['email']}" for="emailComp" styleClass="Fs12 FontLight" />
+									<br />
+									<p:outputLabel id="emailComp" value="#{siteSmeApprovalUI.company.email}" style="width:95%" />
+								</h:panelGroup>
+								<h:panelGroup>
+									<p:outputLabel value="#{lang['levyNumber']}" for="levyNumber" styleClass="Fs12 FontLight" />
+									<br />
+									<p:outputLabel id="levyNumber" value="#{siteSmeApprovalUI.company.levyNumber}" style="width:95%" />
+								</h:panelGroup>
+								<h:panelGroup>
+									<p:outputLabel value="#{lang['numberOfEmployees']}" for="numberOfEmployees" styleClass="Fs12 FontLight" />
+									<br />
+									<p:outputLabel id="numberOfEmployees" value="#{siteSmeApprovalUI.company.numberOfEmployees}" style="width:95%" />
+								</h:panelGroup>
+								<h:panelGroup>
+									<p:outputLabel value="#{lang['sicCode']}" for="sicCode" styleClass="Fs12 FontLight" />
+									<br />
+									<p:outputLabel id="sicCode" value="#{siteSmeApprovalUI.company.sicCode.description}" style="width:95%" required="true" requiredMessage="#{lang['enter.sic.code']}" />
+								</h:panelGroup>
+								<h:panelGroup>
+									<p:outputLabel value="#{lang['organisation.type']}" for="organisationType" styleClass="Fs12 FontLight" />
+									<br />
+									<p:outputLabel value="#{lang['n.a']}" rendered="#{siteSmeApprovalUI.company.organisationType eq null}" />
+									<p:outputLabel id="organisationType" value="#{siteSmeApprovalUI.company.organisationType.description}" style="width:95%" rendered="#{siteSmeApprovalUI.company.organisationType ne null}" />
+								</h:panelGroup>
+							</p:panelGrid>
+							<p:panelGrid columns="2" style="width:100%" id="companyInsGrida" layout="grid" styleClass="ui-panelgrid-blank">
+								<p:fieldset legend="#{lang['residentialAddress']}">
+									<p:panelGrid columns="2" style="width : 95%" styleClass="ui-panelgrid-blank" id="addrPcode">
+										<h:panelGroup>
+											<p:outputLabel value="#{lang['address.line.1']}" for="addr1" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="addr1" value="#{siteSmeApprovalUI.company.residentialAddress.addressLine1}" style="width:95%" required="true" requiredMessage="#{lang['enter.residential.address']}" />
+											<br />
+											<p:outputLabel value="#{lang['address.line.2']}" for="addr2" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{siteSmeApprovalUI.company.residentialAddress.addressLine2 eq null or siteSmeApprovalUI.company.residentialAddress.addressLine2.length() eq 0}" />
+											<p:outputLabel id="addr2" style="width:95%" value="#{siteSmeApprovalUI.company.residentialAddress.addressLine2}" rendered="#{siteSmeApprovalUI.company.residentialAddress.addressLine2 ne null and siteSmeApprovalUI.company.residentialAddress.addressLine2.length() gt 0}" />
+										</h:panelGroup>
+										<h:panelGroup>
+											<p:outputLabel value="#{lang['address.line.3']}" for="addr3" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="addr3" style="width:95%" value="#{siteSmeApprovalUI.company.residentialAddress.addressLine3}" rendered="#{siteSmeApprovalUI.company.residentialAddress.addressLine3 ne null and siteSmeApprovalUI.company.residentialAddress.addressLine3.length() gt 0}" />
+											<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{siteSmeApprovalUI.company.residentialAddress.addressLine3 eq null or siteSmeApprovalUI.company.residentialAddress.addressLine3.length() eq 0}" />
+											<br />
+											<p:outputLabel value="#{lang['address.line.4']}" for="addr4" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="addr4" style="width:95%" value="#{siteSmeApprovalUI.company.residentialAddress.addressLine4}" rendered="#{siteSmeApprovalUI.company.residentialAddress.addressLine4 ne null and siteSmeApprovalUI.company.residentialAddress.addressLine4.length() gt 0}" />
+											<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{siteSmeApprovalUI.company.residentialAddress.addressLine4 eq null or siteSmeApprovalUI.company.residentialAddress.addressLine4.length() eq 0}" />
+										</h:panelGroup>
+										<h:panelGroup>
+											<p:outputLabel value="#{lang['post.code']}" for="pcode" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="pcode" style="width:95%" value="#{siteSmeApprovalUI.company.residentialAddress.postcode}" rendered="#{siteSmeApprovalUI.company.residentialAddress.postcode ne null and siteSmeApprovalUI.company.residentialAddress.postcode.length() gt 0}" />
+											<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{siteSmeApprovalUI.company.residentialAddress.postcode eq null or siteSmeApprovalUI.company.residentialAddress.postcode.length() eq 0}" />
+											<br />
+											<h:outputLabel value="#{lang['municipality']}" for="MunicipalityID" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="MunicipalityID" style="width:95%" value="#{siteSmeApprovalUI.company.residentialAddress.municipality.municipalityDesc}" />
+										</h:panelGroup>
+
+										<h:panelGroup>
+											<div class="EmptyBox40"></div>
+										</h:panelGroup>
+									</p:panelGrid>
+								</p:fieldset>
+
+								<p:fieldset legend="#{lang['postalAddress']}">
+									<p:panelGrid columns="2" style="width : 95%" styleClass="ui-panelgrid-blank" id="postalAddress">
+										<h:panelGroup>
+											<p:outputLabel value="#{lang['address.line.1']}" for="postalAddressaddr1" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="postalAddressaddr1" value="#{siteSmeApprovalUI.company.postalAddress.addressLine1}" style="width:95%" required="true" requiredMessage="#{lang['enter.postal.address']}" />
+											<br />
+											<p:outputLabel value="#{lang['address.line.2']}" for="postalAddressaddr2" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="postalAddressaddr2" style="width:95%" value="#{siteSmeApprovalUI.company.postalAddress.addressLine2}" />
+											<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{siteSmeApprovalUI.company.postalAddress.addressLine2 eq null or siteSmeApprovalUI.company.postalAddress.addressLine2.length() eq 0}" />
+										</h:panelGroup>
+										<h:panelGroup>
+											<p:outputLabel value="#{lang['address.line.3']}" for="postalAddressaddr3" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="postalAddressaddr3" style="width:95%" value="#{siteSmeApprovalUI.company.postalAddress.addressLine3}" />
+											<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{siteSmeApprovalUI.company.postalAddress.addressLine3 eq null or siteSmeApprovalUI.company.postalAddress.addressLine3.length() eq 0}" />
+											<br />
+											<p:outputLabel value="#{lang['address.line.4']}" for="postalAddressaddr4" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="postalAddressaddr4" style="width:95%" value="#{siteSmeApprovalUI.company.postalAddress.addressLine4}" />
+											<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{siteSmeApprovalUI.company.postalAddress.addressLine4 eq null or siteSmeApprovalUI.company.postalAddress.addressLine4.length() eq 0}" />
+										</h:panelGroup>
+										<h:panelGroup>
+											<p:outputLabel value="#{lang['post.code']}" for="postalAddressPcode" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="postalAddressPcode" style="width:95%" value="#{siteSmeApprovalUI.company.postalAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}" />
+											<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{siteSmeApprovalUI.company.postalAddress.postcode eq null or siteSmeApprovalUI.company.postalAddress.postcode.length() eq 0}" />
+											<br />
+											<h:outputLabel value="#{lang['municipality']}" for="postalAddressMunicipalityID" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="postalAddressMunicipalityID" style="width:95%" value="#{siteSmeApprovalUI.company.postalAddress.municipality.municipalityDesc}" />
+										</h:panelGroup>
+
+										<h:panelGroup>
+											<div>
+												<p:outputLabel value="#{lang['same.as.my.address']}" styleClass="Fs12 FontLight" />
+											</div>
+											<div>
+												<p:selectBooleanCheckbox value="#{siteSmeApprovalUI.company.postalAddress.sameAddress}" disabled="true">
+												</p:selectBooleanCheckbox>
+											</div>
+										</h:panelGroup>
+									</p:panelGrid>
+								</p:fieldset>
+							</p:panelGrid>
+						</p:tab>
+						<p:tab title="Mentor Information" id="smeInformationTab">
+							<p:outputPanel id="smeDetailPanel">
+								<c:if test="#{siteSmeApprovalUI.rejectReasonsList.size() gt 0}">
+									<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%">
+										<h1>Rejection Reasons:</h1>
+										<p:repeat var="rwrr" value="#{siteSmeApprovalUI.rejectReasonsList}">
+											<p:outputLabel value="#{rwrr.description}" style="font-weight:bold; font-size: 20px; color: red;" />
+											<br />
+											<p:outputLabel value="#{rwrr.howTo}" style="color: grey;" />
+											<br />
+											<br />
+										</p:repeat>
+									</p:panelGrid>
+								</c:if>
+								
+								<p:panelGrid columns="1" id="sitePanel" styleClass="ui-panelgrid-blank" style="width:100%">
+									<!-- Read only view -->
+									<p:fieldset legend="Site Information">
+										<p:panelGrid columns="2" style="width : 95%" styleClass="ui-panelgrid-blank" id="addrPcodeSite">
+											<h:panelGroup>
+												<p:outputLabel value="Site Name" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel value="#{siteSmeApprovalUI.sitessme.sites.companyName}" rendered="#{siteSmeApprovalUI.sitessme.sites.companyName.length() gt 0}"/>
+												<p:outputLabel value="#{siteSmeApprovalUI.sitessme.company.companyName}"  rendered="#{siteSmeApprovalUI.sitessme.sites.companyName eq null}" />
+												<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{siteSmeApprovalUI.sitessme.sites.companyName eq null and siteSmeApprovalUI.sitessme.sites.companyName eq null}"/>
+											</h:panelGroup>
+											<h:panelGroup />
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['address.line.1']}" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel value="#{siteSmeApprovalUI.sitessme.sites.registeredAddress.addressLine1}" rendered="#{siteSmeApprovalUI.sitessme.sites.registeredAddress.addressLine1.length() gt 0}" />
+												<p:outputLabel value="#{siteSmeApprovalUI.company.residentialAddress.addressLine1}"  rendered="#{siteSmeApprovalUI.sitessme.sites.registeredAddress.addressLine1 eq null}" />												
+												<p:outputLabel value="#{lang['n.a']}" rendered="#{siteSmeApprovalUI.sitessme.sites.registeredAddress.addressLine1 eq null and siteSmeApprovalUI.company.residentialAddress.addressLine1.length() eq 0}"/>
+												<br />
+												<p:outputLabel value="#{lang['address.line.2']}" styleClass="Fs12 FontLight" />
+												<br />
+												
+												<p:outputLabel value="#{siteSmeApprovalUI.sitessme.sites.registeredAddress.addressLine2}" rendered="#{siteSmeApprovalUI.sitessme.sites.registeredAddress.addressLine2.length() gt 0}"/>
+												<p:outputLabel value="#{siteSmeApprovalUI.company.residentialAddress.addressLine2}" required="true" requiredMessage="#{lang['enter.residential.address']}" rendered="#{siteSmeApprovalUI.sitessme.sites.registeredAddress.addressLine2 eq null}" />												
+												<p:outputLabel value="#{lang['n.a']}" rendered="#{siteSmeApprovalUI.sitessme.sites.registeredAddress.addressLine2 eq null and siteSmeApprovalUI.company.residentialAddress.addressLine2.length() eq 0}"/>
+											</h:panelGroup>
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['address.line.3']}"  styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel value="#{siteSmeApprovalUI.sitessme.sites.registeredAddress.addressLine3}" rendered="#{siteSmeApprovalUI.sitessme.sites.registeredAddress.addressLine3.length() gt 0}"/>
+												<p:outputLabel value="#{siteSmeApprovalUI.company.residentialAddress.addressLine3}" rendered="#{siteSmeApprovalUI.sitessme.sites.registeredAddress.addressLine3 eq null}" />
+												<p:outputLabel value="#{lang['n.a']}" rendered="#{siteSmeApprovalUI.sitessme.sites.registeredAddress.addressLine3 eq null and siteSmeApprovalUI.company.residentialAddress.addressLine3.length() eq 0}"/>
+												<br />
+												<p:outputLabel value="#{lang['address.line.4']}"  styleClass="Fs12 FontLight" />
+												<br />											
+												<p:outputLabel value="#{lang['n.a']}" />
+											</h:panelGroup>
+											<h:panelGroup rendered="true">
+												<p:outputLabel value="#{lang['post.code']}" for="pcodeSite" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="pcodeSite" style="width:95%" value="#{siteSmeApprovalUI.company.residentialAddress.postcode}" rendered="#{siteSmeApprovalUI.company.residentialAddress.postcode.length() gt 0}" />
+												<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{siteSmeApprovalUI.company.residentialAddress.postcode.length() eq 0}" />
+												<br />
+												<h:outputLabel value="#{lang['municipality']}" for="MunicipalityIDSite" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="MunicipalityIDSite" style="width:95%" value="#{siteSmeApprovalUI.company.residentialAddress.municipality.municipalityDesc}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<div class="EmptyBox40"></div>
+											</h:panelGroup>
+										</p:panelGrid>
+									</p:fieldset>
+								</p:panelGrid>
+
+								<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%">
+									<h3>Mentor Information</h3>
+								</p:panelGrid>
+								<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%">
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText style="width:95%; opacity:1 !important;" value="#{siteSmeApprovalUI.sitessme.firstName}" disabled="#{siteSmeApprovalUI.disableAll or !siteSmeApprovalUI.editFirstLastName}">
+											<p:ajax />
+										</p:inputText>
+										<p:outputLabel value="First Name" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText style="width:95%; opacity:1 !important;" value="#{siteSmeApprovalUI.sitessme.lastName}" disabled="#{siteSmeApprovalUI.disableAll or !siteSmeApprovalUI.editFirstLastName}">
+											<p:ajax />
+										</p:inputText>
+										<p:outputLabel value="Last Name" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield" rendered="#{siteSmeApprovalUI.sitessme.identityNumber ne null}">
+										<p:inputText style="width:95%; opacity:1 !important;" value="#{siteSmeApprovalUI.sitessme.identityNumber}" disabled="true" />
+										<p:outputLabel value="#{lang['rsa.id.number']}" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield" rendered="#{siteSmeApprovalUI.sitessme.passportNumber ne null}">
+										<p:inputText style="width:95%; opacity:1 !important;" value="#{siteSmeApprovalUI.sitessme.passportNumber}" disabled="true" />
+										<p:outputLabel value="#{lang['passport.number']}" />
+									</h:panelGroup>
+								</p:panelGrid>
+
+								<p:panelGrid id="smeDocsPanel" columns="1" styleClass="ui-panelgrid-blank" style="width:100%">
+									<p:dataTable value="#{siteSmeApprovalUI.sitessme.docs}" var="rv1" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv1.id}">
+										<f:facet name="header">
+										Mentor Documents
+										</f:facet>
+										<p:column headerText="#{lang['type']}" width="18%">#{rv1.configDoc.name}</p:column>
+										<p:column headerText="#{lang['original.file.name']}" priority="4">
+											<p:outputLabel value="#{rv1.originalFname}" styleClass="Fs12"></p:outputLabel>
+										</p:column>
+										<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+										<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+											<h:outputText value="#{rv1.createDate}">
+												<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+											</h:outputText>
+										</p:column>
+										<p:column headerText="#{lang['version']}" width="10%" priority="4">
+											<h:outputText value="#{rv1.versionNo}">
+											</h:outputText>
+										</p:column>
+										<p:column headerText="#{lang['original.required']}">
+											<center>
+												<h:panelGroup rendered="#{rv1.configDoc.originalRequired}" styleClass="green">
+													<i class="fa fa-files-o fa-3x" aria-hidden="true"></i>
+												</h:panelGroup>
+												<h:panelGroup rendered="#{not rv1.configDoc.originalRequired}" styleClass="red">
+													<i class="fa fa-times fa-3x" aria-hidden="true"></i>
+												</h:panelGroup>
+											</center>
+										</p:column>
+										<p:column width="180"  headerText="View">
+											<p:commandButton ajax="false" icon="fa fa-download" action="#{uploadDocUI.download}" id="dlb" rendered="#{rv1.id ne null}" immediate="true">
+												<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+											</p:commandButton>
+											<p:tooltip for="dlb" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+											<p:spacer width="5" rendered="#{rv1.id ne null}" />
+											<p:commandButton icon="fa fa-upload" id="upload" styleClass="flat" process="@this" oncomplete="PF('dlgUploadUser').show()" update=":uploadFormUser" rendered="#{!siteSmeApprovalUI.upload}">
+												<f:setPropertyActionListener value="#{rv1}" target="#{siteSmeApprovalUI.doc}" />
+											</p:commandButton>
+											<p:tooltip for="upload" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+											<p:spacer width="5" rendered="#{!siteSmeApprovalUI.upload}" />
+											<p:commandButton icon="fa fa-bars " id="dhist" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}" process="@this">
+												<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+											</p:commandButton>
+											<p:tooltip for="dhist" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null and false}" />
+											<h:panelGroup id="panelGroupThree" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+												<p:spacer width="5" />
+												<p:commandButton icon="fa fa-comment-o" id="dnote" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel" process="@this">
+													<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+												</p:commandButton>
+												<p:tooltip for="dnote" value="#{lang['view.note']}" position="left" />
+											</h:panelGroup>
+											<h:panelGroup id="panelGroupFour" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+												<p:spacer width="5" />
+												<p:commandButton icon="fa fa-eye " id="viewerButton" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}" process="@this">
+													<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+												</p:commandButton>
+												<p:tooltip for="viewerButton" value="#{lang['view.document']} " position="left" />
+											</h:panelGroup>
+										</p:column>
+									</p:dataTable>
+								</p:panelGrid>
+							</p:outputPanel>
+							<p:outputPanel id="smeQualificationPanel">
+								<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%">
+									<h3>Mentor Qualification Information</h3>
+								</p:panelGrid>
+								<p:panelGrid id="qualificationsPanel" columns="1" styleClass="ui-panelgrid-blank" style="width:100%">
+									<c:if test="#{!siteSmeApprovalUI.disableAll}">
+										<p:fieldset legend="Add Qualification">
+											<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%">
+												<h:panelGroup>
+													<div>
+														<p:outputLabel value="#{lang['qualification']}" for="qualificationAuto"></p:outputLabel>
+													</div>
+													<div>
+														<p:autoComplete style="width:100%" inputStyle="width:50%" id="qualificationAuto" value="#{siteSmeApprovalUI.smeQualifications.qualification}" completeMethod="#{assesorModiratorUI.completeMersetaQualification}" var="rvq" itemLabel="#{rvq.description}" itemValue="#{rvq}"
+															forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+															<p:column headerText="SAQA ID" style="white-space: nowrap">#{rvq.code}</p:column>
+															<p:column headerText="#{lang['description']}" style="white-space: nowrap">#{rvq.description}</p:column>
+															<p:ajax event="itemSelect" update="qualificationsPanel" />
+														</p:autoComplete>
+													</div>
+												</h:panelGroup>
+												<h:panelGroup id="docListQualifications" rendered="#{siteSmeApprovalUI.smeQualifications.docs.size() gt 0}">
+													<br />
+													<span class="FontBold"><i class="fa fa-exclamation-circle" aria-hidden="true"></i> #{lang['please.upload.the.following.compulsory.documents']}</span>
+													<br />
+													<div class="ui-g dashboard">
+														<div class="ui-g-12">
+															<p:repeat var="rc" value="#{siteSmeApprovalUI.smeQualifications.docs}" varStatus="x">
+																<div class="ui-g-12 ui-md-6 ui-lg-3">
+																	<div class="ui-g card colorbox #{rc.originalFname eq null ? 'colorbox-5' : 'colorbox-1'}">
+																		<div class="ui-g-4">
+																			<i class="material-icons">#{rc.originalFname eq null ? 'cloud_upload' : 'check_circle'}</i>
+																		</div>
+																		<div class="ui-g-8">
+																			<span class="colorbox-name">Certified Copy of Trade Test/Qualification</span> <span class="colorbox-count"> <p:commandButton icon="fa fa-download" id="cbDownload1" rendered="#{rc.originalFname ne null}" action="#{siteSmeApprovalUI.download(rc)}" ajax="false" value="#{lang['download']}"
+																					immediate="true" process="@parent">
+																					<p:ajax onevent="oneventFunction" />
+																				</p:commandButton> <p:commandButton value="#{rc.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" styleClass="#{rc.originalFname eq null ? 'red-btn' : 'green-btn'} flat" process="@this" oncomplete="PF('dlgUploadUser').show()" update=":uploadFormUser">
+																					<f:setPropertyActionListener value="#{rc}" target="#{siteSmeApprovalUI.doc}" />
+																				</p:commandButton>
+																			</span>
+																		</div>
+																	</div>
+																</div>
+															</p:repeat>
+														</div>
+													</div>
+												</h:panelGroup>
+												<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%">
+													<p:commandButton value="Add Qualification" update="qualificationsPanel" action="#{siteSmeApprovalUI.addNewSmeQualification}" />
+													<p:commandButton value="Clear" update="qualificationsPanel" action="#{siteSmeApprovalUI.prepNewSmeQualification}" />
+												</p:panelGrid>
+											</p:panelGrid>
+										</p:fieldset>
+									</c:if>
+
+									<p:dataTable var="rowVarsmeq" value="#{siteSmeApprovalUI.sitessme.smeQualificationsList}" rowKey="#{rowVarsmeq.id}" paginator="true" rows="3" paginatorPosition="bottom"
+										paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" reflow="true">
+										<f:facet name="header">
+										Mentor Qualifications
+										</f:facet>
+										<p:column style="width:7%" headerText="#{lang['expand.row']}">
+											<p:rowToggler />
+										</p:column>
+										<p:column headerText="SAQA ID" style="width:8%">
+											<p:outputLabel value="#{rowVarsmeq.qualification.code}" />
+										</p:column>
+										<p:column headerText="Qualification">
+											<p:outputLabel value="#{rowVarsmeq.qualification.description}" />
+										</p:column>
+										<p:column style="width:10%" rendered="#{!siteSmeApprovalUI.disableAll}">
+											<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":siteSmeApprovalForm:tabView:qualificationsPanel" action="#{siteSmeApprovalUI.deleteSmeQualificationEntry}">
+												<f:setPropertyActionListener value="#{rowVarsmeq}" target="#{siteSmeApprovalUI.smeQualifications}" />
+											</p:commandButton>
+										</p:column>
+										
+										<p:column headerText="Approve" width="60" rendered="false">
+											<center>
+											<p:selectBooleanCheckbox value="#{rowVarsmeq.acepted}" disabled="#{rowVarsmeq.status eq ApprovalEnum.Approved}">
+												<p:ajax></p:ajax>
+											</p:selectBooleanCheckbox>
+											</center>
+										</p:column>
+										
+										<p:rowExpansion>
+											<p:outputPanel>
+												<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+													<p:dataTable id="qualificationDocs" value="#{rowVarsmeq.docs}" var="rowVarsQd" rowKey="#{rowVarsQd.id}" paginator="true" paginatorPosition="bottom" rows="5" reflow="true">
+														<p:column headerText="#{lang['type']}" width="18%">Certified Copy of Trade Test/Qualification</p:column>
+														<p:column headerText="#{lang['original.file.name']}" priority="4">
+															<p:outputLabel value="#{rowVarsQd.originalFname}" styleClass="Fs12" />
+														</p:column>
+														<p:column headerText="#{lang['uploaded.by']}">#{rowVarsQd.users.firstName} #{rowVarsQd.users.lastName}</p:column>
+														<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+															<h:outputText value="#{rowVarsQd.createDate}">
+																<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+															</h:outputText>
+														</p:column>
+														<p:column headerText="#{lang['version']}" width="10%" priority="4">
+															<h:outputText value="#{rowVarsQd.versionNo}">
+															</h:outputText>
+														</p:column>
+														<p:column headerText="#{lang['original.required']}" rendered="false">
+															<center>
+																<h:panelGroup rendered="#{rowVarsQd.configDoc.originalRequired}" styleClass="green">
+																	<i class="fa fa-files-o fa-3x" aria-hidden="true"></i>
+																</h:panelGroup>
+																<h:panelGroup rendered="#{not rowVarsQd.configDoc.originalRequired}" styleClass="red">
+																	<i class="fa fa-times fa-3x" aria-hidden="true"></i>
+																</h:panelGroup>
+															</center>
+														</p:column>
+														<p:column width="180" headerText="View">
+															<p:commandButton ajax="false" icon="fa fa-download" action="#{uploadDocUI.download}" id="dlb" rendered="#{rowVarsQd.id ne null}" immediate="true">
+																<f:setPropertyActionListener value="#{rowVarsQd}" target="#{uploadDocUI.doc}" />
+															</p:commandButton>
+															<p:tooltip for="dlb" value="#{lang['download.the.file']}" position="left" rendered="#{rowVarsQd.id ne null}" />
+															<p:spacer width="5" rendered="#{rowVarsQd.id ne null}" />
+															<p:commandButton icon="fa fa-upload" id="upload" styleClass="flat" process="@this" oncomplete="PF('dlgUploadUser').show()" update=":uploadFormUser" rendered="#{!siteSmeApprovalUI.upload}">
+																<f:setPropertyActionListener value="#{rowVarsQd}" target="#{siteSmeApprovalUI.doc}" />
+															</p:commandButton>
+															<p:tooltip for="upload" value="#{rowVarsQd.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+															<p:spacer width="5" rendered="#{!siteSmeApprovalUI.upload}" />
+															<p:commandButton icon="fa fa-bars " id="dhist" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rowVarsQd.id ne null}" process="@this">
+																<f:setPropertyActionListener value="#{rowVarsQd}" target="#{uploadDocUI.doc}" />
+															</p:commandButton>
+															<p:tooltip for="dhist" value="#{lang['document.tracker']}" position="left" rendered="#{rowVarsQd.id ne null and false}" />
+															<h:panelGroup id="panelGroupThree" rendered="#{rowVarsQd.note ne null and rowVarsQd.note.length() gt 0}">
+																<p:spacer width="5" />
+																<p:commandButton icon="fa fa-comment-o" id="dnote" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel" process="@this">
+																	<f:setPropertyActionListener value="#{rowVarsQd}" target="#{uploadDocUI.doc}" />
+																</p:commandButton>
+																<p:tooltip for="dnote" value="#{lang['view.note']}" position="left" />
+															</h:panelGroup>
+															<h:panelGroup id="panelGroupFour" rendered="#{rowVarsQd.extension.toLowerCase() eq 'pdf' or rowVarsQd.extension.toLowerCase() eq 'png' or rowVarsQd.extension.toLowerCase() eq 'jpg' or rowVarsQd.extension.toLowerCase() eq 'jpeg' or rowVarsQd.extension.toLowerCase() eq 'gif'}">
+																<p:spacer width="5" />
+																<p:commandButton icon="fa fa-eye " id="viewerButton" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}" process="@this">
+																	<f:setPropertyActionListener value="#{rowVarsQd}" target="#{uploadDocUI.doc}" />
+																</p:commandButton>
+																<p:tooltip for="viewerButton" value="#{lang['view.document']} " position="left" />
+															</h:panelGroup>
+														</p:column>
+													</p:dataTable>
+												</p:panelGrid>
+											</p:outputPanel>
+										</p:rowExpansion>
+									</p:dataTable>
+								</p:panelGrid>
+							</p:outputPanel>
+							<!-- Action Buttons -->
+							<c:if test="#{sessionUI.task.processRole eq null}">
+								<!-- With SDF/Client -->
+								<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+									<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" update="@form" action="#{siteSmeApprovalUI.clientSubmission}" process="@form" styleClass="flat green-btn Fs18" style="height: 50px;" />
+								</p:panelGrid>
+							</c:if>
+							<c:if
+								test="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Edit or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.View or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload}">
+								<!-- Complete Task -->
+								<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+									<p:commandButton value="#{lang['complete.task']}" action="#{siteSmeApprovalUI.completeWorkflow}" icon="ui-icon-save" update="@form" process="@form" styleClass="flat green-btn Fs18" style="height: 50px;" />
+									<p:commandButton value="#{lang['reject.task']}" oncomplete="PF('rejectReasonsDlg').show()" icon="ui-icon-save" update="@form rejectReasonForm" process="@form" styleClass="flat red-btn Fs18" style="height: 50px;" />
+								</p:panelGrid>
+							</c:if>
+							<c:if test="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve}">
+								<!-- Approve Permission -->
+								<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+									<p:commandButton value="#{lang['approve']}" action="#{siteSmeApprovalUI.approveWorkflow}" icon="ui-icon-save" update="@form" process="@form" styleClass="flat green-btn Fs18" style="height: 50px;" />
+									<p:commandButton value="#{lang['reject.task']}" oncomplete="PF('rejectReasonsDlg').show()" icon="ui-icon-save" update="@form rejectReasonForm" process="@form" styleClass="flat Fs18" style="height: 50px;" />
+								</p:panelGrid>
+							</c:if>
+							<c:if
+								test="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalUploadApproval or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalUpload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalEdit or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalView}">
+								<!-- Final Approve Permissions -->
+								<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+									<p:commandButton id="finalApproveBtn" value="#{lang['final.approval']}" action="#{siteSmeApprovalUI.finalApproveWorkflow}" icon="fa fa-check" onstart="uploadStart()" process="@form" update="@form" styleClass="Fs18 flat green-btn" style="height: 50px" />
+									<p:commandButton id="finalRejectBtn" value="#{lang['final.reject']}" icon="fa fa-times" process="@form" oncomplete="PF('finalRejectReasonsDlg').show()" update="@form finalRejectReasonForm" styleClass="Fs18 flat red-btn" style="height: 50px" />
+								</p:panelGrid>
+							</c:if>
+						</p:tab>
+					</p:tabView>
+				</div>
+			</h:form>
+
+			<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+
+			<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUploadUser" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOADUser" width="80%" responsive="true" modal="true">
+				<h:form id="uploadFormUser">
+					<h:panelGroup id="uploadGroupUser">
+						<div class="ui-g">
+							<div class="ui-g-12">
+								<div class="card">
+									<h1 style="font-weight: bold; font-size: 25px;">#{siteSmeApprovalUI.doc.configDoc eq null ? 'Certified Copy of Trade Test/Qualification' : siteSmeApprovalUI.doc.configDoc.name}</h1>
+									<p:panel>
+										<h:panelGrid columns="2" style="width: 100%">
+											<p:outputLabel value="#{lang['notes']}:" for="note" />
+											<p:inputTextarea id="note" value="#{siteSmeApprovalUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+												<p:ajax />
+											</p:inputTextarea>
+										</h:panelGrid>
+										<div class="TexAlCenter">
+											<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+										</div>
+										<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{siteSmeApprovalUI.storeNewFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}"
+											update="uploadFormUser :siteSmeApprovalForm:tabView:smeDocsPanel :siteSmeApprovalForm:tabView:qualificationsPanel" multiple="false" fileLimit="1" immediate="false" auto="true" />
+									</p:panel>
+									<div class="EmptyBox10" />
+								</div>
+							</div>
+						</div>
+					</h:panelGroup>
+				</h:form>
+			</p:dialog>
+
+			<p:dialog header="Reject Reasons" widgetVar="rejectReasonsDlg" hideEffect="clip" showEffect="clip" id="dialogRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+				<h:form id="rejectReasonForm">
+					<div class="ui-fluid">
+						<div class="ui-g">
+							<div class="ui-g-12">
+								<p:selectManyMenu value="#{siteSmeApprovalUI.selectedRejectionReasons}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+									<f:selectItems value="#{siteSmeApprovalUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+									<p:column>
+										<h:outputText value="#{t.description}" />
+										<br />
+										<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+									</p:column>
+								</p:selectManyMenu>
+							</div>
+						</div>
+						<p:commandButton value="Reject" action="#{siteSmeApprovalUI.rejectWorkflow}" />
+					</div>
+				</h:form>
+			</p:dialog>
+
+			<p:dialog header="Final Reject Reasons" widgetVar="finalRejectReasonsDlg" hideEffect="clip" showEffect="clip" id="dialogFinalRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+				<h:form id="finalRejectReasonForm">
+					<div class="ui-fluid">
+						<div class="ui-g">
+							<div class="ui-g-12">
+								<p:selectManyMenu value="#{siteSmeApprovalUI.selectedRejectionReasons}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+									<f:selectItems value="#{siteSmeApprovalUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+									<p:column>
+										<h:outputText value="#{t.description}" />
+										<br />
+										<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+									</p:column>
+								</p:selectManyMenu>
+							</div>
+						</div>
+						<p:commandButton value="Final Reject" action="#{siteSmeApprovalUI.finalRejectWorkflow}" />
+					</div>
+				</h:form>
+			</p:dialog>
+		</h:panelGroup>
+	</ui:define>
+</ui:composition>

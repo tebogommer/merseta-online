@@ -1,0 +1,336 @@
+<ui:composition xmlns:o="http://omnifaces.org/ui" xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+	<c:if test="#{!trainingproviderUI.formUser.doneSearch}">
+		<p:outputPanel styleClass="card">
+			<h1>Skills Development Provider Registration</h1>
+			<br />
+			<ui:include src="/pages/includes/searchUserPassportOrID.xhtml" />
+		</p:outputPanel>
+	</c:if>
+	<p:importEnum type="haj.com.entity.enums.CompanyRegOrSDLEnum" var="regSDL"></p:importEnum>
+	<p:importEnum type="haj.com.entity.enums.AccreditationApplicationTypeEnum"></p:importEnum>
+	<p:importEnum type="haj.com.entity.enums.YesNoEnum"></p:importEnum>
+	<p:importEnum type="haj.com.entity.enums.SDPApplicationType"></p:importEnum>
+	<h:panelGroup rendered="#{trainingproviderUI.formUser.doneSearch}">
+		<p:outputPanel id="fsSDPInfo" styleClass="card">
+
+			<h1>#{!trainingproviderUI.formUser.doneSearch ? 'Enter RSA ID number or Passport number' : lang['sdp.primary.representative'] }</h1>
+			<br />
+			<!-- <p:fieldset id="fsSDPInfo" legend="#{!trainingproviderUI.formUser.doneSearch ? 'Enter RSA ID number or Passport number' : lang['sdp.primary.representative'] }"> -->
+			<p:outputPanel id="sdfInsGrid">
+				<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<h:panelGroup style="margin-top: -20px">
+						<div>
+							<p:outputLabel value="#{lang['title']}" for="title" />
+						</div>
+						<div>
+							<p:selectOneMenu disabled="#{trainingproviderUI.formUser.title ne null and trainingproviderUI.formUser.id ne null}" id="title" value="#{trainingproviderUI.formUser.title}" converter="TitleConvertor" style="width:95%" required="true" requiredMessage="#{lang['select.title']}">
+								<p:ajax />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsTitles}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup >
+						<div>
+						<p:outputLabel value="#{lang['first.name']}" for="userName" />
+						</div>
+						<div>
+						<p:inputText id="userName" value="#{trainingproviderUI.formUser.firstName}" style="width:95%" required="true" disabled="#{(trainingproviderUI.formUser.existingUser or trainingproviderUI.formUser.regFieldsDone) and trainingproviderUI.formUser.id ne null}"
+							requiredMessage="#{lang['enter.your.name']}" />
+							</div>
+					</h:panelGroup>
+					<h:panelGroup >
+					<div><p:outputLabel value="#{lang['surname']}" for="userSurname" /></div>
+					<div><p:inputText id="userSurname" value="#{trainingproviderUI.formUser.lastName}" style="width:95%" required="true" disabled="#{(trainingproviderUI.formUser.existingUser or trainingproviderUI.formUser.regFieldsDone) and trainingproviderUI.formUser.id ne null}"
+							requiredMessage="#{lang['enter.your.last.name']}" /></div>								
+					</h:panelGroup>
+					<h:panelGroup >
+					<div><p:outputLabel value="#{lang['emails']}" for="userEmail" /></div>
+					<div><p:inputText id="userEmail" value="#{trainingproviderUI.formUser.email}" style="width:95%" required="true" disabled="#{(trainingproviderUI.formUser.existingUser or trainingproviderUI.formUser.regFieldsDone) and trainingproviderUI.formUser.id ne null}"
+							requiredMessage="#{lang['enter.your.email.address']}" /></div>												
+					</h:panelGroup>
+					<h:panelGroup  rendered="#{trainingproviderUI.formUser.rsaIDNumber.length() gt 0}">
+					<div><p:outputLabel value="#{lang['rsa.id.number']}" for="userIdNumber" /></div>
+					<div><p:inputText id="userIdNumber" value="#{trainingproviderUI.formUser.rsaIDNumber}" style="width:95%" disabled="#{trainingproviderUI.formUser.existingUser and trainingproviderUI.formUser.id ne null}" /></div>												
+					</h:panelGroup>
+					<h:panelGroup  rendered="#{trainingproviderUI.formUser.passportNumber.length() gt 0}">
+					<div><p:outputLabel value="#{lang['passport.number']}" for="userPassport" /></div>
+					<div><p:inputText id="userPassport" value="#{trainingproviderUI.formUser.passportNumber}" style="width:95%" disabled="true" /></div>												
+					</h:panelGroup>
+					<h:panelGroup >
+					<div><p:outputLabel value="#{lang['mobile.number']}" for="tpCellNumber" /></div>
+					<div><p:inputMask disabled="#{trainingproviderUI.formUser.cellNumber.length() gt 0}" id="tpCellNumber" mask="#{profileUI.CELLPHONE_FORMAT}" value="#{trainingproviderUI.formUser.cellNumber}" style="width: 95%" label="cellNumber" required="true" requiredMessage="Enter mobile number">
+							<o:validator validatorId="javax.faces.Length" minimum="0" maximum="20" message="#{lang['user.cellnumber.length']}" />
+						</p:inputMask>
+						</div>						
+					</h:panelGroup>
+					<h:panelGroup >
+					<div><p:outputLabel value="#{lang['tel.number']}:" for="tpTelNumber" /></div>
+					<div><p:inputMask disabled="#{trainingproviderUI.formUser.telNumber.length() gt 0}" id="tpTelNumber" mask="#{profileUI.TELPHONE_FORMAT}" value="#{trainingproviderUI.formUser.telNumber}" style="width: 95%" label="telNumber" required="true" requiredMessage="Enter tel number">
+							<o:validator validatorId="javax.faces.Length" minimum="0" maximum="20" message="#{lang['user.tellnumber.length']}" />
+						</p:inputMask></div>												
+					</h:panelGroup>
+					<h:panelGroup >
+					<div><p:outputLabel value="#{lang['fax.number']}" for="tpFax" /></div>
+					<div><p:inputMask disabled="#{trainingproviderUI.formUser.faxNumber.length() gt 0}" id="tpFax" mask="#{profileUI.CELLPHONE_FORMAT}" value="#{trainingproviderUI.formUser.faxNumber}" style="width: 95%" label="cellNumber" required="false" requiredMessage="Enter fax number">
+						</p:inputMask>
+					</div>												
+					</h:panelGroup>
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="#{lang['nationality']}" for="nationality" />
+						</div>
+						<div>
+							<p:autoComplete disabled="#{(trainingproviderUI.formUser.nationality.description.length() gt 0) and trainingproviderUI.formUser.id ne null}" style="width:95%" id="nationality" value="#{trainingproviderUI.formUser.nationality}" required="true" requiredMessage="#{lang['nationality.required']}"
+								completeMethod="#{autoCompleteUI.completeNationality}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="NationalityConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+								<p:column headerText="#{lang['nationality']}" style="white-space: nowrap">#{rv.description}</p:column>
+							</p:autoComplete>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="#{lang['equity']}" for="equity" />
+						</div>
+						<div>
+							<p:autoComplete disabled="#{trainingproviderUI.formUser.equity.description.length() gt 0 and trainingproviderUI.formUser.id ne null}" id="equity" value="#{trainingproviderUI.formUser.equity}" style="width:95%" completeMethod="#{autoCompleteUI.completeEquityExcludeOtherAndUnkown}" var="rv"
+								itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="EquityConvertor" dropdown="true" minQueryLength="3" maxResults="10" requiredMessage="#{lang['provide.equity']}" required="true">
+								<p:column headerText="equity" style="white-space: nowrap">#{rv.description}</p:column>
+							</p:autoComplete>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="#{lang['gender']}" for="gender" />
+						</div>
+						<div>
+							<p:autoComplete disabled="#{trainingproviderUI.formUser.gender ne null and trainingproviderUI.formUser.id ne null}" id="gender" style="width:95%" value="#{trainingproviderUI.formUser.gender}" completeMethod="#{autoCompleteUI.completeGender}" var="rv" itemLabel="#{rv.genderName}"
+								itemValue="#{rv}" forceSelection="true" converter="GenderConvertor" dropdown="true" minQueryLength="3" maxResults="10" requiredMessage="#{lang['provide.gender']}" required="true">
+								<p:column headerText="Gender" style="white-space: nowrap">#{rv.genderName}</p:column>
+							</p:autoComplete>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="#{lang['date.of.birth']}" for="dob" style="width:95%" />
+						</div>
+						<div>
+							<p:calendar id="dob" required="true" disabled="#{trainingproviderUI.formUser.dateOfBirth ne null and trainingproviderUI.formUser.id ne null}" showOn="button" requiredMessage="#{lang['select.date.of.birth']}" value="#{trainingproviderUI.formUser.dateOfBirth}"
+								pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" style="width:95%" />
+						</div>
+					</h:panelGroup>
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="#{lang['disability']}" for="disability" />
+						</div>
+						<div>
+							<p:autoComplete disabled="#{trainingproviderUI.formUser.disabilityStatus ne null and trainingproviderUI.formUser.id ne null}" id="disability" value="#{trainingproviderUI.formUser.disabilityStatus}" style="width:95%" completeMethod="#{autoCompleteUI.completeDisabilityStatus}" var="rv"
+								itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="DisabilityStatusConvertor" dropdown="true" minQueryLength="3" maxResults="10" required="true" requiredMessage="Please Select Disability">
+								<p:column headerText="Disability" style="white-space: nowrap">#{rv.description}</p:column>
+							</p:autoComplete>
+						</div>
+					</h:panelGroup>
+				</p:panelGrid>
+				<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<p:outputPanel id="traingingAndAssesmentPanel">
+						<h:panelGroup>
+							<p:outputLabel value="Training and Assessment" for="activeCheck" />
+							<p:spacer width="10"></p:spacer>
+							<p:selectBooleanCheckbox id="activeCheck" value="#{trainingproviderUI.trainingProviderApplication.trainingAssessment}" disabled="#{trainingproviderUI.formUser.regFieldsDone}">
+								<p:ajax update="traingingAndAssesmentPanel assessmentOnlyPanel" listener="#{trainingproviderUI.switchValuesTrainingAssessment}" />
+							</p:selectBooleanCheckbox>
+						</h:panelGroup>
+					</p:outputPanel>
+
+					<p:outputPanel id="assessmentOnlyPanel">
+						<h:panelGroup>
+							<p:outputLabel value="Assessment Only" for="financeCheck" />
+							<p:spacer width="10"></p:spacer>
+							<p:selectBooleanCheckbox id="financeCheck" value="#{trainingproviderUI.trainingProviderApplication.assessmentOnly}" disabled="#{trainingproviderUI.formUser.regFieldsDone}">
+								<p:ajax update="traingingAndAssesmentPanel assessmentOnlyPanel" listener="#{trainingproviderUI.switchValuesAssessmentOnly}" />
+							</p:selectBooleanCheckbox>
+						</h:panelGroup>
+					</p:outputPanel>	
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="Provider Class" for="provclass" />
+						</div>
+						<div>
+							<p:selectOneMenu id="provclass" value="#{trainingproviderUI.trainingProviderApplication.providerClass}" style="width:95%" required="true" converter="ProviderClassConvertor" disabled="#{trainingproviderUI.formUser.regFieldsDone}">
+								<p:ajax />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsProviderClassExUnknownAndInterrim}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="#{lang['provider.type']}" for="provType" />
+						</div>
+						<div>
+							<p:selectOneMenu id="provType" value="#{trainingproviderUI.trainingProviderApplication.providerType}" style="width:95%" required="true" requiredMessage="Select Provider Type" converter="ProviderTypeConvertor" disabled="#{trainingproviderUI.formUser.regFieldsDone}">
+								<p:ajax />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsProviderTypeNotWSP}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup id="typeofApp">
+						<div>
+							<p:outputLabel value="Type of Application" for="sipsas"></p:outputLabel>
+						</div>
+						<div>
+							<p:selectOneMenu style="width:95%" id="sipsas" required="true" disabled="#{trainingproviderUI.formUser.regFieldsDone}" value="#{trainingproviderUI.trainingProviderApplication.accreditationApplicationTypeEnum}">
+								<f:selectItem itemLabel="---Select One---" noSelectionOption="true" />
+								<p:ajax event="itemSelect" update="accDetailPanel docUpdate" listener="#{trainingproviderUI.checkRequiredWorkflow}"></p:ajax>
+								<f:selectItems value="#{trainingproviderUI.filteredApplicationType}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>	
+				</p:panelGrid>
+			</p:outputPanel>
+
+
+			<p:outputPanel id="docUpdate">
+				<h:panelGroup id="docListUser" rendered="#{trainingproviderUI.formUser.docs.size() gt 0}">
+					<br />
+					<span class="FontBold"> <i class="fa fa-exclamation-circle" aria-hidden="true"></i> #{lang['please.upload.the.following.compulsory.documents']}
+					</span>
+					<br />
+					<div class="ui-g dashboard">
+						<div class="ui-g-12">
+							<p:repeat var="rc" value="#{trainingproviderUI.formUser.docs}" varStatus="x">
+								<div class="ui-g-12 ui-md-6 ui-lg-3">
+									<div class="ui-g card colorbox #{rc.originalFname eq null ? 'colorbox-1' : 'colorbox-5'}">
+										<div class="ui-g-4">
+											<i class="material-icons">#{rc.originalFname eq null ? 'cloud_upload' : 'check_circle'}</i>
+										</div>
+										<div class="ui-g-8">
+											<span class="colorbox-name">#{rc.configDoc.name}</span> <span class="colorbox-count"> <p:commandButton value="#{rc.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" styleClass="#{rc.originalFname eq null ? 'red-btn' : 'green-btn'} flat" process="@this"
+													oncomplete="PF('dlgUploadUser').show()" update=":uploadFormUser">
+													<f:setPropertyActionListener value="#{rc}" target="#{trainingproviderUI.doc}" />
+												</p:commandButton>
+											</span>
+										</div>
+									</div>
+								</div>
+							</p:repeat>
+						</div>
+					</div>
+				</h:panelGroup>
+			</p:outputPanel>
+
+			<p:outputPanel id="accDetailPanel">
+				<c:if
+					test="#{trainingproviderUI.trainingProviderApplication.accreditationApplicationTypeEnum ne null and 
+				(trainingproviderUI.trainingProviderApplication.accreditationApplicationTypeEnum eq AccreditationApplicationTypeEnum.EXTENSIONOFSCOPE or 
+				trainingproviderUI.trainingProviderApplication.accreditationApplicationTypeEnum eq AccreditationApplicationTypeEnum.NON_PRIMARY_FOCUS_ACCREDITATION_APPROVAL or 
+				trainingproviderUI.trainingProviderApplication.accreditationApplicationTypeEnum eq AccreditationApplicationTypeEnum.QCTOSkillsDevelopmentProvider or 
+				trainingproviderUI.trainingProviderApplication.accreditationApplicationTypeEnum eq AccreditationApplicationTypeEnum.QCTOTradeTestCentre)}">
+
+					<h1>Accreditation Detail</h1>
+					<br />
+					<p:panelGrid columns="2" style="width:100%" id="accreditGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="#{lang['etqa']}:" styleClass="gray" />
+							</div>
+							<div>
+								<p:selectOneMenu id="etqa" value="#{trainingproviderUI.trainingProviderApplication.etqa}" converter="EtqaConvertor" style="width:95%" required="true" disabled="#{trainingproviderUI.formUser.regFieldsDone}">
+									<p:ajax></p:ajax>
+									<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+									<f:selectItems value="#{selectItemsUI.selectItemsEtqa}" var="il" itemLabel="#{il.description}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="Accreditation Status" for="accreditationStatus" />
+							</div>
+							<div>
+								<p:selectOneMenu id="accreditationStatus" value="#{trainingproviderUI.trainingProviderApplication.accreditationStatus}" converter="AccreditationStatusConvertor" style="width:95%" required="true" disabled="#{trainingproviderUI.formUser.regFieldsDone}">
+									<p:ajax></p:ajax>
+									<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+									<f:selectItems value="#{selectItemsUI.accreditationStatus}" var="il" itemLabel="#{il.description}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText id="accreditationNumber" value="#{trainingproviderUI.trainingProviderApplication.accreditationNumber}" style="width:95%" required="true" disabled="#{trainingproviderUI.formUser.regFieldsDone}" requiredMessage="#{lang['enter.your.last.name']}" />
+							<p:outputLabel value="Accreditation Number" for="accreditationNumber" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:calendar required="true" requiredMessage="Provide: Accreditation Start Date" id="AccreditationPeriod" value="#{trainingproviderUI.trainingProviderApplication.startDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" style="width: 95%"
+								disabled="#{trainingproviderUI.formUser.regFieldsDone}">
+								<p:ajax event="dateSelect">
+								</p:ajax>
+							</p:calendar>
+							<p:outputLabel value="Accreditation Start Date" for="AccreditationPeriod" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:calendar id="ExpiryDate" required="true" requiredMessage="Provide: Expiry Date" value="#{trainingproviderUI.trainingProviderApplication.expiriyDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" style="width: 95%" navigator="true"
+								disabled="#{trainingproviderUI.formUser.regFieldsDone}">
+								<p:ajax event="dateSelect">
+								</p:ajax>
+							</p:calendar>
+							<p:outputLabel value="Expiry Date" for="ExpiryDate" />
+						</h:panelGroup>
+					</p:panelGrid>
+				</c:if>
+			</p:outputPanel>
+
+
+			<p:panelGrid columns="1" style="width:100%" id="actionGrid" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{!trainingproviderUI.formUser.regFieldsDone}">
+				<p:commandButton value="#{lang['continue']}" update="actionGrid sdfInsGrid companyDetails accDetailPanel typeofApp fsSDPInfo" icon="ui-icon-fast-forward" iconPos="right" styleClass=" flat green-btn Fs18" action="#{trainingproviderUI.checkFeildsProvided}" />
+			</p:panelGrid>
+			<!-- </p:fieldset> -->
+		</p:outputPanel>
+		<br />
+		<h:panelGroup id="companyDetails">
+
+
+			<ui:include src="/pages/includes/tpcompanydetails.xhtml" />
+			<br />
+<p:outputPanel styleClass="card">
+<h1>Add Contact Person(s)</h1>
+
+			<h:panelGroup rendered="#{trainingproviderUI.company.regDone}" id="cpPanel">
+				<ui:include src="/pages/includes/tabinfo.xhtml">
+					<ui:param name="showInfoCircle" value="true" />
+					<ui:param name="cssClass" value="secondaryText Fs15" />
+					<ui:param name="helpTxt" value="#{lang['a.minimum.of.two.contact.persons.are.required']}" />
+				</ui:include>
+				<p:outputPanel id="fsContactPerson">
+					<ui:include src="/pages/includes/tpContactPerson.xhtml">
+					</ui:include>
+				</p:outputPanel>
+			</h:panelGroup>
+			</p:outputPanel>
+			<br />
+			
+			<p:outputPanel id="smeMainPG" rendered="#{trainingproviderUI.doneContactPerson}" styleClass="card">
+			<h1> Availability of Assessor and Moderator</h1>
+				
+					<ui:include src="/pages/includes/tpAvailailityOfFacAndAssessor.xhtml">
+					</ui:include>
+					<c:if test="false">
+						<!-- NOT IN USED -->
+						<ui:include src="/pages/includes/tpSME.xhtml">
+						</ui:include>
+					</c:if>
+				
+			</p:outputPanel>
+			
+			<p:outputPanel  styleClass="card" id="qualUSGrid" style="width:100%" rendered="#{trainingproviderUI.doneSMEReg}">
+				<h1>#{lang['qualification.details']}</h1>
+					<ui:include src="/pages/includes/tpQualificationDetails.xhtml" />
+				
+			</p:outputPanel>
+			<br />
+			<h:panelGrid id="authMainPG">
+				<ui:include src="/pages/includes/tpAuthorisation.xhtml" />
+
+			</h:panelGrid>
+		</h:panelGroup>
+	</h:panelGroup>
+</ui:composition>

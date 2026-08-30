@@ -150,6 +150,12 @@ BEGIN
     CREATE INDEX [IX_InterSetaTransfer_Status] ON [dbo].[InterSetaTransfer]([TransferStatusCode]);
     CREATE INDEX [IX_InterSetaTransfer_OtherSeta] ON [dbo].[InterSetaTransfer]([OtherSetaCode]);
 END
+
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[GrantApplication]') AND name = 'ApplicationStatusCode')
+BEGIN
+    ALTER TABLE [dbo].[GrantApplication] ADD [ApplicationStatusCode] NVARCHAR(50) NULL DEFAULT 'SUBMITTED';
+    EXEC sp_executesql N'UPDATE [dbo].[GrantApplication] SET [ApplicationStatusCode] = ISNULL([StatusCode], ''SUBMITTED'') WHERE [ApplicationStatusCode] IS NULL';
+END
 ";
 
         await context.Database.ExecuteSqlRawAsync(ddl);
@@ -329,7 +335,7 @@ END
                 TransferStatusCode = "Approved by CEO",
                 TransferAmount = 1450000.00m,
                 SetaApprovalReference = "CHIETA/TRF/2026/089",
-                DhetReferenceNumber = "DHET-SETMIS-TRF-2026-441",
+                DhetReferenceNumber = "DHET-TRF-2026-441",
                 Comments = "Accumulated unspent discretionary levies transferred to MerSETA.",
                 CreatedBy = "Admin"
             };

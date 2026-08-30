@@ -1,0 +1,159 @@
+@page "/grants/addendas"
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Domain.Entities
+@inject IContractVariationService VariationService
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+
+<PageTitle>Contract Variations &amp; Addendas | merSETA NSDMS</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
+    <!-- Top Bar -->
+    <MudCard Elevation="2" Class="mb-4">
+        <MudCardContent Class="d-flex align-center justify-space-between py-3">
+            <div>
+                <MudBreadcrumbs Items="_breadcrumbs" Class="pa-0 mb-1" />
+                <MudText Typo="Typo.h5" Class="fw-bold">Grant MOA Variations, Addendas &amp; Extensions</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    Contract variation agreements, project timeline extensions, budget reallocations, and MOA addenda signoffs.
+                </MudText>
+            </div>
+            <MudStack Row="true" Spacing="2">
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadDataAsync">
+                    Refresh
+                </MudButton>
+            </MudStack>
+        </MudCardContent>
+    </MudCard>
+
+    @if (_isLoading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+    }
+
+    <!-- Table -->
+    <MudCard Elevation="2">
+        <MudCardContent>
+            <MudTable Items="_addendas" Hover="true" Dense="true" Elevation="0" Filter="FilterAddendas"
+                      OnRowClick="@((TableRowClickEventArgs<ContractAddenda> e) => { if (e.Item?.Id > 0) Nav.NavigateTo($"/contracts/variations/{e.Item.Id}"); })"
+                      RowClass="cursor-pointer" T="ContractAddenda">
+                <ToolBarContent>
+                    <MudText Typo="Typo.h6">Contract Addendas (@_addendas.Count)</MudText>
+                    <MudSpacer />
+                    <MudTextField @bind-Value="_searchString" Placeholder="Search by addenda #, MOA, variation type..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Immediate="true" />
+                </ToolBarContent>
+                <HeaderContent>
+                    <MudTh>Addenda #</MudTh>
+                    <MudTh>MOA Reference</MudTh>
+                    <MudTh>Variation Type</MudTh>
+                    <MudTh>Adjustment Amount</MudTh>
+                    <MudTh>Revised End Date</MudTh>
+                    <MudTh>Status</MudTh>
+                    <MudTh Style="text-align: right;">Action</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Addenda #" Class="font-monospace fw-bold">@context.AddendaNumber</MudTd>
+                    <MudTd DataLabel="MOA Reference" Class="font-monospace">@(context.GrantMoa?.MoaNumber ?? "MOA-2026")</MudTd>
+                    <MudTd DataLabel="Variation Type">
+                        <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">@context.AddendaTypeCode</MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Adjustment Amount">
+                        <MudText Typo="Typo.body2" Class="fw-bold" Color="@(context.AdjustmentAmount >= 0 ? Color.Success : Color.Error)">
+                            @context.AdjustmentAmount.ToString("C")
+                        </MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Revised End Date">
+                        @(context.RevisedEndDate.ToString("yyyy-MM-dd"))
+                    </MudTd>
+                    <MudTd DataLabel="Status">
+                        <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.ApprovalStatusCode)" Variant="Variant.Filled">
+                            @context.ApprovalStatusCode
+                        </MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Action" Style="text-align: right;">
+                        @if (context.ApprovalStatusCode == "Draft" || context.ApprovalStatusCode == "SubmittedForReview")
+                        {
+                            <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Filled.CheckCircle" OnClick="@(() => ApproveAsync(context.Id))">
+                                Approve Variation
+                            </MudButton>
+                        }
+                        else
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Text">Executed</MudChip>
+                        }
+                    </MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager />
+                </PagerContent>
+            </MudTable>
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
+
+@code {
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Grants & WSP", href: "/grants"),
+        new BreadcrumbItem("Contract Addendas", href: null, disabled: true)
+    };
+
+    private List<ContractAddenda> _addendas = new();
+    private bool _isLoading = true;
+    private string _searchString = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _addendas = await VariationService.GetAllAddendasAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to load contract addendas: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task ApproveAsync(int id)
+    {
+        try
+        {
+            await VariationService.ApproveContractAddendaAsync(id, true, "Contract variation approved by Finance Director.", "FinanceDirector");
+            Snackbar.Add("Contract addenda approved. MOA updated.", Severity.Success);
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private bool FilterAddendas(ContractAddenda a)
+    {
+        if (string.IsNullOrWhiteSpace(_searchString)) return true;
+        var moaNo = a.GrantMoa?.MoaNumber ?? "";
+        return a.AddendaNumber.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+               a.AddendaTypeCode.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+               moaNo.Contains(_searchString, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private Color GetStatusColor(string status) => status switch
+    {
+        "Approved" => Color.Success,
+        "SubmittedForReview" => Color.Warning,
+        "Draft" => Color.Info,
+        "Rejected" => Color.Error,
+        _ => Color.Default
+    };
+}

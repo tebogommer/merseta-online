@@ -1,0 +1,139 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:c="http://java.sun.com/jsp/jstl/core"
+                template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>CollectDetail</h1>
+					<h:form id="collectdetailInsForm">
+						<p:growl sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						
+						<p:panelGrid columns="1" style="width:100%" id="collectdetailInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+       						         							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="registeredMailNumber" value="#{collectdetailUI.collectdetail.registeredMailNumber}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['registeredMailNumber']}" for="registeredMailNumber"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="competenceEnum" value="#{collectdetailUI.collectdetail.competenceEnum}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['competenceEnum']}" for="competenceEnum"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="collectionDate" value="#{collectdetailUI.collectdetail.collectionDate}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['collectionDate']}" for="collectionDate"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="createDate" value="#{collectdetailUI.collectdetail.createDate}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['createDate']}" for="createDate"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="lastName" value="#{collectdetailUI.collectdetail.lastName}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['lastName']}" for="lastName"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="firstName" value="#{collectdetailUI.collectdetail.firstName}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['firstName']}" for="firstName"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="companyName" value="#{collectdetailUI.collectdetail.companyName}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['companyName']}" for="companyName"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="idNumber" value="#{collectdetailUI.collectdetail.idNumber}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['idNumber']}" for="idNumber"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="waybillNumber" value="#{collectdetailUI.collectdetail.waybillNumber}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['waybillNumber']}" for="waybillNumber"/>
+     							</h:panelGroup>  
+
+
+        					    <p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+									<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:collectdetailList :collectdetailInsForm:collectdetailInsGrid" action="#{collectdetailUI.collectdetailInsert}" />
+									<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="collectdetailInsGrid" process="@this" action="#{collectdetailUI.prepareNew}">
+										<p:resetInput target="collectdetailInsGrid" />
+									</p:commandButton>									
+								</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{collectdetailUI.dataModel}" filteredValue="#{collectdetailUI.collectDetailfilteredList}" id="collectdetailList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+           						              					<p:column headerText="#{lang['registeredMailNumber']}">  
+                        			<h:outputText value="#{rowVar.registeredMailNumber}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['competenceEnum']}">  
+                        			<h:outputText value="#{rowVar.competenceEnum}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['collectionDate']}">  
+                        			<h:outputText value="#{rowVar.collectionDate}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['createDate']}">  
+                        			<h:outputText value="#{rowVar.createDate}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['lastName']}">  
+                        			<h:outputText value="#{rowVar.lastName}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['firstName']}">  
+                        			<h:outputText value="#{rowVar.firstName}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['companyName']}">  
+                        			<h:outputText value="#{rowVar.companyName}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['idNumber']}">  
+                        			<h:outputText value="#{rowVar.idNumber}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['waybillNumber']}">  
+                        			<h:outputText value="#{rowVar.waybillNumber}" />  
+            					</p:column>      
+
+
+           						<p:column width="80">
+									<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":collectdetailInsForm:collectdetailInsGrid">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{collectdetailUI.collectdetail}" />
+									</p:commandButton>
+									<p:spacer width="5" />
+									<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:collectdetailList" action="#{collectdetailUI.collectdetailDelete}">
+										<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+										<f:setPropertyActionListener value="#{rowVar}" target="#{collectdetailUI.collectdetail}" />
+									</p:commandButton>
+								</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+<!-- 
+registeredMailNumber = registeredMailNumber
+competenceEnum = competenceEnum
+collectionDate = collectionDate
+createDate = createDate
+lastName = lastName
+firstName = firstName
+companyName = companyName
+idNumber = idNumber
+waybillNumber = waybillNumber
+
+-->
+</ui:composition>

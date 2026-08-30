@@ -1,0 +1,137 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:c="http://java.sun.com/jsp/jstl/core"
+                template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>SitesSme</h1>
+					<h:form id="sitessmeInsForm">
+						<p:growl sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						
+						<p:panelGrid columns="1" style="width:100%" id="sitessmeInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+       						         							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="createDate" value="#{sitessmeUI.sitessme.createDate}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['createDate']}" for="createDate"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="firstName" value="#{sitessmeUI.sitessme.firstName}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['firstName']}" for="firstName"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="lastName" value="#{sitessmeUI.sitessme.lastName}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['lastName']}" for="lastName"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="identityNumber" value="#{sitessmeUI.sitessme.identityNumber}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['identityNumber']}" for="identityNumber"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="residentialAddress" value="#{sitessmeUI.sitessme.residentialAddress}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['residentialAddress']}" for="residentialAddress"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="sites" value="#{sitessmeUI.sitessme.sites}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['sites']}" for="sites"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="deleteUser" value="#{sitessmeUI.sitessme.deleteUser}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['deleteUser']}" for="deleteUser"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="useCompanyAddress" value="#{sitessmeUI.sitessme.useCompanyAddress}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['useCompanyAddress']}" for="useCompanyAddress"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="approvalEnum" value="#{sitessmeUI.sitessme.approvalEnum}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['approvalEnum']}" for="approvalEnum"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="docs" value="#{sitessmeUI.sitessme.docs}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['docs']}" for="docs"/>
+     							</h:panelGroup>  
+
+
+        					    <p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+									<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:sitessmeList :sitessmeInsForm:sitessmeInsGrid" action="#{sitessmeUI.sitessmeInsert}" />
+									<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="sitessmeInsGrid" process="@this" action="#{sitessmeUI.prepareNew}">
+										<p:resetInput target="sitessmeInsGrid" />
+									</p:commandButton>									
+								</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{sitessmeUI.dataModel}" filteredValue="#{sitessmeUI.sitesSmefilteredList}" id="sitessmeList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+           						              					<p:column headerText="#{lang['createDate']}">  
+                        			<h:outputText value="#{rowVar.createDate}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['firstName']}">  
+                        			<h:outputText value="#{rowVar.firstName}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['lastName']}">  
+                        			<h:outputText value="#{rowVar.lastName}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['identityNumber']}">  
+                        			<h:outputText value="#{rowVar.identityNumber}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['residentialAddress']}">  
+                        			<h:outputText value="#{rowVar.residentialAddress}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['sites']}">  
+                        			<h:outputText value="#{rowVar.sites}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['deleteUser']}">  
+                        			<h:outputText value="#{rowVar.deleteUser}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['useCompanyAddress']}">  
+                        			<h:outputText value="#{rowVar.useCompanyAddress}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['approvalEnum']}">  
+                        			<h:outputText value="#{rowVar.approvalEnum}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['docs']}">  
+                        			<h:outputText value="#{rowVar.docs}" />  
+            					</p:column>      
+
+
+           						<p:column width="80">
+									<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":sitessmeInsForm:sitessmeInsGrid">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{sitessmeUI.sitessme}" />
+									</p:commandButton>
+									<p:spacer width="5" />
+									<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:sitessmeList" action="#{sitessmeUI.sitessmeDelete}">
+										<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+										<f:setPropertyActionListener value="#{rowVar}" target="#{sitessmeUI.sitessme}" />
+									</p:commandButton>
+								</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+<!-- 
+_lang_
+-->
+</ui:composition>

@@ -1,0 +1,29 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+	<c:if test="false">
+		<!--  
+			<ui:include src="/pages/includes/workplaceMonitoringInc/actionPlanIncludeDisplay.xhtml">
+				<ui:param name="#{ActionPlanList}" value =" lazy data model of: haj.com.entity.WorkplaceMonitoringActionPlan " /> 
+			</ui:include> 
+		-->
+	</c:if>
+	<div class="EmptyBox10" />
+	<ui:include src="/pages/includes/download_lazy.xhtml">
+		<ui:param name="file_name" value="WPM_Action_Plan_Extracted" />
+		<ui:param name="target" value="actionPlanSurveyIncludeDT" />
+	</ui:include>
+	<div class="EmptyBox10" />
+	<p:dataTable var="rowVarApsInc" value="#{ActionPlanList}" id="actionPlanSurveyIncludeDT" rowKey="#{rowVarApsInc.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+		paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+		<p:column headerText="Criteria">
+			<p:outputLabel value="#{rowVarApsInc.criteria}" />
+		</p:column>
+		<p:column headerText="Risk">
+			<p:outputLabel value="#{rowVarApsInc.atRisk.friendlyName}" rendered="#{rowVarApsInc.atRisk ne null}" />
+			<p:outputLabel value="Not Provided" rendered="#{rowVarApsInc.atRisk eq null}" />
+		</p:column>
+		<p:column headerText="Action">
+			<p:outputLabel value="#{rowVarApsInc.action}" />
+		</p:column>
+	</p:dataTable>
+</ui:composition>

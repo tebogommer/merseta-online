@@ -1,0 +1,548 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum"></p:importEnum>
+					<p:importEnum type="haj.com.entity.enums.UsersStatusEnum" />
+					<p:growl showDetail="false" sticky="false" id="msg">
+						<p:autoUpdate />
+					</p:growl>
+					<h1>Monitor Legacy Assessor / Moderator Details</h1>
+					<h:form id="mainForm">
+
+						<h2>Legacy Assessor Applications</h2>
+						<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<p:outputLabel value="Display only final approved assessor applications:" />
+							<p:selectBooleanCheckbox value="#{monitorLegacyAssessorModUI.filterByApprovedAssessorApplications}">
+								<p:ajax update="mainForm"/>
+							</p:selectBooleanCheckbox>
+						</p:panelGrid>
+						
+						<div class="EmptyBox10" />
+
+						<p:dataTable var="rowVar" value="#{monitorLegacyAssessorModUI.assessorApplicationsDataModel}" id="assessorList" rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,20,40" reflow="true" lazy="true">
+							
+							<f:facet name="header"> Assessor Applications </f:facet>
+							
+							<p:column headerText="#{lang['first.name']}" filterBy="#{rowVar.user.firstName}" sortBy="#{rowVar.user.firstName}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.user.firstName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['last.name']}" filterBy="#{rowVar.user.lastName}" sortBy="#{rowVar.user.lastName}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.user.lastName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['rsa.id.number']}" filterBy="#{rowVar.user.rsaIDNumber}" sortBy="#{rowVar.user.rsaIDNumber}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.user.rsaIDNumber}" />
+								<h:outputText value="N/A" rendered="#{rowVar.user.rsaIDNumber.length() lt 1}" />
+							</p:column>
+
+							<p:column headerText="#{lang['passport.number']}" filterBy="#{rowVar.user.passportNumber}" sortBy="#{rowVar.user.passportNumber}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.user.passportNumber}" />
+								<h:outputText value="N/A" rendered="#{rowVar.user.passportNumber.length() lt 1}" />
+							</p:column>
+
+							<p:column headerText="#{lang['type.of.application']}" sortBy="#{rowVar.applicationType}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.applicationType.displayName}" />
+							</p:column>
+
+
+							<p:column headerText="#{lang['status']}" sortBy="#{rowVar.status}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.status.friendlyName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['registration.number']}" filterBy="#{rowVar.certificateNumber}" sortBy="#{rowVar.certificateNumber}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.certificateNumber}" />
+								<h:outputText rendered="#{rowVar.certificateNumber eq null or rowVar.certificateNumber eq ''}" value="N/A" />
+							</p:column>
+
+							<p:column headerText="#{lang['start.date']}" sortBy="#{rowVar.startDate}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.startDate}">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</h:outputText>
+								<h:outputText rendered="#{rowVar.startDate eq null}" value="N/A" />
+							</p:column>
+
+							<p:column headerText="#{lang['end.date']}" sortBy="#{rowVar.endDate}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.endDate}">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</h:outputText>
+								<h:outputText rendered="#{rowVar.endDate eq null}" value="N/A" />
+							</p:column>
+
+							<p:column headerText="#{lang['decision.number']}" sortBy="#{rowVar.reviewCommitteeMeetingAgenda.decisionNumber}">
+								<h:outputText rendered="#{rowVar.reviewCommitteeMeetingAgenda ne null}" value="#{rowVar.reviewCommitteeMeetingAgenda.decisionNumber}" />
+								<h:outputText rendered="#{rowVar.reviewCommitteeMeetingAgenda eq null}" value="N/A" />
+							</p:column>
+							
+							<p:column width="45">
+								<p:commandButton action="#{monitorLegacyAssessorModUI.prepareQuallifications}" icon="fa fa-database" title="#{lang['update']}" update="updateForm" oncomplete="PF('updateDialog').show()" >
+									<f:setPropertyActionListener value="#{rowVar}" target="#{monitorLegacyAssessorModUI.assessorModeratorApplication}" />
+								</p:commandButton>
+								
+								<p:commandButton action="#{monitorLegacyAssessorModUI.prepareQuallifications}" icon="fa fa-plus" title="#{lang['add']}" update="addForm" oncomplete="PF('addDialog').show()" >
+									<f:setPropertyActionListener value="#{rowVar}" target="#{monitorLegacyAssessorModUI.assessorModeratorApplication}" />
+								</p:commandButton>
+								
+								<p:commandButton action="#{monitorLegacyAssessorModUI.prepareUsersUnitStandards}" icon="fa fa-database" title="#{lang['update']}" update="updateUSForm" oncomplete="PF('updateUSDialog').show()" >
+									<f:setPropertyActionListener value="#{rowVar}" target="#{monitorLegacyAssessorModUI.assessorModeratorApplication}" />
+								</p:commandButton>
+							</p:column>
+
+						</p:dataTable>
+						
+						<h2>Moderator Applications</h2>
+						<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<p:outputLabel value="Display only final approved moderator applications:" />
+							<p:selectBooleanCheckbox value="#{monitorLegacyAssessorModUI.filterByApprovedModeratorApplications}">
+								<p:ajax update="mainForm"/>
+							</p:selectBooleanCheckbox>
+						</p:panelGrid>
+						
+						<div class="EmptyBox10" />
+
+						<p:dataTable var="rowVarM" value="#{monitorLegacyAssessorModUI.moderatorApplicationsDataModel}" id="moderatorList" rowKey="#{rowVarM.id}" paginator="true" rows="10" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,20,40" reflow="true" lazy="true">
+							
+							<f:facet name="header">Legacy Moderator Applications </f:facet>
+							
+							<p:column headerText="#{lang['first.name']}" filterBy="#{rowVarM.user.firstName}" sortBy="#{rowVarM.user.firstName}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVarM.user.firstName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['last.name']}" filterBy="#{rowVarM.user.lastName}" sortBy="#{rowVarM.user.lastName}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVarM.user.lastName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['rsa.id.number']}" filterBy="#{rowVarM.user.rsaIDNumber}" sortBy="#{rowVarM.user.rsaIDNumber}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVarM.user.rsaIDNumber}" />
+								<h:outputText value="N/A" rendered="#{rowVarM.user.rsaIDNumber.length() lt 1}" />
+							</p:column>
+
+							<p:column headerText="#{lang['passport.number']}" filterBy="#{rowVarM.user.passportNumber}" sortBy="#{rowVarM.user.passportNumber}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVarM.user.passportNumber}" />
+								<h:outputText value="N/A" rendered="#{rowVarM.user.passportNumber.length() lt 1}" />
+							</p:column>
+
+							<p:column headerText="#{lang['type.of.application']}" sortBy="#{rowVarM.applicationType}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVarM.applicationType.displayName}" />
+							</p:column>
+
+
+							<p:column headerText="#{lang['status']}" sortBy="#{rowVarM.status}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVarM.status.friendlyName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['registration.number']}" filterBy="#{rowVarM.certificateNumber}" sortBy="#{rowVarM.certificateNumber}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVarM.certificateNumber}" />
+								<h:outputText rendered="#{rowVarM.certificateNumber eq null or rowVarM.certificateNumber eq ''}" value="N/A" />
+							</p:column>
+
+							<p:column headerText="#{lang['start.date']}" sortBy="#{rowVarM.startDate}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVarM.startDate}">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</h:outputText>
+								<h:outputText rendered="#{rowVarM.startDate eq null}" value="N/A" />
+							</p:column>
+
+							<p:column headerText="#{lang['end.date']}" sortBy="#{rowVarM.endDate}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVarM.endDate}">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</h:outputText>
+								<h:outputText rendered="#{rowVarM.endDate eq null}" value="N/A" />
+							</p:column>
+
+							<p:column width="45">
+								<p:commandButton action="#{monitorLegacyAssessorModUI.prepareQuallifications}" icon="fa fa-database" title="#{lang['update']}" update="updateForm" oncomplete="PF('updateDialog').show()" >
+									<f:setPropertyActionListener value="#{rowVarM}" target="#{monitorLegacyAssessorModUI.assessorModeratorApplication}" />
+								</p:commandButton>
+								
+								<p:commandButton action="#{monitorLegacyAssessorModUI.prepareQuallifications}" icon="fa fa-plus" title="#{lang['add']}" update="addForm" oncomplete="PF('addDialog').show()" >
+									<f:setPropertyActionListener value="#{rowVarM}" target="#{monitorLegacyAssessorModUI.assessorModeratorApplication}" />
+								</p:commandButton>
+								
+								<p:commandButton action="#{monitorLegacyAssessorModUI.prepareUsersUnitStandards}" icon="fa fa-database" title="#{lang['update']}" update="updateUSForm" oncomplete="PF('updateUSDialog').show()" >
+									<f:setPropertyActionListener value="#{rowVarM}" target="#{monitorLegacyAssessorModUI.assessorModeratorApplication}" />
+								</p:commandButton>
+							</p:column>
+
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+			<h:form>
+				<p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="fa fa-check" />
+				<p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="fa fa-times" />
+			</h:form>
+		</p:confirmDialog>
+		
+		<p:dialog header="Add Unit Standard/Skills Programme" widgetVar="addDialog" resizable="false" hideEffect="clip" showEffect="clip" id="dlgaddID" width="70%" responsive="true" modal="true" dynamic="true">
+			<h:form id="addForm">
+				<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{monitorLegacyAssessorModUI.assessorModeratorApplication.user.firstName}" id="addname" />
+						<p:outputLabel for="addname" value="#{lang['name']}" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{monitorLegacyAssessorModUI.assessorModeratorApplication.user.lastName}" id="addsurname" />
+						<p:outputLabel for="addsurname" value="#{lang['surname']}" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield" rendered="#{monitorLegacyAssessorModUI.assessorModeratorApplication.user.rsaIDNumber.length() gt 0}">
+						<p:inputText id="adduserIdNumber" value="#{monitorLegacyAssessorModUI.assessorModeratorApplication.user.rsaIDNumber}" style="opacity: 1 !important; color: black; width:100%" disabled="true" />
+						<p:outputLabel value="#{lang['rsa.id.number']}" for="adduserIdNumber" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield" rendered="#{monitorLegacyAssessorModUI.assessorModeratorApplication.user.passportNumber.length() gt 0}">
+						<p:inputText id="adduserPassport" value="#{monitorLegacyAssessorModUI.assessorModeratorApplication.user.passportNumber}" style="opacity: 1 !important; color: black; width:100%" disabled="true" />
+						<p:outputLabel value="#{lang['passport.number']}" for="adduserPassport" />
+					</h:panelGroup>		
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="adduserregistration" value="#{monitorLegacyAssessorModUI.assessorModeratorApplication.certificateNumber}" style="opacity: 1 !important; color: black; width:100%" disabled="true" />
+						<p:outputLabel value="#{lang['registration.number']}" for="adduserregistration" />
+					</h:panelGroup>	
+							
+				</p:panelGrid>
+				
+				<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">				
+					<p:dataTable var="var" value="#{monitorLegacyAssessorModUI.userQualifications}"
+						 rows="5" paginatorPosition="bottom"
+		                 paginator="true"
+		                 paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+		                 rowsPerPageTemplate="5,10,15,20,25,50,100">
+						<p:column headerText="#{lang['qualifications']}">
+							<h:outputText value="#{var.qualification.description}" />
+						</p:column>
+
+						<p:column headerText="#{lang['saqa.id']}">
+							<h:outputText value="#{var.qualification.code}" />
+						</p:column>
+
+						<p:column headerText="#{lang['nqf.level']}">
+							<h:outputText value="#{var.qualification.nqflevel.description}" />
+						</p:column>
+						
+						<p:column  headerText="Approve" width="60">
+							<center>
+								<p:selectBooleanCheckbox value="#{var.accept}" disabled="true" >
+									<p:ajax  event="change" />
+								</p:selectBooleanCheckbox>
+							</center>
+						</p:column>	
+						<p:column  headerText="Update" width="60">
+							<p:commandButton process="@form" update="@form" title="#{lang['add']}" styleClass="Fright" icon="ui-icon-plus" action="#{monitorLegacyAssessorModUI.addUnitStandardsToList(var)}" rendered="#{!var.qualificationUpdated}">
+								<p:confirm header="Confirmation" message="Are you sure you wish to add Unit Standards" icon="fa fa-exclamation-triangle" />
+							</p:commandButton>
+						</p:column>					
+					</p:dataTable>					
+				</p:panelGrid>
+				
+				<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" id="pgQualDetails">					
+					<p:dataTable var="var" value="#{monitorLegacyAssessorModUI.userUnitStandards}"
+						 rows="5" paginatorPosition="bottom"
+		                 paginator="true"
+		                 paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+		                 rowsPerPageTemplate="5,10,15,20,25,50,100">
+						<p:column headerText="#{lang['name.of.unit.standard(s)']}">
+							<h:outputText value="#{var.unitStandard.title}" />
+						</p:column>
+
+						<p:column headerText="#{lang['code']}">
+							<h:outputText value="#{var.unitStandard.code}" />
+						</p:column>
+
+						<p:column headerText="#{lang['nqf.level']}">
+							<h:outputText value="#{var.unitStandard.nqf}" />
+						</p:column>
+						
+						<p:column headerText="Approve" width="60">
+							<center>
+								<p:selectBooleanCheckbox value="#{var.accept}" disabled="true" >
+									<p:ajax  event="change" />
+								</p:selectBooleanCheckbox>
+							</center>
+						</p:column>						
+					</p:dataTable>				
+				</p:panelGrid>
+				
+				<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">					
+					<p:dataTable var="ls" value="#{monitorLegacyAssessorModUI.userLearnershipList}"
+						 rows="5" paginatorPosition="bottom"
+		                 paginator="true"
+		                 paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+		                 rowsPerPageTemplate="5,10,15,20,25,50,100">
+						<p:column headerText="Learnership">
+							<h:outputText value="#{ls.learnership.description}" />
+						</p:column>
+	
+						<p:column headerText="#{lang['code']}">
+							<h:outputText value="#{ls.learnership.code}" />
+						</p:column>
+						
+						<p:column  headerText="Approve" width="60">
+							<center>
+								<p:selectBooleanCheckbox value="#{ls.accept}" disabled="true" >
+									<p:ajax  event="change" />
+								</p:selectBooleanCheckbox>
+							</center>
+						</p:column>	
+						
+					</p:dataTable>
+				</p:panelGrid>
+				
+				<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">					
+					<p:dataTable var="sp"  value="#{monitorLegacyAssessorModUI.userSkillsProgrammeList}"  
+						 rows="5" paginatorPosition="bottom"
+		                 paginator="true"
+		                 paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+		                 rowsPerPageTemplate="5,10,15,20,25,50,100">
+						<p:column headerText="#{lang['skills.programme']}">
+							<h:outputText value="#{sp.skillsProgram.description}" />
+						</p:column>
+	
+						<p:column headerText="#{lang['programmeID']}">
+							<h:outputText value="#{sp.skillsProgram.programmeID}" />
+						</p:column>
+	
+						<p:column headerText="#{lang['code']}" rendered="false">
+							<h:outputText value="#{sp.skillsProgram.code}" />
+						</p:column>
+						
+						<p:column  headerText="Approve" width="60">
+							<center>
+								<p:selectBooleanCheckbox value="#{sp.accept}" disabled="true" >
+									<p:ajax  event="change" />
+								</p:selectBooleanCheckbox>
+							</center>
+						</p:column>	
+					</p:dataTable>
+				</p:panelGrid>				
+			</h:form>
+		</p:dialog>
+		
+		<p:dialog header="Update Qualifications" widgetVar="updateDialog" resizable="false" hideEffect="clip" showEffect="clip" id="dlgID" width="70%" responsive="true" modal="true" dynamic="true">
+			<h:form id="updateForm">
+				<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{monitorLegacyAssessorModUI.assessorModeratorApplication.user.firstName}" id="name" />
+						<p:outputLabel for="name" value="#{lang['name']}" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{monitorLegacyAssessorModUI.assessorModeratorApplication.user.lastName}" id="surname" />
+						<p:outputLabel for="surname" value="#{lang['surname']}" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield" rendered="#{monitorLegacyAssessorModUI.assessorModeratorApplication.user.rsaIDNumber.length() gt 0}">
+						<p:inputText id="userIdNumber" value="#{monitorLegacyAssessorModUI.assessorModeratorApplication.user.rsaIDNumber}" style="opacity: 1 !important; color: black; width:100%" disabled="true" />
+						<p:outputLabel value="#{lang['rsa.id.number']}" for="userIdNumber" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield" rendered="#{monitorLegacyAssessorModUI.assessorModeratorApplication.user.passportNumber.length() gt 0}">
+						<p:inputText id="userPassport" value="#{monitorLegacyAssessorModUI.assessorModeratorApplication.user.passportNumber}" style="opacity: 1 !important; color: black; width:100%" disabled="true" />
+						<p:outputLabel value="#{lang['passport.number']}" for="userPassport" />
+					</h:panelGroup>		
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="userregistration" value="#{monitorLegacyAssessorModUI.assessorModeratorApplication.certificateNumber}" style="opacity: 1 !important; color: black; width:100%" disabled="true" />
+						<p:outputLabel value="#{lang['registration.number']}" for="userregistration" />
+					</h:panelGroup>	
+							
+				</p:panelGrid>
+				
+				<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">				
+					<p:dataTable var="var" value="#{monitorLegacyAssessorModUI.userQualifications}"
+						 rows="5" paginatorPosition="bottom"
+		                 paginator="true"
+		                 paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+		                 rowsPerPageTemplate="5,10,15,20,25,50,100">
+						<p:column headerText="#{lang['qualifications']}">
+							<h:outputText value="#{var.qualification.description}" />
+						</p:column>
+
+						<p:column headerText="#{lang['saqa.id']}">
+							<h:outputText value="#{var.qualification.code}" />
+						</p:column>
+
+						<p:column headerText="#{lang['nqf.level']}">
+							<h:outputText value="#{var.qualification.nqflevel.description}" />
+						</p:column>
+						
+						<p:column  headerText="Approve" width="60">
+							<center>
+								<p:selectBooleanCheckbox value="#{var.accept}" disabled="false" >
+									<p:ajax  event="change" />
+								</p:selectBooleanCheckbox>
+							</center>
+						</p:column>											
+					</p:dataTable>					
+				</p:panelGrid>
+				
+				<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">					
+					<p:dataTable var="var" value="#{monitorLegacyAssessorModUI.userUnitStandards}"
+						 rows="5" paginatorPosition="bottom"
+		                 paginator="true"
+		                 paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+		                 rowsPerPageTemplate="5,10,15,20,25,50,100">
+						<p:column headerText="#{lang['name.of.unit.standard(s)']}">
+							<h:outputText value="#{var.unitStandard.title}" />
+						</p:column>
+
+						<p:column headerText="#{lang['code']}">
+							<h:outputText value="#{var.unitStandard.code}" />
+						</p:column>
+
+						<p:column headerText="#{lang['nqf.level']}">
+							<h:outputText value="#{var.unitStandard.nqf}" />
+						</p:column>
+						
+						<p:column headerText="Approve" width="60">
+							<center>
+								<p:selectBooleanCheckbox value="#{var.accept}" disabled="false" >
+									<p:ajax  event="change" />
+								</p:selectBooleanCheckbox>
+							</center>
+						</p:column>						
+					</p:dataTable>				
+				</p:panelGrid>
+				
+				<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">					
+					<p:dataTable var="ls" value="#{monitorLegacyAssessorModUI.userLearnershipList}"
+						 rows="5" paginatorPosition="bottom"
+		                 paginator="true"
+		                 paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+		                 rowsPerPageTemplate="5,10,15,20,25,50,100">
+						<p:column headerText="Learnership">
+							<h:outputText value="#{ls.learnership.description}" />
+						</p:column>
+	
+						<p:column headerText="#{lang['code']}">
+							<h:outputText value="#{ls.learnership.code}" />
+						</p:column>
+						
+						<p:column  headerText="Approve" width="60">
+							<center>
+								<p:selectBooleanCheckbox value="#{ls.accept}" disabled="false" >
+									<p:ajax  event="change" />
+								</p:selectBooleanCheckbox>
+							</center>
+						</p:column>	
+						
+					</p:dataTable>
+				</p:panelGrid>
+				
+				<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">					
+					<p:dataTable var="sp"  value="#{monitorLegacyAssessorModUI.userSkillsProgrammeList}"  
+						 rows="5" paginatorPosition="bottom"
+		                 paginator="true"
+		                 paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+		                 rowsPerPageTemplate="5,10,15,20,25,50,100">
+						<p:column headerText="#{lang['skills.programme']}">
+							<h:outputText value="#{sp.skillsProgram.description}" />
+						</p:column>
+	
+						<p:column headerText="#{lang['programmeID']}">
+							<h:outputText value="#{sp.skillsProgram.programmeID}" />
+						</p:column>
+	
+						<p:column headerText="#{lang['code']}" rendered="false">
+							<h:outputText value="#{sp.skillsProgram.code}" />
+						</p:column>
+						
+						<p:column  headerText="Approve" width="60">
+							<center>
+								<p:selectBooleanCheckbox value="#{sp.accept}" disabled="false" >
+									<p:ajax  event="change" />
+								</p:selectBooleanCheckbox>
+							</center>
+						</p:column>	
+					</p:dataTable>
+				</p:panelGrid>
+				
+				<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<p:commandButton onstart="uploadStart()" update="@form"  styleClass="flat green-btn Fs18" style="height: 50px;" process="@this" value="#{lang['update']}" icon="ui-icon-save"  action="#{monitorLegacyAssessorModUI.updateQualifications}">
+					</p:commandButton>
+				</p:panelGrid>
+				
+			</h:form>
+		</p:dialog>
+		
+		<p:dialog header="Update Unit Standards" widgetVar="updateUSDialog" resizable="false" hideEffect="clip" showEffect="clip" id="dlgUSID" width="70%" responsive="true" modal="true" dynamic="true">
+			<h:form id="updateUSForm">
+				<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{monitorLegacyAssessorModUI.assessorModeratorApplication.user.firstName}"/>
+						<p:outputLabel value="#{lang['name']}" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{monitorLegacyAssessorModUI.assessorModeratorApplication.user.lastName}" />
+						<p:outputLabel  value="#{lang['surname']}" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield" rendered="#{monitorLegacyAssessorModUI.assessorModeratorApplication.user.rsaIDNumber.length() gt 0}">
+						<p:inputText value="#{monitorLegacyAssessorModUI.assessorModeratorApplication.user.rsaIDNumber}" style="opacity: 1 !important; color: black; width:100%" disabled="true" />
+						<p:outputLabel value="#{lang['rsa.id.number']}"/>
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield" rendered="#{monitorLegacyAssessorModUI.assessorModeratorApplication.user.passportNumber.length() gt 0}">
+						<p:inputText value="#{monitorLegacyAssessorModUI.assessorModeratorApplication.user.passportNumber}" style="opacity: 1 !important; color: black; width:100%" disabled="true" />
+						<p:outputLabel value="#{lang['passport.number']}"/>
+					</h:panelGroup>		
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText value="#{monitorLegacyAssessorModUI.assessorModeratorApplication.certificateNumber}" style="opacity: 1 !important; color: black; width:100%" disabled="true" />
+						<p:outputLabel value="#{lang['registration.number']}" />
+					</h:panelGroup>	
+							
+				</p:panelGrid>
+								
+				<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">					
+					<p:dataTable var="var" value="#{monitorLegacyAssessorModUI.userUnitStandards}"  rows="5" paginatorPosition="bottom"  paginator="true"
+		                 paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+		                 rowsPerPageTemplate="5,10,15,20,25,50,100">
+						<p:column headerText="#{lang['name.of.unit.standard(s)']}" filterBy="#{var.unitStandard.title}">
+							<h:outputText value="#{var.unitStandard.title}" />
+						</p:column>
+
+						<p:column headerText="#{lang['code']}" filterBy="#{var.unitStandard.code}">
+							<h:outputText value="#{var.unitStandard.code}" />
+						</p:column>
+
+						<p:column headerText="#{lang['nqf.level']}">
+							<h:outputText value="#{var.unitStandard.nqf}" />
+						</p:column>
+						
+						<p:column headerText="Approve" width="60">
+							<center>
+								<p:selectBooleanCheckbox value="#{var.accept}" disabled="true" >
+									<p:ajax  event="change" />
+								</p:selectBooleanCheckbox>
+							</center>
+						</p:column>	
+						
+						<p:column width="30" headerText="#{lang['delete']}">
+							<p:commandButton update="@form" icon="fa fa-remove" action="#{monitorLegacyAssessorModUI.removeUnitStandards}" process="@this">
+								<f:setPropertyActionListener value="#{var}" target="#{monitorLegacyAssessorModUI.userUnitStandard}" />
+								<p:confirm header="Confirmation" message="Are You Sure You Want To Remove This Document?" icon="fa fa-exclamation-triangle" />
+							</p:commandButton>
+						</p:column>					
+					</p:dataTable>				
+				</p:panelGrid>
+				<br />
+				<h:panelGroup styleClass="md-inputfield" style="margin-top: 19px">
+					<p:autoComplete id="unitStandard" value="#{monitorLegacyAssessorModUI.unitStandards}" completeMethod="#{autoCompleteUI.completeUnitStandards}" var="rv" itemLabel="#{rv.title}" itemValue="#{rv}" forceSelection="true" converter="UnitStandardsConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 55%"
+						required="true" requiredMessage="Select Unit Standards">
+						<p:ajax event="itemSelect" update="@form"/>
+						<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+						<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.title}</p:column>
+					</p:autoComplete>
+					<p:outputLabel value="#{lang['unit.standard']}" for="unitStandard" styleClass="gray" />
+				</h:panelGroup>
+				<br />					
+				<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<p:commandButton onstart="uploadStart()" update="@form"  styleClass="flat green-btn Fs18" style="height: 50px;" process="@this" value="#{lang['update']}" icon="ui-icon-save"  action="#{monitorLegacyAssessorModUI.updateUnitStandards}">
+					</p:commandButton>
+				</p:panelGrid>
+				
+			</h:form>
+		</p:dialog>
+	
+	</ui:define>
+</ui:composition>

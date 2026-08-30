@@ -2,10 +2,10 @@
 @using Nsdms.Domain.Entities
 @inject IWorkflowEngineService WorkflowService
 
-<div class="workflow-timeline pa-4 rounded-lg elevation-1" style="background-color: #ffffff; border: 1px solid #e2e8f0;">
+<MudPaper Elevation="1" Class="workflow-timeline pa-4 rounded-lg">
     <div class="d-flex align-center gap-2 mb-3">
-        <MudIcon Icon="@Icons.Material.Filled.History" Style="color: #1e40af;" Size="Size.Small" />
-        <h4 style="font-weight: 700; color: #0f172a; margin: 0; font-size: 1rem;">Workflow History &amp; Audit Trail</h4>
+        <MudIcon Icon="@Icons.Material.Filled.History" Color="Color.Primary" Size="Size.Small" />
+        <MudText Typo="Typo.subtitle1" Class="font-weight-bold" Color="Color.Primary">Workflow History &amp; Audit Trail</MudText>
     </div>
 
     @if (_loading)
@@ -14,9 +14,9 @@
     }
     else if (!_historyItems.Any())
     {
-        <p style="color: #64748b; font-size: 0.875rem; margin: 0; font-style: italic;">
+        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="font-italic">
             No workflow transition events recorded yet.
-        </p>
+        </MudText>
     }
     else
     {
@@ -25,36 +25,38 @@
             {
                 <MudTimelineItem Color="Color.Primary" Size="Size.Small">
                     <ItemOpposite>
-                        <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">
+                        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="font-weight-bold">
                             @item.ActionDate.ToLocalTime().ToString("dd MMM yyyy HH:mm")
-                        </span>
+                        </MudText>
                     </ItemOpposite>
                     <ItemContent>
-                        <div class="pa-2 rounded" style="background-color: #f8fafc; border: 1px solid #e2e8f0;">
+                        <MudPaper Elevation="0" Outlined="true" Class="pa-3 rounded">
                             <div class="d-flex align-center justify-space-between gap-2">
-                                <span style="font-weight: 700; color: #1e40af; font-size: 0.875rem;">
+                                <MudText Typo="Typo.body2" Class="font-weight-bold" Color="Color.Primary">
                                     @item.ActionName
-                                </span>
-                                <span class="px-2 py-0.5 rounded" style="background-color: #e2e8f0; color: #334155; font-size: 0.75rem; font-weight: 600;">
+                                </MudText>
+                                <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Filled">
                                     @(item.ToState?.StateName ?? "Advanced")
-                                </span>
+                                </MudChip>
                             </div>
-                            <p style="font-size: 0.8125rem; color: #475569; margin: 2px 0 0 0;">
-                                By: <strong>@(item.ActorName ?? "System")</strong> <span style="color: #64748b;">(@(item.ActorRole ?? "User"))</span>
-                            </p>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1 d-block">
+                                By: <strong>@(item.ActorName ?? "System")</strong> <span>(@(item.ActorRole ?? "User"))</span>
+                            </MudText>
                             @if (!string.IsNullOrEmpty(item.Comments))
                             {
-                                <p class="mt-1 pa-2 rounded" style="background-color: #ffffff; border-left: 3px solid #1e40af; font-size: 0.8125rem; color: #1e293b; margin-bottom: 0;">
-                                    <em>"@item.Comments"</em>
-                                </p>
+                                <MudPaper Elevation="0" Class="mt-2 pa-2 rounded" Style="border-left: 3px solid var(--mud-palette-primary); background-color: var(--mud-palette-background);">
+                                    <MudText Typo="Typo.caption" Class="font-italic">
+                                        "@item.Comments"
+                                    </MudText>
+                                </MudPaper>
                             }
-                        </div>
+                        </MudPaper>
                     </ItemContent>
                 </MudTimelineItem>
             }
         </MudTimeline>
     }
-</div>
+</MudPaper>
 
 @code {
     [Parameter] public string ProcessCode { get; set; } = string.Empty;

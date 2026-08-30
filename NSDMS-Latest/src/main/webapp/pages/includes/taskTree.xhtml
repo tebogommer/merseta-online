@@ -1,0 +1,79 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+
+
+<p:dialog width="99%" fitViewport="true" responsive="true"  widgetVar="taskTreeDialog" header="View task tree" modal="true">
+<style>
+.hsTright {
+    border-right: 1px solid #AAAAAA;
+    border-bottom: 1px solid #AAAAAA;
+    border-top: 1px solid #AAAAAA;
+    padding: 5px 6px;
+    background-color: #eeeeee;
+}
+.hsBright {
+    border-right: 1px solid #AAAAAA;
+    border-bottom: 1px solid #AAAAAA;
+    padding: 5px 6px;
+}
+</style>
+
+<h:form id="taskTreeForm">
+
+
+
+
+<table style="border-spacing:0;" width="100%">
+<thead>
+  <th  style="border-bottom: 1px solid #AAAAAA;border-right: 1px solid #AAAAAA;"></th>
+  <th width="40%" class="hsTright">Task Description</th>
+   <th class="hsTright">Status</th>
+
+   <th class="hsTright">Initiated by and Date</th>
+   <th class="hsTright">Picked up Date</th>
+   <th class="hsTright">Last Actioned by and Date</th>
+   <th class="hsTright">Days</th>
+
+
+</thead>
+<tbody style="padding: 0px important!;">
+<p:repeat var="node" value="#{taskTreeUI.taskList}" varStatus="vs">
+
+<tr style="padding: 0px important!;">
+   <td class="hsBright" style="border-left: none !important;"> <i class="fa fa-arrow-right #{node.css}" aria-hidden="true" style="padding-left: #{vs.index * 15}px"></i></td>
+   <td  width="40%" class="hsBright"  title="#{node.description}"><h:outputText value="#{node.id}-#{node.shortDescription}..." style="padding-left: #{vs.index * 15}px;" /></td>
+   <td class="hsBright"> <div align="center">  <h:outputText value="#{lang[node.taskStatus.registrationName]}"/></div></td>
+
+   <td class="hsBright"> <h:outputText value="#{node.createUser.firstName} #{node.createUser.lastName} (#{node.createUser.email})" />
+   						<h:panelGroup rendered="#{node.createUser ne null}"><br/>
+                             <h:outputText value="#{node.createDate}"><f:convertDateTime pattern="dd MMM yyyy (HH:mm)"/></h:outputText>
+                         </h:panelGroup>
+
+   </td>
+    <td class="hsBright">
+   						<h:panelGroup rendered="#{node.startDate ne null}">
+                             <h:outputText value="#{node.startDate}"><f:convertDateTime pattern="dd MMM yyyy (HH:mm)"/></h:outputText>
+                              (#{node.noDays} days)
+                         </h:panelGroup>
+   </td>
+   <td class="hsBright"> <h:outputText value="#{node.actionUser.firstName} #{node.actionUser.lastName} (#{node.actionUser.email})" rendered="#{node.actionUser ne null}"/>
+   			             <h:panelGroup rendered="#{node.actionUser ne null}"><br/>
+                             <h:outputText value="#{node.actionDate}"><f:convertDateTime pattern="dd MMM yyyy (HH:mm)"/></h:outputText>
+                         </h:panelGroup>
+
+
+   </td>
+   <td class="hsBright"> <h:outputText value="#{node.noDaysLastAction}" /></td>
+
+
+</tr>
+
+
+</p:repeat>
+</tbody>
+</table>
+
+</h:form>
+</p:dialog>
+
+</ui:composition>

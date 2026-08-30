@@ -1,0 +1,93 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+	<p:dialog header="#{lang['sites']}" width="75%" widgetVar="dlgSites" resizable="false" hideEffect="clip" showEffect="clip" id="dialogSites" appendTo="@(body)" modal="true">
+		<h:form id="sitesInsForm">
+			<p:growl sticky="false">
+				<p:autoUpdate />
+			</p:growl>
+			<p:panelGrid columns="2" style="width:100%" id="sitesInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Edit or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload}">
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText id="telNumber" value="#{sitesUI.sites.telNumber}" style="width:95%" />
+					<p:outputLabel value="#{lang['telNumber']}" for="telNumber" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText id="faxNumber" value="#{sitesUI.sites.faxNumber}" style="width:95%" />
+					<p:outputLabel value="#{lang['faxNumber']}" for="faxNumber" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText id="numberOfEmployees" value="#{sitesUI.sites.numberOfEmployees}" style="width:95%" />
+					<p:outputLabel value="#{lang['numberOfEmployees']}" for="numberOfEmployees" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText id="levyNumber" value="#{sitesUI.sites.levyNumber}" style="width:95%" />
+					<p:outputLabel value="#{lang['levyNumber']}" for="levyNumber" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText id="companyName" value="#{sitesUI.sites.companyName}" style="width:95%" />
+					<p:outputLabel value="#{lang['companyName']}" for="companyName" />
+				</h:panelGroup>
+
+			</p:panelGrid>
+			<p:fieldset legend="#{lang['postalAddress']}" style="margin-top: 20px">
+				<p:panelGrid columns="1" style="width : 95%" styleClass="ui-panelgrid-blank" id="postalAddress">
+					<h:panelGroup styleClass="md-inputfield" rendered="#{not sdfcompanyUI.copyAddress}">
+						<p:inputText id="postalAddressaddr1" value="#{sitesUI.sites.registeredAddress.addressLine1}" style="width:95%" required="true" requiredMessage="#{lang['address.line.1.required']}" />
+						<p:outputLabel value="#{lang['address.line.1']}" for="postalAddressaddr1" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield" rendered="#{not sdfcompanyUI.copyAddress}">
+						<p:inputText id="postalAddressaddr2" style="width:95%" value="#{sitesUI.sites.registeredAddress.addressLine2}" />
+						<p:outputLabel value="#{lang['address.line.2']}" for="postalAddressaddr2" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield" rendered="#{not sdfcompanyUI.copyAddress}">
+						<p:inputText id="postalAddressaddr3" style="width:95%" value="#{sitesUI.sites.registeredAddress.addressLine3}" />
+						<p:outputLabel value="#{lang['address.line.3']}" for="postalAddressaddr3" />
+					</h:panelGroup>
+
+
+					<h:panelGroup rendered="#{not sdfcompanyUI.copyAddress}">
+						<div>
+							<h:outputLabel value="#{lang['town']}" for="theTown" />
+						</div>
+						<div>
+							<p:autoComplete id="theTown" value="#{sitesUI.sites.registeredAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true" requiredMessage="#{lang['please.select.a.town']}">
+								<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+							</p:autoComplete>
+						</div>
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield" rendered="#{not sdfcompanyUI.copyAddress}">
+						<p:inputText id="postalAddressPcode" style="width:95%" value="#{sitesUI.sites.registeredAddress.postcode}" required="true" requiredMessage="#{lang['postal.address.error']}" />
+						<p:outputLabel value="#{lang['post.code']}" for="postalAddressPcode" />
+					</h:panelGroup>
+
+					<h:panelGroup rendered="#{not sdfcompanyUI.copyAddress}">
+						<div>
+							<h:outputLabel value="#{lang['municipality']}" for="postalAddressMunicipalityID" />
+						</div>
+						<div>
+							<p:autoComplete id="postalAddressMunicipalityID" value="#{sitesUI.sites.registeredAddress.municipality}" completeMethod="#{sdfcompanyUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityProvince}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true" minQueryLength="3" maxResults="10" required="true"
+								requiredMessage="#{lang['select.municipality']}">
+								<p:column headerText="#{lang['province']}" style="white-space: nowrap">
+								#{rv.province.provinceDesc}
+							</p:column>
+								<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">
+								#{rv.municipalityDesc}
+							</p:column>
+							</p:autoComplete>
+						</div>
+					</h:panelGroup>
+				</p:panelGrid>
+			</p:fieldset>
+
+			<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+				<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":sitesInsForm:sitesInsGrid" action="#{sitesUI.sitesInsert}" oncomplete="findDetails()" />
+			</p:panelGrid>
+		</h:form>
+	</p:dialog>
+
+</ui:composition>

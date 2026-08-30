@@ -1,0 +1,52 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+		<p:growl sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card">
+					<h:form id="mainForm">
+						<p:outputPanel rendered="#{externalSignoffSignOffPageUI.validLink eq false}">
+							<h1 class="BigTopic TexAlCenter">
+								<h:outputText value="Invalid link! Contact support or your regional office" />
+							</h1>
+						</p:outputPanel>
+						<p:outputPanel rendered="#{externalSignoffSignOffPageUI.validLink and not externalSignoffSignOffPageUI.completed}">
+							<h1 class="BigTopic TexAlCenter">
+								<h:outputText value="External Sign Off: Underway" />
+							</h1>
+							<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:95%" layout="grid" rendered="#{not externalSignoffSignOffPageUI.validatedIdNumber}">
+								<span class="Fs13 gray"><i class="fa fa-info-circle" aria-hidden="true"></i> Please provide your identification number for verification of sign off. Once provided please click 'Confirm: Identification Number' to proceed.</span>
+								<div class="EmptyBox5" />
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="rsaIdCriteria" value="#{externalSignoffSignOffPageUI.idNumberEntered}" style="width:95%" requiredMessage="Provide: Identification Number" required="true">
+									</p:inputText>
+									<p:outputLabel value="Identification Number" for="rsaIdCriteria" />
+								</h:panelGroup>
+								<p:commandButton styleClass="flat green-btn Fs18" style="height: 50px;" icon="fa fa-check" value="Confirm: Identification Number" action="#{externalSignoffSignOffPageUI.validateIdNumber}" update="@form" />
+							</p:panelGrid>
+							<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{externalSignoffSignOffPageUI.validatedIdNumber}">
+								<span class="Fs13 gray"><i class="fa fa-info-circle" aria-hidden="true"></i> Please tick the check-box to sign off externally. After selection please click the button 'Complete Sign Off' to complete the process.</span>
+								<div class="EmptyBox5" />
+								<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:95%" layout="grid">
+									<p:outputLabel value="Accept Sign Off:" />
+									<p:selectBooleanCheckbox value="#{externalSignoffSignOffPageUI.accept}" />
+								</p:panelGrid>
+								<p:commandButton styleClass="flat green-btn Fs18" style="height: 50px;" icon="fa fa-check" value="Complete Sign Off" action="#{externalSignoffSignOffPageUI.signOff}" update="@form" />
+							</p:panelGrid>
+						</p:outputPanel>
+						<p:outputPanel rendered="#{externalSignoffSignOffPageUI.validLink and externalSignoffSignOffPageUI.completed}">
+							<h1 class="BigTopic TexAlCenter">
+								<h:outputText value="Thank you for signing off on NSDMS, the sign off process is complete." />
+							</h1>
+							<h1 class="BigTopic TexAlCenter">
+								<h:outputText value="For any queries: please contact your regional office or support." />
+							</h1>
+						</p:outputPanel>
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+</ui:composition>

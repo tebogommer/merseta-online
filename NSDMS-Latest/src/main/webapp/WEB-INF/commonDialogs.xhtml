@@ -1,0 +1,77 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:f="http://java.sun.com/jsf/core" xmlns:h="http://java.sun.com/jsf/html" xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui">
+
+	<script>
+function uploadStart() {
+	//alert("Upload Started");
+	//console.log("Upload Started");
+	PF('dlgWait').show();
+}
+
+function uploadDone() {
+	//alert("Upload Done");
+	//console.log("Upload Done");
+	PF('dlgWait').hide();
+}
+</script>
+
+	<p:dialog modal="true" widgetVar="dlgWait" resizable="false" closable="false">
+		<h1>#{lang['please.wait']}</h1>
+		<div class="Seperator" />
+		<center>
+			<p:graphicImage name="images/468.gif" library="hls" />
+		</center>
+	</p:dialog>
+
+	<p:dialog modal="true" widgetVar="dlgGenHelp" resizable="false" dynamic="true" responsive="true" minHeight="300" header="Information" width="70%">
+		<div class="ui-g">
+			<div class="ui-g-12">
+
+				<h:form id="genHelpForm">
+					<div align="left">
+						<h:outputText value="#{crtHelpUI.help}" escape="false" rendered="#{crtHelpUI.showHelp}" style="text-align: justify;text-justify: inter-word" />
+
+						<h:outputText value="Currently no additional help information for this screen" escape="false" rendered="#{!crtHelpUI.showHelp}" styleClass="FontLight Fs15" />
+					</div>
+				</h:form>
+			</div>
+		</div>
+	</p:dialog>
+
+
+	<p:dialog modal="true" position="top" widgetVar="dlgOffices" resizable="false" dynamic="true" responsive="true" minHeight="300" width="80%" height="70%" header="merSETA Offices" closeOnEscape="true">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<h:form id="genOfficesForm">
+					<div align="left">	
+						<p:scrollPanel mode="native" style="width:100%;height:500px;border:none" >
+							<p:repeat var="rv" value="#{officeUI.officeList}" >
+								<div class="ui-g-12 ui-md-6" style="border-bottom: 0.5pt solid #dedede">
+									<h2>#{rv.description}</h2>
+									<b>Contact Number:</b> #{rv.contactNumber}
+									<br/>
+									<b>Contact Person:</b> #{rv.contactPerson}
+									<br />
+									<b>Contact Person Email:</b> #{rv.contactPersonEmail}
+									<br />
+									<br />
+									<b>Address</b>
+									<br />
+									#{rv.physicalAddress.addressLine1}
+									<br />
+									#{rv.physicalAddress.addressLine2}
+									<br />
+									#{rv.physicalAddress.addressLine3}
+									<br />
+									#{rv.physicalAddress.town.description}
+									<br />
+								</div>
+							</p:repeat>
+						</p:scrollPanel>
+					</div>
+				</h:form>
+			</div>
+		</div>
+	</p:dialog>
+
+</ui:composition>

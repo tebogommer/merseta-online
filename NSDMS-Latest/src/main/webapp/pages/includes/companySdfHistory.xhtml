@@ -1,0 +1,46 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui">
+
+	<c:if test="false">
+		<!-- 
+			include information
+			<ui:include src="/pages/includes/companySdfHistory.xhtml">
+				<ui:param name="dataModelListSDF" value=" haj.com.entity.WspSdfCompanyHistory " />
+				<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+			</ui:include>
+		 -->
+	</c:if>
+	
+	<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{dateTaken ne null}">
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText disabled="true" value="#{dateTaken}" style="width:95%">
+				<f:convertDateTime pattern="#{CALENDER_PATTERN_DETAILED}" />
+			</p:inputText>
+			<p:outputLabel value="History Time Taken" />
+		</h:panelGroup>
+		<p:spacer/>
+	</p:panelGrid>
+
+	<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+		<p:dataTable var="rowVarSdf" value="#{dataModelListSDF}" rowKey="#{rowVarSdf.id}" id="sdfCompanyHistoryList" paginator="true" rows="10" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+			paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,15,20,25" reflow="true" lazy="true">
+			<p:column headerText="#{lang['first.name']}">
+				<h:outputText value="#{rowVarSdf.sdf.firstName}" />
+			</p:column>
+			<p:column headerText="#{lang['last.name']}">
+				<h:outputText value="#{rowVarSdf.sdf.lastName}" />
+			</p:column>
+			<p:column headerText="#{lang['rsa.id.number']}">
+				<h:outputText value="#{rowVarSdf.sdf.rsaIDNumber}" />
+			</p:column>
+			<p:column headerText="#{lang['passport.number']}">
+				<h:outputText value="#{rowVarSdf.sdf.passportNumber}" />
+			</p:column>
+			<p:column headerText="#{lang['email']}">
+				<h:outputText value="#{rowVarSdf.sdf.email}" />
+			</p:column>
+			<p:column headerText="SDF Type">
+				<h:outputText value="#{rowVarSdf.sdfType.description}" />
+			</p:column>
+		</p:dataTable>
+	</p:panelGrid>
+</ui:composition>
