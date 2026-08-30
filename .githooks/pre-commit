@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# merSETA NSDMS Pre-Commit Git Hook
+# Runs automated UI/UX, accessibility and route integrity checks before allowing git commit.
+
+echo "========================================================"
+echo "🛡️ Running merSETA NSDMS Pre-Commit Compliance Gate..."
+echo "========================================================"
+
+python scripts/ci_ux_quality_gate.py
+RESULT=$?
+
+if [ $RESULT -ne 0 ]; then
+    echo ""
+    echo "❌ Git Commit Blocked by UI/UX & Standards Quality Gate!"
+    echo "Please fix the failing tests or accessibility issues above before committing."
+    echo ""
+    exit 1
+fi
+
+echo "✅ Pre-Commit Quality Gate Passed. Proceeding with commit."
+exit 0

@@ -114,6 +114,10 @@ builder.Services.AddScoped<SystemConfigurationService>(sp => (SystemConfiguratio
 builder.Services.AddScoped<IFeatureFlagService, FeatureFlagService>();
 builder.Services.AddScoped<FeatureFlagService>(sp => (FeatureFlagService)sp.GetRequiredService<IFeatureFlagService>());
 
+// Grid View Preferences Persistence (Clause 11.2.7)
+builder.Services.AddScoped<IGridViewPreferenceService, GridViewPreferenceService>();
+builder.Services.AddScoped<GridViewPreferenceService>(sp => (GridViewPreferenceService)sp.GetRequiredService<IGridViewPreferenceService>());
+
 // Configurable Document & File Storage
 builder.Services.AddScoped<IFileStorageService, Nsdms.Infrastructure.Services.LocalFileStorageService>();
 
@@ -176,6 +180,18 @@ builder.Services.AddScoped<ContractVariationService>(sp => (ContractVariationSer
 builder.Services.AddScoped<IExtensionOfScopeService, ExtensionOfScopeService>();
 builder.Services.AddScoped<ExtensionOfScopeService>(sp => (ExtensionOfScopeService)sp.GetRequiredService<IExtensionOfScopeService>());
 
+// WSP Qualitative Survey & Skills Gap Service
+builder.Services.AddScoped<IWspSurveyService, WspSurveyService>();
+builder.Services.AddScoped<WspSurveyService>(sp => (WspSurveyService)sp.GetRequiredService<IWspSurveyService>());
+
+// Statutory Batch Pre-Submission Validation Engine (SETMIS & NLRD)
+builder.Services.AddScoped<Nsdms.Application.Validation.IStatutoryValidationService, StatutoryValidationService>();
+builder.Services.AddScoped<StatutoryValidationService>(sp => (StatutoryValidationService)sp.GetRequiredService<Nsdms.Application.Validation.IStatutoryValidationService>());
+
+// AQP Quality Partner & EISA Assessment Service
+builder.Services.AddScoped<IAqpPartnerService, AqpPartnerService>();
+builder.Services.AddScoped<AqpPartnerService>(sp => (AqpPartnerService)sp.GetRequiredService<IAqpPartnerService>());
+
 // Brand Asset Service
 builder.Services.AddScoped<IBrandAssetService, Nsdms.Infrastructure.Services.BrandAssetService>();
 builder.Services.AddScoped<Nsdms.Infrastructure.Services.BrandAssetService>(sp => (Nsdms.Infrastructure.Services.BrandAssetService)sp.GetRequiredService<IBrandAssetService>());
@@ -188,8 +204,14 @@ builder.Services.AddScoped<Nsdms.Infrastructure.Services.ReportExportService>(sp
 builder.Services.AddScoped<IWorkflowGovernanceService, WorkflowGovernanceService>();
 builder.Services.AddScoped<WorkflowGovernanceService>(sp => (WorkflowGovernanceService)sp.GetRequiredService<IWorkflowGovernanceService>());
 
-// Real-time SignalR Notification Service
-builder.Services.AddSingleton<IRealtimeNotificationService, Nsdms.Web.Services.RealtimeNotificationService>();
+// Real-time SignalR Notification Service & Transport Publisher
+builder.Services.AddSingleton<Nsdms.Web.Services.RealtimeNotificationService>();
+builder.Services.AddSingleton<IRealtimeNotificationService>(sp => sp.GetRequiredService<Nsdms.Web.Services.RealtimeNotificationService>());
+builder.Services.AddSingleton<ISignalRNotificationPublisher>(sp => sp.GetRequiredService<Nsdms.Web.Services.RealtimeNotificationService>());
+
+// Persistent Notification Inbox Service
+builder.Services.AddScoped<INotificationService, Nsdms.Infrastructure.Services.NotificationService>();
+builder.Services.AddScoped<Nsdms.Infrastructure.Services.NotificationService>(sp => (Nsdms.Infrastructure.Services.NotificationService)sp.GetRequiredService<INotificationService>());
 
 // Background Scheduler Hosted Service (Off by default)
 builder.Services.AddHostedService<Nsdms.Infrastructure.Services.BackgroundSchedulerHostedService>();
@@ -209,6 +231,34 @@ app.UseAntiforgery();
 
 app.MapStaticAssets();
 
+// Map Real-time SignalR Hub
+app.MapHub<Nsdms.Web.Hubs.NsdmsNotificationHub>("/hubs/notifications");
+
+// PDF & Statutory Document Download Endpoints
+app.MapGet("/api/documents/moa/{id:int}/pdf", async (int id, IPdfDocumentService pdf) =>
+{
+    var bytes = await pdf.GenerateGrantMoaContractPdfAsync(id);
+    return Results.File(bytes, "application/pdf", $"GrantMoa_Contract_{id}.pdf");
+});
+
+app.MapGet("/api/documents/tradetest/{id:int}/pdf", async (int id, IPdfDocumentService pdf) =>
+{
+    var bytes = await pdf.GenerateTradeTestCertificatePdfAsync(id);
+    return Results.File(bytes, "application/pdf", $"TradeTest_Artisan_Certificate_{id}.pdf");
+});
+
+app.MapGet("/api/documents/wsp/{id:int}/pdf", async (int id, IPdfDocumentService pdf) =>
+{
+    var bytes = await pdf.GenerateWspOutcomeLetterPdfAsync(id);
+    return Results.File(bytes, "application/pdf", $"WSP_Outcome_Letter_{id}.pdf");
+});
+
+app.MapGet("/api/documents/remittance/{id:int}/pdf", async (int id, IPdfDocumentService pdf) =>
+{
+    var bytes = await pdf.GenerateMandatoryRebateRemittancePdfAsync(id);
+    return Results.File(bytes, "application/pdf", $"Mandatory_Rebate_Remittance_{id}.pdf");
+});
+
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
@@ -226,6 +276,9 @@ using (var scope = app.Services.CreateScope())
         Phase6GovernanceSchemaMigrator.MigrateGovernanceSchemaAsync(app.Services).GetAwaiter().GetResult();
         Phase7SetmisLookupMigrator.MigrateSetmisLookupsAsync(app.Services).GetAwaiter().GetResult();
         Phase8SetmisSchemaAlignmentMigrator.MigrateSetmisSchemaAlignmentAsync(app.Services).GetAwaiter().GetResult();
+        Phase8NotificationSchemaMigrator.MigrateNotificationSchemaAsync(app.Services).GetAwaiter().GetResult();
+        Phase8WspSurveyAndAqpSchemaMigrator.MigrateAsync(db).GetAwaiter().GetResult();
+        Phase9TemporalTablesSchemaMigrator.MigrateTemporalTablesSchemaAsync(app.Services).GetAwaiter().GetResult();
         SampleDataSeeder.SeedSampleDataAsync(db).GetAwaiter().GetResult();
         var featureFlags = scope.ServiceProvider.GetRequiredService<IFeatureFlagService>();
         featureFlags.SeedDefaultFeatureFlagsAsync().GetAwaiter().GetResult();

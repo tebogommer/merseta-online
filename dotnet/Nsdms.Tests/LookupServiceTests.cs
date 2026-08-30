@@ -1,4 +1,4 @@
-﻿using Nsdms.Application.Services;
+using Nsdms.Application.Services;
 using Xunit;
 
 namespace Nsdms.Tests;
@@ -49,4 +49,40 @@ public class LookupServiceTests
         Assert.Single(results);
         Assert.Equal("ProvinceType", results[0].TableName);
     }
+
+    [Fact]
+    public async Task SaveLookupItem_SoftDeactivation_PreservesRecordWithInactiveStatus()
+    {
+        // Arrange
+        var contextFactory = new TestDbContextFactory(Guid.NewGuid().ToString());
+        var audit = new AuditService(contextFactory);
+        var service = new LookupService(contextFactory, audit);
+
+        var newCode = new LookupItemDto
+        {
+            Code = "TEST_CODE",
+            Name = "Test Lookup Entry",
+            Description = "Test for UI Standard T3",
+            Active = true
+        };
+
+        // Act 1: Create
+        await service.SaveLookupItemAsync("ProvinceType", newCode, "AdminUser");
+        var items1 = await service.GetLookupItemsAsync("ProvinceType", "TEST_CODE");
+        
+        // Assert 1: Active
+        Assert.Single(items1);
+        Assert.True(items1[0].Active);
+
+        // Act 2: Soft Deactivate (Clause 6.2)
+        newCode.Active = false;
+        await service.SaveLookupItemAsync("ProvinceType", newCode, "AdminUser");
+        var items2 = await service.GetLookupItemsAsync("ProvinceType", "TEST_CODE");
+
+        // Assert 2: Record preserved in database with Active = false
+        Assert.Single(items2);
+        Assert.False(items2[0].Active);
+        Assert.Equal("TEST_CODE", items2[0].Code);
+    }
 }
+

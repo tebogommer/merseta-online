@@ -1,211 +1,223 @@
 @page "/finance"
 @page "/finance/grants"
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@using MudBlazor
 @inject IFinanceService FinanceService
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
 @rendermode InteractiveServer
 
-<div class="d-flex justify-space-between align-center mb-4">
-    <div>
-        <MudText Typo="Typo.h5" Class="font-weight-bold">Grant MOAs & Tranche Disbursements</MudText>
-        <MudText Typo="Typo.body2" Color="Color.Secondary">Memorandum of Agreements, milestone deliverable contracting, and tranche invoice payment matrix</MudText>
-    </div>
-    <div class="d-flex gap-2">
-        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Payments" OnClick="@(() => Navigation.NavigateTo("/finance/levy-rebates"))">
-            Mandatory Grant Rebates
+@*
+  UI-STANDARD.md Archetype: A1 / T1 (Transactional List - Grant MOAs & Tranche Disbursements)
+  Clauses: 4.2, 4.3, 4.4, 6.1, 7.2, 8.1, 8.3, 11.1–11.9, 15.2.5
+*@
+
+<EntityHeader Title="Grant MOAs &amp; Tranche Disbursements"
+              Subtitle="Memorandum of Agreements, milestone deliverable contracting, and tranche invoice payment matrix"
+              ReferenceKey="T1-FINANCE-MOA"
+              Status="Active"
+              BreadcrumbItems="@_breadcrumbs">
+    <ActionZone>
+        <MudButton Variant="Variant.Outlined" 
+                   Color="Color.Primary" 
+                   StartIcon="@Icons.Material.Filled.Payments" 
+                   OnClick="@(() => Navigation.NavigateTo("/finance/levy-rebates"))">
+            Mandatory Rebates
         </MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PostAdd" OnClick="OpenCreateModal">
+        <MudButton Variant="Variant.Filled" 
+                   Color="Color.Primary" 
+                   StartIcon="@Icons.Material.Filled.PostAdd" 
+                   OnClick="@(() => Navigation.NavigateTo("/finance/grants/create"))">
             New Grant MOA
         </MudButton>
-    </div>
-</div>
+    </ActionZone>
+</EntityHeader>
 
-<!-- Summary Cards -->
-<MudGrid Class="mb-4" Spacing="3">
-    <MudItem xs="12" sm="6" md="3">
-        <MudCard Elevation="2">
-            <MudCardContent Class="d-flex align-center gap-3">
-                <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Large">
-                    <MudIcon Icon="@Icons.Material.Filled.Description" />
-                </MudAvatar>
-                <div>
-                    <MudText Typo="Typo.h5" Class="fw-bold">@_moas.Count</MudText>
-                    <MudText Typo="Typo.caption" Color="Color.Secondary">Total Active MOAs</MudText>
-                </div>
-            </MudCardContent>
-        </MudCard>
-    </MudItem>
-    <MudItem xs="12" sm="6" md="3">
-        <MudCard Elevation="2">
-            <MudCardContent Class="d-flex align-center gap-3">
-                <MudAvatar Color="Color.Success" Variant="Variant.Filled" Size="Size.Large">
-                    <MudIcon Icon="@Icons.Material.Filled.AccountBalanceWallet" />
-                </MudAvatar>
-                <div>
-                    <MudText Typo="Typo.h6" Class="fw-bold text-success">@(_moas.Sum(m => m.TotalContractValue).ToString("C0"))</MudText>
-                    <MudText Typo="Typo.caption" Color="Color.Secondary">Total Committed Contract Value</MudText>
-                </div>
-            </MudCardContent>
-        </MudCard>
-    </MudItem>
-    <MudItem xs="12" sm="6" md="3">
-        <MudCard Elevation="2">
-            <MudCardContent Class="d-flex align-center gap-3">
-                <MudAvatar Color="Color.Warning" Variant="Variant.Filled" Size="Size.Large">
-                    <MudIcon Icon="@Icons.Material.Filled.PendingActions" />
-                </MudAvatar>
-                <div>
-                    <MudText Typo="Typo.h5" Class="fw-bold text-warning">@(_moas.SelectMany(m => m.Milestones).Count(ms => ms.MilestoneStatusCode == "Verified" || ms.MilestoneStatusCode == "Submitted"))</MudText>
-                    <MudText Typo="Typo.caption" Color="Color.Secondary">Milestones Awaiting Payout</MudText>
-                </div>
-            </MudCardContent>
-        </MudCard>
-    </MudItem>
-    <MudItem xs="12" sm="6" md="3">
-        <MudCard Elevation="2">
-            <MudCardContent Class="d-flex align-center gap-3">
-                <MudAvatar Color="Color.Info" Variant="Variant.Filled" Size="Size.Large">
-                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" />
-                </MudAvatar>
-                <div>
-                    <MudText Typo="Typo.h6" Class="fw-bold text-info">@(_moas.SelectMany(m => m.Milestones).SelectMany(ms => ms.Payments).Where(p => p.PaymentStatusCode == "Paid").Sum(p => p.ApprovedPaymentAmount).ToString("C0"))</MudText>
-                    <MudText Typo="Typo.caption" Color="Color.Secondary">Total Tranches Disbursed</MudText>
-                </div>
-            </MudCardContent>
-        </MudCard>
-    </MudItem>
-</MudGrid>
+<!-- Summary Metric Cards (Clause 4.4) -->
+<StatCardRow Class="mb-4">
+    <StatCard Value="@_moas.Count.ToString("N0")" 
+              Label="Total Active MOAs" 
+              Context="Contract agreements" />
+    <StatCard Value="@_moas.Sum(m => m.TotalContractValue).ToString("C0")" 
+              Label="Committed Contract Value" 
+              TrendColor="Color.Success" 
+              Context="Total allocation budget" />
+    <StatCard Value="@_moas.SelectMany(m => m.Milestones).Count(ms => ms.MilestoneStatusCode == "Verified" || ms.MilestoneStatusCode == "Submitted").ToString("N0")" 
+              Label="Milestones Awaiting Payout" 
+              TrendColor="Color.Warning" 
+              Context="Pending verification" />
+    <StatCard Value="@_moas.SelectMany(m => m.Milestones).SelectMany(ms => ms.Payments).Where(p => p.PaymentStatusCode == "Paid").Sum(p => p.ApprovedPaymentAmount).ToString("C0")" 
+              Label="Tranches Disbursed" 
+              TrendColor="Color.Info" 
+              Context="Paid to beneficiaries" />
+</StatCardRow>
 
-<MudPaper Elevation="1" Class="pa-4 mb-4">
-    <!-- Filter bar -->
-    <div class="d-flex flex-wrap gap-4 align-center justify-space-between mb-3">
-        <div class="d-flex align-center gap-3 flex-grow-1" style="max-width: 600px;">
-            <MudTextField @bind-Value="_searchString"
-                          Placeholder="Search by MOA Number, Employer Name, SDL, Grant Ref..."
-                          Adornment="Adornment.Start"
-                          AdornmentIcon="@Icons.Material.Filled.Search"
-                          IconSize="Size.Medium"
-                          Class="mt-0"
-                          Immediate="true"
-                          Clearable="true" />
-        </div>
-        <div class="d-flex align-center gap-2">
-            <MudChipSet T="string" @bind-SelectedValue="_statusFilter" SelectionMode="SelectionMode.SingleSelection">
-                <MudChip T="string" Value="@("All")" Color="Color.Default" Variant="@(_statusFilter == "All" ? Variant.Filled : Variant.Outlined)">All</MudChip>
-                <MudChip T="string" Value="@("Active")" Color="Color.Success" Variant="@(_statusFilter == "Active" ? Variant.Filled : Variant.Outlined)">Active</MudChip>
-                <MudChip T="string" Value="@("Pending Signature")" Color="Color.Warning" Variant="@(_statusFilter == "Pending Signature" ? Variant.Filled : Variant.Outlined)">Pending Signature</MudChip>
-                <MudChip T="string" Value="@("Completed")" Color="Color.Info" Variant="@(_statusFilter == "Completed" ? Variant.Filled : Variant.Outlined)">Completed</MudChip>
-            </MudChipSet>
-        </div>
-    </div>
+<!-- Filter Bar (Clause 11.4) -->
+<FilterBar SearchPlaceholder="Search by MOA Number, Employer Name, SDL, Grant Ref..."
+           @bind-SearchText="_searchString"
+           OnSearch="HandleFilterChanged"
+           OnClear="ClearFilters">
+    <FilterContent>
+        <MudSelect T="string" 
+                   Label="Contract Status" 
+                   @bind-Value="_statusFilter" 
+                   @bind-Value:after="HandleFilterChanged"
+                   Variant="Variant.Outlined" 
+                   Margin="Margin.Dense"
+                   Dense="true">
+            <MudSelectItem Value="@("All")">All Statuses</MudSelectItem>
+            <MudSelectItem Value="@("Active")">Active</MudSelectItem>
+            <MudSelectItem Value="@("Pending Signature")">Pending Signature</MudSelectItem>
+            <MudSelectItem Value="@("Completed")">Completed</MudSelectItem>
+            <MudSelectItem Value="@("Terminated")">Terminated</MudSelectItem>
+        </MudSelect>
+    </FilterContent>
+    <ActiveFilterChips>
+        @if (!string.IsNullOrWhiteSpace(_searchString))
+        {
+            <MudChip T="string" Size="Size.Small" OnClose="@(() => { _searchString = string.Empty; HandleFilterChanged(); })">
+                Keyword: @_searchString
+            </MudChip>
+        }
+        @if (_statusFilter != "All")
+        {
+            <MudChip T="string" Size="Size.Small" Color="Color.Primary" OnClose="@(() => { _statusFilter = "All"; HandleFilterChanged(); })">
+                Status: @_statusFilter
+            </MudChip>
+        }
+    </ActiveFilterChips>
+</FilterBar>
 
-    @if (_loading)
-    {
-        <div class="d-flex justify-center pa-8">
-            <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
-        </div>
-    }
-    else
-    {
-        <MudTable T="GrantMoa" 
-                  Items="@FilteredMoas" 
-                  Hover="true" 
-                  Striped="true" 
-                  Elevation="0" 
-                  RowClass="cursor-pointer"
-                  OnRowClick="@(args => Navigation.NavigateTo($"/finance/grants/{args.Item.Id}"))">
+<!-- Data Grid Shell (Clause 11.9) -->
+<DataGridShell TItem="GrantMoa"
+               GridKey="GrantMoaGrid"
+               Items="@FilteredMoas"
+               IsLoading="@_loading"
+               TotalItemsCount="@FilteredMoas.Count"
+               SelectedItems="@_selectedMoas"
+               SelectedItemsChanged="OnSelectedMoasChanged"
+               EmptyTitle="No Grant MOAs Found"
+               EmptyMessage="No grant contracting memorandum of agreements match your active search or filter criteria."
+               EmptyActionLabel="Contract New MOA"
+               OnEmptyAction="@(() => Navigation.NavigateTo("/finance/grants/create"))">
+    <BulkActionBarContent>
+        <MudText Typo="Typo.body2" Class="fw-bold text-white">
+            @_selectedMoas.Count MOA(s) selected
+        </MudText>
+        <MudButton Variant="Variant.Filled" 
+                   Color="Color.Surface" 
+                   Size="Size.Small" 
+                   StartIcon="@Icons.Material.Filled.FileDownload"
+                   OnClick="ExportSelected">
+            Export Selected
+        </MudButton>
+    </BulkActionBarContent>
+    <ChildContent>
+        <MudTable Items="@FilteredMoas"
+                  Hover="true"
+                  Dense="true"
+                  Elevation="0"
+                  MultiSelection="true"
+                  @bind-SelectedItems="_selectedMoas"
+                  Breakpoint="Breakpoint.Sm"
+                  Class="border-default">
             <HeaderContent>
-                <MudTh>MOA Reference</MudTh>
-                <MudTh>Employer / Organisation</MudTh>
+                <MudTh>MOA Number</MudTh>
+                <MudTh>Employer / Beneficiary</MudTh>
                 <MudTh>Contract Value</MudTh>
-                <MudTh>Milestones Progress</MudTh>
-                <MudTh>Contract Period</MudTh>
+                <MudTh>Disbursed Amount</MudTh>
+                <MudTh>Milestones</MudTh>
                 <MudTh>Status</MudTh>
-                <MudTh Style="text-align: right;">Actions</MudTh>
+                <MudTh Style="text-align:right">Actions</MudTh>
             </HeaderContent>
             <RowTemplate>
-                <MudTd DataLabel="MOA Reference">
-                    <div class="d-flex align-center gap-2">
-                        <MudIcon Icon="@Icons.Material.Filled.Gavel" Color="Color.Primary" Size="Size.Small" />
-                        <span class="fw-bold font-monospace">@context.MoaNumber</span>
-                    </div>
+                <!-- Key column is real hyperlink (Clause 11.1) -->
+                <MudTd DataLabel="MOA Number">
+                    <a href="/finance/grants/@context.Id" class="d-flex align-center gap-1 font-monospace fw-bold text-primary text-decoration-none">
+                        <MudIcon Icon="@Icons.Material.Filled.Description" Size="Size.Small" />
+                        <span>@(string.IsNullOrWhiteSpace(context.MoaNumber) ? $"MOA-{context.Id}" : context.MoaNumber)</span>
+                    </a>
                 </MudTd>
                 <MudTd DataLabel="Employer">
-                    <div>
-                        <div class="fw-semibold">@(context.GrantApplication?.Organisation?.CompanyName ?? "Organisation")</div>
-                        <div class="text-muted small">SDL: @(context.GrantApplication?.Organisation?.SdlNumber ?? "N/A")</div>
-                    </div>
+                    <MudText Typo="Typo.body2" Class="fw-bold">@(context.Organisation?.CompanyName ?? "Unlinked Organisation")</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">SDL: @(context.Organisation?.SdlNumber ?? "—")</MudText>
                 </MudTd>
                 <MudTd DataLabel="Contract Value">
-                    <div class="fw-bold text-success">@context.TotalContractValue.ToString("C")</div>
+                    <MudText Typo="Typo.body2" Class="fw-bold">@context.TotalContractValue.ToString("C")</MudText>
                 </MudTd>
-                <MudTd DataLabel="Milestones Progress">
+                <MudTd DataLabel="Disbursed">
                     @{
-                        var totalMs = context.Milestones.Count;
-                        var paidMs = context.Milestones.Count(m => m.MilestoneStatusCode == "Paid");
-                        var pct = totalMs > 0 ? (paidMs * 100) / totalMs : 0;
+                        var paid = context.Milestones?.SelectMany(m => m.Payments ?? new List<GrantTranchePayment>())
+                                        .Where(p => p.PaymentStatusCode == "Paid")
+                                        .Sum(p => p.ApprovedPaymentAmount) ?? 0m;
                     }
-                    <div class="d-flex flex-column gap-1" style="min-width: 140px;">
-                        <div class="d-flex justify-space-between small">
-                            <span>@paidMs of @totalMs Tranches Paid</span>
-                            <span class="fw-bold">@pct%</span>
-                        </div>
-                        <MudProgressLinear Color="Color.Success" Value="@pct" Size="Size.Small" Class="rounded" />
-                    </div>
+                    <MudText Typo="Typo.body2" Class="fw-bold text-success">@paid.ToString("C")</MudText>
                 </MudTd>
-                <MudTd DataLabel="Contract Period">
-                    <div class="small">@context.ContractStartDate.ToString("yyyy-MM-dd") to @context.ContractEndDate.ToString("yyyy-MM-dd")</div>
-                </MudTd>
-                <MudTd DataLabel="Status">
-                    <MudChip T="string" Color="@GetStatusColor(context.MoaStatusCode)" Size="Size.Small" Variant="Variant.Filled">
-                        @context.MoaStatusCode
+                <MudTd DataLabel="Milestones">
+                    <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">
+                        @(context.Milestones?.Count ?? 0) Tranches
                     </MudChip>
                 </MudTd>
-                <MudTd DataLabel="Actions" Style="text-align: right;">
+                <MudTd DataLabel="Status">
+                    <!-- Non-clickable status pill (Clause 6.1, 7.2) -->
+                    <StatusBadge Status="@(context.MoaStatusCode ?? "Draft")" Size="Size.Small" />
+                </MudTd>
+                <MudTd Style="text-align:right" DataLabel="Actions">
                     <div class="d-flex justify-end gap-1">
-                        <MudTooltip Text="View MOA & Tranche Milestones">
-                            <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Primary" Size="Size.Small"
-                                           OnClick="@(() => Navigation.NavigateTo($"/finance/grants/{context.Id}"))" aria-label="View Details" />
-                        </MudTooltip>
-                        <MudTooltip Text="Delete MOA Record">
-                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small"
-                                           OnClick="@(() => DeleteMoa(context.Id, context.MoaNumber))" aria-label="Delete Record" />
+                        <MudTooltip Text="View MOA">
+                            <MudIconButton Icon="@Icons.Material.Filled.Visibility" 
+                                           Color="Color.Primary" 
+                                           Size="Size.Small" 
+                                           OnClick="@(() => Navigation.NavigateTo($"/finance/grants/{context.Id}"))" 
+                                           aria-label="View MOA" />
                         </MudTooltip>
                     </div>
                 </MudTd>
             </RowTemplate>
-            <NoRecordsContent>
-                <div class="pa-8 text-center text-muted">
-                    <MudIcon Icon="@Icons.Material.Filled.ReceiptLong" Size="Size.Large" Class="mb-2" />
-                    <MudText Typo="Typo.body1">No Grant MOA contracts found matching the criteria.</MudText>
-                </div>
-            </NoRecordsContent>
             <PagerContent>
-                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
+                <!-- Fixed page size ladder (Clause 11.3.3) -->
+                <MudTablePager PageSizeOptions="new int[] { 5, 10, 20, 50, 100, 250, 500 }" />
             </PagerContent>
         </MudTable>
-    }
-</MudPaper>
+    </ChildContent>
+</DataGridShell>
 
 @code {
     private List<GrantMoa> _moas = new();
-    private bool _loading = true;
-    private string _searchString = "";
+    private HashSet<GrantMoa> _selectedMoas = new();
+    private string _searchString = string.Empty;
     private string _statusFilter = "All";
+    private bool _loading = true;
+
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Finance & Disbursements", href: null, disabled: true),
+        new BreadcrumbItem("Grant MOAs", href: "/finance/grants")
+    };
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadData();
+        await LoadDataAsync();
     }
 
-    private async Task LoadData()
+    private async Task LoadDataAsync()
     {
         _loading = true;
-        _moas = await FinanceService.GetGrantMoasAsync();
-        _loading = false;
+        try
+        {
+            _moas = await FinanceService.GetGrantMoasAsync();
+        }
+        finally
+        {
+            _loading = false;
+        }
     }
 
-    private IEnumerable<GrantMoa> FilteredMoas
+    private List<GrantMoa> FilteredMoas
     {
         get
         {
@@ -213,7 +225,7 @@
 
             if (_statusFilter != "All")
             {
-                query = query.Where(m => string.Equals(m.MoaStatusCode, _statusFilter, StringComparison.OrdinalIgnoreCase));
+                query = query.Where(m => m.MoaStatusCode != null && m.MoaStatusCode.Equals(_statusFilter, StringComparison.OrdinalIgnoreCase));
             }
 
             if (!string.IsNullOrWhiteSpace(_searchString))
@@ -221,41 +233,33 @@
                 var s = _searchString.Trim();
                 query = query.Where(m =>
                     (m.MoaNumber != null && m.MoaNumber.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
-                    (m.GrantApplication?.Organisation?.CompanyName != null && m.GrantApplication.Organisation.CompanyName.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
-                    (m.GrantApplication?.Organisation?.SdlNumber != null && m.GrantApplication.Organisation.SdlNumber.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
-                    (m.GrantApplication?.ApplicationNumber != null && m.GrantApplication.ApplicationNumber.Contains(s, StringComparison.OrdinalIgnoreCase)));
+                    (m.Organisation != null && m.Organisation.CompanyName != null && m.Organisation.CompanyName.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    (m.Organisation != null && m.Organisation.SdlNumber != null && m.Organisation.SdlNumber.Contains(s, StringComparison.OrdinalIgnoreCase)));
             }
 
-            return query;
+            return query.ToList();
         }
     }
 
-    private Color GetStatusColor(string status) => status switch
+    private void HandleFilterChanged()
     {
-        "Active" => Color.Success,
-        "Pending Signature" => Color.Warning,
-        "Completed" => Color.Info,
-        "Terminated" => Color.Error,
-        _ => Color.Default
-    };
-
-    private void OpenCreateModal()
-    {
-        Navigation.NavigateTo("/grants");
-        Snackbar.Add("Select an Approved Discretionary Grant to generate an MOA contract.", Severity.Info);
+        StateHasChanged();
     }
 
-    private async Task DeleteMoa(int id, string moaNo)
+    private void ClearFilters()
     {
-        var deleted = await FinanceService.DeleteGrantMoaAsync(id, "Admin");
-        if (deleted)
-        {
-            Snackbar.Add($"Grant MOA '{moaNo}' deleted successfully with audit confirmation.", Severity.Success);
-            await LoadData();
-        }
-        else
-        {
-            Snackbar.Add("Could not delete MOA record.", Severity.Error);
-        }
+        _searchString = string.Empty;
+        _statusFilter = "All";
+        StateHasChanged();
+    }
+
+    private void OnSelectedMoasChanged(HashSet<GrantMoa> selected)
+    {
+        _selectedMoas = selected;
+    }
+
+    private void ExportSelected()
+    {
+        Snackbar.Add($"Exporting {_selectedMoas.Count} MOA contracts to CSV...", Severity.Info);
     }
 }

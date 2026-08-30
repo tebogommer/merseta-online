@@ -1,0 +1,60 @@
+@namespace Nsdms.Web.Components.Shared
+@using MudBlazor
+
+@*
+  UI-STANDARD.md Contract (Section 9.2, Clause 5.2.3, 6.2.2):
+  Component: ReadOnlyField
+  Inputs: Label, Value, ChildContent
+  Renders: A View-mode value as formatted text, never a disabled input.
+*@
+
+<div class="nsdms-readonly-field mb-3">
+    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block font-weight-medium mb-1">
+        @Label
+    </MudText>
+
+    @if (ChildContent != null)
+    {
+        <div class="nsdms-readonly-content">
+            @ChildContent
+        </div>
+    }
+    else if (!string.IsNullOrWhiteSpace(Value))
+    {
+        <div class="d-flex align-center gap-1">
+            @if (!string.IsNullOrWhiteSpace(Icon))
+            {
+                <MudIcon Icon="@Icon" Size="Size.Small" Color="Color.Secondary" Class="mr-1" />
+            }
+            <MudText Typo="Typo.body2" Class="@(IsMonospace ? "font-monospace fw-bold" : "font-weight-medium")">
+                @Value
+            </MudText>
+        </div>
+    }
+    else
+    {
+        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="font-italic">
+            @(EmptyText ?? "—")
+        </MudText>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string? Label { get; set; }
+
+    [Parameter]
+    public string? Value { get; set; }
+
+    [Parameter]
+    public string? Icon { get; set; }
+
+    [Parameter]
+    public bool IsMonospace { get; set; } = false;
+
+    [Parameter]
+    public string? EmptyText { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

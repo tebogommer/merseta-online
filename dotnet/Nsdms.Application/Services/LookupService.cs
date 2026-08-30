@@ -108,7 +108,12 @@ public class LookupService : ILookupService
         // 8. Visits & Governance
         new("VisitTypeType", "Site & Monitoring Visit Types", "Visits & Governance", "Routine Monitoring, Workplace Approval, QA Audit, Trade Assessment", 4),
         new("SiteVisitApprovalStatusType", "Site Visit Approval Statuses", "Visits & Governance", "Recommended, Deferred, Not Recommended, Re-inspection Required", 4),
-        new("EmployerApprovalStatusType", "Employer Workplace Approvals", "Visits & Governance", "Full workplace approval, conditional, unapproved, legacy", 3)
+        new("EmployerApprovalStatusType", "Employer Workplace Approvals", "Visits & Governance", "Full workplace approval, conditional, unapproved, legacy", 3),
+
+        // 9. NLRD & Qualifications
+        new("AbetBandType", "ABET Band Classifications", "NLRD & Qualifications", "Adult Basic Education & Training Levels (Undefined, Level 1-4 / GETC)", 5),
+        new("QualificationTypeType", "Qualification Formal Types", "NLRD & Qualifications", "SAQA NQF qualification types (National Certificate, National Diploma, Occupational Certificate, etc.)", 27),
+        new("HonoursClassType", "Academic Distinction Classes", "NLRD & Qualifications", "Higher Education and Umalusi graduation distinctions (Cum Laude, Honours, etc.)", 27)
     };
 
     public Task<List<LookupCategoryMetadata>> GetAllLookupMetadataAsync(string? search = null, string? category = null)
@@ -286,6 +291,9 @@ public class LookupService : ILookupService
             "VisitTypeType" => db.VisitTypeTypes.AsNoTracking().Cast<BaseLookupType>(),
             "SiteVisitApprovalStatusType" => db.SiteVisitApprovalStatusTypes.AsNoTracking().Cast<BaseLookupType>(),
             "EmployerApprovalStatusType" => db.EmployerApprovalStatusTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "AbetBandType" => db.AbetBandTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "QualificationTypeType" => db.QualificationTypeTypes.AsNoTracking().Cast<BaseLookupType>(),
+            "HonoursClassType" => db.HonoursClassTypes.AsNoTracking().Cast<BaseLookupType>(),
             _ => db.StatusTypes.AsNoTracking().Cast<BaseLookupType>()
         };
     }
@@ -344,6 +352,9 @@ public class LookupService : ILookupService
             "VisitTypeType" => typeof(VisitTypeType),
             "SiteVisitApprovalStatusType" => typeof(SiteVisitApprovalStatusType),
             "EmployerApprovalStatusType" => typeof(EmployerApprovalStatusType),
+            "AbetBandType" => typeof(AbetBandType),
+            "QualificationTypeType" => typeof(QualificationTypeType),
+            "HonoursClassType" => typeof(HonoursClassType),
             _ => null
         };
     }

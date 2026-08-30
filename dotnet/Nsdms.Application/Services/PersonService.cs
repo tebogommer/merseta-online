@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Nsdms.Application.Common;
+using Nsdms.Application.Common.Models;
 using Nsdms.Application.Common.Utilities;
 using Nsdms.Domain.Entities;
 
@@ -8,6 +9,7 @@ namespace Nsdms.Application.Services;
 public interface IPersonService
 {
     Task<List<Person>> GetAllAsync(string? search = null);
+    Task<PagedResult<PersonListDto>> GetPagedAsync(PaginationQuery query, CancellationToken cancellationToken = default);
     Task<Person?> GetByIdAsync(int id);
     Task<Person?> GetByRsaIdAsync(string rsaId);
     Task<Person> CreateAsync(Person person, string currentUsername = "SYSTEM");
@@ -24,6 +26,59 @@ public class PersonService : IPersonService
     {
         _contextFactory = contextFactory;
         _audit = audit;
+    }
+
+    public async Task<PagedResult<PersonListDto>> GetPagedAsync(PaginationQuery query, CancellationToken cancellationToken = default)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var baseQuery = db.People.AsNoTracking();
+
+        if (query.FilterParams.TryGetValue("status", out var statusVal) && !string.IsNullOrWhiteSpace(statusVal) && statusVal != "All")
+        {
+            if (statusVal.Equals("Active", StringComparison.OrdinalIgnoreCase))
+                baseQuery = baseQuery.Where(p => p.IsActive);
+            else if (statusVal.Equals("Inactive", StringComparison.OrdinalIgnoreCase))
+                baseQuery = baseQuery.Where(p => !p.IsActive);
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.SearchText))
+        {
+            var s = query.SearchText.Trim();
+            baseQuery = baseQuery.Where(p =>
+                p.FirstName.Contains(s) ||
+                p.LastName.Contains(s) ||
+                p.RsaIdNumber.Contains(s) ||
+                (p.PassportNumber != null && p.PassportNumber.Contains(s)) ||
+                (p.Email != null && p.Email.Contains(s)) ||
+                (p.PhoneNumber != null && p.PhoneNumber.Contains(s)));
+        }
+
+        var totalCount = await baseQuery.CountAsync(cancellationToken);
+
+        var pagedEntities = await baseQuery
+            .OrderBy(p => p.LastName)
+            .ThenBy(p => p.FirstName)
+            .Skip(query.PageIndex * query.PageSize)
+            .Take(query.PageSize)
+            .ToListAsync(cancellationToken);
+
+        var items = pagedEntities.Select(p => new PersonListDto(
+            p.Id,
+            p.Title,
+            p.FirstName ?? string.Empty,
+            p.LastName ?? string.Empty,
+            p.MiddleName,
+            p.RsaIdNumber,
+            p.PassportNumber,
+            p.Gender,
+            p.DateOfBirth,
+            p.Email,
+            p.PhoneNumber,
+            p.ProvinceCode,
+            p.IsActive
+        )).ToList();
+
+        return new PagedResult<PersonListDto>(items, totalCount, query.PageIndex, query.PageSize);
     }
 
     public async Task<List<Person>> GetAllAsync(string? search = null)

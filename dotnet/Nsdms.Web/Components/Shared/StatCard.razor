@@ -1,0 +1,171 @@
+@namespace Nsdms.Web.Components.Shared
+@using MudBlazor
+
+@*
+  UI-STANDARD.md Contract (Section 9.2 & Clause 4.4):
+  Component: StatCard
+  Inputs: Label, Value, Comparison, ComparisonMeaning, LinkUrl
+  Rules:
+  - Surface not clickable; drill-down is explicit "View all" link in footer.
+  - Value uses tabular numerals.
+  - Comparison arrow/color follows meaning, not direction.
+  - Handles own loading skeleton and inline error state (never silent 0).
+*@
+
+<MudItem xs="12" sm="6" md="3">
+    <MudCard Elevation="0" Class="nsdms-stat-card border-default h-100 d-flex flex-column justify-space-between rounded-lg" style="border: 1px solid var(--mud-palette-lines-default);" role="region" aria-label="@Label" @attributes="AdditionalAttributes">
+        <MudCardContent Class="pa-4">
+            @if (IsLoading)
+            {
+                <MudSkeleton SkeletonType="SkeletonType.Text" Width="60%" Height="20px" Class="mb-2" />
+                <MudSkeleton SkeletonType="SkeletonType.Rectangle" Width="40%" Height="36px" Class="mb-2 rounded" />
+                <MudSkeleton SkeletonType="SkeletonType.Text" Width="50%" Height="16px" />
+            }
+            else if (HasError)
+            {
+                <div class="pa-2 text-center">
+                    <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Color="Color.Error" Size="Size.Medium" Class="mb-1" />
+                    <MudText Typo="Typo.caption" Color="Color.Error" Class="d-block">
+                        @(string.IsNullOrWhiteSpace(ErrorMessage) ? "Failed to load metric" : ErrorMessage)
+                    </MudText>
+                    @if (OnRetry.HasDelegate)
+                    {
+                        <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary" OnClick="OnRetry" Class="mt-1">
+                            Retry
+                        </MudButton>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="d-flex justify-space-between align-start mb-1">
+                    <!-- 1. Label -->
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="font-weight-medium text-truncate" Style="max-width: 80%;">
+                        @Label
+                    </MudText>
+                    @if (!string.IsNullOrWhiteSpace(Icon))
+                    {
+                        <MudIcon Icon="@Icon" Size="Size.Small" Color="Color.Secondary" Class="opacity-50" />
+                    }
+                </div>
+
+                <!-- 2. Dominant Value with Tabular Numerals -->
+                <div class="my-1">
+                    <span class="mud-typography mud-typography-h4 font-weight-bold font-monospace text-primary">
+                        @Value
+                    </span>
+                </div>
+
+                <!-- 3. Comparison Trend / Target / Context -->
+                @if (!string.IsNullOrWhiteSpace(Comparison))
+                {
+                    <div class="d-flex align-center gap-1 mt-1">
+                        @if (ComparisonMeaning != StatMeaning.Neutral || TrendColor != Color.Default)
+                        {
+                            <MudIcon Icon="@GetComparisonIcon()" 
+                                     Color="@GetComparisonColor()" 
+                                     Size="Size.Small" />
+                        }
+                        <MudText Typo="Typo.caption" 
+                                 Color="@GetComparisonColor()" 
+                                 Class="font-weight-medium">
+                            @Comparison
+                        </MudText>
+                    </div>
+                }
+            }
+        </MudCardContent>
+
+        <!-- 4. Explicit Footer Drill-down Link (Surface is NOT clickable per Clause 4.4.2.3) -->
+        @if (!IsLoading && !HasError && !string.IsNullOrWhiteSpace(EffectiveLinkUrl))
+        {
+            <div class="pa-2 px-4 border-top bg-light d-flex justify-end align-center">
+                <MudLink Href="@EffectiveLinkUrl" Typo="Typo.caption" Color="Color.Primary" Class="font-weight-bold d-inline-flex align-center gap-1">
+                    @(string.IsNullOrWhiteSpace(LinkText) ? "View all" : LinkText)
+                    <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" />
+                </MudLink>
+            </div>
+        }
+    </MudCard>
+</MudItem>
+
+@code {
+    public enum StatMeaning
+    {
+        Neutral,
+        Positive,
+        Negative
+    }
+
+    [Parameter]
+    public string Label { get; set; } = string.Empty;
+
+    [Parameter]
+    public string Value { get; set; } = "0";
+
+    [Parameter]
+    public string? Comparison { get; set; }
+
+    [Parameter]
+    public string? Context { get => Comparison; set => Comparison = value; }
+
+    [Parameter]
+    public StatMeaning ComparisonMeaning { get; set; } = StatMeaning.Neutral;
+
+    [Parameter]
+    public Color TrendColor { get; set; } = Color.Default;
+
+    [Parameter]
+    public string? LinkUrl { get; set; }
+
+    [Parameter]
+    public string? Href { get => LinkUrl; set => LinkUrl = value; }
+
+    [Parameter]
+    public string? LinkText { get; set; }
+
+    [Parameter]
+    public string? Icon { get; set; }
+
+    [Parameter]
+    public bool IsLoading { get; set; } = false;
+
+    [Parameter]
+    public bool HasError { get; set; } = false;
+
+    [Parameter]
+    public string? ErrorMessage { get; set; }
+
+    [Parameter]
+    public EventCallback OnRetry { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object>? AdditionalAttributes { get; set; }
+
+    private string? EffectiveLinkUrl => !string.IsNullOrWhiteSpace(LinkUrl) ? LinkUrl : Href;
+
+    private string GetComparisonIcon()
+    {
+        if (TrendColor == Color.Success) return Icons.Material.Filled.TrendingUp;
+        if (TrendColor == Color.Error) return Icons.Material.Filled.TrendingDown;
+
+        return ComparisonMeaning switch
+        {
+            StatMeaning.Positive => Icons.Material.Filled.ArrowUpward,
+            StatMeaning.Negative => Icons.Material.Filled.ArrowDownward,
+            _ => Icons.Material.Filled.TrendingFlat
+        };
+    }
+
+    private Color GetComparisonColor()
+    {
+        if (TrendColor != Color.Default) return TrendColor;
+
+        return ComparisonMeaning switch
+        {
+            StatMeaning.Positive => Color.Success,
+            StatMeaning.Negative => Color.Error,
+            _ => Color.Secondary
+        };
+    }
+}

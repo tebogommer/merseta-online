@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Nsdms.Application.Common;
+using Nsdms.Application.Common.Models;
 using Nsdms.Domain.Entities;
 
 namespace Nsdms.Application.Services;
@@ -8,6 +9,7 @@ public interface IOrganisationService
 {
     // Organisation CRUD
     Task<List<Organisation>> GetAllAsync(string? search = null);
+    Task<PagedResult<OrganisationListDto>> GetPagedAsync(PaginationQuery query, CancellationToken cancellationToken = default);
     Task<Organisation?> GetByIdAsync(int id);
     Task<Organisation> CreateAsync(Organisation org, string currentUsername = "Admin");
     Task<Organisation> UpdateAsync(Organisation org, string currentUsername = "Admin");
@@ -37,6 +39,58 @@ public class OrganisationService : IOrganisationService
     {
         _contextFactory = contextFactory;
         _audit = audit;
+    }
+
+    public async Task<PagedResult<OrganisationListDto>> GetPagedAsync(PaginationQuery query, CancellationToken cancellationToken = default)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var baseQuery = db.Organisations
+            .Include(o => o.PrimaryContactPerson)
+            .AsNoTracking();
+
+        if (query.FilterParams.TryGetValue("status", out var statusVal) && !string.IsNullOrWhiteSpace(statusVal) && statusVal != "All")
+        {
+            if (statusVal.Equals("Active", StringComparison.OrdinalIgnoreCase))
+                baseQuery = baseQuery.Where(o => o.IsActive);
+            else if (statusVal.Equals("Inactive", StringComparison.OrdinalIgnoreCase))
+                baseQuery = baseQuery.Where(o => !o.IsActive);
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.SearchText))
+        {
+            var s = query.SearchText.Trim();
+            baseQuery = baseQuery.Where(o =>
+                o.CompanyName.Contains(s) ||
+                (o.TradingName != null && o.TradingName.Contains(s)) ||
+                o.SdlNumber.Contains(s) ||
+                (o.MainSdlNumber != null && o.MainSdlNumber.Contains(s)) ||
+                (o.RegistrationNumber != null && o.RegistrationNumber.Contains(s)) ||
+                (o.TaxNumber != null && o.TaxNumber.Contains(s)));
+        }
+
+        var totalCount = await baseQuery.CountAsync(cancellationToken);
+
+        var pagedEntities = await baseQuery
+            .OrderByDescending(o => o.Id)
+            .Skip(query.PageIndex * query.PageSize)
+            .Take(query.PageSize)
+            .ToListAsync(cancellationToken);
+
+        var items = pagedEntities.Select(o => new OrganisationListDto(
+            o.Id,
+            o.SdlNumber,
+            o.CompanyName,
+            o.TradingName,
+            o.RegistrationNumber,
+            o.TaxNumber,
+            o.ChamberCode,
+            o.SectorCode,
+            o.IsActive,
+            o.PrimaryContactPerson != null ? $"{o.PrimaryContactPerson.FirstName} {o.PrimaryContactPerson.LastName}".Trim() : null,
+            o.PrimaryContactPerson?.EmailAddress
+        )).ToList();
+
+        return new PagedResult<OrganisationListDto>(items, totalCount, query.PageIndex, query.PageSize);
     }
 
     public async Task<List<Organisation>> GetAllAsync(string? search = null)

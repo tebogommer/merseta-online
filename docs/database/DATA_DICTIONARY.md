@@ -1,6 +1,6 @@
 # MerSETA NSDMS — Database Data Dictionary
 
-> **Generated:** 2026-08-30 11:57:55 UTC | **Target Engine:** Microsoft SQL Server Express | **Total Tables:** 149
+> **Generated:** 2026-08-30 20:12:31 UTC | **Target Engine:** Microsoft SQL Server Express | **Total Tables:** 159
 
 ---
 
@@ -15,6 +15,9 @@
 | `dbo` | [`AppUserLogin`](#appuserlogin) | `IdentityUserLogin`1` | 4 | `LoginProvider, ProviderKey` | System entity for IdentityUserLogin`1 data governance. |
 | `dbo` | [`AppUserRole`](#appuserrole) | `IdentityUserRole`1` | 2 | `UserId, RoleId` | System entity for IdentityUserRole`1 data governance. |
 | `dbo` | [`AppUserToken`](#appusertoken) | `IdentityUserToken`1` | 4 | `UserId, LoginProvider, Name` | System entity for IdentityUserToken`1 data governance. |
+| `dbo` | [`AqpLearnerAssessment`](#aqplearnerassessment) | `AqpLearnerAssessment` | 20 | `Id` | External Integrated Summative Assessment (EISA) record administered by an AQP for a registered learner. |
+| `dbo` | [`AqpPartner`](#aqppartner) | `AqpPartner` | 19 | `Id` | Assessment Quality Partner (AQP) accredited by QCTO to develop assessment instruments and manage EISA exams. |
+| `dbo` | [`AqpQualificationScope`](#aqpqualificationscope) | `AqpQualificationScope` | 12 | `Id` | Qualifications in scope for which the AQP is authorized to administer external summative assessments (EISA). |
 | `dbo` | [`ArplExperienceDetail`](#arplexperiencedetail) | `ArplExperienceDetail` | 12 | `Id` | Historical work experience item claimed under ARPL. |
 | `dbo` | [`ArplTradeTestInformation`](#arpltradetestinformation) | `ArplTradeTestInformation` | 17 | `Id` | Artisan Recognition of Prior Learning (ARPL) Portfolio Assessment record. |
 | `dbo` | [`ArplTrainingDetail`](#arpltrainingdetail) | `ArplTrainingDetail` | 10 | `Id` | Prior formal or non-formal training modules completed by an ARPL candidate. |
@@ -77,6 +80,7 @@
 | `dbo` | [`SummativeAssessmentUnitStandard`](#summativeassessmentunitstandard) | `SummativeAssessmentUnitStandard` | 16 | `Id` | Unit Standard credit assessment and moderation outcome line item. |
 | `dbo` | [`SystemConfig`](#systemconfig) | `SystemConfig` | 12 | `Id` | Runtime system configuration key-value overrides. |
 | `dbo` | [`SystemFeatureFlag`](#systemfeatureflag) | `SystemFeatureFlag` | 11 | `Id` | Granular runtime feature flags for enabling/disabling modules and integrations. All external third-party integrations default to IsEnabled = false. |
+| `dbo` | [`SystemNotification`](#systemnotification) | `SystemNotification` | 14 | `Id` | Persistent system notification for real-time SignalR push and user inbox alerts. |
 | `dbo` | [`TradeTestTask`](#tradetesttask) | `TradeTestTask` | 15 | `Id` | Practical Task and Scoring Item evaluated during the Trade Test. |
 | `dbo` | [`TrainingCommittee`](#trainingcommittee) | `TrainingCommittee` | 10 | `Id` | Employer Workplace Training Committee constituted per statutory merSETA guidelines. |
 | `dbo` | [`TrainingCommitteeMember`](#trainingcommitteemember) | `TrainingCommitteeMember` | 10 | `Id` | Individual Union and Employer representatives on a Training Committee. |
@@ -105,8 +109,12 @@
 | `dbo` | [`WspDispute`](#wspdispute) | `WspDispute` | 13 | `Id` | Dispute logged regarding Workplace Skills Plan (WSP) approval or committee sign-off. |
 | `dbo` | [`WspEmploymentSummary`](#wspemploymentsummary) | `WspEmploymentSummary` | 18 | `Id` | Employment profile demographic breakdown by occupational category (SETMIS Form 500). |
 | `dbo` | [`WspSkillsGap`](#wspskillsgap) | `WspSkillsGap` | 11 | `Id` | Critical and Scarce Skills Gap identified during WSP compilation. |
+| `dbo` | [`WspStrategicPriority`](#wspstrategicpriority) | `WspStrategicPriority` | 11 | `Id` | Strategic priorities and alignment with National Skills Development Plan (NSDP) goals in WSP submissions. |
+| `dbo` | [`WspStrategicSkillsGap`](#wspstrategicskillsgap) | `WspStrategicSkillsGap` | 15 | `Id` | Captures identified organizational skills gaps, root causes, and targeted interventions for WSP/ATR submissions. |
 | `dbo` | [`WspSubmission`](#wspsubmission) | `WspSubmission` | 12 | `Id` | Mandatory Grant Workplace Skills Plan (WSP) and Annual Training Report (ATR) submissions. |
+| `dbo` | [`WspTrainingImpactSurvey`](#wsptrainingimpactsurvey) | `WspTrainingImpactSurvey` | 11 | `Id` | Qualitative training impact questionnaire evaluating the business effectiveness of previous year training. |
 | `dbo` | [`WspTrainingPlan`](#wsptrainingplan) | `WspTrainingPlan` | 10 | `Id` | Planned learning and development interventions submitted in the annual Workplace Skills Plan. |
+| `lookup` | [`AbetBandType`](#abetbandtype) | `AbetBandType` | 8 | `Code` | NLRD Adult Basic Education and Training Band classifications (Field: ABET_BAND_ID - 1 to 5). |
 | `lookup` | [`AlternateIdType`](#alternateidtype) | `AlternateIdType` | 8 | `Code` | SETMIS statutory alternate identification types (Field: Alternate_Id_Type_Id - e.g. Passport, Birth Certificate, Work Permit). |
 | `lookup` | [`CategoryType`](#categorytype) | `CategoryType` | 8 | `Code` | Employer entity levy compliance categories (e.g. Levy Paying, Non-Levy Paying, Government/Exempt). |
 | `lookup` | [`ChamberType`](#chambertype) | `ChamberType` | 8 | `Code` | MerSETA sub-sector chambers (Auto, Metal & Engineering, Plastics, Motor Retail). |
@@ -128,6 +136,7 @@
 | `lookup` | [`GrantTypeType`](#granttypetype) | `GrantTypeType` | 8 | `Code` | MerSETA Discretionary and Mandatory grant allocation funding types. |
 | `lookup` | [`HearingRatingType`](#hearingratingtype) | `HearingRatingType` | 8 | `Code` | Washington Group Hearing functional rating (Field: Hearing_Rating_Id - 1: No difficulty to 6: Cannot yet be determined). |
 | `lookup` | [`HomeLanguageType`](#homelanguagetype) | `HomeLanguageType` | 8 | `Code` | Official South African home language classifications (Field: Home_Language_Code - 14 statutory codes including SASL). |
+| `lookup` | [`HonoursClassType`](#honoursclasstype) | `HonoursClassType` | 8 | `Code` | Higher Education and Umalusi academic achievement classification distinctions (Field: HONOURS_CLASS_ID - Cum Laude, Honours, etc.). |
 | `lookup` | [`InternshipStatusType`](#internshipstatustype) | `InternshipStatusType` | 8 | `Code` | Work Integrated Learning (WIL) and Internship lifecycle status (Field: Internship_Status_Id - Active, Completed, Discontinued). |
 | `lookup` | [`InterventionType`](#interventiontype) | `InterventionType` | 8 | `Code` | Targeted skills development intervention categories. |
 | `lookup` | [`LearnerEvidenceType`](#learnerevidencetype) | `LearnerEvidenceType` | 8 | `Code` | Portfolio of Evidence (PoE) digital artifact and evidence document types. |
@@ -142,6 +151,7 @@
 | `lookup` | [`ProviderStatusType`](#providerstatustype) | `ProviderStatusType` | 8 | `Code` | Skills Development Provider ETQA accreditation standing codes (Field: Provider_Status_Id - Accredited, Registered, Closed, etc.). |
 | `lookup` | [`ProviderType`](#providertype) | `ProviderType` | 8 | `Code` | Skills Development Provider functional entity type (Field: Provider_Type_Id - Education, Training, Employer, NGO). |
 | `lookup` | [`ProvinceType`](#provincetype) | `ProvinceType` | 8 | `Code` | South African provincial geopolitical regions (Field: Province_Code - 11 statutory provincial and national codes). |
+| `lookup` | [`QualificationTypeType`](#qualificationtypetype) | `QualificationTypeType` | 8 | `Code` | SAQA National Qualifications Framework qualification formal types (Field: QUALIFICATION_TYPE_ID - National Certificate, Diploma, Occupational Certificate, etc.). |
 | `lookup` | [`RememberingRatingType`](#rememberingratingtype) | `RememberingRatingType` | 8 | `Code` | Washington Group Memory and Cognitive functional rating (Field: Remembering_Rating_Id - 1: No difficulty to 6: Cannot yet be determined). |
 | `lookup` | [`SectorType`](#sectortype) | `SectorType` | 8 | `Code` | MerSETA industrial economic sector classifications (Auto, Metal, Motor Retail, Plastics, Tyre). |
 | `lookup` | [`SeeingRatingType`](#seeingratingtype) | `SeeingRatingType` | 8 | `Code` | Washington Group Vision functional rating (Field: Seeing_Rating_Id - 1: No difficulty to 6: Cannot yet be determined). |
@@ -349,6 +359,137 @@
 | Constraint Name | Foreign Columns | Principal Table | Delete Rule |
 | :--- | :--- | :--- | :--- |
 | `FK_AppUserToken_AppUser_UserId` | `UserId` | `dbo.AppUser` | `Cascade` |
+
+---
+
+### <a id="aqplearnerassessment"></a> `dbo.AqpLearnerAssessment`
+
+**Description:** External Integrated Summative Assessment (EISA) record administered by an AQP for a registered learner.  
+**CLR Model:** `Nsdms.Domain.Entities.AqpLearnerAssessment`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `AqpPartnerId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `AssessmentCenter` | `nvarchar(max)` | **NOT NULL** |  | Domain property for AssessmentCenter. |
+| `AssessmentDate` | `datetime2` | **NOT NULL** |  | Domain property for AssessmentDate. |
+| `AssessmentNumber` | `nvarchar(100)` | **NOT NULL** |  | Domain property for AssessmentNumber. |
+| `CertificateIssuedDate` | `datetime2` | NULL |  | Domain property for CertificateIssuedDate. |
+| `CertificateNumber` | `nvarchar(max)` | NULL |  | Domain property for CertificateNumber. |
+| `CompanyLearnerId` | `int` | NULL | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `EisaExamSession` | `nvarchar(100)` | **NOT NULL** |  | Domain property for EisaExamSession. |
+| `FinalOverallPercentage` | `decimal(18,2)` | **NOT NULL** |  | Domain property for FinalOverallPercentage. |
+| `ModerationStatusCode` | `nvarchar(max)` | **NOT NULL** |  | Domain property for ModerationStatusCode. |
+| `ModeratorComments` | `nvarchar(max)` | NULL |  | Domain property for ModeratorComments. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `PersonId` | `int` | NULL | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `PracticalScorePercentage` | `decimal(18,2)` | NULL |  | Domain property for PracticalScorePercentage. |
+| `ResultStatusCode` | `nvarchar(max)` | **NOT NULL** |  | Domain property for ResultStatusCode. |
+| `TheoryScorePercentage` | `decimal(18,2)` | NULL |  | Domain property for TheoryScorePercentage. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_AqpLearnerAssessment_AqpPartner_AqpPartnerId` | `AqpPartnerId` | `dbo.AqpPartner` | `Cascade` |
+| `FK_AqpLearnerAssessment_CompanyLearner_CompanyLearnerId` | `CompanyLearnerId` | `dbo.CompanyLearner` | `ClientSetNull` |
+| `FK_AqpLearnerAssessment_Person_PersonId` | `PersonId` | `dbo.Person` | `ClientSetNull` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_AqpLearnerAssessment_AqpPartnerId` | `AqpPartnerId` | No |
+| `IX_AqpLearnerAssessment_CompanyLearnerId` | `CompanyLearnerId` | No |
+| `IX_AqpLearnerAssessment_PersonId` | `PersonId` | No |
+
+---
+
+### <a id="aqppartner"></a> `dbo.AqpPartner`
+
+**Description:** Assessment Quality Partner (AQP) accredited by QCTO to develop assessment instruments and manage EISA exams.  
+**CLR Model:** `Nsdms.Domain.Entities.AqpPartner`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `AccreditationEndDate` | `datetime2` | **NOT NULL** |  | Domain property for AccreditationEndDate. |
+| `AccreditationNumber` | `nvarchar(100)` | **NOT NULL** |  | Domain property for AccreditationNumber. |
+| `AccreditationStartDate` | `datetime2` | **NOT NULL** |  | Domain property for AccreditationStartDate. |
+| `AqpCode` | `nvarchar(50)` | **NOT NULL** |  | Domain property for AqpCode. |
+| `AqpName` | `nvarchar(200)` | **NOT NULL** |  | Domain property for AqpName. |
+| `ContactPersonId` | `int` | NULL | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `Email` | `nvarchar(max)` | NULL |  | Primary email address. |
+| `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the record is active and operational. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `PhoneNumber` | `nvarchar(max)` | NULL |  | Primary contact telephone number. |
+| `PhysicalAddress` | `nvarchar(max)` | NULL |  | Domain property for PhysicalAddress. |
+| `PostalCode` | `nvarchar(max)` | NULL |  | Domain property for PostalCode. |
+| `ProvinceCode` | `nvarchar(max)` | **NOT NULL** |  | Domain property for ProvinceCode. |
+| `QualityAssuranceBody` | `nvarchar(max)` | **NOT NULL** |  | Domain property for QualityAssuranceBody. |
+| `StatusCode` | `nvarchar(max)` | **NOT NULL** |  | Current lifecycle state code in the workflow engine. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_AqpPartner_Person_ContactPersonId` | `ContactPersonId` | `dbo.Person` | `ClientSetNull` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_AqpPartner_AqpCode` | `AqpCode` | No |
+| `IX_AqpPartner_IsActive` | `IsActive` | No |
+
+---
+
+### <a id="aqpqualificationscope"></a> `dbo.AqpQualificationScope`
+
+**Description:** Qualifications in scope for which the AQP is authorized to administer external summative assessments (EISA).  
+**CLR Model:** `Nsdms.Domain.Entities.AqpQualificationScope`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `AqpPartnerId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `AssessmentModel` | `nvarchar(max)` | **NOT NULL** |  | Domain property for AssessmentModel. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CurriculumCode` | `nvarchar(max)` | NULL |  | Domain property for CurriculumCode. |
+| `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the record is active and operational. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `NqfLevel` | `int` | **NOT NULL** |  | Domain property for NqfLevel. |
+| `QualificationTitle` | `nvarchar(250)` | **NOT NULL** |  | Domain property for QualificationTitle. |
+| `SaqaQualificationId` | `nvarchar(max)` | NULL |  | Domain property for SaqaQualificationId. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_AqpQualificationScope_AqpPartner_AqpPartnerId` | `AqpPartnerId` | `dbo.AqpPartner` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_AqpQualificationScope_AqpPartnerId` | `AqpPartnerId` | No |
 
 ---
 
@@ -716,7 +857,7 @@
 | Column | SQL Store Type | Nullable | Key | Description |
 | :--- | :--- | :--- | :--- | :--- |
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
-| `AssessorEtqaId` | `nvarchar(10)` | **NOT NULL** |  | Submitting ETQA ID of the registered Assessor (references lookup.SetaType, default 17 for merSETA). |
+| `AssessorEtqaId` | `nvarchar(10)` | NULL |  | Submitting ETQA ID of the registered Assessor (references lookup.SetaType, default 17 for merSETA). |
 | `AssessorRegistrationNumber` | `nvarchar(50)` | NULL |  | Registered ETQA Assessor registration number assigned to this learner agreement (SETMIS Files 500, 501, 502). |
 | `CertificateNumber` | `nvarchar(100)` | NULL |  | SAQA or merSETA National Certificate Serial Number awarded upon successful achievement. |
 | `ChamberCode` | `nvarchar(max)` | NULL |  | MerSETA industrial chamber code (e.g. Auto, Metal, Plastic, Motor, New Tyre). |
@@ -725,14 +866,14 @@
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
 | `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
 | `CumulativeSpend` | `decimal(18,2)` | **NOT NULL** |  | Cumulative Discretionary Grant / Levy stipend funding disbursed to date in ZAR. |
-| `EconomicStatusId` | `nvarchar(10)` | **NOT NULL** |  | Learner economic employment standing code (references lookup.EconomicStatusType: 01 Employed 18.1, 02 Unemployed 18.2, 03 Student). |
+| `EconomicStatusId` | `nvarchar(10)` | NULL |  | Learner economic employment standing code (references lookup.EconomicStatusType: 01 Employed 18.1, 02 Unemployed 18.2, 03 Student). |
 | `EnrolmentStatusCode` | `nvarchar(50)` | NULL |  | Legacy enrolment status code mapping. |
 | `EnrolmentStatusDate` | `datetime2` | NULL |  | Date when current enrolment status milestone became effective (SETMIS Files 500, 501, 502). |
-| `EnrolmentStatusId` | `nvarchar(10)` | **NOT NULL** |  | Current statutory enrolment lifecycle status code (references lookup.EnrolmentStatusType: 01 Enrolled, 02 Achieved, 03 Certificated, 04 Terminated, 05 Transferred). |
+| `EnrolmentStatusId` | `nvarchar(10)` | NULL |  | Current statutory enrolment lifecycle status code (references lookup.EnrolmentStatusType: 01 Enrolled, 02 Achieved, 03 Certificated, 04 Terminated, 05 Transferred). |
 | `EnrolmentStatusReasonId` | `nvarchar(10)` | NULL |  | Statutory reason code for contract termination or status change (references lookup.EnrolmentStatusReasonType). |
-| `EnrolmentTypeId` | `nvarchar(10)` | **NOT NULL** |  | Learner delivery mode classification code (references lookup.EnrolmentType: 01 Contact, 02 Distance, 03 Mixed Mode, 04 Workplace Based). |
+| `EnrolmentTypeId` | `nvarchar(10)` | NULL |  | Learner delivery mode classification code (references lookup.EnrolmentType: 01 Contact, 02 Distance, 03 Mixed Mode, 04 Workplace Based). |
 | `ExpectedCompletionDate` | `datetime2` | NULL |  | Projected completion date based on registered programme curriculum duration. |
-| `FundingId` | `nvarchar(10)` | **NOT NULL** |  | Funding source lookup identifier (references lookup.FundingType: 01 SETA Funded, 02 Employer Funded, 03 NSF). |
+| `FundingId` | `nvarchar(10)` | NULL |  | Funding source lookup identifier (references lookup.FundingType: 01 SETA Funded, 02 Employer Funded, 03 NSF). |
 | `FundingTypeCode` | `nvarchar(50)` | NULL |  | Funding vehicle classification code (e.g. MandatoryGrant, DiscretionaryGrant, SelfFunded). |
 | `InternshipStatusId` | `nvarchar(10)` | NULL |  | Work Integrated Learning / Internship milestone standing (references lookup.InternshipStatusType: 01 In Progress, 02 Completed, 03 Withdrawn). |
 | `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the learner record is active in reporting and SETMIS submissions. |
@@ -746,7 +887,7 @@
 | `OfoCode` | `nvarchar(20)` | NULL |  | DHET Organising Framework for Occupations statutory code (references lookup.OfoCodeType, e.g. 264202 Editor, 651202 Welder). |
 | `OrganisationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the host or sponsoring Employer Organisation. |
 | `OrganisationSiteId` | `int` | NULL | 🔗 **FK** | Optional foreign key referencing the specific host branch / plant facility. |
-| `PartOfId` | `nvarchar(10)` | **NOT NULL** |  | Programme hierarchy and articulation type code (references lookup.PartOfType: 01 Stand-alone, 02 Part of Qualification, 03 Part of Learnership). |
+| `PartOfId` | `nvarchar(10)` | NULL |  | Programme hierarchy and articulation type code (references lookup.PartOfType: 01 Stand-alone, 02 Part of Qualification, 03 Part of Learnership). |
 | `PersonId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the demographic Person record (names, RSA ID, contact details). |
 | `PracticalProviderCode` | `nvarchar(50)` | NULL |  | Secondary practical training provider code for decentralized apprenticeship workplace programmes (SETMIS File 501). |
 | `PracticalProviderEtqaId` | `nvarchar(10)` | NULL |  | Secondary practical training provider ETQA ID (default 17). |
@@ -757,7 +898,7 @@
 | `SaqaQualificationId` | `int` | NULL |  | SAQA Registered Qualification ID code (SETMIS File 501, 505, 506). |
 | `SetaRegion` | `nvarchar(max)` | NULL |  | MerSETA regional office responsible for managing this learner agreement. |
 | `TrainingProviderId` | `int` | NULL | 🔗 **FK** | Optional foreign key referencing the accredited Skills Development Training Provider (SDP). |
-| `UrbanRuralId` | `nvarchar(10)` | **NOT NULL** |  | Geographic intervention area classification (references lookup.UrbanRuralType: 01 Urban, 02 Rural, 98 Unknown). |
+| `UrbanRuralId` | `nvarchar(10)` | NULL |  | Geographic intervention area classification (references lookup.UrbanRuralType: 01 Urban, 02 Rural, 98 Unknown). |
 
 #### Foreign Key Constraints
 
@@ -1721,32 +1862,32 @@
 | Column | SQL Store Type | Nullable | Key | Description |
 | :--- | :--- | :--- | :--- | :--- |
 | `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
-| `AssessorEtqaId` | `nvarchar(10)` | **NOT NULL** |  | Submitting ETQA ID of the registered Assessor (default 17). |
+| `AssessorEtqaId` | `nvarchar(10)` | NULL |  | Submitting ETQA ID of the registered Assessor (default 17). |
 | `AssessorPersonId` | `int` | NULL | 🔗 **FK** | Foreign key referencing the examining trade test assessor Person. |
 | `AssessorRegistrationNumber` | `nvarchar(50)` | NULL |  | Registered ETQA Assessor registration number conducting examination (SETMIS File 505). |
 | `CertificateIssueDate` | `datetime2` | NULL |  | Date when the artisan qualification certificate was issued. |
 | `CompanyLearnerId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the registered CompanyLearner contract. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
 | `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
-| `ModeratorEtqaId` | `nvarchar(10)` | **NOT NULL** |  | Submitting ETQA ID of the registered Moderator (default 17). |
+| `ModeratorEtqaId` | `nvarchar(10)` | NULL |  | Submitting ETQA ID of the registered Moderator (default 17). |
 | `ModeratorPersonId` | `int` | NULL | 🔗 **FK** | Foreign key referencing the verifying moderator Person. |
 | `ModeratorRegistrationNumber` | `nvarchar(50)` | NULL |  | Registered ETQA Moderator / NAMB Verifier registration number (SETMIS File 505). |
 | `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
 | `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
-| `QualificationId` | `nvarchar(50)` | **NOT NULL** |  | SAQA Qualification ID or OFO Trade Code corresponding to the trade test (SETMIS File 505). |
+| `QualificationId` | `nvarchar(50)` | NULL |  | SAQA Qualification ID or OFO Trade Code corresponding to the trade test (SETMIS File 505). |
 | `Remarks` | `nvarchar(max)` | NULL |  | Assessment feedback and examiner moderation remarks. |
-| `ResultStatusCode` | `nvarchar(50)` | **NOT NULL** |  | Legacy assessment outcome status code (e.g. Scheduled, Competent, NotYetCompetent, Absent). |
+| `ResultStatusCode` | `nvarchar(50)` | NULL |  | Legacy assessment outcome status code (e.g. Scheduled, Competent, NotYetCompetent, Absent). |
 | `SerialCertificateNumber` | `nvarchar(50)` | NULL |  | National Red Seal Artisan Trade Certificate serial number issued upon competency. |
 | `TestCenterName` | `nvarchar(150)` | **NOT NULL** |  | Name and facility location of accredited Trade Test Center (TTC). |
 | `TradeCode` | `nvarchar(50)` | NULL |  | OFO Trade Code corresponding to the trade test (SETMIS File 505). |
-| `TradeTestCentreCode` | `nvarchar(50)` | **NOT NULL** |  | Accredited Trade Test Centre (TTC) Provider Code as registered on NLRD/SETMIS (SETMIS File 505). |
-| `TradeTestCentreEtqaId` | `nvarchar(10)` | **NOT NULL** |  | Submitting ETQA ID of Trade Test Centre (references lookup.SetaType, default 17 for merSETA). |
+| `TradeTestCentreCode` | `nvarchar(50)` | NULL |  | Accredited Trade Test Centre (TTC) Provider Code as registered on NLRD/SETMIS (SETMIS File 505). |
+| `TradeTestCentreEtqaId` | `nvarchar(10)` | NULL |  | Submitting ETQA ID of Trade Test Centre (references lookup.SetaType, default 17 for merSETA). |
 | `TradeTestDate` | `datetime2` | **NOT NULL** |  | Examination date on which the trade test was conducted. |
 | `TradeTestNumber` | `int` | **NOT NULL** |  | Trade test examination attempt index number (e.g. 1, 2, 3) for SETMIS File 505. |
-| `TradeTestResultId` | `nvarchar(10)` | **NOT NULL** |  | Trade test competency outcome lookup code (references lookup.TradeTestResultType: 01 Competent, 02 Not Yet Competent). |
-| `TradeTestResultReasonId` | `nvarchar(10)` | **NOT NULL** |  | Statutory assessment outcome reason code (references lookup.TradeTestResultReasonType: 01 Assessment Criteria Satisfied). |
+| `TradeTestResultId` | `nvarchar(10)` | NULL |  | Trade test competency outcome lookup code (references lookup.TradeTestResultType: 01 Competent, 02 Not Yet Competent). |
+| `TradeTestResultReasonId` | `nvarchar(10)` | NULL |  | Statutory assessment outcome reason code (references lookup.TradeTestResultReasonType: 01 Assessment Criteria Satisfied). |
 | `TradeTitle` | `nvarchar(150)` | **NOT NULL** |  | Designated artisan trade title (e.g. Diesel Mechanic, Boilermaker, Fitter & Turner, Electrician, Welder). |
-| `TrainingProviderEtqaId` | `nvarchar(10)` | **NOT NULL** |  | Original training provider Submitting ETQA ID (default 17). |
+| `TrainingProviderEtqaId` | `nvarchar(10)` | NULL |  | Original training provider Submitting ETQA ID (default 17). |
 | `TrainingProviderId` | `int` | NULL | 🔗 **FK** | Foreign key referencing original Skills Development Training Provider (SDP). |
 
 #### Foreign Key Constraints
@@ -2271,7 +2412,7 @@
 | `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
 | `DateOfBirth` | `datetime2` | NULL |  | Date of birth (auto-derived from RSA ID when available). |
 | `DisabilityCode` | `nvarchar(15)` | NULL |  | Legacy disability classification lookup code (references lookup.DisabilityType). |
-| `Email` | `nvarchar(150)` | **NOT NULL** |  | Primary email contact address. |
+| `Email` | `nvarchar(150)` | NULL |  | Primary email contact address. |
 | `EquityCode` | `nvarchar(15)` | NULL |  | BBBEE / SETMIS statutory equity classification code (references lookup.EquityType: BA, BC, BI, WH, OTH). |
 | `FaxNumber` | `nvarchar(30)` | NULL |  | Facsimile contact number. |
 | `FirstName` | `nvarchar(100)` | **NOT NULL** |  | Legal first / given name(s). |
@@ -2289,7 +2430,7 @@
 | `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
 | `NationalityCode` | `nvarchar(15)` | NULL |  | Country nationality lookup code (references lookup.NationalityType: SA, SDC, NAM, ZIM, etc.). |
 | `PassportNumber` | `nvarchar(50)` | NULL |  | Foreign passport number or alternate identification number for non-South African citizens. |
-| `PhoneNumber` | `nvarchar(30)` | **NOT NULL** |  | Primary telephone contact number. |
+| `PhoneNumber` | `nvarchar(30)` | NULL |  | Primary telephone contact number. |
 | `PhysicalAddress` | `nvarchar(500)` | NULL |  | Physical residential street address line 1. |
 | `PhysicalAddressPostalCode` | `nvarchar(max)` | NULL |  | Physical residential address postal code. |
 | `PopiActConsentDate` | `datetime2` | NULL |  | Date when POPIA data processing consent was recorded. |
@@ -2303,7 +2444,7 @@
 | `PreviousProviderEtqaId` | `nvarchar(10)` | NULL |  | Previous Submitting ETQA ID associated with this individual. |
 | `ProvinceCode` | `nvarchar(15)` | NULL |  | South African province code of primary residence (references lookup.ProvinceType: GP, KZN, WC, EC, FS, MP, NW, NC, LP). |
 | `RememberingRatingId` | `nvarchar(10)` | NULL |  | Washington Group Memory / Cognitive functional difficulty rating (references lookup.RememberingRatingType: 01 None to 06 Cannot determine). |
-| `RsaIdNumber` | `nvarchar(20)` | **NOT NULL** |  | 13-digit South African National Identity Number. |
+| `RsaIdNumber` | `nvarchar(20)` | NULL |  | 13-digit South African National Identity Number. |
 | `SeeingRatingId` | `nvarchar(10)` | NULL |  | Washington Group Seeing functional difficulty rating (references lookup.SeeingRatingType: 01 None to 06 Cannot determine). |
 | `SelfCareRatingId` | `nvarchar(10)` | NULL |  | Washington Group Self-Care functional difficulty rating (references lookup.SelfCareRatingType: 01 None to 06 Cannot determine). |
 | `StatssaAreaCode` | `nvarchar(50)` | NULL |  | Statistics South Africa Spatial Area Code (references lookup.StatssaAreaCodeType). |
@@ -3088,6 +3229,42 @@
 
 ---
 
+### <a id="systemnotification"></a> `dbo.SystemNotification`
+
+**Description:** Persistent system notification for real-time SignalR push and user inbox alerts.  
+**CLR Model:** `Nsdms.Domain.Entities.SystemNotification`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `ActionUrl` | `nvarchar(300)` | NULL |  | Domain property for ActionUrl. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `IsRead` | `bit` | **NOT NULL** |  | Domain property for IsRead. |
+| `Message` | `nvarchar(1000)` | **NOT NULL** |  | Domain property for Message. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `NotificationType` | `nvarchar(50)` | **NOT NULL** |  | Domain property for NotificationType. |
+| `ReadAt` | `datetime2` | NULL |  | Domain property for ReadAt. |
+| `RecipientRole` | `nvarchar(100)` | NULL |  | Domain property for RecipientRole. |
+| `RecipientUsername` | `nvarchar(150)` | NULL |  | Domain property for RecipientUsername. |
+| `Severity` | `nvarchar(30)` | **NOT NULL** |  | Domain property for Severity. |
+| `Title` | `nvarchar(200)` | **NOT NULL** |  | Domain property for Title. |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_SystemNotification_CreatedAt` | `CreatedAt` | No |
+| `IX_SystemNotification_IsRead` | `IsRead` | No |
+| `IX_SystemNotification_RecipientRole` | `RecipientRole` | No |
+| `IX_SystemNotification_RecipientUsername` | `RecipientUsername` | No |
+
+---
+
 ### <a id="tradetesttask"></a> `dbo.TradeTestTask`
 
 **Description:** Practical Task and Scoring Item evaluated during the Trade Test.  
@@ -3221,7 +3398,7 @@
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
 | `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
 | `EtqaDecisionNumber` | `nvarchar(50)` | NULL |  | MerSETA ETQA committee decision minute reference number (SETMIS File 100). |
-| `EtqaId` | `nvarchar(10)` | **NOT NULL** |  | Submitting ETQA / SETA Identifier (references lookup.SetaType, default 17 for merSETA). |
+| `EtqaId` | `nvarchar(10)` | NULL |  | Submitting ETQA / SETA Identifier (references lookup.SetaType, default 17 for merSETA). |
 | `FaxNumber` | `nvarchar(50)` | NULL |  | Facsimile transmission contact number. |
 | `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the provider is active for new learner enrolments. |
 | `LogoDocumentId` | `int` | NULL |  | Foreign key referencing the high-resolution brand logo DocumentMetadata. |
@@ -3230,12 +3407,12 @@
 | `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
 | `OrganisationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the parent legal Organisation. |
 | `PrimaryContactPersonId` | `int` | NULL | 🔗 **FK** | Optional foreign key referencing the SDP principal or training director. |
-| `ProviderClassId` | `nvarchar(10)` | **NOT NULL** |  | Provider institutional class code (references lookup.ProviderClassType: 01 Public TVET, 02 Private, 03 University, 04 NGO/CBO). |
-| `ProviderCode` | `nvarchar(50)` | **NOT NULL** |  | Statutory Provider Code as recorded on the National Learners' Records Database (NLRD) and SETMIS (SETMIS File 100). |
+| `ProviderClassId` | `nvarchar(10)` | NULL |  | Provider institutional class code (references lookup.ProviderClassType: 01 Public TVET, 02 Private, 03 University, 04 NGO/CBO). |
+| `ProviderCode` | `nvarchar(50)` | NULL |  | Statutory Provider Code as recorded on the National Learners' Records Database (NLRD) and SETMIS (SETMIS File 100). |
 | `ProviderStatusCode` | `nvarchar(15)` | NULL |  | Legacy Provider Status Code mapping. |
-| `ProviderStatusId` | `nvarchar(10)` | **NOT NULL** |  | Current accreditation standing code (references lookup.ProviderStatusType: 01 Accredited, 02 Provisional, 03 De-accredited). |
+| `ProviderStatusId` | `nvarchar(10)` | NULL |  | Current accreditation standing code (references lookup.ProviderStatusType: 01 Accredited, 02 Provisional, 03 De-accredited). |
 | `ProviderTypeCode` | `nvarchar(15)` | NULL |  | Legacy Provider Type Code mapping. |
-| `ProviderTypeId` | `nvarchar(10)` | **NOT NULL** |  | Provider functional operational type code (references lookup.ProviderType: 01 Education, 02 Training, 03 Employer Provider). |
+| `ProviderTypeId` | `nvarchar(10)` | NULL |  | Provider functional operational type code (references lookup.ProviderType: 01 Education, 02 Training, 03 Employer Provider). |
 | `SarsNumber` | `nvarchar(50)` | NULL |  | SARS Income Tax reference number (SETMIS File 100). |
 | `WebsiteUrl` | `nvarchar(200)` | NULL |  | Corporate website URL. |
 
@@ -4207,6 +4384,83 @@
 
 ---
 
+### <a id="wspstrategicpriority"></a> `dbo.WspStrategicPriority`
+
+**Description:** Strategic priorities and alignment with National Skills Development Plan (NSDP) goals in WSP submissions.  
+**CLR Model:** `Nsdms.Domain.Entities.WspStrategicPriority`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `AlignmentDescription` | `nvarchar(max)` | **NOT NULL** |  | Domain property for AlignmentDescription. |
+| `AllocatedBudget` | `decimal(18,2)` | **NOT NULL** |  | Domain property for AllocatedBudget. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `IsAlignedWithNsdp` | `bit` | **NOT NULL** |  | Domain property for IsAlignedWithNsdp. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `PriorityCode` | `nvarchar(100)` | **NOT NULL** |  | Domain property for PriorityCode. |
+| `StrategicObjective` | `nvarchar(max)` | **NOT NULL** |  | Domain property for StrategicObjective. |
+| `WspId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_WspStrategicPriority_WspSubmission_WspId` | `WspId` | `dbo.WspSubmission` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_WspStrategicPriority_WspId` | `WspId` | No |
+
+---
+
+### <a id="wspstrategicskillsgap"></a> `dbo.WspStrategicSkillsGap`
+
+**Description:** Captures identified organizational skills gaps, root causes, and targeted interventions for WSP/ATR submissions.  
+**CLR Model:** `Nsdms.Domain.Entities.WspStrategicSkillsGap`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `CauseOfGap` | `nvarchar(max)` | NULL |  | Domain property for CauseOfGap. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `EstimatedBudget` | `decimal(18,2)` | **NOT NULL** |  | Domain property for EstimatedBudget. |
+| `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the record is active and operational. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `OccupationTitle` | `nvarchar(150)` | **NOT NULL** |  | Domain property for OccupationTitle. |
+| `OfoCode` | `nvarchar(max)` | NULL |  | Domain property for OfoCode. |
+| `PlannedIntervention` | `nvarchar(max)` | NULL |  | Domain property for PlannedIntervention. |
+| `PriorityLevel` | `nvarchar(50)` | **NOT NULL** |  | Domain property for PriorityLevel. |
+| `SkillGapDescription` | `nvarchar(max)` | **NOT NULL** |  | Domain property for SkillGapDescription. |
+| `TargetLearnerCount` | `int` | **NOT NULL** |  | Domain property for TargetLearnerCount. |
+| `WspId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_WspStrategicSkillsGap_WspSubmission_WspId` | `WspId` | `dbo.WspSubmission` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_WspStrategicSkillsGap_IsActive` | `IsActive` | No |
+| `IX_WspStrategicSkillsGap_WspId` | `WspId` | No |
+
+---
+
 ### <a id="wspsubmission"></a> `dbo.WspSubmission`
 
 **Description:** Mandatory Grant Workplace Skills Plan (WSP) and Annual Training Report (ATR) submissions.  
@@ -4247,6 +4501,42 @@
 
 ---
 
+### <a id="wsptrainingimpactsurvey"></a> `dbo.WspTrainingImpactSurvey`
+
+**Description:** Qualitative training impact questionnaire evaluating the business effectiveness of previous year training.  
+**CLR Model:** `Nsdms.Domain.Entities.WspTrainingImpactSurvey`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `EvidenceDocumentUrl` | `nvarchar(max)` | NULL |  | Domain property for EvidenceDocumentUrl. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `QualitativeImpactNotes` | `nvarchar(max)` | NULL |  | Domain property for QualitativeImpactNotes. |
+| `QuestionText` | `nvarchar(max)` | **NOT NULL** |  | Domain property for QuestionText. |
+| `RatingScore` | `int` | **NOT NULL** |  | Domain property for RatingScore. |
+| `SurveyCategory` | `nvarchar(100)` | **NOT NULL** |  | Domain property for SurveyCategory. |
+| `WspId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_WspTrainingImpactSurvey_WspSubmission_WspId` | `WspId` | `dbo.WspSubmission` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_WspTrainingImpactSurvey_WspId` | `WspId` | No |
+
+---
+
 ### <a id="wsptrainingplan"></a> `dbo.WspTrainingPlan`
 
 **Description:** Planned learning and development interventions submitted in the annual Workplace Skills Plan.  
@@ -4280,6 +4570,34 @@
 | :--- | :--- | :--- |
 | `IX_WspTrainingPlan_ProgrammeTypeCode` | `ProgrammeTypeCode` | No |
 | `IX_WspTrainingPlan_WspSubmissionId` | `WspSubmissionId` | No |
+
+---
+
+### <a id="abetbandtype"></a> `lookup.AbetBandType`
+
+**Description:** NLRD Adult Basic Education and Training Band classifications (Field: ABET_BAND_ID - 1 to 5).  
+**CLR Model:** `Nsdms.Domain.Entities.AbetBandType`  
+**Primary Key:** `Code`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Code` | `nvarchar(50)` | **NOT NULL** | 🔑 **PK** | Unique alphanumeric code identifier acting as primary key. |
+| `Active` | `bit` | **NOT NULL** |  | Indicates whether the lookup value is active and selectable in UI workflows. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the lookup record was created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the lookup record. |
+| `Description` | `nvarchar(500)` | NULL |  | Detailed description and statutory context of the lookup code. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the lookup record was last modified. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the lookup record. |
+| `Name` | `nvarchar(250)` | **NOT NULL** |  | Display name / title of the lookup option. |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_AbetBandType_Active` | `Active` | No |
+| `IX_AbetBandType_Name` | `Name` | No |
 
 ---
 
@@ -4871,6 +5189,34 @@
 
 ---
 
+### <a id="honoursclasstype"></a> `lookup.HonoursClassType`
+
+**Description:** Higher Education and Umalusi academic achievement classification distinctions (Field: HONOURS_CLASS_ID - Cum Laude, Honours, etc.).  
+**CLR Model:** `Nsdms.Domain.Entities.HonoursClassType`  
+**Primary Key:** `Code`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Code` | `nvarchar(50)` | **NOT NULL** | 🔑 **PK** | Unique alphanumeric code identifier acting as primary key. |
+| `Active` | `bit` | **NOT NULL** |  | Indicates whether the lookup value is active and selectable in UI workflows. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the lookup record was created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the lookup record. |
+| `Description` | `nvarchar(500)` | NULL |  | Detailed description and statutory context of the lookup code. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the lookup record was last modified. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the lookup record. |
+| `Name` | `nvarchar(250)` | **NOT NULL** |  | Display name / title of the lookup option. |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_HonoursClassType_Active` | `Active` | No |
+| `IX_HonoursClassType_Name` | `Name` | No |
+
+---
+
 ### <a id="internshipstatustype"></a> `lookup.InternshipStatusType`
 
 **Description:** Work Integrated Learning (WIL) and Internship lifecycle status (Field: Internship_Status_Id - Active, Completed, Discontinued).  
@@ -5260,6 +5606,34 @@
 | :--- | :--- | :--- |
 | `IX_ProvinceType_Active` | `Active` | No |
 | `IX_ProvinceType_Name` | `Name` | No |
+
+---
+
+### <a id="qualificationtypetype"></a> `lookup.QualificationTypeType`
+
+**Description:** SAQA National Qualifications Framework qualification formal types (Field: QUALIFICATION_TYPE_ID - National Certificate, Diploma, Occupational Certificate, etc.).  
+**CLR Model:** `Nsdms.Domain.Entities.QualificationTypeType`  
+**Primary Key:** `Code`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Code` | `nvarchar(50)` | **NOT NULL** | 🔑 **PK** | Unique alphanumeric code identifier acting as primary key. |
+| `Active` | `bit` | **NOT NULL** |  | Indicates whether the lookup value is active and selectable in UI workflows. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the lookup record was created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the lookup record. |
+| `Description` | `nvarchar(500)` | NULL |  | Detailed description and statutory context of the lookup code. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the lookup record was last modified. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the lookup record. |
+| `Name` | `nvarchar(250)` | **NOT NULL** |  | Display name / title of the lookup option. |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_QualificationTypeType_Active` | `Active` | No |
+| `IX_QualificationTypeType_Name` | `Name` | No |
 
 ---
 

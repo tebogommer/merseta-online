@@ -37,3 +37,30 @@ updated: 2026-08-30
 - Add unit tests in `Nsdms.Tests` for every business rule and calculation.
 - Maintain and update `test_all_pages_playwright.py` with every new route created to guarantee 100% test coverage.
 
+## Employer Visit & Contact Person Invariant
+- When building features that schedule or execute ANY type of "Visit" or "Monitoring" activity against an Employer, ALWAYS enforce selection of a specific Contact Person (`ContactPersonId` / `contact_person_id`).
+- Backend services must explicitly validate the `ContactPersonId` relational link before saving any visit record.
+
+## CASL Role-Based Authorization & Visibility Standard
+- When implementing CASL ability checks in UI components for visibility, ALWAYS check for both `View` and `Manage` actions (e.g., `CaslAbilityService.CanViewOrManage(context, "Model")` or `ability.can('View', 'Model') || ability.can('Manage', 'Model')`) because CASL treats these actions as strictly distinct unless aliases are explicitly configured.
+- Admin users have global visibility and full CRUD permissions across all modules.
+- Non-admin users are strictly scoped to their `DefaultOrganisationId` tenant boundary.
+
+## MudBlazor Layout & Sticky Action Bar Standard
+- Never place utility padding classes (`Class="pa-*"`, `Class="pt-*"`, `Class="py-*"`) directly on `<MudMainContent>`. MudBlazor utility classes apply `!important` which overrides the framework's calculated `padding-top: var(--mud-appbar-height)` (64px) and causes the header to overlap page content by 48px.
+- Always nest inner padding inside `<MudMainContent>`: `<MudMainContent><div class="pa-4"><main id="main-content">@Body</main></div></MudMainContent>`.
+- All sticky action bars, detail top bars, and table toolbars must use `top: var(--mud-appbar-height, 64px) !important;` (or the `.sticky-top` / `.sticky-top-header` CSS classes) so they dock flush underneath the `MudAppBar` during scroll.
+- When editing a record, the edit button must expose all editable fields in full view with Cancel and Save buttons (including icon indicators from `Icons.Material.Filled`), and all mutations must produce `ISnackbar` toast feedback.
+
+## RSA ID Demographics Helper
+- Any Razor component capturing a South African National ID number must bind an `OnBlur` / `TextChanged` handler to automatically extract and populate Date of Birth, Gender, and Citizenship via `RsaIdValidator.Parse`.
+
+## Dynamic Configuration & Feature Flags Governance
+- **Zero Hardcoding Invariant**: No business parameter, threshold, storage path, or external integration endpoint may be hardcoded. Always use `ISystemConfigurationService` with cascading database overrides.
+- **Integrations Off-By-Default**: All external integrations (Dynamics GP, Sage, Live DHET SFTP, Live SARS FTP, SMS OTP, Azure Blob) MUST default to `IsEnabled = false`. Workflows must cleanly execute in mock simulation mode when disabled.
+
+## EF Core Nullability & SETMIS Schema Resilience Standard
+- **Optional Relational Codes**: In EF Core entities representing legacy or SETMIS records (`LearnerTradeTest`, `CompanyLearner`, `Person`, `TrainingProvider`), declare all optional foreign key string properties as nullable (`string?`) to prevent `SqlNullValueException` when existing database rows contain NULLs.
+- **Explicit Singular Table Names**: When defining new `DbSet<T>` properties in `INsdmsDbContext` and `NsdmsDbContext`, always configure `modelBuilder.Entity<T>().ToTable("SingularName")` in Fluent API to ensure EF Core does not default to plural table names.
+
+

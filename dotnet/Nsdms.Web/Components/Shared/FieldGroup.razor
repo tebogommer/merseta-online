@@ -1,0 +1,74 @@
+@namespace Nsdms.Web.Components.Shared
+@using MudBlazor
+
+@*
+  UI-STANDARD.md Contract (Section 9.2, Clause 10):
+  Component: FieldGroup
+  Inputs: Label, Required, Help, Error, ChildContent
+  Renders: Label above input, required indicator, inline hint, and validation error below.
+*@
+
+<div class="nsdms-field-group mb-3 @(string.IsNullOrWhiteSpace(Error) ? "" : "has-error")" role="group">
+    @if (!string.IsNullOrWhiteSpace(Label))
+    {
+        <div class="d-flex align-center justify-space-between mb-1">
+            <label class="mud-typography mud-typography-body2 font-weight-medium text-primary">
+                @Label
+                @if (Required)
+                {
+                    <span class="text-error font-weight-bold ml-1" aria-hidden="true">*</span>
+                }
+            </label>
+            @if (!string.IsNullOrWhiteSpace(Help))
+            {
+                <MudTooltip Text="@Help">
+                    <MudIcon Icon="@Icons.Material.Filled.HelpOutline" Size="Size.Small" Color="Color.Secondary" Class="cursor-pointer" />
+                </MudTooltip>
+            }
+        </div>
+    }
+
+    <div class="nsdms-field-control">
+        @ChildContent
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Error))
+    {
+        <div class="nsdms-field-error d-flex align-center gap-1 mt-1 text-error" role="alert">
+            <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Size="Size.Small" Color="Color.Error" />
+            <MudText Typo="Typo.caption" Color="Color.Error">@Error</MudText>
+        </div>
+    }
+    else if (!string.IsNullOrWhiteSpace(HelpText))
+    {
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-1 d-block">
+            @HelpText
+        </MudText>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public string? Label { get; set; }
+
+    [Parameter]
+    public bool Required { get; set; } = false;
+
+    [Parameter]
+    public string? Help { get; set; }
+
+    [Parameter]
+    public string? HelpText { get; set; }
+
+    [Parameter]
+    public string? HelperText { get => HelpText; set => HelpText = value; }
+
+    [Parameter]
+    public string? Error { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object>? AdditionalAttributes { get; set; }
+}

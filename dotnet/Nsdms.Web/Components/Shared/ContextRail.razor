@@ -1,0 +1,47 @@
+@namespace Nsdms.Web.Components.Shared
+@using MudBlazor
+
+@*
+  UI-STANDARD.md Contract:
+  Component: ContextRail
+  Inputs: Title, Subtitle, Status, StatusLabel, ChildContent
+  Renders: Standardized right-side operational context panel for Master-Detail views.
+*@
+
+<div class="nsdms-context-rail bg-surface border-default mb-4" role="region" aria-label="Record Context & Governance">
+    @if (!string.IsNullOrWhiteSpace(Title))
+    {
+        <div class="d-flex align-center gap-2 mb-3 pb-2 border-b" style="border-bottom: 1px solid var(--mud-palette-lines-default);">
+            @if (Icon != null)
+            {
+                <MudIcon Icon="@Icon" Color="@IconColor" Size="Size.Small" />
+            }
+            <div>
+                <MudText Typo="Typo.subtitle2" Class="fw-bold">@Title</MudText>
+                @if (!string.IsNullOrWhiteSpace(Subtitle))
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@Subtitle</MudText>
+                }
+            </div>
+        </div>
+    }
+
+    @ChildContent
+</div>
+
+@code {
+    [Parameter]
+    public string? Title { get; set; } = "Record Governance";
+
+    [Parameter]
+    public string? Subtitle { get; set; } = "Status, SLA & Audit";
+
+    [Parameter]
+    public string? Icon { get; set; } = Icons.Material.Filled.Shield;
+
+    [Parameter]
+    public Color IconColor { get; set; } = Color.Primary;
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

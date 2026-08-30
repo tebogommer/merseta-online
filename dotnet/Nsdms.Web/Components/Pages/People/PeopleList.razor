@@ -1,55 +1,103 @@
 @page "/people"
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@using MudBlazor
 @inject IPersonService PersonService
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
 @rendermode InteractiveServer
 
-<div class="d-flex justify-space-between align-center mb-4">
-    <div>
-        <MudText Typo="Typo.h5" Class="font-weight-bold">People & Demographics Registry</MudText>
-        <MudText Typo="Typo.body2" Color="Color.Secondary">Centralized identity, demographic, and contact registry for learners, assessors, and SDFs</MudText>
-    </div>
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd" OnClick="CreateNewPerson">
-        New Person
-    </MudButton>
-</div>
+@*
+  UI-STANDARD.md Archetype: A1 / T1 (Transactional List - People & Demographics Registry)
+  Clauses: 4.2, 4.3, 6.1, 7.2, 8.1, 8.3, 11.1–11.9, 15.2.5
+*@
 
-<MudPaper Class="pa-4 mb-4" Elevation="1">
-    <div class="d-flex flex-wrap gap-4 align-center justify-space-between mb-3">
-        <div class="d-flex align-center gap-3 flex-grow-1" style="max-width: 600px;">
-            <MudTextField @bind-Value="_searchString"
-                          Placeholder="Search by Name, RSA ID, Passport, Email, Phone..."
-                          Adornment="Adornment.Start"
-                          AdornmentIcon="@Icons.Material.Filled.Search"
-                          IconSize="Size.Medium"
-                          Class="mt-0"
-                          Immediate="true"
-                          Clearable="true" />
-        </div>
-        <div class="d-flex align-center gap-2">
-            <MudChipSet T="string" @bind-SelectedValue="_statusFilter" SelectionMode="SelectionMode.SingleSelection">
-                <MudChip T="string" Value="@("All")" Color="Color.Default" Variant="@(_statusFilter == "All" ? Variant.Filled : Variant.Outlined)">All</MudChip>
-                <MudChip T="string" Value="@("Active")" Color="Color.Success" Variant="@(_statusFilter == "Active" ? Variant.Filled : Variant.Outlined)">Active Only</MudChip>
-                <MudChip T="string" Value="@("Inactive")" Color="Color.Error" Variant="@(_statusFilter == "Inactive" ? Variant.Filled : Variant.Outlined)">Inactive</MudChip>
-            </MudChipSet>
-        </div>
-    </div>
+<EntityHeader Title="People &amp; Demographics Registry"
+              Subtitle="Centralized identity, demographic, and contact registry for learners, assessors, moderators, and SDFs"
+              ReferenceKey="T1-PEOPLE"
+              Status="Active"
+              BreadcrumbItems="@_breadcrumbs">
+    <ActionZone>
+        <MudButton Variant="Variant.Filled" 
+                   Color="Color.Primary" 
+                   StartIcon="@Icons.Material.Filled.PersonAdd" 
+                   OnClick="CreateNewPerson">
+            New Person
+        </MudButton>
+    </ActionZone>
+</EntityHeader>
 
-    @if (_loading)
-    {
-        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
-    }
-    else
-    {
+<!-- Filter Bar (Clause 11.4) -->
+<FilterBar SearchPlaceholder="Search by Name, RSA ID, Passport, Email, Phone..."
+           @bind-SearchText="_searchString"
+           OnSearch="HandleFilterChanged"
+           OnClear="HandleFilterCleared">
+    <FilterContent>
+        <MudSelect T="string" 
+                   Label="Status Filter" 
+                   @bind-Value="_statusFilter" 
+                   @bind-Value:after="HandleFilterChanged"
+                   Variant="Variant.Outlined" 
+                   Margin="Margin.Dense"
+                   Dense="true">
+            <MudSelectItem Value="@("All")">All People</MudSelectItem>
+            <MudSelectItem Value="@("Active")">Active Only</MudSelectItem>
+            <MudSelectItem Value="@("Inactive")">Inactive Only</MudSelectItem>
+        </MudSelect>
+    </FilterContent>
+    <ActiveFilterChips>
+        @if (!string.IsNullOrWhiteSpace(_searchString))
+        {
+            <MudChip T="string" Size="Size.Small" OnClose="@(() => { _searchString = string.Empty; HandleFilterChanged(); })">
+                Keyword: @_searchString
+            </MudChip>
+        }
+        @if (_statusFilter != "All")
+        {
+            <MudChip T="string" Size="Size.Small" Color="Color.Primary" OnClose="@(() => { _statusFilter = "All"; HandleFilterChanged(); })">
+                Status: @_statusFilter
+            </MudChip>
+        }
+    </ActiveFilterChips>
+</FilterBar>
+
+<!-- Data Grid Shell (Clause 11.9) -->
+<DataGridShell TItem="Person"
+               GridKey="PeopleRegistryGrid"
+               Items="@FilteredPeople"
+               IsLoading="@_loading"
+               TotalItemsCount="@FilteredPeople.Count"
+               SelectedItems="@_selectedPeople"
+               SelectedItemsChanged="OnSelectedPeopleChanged"
+               EmptyTitle="No Persons Found"
+               EmptyMessage="No person records match your search or filter criteria. Create a new person record to populate the demographic registry."
+               EmptyActionLabel="Capture New Person"
+               OnEmptyAction="CreateNewPerson">
+    <BulkActionBarContent>
+        <MudText Typo="Typo.body2" Class="fw-bold text-white">
+            @_selectedPeople.Count person record(s) selected
+        </MudText>
+        <MudButton Variant="Variant.Filled" 
+                   Color="Color.Surface" 
+                   Size="Size.Small" 
+                   StartIcon="@Icons.Material.Filled.FileDownload"
+                   OnClick="ExportSelected">
+            Export Selected
+        </MudButton>
+    </BulkActionBarContent>
+    <ChildContent>
         <MudTable Items="@FilteredPeople"
                   Hover="true"
                   Dense="true"
-                  Striped="true"
+                  Elevation="0"
+                  MultiSelection="true"
+                  @bind-SelectedItems="_selectedPeople"
                   Breakpoint="Breakpoint.Sm"
-                  OnRowClick="@((TableRowClickEventArgs<Person> e) => OpenDetail(e.Item != null ? e.Item.Id : 0))"
-                  T="Person">
+                  Class="border-default">
             <HeaderContent>
-                <MudTh>Full Name</MudTh>
+                <MudTh>Full Name (Hyperlink)</MudTh>
                 <MudTh>RSA ID / Passport</MudTh>
                 <MudTh>Gender</MudTh>
                 <MudTh>Date of Birth</MudTh>
@@ -59,18 +107,19 @@
                 <MudTh Style="text-align:right">Actions</MudTh>
             </HeaderContent>
             <RowTemplate>
+                <!-- Key column is real hyperlink (Clause 11.1) -->
                 <MudTd DataLabel="Full Name">
                     <div class="d-flex align-center gap-2">
                         <MudAvatar Color="Color.Primary" Size="Size.Small">
                             @GetInitials(context)
                         </MudAvatar>
                         <div>
-                            <MudText Typo="Typo.body2" Class="fw-bold">
+                            <a href="/people/@context.Id" class="fw-bold text-primary text-decoration-none">
                                 @(!string.IsNullOrWhiteSpace(context.Title) ? $"{context.Title} " : "")@context.FirstName @context.LastName
-                            </MudText>
+                            </a>
                             @if (!string.IsNullOrWhiteSpace(context.MiddleName))
                             {
-                                <MudText Typo="Typo.caption" Color="Color.Secondary">Middle: @context.MiddleName</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block">Middle: @context.MiddleName</MudText>
                             }
                         </div>
                     </div>
@@ -78,94 +127,99 @@
                 <MudTd DataLabel="RSA ID / Passport">
                     @if (!string.IsNullOrWhiteSpace(context.RsaIdNumber))
                     {
-                        <div class="d-flex align-center gap-1">
+                        <div class="d-flex align-center gap-1 font-monospace">
                             <MudIcon Icon="@Icons.Material.Filled.Badge" Size="Size.Small" Color="Color.Info" />
-                            <MudText Typo="Typo.body2" Class="font-monospace">@context.RsaIdNumber</MudText>
+                            <span>@context.RsaIdNumber</span>
                         </div>
                     }
                     else if (!string.IsNullOrWhiteSpace(context.PassportNumber))
                     {
                         <div class="d-flex align-center gap-1">
                             <MudIcon Icon="@Icons.Material.Filled.Public" Size="Size.Small" Color="Color.Secondary" />
-                            <MudText Typo="Typo.body2">@context.PassportNumber</MudText>
+                            <span>@context.PassportNumber</span>
                         </div>
                     }
                     else
                     {
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">Not provided</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">—</MudText>
                     }
                 </MudTd>
                 <MudTd DataLabel="Gender">
-                    @if (!string.IsNullOrWhiteSpace(context.Gender))
-                    {
-                        <span>@context.Gender</span>
-                    }
-                    else if (!string.IsNullOrWhiteSpace(context.GenderCode))
-                    {
-                        <span>@context.GenderCode</span>
-                    }
-                    else
-                    {
-                        <span class="text-muted">-</span>
-                    }
+                    @(!string.IsNullOrWhiteSpace(context.Gender) ? context.Gender : "—")
                 </MudTd>
                 <MudTd DataLabel="Date of Birth">
-                    @(context.DateOfBirth.HasValue ? context.DateOfBirth.Value.ToString("yyyy-MM-dd") : "-")
+                    @(context.DateOfBirth.HasValue ? context.DateOfBirth.Value.ToString("yyyy-MM-dd") : "—")
                 </MudTd>
-                <MudTd DataLabel="Contact">
+                <MudTd DataLabel="Contact (Email / Cell)">
                     <div>
-                        @if (!string.IsNullOrWhiteSpace(context.Email))
+                        @if (!string.IsNullOrWhiteSpace(context.EmailAddress))
                         {
-                            <div class="d-flex align-center gap-1">
-                                <MudIcon Icon="@Icons.Material.Filled.Email" Size="Size.Small" Color="Color.Default" />
-                                <MudText Typo="Typo.caption">@context.Email</MudText>
-                            </div>
+                            <MudText Typo="Typo.caption" Class="d-block text-truncate" Style="max-width: 180px;">@context.EmailAddress</MudText>
                         }
-                        @if (!string.IsNullOrWhiteSpace(context.CellNumber) || !string.IsNullOrWhiteSpace(context.PhoneNumber))
+                        @if (!string.IsNullOrWhiteSpace(context.CellPhoneNumber))
                         {
-                            <div class="d-flex align-center gap-1">
-                                <MudIcon Icon="@Icons.Material.Filled.Phone" Size="Size.Small" Color="Color.Default" />
-                                <MudText Typo="Typo.caption">@(!string.IsNullOrWhiteSpace(context.CellNumber) ? context.CellNumber : context.PhoneNumber)</MudText>
-                            </div>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block font-monospace">@context.CellPhoneNumber</MudText>
+                        }
+                        @if (string.IsNullOrWhiteSpace(context.EmailAddress) && string.IsNullOrWhiteSpace(context.CellPhoneNumber))
+                        {
+                            <span>—</span>
                         }
                     </div>
                 </MudTd>
                 <MudTd DataLabel="Province">
-                    @(string.IsNullOrWhiteSpace(context.ProvinceCode) ? "-" : context.ProvinceCode)
+                    @(!string.IsNullOrWhiteSpace(context.ProvinceCode) ? context.ProvinceCode : "—")
                 </MudTd>
                 <MudTd DataLabel="Status">
-                    <MudChip T="string" Color="@(context.IsActive ? Color.Success : Color.Error)" Size="Size.Small" Variant="Variant.Filled">
-                        @(context.IsActive ? "Active" : "Inactive")
-                    </MudChip>
+                    <!-- Non-clickable status pill (Clause 6.1, 7.2) -->
+                    <StatusBadge Status="@(context.IsActive ? "Active" : "Inactive")" Size="Size.Small" />
                 </MudTd>
                 <MudTd Style="text-align:right" DataLabel="Actions">
                     <div class="d-flex justify-end gap-1">
-                        <MudTooltip Text="View & Edit Record">
-                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" OnClick="@(() => OpenDetail(context.Id))" aria-label="Edit Person" />
+                        <MudTooltip Text="View Profile">
+                            <MudIconButton Icon="@Icons.Material.Filled.Visibility" 
+                                           Color="Color.Primary" 
+                                           Size="Size.Small" 
+                                           OnClick="@(() => OpenDetail(context.Id))" 
+                                           aria-label="View Profile" />
+                        </MudTooltip>
+                        <MudTooltip Text="Edit Person">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" 
+                                           Color="Color.Secondary" 
+                                           Size="Size.Small" 
+                                           OnClick="@(() => OpenEdit(context.Id))" 
+                                           aria-label="Edit Person" />
                         </MudTooltip>
                         <MudTooltip Text="Delete Record">
-                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeletePerson(context.Id, $"{context.FirstName} {context.LastName}"))" aria-label="Delete Person" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" 
+                                           Color="Color.Error" 
+                                           Size="Size.Small" 
+                                           OnClick="@(() => DeletePerson(context.Id, $"{context.FirstName} {context.LastName}"))" 
+                                           aria-label="Delete Record" />
                         </MudTooltip>
                     </div>
                 </MudTd>
             </RowTemplate>
-            <NoRecordsContent>
-                <div class="pa-4 text-center">
-                    <MudText Typo="Typo.body1" Color="Color.Secondary">No person records found matching the criteria.</MudText>
-                </div>
-            </NoRecordsContent>
             <PagerContent>
-                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
+                <!-- Fixed page size ladder (Clause 11.3.3) -->
+                <MudTablePager PageSizeOptions="new int[] { 5, 10, 20, 50, 100, 250, 500 }" />
             </PagerContent>
         </MudTable>
-    }
-</MudPaper>
+    </ChildContent>
+</DataGridShell>
 
 @code {
     private List<Person> _people = new();
+    private HashSet<Person> _selectedPeople = new();
     private string _searchString = string.Empty;
     private string _statusFilter = "All";
     private bool _loading = true;
+
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Core Registries", href: null, disabled: true),
+        new BreadcrumbItem("People", href: "/people")
+    };
 
     protected override async Task OnInitializedAsync()
     {
@@ -179,7 +233,7 @@
         _loading = false;
     }
 
-    private IEnumerable<Person> FilteredPeople
+    private List<Person> FilteredPeople
     {
         get
         {
@@ -187,27 +241,26 @@
 
             if (_statusFilter == "Active")
             {
-                query = query.Where(p => p.IsActive);
+                query = query.Where(x => x.IsActive);
             }
             else if (_statusFilter == "Inactive")
             {
-                query = query.Where(p => !p.IsActive);
+                query = query.Where(x => !x.IsActive);
             }
 
             if (!string.IsNullOrWhiteSpace(_searchString))
             {
                 var s = _searchString.Trim();
-                query = query.Where(p =>
-                    (p.FirstName != null && p.FirstName.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
-                    (p.LastName != null && p.LastName.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
-                    (p.RsaIdNumber != null && p.RsaIdNumber.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
-                    (p.PassportNumber != null && p.PassportNumber.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
-                    (p.Email != null && p.Email.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
-                    (p.CellNumber != null && p.CellNumber.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
-                    (p.PhoneNumber != null && p.PhoneNumber.Contains(s, StringComparison.OrdinalIgnoreCase)));
+                query = query.Where(x =>
+                    (x.FirstName != null && x.FirstName.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    (x.LastName != null && x.LastName.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    (x.RsaIdNumber != null && x.RsaIdNumber.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    (x.PassportNumber != null && x.PassportNumber.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    (x.EmailAddress != null && x.EmailAddress.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    (x.CellPhoneNumber != null && x.CellPhoneNumber.Contains(s, StringComparison.OrdinalIgnoreCase)));
             }
 
-            return query;
+            return query.ToList();
         }
     }
 
@@ -218,9 +271,31 @@
         return $"{first}{last}";
     }
 
+    private void HandleFilterChanged()
+    {
+        StateHasChanged();
+    }
+
+    private void HandleFilterCleared()
+    {
+        _searchString = string.Empty;
+        _statusFilter = "All";
+        StateHasChanged();
+    }
+
+    private void OnSelectedPeopleChanged(HashSet<Person> selected)
+    {
+        _selectedPeople = selected;
+    }
+
     private void OpenDetail(int id)
     {
         NavManager.NavigateTo($"/people/{id}");
+    }
+
+    private void OpenEdit(int id)
+    {
+        NavManager.NavigateTo($"/people/{id}/edit");
     }
 
     private void CreateNewPerson()
@@ -228,17 +303,32 @@
         NavManager.NavigateTo("/people/create");
     }
 
+    private void ExportSelected()
+    {
+        Snackbar.Add($"Exporting {_selectedPeople.Count} person records to CSV...", Severity.Info);
+    }
+
     private async Task DeletePerson(int id, string name)
     {
-        var deleted = await PersonService.DeleteAsync(id, "Admin");
-        if (deleted)
+        bool? confirmed = await DialogService.ShowMessageBoxAsync(
+            "Delete Person Record?",
+            $"Are you sure you wish to delete person record '{name}'? This action will perform an audit-tracked soft delete.",
+            yesText: "Delete Record",
+            cancelText: "Cancel"
+        );
+
+        if (confirmed == true)
         {
-            Snackbar.Add($"Person '{name}' deleted successfully with audit confirmation.", Severity.Success);
-            await LoadData();
-        }
-        else
-        {
-            Snackbar.Add("Could not delete the specified person record.", Severity.Error);
+            var deleted = await PersonService.DeleteAsync(id, "Admin");
+            if (deleted)
+            {
+                Snackbar.Add($"Person record '{name}' deleted successfully with audit confirmation.", Severity.Success);
+                await LoadData();
+            }
+            else
+            {
+                Snackbar.Add("Could not delete the person record.", Severity.Error);
+            }
         }
     }
 }

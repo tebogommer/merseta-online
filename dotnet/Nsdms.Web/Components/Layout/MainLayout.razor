@@ -1,110 +1,280 @@
 @inherits LayoutComponentBase
 @implements IDisposable
+@using Nsdms.Application.Common.Interfaces
 @using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
 @using Nsdms.Web.Themes
 @inject IRealtimeNotificationService NotificationService
+@inject INotificationService PersistentNotificationService
 @inject ISnackbar Snackbar
 @inject IJSRuntime JS
+@inject NavigationManager Nav
 
 <MudThemeProvider Theme="_customTheme" @bind-IsDarkMode="_isDarkMode" />
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
-<a href="#main-content" class="skip-link">Skip to Main Content</a>
+<div class="nsdms-app-shell">
+    <a href="#main-content" class="nsdms-skip-link">Skip to Main Content</a>
 
-<MudLayout>
-    <MudAppBar Elevation="1" Color="Color.Primary" role="banner">
-        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" aria-label="Toggle navigation menu" />
-        <MudText Typo="Typo.h6" Class="ml-3 font-weight-bold">MerSETA NSDMS Enterprise Portal</MudText>
-        <MudSpacer />
+    <MudLayout>
+        <!-- Modernized 56px Enterprise Top Bar -->
+        <MudAppBar Elevation="0" Class="nsdms-top-bar px-4" role="banner" Style="background-color: var(--mud-palette-appbar-background); color: var(--mud-palette-appbar-text);">
+            <MudIconButton Icon="@Icons.Material.Filled.Menu" 
+                           Color="Color.Inherit" 
+                           Edge="Edge.Start" 
+                           OnClick="@((e) => DrawerToggle())" 
+                           aria-label="Toggle navigation sidebar" />
 
-        <!-- Real-time Notifications Bell -->
-        <MudMenu Icon="@Icons.Material.Filled.Notifications" Color="Color.Inherit" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense="true" Class="mr-2" AriaLabel="Live Notifications Menu" Title="Live Notifications Menu">
-            <div class="pa-3" style="min-width: 300px; max-width: 360px;">
-                <div class="d-flex justify-space-between align-center mb-2">
-                    <MudText Typo="Typo.subtitle2" Class="fw-bold" Color="Color.Primary">Live Activity Matrix</MudText>
-                    <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled">SignalR Active</MudChip>
+            <!-- merSETA Brand & System Identity -->
+            <div class="d-flex align-center gap-2 ml-2">
+                <div class="d-flex align-center justify-center rounded" style="width: 32px; height: 32px; background: var(--mud-palette-primary); color: #ffffff; font-weight: 800; font-size: 0.9rem; letter-spacing: -0.02em;">
+                    mS
                 </div>
-                @if (!_notifications.Any())
-                {
-                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="font-italic">No new real-time alerts.</MudText>
-                }
-                else
-                {
-                    <MudList T="string" Dense="true">
-                        @foreach (var n in _notifications.Take(5))
-                        {
-                            <MudListItem T="string" Icon="@Icons.Material.Filled.Bolt" IconColor="Color.Warning">
-                                <MudText Typo="Typo.caption" Class="fw-bold d-block">@n.Title</MudText>
-                                <MudText Typo="Typo.caption" Color="Color.Secondary">@n.Time.ToString("HH:mm:ss") - @n.Detail</MudText>
-                            </MudListItem>
-                        }
-                    </MudList>
-                }
+                <div class="d-flex flex-column">
+                    <span class="font-weight-bold" style="font-size: 0.95rem; line-height: 1.2; letter-spacing: -0.01em;">
+                        merSETA NSDMS
+                    </span>
+                    <span class="d-none d-sm-inline" style="font-size: 0.68rem; opacity: 0.75; line-height: 1;">
+                        Enterprise Operations &amp; Governance
+                    </span>
+                </div>
             </div>
-        </MudMenu>
-        
-        <MudTooltip Text="@(_isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode")">
-            <MudIconButton Icon="@(_isDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"
-                           Color="Color.Inherit"
-                           OnClick="@ToggleTheme"
-                           Class="mr-2"
-                           aria-label="Toggle dark mode" />
-        </MudTooltip>
 
-        <MudChip T="string" Color="Color.Dark" Variant="Variant.Filled" Size="Size.Small">
-            @(_isDarkMode ? "🌙 Dark Mode" : "☀️ Light Mode")
-        </MudChip>
-    </MudAppBar>
-    <MudDrawer @bind-Open="_drawerOpen" Elevation="2" ClipMode="DrawerClipMode.Always" role="navigation" aria-label="Main Navigation">
-        <NavMenu />
-    </MudDrawer>
-    <MudMainContent role="main">
-        <div class="pa-4 pa-md-6 pt-6">
-            <main id="main-content" role="main">
-                @Body
-            </main>
-        </div>
-    </MudMainContent>
-</MudLayout>
+            <MudSpacer />
+
+            <!-- Global Shortcut Search Hint -->
+            <div class="d-none d-md-flex align-center px-3 py-1 rounded mr-3" style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.12); cursor: pointer;" @onclick="@(() => Nav.NavigateTo("/tasks"))">
+                <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" Style="opacity: 0.75; font-size: 1rem;" Class="mr-2" />
+                <span style="font-size: 0.78rem; opacity: 0.75;">Search registry or tasks...</span>
+                <span class="kbd-shortcut ml-3" style="background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.25); color: #ffffff;">/</span>
+            </div>
+
+            <!-- Real-time Notifications Bell with Badge -->
+            <MudBadge Content="@_unreadCount" Color="Color.Error" Overlap="true" Visible="@(_unreadCount > 0)" Class="mr-2">
+                <MudMenu Icon="@Icons.Material.Filled.Notifications" Color="Color.Inherit" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense="true" AriaLabel="Live Notifications Menu" Title="Live Notifications Menu">
+                    <div class="pa-3" style="min-width: 320px; max-width: 400px;">
+                        <div class="d-flex justify-space-between align-center mb-2">
+                            <div>
+                                <MudText Typo="Typo.subtitle2" Class="fw-bold" Color="Color.Primary">Operational Notifications</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Real-Time SignalR &amp; In-App Alerts</MudText>
+                            </div>
+                            <MudButton Size="Size.Small" Variant="Variant.Text" Color="Color.Primary" OnClick="@MarkAllNotificationsReadAsync" Disabled="@(_unreadCount == 0)">
+                                Mark all read
+                            </MudButton>
+                        </div>
+                        <MudDivider Class="my-2" />
+                        @if (!_userNotifications.Any())
+                        {
+                            <div class="pa-4 text-center">
+                                <MudIcon Icon="@Icons.Material.Outlined.NotificationsNone" Color="Color.Secondary" Size="Size.Large" Class="mb-1" />
+                                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block">No notifications at this time.</MudText>
+                            </div>
+                        }
+                        else
+                        {
+                            <MudList T="SystemNotificationDto" Dense="true">
+                                @foreach (var n in _userNotifications.Take(6))
+                                {
+                                    <MudListItem T="SystemNotificationDto" OnClick="@(() => HandleNotificationClickAsync(n))" Class="@(n.IsRead ? "opacity-75" : "bg-light rounded mb-1")">
+                                        <div class="d-flex align-start gap-2">
+                                            <MudIcon Icon="@GetNotificationIcon(n.NotificationType, n.Severity)" Color="@GetNotificationColor(n.Severity)" Size="Size.Small" Class="mt-1" />
+                                            <div style="flex: 1;">
+                                                <div class="d-flex justify-space-between">
+                                                    <MudText Typo="Typo.caption" Class="fw-bold">@n.Title</MudText>
+                                                    <MudText Typo="Typo.caption" Style="font-size: 0.65rem;" Color="Color.Secondary">@n.CreatedAt.ToString("HH:mm")</MudText>
+                                                </div>
+                                                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block text-truncate" Style="max-width: 250px;">@n.Message</MudText>
+                                            </div>
+                                        </div>
+                                    </MudListItem>
+                                }
+                            </MudList>
+                        }
+                    </div>
+                </MudMenu>
+            </MudBadge>
+            
+            <!-- Keyboard Shortcuts Helper Menu -->
+            <MudMenu Icon="@Icons.Material.Filled.Keyboard" Color="Color.Inherit" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Dense="true" AriaLabel="Keyboard Shortcuts Guide" Title="Keyboard Shortcuts Guide" Class="mr-2">
+                <div class="pa-4" style="min-width: 280px;">
+                    <div class="d-flex align-center gap-2 mb-2">
+                        <MudIcon Icon="@Icons.Material.Filled.Keyboard" Color="Color.Primary" />
+                        <MudText Typo="Typo.subtitle2" Class="fw-bold">Power-User Keybindings</MudText>
+                    </div>
+                    <MudDivider Class="mb-3" />
+                    <div class="d-flex flex-column gap-2">
+                        <div class="d-flex justify-space-between align-center">
+                            <MudText Typo="Typo.caption">Quick Save Record</MudText>
+                            <span class="kbd-shortcut">Ctrl + S</span>
+                        </div>
+                        <div class="d-flex justify-space-between align-center">
+                            <MudText Typo="Typo.caption">Focus Table Search</MudText>
+                            <span class="kbd-shortcut">/</span>
+                        </div>
+                        <div class="d-flex justify-space-between align-center">
+                            <MudText Typo="Typo.caption">Cancel / Go Back</MudText>
+                            <span class="kbd-shortcut">Esc</span>
+                        </div>
+                        <div class="d-flex justify-space-between align-center">
+                            <MudText Typo="Typo.caption">Skip Navigation</MudText>
+                            <span class="kbd-shortcut">Tab</span>
+                        </div>
+                    </div>
+                </div>
+            </MudMenu>
+
+            <!-- Theme Toggle -->
+            <MudTooltip Text="@(_isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode")">
+                <MudIconButton Icon="@(_isDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"
+                               Color="Color.Inherit"
+                               OnClick="@ToggleTheme"
+                               Class="mr-3"
+                               aria-label="Toggle dark mode" />
+            </MudTooltip>
+
+            <!-- User Profile Avatar Pill -->
+            <div class="d-flex align-center gap-2 pl-2" style="border-left: 1px solid rgba(255,255,255,0.15);">
+                <MudAvatar Size="Size.Small" Style="background: var(--mud-palette-primary); color: #ffffff; font-weight: 600; font-size: 0.75rem;">
+                    AD
+                </MudAvatar>
+                <div class="d-none d-lg-flex flex-column">
+                    <span style="font-size: 0.8125rem; font-weight: 600; line-height: 1.1;">Admin Officer</span>
+                    <span style="font-size: 0.68rem; opacity: 0.75; line-height: 1;">SuperAdmin</span>
+                </div>
+            </div>
+        </MudAppBar>
+
+        <!-- Left Navigation Drawer -->
+        <MudDrawer @bind-Open="_drawerOpen" Elevation="0" ClipMode="DrawerClipMode.Always" role="navigation" aria-label="Main Navigation" Class="border-r" Style="border-right: 1px solid var(--mud-palette-lines-default);">
+            <NavMenu />
+        </MudDrawer>
+
+        <!-- Main Content Area -->
+        <MudMainContent role="main">
+            <div class="nsdms-page-container px-4 px-md-6 pt-3 pb-8">
+                <main id="main-content" role="main">
+                    @Body
+                </main>
+            </div>
+        </MudMainContent>
+    </MudLayout>
+</div>
 
 @code {
     private bool _drawerOpen = true;
     private bool _isDarkMode = false;
     private MudTheme _customTheme = NsdmsTheme.CreateTheme();
-    private List<(string Title, string Detail, DateTime Time)> _notifications = new();
+    private List<SystemNotificationDto> _userNotifications = new();
+    private int _unreadCount = 0;
+    private string _currentUsername = "Admin";
+    private List<string> _currentUserRoles = new() { "SuperAdmin", "Admin", "FinanceManager", "CLO" };
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         NotificationService.TaskAssignedReceived += HandleTaskAssigned;
         NotificationService.WorkflowTransitionReceived += HandleWorkflowTransition;
+        NotificationService.UserNotificationReceived += HandleUserNotification;
+
+        await RefreshNotificationsAsync();
+    }
+
+    private async Task RefreshNotificationsAsync()
+    {
+        try
+        {
+            _userNotifications = await PersistentNotificationService.GetUserNotificationsAsync(_currentUsername, _currentUserRoles, false, 15);
+            _unreadCount = await PersistentNotificationService.GetUnreadCountAsync(_currentUsername, _currentUserRoles);
+            StateHasChanged();
+        }
+        catch
+        {
+            // Graceful fallback during prerendering
+        }
+    }
+
+    private void HandleUserNotification(SystemNotificationDto notification)
+    {
+        InvokeAsync(async () =>
+        {
+            _userNotifications.Insert(0, notification);
+            _unreadCount++;
+            var severity = notification.Severity.Equals("Error", StringComparison.OrdinalIgnoreCase) ? Severity.Error
+                : notification.Severity.Equals("Warning", StringComparison.OrdinalIgnoreCase) ? Severity.Warning
+                : notification.Severity.Equals("Success", StringComparison.OrdinalIgnoreCase) ? Severity.Success
+                : Severity.Info;
+
+            Snackbar.Add($"🔔 {notification.Title}: {notification.Message}", severity);
+            StateHasChanged();
+        });
     }
 
     private void HandleTaskAssigned(string taskId, string taskTitle, string assignedRole, string priority)
     {
-        InvokeAsync(() =>
+        InvokeAsync(async () =>
         {
-            _notifications.Insert(0, ($"Task: {taskTitle}", $"Assigned to {assignedRole} [{priority}]", DateTime.UtcNow));
             Snackbar.Add($"⚡ Live SignalR Event: Task '{taskTitle}' assigned to {assignedRole}", Severity.Info);
-            StateHasChanged();
+            await RefreshNotificationsAsync();
         });
     }
 
     private void HandleWorkflowTransition(string entityType, int entityId, string fromState, string toState, string actor)
     {
-        InvokeAsync(() =>
+        InvokeAsync(async () =>
         {
-            _notifications.Insert(0, ($"Workflow Transition: {entityType} #{entityId}", $"Moved to {toState} by {actor}", DateTime.UtcNow));
             Snackbar.Add($"⚡ Workflow Transition: {entityType} #{entityId} is now '{toState}'", Severity.Success);
-            StateHasChanged();
+            await RefreshNotificationsAsync();
         });
+    }
+
+    private async Task HandleNotificationClickAsync(SystemNotificationDto notification)
+    {
+        if (!notification.IsRead)
+        {
+            await PersistentNotificationService.MarkAsReadAsync(notification.Id, _currentUsername);
+            notification.IsRead = true;
+            _unreadCount = Math.Max(0, _unreadCount - 1);
+        }
+
+        if (!string.IsNullOrWhiteSpace(notification.ActionUrl))
+        {
+            Nav.NavigateTo(notification.ActionUrl);
+        }
+    }
+
+    private async Task MarkAllNotificationsReadAsync()
+    {
+        await PersistentNotificationService.MarkAllAsReadAsync(_currentUsername, _currentUserRoles);
+        foreach (var n in _userNotifications) n.IsRead = true;
+        _unreadCount = 0;
+        StateHasChanged();
+        Snackbar.Add("All notifications marked as read.", Severity.Success);
+    }
+
+    private string GetNotificationIcon(string type, string severity)
+    {
+        if (type.Equals("WorkflowTask", StringComparison.OrdinalIgnoreCase)) return Icons.Material.Filled.Assignment;
+        if (type.Equals("SignoffRequired", StringComparison.OrdinalIgnoreCase)) return Icons.Material.Filled.Draw;
+        if (type.Equals("Delegation", StringComparison.OrdinalIgnoreCase)) return Icons.Material.Filled.SupervisorAccount;
+        if (severity.Equals("Warning", StringComparison.OrdinalIgnoreCase)) return Icons.Material.Filled.Warning;
+        if (severity.Equals("Error", StringComparison.OrdinalIgnoreCase)) return Icons.Material.Filled.Error;
+        return Icons.Material.Filled.Notifications;
+    }
+
+    private Color GetNotificationColor(string severity)
+    {
+        if (severity.Equals("Warning", StringComparison.OrdinalIgnoreCase)) return Color.Warning;
+        if (severity.Equals("Error", StringComparison.OrdinalIgnoreCase)) return Color.Error;
+        if (severity.Equals("Success", StringComparison.OrdinalIgnoreCase)) return Color.Success;
+        return Color.Primary;
     }
 
     public void Dispose()
     {
         NotificationService.TaskAssignedReceived -= HandleTaskAssigned;
         NotificationService.WorkflowTransitionReceived -= HandleWorkflowTransition;
+        NotificationService.UserNotificationReceived -= HandleUserNotification;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

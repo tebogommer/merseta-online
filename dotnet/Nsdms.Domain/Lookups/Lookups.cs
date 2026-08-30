@@ -326,3 +326,26 @@ public class SiteVisitApprovalStatusType : BaseLookupType { }
 /// </summary>
 [Table("EmployerApprovalStatusType", Schema = "lookup")]
 public class EmployerApprovalStatusType : BaseLookupType { }
+
+// =========================================================================================
+// NLRD Academic & Qualification Classification Lookups
+// =========================================================================================
+
+/// <summary>
+/// NLRD Adult Basic Education and Training Band classifications (Field: ABET_BAND_ID - 1 to 5).
+/// </summary>
+[Table("AbetBandType", Schema = "lookup")]
+public class AbetBandType : BaseLookupType { }
+
+/// <summary>
+/// SAQA National Qualifications Framework qualification formal types (Field: QUALIFICATION_TYPE_ID - National Certificate, Diploma, Occupational Certificate, etc.).
+/// </summary>
+[Table("QualificationTypeType", Schema = "lookup")]
+public class QualificationTypeType : BaseLookupType { }
+
+/// <summary>
+/// Higher Education and Umalusi academic achievement classification distinctions (Field: HONOURS_CLASS_ID - Cum Laude, Honours, etc.).
+/// </summary>
+[Table("HonoursClassType", Schema = "lookup")]
+public class HonoursClassType : BaseLookupType { }
+

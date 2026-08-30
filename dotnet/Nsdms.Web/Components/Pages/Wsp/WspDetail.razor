@@ -1,7 +1,9 @@
 @page "/wsp/{id:int}"
+@page "/wsp/{id:int}/edit"
 @page "/wsp/create"
 @using Nsdms.Web.Components.Shared
 @inject IWspService WspService
+@inject IWspSurveyService WspSurveyService
 @inject IOrganisationService OrgService
 @inject LookupService LookupService
 @inject NavigationManager NavManager
@@ -28,6 +30,12 @@
     <div class="d-flex align-center gap-2">
         @if (Id > 0)
         {
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.PictureAsPdf"
+                       OnClick="DownloadOutcomeLetterPdf">
+                Outcome Letter (PDF)
+            </MudButton>
             <MudButton Variant="Variant.Outlined"
                        Color="Color.Error"
                        StartIcon="@Icons.Material.Filled.Delete"
@@ -482,14 +490,265 @@
                 </MudGrid>
             </MudTabPanel>
 
-            <!-- TAB 5: Evidence Vault -->
+            <!-- TAB 5: Qualitative Surveys & Strategic Gaps -->
             @if (Id > 0)
             {
+                <MudTabPanel Text="Qualitative Surveys &amp; Gaps" Icon="@Icons.Material.Filled.Psychology">
+                    <MudGrid Spacing="3">
+                        <!-- Left Sub-panel: Skills Gaps & Planned Interventions -->
+                        <MudItem xs="12" lg="6">
+                            <MudCard Elevation="2" Class="mb-4">
+                                <MudCardHeader>
+                                    <CardHeaderAvatar>
+                                        <MudAvatar Color="Color.Warning" Variant="Variant.Filled">
+                                            <MudIcon Icon="@Icons.Material.Filled.Engineering" />
+                                        </MudAvatar>
+                                    </CardHeaderAvatar>
+                                    <CardHeaderContent>
+                                        <MudText Typo="Typo.h6">Organizational Skills Gaps</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Critical scarce and critical skill gaps identified across occupations</MudText>
+                                    </CardHeaderContent>
+                                    <CardHeaderActions>
+                                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenAddGapForm">
+                                            Add Gap
+                                        </MudButton>
+                                    </CardHeaderActions>
+                                </MudCardHeader>
+                                <MudCardContent>
+                                    @if (_showAddGapForm)
+                                    {
+                                        <MudPaper Class="pa-4 mb-4 border rounded" Elevation="0">
+                                            <MudText Typo="Typo.subtitle2" Class="mb-3 font-weight-bold">Register New Skills Gap</MudText>
+                                            <MudGrid Spacing="2">
+                                                <MudItem xs="12" md="6">
+                                                    <MudTextField @bind-Value="_newGapOccupation" Label="Target Occupation Title" Variant="Variant.Outlined" Margin="Margin.Dense" Required="true" />
+                                                </MudItem>
+                                                <MudItem xs="12" md="6">
+                                                    <MudTextField @bind-Value="_newGapOfo" Label="OFO Code (Optional)" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                                                </MudItem>
+                                                <MudItem xs="12">
+                                                    <MudTextField @bind-Value="_newGapDesc" Label="Description of Skills Gap" Variant="Variant.Outlined" Margin="Margin.Dense" Lines="2" Required="true" />
+                                                </MudItem>
+                                                <MudItem xs="12" md="6">
+                                                    <MudTextField @bind-Value="_newGapIntervention" Label="Planned Intervention" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                                                </MudItem>
+                                                <MudItem xs="12" md="6">
+                                                    <MudSelect @bind-Value="_newGapPriority" Label="Priority Level" Variant="Variant.Outlined" Margin="Margin.Dense">
+                                                        <MudSelectItem Value="@("High")">High Priority</MudSelectItem>
+                                                        <MudSelectItem Value="@("Medium")">Medium Priority</MudSelectItem>
+                                                        <MudSelectItem Value="@("Low")">Low Priority</MudSelectItem>
+                                                    </MudSelect>
+                                                </MudItem>
+                                                <MudItem xs="12" md="6">
+                                                    <MudNumericField @bind-Value="_newGapLearners" Label="Target Beneficiaries" Variant="Variant.Outlined" Margin="Margin.Dense" Min="1" />
+                                                </MudItem>
+                                                <MudItem xs="12" md="6">
+                                                    <MudNumericField @bind-Value="_newGapBudget" Label="Estimated Budget (ZAR)" Variant="Variant.Outlined" Margin="Margin.Dense" Min="0m" Format="N2" />
+                                                </MudItem>
+                                                <MudItem xs="12" Class="d-flex justify-end gap-2 mt-2">
+                                                    <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="() => _showAddGapForm = false">Cancel</MudButton>
+                                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveSkillsGap">Save Gap</MudButton>
+                                                </MudItem>
+                                            </MudGrid>
+                                        </MudPaper>
+                                    }
+
+                                    <MudTable Items="_skillsGaps" Dense="true" Hover="true" Elevation="0">
+                                        <HeaderContent>
+                                            <MudTh>Occupation</MudTh>
+                                            <MudTh>Description &amp; Intervention</MudTh>
+                                            <MudTh>Priority</MudTh>
+                                            <MudTh>Target / Budget</MudTh>
+                                            <MudTh Style="text-align:right">Actions</MudTh>
+                                        </HeaderContent>
+                                        <RowTemplate>
+                                            <MudTd DataLabel="Occupation">
+                                                <MudText Typo="Typo.body2" Class="fw-bold">@context.OccupationTitle</MudText>
+                                                <MudText Typo="Typo.caption" Color="Color.Secondary">OFO: @(context.OfoCode ?? "General")</MudText>
+                                            </MudTd>
+                                            <MudTd DataLabel="Description">
+                                                <MudText Typo="Typo.body2">@context.SkillGapDescription</MudText>
+                                                @if (!string.IsNullOrWhiteSpace(context.PlannedIntervention))
+                                                {
+                                                    <MudText Typo="Typo.caption" Color="Color.Primary">Plan: @context.PlannedIntervention</MudText>
+                                                }
+                                            </MudTd>
+                                            <MudTd DataLabel="Priority">
+                                                <MudChip T="string" Size="Size.Small" Color="@(context.PriorityLevel == "High" ? Color.Error : (context.PriorityLevel == "Medium" ? Color.Warning : Color.Info))" Variant="Variant.Filled">
+                                                    @context.PriorityLevel
+                                                </MudChip>
+                                            </MudTd>
+                                            <MudTd DataLabel="Target / Budget">
+                                                <MudText Typo="Typo.body2">@context.TargetLearnerCount staff</MudText>
+                                                <MudText Typo="Typo.caption" Class="fw-bold">@context.EstimatedBudget.ToString("C")</MudText>
+                                            </MudTd>
+                                            <MudTd Style="text-align:right" DataLabel="Actions">
+                                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteSkillsGap(context.Id))" aria-label="Delete skills gap" />
+                                            </MudTd>
+                                        </RowTemplate>
+                                        <NoRecordsContent>
+                                            <div class="pa-4 text-center">
+                                                <MudText Typo="Typo.body2" Color="Color.Secondary">No organizational skills gaps logged yet.</MudText>
+                                            </div>
+                                        </NoRecordsContent>
+                                    </MudTable>
+                                </MudCardContent>
+                            </MudCard>
+
+                            <!-- Strategic Priorities & NSDP Alignment -->
+                            <MudCard Elevation="2">
+                                <MudCardHeader>
+                                    <CardHeaderAvatar>
+                                        <MudAvatar Color="Color.Info" Variant="Variant.Filled">
+                                            <MudIcon Icon="@Icons.Material.Filled.Flag" />
+                                        </MudAvatar>
+                                    </CardHeaderAvatar>
+                                    <CardHeaderContent>
+                                        <MudText Typo="Typo.h6">Strategic Priorities &amp; NSDP Alignment</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">4IR, Green Economy, Local Manufacturing, and Youth Focus</MudText>
+                                    </CardHeaderContent>
+                                    <CardHeaderActions>
+                                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenAddPriorityForm">
+                                            Add Priority
+                                        </MudButton>
+                                    </CardHeaderActions>
+                                </MudCardHeader>
+                                <MudCardContent>
+                                    @if (_showAddPriorityForm)
+                                    {
+                                        <MudPaper Class="pa-4 mb-4 border rounded" Elevation="0">
+                                            <MudText Typo="Typo.subtitle2" Class="mb-3 font-weight-bold">Register Strategic Priority</MudText>
+                                            <MudGrid Spacing="2">
+                                                <MudItem xs="12" md="6">
+                                                    <MudSelect @bind-Value="_newPriorityCode" Label="Priority Area" Variant="Variant.Outlined" Margin="Margin.Dense">
+                                                        <MudSelectItem Value="@("4IR_DIGITAL")">Industry 4.0 &amp; Automation</MudSelectItem>
+                                                        <MudSelectItem Value="@("GREEN_ECONOMY")">Green Economy &amp; Clean Tech</MudSelectItem>
+                                                        <MudSelectItem Value="@("LOCAL_MFG")">Localisation &amp; Manufacturing</MudSelectItem>
+                                                        <MudSelectItem Value="@("YOUTH_DEV")">Youth Employment &amp; TVET</MudSelectItem>
+                                                    </MudSelect>
+                                                </MudItem>
+                                                <MudItem xs="12" md="6">
+                                                    <MudTextField @bind-Value="_newPriorityObjective" Label="Strategic Objective" Variant="Variant.Outlined" Margin="Margin.Dense" Required="true" />
+                                                </MudItem>
+                                                <MudItem xs="12">
+                                                    <MudTextField @bind-Value="_newPriorityAlignment" Label="Alignment Description" Variant="Variant.Outlined" Margin="Margin.Dense" Lines="2" />
+                                                </MudItem>
+                                                <MudItem xs="12" md="6">
+                                                    <MudNumericField @bind-Value="_newPriorityBudget" Label="Allocated Budget (ZAR)" Variant="Variant.Outlined" Margin="Margin.Dense" Min="0m" Format="N2" />
+                                                </MudItem>
+                                                <MudItem xs="12" md="6" Class="d-flex align-center">
+                                                    <MudSwitch @bind-Value="_newPriorityNsdp" Label="Directly Aligned with NSDP 2030" Color="Color.Success" />
+                                                </MudItem>
+                                                <MudItem xs="12" Class="d-flex justify-end gap-2 mt-2">
+                                                    <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="() => _showAddPriorityForm = false">Cancel</MudButton>
+                                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveStrategicPriority">Save Priority</MudButton>
+                                                </MudItem>
+                                            </MudGrid>
+                                        </MudPaper>
+                                    }
+
+                                    <MudTable Items="_strategicPriorities" Dense="true" Hover="true" Elevation="0">
+                                        <HeaderContent>
+                                            <MudTh>Area</MudTh>
+                                            <MudTh>Objective</MudTh>
+                                            <MudTh>Budget</MudTh>
+                                            <MudTh>NSDP Aligned</MudTh>
+                                            <MudTh Style="text-align:right">Actions</MudTh>
+                                        </HeaderContent>
+                                        <RowTemplate>
+                                            <MudTd DataLabel="Area">
+                                                <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">@context.PriorityCode</MudChip>
+                                            </MudTd>
+                                            <MudTd DataLabel="Objective">
+                                                <MudText Typo="Typo.body2" Class="fw-bold">@context.StrategicObjective</MudText>
+                                                <MudText Typo="Typo.caption" Color="Color.Secondary">@context.AlignmentDescription</MudText>
+                                            </MudTd>
+                                            <MudTd DataLabel="Budget">
+                                                <MudText Typo="Typo.body2" Class="fw-bold text-success">@context.AllocatedBudget.ToString("C")</MudText>
+                                            </MudTd>
+                                            <MudTd DataLabel="NSDP Aligned">
+                                                @if (context.IsAlignedWithNsdp)
+                                                {
+                                                    <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Filled">NSDP 2030</MudChip>
+                                                }
+                                            </MudTd>
+                                            <MudTd Style="text-align:right" DataLabel="Actions">
+                                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteStrategicPriority(context.Id))" aria-label="Delete priority" />
+                                            </MudTd>
+                                        </RowTemplate>
+                                        <NoRecordsContent>
+                                            <div class="pa-4 text-center">
+                                                <MudText Typo="Typo.body2" Color="Color.Secondary">No strategic priorities registered yet.</MudText>
+                                            </div>
+                                        </NoRecordsContent>
+                                    </MudTable>
+                                </MudCardContent>
+                            </MudCard>
+                        </MudItem>
+
+                        <!-- Right Sub-panel: Qualitative Training Impact Questionnaire -->
+                        <MudItem xs="12" lg="6">
+                            <MudCard Elevation="2">
+                                <MudCardHeader>
+                                    <CardHeaderAvatar>
+                                        <MudAvatar Color="Color.Success" Variant="Variant.Filled">
+                                            <MudIcon Icon="@Icons.Material.Filled.RateReview" />
+                                        </MudAvatar>
+                                    </CardHeaderAvatar>
+                                    <CardHeaderContent>
+                                        <MudText Typo="Typo.h6">Qualitative Training Impact Questionnaire</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Evaluation of training effectiveness on workplace productivity, transformation, and retention</MudText>
+                                    </CardHeaderContent>
+                                    <CardHeaderActions>
+                                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.AutoFixHigh" OnClick="InitStandardSurveys">
+                                            Auto-Populate
+                                        </MudButton>
+                                    </CardHeaderActions>
+                                </MudCardHeader>
+                                <MudCardContent>
+                                    <div class="d-flex flex-column gap-4">
+                                        @foreach (var survey in _impactSurveys)
+                                        {
+                                            <MudPaper Class="pa-3 border rounded" Elevation="0">
+                                                <div class="d-flex justify-space-between align-center mb-1">
+                                                    <MudChip T="string" Size="Size.Small" Color="Color.Secondary" Variant="Variant.Outlined">@survey.SurveyCategory</MudChip>
+                                                    <div class="d-flex align-center gap-2">
+                                                        <MudRating @bind-SelectedValue="survey.RatingScore" MaxValue="5" Color="Color.Warning" Size="Size.Small" />
+                                                        <MudText Typo="Typo.caption" Class="fw-bold">(@survey.RatingScore / 5)</MudText>
+                                                    </div>
+                                                </div>
+                                                <MudText Typo="Typo.body2" Class="fw-bold mb-2">@survey.QuestionText</MudText>
+                                                <MudTextField @bind-Value="survey.QualitativeImpactNotes" Label="Observations &amp; Business Impact Notes" Variant="Variant.Outlined" Margin="Margin.Dense" Lines="2" />
+                                                <div class="d-flex justify-end mt-2">
+                                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Save" OnClick="@(() => SaveImpactSurvey(survey))">
+                                                        Update Rating
+                                                    </MudButton>
+                                                </div>
+                                            </MudPaper>
+                                        }
+
+                                        @if (_impactSurveys.Count == 0)
+                                        {
+                                            <div class="pa-4 text-center">
+                                                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">No qualitative survey responses recorded yet.</MudText>
+                                                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PlaylistAdd" OnClick="InitStandardSurveys">
+                                                    Load Standard DHET Impact Survey Template
+                                                </MudButton>
+                                            </div>
+                                        }
+                                    </div>
+                                </MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                    </MudGrid>
+                </MudTabPanel>
+
+                <!-- TAB 6: Evidence Vault -->
                 <MudTabPanel Text="Evidence Vault" Icon="@Icons.Material.Filled.FolderZip">
                     <DocumentVault TargetEntityName="WspSubmission" TargetEntityId="@Id" />
                 </MudTabPanel>
 
-                <!-- TAB 6: Workflow History -->
+                <!-- TAB 7: Workflow History -->
                 <MudTabPanel Text="Workflow History" Icon="@Icons.Material.Filled.History">
                     <WorkflowTimeline ProcessCode="WSP" EntityId="@Id" />
                 </MudTabPanel>
@@ -574,6 +833,7 @@
             _submissionDate = w.SubmissionDate;
             _summaries = await WspService.GetEmploymentSummariesAsync(Id);
             _plans = await WspService.GetTrainingPlansAsync(Id);
+            await LoadSurveysAndGaps();
         }
         else
         {
@@ -771,6 +1031,170 @@
         catch (Exception ex)
         {
             Snackbar.Add($"Error removing plan: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void DownloadOutcomeLetterPdf()
+    {
+        NavManager.NavigateTo($"/api/documents/wsp/{Id}/pdf", forceLoad: true);
+    }
+
+    // Qualitative Survey & Skills Gap Backing State
+    private List<WspStrategicSkillsGap> _skillsGaps = new();
+    private List<WspTrainingImpactSurvey> _impactSurveys = new();
+    private List<WspStrategicPriority> _strategicPriorities = new();
+
+    private bool _showAddGapForm = false;
+    private string _newGapOccupation = "";
+    private string? _newGapOfo;
+    private string _newGapDesc = "";
+    private string? _newGapCause = "Technological advances and skills scarcity";
+    private string? _newGapIntervention;
+    private string _newGapPriority = "High";
+    private int _newGapLearners = 5;
+    private decimal _newGapBudget = 75000m;
+
+    private bool _showAddPriorityForm = false;
+    private string _newPriorityCode = "4IR_DIGITAL";
+    private string _newPriorityObjective = "";
+    private string _newPriorityAlignment = "";
+    private decimal _newPriorityBudget = 100000m;
+    private bool _newPriorityNsdp = true;
+
+    private async Task LoadSurveysAndGaps()
+    {
+        if (Id > 0)
+        {
+            _skillsGaps = await WspSurveyService.GetSkillsGapsAsync(Id);
+            _impactSurveys = await WspSurveyService.GetTrainingImpactSurveysAsync(Id);
+            _strategicPriorities = await WspSurveyService.GetStrategicPrioritiesAsync(Id);
+        }
+    }
+
+    private void OpenAddGapForm()
+    {
+        _newGapOccupation = "";
+        _newGapOfo = null;
+        _newGapDesc = "";
+        _newGapCause = "Technological advances and skills scarcity";
+        _newGapIntervention = "";
+        _newGapPriority = "High";
+        _newGapLearners = 5;
+        _newGapBudget = 75000m;
+        _showAddGapForm = true;
+    }
+
+    private async Task SaveSkillsGap()
+    {
+        if (string.IsNullOrWhiteSpace(_newGapOccupation) || string.IsNullOrWhiteSpace(_newGapDesc))
+        {
+            Snackbar.Add("Occupation title and gap description are required.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            await WspSurveyService.AddSkillsGapAsync(Id, _newGapOccupation, _newGapOfo, _newGapDesc, _newGapCause, _newGapIntervention, _newGapPriority, _newGapLearners, _newGapBudget, "Admin");
+            Snackbar.Add("Skills gap registered successfully.", Severity.Success);
+            _showAddGapForm = false;
+            _skillsGaps = await WspSurveyService.GetSkillsGapsAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error adding skills gap: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task DeleteSkillsGap(int gapId)
+    {
+        try
+        {
+            var res = await WspSurveyService.DeleteSkillsGapAsync(gapId, "Admin");
+            if (res)
+            {
+                Snackbar.Add("Skills gap removed.", Severity.Success);
+                _skillsGaps = await WspSurveyService.GetSkillsGapsAsync(Id);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error removing skills gap: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task InitStandardSurveys()
+    {
+        try
+        {
+            await WspSurveyService.InitializeStandardImpactQuestionsAsync(Id, "Admin");
+            Snackbar.Add("Standard training impact survey loaded.", Severity.Success);
+            _impactSurveys = await WspSurveyService.GetTrainingImpactSurveysAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error initializing surveys: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task SaveImpactSurvey(WspTrainingImpactSurvey survey)
+    {
+        try
+        {
+            await WspSurveyService.SaveTrainingImpactSurveyAsync(Id, survey.SurveyCategory, survey.QuestionText, survey.RatingScore, survey.QualitativeImpactNotes, survey.EvidenceDocumentUrl, "Admin");
+            Snackbar.Add($"Rating updated for {survey.SurveyCategory}.", Severity.Success);
+            _impactSurveys = await WspSurveyService.GetTrainingImpactSurveysAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving impact rating: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void OpenAddPriorityForm()
+    {
+        _newPriorityCode = "4IR_DIGITAL";
+        _newPriorityObjective = "";
+        _newPriorityAlignment = "";
+        _newPriorityBudget = 100000m;
+        _newPriorityNsdp = true;
+        _showAddPriorityForm = true;
+    }
+
+    private async Task SaveStrategicPriority()
+    {
+        if (string.IsNullOrWhiteSpace(_newPriorityObjective))
+        {
+            Snackbar.Add("Strategic objective is required.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            await WspSurveyService.AddStrategicPriorityAsync(Id, _newPriorityCode, _newPriorityObjective, _newPriorityAlignment, _newPriorityBudget, _newPriorityNsdp, "Admin");
+            Snackbar.Add("Strategic priority registered.", Severity.Success);
+            _showAddPriorityForm = false;
+            _strategicPriorities = await WspSurveyService.GetStrategicPrioritiesAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error adding strategic priority: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task DeleteStrategicPriority(int priorityId)
+    {
+        try
+        {
+            var res = await WspSurveyService.DeleteStrategicPriorityAsync(priorityId, "Admin");
+            if (res)
+            {
+                Snackbar.Add("Strategic priority removed.", Severity.Success);
+                _strategicPriorities = await WspSurveyService.GetStrategicPrioritiesAsync(Id);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error deleting priority: {ex.Message}", Severity.Error);
         }
     }
 }

@@ -1,83 +1,145 @@
-﻿@page "/monitoring"
+@page "/monitoring"
 @using Nsdms.Application.Common.Interfaces
 @using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@using MudBlazor
 @inject IWorkplaceMonitoringService MonitoringService
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@rendermode InteractiveServer
 
-<PageTitle>Workplace Monitoring & Site Audits | merSETA NSDMS</PageTitle>
+@*
+  UI-STANDARD.md Archetype: A1 / T1 (Transactional List - Workplace Monitoring & Site Audits)
+  Clauses: 4.2, 4.3, 4.4, 6.1, 7.2, 8.1, 8.3, 11.1–11.9, 15.2.5
+*@
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
-    <!-- Top Bar -->
-    <MudCard Elevation="2" Class="mb-4">
-        <MudCardContent Class="d-flex align-center justify-space-between py-3">
-            <div>
-                <MudBreadcrumbs Items="_breadcrumbs" Class="pa-0 mb-1" />
-                <MudText Typo="Typo.h5" Class="fw-bold">Workplace Monitoring &amp; Site Audits</MudText>
-                <MudText Typo="Typo.body2" Color="Color.Secondary">
-                    Statutory quality assurance, learner safety inspection visits, and compliance action plans.
-                </MudText>
-            </div>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="@(() => Navigation.NavigateTo("/monitoring/create"))">
-                Schedule Monitoring Visit
-            </MudButton>
-        </MudCardContent>
-    </MudCard>
+<EntityHeader Title="Workplace Monitoring &amp; Site Audits"
+              Subtitle="Statutory quality assurance, learner safety inspection visits, and compliance action plans"
+              ReferenceKey="T1-MONITORING"
+              Status="Active"
+              BreadcrumbItems="@_breadcrumbs">
+    <ActionZone>
+        <MudButton Variant="Variant.Outlined" 
+                   Color="Color.Primary" 
+                   StartIcon="@Icons.Material.Filled.Refresh" 
+                   OnClick="LoadDataAsync">
+            Refresh
+        </MudButton>
+        <MudButton Variant="Variant.Filled" 
+                   Color="Color.Primary" 
+                   StartIcon="@Icons.Material.Filled.Add" 
+                   OnClick="@(() => Navigation.NavigateTo("/monitoring/create"))">
+            Schedule Visit
+        </MudButton>
+    </ActionZone>
+</EntityHeader>
 
-    <!-- Summary Metrics -->
-    <MudGrid Class="mb-4">
-        <MudItem xs="12" sm="6" md="3">
-            <MudCard Elevation="1" Class="pa-3 border-l-4 border-l-primary">
-                <MudText Typo="Typo.caption" Color="Color.Secondary">TOTAL MONITORED VISITS</MudText>
-                <MudText Typo="Typo.h4" Class="fw-bold">@_visits.Count</MudText>
-            </MudCard>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="3">
-            <MudCard Elevation="1" Class="pa-3 border-l-4 border-l-success">
-                <MudText Typo="Typo.caption" Color="Color.Secondary">APPROVED &amp; COMPLIANT</MudText>
-                <MudText Typo="Typo.h4" Color="Color.Success" Class="fw-bold">@_visits.Count(v => v.StatusCode == "Approved")</MudText>
-            </MudCard>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="3">
-            <MudCard Elevation="1" Class="pa-3 border-l-4 border-l-warning">
-                <MudText Typo="Typo.caption" Color="Color.Secondary">PENDING REVIEW</MudText>
-                <MudText Typo="Typo.h4" Color="Color.Warning" Class="fw-bold">@_visits.Count(v => v.StatusCode == "PendingApproval" || v.StatusCode == "Draft")</MudText>
-            </MudCard>
-        </MudItem>
-        <MudItem xs="12" sm="6" md="3">
-            <MudCard Elevation="1" Class="pa-3 border-l-4 border-l-error">
-                <MudText Typo="Typo.caption" Color="Color.Secondary">NON-COMPLIANCE FLAGGED</MudText>
-                <MudText Typo="Typo.h4" Color="Color.Error" Class="fw-bold">@_visits.Count(v => v.StatusCode == "NonComplianceIdentified" || v.NonCompliancesIdentified)</MudText>
-            </MudCard>
-        </MudItem>
-    </MudGrid>
+<!-- Summary Metric Cards (Clause 4.4) -->
+<StatCardRow Class="mb-4">
+    <StatCard Value="@_visits.Count.ToString("N0")" 
+              Label="Total Monitored Visits" 
+              Context="All logged audits" />
+    <StatCard Value="@_visits.Count(v => v.StatusCode == "Approved").ToString("N0")" 
+              Label="Approved &amp; Compliant" 
+              TrendColor="Color.Success" 
+              Context="Full compliance verified" />
+    <StatCard Value="@_visits.Count(v => v.StatusCode == "PendingApproval" || v.StatusCode == "Draft").ToString("N0")" 
+              Label="Pending Review" 
+              TrendColor="Color.Warning" 
+              Context="Awaiting QA signoff" />
+    <StatCard Value="@_visits.Count(v => v.StatusCode == "NonComplianceIdentified" || v.NonCompliancesIdentified).ToString("N0")" 
+              Label="Non-Compliance Flagged" 
+              TrendColor="Color.Error" 
+              Context="Action plan required" />
+</StatCardRow>
 
-    <!-- Filter & Table -->
-    <MudCard Elevation="2">
-        <MudTable Items="_visits" Hover="true" Dense="true" Elevation="0" Filter="FilterVisits" OnRowClick="@((TableRowClickEventArgs<WorkplaceMonitoringSiteVisit> args) => Navigation.NavigateTo($"/monitoring/{args.Item.Id}"))" RowClass="cursor-pointer">
-            <ToolBarContent>
-                <MudText Typo="Typo.h6">Audit Site Visits</MudText>
-                <MudSpacer />
-                <MudSelect T="string" @bind-Value="_statusFilter" Label="Filter Status" Variant="Variant.Outlined" Dense="true" Class="me-4" Style="max-width: 220px;" Clearable="true">
-                    <MudSelectItem Value="@("")">All Statuses</MudSelectItem>
-                    <MudSelectItem Value="@("Draft")">Draft</MudSelectItem>
-                    <MudSelectItem Value="@("PendingApproval")">Pending Approval</MudSelectItem>
-                    <MudSelectItem Value="@("Approved")">Approved</MudSelectItem>
-                    <MudSelectItem Value="@("NonComplianceIdentified")">Non-Compliance Flagged</MudSelectItem>
-                </MudSelect>
-                <MudTextField @bind-Value="_searchString" Placeholder="Search employer, SDL or contact..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" />
-            </ToolBarContent>
+<!-- Filter Bar (Clause 11.4) -->
+<FilterBar SearchPlaceholder="Search by employer name, SDL number, contact person..."
+           @bind-SearchText="_searchString"
+           OnSearch="HandleFilterChanged"
+           OnClear="ClearFilters">
+    <FilterContent>
+        <MudSelect T="string" 
+                   Label="Compliance Status" 
+                   @bind-Value="_statusFilter" 
+                   @bind-Value:after="HandleFilterChanged"
+                   Variant="Variant.Outlined" 
+                   Margin="Margin.Dense"
+                   Dense="true">
+            <MudSelectItem Value="@("All")">All Statuses</MudSelectItem>
+            <MudSelectItem Value="@("Approved")">Approved &amp; Compliant</MudSelectItem>
+            <MudSelectItem Value="@("PendingApproval")">Pending Approval</MudSelectItem>
+            <MudSelectItem Value="@("NonComplianceIdentified")">Non-Compliance Flagged</MudSelectItem>
+            <MudSelectItem Value="@("Draft")">Draft</MudSelectItem>
+        </MudSelect>
+    </FilterContent>
+    <ActiveFilterChips>
+        @if (!string.IsNullOrWhiteSpace(_searchString))
+        {
+            <MudChip T="string" Size="Size.Small" OnClose="@(() => { _searchString = string.Empty; HandleFilterChanged(); })">
+                Keyword: @_searchString
+            </MudChip>
+        }
+        @if (_statusFilter != "All")
+        {
+            <MudChip T="string" Size="Size.Small" Color="Color.Primary" OnClose="@(() => { _statusFilter = "All"; HandleFilterChanged(); })">
+                Status: @_statusFilter
+            </MudChip>
+        }
+    </ActiveFilterChips>
+</FilterBar>
+
+<!-- Data Grid Shell (Clause 11.9) -->
+<DataGridShell TItem="WorkplaceMonitoringSiteVisit"
+               GridKey="WorkplaceMonitoringGrid"
+               Items="@FilteredVisits"
+               IsLoading="@_isLoading"
+               TotalItemsCount="@FilteredVisits.Count"
+               SelectedItems="@_selectedVisits"
+               SelectedItemsChanged="OnSelectedVisitsChanged"
+               EmptyTitle="No Monitoring Visits Found"
+               EmptyMessage="No workplace monitoring or site audit records match your active search or filter criteria."
+               EmptyActionLabel="Schedule Monitoring Visit"
+               OnEmptyAction="@(() => Navigation.NavigateTo("/monitoring/create"))">
+    <BulkActionBarContent>
+        <MudText Typo="Typo.body2" Class="fw-bold text-white">
+            @_selectedVisits.Count monitoring visit(s) selected
+        </MudText>
+        <MudButton Variant="Variant.Filled" 
+                   Color="Color.Surface" 
+                   Size="Size.Small" 
+                   StartIcon="@Icons.Material.Filled.FileDownload"
+                   OnClick="ExportSelected">
+            Export Selected
+        </MudButton>
+    </BulkActionBarContent>
+    <ChildContent>
+        <MudTable Items="@FilteredVisits"
+                  Hover="true"
+                  Dense="true"
+                  Elevation="0"
+                  MultiSelection="true"
+                  @bind-SelectedItems="_selectedVisits"
+                  Breakpoint="Breakpoint.Sm"
+                  Class="border-default">
             <HeaderContent>
-                <MudTh>ID</MudTh>
+                <MudTh>Visit ID</MudTh>
                 <MudTh>Employer / Organisation</MudTh>
                 <MudTh>Contact Person</MudTh>
-                <MudTh Class="hidden md:table-cell">Monitoring Date</MudTh>
-                <MudTh Class="hidden md:table-cell">CLO Officer</MudTh>
+                <MudTh Class="d-none d-md-table-cell">Monitoring Date</MudTh>
+                <MudTh Class="d-none d-md-table-cell">CLO Officer</MudTh>
                 <MudTh>Compliance Status</MudTh>
                 <MudTh Style="text-align: right;">Action</MudTh>
             </HeaderContent>
             <RowTemplate>
-                <MudTd DataLabel="ID" Class="fw-bold">#@context.Id</MudTd>
+                <!-- Key column is real hyperlink (Clause 11.1) -->
+                <MudTd DataLabel="Visit ID">
+                    <a href="/monitoring/@context.Id" class="d-flex align-center gap-1 font-monospace fw-bold text-primary text-decoration-none">
+                        <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" />
+                        <span>VIS-@context.Id</span>
+                    </a>
+                </MudTd>
                 <MudTd DataLabel="Employer">
                     <MudText Typo="Typo.body2" Class="fw-bold">@(context.Organisation?.CompanyName ?? "N/A")</MudText>
                     <MudText Typo="Typo.caption" Color="Color.Secondary">SDL: @(context.Organisation?.SdlNumber ?? "N/A")</MudText>
@@ -86,86 +148,128 @@
                     <MudText Typo="Typo.body2">@(context.ContactPerson?.FullName ?? "Not Assigned")</MudText>
                     <MudText Typo="Typo.caption" Color="Color.Secondary">@(context.ContactPerson?.Email ?? "")</MudText>
                 </MudTd>
-                <MudTd DataLabel="Date" Class="hidden md:table-cell">@context.MonitoringDate.ToString("yyyy-MM-dd")</MudTd>
-                <MudTd DataLabel="CLO" Class="hidden md:table-cell">@(context.CloUserId ?? "Regional Officer")</MudTd>
+                <MudTd DataLabel="Date" Class="d-none d-md-table-cell">
+                    @context.MonitoringDate.ToString("yyyy-MM-dd")
+                </MudTd>
+                <MudTd DataLabel="CLO" Class="d-none d-md-table-cell">
+                    <MudChip T="string" Size="Size.Small" Color="Color.Dark" Variant="Variant.Text">
+                        @(context.CloUserId ?? "Regional Officer")
+                    </MudChip>
+                </MudTd>
                 <MudTd DataLabel="Status">
-                    @if (context.StatusCode == "Approved")
-                    {
-                        <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.CheckCircle">Approved</MudChip>
-                    }
-                    else if (context.StatusCode == "NonComplianceIdentified" || context.NonCompliancesIdentified)
-                    {
-                        <MudChip T="string" Color="Color.Error" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Warning">Non-Compliant</MudChip>
-                    }
-                    else if (context.StatusCode == "PendingApproval")
-                    {
-                        <MudChip T="string" Color="Color.Warning" Size="Size.Small" Variant="Variant.Filled">Pending Approval</MudChip>
-                    }
-                    else
-                    {
-                        <MudChip T="string" Color="Color.Default" Size="Size.Small" Variant="Variant.Outlined">@context.StatusCode</MudChip>
-                    }
+                    <!-- Non-clickable status pill (Clause 6.1, 7.2) -->
+                    <StatusBadge Status="@(context.StatusCode ?? "Draft")" Size="Size.Small" />
                 </MudTd>
                 <MudTd DataLabel="Action" Style="text-align: right;">
-                    <MudIconButton Icon="@Icons.Material.Filled.ArrowForward" Color="Color.Primary" Size="Size.Small" OnClick="@(() => Navigation.NavigateTo($"/monitoring/{context.Id}"))" />
+                    <div class="d-flex justify-end gap-1">
+                        <MudTooltip Text="View Audit Report">
+                            <MudIconButton Icon="@Icons.Material.Filled.Visibility" 
+                                           Color="Color.Primary" 
+                                           Size="Size.Small" 
+                                           OnClick="@(() => Navigation.NavigateTo($"/monitoring/{context.Id}"))" 
+                                           aria-label="View Audit Report" />
+                        </MudTooltip>
+                    </div>
                 </MudTd>
             </RowTemplate>
             <NoRecordsContent>
-                <div class="pa-4 text-center">
-                    <MudText Typo="Typo.body1" Color="Color.Secondary">No monitoring visits found matching filters.</MudText>
+                <div class="nsdms-empty-state">
+                    <div class="nsdms-empty-icon-wrap">
+                        <MudIcon Icon="@Icons.Material.Outlined.FactCheck" Color="Color.Secondary" Size="Size.Medium" />
+                    </div>
+                    <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-1">No monitoring visits found</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                        No workplace monitoring or site audit records currently exist in this view.
+                    </MudText>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add" OnClick="@(() => Navigation.NavigateTo("/monitoring/create"))">
+                        Schedule Visit
+                    </MudButton>
                 </div>
             </NoRecordsContent>
+            <PagerContent>
+                <!-- Fixed page size ladder (Clause 11.3.3) -->
+                <MudTablePager PageSizeOptions="new int[] { 5, 10, 20, 50, 100, 250, 500 }" />
+            </PagerContent>
         </MudTable>
-    </MudCard>
-</MudContainer>
+    </ChildContent>
+</DataGridShell>
 
 @code {
+    private List<WorkplaceMonitoringSiteVisit> _visits = new();
+    private HashSet<WorkplaceMonitoringSiteVisit> _selectedVisits = new();
+    private string _searchString = string.Empty;
+    private string _statusFilter = "All";
+    private bool _isLoading = true;
+
     private List<BreadcrumbItem> _breadcrumbs = new()
     {
         new BreadcrumbItem("Home", href: "/"),
-        new BreadcrumbItem("Quality Assurance", href: "/etqa"),
-        new BreadcrumbItem("Workplace Monitoring", href: null, disabled: true)
+        new BreadcrumbItem("Quality Assurance", href: null, disabled: true),
+        new BreadcrumbItem("Monitoring Visits", href: "/monitoring")
     };
-
-    private List<WorkplaceMonitoringSiteVisit> _visits = new();
-    private string _searchString = string.Empty;
-    private string _statusFilter = string.Empty;
-    private bool _loading = true;
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadVisitsAsync();
+        await LoadDataAsync();
     }
 
-    private async Task LoadVisitsAsync()
+    private async Task LoadDataAsync()
     {
-        _loading = true;
+        _isLoading = true;
         try
         {
             _visits = await MonitoringService.GetAllSiteVisitsAsync();
         }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Error loading monitoring visits: {ex.Message}", Severity.Error);
-        }
         finally
         {
-            _loading = false;
+            _isLoading = false;
         }
     }
 
-    private bool FilterVisits(WorkplaceMonitoringSiteVisit visit)
+    private List<WorkplaceMonitoringSiteVisit> FilteredVisits
     {
-        if (!string.IsNullOrWhiteSpace(_statusFilter) && !visit.StatusCode.Equals(_statusFilter, StringComparison.OrdinalIgnoreCase))
+        get
         {
-            return false;
+            var query = _visits.AsEnumerable();
+
+            if (_statusFilter != "All")
+            {
+                query = query.Where(v => v.StatusCode != null && v.StatusCode.Equals(_statusFilter, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (!string.IsNullOrWhiteSpace(_searchString))
+            {
+                var s = _searchString.Trim();
+                query = query.Where(v =>
+                    (v.Organisation != null && v.Organisation.CompanyName.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    (v.Organisation != null && v.Organisation.SdlNumber != null && v.Organisation.SdlNumber.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    (v.ContactPerson != null && v.ContactPerson.FullName.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    (v.CloUserId != null && v.CloUserId.Contains(s, StringComparison.OrdinalIgnoreCase)));
+            }
+
+            return query.ToList();
         }
+    }
 
-        if (string.IsNullOrWhiteSpace(_searchString)) return true;
+    private void HandleFilterChanged()
+    {
+        StateHasChanged();
+    }
 
-        return (visit.Organisation?.CompanyName != null && visit.Organisation.CompanyName.Contains(_searchString, StringComparison.OrdinalIgnoreCase)) ||
-               (visit.Organisation?.SdlNumber != null && visit.Organisation.SdlNumber.Contains(_searchString, StringComparison.OrdinalIgnoreCase)) ||
-               (visit.ContactPerson?.FullName != null && visit.ContactPerson.FullName.Contains(_searchString, StringComparison.OrdinalIgnoreCase)) ||
-               visit.StatusCode.Contains(_searchString, StringComparison.OrdinalIgnoreCase);
+    private void ClearFilters()
+    {
+        _searchString = string.Empty;
+        _statusFilter = "All";
+        StateHasChanged();
+    }
+
+    private void OnSelectedVisitsChanged(HashSet<WorkplaceMonitoringSiteVisit> selected)
+    {
+        _selectedVisits = selected;
+    }
+
+    private void ExportSelected()
+    {
+        Snackbar.Add($"Exporting {_selectedVisits.Count} monitoring visits to CSV...", Severity.Info);
     }
 }

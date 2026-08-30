@@ -68,6 +68,7 @@ public interface INsdmsDbContext : IDisposable, IAsyncDisposable
     // System Configuration & Feature Flags
     DbSet<SystemConfig> SystemConfigs { get; }
     DbSet<SystemFeatureFlag> SystemFeatureFlags { get; }
+    DbSet<SystemNotification> SystemNotifications { get; }
 
     // Document & File Management
     DbSet<DocumentAttachment> DocumentAttachments { get; }
@@ -194,6 +195,21 @@ public interface INsdmsDbContext : IDisposable, IAsyncDisposable
     DbSet<UrbanRuralType> UrbanRuralTypes { get; }
     DbSet<SetaType> SetaTypes { get; }
     DbSet<FundingType> FundingTypes { get; }
+
+    // NLRD Lookups
+    DbSet<AbetBandType> AbetBandTypes { get; }
+    DbSet<QualificationTypeType> QualificationTypeTypes { get; }
+    DbSet<HonoursClassType> HonoursClassTypes { get; }
+
+    // WSP Surveys & Strategic Skills Gaps
+    DbSet<WspStrategicSkillsGap> WspStrategicSkillsGaps { get; }
+    DbSet<WspTrainingImpactSurvey> WspTrainingImpactSurveys { get; }
+    DbSet<WspStrategicPriority> WspStrategicPriorities { get; }
+
+    // AQP Assessment Quality Partner Management
+    DbSet<AqpPartner> AqpPartners { get; }
+    DbSet<AqpQualificationScope> AqpQualificationScopes { get; }
+    DbSet<AqpLearnerAssessment> AqpLearnerAssessments { get; }
 
     DbSet<TEntity> Set<TEntity>() where TEntity : class;
     ValueTask<object?> FindAsync(Type entityType, params object?[]? keyValues);

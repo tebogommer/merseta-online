@@ -1,0 +1,118 @@
+@namespace Nsdms.Web.Components.Shared
+@using MudBlazor
+
+@*
+  UI-STANDARD.md Contract (Section 9.2, Clause 4.2, 7.4.2, 15.2.5):
+  Component: EntityHeader / PageHeader
+  Inputs: Title, Reference/ReferenceKey, Status, Flags, Actions/ActionZone
+  Renders: Modern integrated workspace header (breadcrumbs, title, status, description, action buttons).
+*@
+
+<div class="nsdms-page-header" role="region" aria-label="Page Header">
+    @if (BreadcrumbItems != null && BreadcrumbItems.Any())
+    {
+        <nav aria-label="Breadcrumb" class="mb-1">
+            <MudBreadcrumbs Items="BreadcrumbItems" Separator="/" Class="pa-0 ma-0 text-secondary" Style="font-size: 0.8125rem;" />
+        </nav>
+    }
+
+    <div class="d-flex flex-column flex-md-row justify-space-between align-start align-md-center gap-3">
+        <!-- Title & Badges Zone -->
+        <div class="d-flex flex-column gap-1 flex-grow-1">
+            <div class="d-flex flex-wrap align-center gap-2">
+                <h1 class="nsdms-page-header-title ma-0">
+                    @Title
+                </h1>
+                @if (!string.IsNullOrWhiteSpace(Status))
+                {
+                    <StatusBadge Status="@Status" Size="Size.Small" />
+                }
+                @if (ShouldShowReference && !string.IsNullOrWhiteSpace(EffectiveReference))
+                {
+                    <span class="nsdms-reference-tag font-monospace text-secondary" style="font-size: 0.75rem; background: var(--mud-palette-background-grey); padding: 1px 6px; border-radius: 4px; border: 1px solid var(--mud-palette-lines-default);" title="System Identifier">
+                        @EffectiveReference
+                    </span>
+                }
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(Subtitle))
+            {
+                <div class="nsdms-page-header-subtitle">
+                    @Subtitle
+                </div>
+            }
+
+            @if (Flags != null && Flags.Any())
+            {
+                <div class="d-flex flex-wrap align-center gap-2 mt-1">
+                    <FlagBadge Flags="@Flags" />
+                </div>
+            }
+        </div>
+
+        <!-- Action Zone -->
+        @if (EffectiveActions != null)
+        {
+            <div class="nsdms-action-zone d-flex flex-wrap align-center gap-2 align-self-stretch align-self-md-auto justify-end">
+                @EffectiveActions
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string Title { get; set; } = string.Empty;
+
+    [Parameter]
+    public string? Subtitle { get; set; }
+
+    [Parameter]
+    public string? Reference { get; set; }
+
+    [Parameter]
+    public string? ReferenceKey { get; set; }
+
+    [Parameter]
+    public string? Status { get; set; }
+
+    [Parameter]
+    public IEnumerable<string>? Flags { get; set; }
+
+    [Parameter]
+    public List<BreadcrumbItem>? BreadcrumbItems { get; set; }
+
+    [Parameter]
+    public RenderFragment? Actions { get; set; }
+
+    [Parameter]
+    public RenderFragment? ActionZone { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    private string? EffectiveReference => !string.IsNullOrWhiteSpace(Reference) ? Reference : ReferenceKey;
+
+    private bool ShouldShowReference
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(EffectiveReference)) return false;
+            // Suppress internal archetype markers from prominent page headers
+            if (EffectiveReference.StartsWith("T1-", StringComparison.OrdinalIgnoreCase) ||
+                EffectiveReference.StartsWith("T2-", StringComparison.OrdinalIgnoreCase) ||
+                EffectiveReference.StartsWith("T3-", StringComparison.OrdinalIgnoreCase) ||
+                EffectiveReference.StartsWith("A1-", StringComparison.OrdinalIgnoreCase) ||
+                EffectiveReference.StartsWith("A2-", StringComparison.OrdinalIgnoreCase) ||
+                EffectiveReference.StartsWith("A3-", StringComparison.OrdinalIgnoreCase) ||
+                EffectiveReference.StartsWith("A4-", StringComparison.OrdinalIgnoreCase) ||
+                EffectiveReference.StartsWith("A5-", StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+            return true;
+        }
+    }
+
+    private RenderFragment? EffectiveActions => Actions ?? ActionZone ?? ChildContent;
+}

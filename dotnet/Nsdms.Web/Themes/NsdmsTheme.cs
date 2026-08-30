@@ -10,94 +10,131 @@ public static class NsdmsTheme
         {
             PaletteLight = new PaletteLight
             {
-                Primary = "#cc9c47",
+                // Brand Identity (merSETA Gold - used as accent, active states, key focus)
+                Primary = "#b8860b",
+                PrimaryDarken = "#805c06",
+                PrimaryLighten = "#d4a72c",
                 PrimaryContrastText = "#ffffff",
-                Secondary = "#5e5e5e",
+
+                // Neutral / Secondary
+                Secondary = "#475569",
                 SecondaryContrastText = "#ffffff",
-                Tertiary = "#875224",
+                Tertiary = "#64748b",
                 TertiaryContrastText = "#ffffff",
-                Info = "#0369a1",
+
+                // Semantic Status Palettes
+                Info = "#0284c7",
                 InfoContrastText = "#ffffff",
-                Success = "#065f46",
+                Success = "#059669",
                 SuccessContrastText = "#ffffff",
-                Warning = "#9a3412",
+                Warning = "#d97706",
                 WarningContrastText = "#ffffff",
-                Error = "#ba1a1a",
+                Error = "#dc2626",
                 ErrorContrastText = "#ffffff",
-                Dark = "#1a1c1c",
+
+                // Base Surfaces & Backgrounds
+                Dark = "#0f172a",
                 DarkContrastText = "#ffffff",
-                Background = "#f9f9f9",
-                BackgroundGray = "#f3f3f3",
+                Background = "#f8fafc",
+                BackgroundGray = "#f1f5f9",
                 Surface = "#ffffff",
-                AppbarBackground = "#cc9c47",
-                AppbarText = "#ffffff",
-                DrawerBackground = "#f3f3f3",
-                DrawerText = "#1a1c1c",
-                DrawerIcon = "#524436",
-                TextPrimary = "#1a1c1c",
-                TextSecondary = "#524436",
-                TextDisabled = "#857464",
-                ActionDefault = "#524436",
-                ActionDisabled = "#dadada",
-                ActionDisabledBackground = "#eeeeee",
-                LinesDefault = "#e2e2e2",
-                LinesInputs = "#857464",
-                TableLines = "#eeeeee",
-                TableStriped = "#f9f9f9",
-                TableHover = "#f3f3f3",
-                Divider = "#e2e2e2",
-                DividerLight = "#eeeeee"
+
+                // Application Shell: Modern crisp dark topbar and clean white sidebar
+                AppbarBackground = "#0f172a",
+                AppbarText = "#f8fafc",
+                DrawerBackground = "#ffffff",
+                DrawerText = "#1e293b",
+                DrawerIcon = "#64748b",
+
+                // Text Hierarchy
+                TextPrimary = "#0f172a",
+                TextSecondary = "#475569",
+                TextDisabled = "#94a3b8",
+
+                // Action States
+                ActionDefault = "#475569",
+                ActionDisabled = "#cbd5e1",
+                ActionDisabledBackground = "#f1f5f9",
+
+                // Subtle Structure Lines & Dividers
+                LinesDefault = "#e2e8f0",
+                LinesInputs = "#94a3b8",
+                TableLines = "#f1f5f9",
+                TableStriped = "#f8fafc",
+                TableHover = "#f1f5f9",
+                Divider = "#e2e8f0",
+                DividerLight = "#f1f5f9"
             },
             PaletteDark = new PaletteDark
             {
-                Primary = "#ffb962",
-                PrimaryContrastText = "#472a00",
-                Secondary = "#bcc7de",
-                SecondaryContrastText = "#263143",
-                Tertiary = "#7bd0ff",
-                TertiaryContrastText = "#003549",
-                Info = "#279fd2",
-                InfoContrastText = "#003145",
-                Success = "#34d399",
+                // Brand Identity (Soft Luminous Gold in Dark Mode)
+                Primary = "#e6b054",
+                PrimaryDarken = "#cca042",
+                PrimaryLighten = "#f7d594",
+                PrimaryContrastText = "#0f172a",
+
+                // Neutral / Secondary
+                Secondary = "#94a3b8",
+                SecondaryContrastText = "#0f172a",
+                Tertiary = "#64748b",
+                TertiaryContrastText = "#ffffff",
+
+                // Semantic Status Palettes (Luminous for Dark Contrast)
+                Info = "#38bdf8",
+                InfoContrastText = "#0c4a6e",
+                Success = "#10b981",
                 SuccessContrastText = "#064e3b",
-                Warning = "#fbbf24",
+                Warning = "#f59e0b",
                 WarningContrastText = "#451a03",
-                Error = "#ffb4ab",
-                ErrorContrastText = "#690005",
-                Dark = "#130d07",
-                DarkContrastText = "#eee0d4",
-                Background = "#121212",
-                BackgroundGray = "#18120c",
-                Surface = "#1e1e1e",
-                AppbarBackground = "#18120c",
-                AppbarText = "#ffb962",
-                DrawerBackground = "#18120c",
-                DrawerText = "#eee0d4",
-                DrawerIcon = "#d7c3b0",
-                TextPrimary = "#eee0d4",
-                TextSecondary = "#d7c3b0",
-                TextDisabled = "#9f8e7c",
-                ActionDefault = "#d7c3b0",
-                ActionDisabled = "#524436",
-                ActionDisabledBackground = "#251e17",
-                LinesDefault = "#3b332b",
-                LinesInputs = "#9f8e7c",
-                TableLines = "#302921",
-                TableStriped = "#211a13",
-                TableHover = "#251e17",
-                Divider = "#3b332b",
-                DividerLight = "#302921"
+                Error = "#f87171",
+                ErrorContrastText = "#450a0a",
+
+                // Base Surfaces & Backgrounds
+                Dark = "#030712",
+                DarkContrastText = "#f9fafb",
+                Background = "#0b0f19",
+                BackgroundGray = "#111827",
+                Surface = "#111827",
+
+                // Application Shell in Dark Mode
+                AppbarBackground = "#070a12",
+                AppbarText = "#f8fafc",
+                DrawerBackground = "#0e1422",
+                DrawerText = "#f1f5f9",
+                DrawerIcon = "#94a3b8",
+
+                // Text Hierarchy
+                TextPrimary = "#f8fafc",
+                TextSecondary = "#94a3b8",
+                TextDisabled = "#64748b",
+
+                // Action States
+                ActionDefault = "#94a3b8",
+                ActionDisabled = "#374151",
+                ActionDisabledBackground = "#1f2937",
+
+                // Structure Lines & Dividers
+                LinesDefault = "#1f2937",
+                LinesInputs = "#374151",
+                TableLines = "#1f2937",
+                TableStriped = "#0f1523",
+                TableHover = "#1a2234",
+                Divider = "#1f2937",
+                DividerLight = "#172033"
             },
             LayoutProperties = new LayoutProperties
             {
-                DefaultBorderRadius = "4px"
+                DefaultBorderRadius = "6px",
+                AppbarHeight = "56px",
+                DrawerWidthLeft = "256px",
+                DrawerMiniWidthLeft = "64px"
             },
             Typography = new Typography
             {
                 Default = new DefaultTypography
                 {
                     FontFamily = new[] { "Inter", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif" },
-                    FontSize = "0.9375rem",
+                    FontSize = "0.875rem",
                     FontWeight = "400",
                     LineHeight = "1.5",
                     LetterSpacing = "normal"
@@ -105,7 +142,7 @@ public static class NsdmsTheme
                 H1 = new H1Typography
                 {
                     FontFamily = new[] { "Inter", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif" },
-                    FontSize = "2.25rem",
+                    FontSize = "1.75rem",
                     FontWeight = "700",
                     LineHeight = "1.25",
                     LetterSpacing = "-0.02em"
@@ -113,15 +150,15 @@ public static class NsdmsTheme
                 H2 = new H2Typography
                 {
                     FontFamily = new[] { "Inter", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif" },
-                    FontSize = "1.75rem",
-                    FontWeight = "700",
+                    FontSize = "1.375rem",
+                    FontWeight = "600",
                     LineHeight = "1.3",
-                    LetterSpacing = "-0.02em"
+                    LetterSpacing = "-0.015em"
                 },
                 H3 = new H3Typography
                 {
                     FontFamily = new[] { "Inter", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif" },
-                    FontSize = "1.375rem",
+                    FontSize = "1.125rem",
                     FontWeight = "600",
                     LineHeight = "1.35",
                     LetterSpacing = "-0.01em"
@@ -129,14 +166,14 @@ public static class NsdmsTheme
                 H4 = new H4Typography
                 {
                     FontFamily = new[] { "Inter", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif" },
-                    FontSize = "1.125rem",
+                    FontSize = "1rem",
                     FontWeight = "600",
                     LineHeight = "1.4"
                 },
                 H5 = new H5Typography
                 {
                     FontFamily = new[] { "Inter", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif" },
-                    FontSize = "1rem",
+                    FontSize = "0.9375rem",
                     FontWeight = "600",
                     LineHeight = "1.4"
                 },
@@ -150,7 +187,7 @@ public static class NsdmsTheme
                 Body1 = new Body1Typography
                 {
                     FontFamily = new[] { "Inter", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif" },
-                    FontSize = "0.9375rem",
+                    FontSize = "0.875rem",
                     FontWeight = "400",
                     LineHeight = "1.5"
                 },
@@ -159,7 +196,7 @@ public static class NsdmsTheme
                     FontFamily = new[] { "Inter", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif" },
                     FontSize = "0.8125rem",
                     FontWeight = "400",
-                    LineHeight = "1.43"
+                    LineHeight = "1.45"
                 },
                 Button = new ButtonTypography
                 {
@@ -167,7 +204,7 @@ public static class NsdmsTheme
                     FontSize = "0.875rem",
                     FontWeight = "600",
                     LineHeight = "1.75",
-                    LetterSpacing = "0.02em",
+                    LetterSpacing = "0.01em",
                     TextTransform = "none"
                 },
                 Caption = new CaptionTypography
@@ -175,8 +212,8 @@ public static class NsdmsTheme
                     FontFamily = new[] { "Inter", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "Helvetica", "Arial", "sans-serif" },
                     FontSize = "0.75rem",
                     FontWeight = "400",
-                    LineHeight = "1.33",
-                    LetterSpacing = "0.03em"
+                    LineHeight = "1.35",
+                    LetterSpacing = "0.02em"
                 }
             }
         };

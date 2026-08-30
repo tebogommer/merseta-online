@@ -1,111 +1,226 @@
-﻿@page "/tradetests"
+@page "/tradetests"
 @using Nsdms.Application.Common.Interfaces
 @using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@using MudBlazor
 @inject ITradeTestAndArplService TradeTestService
 @inject NavigationManager Nav
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@rendermode InteractiveServer
 
-<PageTitle>Trade Test & ARPL Administration | merSETA NSDMS</PageTitle>
+@*
+  UI-STANDARD.md Archetype: A1 / T1 (Transactional List - Artisan Trade Test & ARPL Administration)
+  Clauses: 4.2, 4.3, 6.1, 7.2, 8.1, 8.3, 11.1–11.9, 15.2.5
+*@
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
-    <!-- Top Bar -->
-    <MudCard Elevation="2" Class="mb-4">
-        <MudCardContent Class="d-flex align-center justify-space-between py-3">
-            <div>
-                <MudBreadcrumbs Items="_breadcrumbs" Class="pa-0 mb-1" />
-                <MudText Typo="Typo.h5" Class="fw-bold">Artisan Trade Test & ARPL Administration</MudText>
-                <MudText Typo="Typo.body2" Color="Color.Secondary">
-                    National artisan assessment scheduling, NAMB serial allocation, ARPL portfolio evaluation, and trade certification.
-                </MudText>
-            </div>
-            <MudStack Row="true" Spacing="2">
-                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadDataAsync">
-                    Refresh
-                </MudButton>
-            </MudStack>
-        </MudCardContent>
-    </MudCard>
+<EntityHeader Title="Artisan Trade Test &amp; ARPL Administration"
+              Subtitle="National artisan assessment scheduling, NAMB serial allocation, ARPL portfolio evaluation, and trade certification"
+              ReferenceKey="T1-TRADETESTS"
+              Status="Active"
+              BreadcrumbItems="@_breadcrumbs">
+    <ActionZone>
+        <MudButton Variant="Variant.Outlined" 
+                   Color="Color.Primary" 
+                   StartIcon="@Icons.Material.Filled.Refresh" 
+                   OnClick="LoadDataAsync">
+            Refresh
+        </MudButton>
+        <MudButton Variant="Variant.Filled" 
+                   Color="Color.Primary" 
+                   StartIcon="@Icons.Material.Filled.FactCheck" 
+                   OnClick="@(() => Nav.NavigateTo("/tradetests/create"))">
+            New Application
+        </MudButton>
+    </ActionZone>
+</EntityHeader>
 
-    @if (_isLoading)
-    {
-        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
-    }
+<!-- Filter Bar (Clause 11.4) -->
+<FilterBar SearchPlaceholder="Search by application #, candidate name, trade title..."
+           @bind-SearchText="_searchString"
+           OnSearch="HandleFilterChanged"
+           OnClear="ClearFilters">
+    <FilterContent>
+        <MudSelect T="string" 
+                   Label="Application Type" 
+                   @bind-Value="_typeFilter" 
+                   @bind-Value:after="HandleFilterChanged"
+                   Variant="Variant.Outlined" 
+                   Margin="Margin.Dense"
+                   Dense="true">
+            <MudSelectItem Value="@("All")">All Types</MudSelectItem>
+            <MudSelectItem Value="@("Section28")">Section 28 (ARPL)</MudSelectItem>
+            <MudSelectItem Value="@("Apprenticeship")">Apprenticeship</MudSelectItem>
+        </MudSelect>
 
-    <!-- Filter & Master Grid -->
-    <MudCard Elevation="2">
-        <MudCardContent>
-            <MudTable Items="_applications" Hover="true" Dense="true" Elevation="0" Filter="FilterApplications">
-                <ToolBarContent>
-                    <MudText Typo="Typo.h6">Trade Test Applications (@_applications.Count)</MudText>
-                    <MudSpacer />
-                    <MudTextField @bind-Value="_searchString" Placeholder="Search by application #, candidate, trade..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Immediate="true" />
-                </ToolBarContent>
-                <HeaderContent>
-                    <MudTh>App #</MudTh>
-                    <MudTh>Candidate</MudTh>
-                    <MudTh>Trade Title</MudTh>
-                    <MudTh>Type</MudTh>
-                    <MudTh>Assessment Date</MudTh>
-                    <MudTh>NAMB Serial</MudTh>
-                    <MudTh>Outcome</MudTh>
-                    <MudTh>Status</MudTh>
-                    <MudTh Style="text-align: right;">Action</MudTh>
-                </HeaderContent>
-                <RowTemplate>
-                    <MudTd DataLabel="App #" Class="font-monospace fw-bold">@context.ApplicationNumber</MudTd>
-                    <MudTd DataLabel="Candidate">@(context.Person != null ? $"{context.Person.FirstName} {context.Person.LastName}" : "Candidate")</MudTd>
-                    <MudTd DataLabel="Trade Title">@context.TradeTitle</MudTd>
-                    <MudTd DataLabel="Type">
-                        <MudChip T="string" Size="Size.Small" Color="@(context.ApplicationTypeCode == "Section28" ? Color.Warning : Color.Info)" Variant="Variant.Outlined">
-                            @context.ApplicationTypeCode
-                        </MudChip>
-                    </MudTd>
-                    <MudTd DataLabel="Assessment Date">@(context.AssessmentDate?.ToString("yyyy-MM-dd") ?? "Unscheduled")</MudTd>
-                    <MudTd DataLabel="NAMB Serial" Class="font-monospace">@(context.NambSerialNumber ?? "Pending")</MudTd>
-                    <MudTd DataLabel="Outcome">
-                        @if (context.CompetencyStatusCode == "Competent")
-                        {
-                            <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Filled">Competent</MudChip>
-                        }
-                        else if (context.CompetencyStatusCode == "NotYetCompetent")
-                        {
-                            <MudChip T="string" Size="Size.Small" Color="Color.Error" Variant="Variant.Outlined">Not Yet Competent</MudChip>
-                        }
-                        else
-                        {
-                            <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Text">Pending</MudChip>
-                        }
-                    </MudTd>
-                    <MudTd DataLabel="Status">
-                        <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.StatusCode)" Variant="Variant.Filled">
-                            @context.StatusCode
-                        </MudChip>
-                    </MudTd>
-                    <MudTd DataLabel="Action" Style="text-align: right;">
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Visibility" OnClick="@(() => Nav.NavigateTo($"/tradetests/{context.Id}"))">
-                            View / Evaluate
-                        </MudButton>
-                    </MudTd>
-                </RowTemplate>
-                <PagerContent>
-                    <MudTablePager />
-                </PagerContent>
-            </MudTable>
-        </MudCardContent>
-    </MudCard>
-</MudContainer>
+        <MudSelect T="string" 
+                   Label="Competency Outcome" 
+                   @bind-Value="_outcomeFilter" 
+                   @bind-Value:after="HandleFilterChanged"
+                   Variant="Variant.Outlined" 
+                   Margin="Margin.Dense"
+                   Dense="true">
+            <MudSelectItem Value="@("All")">All Outcomes</MudSelectItem>
+            <MudSelectItem Value="@("Competent")">Competent</MudSelectItem>
+            <MudSelectItem Value="@("NotYetCompetent")">Not Yet Competent</MudSelectItem>
+            <MudSelectItem Value="@("Pending")">Pending</MudSelectItem>
+        </MudSelect>
+    </FilterContent>
+    <ActiveFilterChips>
+        @if (!string.IsNullOrWhiteSpace(_searchString))
+        {
+            <MudChip T="string" Size="Size.Small" OnClose="@(() => { _searchString = string.Empty; HandleFilterChanged(); })">
+                Keyword: @_searchString
+            </MudChip>
+        }
+        @if (_typeFilter != "All")
+        {
+            <MudChip T="string" Size="Size.Small" Color="Color.Info" OnClose="@(() => { _typeFilter = "All"; HandleFilterChanged(); })">
+                Type: @_typeFilter
+            </MudChip>
+        }
+        @if (_outcomeFilter != "All")
+        {
+            <MudChip T="string" Size="Size.Small" Color="Color.Success" OnClose="@(() => { _outcomeFilter = "All"; HandleFilterChanged(); })">
+                Outcome: @_outcomeFilter
+            </MudChip>
+        }
+    </ActiveFilterChips>
+</FilterBar>
+
+<!-- Data Grid Shell (Clause 11.9) -->
+<DataGridShell TItem="LearnerTradeTestApplication"
+               GridKey="TradeTestRegistryGrid"
+               Items="@FilteredApplications"
+               IsLoading="@_isLoading"
+               TotalItemsCount="@FilteredApplications.Count"
+               SelectedItems="@_selectedTradeTests"
+               SelectedItemsChanged="OnSelectedTradeTestsChanged"
+               EmptyTitle="No Trade Test Applications Found"
+               EmptyMessage="No artisan assessment applications match your active filters. Register a new candidate to begin trade test administration."
+               EmptyActionLabel="New Application"
+               OnEmptyAction="@(() => Nav.NavigateTo("/tradetests/create"))">
+    <BulkActionBarContent>
+        <MudText Typo="Typo.body2" Class="fw-bold text-white">
+            @_selectedTradeTests.Count application(s) selected
+        </MudText>
+        <MudButton Variant="Variant.Filled" 
+                   Color="Color.Surface" 
+                   Size="Size.Small" 
+                   StartIcon="@Icons.Material.Filled.FileDownload"
+                   OnClick="ExportSelected">
+            Export Selected
+        </MudButton>
+    </BulkActionBarContent>
+    <ChildContent>
+        <MudTable T="LearnerTradeTestApplication"
+                  Items="@FilteredApplications"
+                  Hover="true"
+                  Dense="true"
+                  Elevation="0"
+                  MultiSelection="true"
+                  @bind-SelectedItems="_selectedTradeTests"
+                  Breakpoint="Breakpoint.Sm"
+                  Class="border-default">
+            <HeaderContent>
+                <MudTh>App #</MudTh>
+                <MudTh>Candidate Name</MudTh>
+                <MudTh>Trade Title</MudTh>
+                <MudTh>Type</MudTh>
+                <MudTh>Assessment Date</MudTh>
+                <MudTh>NAMB Serial</MudTh>
+                <MudTh>Outcome</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh Style="text-align: right;">Action</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <!-- Key column is real hyperlink (Clause 11.1) -->
+                <MudTd DataLabel="App #">
+                    <a href="/tradetests/@context.Id" class="d-flex align-center gap-1 font-monospace fw-bold text-primary text-decoration-none">
+                        <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" />
+                        <span>@context.ApplicationNumber</span>
+                    </a>
+                </MudTd>
+                <MudTd DataLabel="Candidate Name">
+                    <div class="d-flex align-center gap-2">
+                        <MudAvatar Color="Color.Primary" Size="Size.Small">
+                            @(context.Person != null ? $"{context.Person.FirstName?[0]}{context.Person.LastName?[0]}" : "TT")
+                        </MudAvatar>
+                        <div>
+                            <MudText Typo="Typo.body2" Class="fw-bold">
+                                @(context.Person != null ? $"{context.Person.FirstName} {context.Person.LastName}" : "Candidate")
+                            </MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="font-monospace">
+                                @(context.Person?.RsaIdNumber ?? context.Person?.PassportNumber ?? "No ID")
+                            </MudText>
+                        </div>
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="Trade Title">
+                    <MudText Typo="Typo.body2" Class="fw-medium">@context.TradeTitle</MudText>
+                </MudTd>
+                <MudTd DataLabel="Type">
+                    <MudChip T="string" Size="Size.Small" Color="@(context.ApplicationTypeCode == "Section28" ? Color.Warning : Color.Info)" Variant="Variant.Outlined">
+                        @context.ApplicationTypeCode
+                    </MudChip>
+                </MudTd>
+                <MudTd DataLabel="Assessment Date">
+                    @(context.AssessmentDate?.ToString("yyyy-MM-dd") ?? "Unscheduled")
+                </MudTd>
+                <MudTd DataLabel="NAMB Serial" Class="font-monospace">
+                    @(context.NambSerialNumber ?? "Pending")
+                </MudTd>
+                <MudTd DataLabel="Outcome">
+                    @if (context.CompetencyStatusCode == "Competent")
+                    {
+                        <StatusBadge Status="Competent" Size="Size.Small" />
+                    }
+                    else if (context.CompetencyStatusCode == "NotYetCompetent")
+                    {
+                        <StatusBadge Status="Declined" Size="Size.Small" />
+                    }
+                    else
+                    {
+                        <StatusBadge Status="Draft" Size="Size.Small" />
+                    }
+                </MudTd>
+                <MudTd DataLabel="Status">
+                    <StatusBadge Status="@context.StatusCode" Size="Size.Small" />
+                </MudTd>
+                <MudTd DataLabel="Action" Style="text-align: right;">
+                    <div class="d-flex justify-end gap-1">
+                        <MudTooltip Text="View / Evaluate Assessment">
+                            <MudIconButton Icon="@Icons.Material.Filled.Visibility" 
+                                           Color="Color.Primary" 
+                                           Size="Size.Small" 
+                                           OnClick="@(() => Nav.NavigateTo($"/tradetests/{context.Id}"))" 
+                                           aria-label="View Assessment" />
+                        </MudTooltip>
+                    </div>
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <!-- Fixed page size ladder (Clause 11.3.3) -->
+                <MudTablePager PageSizeOptions="new int[] { 5, 10, 20, 50, 100, 250, 500 }" />
+            </PagerContent>
+        </MudTable>
+    </ChildContent>
+</DataGridShell>
 
 @code {
+    private List<LearnerTradeTestApplication> _applications = new();
+    private HashSet<LearnerTradeTestApplication> _selectedTradeTests = new();
+    private string _searchString = string.Empty;
+    private string _typeFilter = "All";
+    private string _outcomeFilter = "All";
+    private bool _isLoading = true;
+
     private List<BreadcrumbItem> _breadcrumbs = new()
     {
         new BreadcrumbItem("Home", href: "/"),
-        new BreadcrumbItem("Quality Assurance", href: "/etqa/accreditation"),
-        new BreadcrumbItem("Trade Tests & ARPL", href: null, disabled: true)
+        new BreadcrumbItem("Learner Lifecycle", href: null, disabled: true),
+        new BreadcrumbItem("Trade Tests", href: "/tradetests")
     };
-
-    private List<LearnerTradeTestApplication> _applications = new();
-    private bool _isLoading = true;
-    private string _searchString = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -119,34 +234,62 @@
         {
             _applications = await TradeTestService.GetApplicationsAsync();
         }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Failed to load trade test applications: {ex.Message}", Severity.Error);
-        }
         finally
         {
             _isLoading = false;
         }
     }
 
-    private bool FilterApplications(LearnerTradeTestApplication app)
+    private List<LearnerTradeTestApplication> FilteredApplications
     {
-        if (string.IsNullOrWhiteSpace(_searchString)) return true;
-        var personName = app.Person != null ? $"{app.Person.FirstName} {app.Person.LastName}" : "";
-        return app.ApplicationNumber.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
-               app.TradeTitle.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
-               personName.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
-               (app.NambSerialNumber != null && app.NambSerialNumber.Contains(_searchString, StringComparison.OrdinalIgnoreCase));
+        get
+        {
+            var query = _applications.AsEnumerable();
+
+            if (_typeFilter != "All")
+            {
+                query = query.Where(x => x.ApplicationTypeCode != null && x.ApplicationTypeCode.Equals(_typeFilter, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (_outcomeFilter != "All")
+            {
+                query = query.Where(x => x.CompetencyStatusCode != null && x.CompetencyStatusCode.Equals(_outcomeFilter, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (!string.IsNullOrWhiteSpace(_searchString))
+            {
+                var s = _searchString.Trim();
+                query = query.Where(x =>
+                    (x.ApplicationNumber != null && x.ApplicationNumber.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    (x.TradeTitle != null && x.TradeTitle.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    (x.Person != null && ((x.Person.FirstName != null && x.Person.FirstName.Contains(s, StringComparison.OrdinalIgnoreCase)) || (x.Person.LastName != null && x.Person.LastName.Contains(s, StringComparison.OrdinalIgnoreCase)))) ||
+                    (x.NambSerialNumber != null && x.NambSerialNumber.Contains(s, StringComparison.OrdinalIgnoreCase)));
+            }
+
+            return query.ToList();
+        }
     }
 
-    private Color GetStatusColor(string status) => status switch
+    private void HandleFilterChanged()
     {
-        "Certified" => Color.Success,
-        "Competent" => Color.Success,
-        "Assessing" => Color.Warning,
-        "AwaitingNambApproval" => Color.Info,
-        "TradeCenterAllocated" => Color.Primary,
-        "Rejected" => Color.Error,
-        _ => Color.Default
-    };
+        StateHasChanged();
+    }
+
+    private void ClearFilters()
+    {
+        _searchString = string.Empty;
+        _typeFilter = "All";
+        _outcomeFilter = "All";
+        StateHasChanged();
+    }
+
+    private void OnSelectedTradeTestsChanged(HashSet<LearnerTradeTestApplication> selected)
+    {
+        _selectedTradeTests = selected;
+    }
+
+    private void ExportSelected()
+    {
+        Snackbar.Add($"Exporting {_selectedTradeTests.Count} trade tests to CSV...", Severity.Info);
+    }
 }

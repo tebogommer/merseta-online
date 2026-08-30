@@ -16,6 +16,11 @@ public interface IRealtimeNotificationService
     event Action<string, int, string, string, string>? WorkflowTransitionReceived;
 
     /// <summary>
+    /// Event fired when a persistent user or role notification arrives.
+    /// </summary>
+    event Action<Nsdms.Domain.Entities.SystemNotificationDto>? UserNotificationReceived;
+
+    /// <summary>
     /// Broadcasts an instant task assignment event to the assigned role group.
     /// </summary>
     Task NotifyTaskAssignedAsync(string taskId, string taskTitle, string assignedRole, string priority);

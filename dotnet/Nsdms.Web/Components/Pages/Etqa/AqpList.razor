@@ -1,0 +1,111 @@
+﻿@page "/etqa/aqp"
+@inject IAqpPartnerService AqpService
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+<div class="d-flex justify-space-between align-center mb-4">
+    <div>
+        <MudText Typo="Typo.h5" Class="font-weight-bold">Assessment Quality Partners (AQP)</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">QCTO-delegated Quality Assurance Bodies, qualification assessment scopes, and EISA examinations</MudText>
+    </div>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="CreatePartner">
+        Register AQP Partner
+    </MudButton>
+</div>
+
+<MudCard Elevation="2">
+    <MudCardContent Class="pa-0">
+        <MudTable Items="_partners" Dense="true" Hover="true" Filter="FilterFunc" Loading="_loading" Elevation="0">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Registered AQP Bodies</MudText>
+                <MudSpacer />
+                <MudTextField @bind-Value="_searchString" Placeholder="Search AQP name, code, accreditation..." Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Immediate="true" />
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>AQP Code</MudTh>
+                <MudTh>Partner Name</MudTh>
+                <MudTh>Accreditation Number</MudTh>
+                <MudTh>QA Body</MudTh>
+                <MudTh>Province</MudTh>
+                <MudTh>Accreditation Validity</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh Style="text-align:right">Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="AQP Code">
+                    <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">@context.AqpCode</MudChip>
+                </MudTd>
+                <MudTd DataLabel="Partner Name">
+                    <MudText Typo="Typo.body2" Class="fw-bold">@context.AqpName</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Contact: @(context.ContactPerson != null ? $"{context.ContactPerson.FirstName} {context.ContactPerson.LastName}" : "Unassigned")</MudText>
+                </MudTd>
+                <MudTd DataLabel="Accreditation Number">
+                    <MudText Typo="Typo.body2">@context.AccreditationNumber</MudText>
+                </MudTd>
+                <MudTd DataLabel="QA Body">
+                    <MudChip T="string" Size="Size.Small" Color="Color.Dark" Variant="Variant.Filled">@context.QualityAssuranceBody</MudChip>
+                </MudTd>
+                <MudTd DataLabel="Province">
+                    <MudText Typo="Typo.body2">@context.ProvinceCode</MudText>
+                </MudTd>
+                <MudTd DataLabel="Accreditation Validity">
+                    <MudText Typo="Typo.caption" Class="fw-bold">@context.AccreditationStartDate.ToString("yyyy-MM-dd") to @context.AccreditationEndDate.ToString("yyyy-MM-dd")</MudText>
+                </MudTd>
+                <MudTd DataLabel="Status">
+                    <MudChip T="string" Size="Size.Small" Color="@(context.StatusCode == "Active" ? Color.Success : (context.StatusCode == "UnderReview" ? Color.Warning : Color.Error))" Variant="Variant.Filled">
+                        @context.StatusCode
+                    </MudChip>
+                </MudTd>
+                <MudTd Style="text-align:right" DataLabel="Actions">
+                    <MudTooltip Text="View Partner Details & EISA Scopes">
+                        <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Primary" Size="Size.Small" OnClick="@(() => ViewDetail(context.Id))" aria-label="View AQP Partner" />
+                    </MudTooltip>
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <div class="pa-4 text-center">
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">No Assessment Quality Partners registered.</MudText>
+                </div>
+            </NoRecordsContent>
+        </MudTable>
+    </MudCardContent>
+</MudCard>
+
+@code {
+    private List<AqpPartner> _partners = new();
+    private bool _loading = true;
+    private string _searchString = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _loading = true;
+        _partners = await AqpService.GetAllPartnersAsync();
+        _loading = false;
+    }
+
+    private bool FilterFunc(AqpPartner partner)
+    {
+        if (string.IsNullOrWhiteSpace(_searchString)) return true;
+        if (partner.AqpName.Contains(_searchString, StringComparison.OrdinalIgnoreCase)) return true;
+        if (partner.AqpCode.Contains(_searchString, StringComparison.OrdinalIgnoreCase)) return true;
+        if (partner.AccreditationNumber.Contains(_searchString, StringComparison.OrdinalIgnoreCase)) return true;
+        return false;
+    }
+
+    private void ViewDetail(int id)
+    {
+        NavManager.NavigateTo($"/etqa/aqp/{id}");
+    }
+
+    private void CreatePartner()
+    {
+        NavManager.NavigateTo("/etqa/aqp/create");
+    }
+}

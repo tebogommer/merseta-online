@@ -22,22 +22,22 @@ public class LearnerTradeTest : BaseEntity
     /// <summary>
     /// Name and facility location of accredited Trade Test Center (TTC).
     /// </summary>
-    public string TestCenterName { get; set; } = string.Empty;
+    public string? TestCenterName { get; set; } = string.Empty;
 
     /// <summary>
     /// Accredited Trade Test Centre (TTC) Provider Code as registered on NLRD/SETMIS (SETMIS File 505).
     /// </summary>
-    public string TradeTestCentreCode { get; set; } = string.Empty;
+    public string? TradeTestCentreCode { get; set; } = string.Empty;
 
     /// <summary>
     /// Submitting ETQA ID of Trade Test Centre (references lookup.SetaType, default 17 for merSETA).
     /// </summary>
-    public string TradeTestCentreEtqaId { get; set; } = "17";
+    public string? TradeTestCentreEtqaId { get; set; } = "17";
 
     /// <summary>
     /// Designated artisan trade title (e.g. Diesel Mechanic, Boilermaker, Fitter &amp; Turner, Electrician, Welder).
     /// </summary>
-    public string TradeTitle { get; set; } = string.Empty;
+    public string? TradeTitle { get; set; } = string.Empty;
 
     /// <summary>
     /// OFO Trade Code corresponding to the trade test (SETMIS File 505).
@@ -47,7 +47,7 @@ public class LearnerTradeTest : BaseEntity
     /// <summary>
     /// SAQA Qualification ID or OFO Trade Code corresponding to the trade test (SETMIS File 505).
     /// </summary>
-    public string QualificationId { get; set; } = string.Empty;
+    public string? QualificationId { get; set; } = string.Empty;
 
     /// <summary>
     /// Trade test examination attempt index number (e.g. 1, 2, 3) for SETMIS File 505.
@@ -65,17 +65,17 @@ public class LearnerTradeTest : BaseEntity
     /// <summary>
     /// Trade test competency outcome lookup code (references lookup.TradeTestResultType: 01 Competent, 02 Not Yet Competent).
     /// </summary>
-    public string TradeTestResultId { get; set; } = "01";
+    public string? TradeTestResultId { get; set; } = "01";
 
     /// <summary>
     /// Statutory assessment outcome reason code (references lookup.TradeTestResultReasonType: 01 Assessment Criteria Satisfied).
     /// </summary>
-    public string TradeTestResultReasonId { get; set; } = "01";
+    public string? TradeTestResultReasonId { get; set; } = "01";
 
     /// <summary>
     /// Legacy assessment outcome status code (e.g. Scheduled, Competent, NotYetCompetent, Absent).
     /// </summary>
-    public string ResultStatusCode { get; set; } = "Scheduled";
+    public string? ResultStatusCode { get; set; } = "Scheduled";
 
     /// <summary>
     /// Registered ETQA Assessor registration number conducting examination (SETMIS File 505).
@@ -85,7 +85,7 @@ public class LearnerTradeTest : BaseEntity
     /// <summary>
     /// Submitting ETQA ID of the registered Assessor (default 17).
     /// </summary>
-    public string AssessorEtqaId { get; set; } = "17";
+    public string? AssessorEtqaId { get; set; } = "17";
 
     /// <summary>
     /// Registered ETQA Moderator / NAMB Verifier registration number (SETMIS File 505).
@@ -95,7 +95,7 @@ public class LearnerTradeTest : BaseEntity
     /// <summary>
     /// Submitting ETQA ID of the registered Moderator (default 17).
     /// </summary>
-    public string ModeratorEtqaId { get; set; } = "17";
+    public string? ModeratorEtqaId { get; set; } = "17";
 
     /// <summary>
     /// Foreign key referencing original Skills Development Training Provider (SDP).
@@ -110,7 +110,7 @@ public class LearnerTradeTest : BaseEntity
     /// <summary>
     /// Original training provider Submitting ETQA ID (default 17).
     /// </summary>
-    public string TrainingProviderEtqaId { get; set; } = "17";
+    public string? TrainingProviderEtqaId { get; set; } = "17";
 
     /// <summary>
     /// Foreign key referencing the examining trade test assessor Person.

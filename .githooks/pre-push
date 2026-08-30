@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# merSETA NSDMS Pre-Push Git Hook
+# Enforces full regression suite before code can be pushed to remote repository.
+
+echo "========================================================"
+echo "🚀 Running merSETA NSDMS Pre-Push Regression Gate..."
+echo "========================================================"
+
+python scripts/ci_ux_quality_gate.py
+RESULT=$?
+
+if [ $RESULT -ne 0 ]; then
+    echo ""
+    echo "❌ Git Push Aborted! Regressions detected in NSDMS UI/UX or Accessibility Suite."
+    echo "Fix failing routes and run 'python scripts/ci_ux_quality_gate.py' locally."
+    echo ""
+    exit 1
+fi
+
+echo "✅ Pre-Push Regression Gate Passed. Pushing changes to remote."
+exit 0

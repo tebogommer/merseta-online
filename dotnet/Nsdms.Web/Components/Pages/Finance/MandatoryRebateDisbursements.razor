@@ -140,6 +140,9 @@
                 </MudTd>
                 <MudTd DataLabel="Actions" Style="text-align: right;">
                     <div class="d-flex justify-end gap-1">
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.PictureAsPdf" OnClick="@(() => DownloadRemittancePdf(context.Id))">
+                            Remittance (PDF)
+                        </MudButton>
                         @if (context.DisbursementStatusCode == "Calculated")
                         {
                             <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.ThumbUp" OnClick="@(() => ApproveDisbursement(context.Id))">
@@ -245,4 +248,9 @@
         "On Hold" => Color.Error,
         _ => Color.Default
     };
+
+    private void DownloadRemittancePdf(int disbursementId)
+    {
+        Navigation.NavigateTo($"/api/documents/remittance/{disbursementId}/pdf", forceLoad: true);
+    }
 }

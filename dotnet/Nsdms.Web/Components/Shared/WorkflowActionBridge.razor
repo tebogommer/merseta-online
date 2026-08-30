@@ -1,37 +1,45 @@
+@namespace Nsdms.Web.Components.Shared
 @using Nsdms.Application.Services
 @using Nsdms.Domain.Entities
 @inject IWorkflowEngineService WorkflowService
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 
-<MudPaper Elevation="1" Class="workflow-action-bridge pa-3 my-3 rounded-lg">
-    <div class="d-flex flex-wrap align-center justify-space-between gap-3">
-        <!-- Current Workflow State Badge & Info -->
-        <div class="d-flex align-center gap-2">
-            <MudIcon Icon="@Icons.Material.Filled.AccountTree" Color="Color.Primary" Size="Size.Small" />
-            <MudText Typo="Typo.body2" Class="font-weight-bold">Workflow Status:</MudText>
-            @if (_instance != null && _instance.CurrentWorkflowState != null)
-            {
-                <MudChip T="string" Color="Color.Primary" Variant="Variant.Filled" Size="Size.Small">
-                    @_instance.CurrentWorkflowState.StateName
-                </MudChip>
-                @if (_instance.IsCompleted)
-                {
-                    <MudChip T="string" Color="Color.Success" Variant="Variant.Filled" Size="Size.Small" Icon="@Icons.Material.Filled.CheckCircle">
-                        Completed
-                    </MudChip>
-                }
-            }
-            else
-            {
-                <MudChip T="string" Color="Color.Default" Variant="Variant.Outlined" Size="Size.Small">
-                    Not Initiated
-                </MudChip>
-            }
+<MudPaper Elevation="0" Class="workflow-action-bridge pa-4 my-3 rounded-lg border-default" Style="background-color: var(--mud-palette-surface); border: 1px solid var(--mud-palette-lines-default);">
+    <div class="d-flex flex-column flex-md-row align-start align-md-center justify-space-between gap-3">
+        <!-- Current Workflow State Badge & Status Context -->
+        <div class="d-flex align-center gap-3">
+            <div class="d-flex align-center justify-center rounded p-2" style="background: rgba(184, 134, 11, 0.1); color: var(--mud-palette-primary); width: 36px; height: 36px;">
+                <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" />
+            </div>
+            <div>
+                <div class="d-flex align-center gap-2">
+                    <span style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; color: var(--mud-palette-text-secondary);">
+                        Current Stage:
+                    </span>
+                    @if (_instance != null && _instance.CurrentWorkflowState != null)
+                    {
+                        <StatusBadge Status="@_instance.CurrentWorkflowState.StateName" Size="Size.Small" />
+                        @if (_instance.IsCompleted)
+                        {
+                            <MudChip T="string" Color="Color.Success" Variant="Variant.Filled" Size="Size.Small" Icon="@Icons.Material.Filled.CheckCircle">
+                                Completed
+                            </MudChip>
+                        }
+                    }
+                    else
+                    {
+                        <StatusBadge Status="Draft" Size="Size.Small" />
+                    }
+                </div>
+                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block mt-1">
+                    @(_instance?.IsCompleted == true ? "Lifecycle successfully finalized and locked." : "Active workflow gate. Authorized officers can advance or return this record.")
+                </MudText>
+            </div>
         </div>
 
-        <!-- Interactive Transition Action Buttons -->
-        <div class="d-flex flex-wrap align-center gap-2">
+        <!-- Interactive Transition Action Buttons (Primary vs Destructive separated) -->
+        <div class="d-flex flex-wrap align-center gap-2 align-self-stretch align-self-md-auto justify-end">
             @if (_instance == null)
             {
                 <MudButton Variant="Variant.Filled" 
@@ -45,13 +53,13 @@
             }
             else if (!_instance.IsCompleted && _availableTransitions.Any())
             {
-                @foreach (var transition in _availableTransitions)
+                @foreach (var transition in _availableTransitions.OrderByDescending(t => !t.ActionName.Contains("Reject", StringComparison.OrdinalIgnoreCase) && !t.ActionName.Contains("Decline", StringComparison.OrdinalIgnoreCase)))
                 {
                     var isReject = transition.ActionName.Contains("Reject", StringComparison.OrdinalIgnoreCase) || transition.ActionName.Contains("Decline", StringComparison.OrdinalIgnoreCase);
-                    <MudButton Variant="Variant.Filled"
+                    <MudButton Variant="@(isReject ? Variant.Outlined : Variant.Filled)"
                                Color="@(isReject ? Color.Error : Color.Primary)"
                                Size="Size.Medium"
-                               StartIcon="@(isReject ? Icons.Material.Filled.Cancel : Icons.Material.Filled.Check)"
+                               StartIcon="@(isReject ? Icons.Material.Filled.Cancel : Icons.Material.Filled.CheckCircle)"
                                Disabled="@_isProcessing"
                                OnClick="() => HandleTransitionClickAsync(transition)">
                         @transition.ActionName
@@ -60,8 +68,8 @@
             }
             else if (_instance.IsCompleted)
             {
-                <MudChip T="string" Color="Color.Success" Variant="Variant.Text" Size="Size.Small" Icon="@Icons.Material.Filled.Lock">
-                    Final State Locked
+                <MudChip T="string" Color="Color.Success" Variant="Variant.Outlined" Size="Size.Small" Icon="@Icons.Material.Filled.Lock">
+                    Terminal State Reached
                 </MudChip>
             }
         </div>
@@ -69,15 +77,19 @@
 
     @if (_showCommentModal && _selectedTransition != null)
     {
-        <MudPaper Elevation="2" Class="comment-modal mt-3 pa-4 rounded-lg">
-            <MudText Typo="Typo.subtitle2" Class="font-weight-bold mb-1">
-                Confirm Action: @_selectedTransition.ActionName
-            </MudText>
+        <MudPaper Elevation="0" Class="comment-modal mt-3 pa-4 rounded-lg border-default" style="background-color: var(--mud-palette-background-grey); border: 1px solid var(--mud-palette-lines-default);">
+            <div class="d-flex align-center gap-2 mb-2">
+                <MudIcon Icon="@(_selectedTransition.ActionName.Contains("Reject", StringComparison.OrdinalIgnoreCase) ? Icons.Material.Filled.Warning : Icons.Material.Filled.FactCheck)" 
+                         Color="@(_selectedTransition.ActionName.Contains("Reject", StringComparison.OrdinalIgnoreCase) ? Color.Error : Color.Primary)" />
+                <MudText Typo="Typo.subtitle2" Class="font-weight-bold">
+                    Confirm Action: @_selectedTransition.ActionName
+                </MudText>
+            </div>
             <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block mb-3">
-                Please provide notes or justification for this state transition.
+                Please provide notes or audit justification for advancing this workflow stage.
             </MudText>
             <MudTextField @bind-Value="_commentText" 
-                          Label="Action Comments / Notes" 
+                          Label="Action Justification / Audit Remarks" 
                           Variant="Variant.Outlined" 
                           Lines="3" 
                           FullWidth="true"
@@ -87,10 +99,10 @@
                     Cancel
                 </MudButton>
                 <MudButton Variant="Variant.Filled" 
-                           Color="Color.Primary" 
+                           Color="@(_selectedTransition.ActionName.Contains("Reject", StringComparison.OrdinalIgnoreCase) ? Color.Error : Color.Primary)" 
                            OnClick="ExecuteTransitionAsync" 
                            Disabled="@(_isProcessing || (_selectedTransition.RequiresComments && string.IsNullOrWhiteSpace(_commentText)))">
-                    Confirm Transition
+                    @(_isProcessing ? "Processing..." : "Confirm & Advance")
                 </MudButton>
             </div>
         </MudPaper>

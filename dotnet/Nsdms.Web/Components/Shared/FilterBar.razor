@@ -1,0 +1,139 @@
+@namespace Nsdms.Web.Components.Shared
+@using MudBlazor
+
+@*
+  UI-STANDARD.md Contract (Section 9.2, Clause 11.4):
+  Component: FilterBar
+  Inputs: SearchText, SearchPlaceholder, FilterContent, Filters, ActiveChips, ActiveFilterChips, OnSearch, OnClear, OnClearAll, ResultCount, DebounceIntervalMs
+  Renders: Filters above the grid with debounced cancel-safe type-ahead and visible active chips.
+*@
+
+<div class="nsdms-filter-bar mb-3" role="search" aria-label="Filters">
+    <div class="pa-3 rounded bg-surface border-default" style="border: 1px solid var(--mud-palette-lines-default);">
+        <div class="d-flex flex-wrap align-center justify-space-between gap-3">
+            @if (!string.IsNullOrEmpty(SearchPlaceholder) || SearchText != null)
+            {
+                <div class="d-flex align-center flex-grow-1" style="min-width: 240px; max-width: 380px;">
+                    <MudTextField T="string"
+                                  Value="@SearchText"
+                                  ValueChanged="HandleSearchTextChanged"
+                                  Placeholder="@(SearchPlaceholder ?? "Search records...")"
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search"
+                                  IconSize="Size.Small"
+                                  Margin="Margin.Dense"
+                                  Variant="Variant.Outlined"
+                                  Clearable="true"
+                                  Immediate="true"
+                                  DebounceInterval="@DebounceIntervalMs"
+                                  aria-label="Filter search" />
+                </div>
+            }
+
+            <div class="d-flex flex-wrap align-center gap-2 flex-grow-1">
+                @if (FilterContent != null)
+                {
+                    @FilterContent
+                }
+                else if (Filters != null)
+                {
+                    @Filters
+                }
+            </div>
+
+            @if (ResultCount.HasValue)
+            {
+                <div class="d-flex align-center">
+                    <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined" Class="font-monospace">
+                        @ResultCount.Value.ToString("N0") records
+                    </MudChip>
+                </div>
+            }
+        </div>
+
+        @if (ShouldShowActiveFilters)
+        {
+            <div class="d-flex flex-wrap align-center gap-2 mt-2 pt-2 border-top" style="border-top: 1px solid var(--mud-palette-lines-default);">
+                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="font-weight-medium">
+                    Active filters:
+                </MudText>
+                @if (ActiveFilterChips != null)
+                {
+                    @ActiveFilterChips
+                }
+                else if (ActiveChips != null)
+                {
+                    @ActiveChips
+                }
+                @if (OnClear.HasDelegate)
+                {
+                    <MudButton Variant="Variant.Text" Color="Color.Error" Size="Size.Small" OnClick="OnClear" StartIcon="@Icons.Material.Filled.ClearAll">
+                        Clear all
+                    </MudButton>
+                }
+                else if (OnClearAll.HasDelegate)
+                {
+                    <MudButton Variant="Variant.Text" Color="Color.Error" Size="Size.Small" OnClick="OnClearAll" StartIcon="@Icons.Material.Filled.ClearAll">
+                        Clear all
+                    </MudButton>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string? SearchText { get; set; }
+
+    [Parameter]
+    public EventCallback<string> SearchTextChanged { get; set; }
+
+    [Parameter]
+    public string? SearchPlaceholder { get; set; }
+
+    [Parameter]
+    public int DebounceIntervalMs { get; set; } = 250;
+
+    [Parameter]
+    public RenderFragment? FilterContent { get; set; }
+
+    [Parameter]
+    public RenderFragment? Filters { get; set; }
+
+    [Parameter]
+    public RenderFragment? ActiveFilterChips { get; set; }
+
+    [Parameter]
+    public RenderFragment? ActiveChips { get; set; }
+
+    [Parameter]
+    public bool HasActiveFilters { get; set; }
+
+    [Parameter]
+    public int? ResultCount { get; set; }
+
+    [Parameter]
+    public EventCallback OnSearch { get; set; }
+
+    [Parameter]
+    public EventCallback OnClear { get; set; }
+
+    [Parameter]
+    public EventCallback OnClearAll { get; set; }
+
+    private bool ShouldShowActiveFilters => HasActiveFilters || !string.IsNullOrWhiteSpace(SearchText);
+
+    private async Task HandleSearchTextChanged(string val)
+    {
+        SearchText = val;
+        if (SearchTextChanged.HasDelegate)
+        {
+            await SearchTextChanged.InvokeAsync(val);
+        }
+        if (OnSearch.HasDelegate)
+        {
+            await OnSearch.InvokeAsync();
+        }
+    }
+}

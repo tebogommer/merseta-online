@@ -1,0 +1,56 @@
+@namespace Nsdms.Web.Components.Shared
+@using MudBlazor
+
+@*
+  UI-STANDARD.md Contract (Section 9.2, Clause 8.1, 8.2):
+  Component: PageActions
+  Inputs: Primary, Secondary, Destructive, Overflow
+  Renders: The action zone, enforcing one primary and correct ordering.
+*@
+
+<div class="nsdms-page-actions d-flex flex-wrap align-center gap-2" role="toolbar" aria-label="Page Actions">
+    @if (Secondary != null)
+    {
+        @Secondary
+    }
+
+    @if (Destructive != null)
+    {
+        <div class="nsdms-destructive-action mr-1">
+            @Destructive
+        </div>
+    }
+
+    @if (Primary != null)
+    {
+        @Primary
+    }
+
+    @if (Overflow != null)
+    {
+        <MudMenu Icon="@Icons.Material.Filled.MoreVert" 
+                 Color="Color.Default" 
+                 Variant="Variant.Outlined" 
+                 Size="Size.Medium" 
+                 Dense="true" 
+                 AriaLabel="More Actions"
+                 AnchorOrigin="Origin.BottomRight" 
+                 TransformOrigin="Origin.TopRight">
+            @Overflow
+        </MudMenu>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public RenderFragment? Primary { get; set; }
+
+    [Parameter]
+    public RenderFragment? Secondary { get; set; }
+
+    [Parameter]
+    public RenderFragment? Destructive { get; set; }
+
+    [Parameter]
+    public RenderFragment? Overflow { get; set; }
+}

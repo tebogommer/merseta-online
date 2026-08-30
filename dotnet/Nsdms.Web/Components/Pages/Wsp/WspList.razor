@@ -1,54 +1,103 @@
 @page "/wsp"
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@using MudBlazor
 @inject IWspService WspService
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
 @rendermode InteractiveServer
 
-<div class="d-flex justify-space-between align-center mb-4">
-    <div>
-        <MudText Typo="Typo.h5" Class="font-weight-bold">WSP & Mandatory Grants</MudText>
-        <MudText Typo="Typo.body2" Color="Color.Secondary">Annual Workplace Skills Plans (WSP), Annual Training Reports (ATR), employment equity breakdown, and mandatory levy grant claims</MudText>
-    </div>
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PostAdd" OnClick="CreateNewWsp">
-        New WSP Submission
-    </MudButton>
-</div>
+@*
+  UI-STANDARD.md Archetype: A1 / T1 (Transactional List - WSP & Mandatory Grants)
+  Clauses: 4.2, 4.3, 6.1, 7.2, 8.1, 8.3, 11.1–11.9, 15.2.5
+*@
 
-<MudPaper Class="pa-4 mb-4" Elevation="1">
-    <div class="d-flex flex-wrap gap-4 align-center justify-space-between mb-3">
-        <div class="d-flex align-center gap-3 flex-grow-1" style="max-width: 600px;">
-            <MudTextField @bind-Value="_searchString"
-                          Placeholder="Search by Reference No, Organisation Name, SDL No, Fin Year..."
-                          Adornment="Adornment.Start"
-                          AdornmentIcon="@Icons.Material.Filled.Search"
-                          IconSize="Size.Medium"
-                          Class="mt-0"
-                          Immediate="true"
-                          Clearable="true" />
-        </div>
-        <div class="d-flex align-center gap-2">
-            <MudChipSet T="string" @bind-SelectedValue="_statusFilter" SelectionMode="SelectionMode.SingleSelection">
-                <MudChip T="string" Value="@("All")" Color="Color.Default" Variant="@(_statusFilter == "All" ? Variant.Filled : Variant.Outlined)">All</MudChip>
-                <MudChip T="string" Value="@("SUBMITTED")" Color="Color.Info" Variant="@(_statusFilter == "SUBMITTED" ? Variant.Filled : Variant.Outlined)">Submitted</MudChip>
-                <MudChip T="string" Value="@("APPROVED")" Color="Color.Success" Variant="@(_statusFilter == "APPROVED" ? Variant.Filled : Variant.Outlined)">Approved</MudChip>
-                <MudChip T="string" Value="@("DRAFT")" Color="Color.Warning" Variant="@(_statusFilter == "DRAFT" ? Variant.Filled : Variant.Outlined)">Draft</MudChip>
-            </MudChipSet>
-        </div>
-    </div>
+<EntityHeader Title="WSP &amp; Mandatory Grants"
+              Subtitle="Annual Workplace Skills Plans (WSP), Annual Training Reports (ATR), and mandatory levy grant claims"
+              ReferenceKey="T1-WSP"
+              Status="Active"
+              BreadcrumbItems="@_breadcrumbs">
+    <ActionZone>
+        <MudButton Variant="Variant.Filled" 
+                   Color="Color.Primary" 
+                   StartIcon="@Icons.Material.Filled.PostAdd" 
+                   OnClick="CreateNewWsp">
+            New WSP Submission
+        </MudButton>
+    </ActionZone>
+</EntityHeader>
 
-    @if (_loading)
-    {
-        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
-    }
-    else
-    {
+<!-- Filter Bar (Clause 11.4) -->
+<FilterBar SearchPlaceholder="Search by Reference No, Organisation Name, SDL No, Fin Year..."
+           @bind-SearchText="_searchString"
+           OnSearch="HandleFilterChanged"
+           OnClear="HandleFilterCleared">
+    <FilterContent>
+        <MudSelect T="string" 
+                   Label="Status Filter" 
+                   @bind-Value="_statusFilter" 
+                   @bind-Value:after="HandleFilterChanged"
+                   Variant="Variant.Outlined" 
+                   Margin="Margin.Dense"
+                   Dense="true">
+            <MudSelectItem Value="@("All")">All Statuses</MudSelectItem>
+            <MudSelectItem Value="@("DRAFT")">Draft</MudSelectItem>
+            <MudSelectItem Value="@("SUBMITTED")">Submitted</MudSelectItem>
+            <MudSelectItem Value="@("APPROVED")">Approved</MudSelectItem>
+            <MudSelectItem Value="@("REJECTED")">Rejected</MudSelectItem>
+        </MudSelect>
+    </FilterContent>
+    <ActiveFilterChips>
+        @if (!string.IsNullOrWhiteSpace(_searchString))
+        {
+            <MudChip T="string" Size="Size.Small" OnClose="@(() => { _searchString = string.Empty; HandleFilterChanged(); })">
+                Keyword: @_searchString
+            </MudChip>
+        }
+        @if (_statusFilter != "All")
+        {
+            <MudChip T="string" Size="Size.Small" Color="Color.Primary" OnClose="@(() => { _statusFilter = "All"; HandleFilterChanged(); })">
+                Status: @_statusFilter
+            </MudChip>
+        }
+    </ActiveFilterChips>
+</FilterBar>
+
+<!-- Data Grid Shell (Clause 11.9) -->
+<DataGridShell TItem="WspSubmission"
+               GridKey="WspSubmissionsGrid"
+               Items="@FilteredSubmissions"
+               IsLoading="@_loading"
+               TotalItemsCount="@FilteredSubmissions.Count"
+               SelectedItems="@_selectedSubmissions"
+               SelectedItemsChanged="OnSelectedSubmissionsChanged"
+               EmptyTitle="No WSP Submissions Found"
+               EmptyMessage="No Workplace Skills Plan submissions match your search or filter criteria. Submit a new WSP to initiate the mandatory grant process."
+               EmptyActionLabel="Capture New WSP"
+               OnEmptyAction="CreateNewWsp">
+    <BulkActionBarContent>
+        <MudText Typo="Typo.body2" Class="fw-bold text-white">
+            @_selectedSubmissions.Count WSP submission(s) selected
+        </MudText>
+        <MudButton Variant="Variant.Filled" 
+                   Color="Color.Surface" 
+                   Size="Size.Small" 
+                   StartIcon="@Icons.Material.Filled.FileDownload"
+                   OnClick="ExportSelected">
+            Export Selected
+        </MudButton>
+    </BulkActionBarContent>
+    <ChildContent>
         <MudTable Items="@FilteredSubmissions"
                   Hover="true"
                   Dense="true"
-                  Striped="true"
+                  Elevation="0"
+                  MultiSelection="true"
+                  @bind-SelectedItems="_selectedSubmissions"
                   Breakpoint="Breakpoint.Sm"
-                  OnRowClick="@((TableRowClickEventArgs<WspSubmission> e) => OpenDetail(e.Item != null ? e.Item.Id : 0))"
-                  T="WspSubmission">
+                  Class="border-default">
             <HeaderContent>
                 <MudTh>Reference No</MudTh>
                 <MudTh>Fin Year</MudTh>
@@ -60,18 +109,19 @@
                 <MudTh Style="text-align:right">Actions</MudTh>
             </HeaderContent>
             <RowTemplate>
+                <!-- Key column is real hyperlink (Clause 11.1) -->
                 <MudTd DataLabel="Reference No">
-                    <div class="d-flex align-center gap-1">
-                        <MudIcon Icon="@Icons.Material.Filled.Assignment" Size="Size.Small" Color="Color.Primary" />
-                        <MudText Typo="Typo.body2" Class="fw-bold font-monospace">@context.ReferenceNumber</MudText>
-                    </div>
+                    <a href="/wsp/@context.Id" class="d-flex align-center gap-1 font-monospace fw-bold text-primary text-decoration-none">
+                        <MudIcon Icon="@Icons.Material.Filled.Assignment" Size="Size.Small" />
+                        <span>@(string.IsNullOrWhiteSpace(context.ReferenceNumber) ? $"WSP-{context.Id}" : context.ReferenceNumber)</span>
+                    </a>
                 </MudTd>
                 <MudTd DataLabel="Fin Year">
                     <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">@context.FinYear</MudChip>
                 </MudTd>
                 <MudTd DataLabel="Organisation / SDL">
                     <MudText Typo="Typo.body2" Class="fw-bold">@(context.Organisation?.CompanyName ?? "Unlinked")</MudText>
-                    <MudText Typo="Typo.caption" Color="Color.Secondary">SDL: @(context.Organisation?.SdlNumber ?? "-")</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">SDL: @(context.Organisation?.SdlNumber ?? "—")</MudText>
                 </MudTd>
                 <MudTd DataLabel="Employees">
                     <MudText Typo="Typo.body2">@context.EmployeeCount.ToString("N0")</MudText>
@@ -83,38 +133,56 @@
                     @(context.SubmissionDate.HasValue ? context.SubmissionDate.Value.ToString("yyyy-MM-dd") : "Not submitted")
                 </MudTd>
                 <MudTd DataLabel="Status">
-                    <MudChip T="string" Color="@GetStatusColor(context.StatusCode)" Size="Size.Small" Variant="Variant.Filled">
-                        @(!string.IsNullOrWhiteSpace(context.StatusCode) ? context.StatusCode : "DRAFT")
-                    </MudChip>
+                    <!-- Non-clickable status pill (Clause 6.1, 7.2) -->
+                    <StatusBadge Status="@(!string.IsNullOrWhiteSpace(context.StatusCode) ? context.StatusCode : "DRAFT")" Size="Size.Small" />
                 </MudTd>
                 <MudTd Style="text-align:right" DataLabel="Actions">
                     <div class="d-flex justify-end gap-1">
-                        <MudTooltip Text="View & Edit Submission">
-                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" OnClick="@(() => OpenDetail(context.Id))" aria-label="Edit Record" />
+                        <MudTooltip Text="View Submission">
+                            <MudIconButton Icon="@Icons.Material.Filled.Visibility" 
+                                           Color="Color.Primary" 
+                                           Size="Size.Small" 
+                                           OnClick="@(() => OpenDetail(context.Id))" 
+                                           aria-label="View Submission" />
+                        </MudTooltip>
+                        <MudTooltip Text="Edit Submission">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" 
+                                           Color="Color.Secondary" 
+                                           Size="Size.Small" 
+                                           OnClick="@(() => OpenEdit(context.Id))" 
+                                           aria-label="Edit Submission" />
                         </MudTooltip>
                         <MudTooltip Text="Delete Record">
-                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteWsp(context.Id, context.ReferenceNumber))" aria-label="Delete Record" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" 
+                                           Color="Color.Error" 
+                                           Size="Size.Small" 
+                                           OnClick="@(() => DeleteWsp(context.Id, context.ReferenceNumber))" 
+                                           aria-label="Delete Record" />
                         </MudTooltip>
                     </div>
                 </MudTd>
             </RowTemplate>
-            <NoRecordsContent>
-                <div class="pa-4 text-center">
-                    <MudText Typo="Typo.body1" Color="Color.Secondary">No WSP submissions found matching search criteria.</MudText>
-                </div>
-            </NoRecordsContent>
             <PagerContent>
-                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
+                <!-- Fixed page size ladder (Clause 11.3.3) -->
+                <MudTablePager PageSizeOptions="new int[] { 5, 10, 20, 50, 100, 250, 500 }" />
             </PagerContent>
         </MudTable>
-    }
-</MudPaper>
+    </ChildContent>
+</DataGridShell>
 
 @code {
     private List<WspSubmission> _submissions = new();
+    private HashSet<WspSubmission> _selectedSubmissions = new();
     private string _searchString = string.Empty;
     private string _statusFilter = "All";
     private bool _loading = true;
+
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Grants & WSP", href: null, disabled: true),
+        new BreadcrumbItem("WSP Submissions", href: "/wsp")
+    };
 
     protected override async Task OnInitializedAsync()
     {
@@ -128,7 +196,7 @@
         _loading = false;
     }
 
-    private IEnumerable<WspSubmission> FilteredSubmissions
+    private List<WspSubmission> FilteredSubmissions
     {
         get
         {
@@ -136,7 +204,7 @@
 
             if (_statusFilter != "All")
             {
-                query = query.Where(x => string.Equals(x.StatusCode, _statusFilter, StringComparison.OrdinalIgnoreCase));
+                query = query.Where(x => x.StatusCode != null && x.StatusCode.Equals(_statusFilter, StringComparison.OrdinalIgnoreCase));
             }
 
             if (!string.IsNullOrWhiteSpace(_searchString))
@@ -144,27 +212,40 @@
                 var s = _searchString.Trim();
                 query = query.Where(x =>
                     (x.ReferenceNumber != null && x.ReferenceNumber.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
-                    (x.Organisation != null && x.Organisation.CompanyName.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
-                    (x.Organisation != null && x.Organisation.SdlNumber.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
-                    x.FinYear.ToString().Contains(s));
+                    x.FinYear.ToString().Contains(s, StringComparison.OrdinalIgnoreCase) ||
+                    (x.Organisation != null && x.Organisation.CompanyName != null && x.Organisation.CompanyName.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    (x.Organisation != null && x.Organisation.SdlNumber != null && x.Organisation.SdlNumber.Contains(s, StringComparison.OrdinalIgnoreCase)));
             }
 
-            return query;
+            return query.ToList();
         }
     }
 
-    private Color GetStatusColor(string? status) => status?.ToUpperInvariant() switch
+    private void HandleFilterChanged()
     {
-        "APPROVED" => Color.Success,
-        "SUBMITTED" => Color.Info,
-        "REJECTED" => Color.Error,
-        "UNDER_REVIEW" => Color.Warning,
-        _ => Color.Default
-    };
+        StateHasChanged();
+    }
+
+    private void HandleFilterCleared()
+    {
+        _searchString = string.Empty;
+        _statusFilter = "All";
+        StateHasChanged();
+    }
+
+    private void OnSelectedSubmissionsChanged(HashSet<WspSubmission> selected)
+    {
+        _selectedSubmissions = selected;
+    }
 
     private void OpenDetail(int id)
     {
         NavManager.NavigateTo($"/wsp/{id}");
+    }
+
+    private void OpenEdit(int id)
+    {
+        NavManager.NavigateTo($"/wsp/{id}/edit");
     }
 
     private void CreateNewWsp()
@@ -172,17 +253,32 @@
         NavManager.NavigateTo("/wsp/create");
     }
 
+    private void ExportSelected()
+    {
+        Snackbar.Add($"Exporting {_selectedSubmissions.Count} WSP submissions to CSV...", Severity.Info);
+    }
+
     private async Task DeleteWsp(int id, string refNo)
     {
-        var deleted = await WspService.DeleteAsync(id, "Admin");
-        if (deleted)
+        bool? confirmed = await DialogService.ShowMessageBoxAsync(
+            "Delete WSP Submission?",
+            $"Are you sure you wish to delete WSP submission '{refNo}'? This action will perform an audit-tracked soft delete.",
+            yesText: "Delete Submission",
+            cancelText: "Cancel"
+        );
+
+        if (confirmed == true)
         {
-            Snackbar.Add($"WSP Submission '{refNo}' deleted successfully with audit trail.", Severity.Success);
-            await LoadData();
-        }
-        else
-        {
-            Snackbar.Add("Could not delete WSP submission.", Severity.Error);
+            var deleted = await WspService.DeleteAsync(id, "Admin");
+            if (deleted)
+            {
+                Snackbar.Add($"WSP submission '{refNo}' deleted successfully with audit confirmation.", Severity.Success);
+                await LoadData();
+            }
+            else
+            {
+                Snackbar.Add("Could not delete the WSP submission.", Severity.Error);
+            }
         }
     }
 }

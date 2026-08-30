@@ -176,7 +176,7 @@ END
 IF OBJECT_ID(N'dbo.TrainingProvider', N'U') IS NOT NULL
 BEGIN
     IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.TrainingProvider') AND name = N'ProviderCode')
-        ALTER TABLE dbo.TrainingProvider ADD [ProviderCode] NVARCHAR(50) NULL;
+        ALTER TABLE dbo.TrainingProvider ADD [ProviderCode] NVARCHAR(50) NOT NULL CONSTRAINT DF_TrainingProvider_ProviderCode DEFAULT '';
 
     IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.TrainingProvider') AND name = N'EtqaId')
         ALTER TABLE dbo.TrainingProvider ADD [EtqaId] NVARCHAR(10) NOT NULL CONSTRAINT DF_TrainingProvider_EtqaId DEFAULT '17';
@@ -207,6 +207,13 @@ BEGIN
 
     IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'dbo.TrainingProvider') AND name = N'IX_TrainingProvider_ProviderStatusId')
         CREATE INDEX [IX_TrainingProvider_ProviderStatusId] ON dbo.TrainingProvider([ProviderStatusId]);
+
+    EXEC(N'UPDATE dbo.TrainingProvider SET ProviderCode = ''SDP-'' + CAST(Id AS NVARCHAR(20)) WHERE ProviderCode IS NULL OR ProviderCode = '''';');
+    EXEC(N'UPDATE dbo.TrainingProvider SET EtqaId = ''17'' WHERE EtqaId IS NULL;');
+    EXEC(N'UPDATE dbo.TrainingProvider SET ProviderClassId = ''02'' WHERE ProviderClassId IS NULL;');
+    EXEC(N'UPDATE dbo.TrainingProvider SET ProviderTypeId = ''02'' WHERE ProviderTypeId IS NULL;');
+    EXEC(N'UPDATE dbo.TrainingProvider SET ProviderStatusId = ''01'' WHERE ProviderStatusId IS NULL;');
+    EXEC(N'UPDATE dbo.TrainingProvider SET AccreditationNumber = ''ACC-'' + CAST(Id AS NVARCHAR(20)) WHERE AccreditationNumber IS NULL;');
 END
 
 -- 5. ETQA ASSESSOR (SETMIS File 401)
@@ -377,6 +384,12 @@ END
 -- 8. LEARNER TRADE TEST (SETMIS File 505)
 IF OBJECT_ID(N'dbo.LearnerTradeTest', N'U') IS NOT NULL
 BEGIN
+    IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.LearnerTradeTest') AND name = N'TradeTestNumber')
+        ALTER TABLE dbo.LearnerTradeTest ADD [TradeTestNumber] INT NOT NULL CONSTRAINT DF_LearnerTradeTest_TradeTestNumber DEFAULT 1;
+
+    IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.LearnerTradeTest') AND name = N'AttemptNumber')
+        EXEC(N'UPDATE dbo.LearnerTradeTest SET [TradeTestNumber] = [AttemptNumber] WHERE [TradeTestNumber] IS NULL OR [TradeTestNumber] = 1;');
+
     IF NOT EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID(N'dbo.LearnerTradeTest') AND name = N'TradeTestCentreCode')
         ALTER TABLE dbo.LearnerTradeTest ADD [TradeTestCentreCode] NVARCHAR(50) NULL;
 
@@ -418,6 +431,14 @@ BEGIN
 
     IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE object_id = OBJECT_ID(N'dbo.LearnerTradeTest') AND name = N'IX_LearnerTradeTest_TradeTestResultId')
         CREATE INDEX [IX_LearnerTradeTest_TradeTestResultId] ON dbo.LearnerTradeTest([TradeTestResultId]);
+
+    EXEC(N'UPDATE dbo.LearnerTradeTest SET TradeTestCentreCode = ''TTC-'' + CAST(Id AS NVARCHAR(20)) WHERE TradeTestCentreCode IS NULL;');
+    EXEC(N'UPDATE dbo.LearnerTradeTest SET TradeTestCentreEtqaId = ''17'' WHERE TradeTestCentreEtqaId IS NULL;');
+    EXEC(N'UPDATE dbo.LearnerTradeTest SET TradeTestResultId = ''01'' WHERE TradeTestResultId IS NULL;');
+    EXEC(N'UPDATE dbo.LearnerTradeTest SET TradeTestResultReasonId = ''01'' WHERE TradeTestResultReasonId IS NULL;');
+    EXEC(N'UPDATE dbo.LearnerTradeTest SET AssessorEtqaId = ''17'' WHERE AssessorEtqaId IS NULL;');
+    EXEC(N'UPDATE dbo.LearnerTradeTest SET ModeratorEtqaId = ''17'' WHERE ModeratorEtqaId IS NULL;');
+    EXEC(N'UPDATE dbo.LearnerTradeTest SET TrainingProviderEtqaId = ''17'' WHERE TrainingProviderEtqaId IS NULL;');
 END
 
 -- 9. SKILLS REGISTRATION (SETMIS File 304)

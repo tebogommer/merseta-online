@@ -283,10 +283,14 @@ BEGIN
         TotalCreditsRequired INT NOT NULL CONSTRAINT DF_QCD_Credits DEFAULT 120,
         DevelopmentTypeCode NVARCHAR(50) NOT NULL CONSTRAINT DF_QCD_DevType DEFAULT N'NewDevelopment',
         NationalDevelopmentPlanChecked BIT NOT NULL CONSTRAINT DF_QCD_NDP DEFAULT 1,
+        NationalDevelopmentPlanEvidence NVARCHAR(MAX) NULL,
         NewGrowthPlanChecked BIT NOT NULL CONSTRAINT DF_QCD_NGP DEFAULT 1,
+        NewGrowthPlanEvidence NVARCHAR(MAX) NULL,
         IndustrialPolicyActionPlanChecked BIT NOT NULL CONSTRAINT DF_QCD_IPAP DEFAULT 1,
+        IndustrialPolicyActionPlanEvidence NVARCHAR(MAX) NULL,
         StrategicInfrastructureChecked BIT NOT NULL CONSTRAINT DF_QCD_SIP DEFAULT 0,
         PurposeOfQualification NVARCHAR(MAX) NULL,
+        TargetLearnerAudience NVARCHAR(MAX) NULL,
         IndustryDemandJustification NVARCHAR(MAX) NULL,
         DevelopmentQualityPartner NVARCHAR(100) NOT NULL CONSTRAINT DF_QCD_DQP DEFAULT N'merSETA DQP',
         AssessmentQualityPartner NVARCHAR(100) NOT NULL CONSTRAINT DF_QCD_AQP DEFAULT N'merSETA AQP',
@@ -307,6 +311,75 @@ BEGIN
     CREATE NONCLUSTERED INDEX IX_QCD_OfoCode ON dbo.QualificationsCurriculumDevelopment (OfoCode);
     PRINT 'Created table [dbo].[QualificationsCurriculumDevelopment].';
 END
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'CurriculumWorkingGroupMember' AND schema_id = SCHEMA_ID(N'dbo'))
+BEGIN
+    CREATE TABLE dbo.CurriculumWorkingGroupMember (
+        id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_CWGM PRIMARY KEY CLUSTERED,
+        QualificationsCurriculumDevelopmentId INT NOT NULL CONSTRAINT FK_CWGM_QCD REFERENCES dbo.QualificationsCurriculumDevelopment(id) ON DELETE CASCADE,
+        PersonId INT NULL CONSTRAINT FK_CWGM_Person REFERENCES dbo.Person(id),
+        MemberName NVARCHAR(150) NOT NULL,
+        StakeholderRoleTitle NVARCHAR(100) NOT NULL CONSTRAINT DF_CWGM_Role DEFAULT N'IndustryExpert',
+        OrganisationRepresented NVARCHAR(200) NOT NULL CONSTRAINT DF_CWGM_Org DEFAULT '',
+        EmailAddress NVARCHAR(150) NOT NULL CONSTRAINT DF_CWGM_Email DEFAULT '',
+        PhoneNumber NVARCHAR(50) NOT NULL CONSTRAINT DF_CWGM_Phone DEFAULT '',
+        IsConfirmedAttendee BIT NOT NULL CONSTRAINT DF_CWGM_Confirmed DEFAULT 1,
+        CreatedAt DATETIME2(7) NOT NULL CONSTRAINT DF_CWGM_CreatedAt DEFAULT SYSUTCDATETIME(),
+        CreatedBy NVARCHAR(100) NOT NULL CONSTRAINT DF_CWGM_CreatedBy DEFAULT N'SYSTEM',
+        ModifiedAt DATETIME2(7) NULL,
+        ModifiedBy NVARCHAR(100) NULL
+    );
+    CREATE NONCLUSTERED INDEX IX_CWGM_QcdId ON dbo.CurriculumWorkingGroupMember (QualificationsCurriculumDevelopmentId);
+    PRINT 'Created table [dbo].[CurriculumWorkingGroupMember].';
+END
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'SkillsRegistration' AND schema_id = SCHEMA_ID(N'dbo'))
+BEGIN
+    CREATE TABLE dbo.SkillsRegistration (
+        id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_SkillsRegistration PRIMARY KEY CLUSTERED,
+        QualificationsCurriculumDevelopmentId INT NOT NULL CONSTRAINT FK_SkillsReg_QCD REFERENCES dbo.QualificationsCurriculumDevelopment(id) ON DELETE CASCADE,
+        NonNqfIntervCode NVARCHAR(50) NOT NULL,
+        NonNqfIntervName NVARCHAR(200) NOT NULL,
+        SubfieldId NVARCHAR(10) NOT NULL CONSTRAINT DF_SkillsReg_Subfield DEFAULT N'06',
+        EtqaId NVARCHAR(10) NOT NULL CONSTRAINT DF_SkillsReg_Etqa DEFAULT N'17',
+        NonNqfIntervStatusId NVARCHAR(10) NOT NULL CONSTRAINT DF_SkillsReg_Status DEFAULT N'01',
+        LearningProgrammeTypeId NVARCHAR(10) NOT NULL CONSTRAINT DF_SkillsReg_ProgType DEFAULT N'03',
+        RegistrationStartDate DATETIME2(7) NOT NULL CONSTRAINT DF_SkillsReg_StartDate DEFAULT SYSUTCDATETIME(),
+        RegistrationEndDate DATETIME2(7) NULL,
+        Credits INT NOT NULL CONSTRAINT DF_SkillsReg_Credits DEFAULT 30,
+        NqfLevel INT NOT NULL CONSTRAINT DF_SkillsReg_Nqf DEFAULT 3,
+        UnitStandardsIncludedJson NVARCHAR(MAX) NOT NULL CONSTRAINT DF_SkillsReg_UnitStandards DEFAULT N'[]',
+        CreatedAt DATETIME2(7) NOT NULL CONSTRAINT DF_SkillsReg_CreatedAt DEFAULT SYSUTCDATETIME(),
+        CreatedBy NVARCHAR(100) NOT NULL CONSTRAINT DF_SkillsReg_CreatedBy DEFAULT N'SYSTEM',
+        ModifiedAt DATETIME2(7) NULL,
+        ModifiedBy NVARCHAR(100) NULL
+    );
+    CREATE NONCLUSTERED INDEX IX_SkillsReg_QcdId ON dbo.SkillsRegistration (QualificationsCurriculumDevelopmentId);
+    CREATE NONCLUSTERED INDEX IX_SkillsReg_Code ON dbo.SkillsRegistration (NonNqfIntervCode);
+    PRINT 'Created table [dbo].[SkillsRegistration].';
+END
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'NonSetaCompany' AND schema_id = SCHEMA_ID(N'dbo'))
+BEGIN
+    CREATE TABLE dbo.NonSetaCompany (
+        id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_NonSetaCompany PRIMARY KEY CLUSTERED,
+        CompanyName NVARCHAR(200) NOT NULL,
+        SdlNumber NVARCHAR(50) NULL,
+        PrimarySetaCode NVARCHAR(50) NOT NULL CONSTRAINT DF_NonSetaCompany_Seta DEFAULT N'W&RSETA',
+        CompanyRegistrationNumber NVARCHAR(50) NULL,
+        Email NVARCHAR(150) NOT NULL CONSTRAINT DF_NonSetaCompany_Email DEFAULT '',
+        PhoneNumber NVARCHAR(50) NOT NULL CONSTRAINT DF_NonSetaCompany_Phone DEFAULT '',
+        PhysicalAddress NVARCHAR(500) NULL,
+        IsActive BIT NOT NULL CONSTRAINT DF_NonSetaCompany_Active DEFAULT 1,
+        CreatedAt DATETIME2(7) NOT NULL CONSTRAINT DF_NonSetaCompany_CreatedAt DEFAULT SYSUTCDATETIME(),
+        CreatedBy NVARCHAR(100) NOT NULL CONSTRAINT DF_NonSetaCompany_CreatedBy DEFAULT N'SYSTEM',
+        ModifiedAt DATETIME2(7) NULL,
+        ModifiedBy NVARCHAR(100) NULL
+    );
+    CREATE NONCLUSTERED INDEX IX_NonSetaCompany_Seta ON dbo.NonSetaCompany (PrimarySetaCode);
+    PRINT 'Created table [dbo].[NonSetaCompany].';
+END
+
 
 -- 9. Non-SETA Qualifications (Area 16)
 IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'NonSetaQualificationsCompletion' AND schema_id = SCHEMA_ID(N'dbo'))
@@ -554,4 +627,147 @@ BEGIN
     PRINT 'Created table [dbo].[DhetFlatFileExportLog].';
 END
 
+-- 16. WSP Qualitative Surveys & Strategic Skills Priorities
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'WspSkillsGap' AND schema_id = SCHEMA_ID(N'dbo'))
+BEGIN
+    CREATE TABLE dbo.WspSkillsGap (
+        id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_WspSkillsGap PRIMARY KEY CLUSTERED,
+        WspId INT NOT NULL CONSTRAINT FK_WspSkillsGap_Wsp FOREIGN KEY REFERENCES dbo.WspSubmission(id),
+        OccupationTitle NVARCHAR(200) NOT NULL,
+        OfoCode NVARCHAR(50) NULL,
+        SkillGapDescription NVARCHAR(1000) NOT NULL,
+        CauseOfGap NVARCHAR(500) NULL,
+        PlannedIntervention NVARCHAR(500) NULL,
+        PriorityLevel NVARCHAR(50) NOT NULL CONSTRAINT DF_WspSkillsGap_Priority DEFAULT N'High',
+        TargetLearnerCount INT NOT NULL CONSTRAINT DF_WspSkillsGap_Learners DEFAULT 1,
+        EstimatedBudget DECIMAL(18,2) NOT NULL CONSTRAINT DF_WspSkillsGap_Budget DEFAULT 0.0,
+        IsActive BIT NOT NULL CONSTRAINT DF_WspSkillsGap_Active DEFAULT 1,
+        CreatedAt DATETIME2(7) NOT NULL CONSTRAINT DF_WspSkillsGap_CreatedAt DEFAULT SYSUTCDATETIME(),
+        CreatedBy NVARCHAR(100) NOT NULL CONSTRAINT DF_WspSkillsGap_CreatedBy DEFAULT N'SYSTEM',
+        ModifiedAt DATETIME2(7) NULL,
+        ModifiedBy NVARCHAR(100) NULL
+    );
+    CREATE NONCLUSTERED INDEX IX_WspSkillsGap_Wsp ON dbo.WspSkillsGap (WspId);
+    PRINT 'Created table [dbo].[WspSkillsGap].';
+END
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'WspTrainingImpactSurvey' AND schema_id = SCHEMA_ID(N'dbo'))
+BEGIN
+    CREATE TABLE dbo.WspTrainingImpactSurvey (
+        id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_WspTrainingImpactSurvey PRIMARY KEY CLUSTERED,
+        WspId INT NOT NULL CONSTRAINT FK_WspImpact_Wsp FOREIGN KEY REFERENCES dbo.WspSubmission(id),
+        SurveyCategory NVARCHAR(100) NOT NULL,
+        QuestionText NVARCHAR(500) NOT NULL,
+        RatingScore INT NOT NULL CONSTRAINT DF_WspImpact_Rating DEFAULT 4,
+        QualitativeImpactNotes NVARCHAR(2000) NULL,
+        EvidenceDocumentUrl NVARCHAR(500) NULL,
+        CreatedAt DATETIME2(7) NOT NULL CONSTRAINT DF_WspImpact_CreatedAt DEFAULT SYSUTCDATETIME(),
+        CreatedBy NVARCHAR(100) NOT NULL CONSTRAINT DF_WspImpact_CreatedBy DEFAULT N'SYSTEM',
+        ModifiedAt DATETIME2(7) NULL,
+        ModifiedBy NVARCHAR(100) NULL
+    );
+    CREATE NONCLUSTERED INDEX IX_WspImpact_Wsp ON dbo.WspTrainingImpactSurvey (WspId);
+    PRINT 'Created table [dbo].[WspTrainingImpactSurvey].';
+END
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'WspStrategicPriority' AND schema_id = SCHEMA_ID(N'dbo'))
+BEGIN
+    CREATE TABLE dbo.WspStrategicPriority (
+        id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_WspStrategicPriority PRIMARY KEY CLUSTERED,
+        WspId INT NOT NULL CONSTRAINT FK_WspPriority_Wsp FOREIGN KEY REFERENCES dbo.WspSubmission(id),
+        PriorityCode NVARCHAR(50) NOT NULL,
+        StrategicObjective NVARCHAR(500) NOT NULL,
+        AlignmentDescription NVARCHAR(1000) NULL,
+        AllocatedBudget DECIMAL(18,2) NOT NULL CONSTRAINT DF_WspPriority_Budget DEFAULT 0.0,
+        IsAlignedWithNsdp BIT NOT NULL CONSTRAINT DF_WspPriority_Nsdp DEFAULT 1,
+        CreatedAt DATETIME2(7) NOT NULL CONSTRAINT DF_WspPriority_CreatedAt DEFAULT SYSUTCDATETIME(),
+        CreatedBy NVARCHAR(100) NOT NULL CONSTRAINT DF_WspPriority_CreatedBy DEFAULT N'SYSTEM',
+        ModifiedAt DATETIME2(7) NULL,
+        ModifiedBy NVARCHAR(100) NULL
+    );
+    CREATE NONCLUSTERED INDEX IX_WspPriority_Wsp ON dbo.WspStrategicPriority (WspId);
+    PRINT 'Created table [dbo].[WspStrategicPriority].';
+END
+
+-- 17. AQP (Assessment Quality Partner) & EISA Assessments
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'AqpPartner' AND schema_id = SCHEMA_ID(N'dbo'))
+BEGIN
+    CREATE TABLE dbo.AqpPartner (
+        id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_AqpPartner PRIMARY KEY CLUSTERED,
+        AqpName NVARCHAR(250) NOT NULL,
+        AqpCode NVARCHAR(50) NOT NULL,
+        AccreditationNumber NVARCHAR(100) NOT NULL,
+        QualityAssuranceBody NVARCHAR(100) NOT NULL CONSTRAINT DF_Aqp_QA DEFAULT N'QCTO',
+        ContactPersonId INT NULL CONSTRAINT FK_Aqp_ContactPerson FOREIGN KEY REFERENCES dbo.Person(id),
+        Email NVARCHAR(150) NULL,
+        PhoneNumber NVARCHAR(50) NULL,
+        PhysicalAddress NVARCHAR(300) NULL,
+        PostalCode NVARCHAR(20) NULL,
+        ProvinceCode NVARCHAR(50) NOT NULL CONSTRAINT DF_Aqp_Province DEFAULT N'GP',
+        AccreditationStartDate DATETIME2(7) NOT NULL,
+        AccreditationEndDate DATETIME2(7) NOT NULL,
+        StatusCode NVARCHAR(50) NOT NULL CONSTRAINT DF_Aqp_Status DEFAULT N'Active',
+        IsActive BIT NOT NULL CONSTRAINT DF_Aqp_Active DEFAULT 1,
+        CreatedAt DATETIME2(7) NOT NULL CONSTRAINT DF_Aqp_CreatedAt DEFAULT SYSUTCDATETIME(),
+        CreatedBy NVARCHAR(100) NOT NULL CONSTRAINT DF_Aqp_CreatedBy DEFAULT N'SYSTEM',
+        ModifiedAt DATETIME2(7) NULL,
+        ModifiedBy NVARCHAR(100) NULL
+    );
+    CREATE UNIQUE NONCLUSTERED INDEX UX_Aqp_Code ON dbo.AqpPartner (AqpCode);
+    CREATE UNIQUE NONCLUSTERED INDEX UX_Aqp_Accreditation ON dbo.AqpPartner (AccreditationNumber);
+    CREATE NONCLUSTERED INDEX IX_Aqp_ContactPerson ON dbo.AqpPartner (ContactPersonId);
+    PRINT 'Created table [dbo].[AqpPartner].';
+END
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'AqpQualificationScope' AND schema_id = SCHEMA_ID(N'dbo'))
+BEGIN
+    CREATE TABLE dbo.AqpQualificationScope (
+        id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_AqpQualificationScope PRIMARY KEY CLUSTERED,
+        AqpPartnerId INT NOT NULL CONSTRAINT FK_AqpScope_Partner FOREIGN KEY REFERENCES dbo.AqpPartner(id),
+        QualificationTitle NVARCHAR(250) NOT NULL,
+        SaqaQualificationId NVARCHAR(50) NULL,
+        NqfLevel INT NOT NULL CONSTRAINT DF_AqpScope_Nqf DEFAULT 4,
+        CurriculumCode NVARCHAR(50) NULL,
+        AssessmentModel NVARCHAR(50) NOT NULL CONSTRAINT DF_AqpScope_Model DEFAULT N'EISA',
+        IsActive BIT NOT NULL CONSTRAINT DF_AqpScope_Active DEFAULT 1,
+        CreatedAt DATETIME2(7) NOT NULL CONSTRAINT DF_AqpScope_CreatedAt DEFAULT SYSUTCDATETIME(),
+        CreatedBy NVARCHAR(100) NOT NULL CONSTRAINT DF_AqpScope_CreatedBy DEFAULT N'SYSTEM',
+        ModifiedAt DATETIME2(7) NULL,
+        ModifiedBy NVARCHAR(100) NULL
+    );
+    CREATE NONCLUSTERED INDEX IX_AqpScope_Partner ON dbo.AqpQualificationScope (AqpPartnerId);
+    PRINT 'Created table [dbo].[AqpQualificationScope].';
+END
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'AqpLearnerAssessment' AND schema_id = SCHEMA_ID(N'dbo'))
+BEGIN
+    CREATE TABLE dbo.AqpLearnerAssessment (
+        id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_AqpLearnerAssessment PRIMARY KEY CLUSTERED,
+        AqpPartnerId INT NOT NULL CONSTRAINT FK_AqpAssessment_Partner FOREIGN KEY REFERENCES dbo.AqpPartner(id),
+        CompanyLearnerId INT NULL CONSTRAINT FK_AqpAssessment_Learner FOREIGN KEY REFERENCES dbo.CompanyLearner(id),
+        PersonId INT NULL CONSTRAINT FK_AqpAssessment_Person FOREIGN KEY REFERENCES dbo.Person(id),
+        AssessmentNumber NVARCHAR(50) NOT NULL,
+        EisaExamSession NVARCHAR(100) NOT NULL,
+        AssessmentDate DATETIME2(7) NOT NULL,
+        AssessmentCenter NVARCHAR(200) NOT NULL,
+        TheoryScorePercentage DECIMAL(5,2) NULL,
+        PracticalScorePercentage DECIMAL(5,2) NULL,
+        FinalOverallPercentage DECIMAL(5,2) NOT NULL CONSTRAINT DF_AqpAssessment_Final DEFAULT 0.0,
+        ResultStatusCode NVARCHAR(50) NOT NULL CONSTRAINT DF_AqpAssessment_Result DEFAULT N'Pending',
+        ModerationStatusCode NVARCHAR(50) NOT NULL CONSTRAINT DF_AqpAssessment_Moderation DEFAULT N'Pending',
+        CertificateNumber NVARCHAR(100) NULL,
+        CertificateIssuedDate DATETIME2(7) NULL,
+        ModeratorComments NVARCHAR(1000) NULL,
+        CreatedAt DATETIME2(7) NOT NULL CONSTRAINT DF_AqpAssessment_CreatedAt DEFAULT SYSUTCDATETIME(),
+        CreatedBy NVARCHAR(100) NOT NULL CONSTRAINT DF_AqpAssessment_CreatedBy DEFAULT N'SYSTEM',
+        ModifiedAt DATETIME2(7) NULL,
+        ModifiedBy NVARCHAR(100) NULL
+    );
+    CREATE UNIQUE NONCLUSTERED INDEX UX_AqpAssessment_Number ON dbo.AqpLearnerAssessment (AssessmentNumber);
+    CREATE NONCLUSTERED INDEX IX_AqpAssessment_Partner ON dbo.AqpLearnerAssessment (AqpPartnerId);
+    CREATE NONCLUSTERED INDEX IX_AqpAssessment_Learner ON dbo.AqpLearnerAssessment (CompanyLearnerId);
+    PRINT 'Created table [dbo].[AqpLearnerAssessment].';
+END
+
 PRINT 'Complete Idempotent Enterprise DDL Deployment Succeeded!';
+

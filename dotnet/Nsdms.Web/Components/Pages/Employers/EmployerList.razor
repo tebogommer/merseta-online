@@ -1,53 +1,101 @@
 @page "/employers"
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@using MudBlazor
 @inject IOrganisationService OrgService
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
 @rendermode InteractiveServer
 
-<div class="d-flex justify-space-between align-center mb-4">
-    <div>
-        <MudText Typo="Typo.h5" Class="font-weight-bold">Employer & Organisation Registry</MudText>
-        <MudText Typo="Typo.body2" Color="Color.Secondary">Centralized database of levy-paying employers, chambers, providers, and accredited entities</MudText>
-    </div>
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AddBusiness" OnClick="CreateNewEmployer">
-        New Employer
-    </MudButton>
-</div>
+@*
+  UI-STANDARD.md Archetype: A1 / T1 (Transactional List - Employer & Organisation Registry)
+  Clauses: 4.2, 4.3, 6.1, 7.2, 8.1, 8.3, 11.1–11.9, 15.2.5
+*@
 
-<MudPaper Class="pa-4 mb-4" Elevation="1">
-    <div class="d-flex flex-wrap gap-4 align-center justify-space-between mb-3">
-        <div class="d-flex align-center gap-3 flex-grow-1" style="max-width: 600px;">
-            <MudTextField @bind-Value="_searchString"
-                          Placeholder="Search by SDL Number, Organisation Name, Registration No, Tax No..."
-                          Adornment="Adornment.Start"
-                          AdornmentIcon="@Icons.Material.Filled.Search"
-                          IconSize="Size.Medium"
-                          Class="mt-0"
-                          Immediate="true"
-                          Clearable="true" />
-        </div>
-        <div class="d-flex align-center gap-2">
-            <MudChipSet T="string" @bind-SelectedValue="_statusFilter" SelectionMode="SelectionMode.SingleSelection">
-                <MudChip T="string" Value="@("All")" Color="Color.Default" Variant="@(_statusFilter == "All" ? Variant.Filled : Variant.Outlined)">All</MudChip>
-                <MudChip T="string" Value="@("Active")" Color="Color.Success" Variant="@(_statusFilter == "Active" ? Variant.Filled : Variant.Outlined)">Active Only</MudChip>
-                <MudChip T="string" Value="@("Inactive")" Color="Color.Error" Variant="@(_statusFilter == "Inactive" ? Variant.Filled : Variant.Outlined)">Inactive</MudChip>
-            </MudChipSet>
-        </div>
-    </div>
+<EntityHeader Title="Employer &amp; Organisation Registry"
+              Subtitle="Centralized master register of levy-paying employers, chambers, providers, and accredited entities"
+              ReferenceKey="T1-EMPLOYERS"
+              Status="Active"
+              BreadcrumbItems="@_breadcrumbs">
+    <ActionZone>
+        <MudButton Variant="Variant.Filled" 
+                   Color="Color.Primary" 
+                   StartIcon="@Icons.Material.Filled.AddBusiness" 
+                   OnClick="CreateNewEmployer">
+            New Organisation
+        </MudButton>
+    </ActionZone>
+</EntityHeader>
 
-    @if (_loading)
-    {
-        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
-    }
-    else
-    {
+<!-- Filter Bar (Clause 11.4) -->
+<FilterBar SearchPlaceholder="Search by SDL Number, Organisation Name, Registration No, Tax No..."
+           @bind-SearchText="_searchString"
+           OnSearch="HandleFilterChanged"
+           OnClear="HandleFilterCleared">
+    <FilterContent>
+        <MudSelect T="string" 
+                   Label="Status Filter" 
+                   @bind-Value="_statusFilter" 
+                   @bind-Value:after="HandleFilterChanged"
+                   Variant="Variant.Outlined" 
+                   Margin="Margin.Dense"
+                   Dense="true">
+            <MudSelectItem Value="@("All")">All Organisations</MudSelectItem>
+            <MudSelectItem Value="@("Active")">Active Only</MudSelectItem>
+            <MudSelectItem Value="@("Inactive")">Inactive Only</MudSelectItem>
+        </MudSelect>
+    </FilterContent>
+    <ActiveFilterChips>
+        @if (!string.IsNullOrWhiteSpace(_searchString))
+        {
+            <MudChip T="string" Size="Size.Small" OnClose="@(() => { _searchString = string.Empty; HandleFilterChanged(); })">
+                Keyword: @_searchString
+            </MudChip>
+        }
+        @if (_statusFilter != "All")
+        {
+            <MudChip T="string" Size="Size.Small" Color="Color.Primary" OnClose="@(() => { _statusFilter = "All"; HandleFilterChanged(); })">
+                Status: @_statusFilter
+            </MudChip>
+        }
+    </ActiveFilterChips>
+</FilterBar>
+
+<!-- Data Grid Shell (Clause 11.9) -->
+<DataGridShell TItem="Organisation"
+               GridKey="EmployerRegistryGrid"
+               Items="@FilteredEmployers"
+               IsLoading="@_loading"
+               TotalItemsCount="@FilteredEmployers.Count"
+               SelectedItems="@_selectedEmployers"
+               SelectedItemsChanged="OnSelectedEmployersChanged"
+               EmptyTitle="No Organisations Found"
+               EmptyMessage="No registered employers match your active search and filter criteria. Register a new employer to populate the master registry."
+               EmptyActionLabel="Register New Organisation"
+               OnEmptyAction="CreateNewEmployer">
+    <BulkActionBarContent>
+        <MudText Typo="Typo.body2" Class="fw-bold text-white">
+            @_selectedEmployers.Count organisation(s) selected
+        </MudText>
+        <MudButton Variant="Variant.Filled" 
+                   Color="Color.Surface" 
+                   Size="Size.Small" 
+                   StartIcon="@Icons.Material.Filled.FileDownload"
+                   OnClick="ExportSelected">
+            Export Selected
+        </MudButton>
+    </BulkActionBarContent>
+    <ChildContent>
         <MudTable Items="@FilteredEmployers"
                   Hover="true"
                   Dense="true"
-                  Striped="true"
+                  Elevation="0"
+                  MultiSelection="true"
+                  @bind-SelectedItems="_selectedEmployers"
                   Breakpoint="Breakpoint.Sm"
-                  OnRowClick="@((TableRowClickEventArgs<Organisation> e) => OpenDetail(e.Item != null ? e.Item.Id : 0))"
-                  T="Organisation">
+                  Class="border-default">
             <HeaderContent>
                 <MudTh>SDL Number</MudTh>
                 <MudTh>Organisation Name</MudTh>
@@ -58,11 +106,12 @@
                 <MudTh Style="text-align:right">Actions</MudTh>
             </HeaderContent>
             <RowTemplate>
+                <!-- Key column is real hyperlink (Clause 11.1) -->
                 <MudTd DataLabel="SDL Number">
-                    <div class="d-flex align-center gap-1">
-                        <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Small" Color="Color.Primary" />
-                        <MudText Typo="Typo.body2" Class="fw-bold font-monospace">@context.SdlNumber</MudText>
-                    </div>
+                    <a href="/employers/@context.Id" class="d-flex align-center gap-1 font-monospace fw-bold text-primary text-decoration-none">
+                        <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Small" />
+                        <span>@(string.IsNullOrWhiteSpace(context.SdlNumber) ? $"ORG-{context.Id}" : context.SdlNumber)</span>
+                    </a>
                 </MudTd>
                 <MudTd DataLabel="Organisation Name">
                     <MudText Typo="Typo.body2" Class="fw-bold">@context.CompanyName</MudText>
@@ -74,7 +123,7 @@
                     }
                 </MudTd>
                 <MudTd Class="d-none d-md-table-cell" DataLabel="Trading Name">
-                    @(!string.IsNullOrWhiteSpace(context.TradingName) ? context.TradingName : "-")
+                    @(!string.IsNullOrWhiteSpace(context.TradingName) ? context.TradingName : "—")
                 </MudTd>
                 <MudTd Class="d-none d-md-table-cell" DataLabel="Registration / Tax No">
                     <div>
@@ -84,59 +133,77 @@
                         }
                         @if (!string.IsNullOrWhiteSpace(context.TaxNumber))
                         {
-                            <MudText Typo="Typo.caption" Class="d-block text-muted">Tax: @context.TaxNumber</MudText>
+                            <MudText Typo="Typo.caption" Class="d-block text-secondary">Tax: @context.TaxNumber</MudText>
                         }
                         @if (string.IsNullOrWhiteSpace(context.RegistrationNumber) && string.IsNullOrWhiteSpace(context.TaxNumber))
                         {
-                            <span>-</span>
+                            <span>—</span>
                         }
                     </div>
                 </MudTd>
                 <MudTd DataLabel="Chamber / Sector">
-                    <div>
+                    <div class="d-flex align-center gap-1">
                         @if (!string.IsNullOrWhiteSpace(context.ChamberCode))
                         {
                             <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">@context.ChamberCode</MudChip>
                         }
                         @if (!string.IsNullOrWhiteSpace(context.SectorCode))
                         {
-                            <MudText Typo="Typo.caption" Class="d-block text-muted">@context.SectorCode</MudText>
+                            <MudText Typo="Typo.caption" Class="text-secondary">@context.SectorCode</MudText>
                         }
                     </div>
                 </MudTd>
                 <MudTd DataLabel="Status">
-                    <MudChip T="string" Color="@(context.IsActive ? Color.Success : Color.Error)" Size="Size.Small" Variant="Variant.Filled">
-                        @(context.IsActive ? "Active" : "Inactive")
-                    </MudChip>
+                    <!-- Non-clickable status pill (Clause 6.1, 7.2) -->
+                    <StatusBadge Status="@(context.IsActive ? "Active" : "Inactive")" Size="Size.Small" />
                 </MudTd>
                 <MudTd Style="text-align:right" DataLabel="Actions">
                     <div class="d-flex justify-end gap-1">
-                        <MudTooltip Text="View & Edit Details">
-                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" OnClick="@(() => OpenDetail(context.Id))" aria-label="Edit Record" />
+                        <MudTooltip Text="View Details">
+                            <MudIconButton Icon="@Icons.Material.Filled.Visibility" 
+                                           Color="Color.Primary" 
+                                           Size="Size.Small" 
+                                           OnClick="@(() => OpenDetail(context.Id))" 
+                                           aria-label="View Details" />
+                        </MudTooltip>
+                        <MudTooltip Text="Edit Organisation">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" 
+                                           Color="Color.Secondary" 
+                                           Size="Size.Small" 
+                                           OnClick="@(() => OpenEdit(context.Id))" 
+                                           aria-label="Edit Organisation" />
                         </MudTooltip>
                         <MudTooltip Text="Delete Record">
-                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteEmployer(context.Id, context.CompanyName))" aria-label="Delete Record" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" 
+                                           Color="Color.Error" 
+                                           Size="Size.Small" 
+                                           OnClick="@(() => DeleteEmployer(context.Id, context.CompanyName))" 
+                                           aria-label="Delete Record" />
                         </MudTooltip>
                     </div>
                 </MudTd>
             </RowTemplate>
-            <NoRecordsContent>
-                <div class="pa-4 text-center">
-                    <MudText Typo="Typo.body1" Color="Color.Secondary">No employers found matching search criteria.</MudText>
-                </div>
-            </NoRecordsContent>
             <PagerContent>
-                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
+                <!-- Fixed page size ladder (Clause 11.3.3) -->
+                <MudTablePager PageSizeOptions="new int[] { 5, 10, 20, 50, 100, 250, 500 }" />
             </PagerContent>
         </MudTable>
-    }
-</MudPaper>
+    </ChildContent>
+</DataGridShell>
 
 @code {
     private List<Organisation> _employers = new();
+    private HashSet<Organisation> _selectedEmployers = new();
     private string _searchString = string.Empty;
     private string _statusFilter = "All";
     private bool _loading = true;
+
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Core Registries", href: null, disabled: true),
+        new BreadcrumbItem("Employers", href: "/employers")
+    };
 
     protected override async Task OnInitializedAsync()
     {
@@ -150,7 +217,7 @@
         _loading = false;
     }
 
-    private IEnumerable<Organisation> FilteredEmployers
+    private List<Organisation> FilteredEmployers
     {
         get
         {
@@ -176,8 +243,25 @@
                     (x.TaxNumber != null && x.TaxNumber.Contains(s, StringComparison.OrdinalIgnoreCase)));
             }
 
-            return query;
+            return query.ToList();
         }
+    }
+
+    private void HandleFilterChanged()
+    {
+        StateHasChanged();
+    }
+
+    private void HandleFilterCleared()
+    {
+        _searchString = string.Empty;
+        _statusFilter = "All";
+        StateHasChanged();
+    }
+
+    private void OnSelectedEmployersChanged(HashSet<Organisation> selected)
+    {
+        _selectedEmployers = selected;
     }
 
     private void OpenDetail(int id)
@@ -185,22 +269,42 @@
         NavManager.NavigateTo($"/employers/{id}");
     }
 
+    private void OpenEdit(int id)
+    {
+        NavManager.NavigateTo($"/employers/{id}/edit");
+    }
+
     private void CreateNewEmployer()
     {
         NavManager.NavigateTo("/employers/create");
     }
 
+    private void ExportSelected()
+    {
+        Snackbar.Add($"Exporting {_selectedEmployers.Count} organisations to CSV...", Severity.Info);
+    }
+
     private async Task DeleteEmployer(int id, string companyName)
     {
-        var deleted = await OrgService.DeleteAsync(id, "Admin");
-        if (deleted)
+        bool? confirmed = await DialogService.ShowMessageBoxAsync(
+            "Delete Employer Record?",
+            $"Are you sure you wish to delete organisation '{companyName}'? This action will perform an audit-tracked soft delete.",
+            yesText: "Delete Record",
+            cancelText: "Cancel"
+        );
+
+        if (confirmed == true)
         {
-            Snackbar.Add($"Employer '{companyName}' deleted successfully with audit confirmation.", Severity.Success);
-            await LoadData();
-        }
-        else
-        {
-            Snackbar.Add("Could not delete the employer record.", Severity.Error);
+            var deleted = await OrgService.DeleteAsync(id, "Admin");
+            if (deleted)
+            {
+                Snackbar.Add($"Employer '{companyName}' deleted successfully with audit confirmation.", Severity.Success);
+                await LoadData();
+            }
+            else
+            {
+                Snackbar.Add("Could not delete the employer record.", Severity.Error);
+            }
         }
     }
 }

@@ -126,10 +126,12 @@
                 <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
             </PagerContent>
             <NoRecordsContent>
-                <div class="pa-8 text-center">
-                    <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" Color="Color.Secondary" Class="mb-2" />
-                    <MudText Typo="Typo.h6" Color="Color.Secondary">No audit log records found matching your filters</MudText>
-                </div>
+                <EmptyStateCard Icon="@Icons.Material.Outlined.HistoryEdu"
+                                Title="No Audit Logs Found"
+                                Description="No security or mutation audit trail entries match your search criteria. Try clearing your entity or action filters."
+                                ActionText="Reset Filters"
+                                ActionIcon="@Icons.Material.Filled.Refresh"
+                                OnActionClick="ResetFilters" />
             </NoRecordsContent>
         </MudTable>
     </MudPaper>
@@ -215,5 +217,13 @@
             "rejected" or "cancelled" => Color.Warning,
             _ => Color.Secondary
         };
+    }
+
+    private void ResetFilters()
+    {
+        _searchQuery = string.Empty;
+        _selectedEntity = null;
+        _selectedAction = null;
+        ApplyFilters();
     }
 }

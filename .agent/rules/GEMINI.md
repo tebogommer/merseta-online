@@ -538,6 +538,71 @@ The agent may only declare testing phase complete when:
 
 ---
 
+### 🛡️ EF Core Nullability & SETMIS Schema Resilience Standard
+1. **Optional Relational Codes**: In EF Core entities representing legacy or SETMIS records (`LearnerTradeTest`, `CompanyLearner`, `Person`, `TrainingProvider`), declare all optional foreign key string properties as nullable (`string?`) to prevent `SqlNullValueException` when existing database rows contain NULLs.
+2. **Explicit Singular Table Names**: When defining new `DbSet<T>` properties in `INsdmsDbContext` and `NsdmsDbContext`, always configure `modelBuilder.Entity<T>().ToTable("SingularName")` in Fluent API to ensure EF Core does not default to plural table names.
+
+---
+
+### 🎨 UI/UX 5-Pillar Standards & CI Quality Gate Standard
+1. **Five-Pillar Invariant**: All UI interfaces must strictly comply with:
+   - **W3C WCAG 2.2 AA**: All interactive buttons/icons must provide machine-readable `aria-label` or `Title`; explicit `:focus-visible` outlines; skip-to-content bypass.
+   - **NN/g 10 Usability Heuristics**: State visibility via chips/toasts, user freedom with Back buttons, error prevention with confirmation dialogs.
+   - **ISO 9241-110 Dialogue Principles**: Direct self-descriptive action verbs (*Save Person*, *Approve Grant*), task suitability, controllability.
+   - **IxDF Interaction Design Laws**: Universal $\ge 36\text{px}$ touch targets (Fitts's Law), tabbed schema chunking (Hick's & Miller's Laws).
+   - **Google Lighthouse Core Web Vitals**: Sub-2.5s LCP render latency, 0.00 CLS, and accessible contrast.
+2. **Illustrated Empty States Invariant**: Never use raw, unstyled text for empty data tables. Always use `<EmptyStateCard>` with a contextual icon, title, description, and action button.
+3. **Power-User Keybindings**: Form detail views must support <kbd>Ctrl+S</kbd> to quick-save, <kbd>/</kbd> to focus table search, and <kbd>Esc</kbd> to cancel.
+4. **CI/CD Quality Gate**: All code changes must pass `python scripts/ci_ux_quality_gate.py` with 0 blocking errors and $\ge 90\%$ clean pass rate before merging.
+
+---
+
+### 🛡️ SQL Server Temporal Tables & History Schema Governance
+1. **Dedicated History Schema**: All system-versioned temporal history tables must reside in the `history` schema (`history.<Entity>History`).
+2. **EF Core Convention**: All persistent domain entities in `NsdmsDbContext` are mapped as temporal tables via `modelBuilder.ApplyTemporalTables()`.
+3. **Exclusions**: Append-only tables (`AuditLog`), workflow transient leases (`WorkflowTaskLease`), and static lookup tables (`lookup.*`) are non-temporal.
+4. **Point-in-Time Queries**: Use EF Core's native temporal query extensions (`.TemporalAsOf(dateTime)`, `.TemporalBetween(start, end)`, `.TemporalAll()`) when retrieving historical snapshots.
+
+---
+
+### 🛡️ Schema-Domain Synchronization Rule
+- Whenever new properties are added to an Entity class in `Nsdms.Domain/Entities/`, immediately:
+  1. Add corresponding `ALTER TABLE ... ADD [ColumnName] ...` clauses to the active Schema Migrator in `Nsdms.Infrastructure/Data/`.
+  2. Update the master DDL script (`V2026_08_Complete_Nsdms_Enterprise_DDL.sql`).
+  3. Verify column presence against `INFORMATION_SCHEMA.COLUMNS` before testing UI routes.
+
+---
+
+## UI rules
+
+`UI-STANDARD.md` in this repository governs every page, dialog, and shared UI component. Read it before creating or modifying any UI, and treat it as normative — not as advice.
+
+**Before generating a page:**
+
+1. State which archetype it implements (A1–A5, or T3 reference data). If it fits none, stop and ask — do not invent a sixth.
+2. Check the shared component set. Use those components; do not hand-write badges, headers, button groups, grids, steppers, or stat cards.
+3. Check the technology mapping note for this application's entity vocabulary, and use those nouns in routes, labels, and messages.
+
+**Rules that are breached most often — check these explicitly:**
+
+- Records open in **View** mode. Edit is a separate route reached by an explicit action.
+- **State reports, actions perform.** A badge is never clickable; a button never displays a value.
+- Workflow **state**, **status**, and **flags** are three distinct things. One state badge per page.
+- Transition actions come from the shared transition service, never from conditions written into a page. Never render an action that will fail.
+- Every list meets the full data table baseline, via the shared grid component.
+- The unique key column is a real hyperlink to the record's View route.
+- Reference data is maintained in the reference-data area, not as entity CRUD. Values are deactivated, never deleted once referenced.
+
+**Before declaring any page done:**
+
+Run the compliance checklist in the standard. A page that cannot tick every box is not finished.
+
+**When declining or deviating:**
+
+Cite the clause identifier. If the standard does not cover what is needed, stop and ask rather than improvising. Report clauses you believe are wrong — do not edit `UI-STANDARD.md`.
+
+---
+
 # END OF POLICY — NON-NEGOTIABLE
 
 

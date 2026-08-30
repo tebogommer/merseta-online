@@ -21,6 +21,12 @@ public interface IPdfDocumentService
     Task<byte[]> GenerateStatementOfResultsPdfAsync(SummativeAssessmentReport report, StatementOfResults sor);
     Task<byte[]> GenerateSarsClawbackNoticePdfAsync(SarsLevyReconAudit audit);
     Task<byte[]> GenerateQcdScopingDocumentPdfAsync(QualificationsCurriculumDevelopment qcd);
+
+    // ID-based direct PDF generation methods
+    Task<byte[]> GenerateGrantMoaContractPdfAsync(int grantMoaId);
+    Task<byte[]> GenerateTradeTestCertificatePdfAsync(int tradeTestId);
+    Task<byte[]> GenerateWspOutcomeLetterPdfAsync(int wspSubmissionId);
+    Task<byte[]> GenerateMandatoryRebateRemittancePdfAsync(int disbursementId);
 }
 
 public class ErpDisbursementResult

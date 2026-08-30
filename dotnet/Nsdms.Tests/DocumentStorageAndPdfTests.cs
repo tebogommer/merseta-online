@@ -55,7 +55,7 @@ public class DocumentStorageAndPdfTests
     public async Task QuestPdfDocumentService_GeneratesValidPdfBytes_ForTradeTestCertificate()
     {
         var (factory, db, audit, config, flags) = CreateContext();
-        var pdfService = new QuestPdfDocumentService(flags, config);
+        var pdfService = new QuestPdfDocumentService(factory, flags, config);
 
         var tradeTest = new LearnerTradeTest
         {
@@ -79,7 +79,7 @@ public class DocumentStorageAndPdfTests
     public async Task QuestPdfDocumentService_GeneratesValidPdfBytes_ForGrantMoa()
     {
         var (factory, db, audit, config, flags) = CreateContext();
-        var pdfService = new QuestPdfDocumentService(flags, config);
+        var pdfService = new QuestPdfDocumentService(factory, flags, config);
 
         var moa = new GrantMoa
         {
@@ -104,7 +104,7 @@ public class DocumentStorageAndPdfTests
     public async Task QuestPdfDocumentService_GeneratesValidPdfBytes_ForArtisanTradeCertificateApp()
     {
         var (factory, db, audit, config, flags) = CreateContext();
-        var pdfService = new QuestPdfDocumentService(flags, config);
+        var pdfService = new QuestPdfDocumentService(factory, flags, config);
 
         var app = new LearnerTradeTestApplication
         {
@@ -128,7 +128,7 @@ public class DocumentStorageAndPdfTests
     public async Task QuestPdfDocumentService_GeneratesValidPdfBytes_ForStatementOfResults()
     {
         var (factory, db, audit, config, flags) = CreateContext();
-        var pdfService = new QuestPdfDocumentService(flags, config);
+        var pdfService = new QuestPdfDocumentService(factory, flags, config);
 
         var report = new SummativeAssessmentReport
         {
@@ -162,7 +162,7 @@ public class DocumentStorageAndPdfTests
     public async Task QuestPdfDocumentService_GeneratesValidPdfBytes_ForSarsClawbackNotice()
     {
         var (factory, db, audit, config, flags) = CreateContext();
-        var pdfService = new QuestPdfDocumentService(flags, config);
+        var pdfService = new QuestPdfDocumentService(factory, flags, config);
 
         var auditRecord = new SarsLevyReconAudit
         {
@@ -186,7 +186,7 @@ public class DocumentStorageAndPdfTests
     public async Task QuestPdfDocumentService_GeneratesValidPdfBytes_ForQcdScopingDocument()
     {
         var (factory, db, audit, config, flags) = CreateContext();
-        var pdfService = new QuestPdfDocumentService(flags, config);
+        var pdfService = new QuestPdfDocumentService(factory, flags, config);
 
         var qcd = new QualificationsCurriculumDevelopment
         {

@@ -22,17 +22,17 @@ public class TrainingProvider : BaseEntity
     /// <summary>
     /// Statutory Provider Code as recorded on the National Learners' Records Database (NLRD) and SETMIS (SETMIS File 100).
     /// </summary>
-    public string ProviderCode { get; set; } = string.Empty;
+    public string? ProviderCode { get; set; } = string.Empty;
 
     /// <summary>
     /// Submitting ETQA / SETA Identifier (references lookup.SetaType, default 17 for merSETA).
     /// </summary>
-    public string EtqaId { get; set; } = "17";
+    public string? EtqaId { get; set; } = "17";
 
     /// <summary>
     /// Official ETQA accreditation certificate number.
     /// </summary>
-    public string AccreditationNumber { get; set; } = string.Empty;
+    public string? AccreditationNumber { get; set; } = string.Empty;
 
     /// <summary>
     /// Start date of current ETQA accreditation cycle.
@@ -47,17 +47,17 @@ public class TrainingProvider : BaseEntity
     /// <summary>
     /// Provider institutional class code (references lookup.ProviderClassType: 01 Public TVET, 02 Private, 03 University, 04 NGO/CBO).
     /// </summary>
-    public string ProviderClassId { get; set; } = "02";
+    public string? ProviderClassId { get; set; } = "02";
 
     /// <summary>
     /// Provider functional operational type code (references lookup.ProviderType: 01 Education, 02 Training, 03 Employer Provider).
     /// </summary>
-    public string ProviderTypeId { get; set; } = "02";
+    public string? ProviderTypeId { get; set; } = "02";
 
     /// <summary>
     /// Current accreditation standing code (references lookup.ProviderStatusType: 01 Accredited, 02 Provisional, 03 De-accredited).
     /// </summary>
-    public string ProviderStatusId { get; set; } = "01";
+    public string? ProviderStatusId { get; set; } = "01";
 
     /// <summary>
     /// Legacy Provider Type Code mapping.

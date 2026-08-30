@@ -17,7 +17,7 @@ public class Person : BaseEntity
     /// <summary>
     /// Legal first / given name(s).
     /// </summary>
-    public string FirstName { get; set; } = string.Empty;
+    public string? FirstName { get; set; } = string.Empty;
 
     /// <summary>
     /// Middle or secondary given name(s).
@@ -27,12 +27,12 @@ public class Person : BaseEntity
     /// <summary>
     /// Legal family surname.
     /// </summary>
-    public string LastName { get; set; } = string.Empty;
+    public string? LastName { get; set; } = string.Empty;
 
     /// <summary>
     /// 13-digit South African National Identity Number.
     /// </summary>
-    public string RsaIdNumber { get; set; } = string.Empty;
+    public string? RsaIdNumber { get; set; } = string.Empty;
 
     /// <summary>
     /// Foreign passport number or alternate identification number for non-South African citizens.
@@ -186,15 +186,15 @@ public class Person : BaseEntity
     /// <summary>
     /// Primary email contact address.
     /// </summary>
-    public string Email { get; set; } = string.Empty;
+    public string? Email { get; set; } = string.Empty;
 
     [NotMapped]
-    public string EmailAddress { get => Email; set => Email = value; }
+    public string? EmailAddress { get => Email; set => Email = value; }
 
     /// <summary>
     /// Primary telephone contact number.
     /// </summary>
-    public string PhoneNumber { get; set; } = string.Empty;
+    public string? PhoneNumber { get; set; } = string.Empty;
 
     /// <summary>
     /// Mobile / cellular phone number.

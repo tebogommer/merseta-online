@@ -1,0 +1,63 @@
+@namespace Nsdms.Web.Components.Shared
+@using MudBlazor
+
+@*
+  UI-STANDARD.md Contract:
+  Component: FormSection
+  Inputs: Title, Subtitle, Icon, IconColor, HeaderBadge, ChildContent
+  Renders: Standardized semantic form section card with clean header and responsive contents.
+*@
+
+<div class="nsdms-form-section bg-surface border-default mb-4" role="region" aria-label="@Title">
+    @if (!string.IsNullOrWhiteSpace(Title) || Icon != null || HeaderBadge != null)
+    {
+        <div class="nsdms-form-section-header d-flex align-center justify-space-between pb-2 mb-3" style="border-bottom: 1px solid var(--mud-palette-lines-default);">
+            <div class="d-flex align-center gap-2">
+                @if (Icon != null)
+                {
+                    <MudAvatar Color="@IconColor" Variant="Variant.Filled" Size="Size.Small">
+                        <MudIcon Icon="@Icon" Size="Size.Small" />
+                    </MudAvatar>
+                }
+                <div>
+                    <MudText Typo="Typo.subtitle1" Class="fw-bold">@Title</MudText>
+                    @if (!string.IsNullOrWhiteSpace(Subtitle))
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@Subtitle</MudText>
+                    }
+                </div>
+            </div>
+
+            @if (HeaderBadge != null)
+            {
+                <div>
+                    @HeaderBadge
+                </div>
+            }
+        </div>
+    }
+
+    <div class="nsdms-form-section-body">
+        @ChildContent
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string? Title { get; set; }
+
+    [Parameter]
+    public string? Subtitle { get; set; }
+
+    [Parameter]
+    public string? Icon { get; set; }
+
+    [Parameter]
+    public Color IconColor { get; set; } = Color.Primary;
+
+    [Parameter]
+    public RenderFragment? HeaderBadge { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

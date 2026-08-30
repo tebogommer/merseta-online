@@ -1,0 +1,111 @@
+@namespace Nsdms.Web.Components.Shared
+@using MudBlazor
+@inject IJSRuntime JS
+
+@*
+  UI-STANDARD.md Contract (Section 9.2, Clause 4.5.1, 4.6.2):
+  Component: AppShell
+  Inputs: NavContent, NavCollapsed, CurrentPath, TopBarContent, ChildContent
+  Renders: Standard application shell with namespaced classes, left navigation, collapse persistence, and responsive off-canvas drawer.
+*@
+
+<div class="nsdms-app-shell">
+    <a href="#main-content" class="nsdms-skip-link">Skip to Main Content</a>
+
+    <MudLayout>
+        <!-- Top Application Bar -->
+        <MudAppBar Elevation="1" Color="Color.Primary" Class="nsdms-top-bar" role="banner">
+            <MudIconButton Icon="@Icons.Material.Filled.Menu" 
+                           Color="Color.Inherit" 
+                           Edge="Edge.Start" 
+                           OnClick="@ToggleDrawerAsync" 
+                           aria-label="Toggle navigation panel" />
+            
+            <MudText Typo="Typo.h6" Class="ml-3 font-weight-bold d-none d-sm-inline">
+                MerSETA NSDMS Enterprise Portal
+            </MudText>
+
+            <MudSpacer />
+
+            @if (TopBarContent != null)
+            {
+                @TopBarContent
+            }
+        </MudAppBar>
+
+        <!-- Left Navigation Panel (Collapsible to icon rail, Off-canvas on mobile) -->
+        <MudDrawer @bind-Open="_drawerOpen" 
+                   Elevation="2" 
+                   ClipMode="DrawerClipMode.Always" 
+                   Variant="DrawerVariant.Responsive"
+                   Breakpoint="Breakpoint.Md"
+                   Class="nsdms-sidebar-drawer"
+                   role="navigation" 
+                   aria-label="Sidebar Navigation">
+            <div class="nsdms-drawer-inner h-100 overflow-y-auto">
+                @if (NavContent != null)
+                {
+                    @NavContent
+                }
+            </div>
+        </MudDrawer>
+
+        <!-- Main Content Area: Sized from space that remains (Clause 4.6.2.1) -->
+        <MudMainContent Class="nsdms-main-container">
+            <div class="pa-4 pa-md-6 pt-6">
+                <main id="main-content" role="main">
+                    @ChildContent
+                </main>
+            </div>
+        </MudMainContent>
+    </MudLayout>
+</div>
+
+@code {
+    [Parameter]
+    public RenderFragment? TopBarContent { get; set; }
+
+    [Parameter]
+    public RenderFragment? NavContent { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    [Parameter]
+    public string? CurrentPath { get; set; }
+
+    private bool _drawerOpen = true;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                var saved = await JS.InvokeAsync<string?>("localStorage.getItem", "nsdms_drawer_open");
+                if (saved != null)
+                {
+                    _drawerOpen = saved == "true";
+                    StateHasChanged();
+                }
+            }
+            catch
+            {
+                // Fallback
+            }
+        }
+    }
+
+    private async Task ToggleDrawerAsync()
+    {
+        _drawerOpen = !_drawerOpen;
+        try
+        {
+            await JS.InvokeVoidAsync("localStorage.setItem", "nsdms_drawer_open", _drawerOpen ? "true" : "false");
+        }
+        catch
+        {
+            // Fallback
+        }
+    }
+}

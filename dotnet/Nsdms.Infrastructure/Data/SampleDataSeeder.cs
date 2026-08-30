@@ -885,5 +885,109 @@ public static class SampleDataSeeder
             db.ReviewCommitteeMeetings.Add(meeting);
             await db.SaveChangesAsync();
         }
+
+        if (!await db.QualificationsCurriculumDevelopments.AnyAsync())
+        {
+            var qcd1 = new QualificationsCurriculumDevelopment
+            {
+                ApplicationNumber = "QCD-2026-AUT-001",
+                QualificationTitle = "Occupational Certificate: Electric Vehicle Mechatronics Technician",
+                SaqaQualificationId = "SAQA-119842",
+                OfoCode = "671201",
+                NqfLevel = 5,
+                TotalCreditsRequired = 240,
+                DevelopmentTypeCode = "NewDevelopment",
+                NationalDevelopmentPlanChecked = true,
+                NationalDevelopmentPlanEvidence = "Aligned with NDP 2030 Chapter 9: Improving education, training and innovation for green transport economy.",
+                NewGrowthPlanChecked = true,
+                NewGrowthPlanEvidence = "Supports Green Economy Accord and automotive industry manufacturing transformation.",
+                IndustrialPolicyActionPlanChecked = true,
+                IndustrialPolicyActionPlanEvidence = "Matches SAAM 2035 EV localization and high-tech manufacturing priority interventions.",
+                StrategicInfrastructureChecked = true,
+                PurposeOfQualification = "To produce skilled mechatronics technicians capable of diagnosing, servicing and assembling electric and hybrid powertrains.",
+                TargetLearnerAudience = "Apprentices, qualified automotive motor mechanics seeking EV upskilling, and TVET engineering diploma graduates.",
+                IndustryDemandJustification = "Critical shortage of high-voltage battery diagnostic specialists across SA automotive OEM manufacturing plants.",
+                DevelopmentQualityPartner = "merSETA DQP",
+                AssessmentQualityPartner = "merSETA AQP",
+                OrganisationId = orgToyotaDb.Id,
+                WorkingGroupConvenedDate = DateTime.UtcNow.AddDays(-60),
+                PublicCommentClosingDate = DateTime.UtcNow.AddDays(30),
+                StatusCode = "PublicCommentOpen",
+                CreatedAt = DateTime.UtcNow.AddDays(-75),
+                CreatedBy = "SYSTEM"
+            };
+
+            qcd1.WorkingGroupMembers.Add(new CurriculumWorkingGroupMember
+            {
+                MemberName = "Dr. Johan van der Merwe",
+                StakeholderRoleTitle = "LeadQDF",
+                OrganisationRepresented = "merSETA Curriculum Development Unit",
+                EmailAddress = "johan.vdm@merietasamples.co.za",
+                PhoneNumber = "0112345678",
+                IsConfirmedAttendee = true,
+                CreatedAt = DateTime.UtcNow.AddDays(-60),
+                CreatedBy = "SYSTEM"
+            });
+
+            qcd1.WorkingGroupMembers.Add(new CurriculumWorkingGroupMember
+            {
+                MemberName = "Sipho Khumalo",
+                StakeholderRoleTitle = "IndustryExpert",
+                OrganisationRepresented = "Toyota SA Motors - Technical Training Centre",
+                EmailAddress = "sipho.khumalo@merietasamples.co.za",
+                PhoneNumber = "0319102000",
+                IsConfirmedAttendee = true,
+                CreatedAt = DateTime.UtcNow.AddDays(-60),
+                CreatedBy = "SYSTEM"
+            });
+
+            qcd1.SkillsRegistrations.Add(new SkillsRegistration
+            {
+                NonNqfIntervCode = "SP-EV-BATT-01",
+                NonNqfIntervName = "High-Voltage EV Battery Pack Diagnostics and Safety Isolation",
+                SubfieldId = "06",
+                EtqaId = "17",
+                NonNqfIntervStatusId = "01",
+                LearningProgrammeTypeId = "03",
+                RegistrationStartDate = DateTime.UtcNow.AddDays(-30),
+                Credits = 45,
+                NqfLevel = 5,
+                UnitStandardsIncludedJson = "[\"US-EV-001\",\"US-EV-002\",\"US-EV-003\"]",
+                CreatedAt = DateTime.UtcNow.AddDays(-30),
+                CreatedBy = "SYSTEM"
+            });
+
+            var qcd2 = new QualificationsCurriculumDevelopment
+            {
+                ApplicationNumber = "QCD-2026-MET-002",
+                QualificationTitle = "Occupational Certificate: Robotic Welding & Automation Specialist",
+                SaqaQualificationId = "SAQA-118751",
+                OfoCode = "651202",
+                NqfLevel = 4,
+                TotalCreditsRequired = 180,
+                DevelopmentTypeCode = "ReAlignment",
+                NationalDevelopmentPlanChecked = true,
+                NationalDevelopmentPlanEvidence = "NDP Priority Skills alignment for heavy engineering manufacturing.",
+                NewGrowthPlanChecked = true,
+                NewGrowthPlanEvidence = "Supports advanced metals and plastics manufacturing productivity.",
+                IndustrialPolicyActionPlanChecked = true,
+                IndustrialPolicyActionPlanEvidence = "IPAP Metal Fabrication, Capital and Rail Transport Equipment sector plan.",
+                StrategicInfrastructureChecked = false,
+                PurposeOfQualification = "To train automated welding system programmers and operators for robotic welding cells in industrial manufacturing.",
+                TargetLearnerAudience = "Qualified boilermakers, welders, and precision mechanical engineering artisans.",
+                IndustryDemandJustification = "High demand from automotive body shops and structural steel fabricators transitioning to Industry 4.0 automation.",
+                DevelopmentQualityPartner = "merSETA DQP",
+                AssessmentQualityPartner = "merSETA AQP",
+                OrganisationId = orgToyotaDb.Id,
+                WorkingGroupConvenedDate = DateTime.UtcNow.AddDays(-120),
+                SaqaSubmissionDate = DateTime.UtcNow.AddDays(-15),
+                StatusCode = "SubmittedToQcto",
+                CreatedAt = DateTime.UtcNow.AddDays(-140),
+                CreatedBy = "SYSTEM"
+            };
+
+            db.QualificationsCurriculumDevelopments.AddRange(qcd1, qcd2);
+            await db.SaveChangesAsync();
+        }
     }
 }

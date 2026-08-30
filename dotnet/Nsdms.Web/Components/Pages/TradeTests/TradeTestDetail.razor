@@ -1,4 +1,5 @@
 @page "/tradetests/{Id:int}"
+@page "/tradetests/{Id:int}/edit"
 @using Nsdms.Application.Common.Interfaces
 @using Nsdms.Domain.Entities
 @inject ITradeTestAndArplService TradeTestService
@@ -64,6 +65,10 @@ else
                             Issue Trade Certificate
                         </MudButton>
                     }
+
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PictureAsPdf" OnClick="DownloadCertificatePdf">
+                        Download Certificate (PDF)
+                    </MudButton>
 
                     @if (_app.StatusCode == "Certified")
                     {
@@ -283,5 +288,10 @@ else
         {
             Snackbar.Add($"Error: {ex.Message}", Severity.Error);
         }
+    }
+
+    private void DownloadCertificatePdf()
+    {
+        Nav.NavigateTo($"/api/documents/tradetest/{Id}/pdf", forceLoad: true);
     }
 }

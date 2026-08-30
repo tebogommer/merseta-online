@@ -46,6 +46,8 @@ PAGES_TO_TEST = [
     {"name": "Summative Assessment Reports & SOR", "url": "/assessments/summative"},
     {"name": "Workplace Monitoring & Audits", "url": "/monitoring"},
     {"name": "ETQA Assessors & Moderators", "url": "/etqa"},
+    {"name": "Assessment Quality Partners (AQP)", "url": "/etqa/aqp"},
+    {"name": "Register AQP Partner Form", "url": "/etqa/aqp/create"},
     {"name": "Register Assessor Form", "url": "/etqa/create"},
     {"name": "Assessor Detail View", "url": "/etqa/1"},
     {"name": "Accreditation Scope Extensions", "url": "/etqa/scope-extensions"},

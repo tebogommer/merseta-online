@@ -1,0 +1,51 @@
+@using MudBlazor
+@inject NavigationManager Navigation
+
+<div class="empty-state-container pa-8 my-4 text-center d-flex flex-column align-center justify-center border rounded-lg" style="background-color: var(--mud-palette-background-grey); min-height: 220px;">
+    <MudAvatar Color="@AvatarColor" Variant="Variant.Outlined" Size="Size.Large" Class="mb-3 pa-6" Style="border-width: 2px;">
+        <MudIcon Icon="@Icon" Size="Size.Large" Color="@AvatarColor" />
+    </MudAvatar>
+
+    <MudText Typo="Typo.h6" Class="fw-bold mb-1" Color="Color.Default">
+        @Title
+    </MudText>
+
+    <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-4" Style="max-width: 480px;">
+        @Description
+    </MudText>
+
+    @if (!string.IsNullOrWhiteSpace(ActionText))
+    {
+        <MudButton Variant="Variant.Filled"
+                   Color="@ActionColor"
+                   StartIcon="@ActionIcon"
+                   Size="Size.Medium"
+                   OnClick="HandleActionClick">
+            @ActionText
+        </MudButton>
+    }
+</div>
+
+@code {
+    [Parameter] public string Icon { get; set; } = Icons.Material.Outlined.FolderOff;
+    [Parameter] public Color AvatarColor { get; set; } = Color.Primary;
+    [Parameter] public string Title { get; set; } = "No records found";
+    [Parameter] public string Description { get; set; } = "There are no records matching the selected filters. Try broadening your search or create a new entry.";
+    [Parameter] public string? ActionText { get; set; }
+    [Parameter] public string ActionIcon { get; set; } = Icons.Material.Filled.Add;
+    [Parameter] public Color ActionColor { get; set; } = Color.Primary;
+    [Parameter] public EventCallback OnActionClick { get; set; }
+    [Parameter] public string? ActionHref { get; set; }
+
+    private async Task HandleActionClick()
+    {
+        if (!string.IsNullOrWhiteSpace(ActionHref))
+        {
+            Navigation.NavigateTo(ActionHref);
+        }
+        else if (OnActionClick.HasDelegate)
+        {
+            await OnActionClick.InvokeAsync();
+        }
+    }
+}

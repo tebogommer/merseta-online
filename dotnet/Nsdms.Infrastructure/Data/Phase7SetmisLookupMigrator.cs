@@ -46,7 +46,10 @@ public static class Phase7SetmisLookupMigrator
         { "Urban_Rural_ID", "UrbanRuralType" },
         { "SETA_Id", "SetaType" },
         { "Funding_Id", "FundingType" },
-        { "Employer_Approval_Status_Id", "EmployerApprovalStatusType" }
+        { "Employer_Approval_Status_Id", "EmployerApprovalStatusType" },
+        { "Abet_Band_Id", "AbetBandType" },
+        { "Qualification_Type_Id", "QualificationTypeType" },
+        { "Honours_Class_Id", "HonoursClassType" }
     };
 
     public static async Task MigrateSetmisLookupsAsync(IServiceProvider serviceProvider)

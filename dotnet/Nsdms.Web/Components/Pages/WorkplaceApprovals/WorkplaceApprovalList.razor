@@ -1,140 +1,182 @@
 @page "/workplace-approvals"
-@rendermode InteractiveServer
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@using MudBlazor
 @inject IWorkplaceApprovalService ApprovalService
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@rendermode InteractiveServer
 
-<PageTitle>Workplace Approvals - NSDMS</PageTitle>
+@*
+  UI-STANDARD.md Archetype: A1 / T1 (Transactional List - Workplace Approvals)
+  Clauses: 4.2, 4.3, 6.1, 7.2, 8.1, 8.3, 11.1–11.9, 15.2.5
+*@
 
-<div class="mb-4 d-flex justify-space-between align-center">
-    <div>
-        <MudBreadcrumbs Items="_breadcrumbItems" Class="pa-0 mb-1" />
-        <MudText Typo="Typo.h4" Class="fw-bold">Workplace Approvals (WPA)</MudText>
-        <MudText Typo="Typo.body2" Color="Color.Secondary">Evaluate, approve, and verify host employer training infrastructure and workshop mentors.</MudText>
-    </div>
-    <div>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="@(() => Navigation.NavigateTo("/workplace-approvals/create"))">
+<EntityHeader Title="Workplace Approvals (WPA)"
+              Subtitle="Evaluate, approve, and verify host employer training infrastructure and workshop mentors"
+              ReferenceKey="T1-WORKPLACE-APPROVALS"
+              Status="Active"
+              BreadcrumbItems="@_breadcrumbItems">
+    <ActionZone>
+        <MudButton Variant="Variant.Filled" 
+                   Color="Color.Primary" 
+                   StartIcon="@Icons.Material.Filled.Add" 
+                   OnClick="@(() => Navigation.NavigateTo("/workplace-approvals/create"))">
             New Approval Application
         </MudButton>
-    </div>
-</div>
+    </ActionZone>
+</EntityHeader>
 
-<MudCard Outlined="true" Class="mb-4">
-    <MudCardContent Class="py-3">
-        <MudGrid AlignItems="Center">
-            <MudItem xs="12" sm="6" md="4">
-                <MudTextField @bind-Value="_searchString" Immediate="true" Placeholder="Search approval no, qualification, employer..."
-                              Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
-                              Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" OnClearButtonClick="@(() => OnSearch(""))" TextChanged="OnSearch" />
-            </MudItem>
-            <MudItem xs="12" sm="6" md="3">
-                <MudSelect T="string" Value="_selectedStatus" Label="Status Filter" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" ValueChanged="OnStatusFilterChanged">
-                    <MudSelectItem Value="@("Pending")">Pending</MudSelectItem>
-                    <MudSelectItem Value="@("Approved")">Approved</MudSelectItem>
-                    <MudSelectItem Value="@("Rejected")">Rejected</MudSelectItem>
-                    <MudSelectItem Value="@("Expired")">Expired</MudSelectItem>
-                </MudSelect>
-            </MudItem>
-            <MudItem xs="12" sm="12" md="5" Class="d-flex justify-end gap-2">
-                <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadData">
-                    Refresh
-                </MudButton>
-            </MudItem>
-        </MudGrid>
-    </MudCardContent>
-</MudCard>
+<!-- Filter Bar (Clause 11.4) -->
+<FilterBar SearchPlaceholder="Search approval no, qualification, employer name, SDL..."
+           @bind-SearchText="_searchString"
+           OnSearch="LoadData"
+           OnClear="ClearFilters">
+    <FilterContent>
+        <MudSelect T="string" 
+                   Label="Status Filter" 
+                   Value="_selectedStatus" 
+                   ValueChanged="OnStatusFilterChanged"
+                   Variant="Variant.Outlined" 
+                   Margin="Margin.Dense"
+                   Dense="true">
+            <MudSelectItem Value="@("All")">All Statuses</MudSelectItem>
+            <MudSelectItem Value="@("Pending")">Pending</MudSelectItem>
+            <MudSelectItem Value="@("Approved")">Approved</MudSelectItem>
+            <MudSelectItem Value="@("Rejected")">Rejected</MudSelectItem>
+            <MudSelectItem Value="@("Expired")">Expired</MudSelectItem>
+        </MudSelect>
+    </FilterContent>
+    <ActiveFilterChips>
+        @if (!string.IsNullOrWhiteSpace(_searchString))
+        {
+            <MudChip T="string" Size="Size.Small" OnClose="@(() => { _searchString = string.Empty; LoadData(); })">
+                Keyword: @_searchString
+            </MudChip>
+        }
+        @if (_selectedStatus != "All" && !string.IsNullOrWhiteSpace(_selectedStatus))
+        {
+            <MudChip T="string" Size="Size.Small" Color="Color.Primary" OnClose="@(() => { _selectedStatus = "All"; LoadData(); })">
+                Status: @_selectedStatus
+            </MudChip>
+        }
+    </ActiveFilterChips>
+</FilterBar>
 
-@if (_loading)
-{
-    <div class="d-flex justify-center my-8">
-        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
-    </div>
-}
-else
-{
-    <MudTable T="WorkplaceApproval" Items="_approvals" Hover="true" Striped="true" Elevation="1" Class="rounded-lg" RowClass="cursor-pointer" OnRowClick="@(args => Navigation.NavigateTo($"/workplace-approvals/{args.Item.Id}"))">
-        <HeaderContent>
-            <MudTh>Approval Number</MudTh>
-            <MudTh>Employer / Organisation</MudTh>
-            <MudTh>Qualification Scope</MudTh>
-            <MudTh>Inspection Date</MudTh>
-            <MudTh>Expiry Date</MudTh>
-            <MudTh>Mentors</MudTh>
-            <MudTh>Status</MudTh>
-            <MudTh Style="text-align: right;">Actions</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Approval Number">
-                <div class="d-flex align-center gap-2">
-                    <MudIcon Icon="@Icons.Material.Filled.FactCheck" Color="Color.Primary" Size="Size.Small" />
-                    <span class="fw-bold font-monospace">@context.ApprovalNumber</span>
-                </div>
-            </MudTd>
-            <MudTd DataLabel="Employer">
-                <div>
-                    <div class="fw-semibold">@(context.Organisation?.CompanyName ?? "Unknown")</div>
-                    <div class="text-muted small">SDL: @(context.Organisation?.SdlNumber ?? "N/A")</div>
-                </div>
-            </MudTd>
-            <MudTd DataLabel="Qualification">
-                <div class="fw-medium">@context.QualificationTitle</div>
-                @if (context.SaqaQualificationId.HasValue)
-                {
-                    <div class="text-muted small">SAQA ID: @context.SaqaQualificationId</div>
-                }
-            </MudTd>
-            <MudTd DataLabel="Inspection Date">
-                @(context.InspectionDate?.ToString("yyyy-MM-dd") ?? "Pending")
-            </MudTd>
-            <MudTd DataLabel="Expiry Date">
-                @(context.ExpiryDate?.ToString("yyyy-MM-dd") ?? "—")
-            </MudTd>
-            <MudTd DataLabel="Mentors">
-                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info" Icon="@Icons.Material.Filled.Engineering">
-                    @context.Mentors.Count Mentors
-                </MudChip>
-            </MudTd>
-            <MudTd DataLabel="Status">
-                @if (context.ApprovalStatusCode == "Approved")
-                {
-                    <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.CheckCircle">Approved</MudChip>
-                }
-                else if (context.ApprovalStatusCode == "Pending")
-                {
-                    <MudChip T="string" Color="Color.Warning" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Schedule">Pending</MudChip>
-                }
-                else if (context.ApprovalStatusCode == "Rejected")
-                {
-                    <MudChip T="string" Color="Color.Error" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Cancel">Rejected</MudChip>
-                }
-                else
-                {
-                    <MudChip T="string" Color="Color.Default" Size="Size.Small" Variant="Variant.Filled">@context.ApprovalStatusCode</MudChip>
-                }
-            </MudTd>
-            <MudTd DataLabel="Actions" Style="text-align: right;">
-                <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Primary" Size="Size.Small" Title="View Details"
-                               OnClick="@(() => Navigation.NavigateTo($"/workplace-approvals/{context.Id}"))" />
-                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" Title="Delete"
-                               OnClick="@(() => DeleteApproval(context.Id))" />
-            </MudTd>
-        </RowTemplate>
-        <PagerContent>
-            <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
-        </PagerContent>
-    </MudTable>
-}
+<!-- Data Grid Shell (Clause 11.9) -->
+<DataGridShell TItem="WorkplaceApproval"
+               GridKey="WorkplaceApprovalsGrid"
+               Items="@_approvals"
+               IsLoading="@_loading"
+               TotalItemsCount="@_approvals.Count"
+               SelectedItems="@_selectedApprovals"
+               SelectedItemsChanged="OnSelectedApprovalsChanged"
+               EmptyTitle="No Workplace Approvals Found"
+               EmptyMessage="No workplace approval records match your search or filter criteria. Create a new approval application to initiate employer site verification."
+               EmptyActionLabel="Create Application"
+               OnEmptyAction="@(() => Navigation.NavigateTo("/workplace-approvals/create"))">
+    <BulkActionBarContent>
+        <MudText Typo="Typo.body2" Class="fw-bold text-white">
+            @_selectedApprovals.Count approval(s) selected
+        </MudText>
+        <MudButton Variant="Variant.Filled" 
+                   Color="Color.Surface" 
+                   Size="Size.Small" 
+                   StartIcon="@Icons.Material.Filled.FileDownload"
+                   OnClick="ExportSelected">
+            Export Selected
+        </MudButton>
+    </BulkActionBarContent>
+    <ChildContent>
+        <MudTable T="WorkplaceApproval" 
+                  Items="_approvals" 
+                  Hover="true" 
+                  Dense="true" 
+                  Elevation="0" 
+                  MultiSelection="true"
+                  @bind-SelectedItems="_selectedApprovals"
+                  Breakpoint="Breakpoint.Sm" 
+                  Class="border-default">
+            <HeaderContent>
+                <MudTh>Approval Number</MudTh>
+                <MudTh>Employer / Organisation</MudTh>
+                <MudTh>Qualification Scope</MudTh>
+                <MudTh>Inspection Date</MudTh>
+                <MudTh>Expiry Date</MudTh>
+                <MudTh>Mentors</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh Style="text-align: right;">Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <!-- Key column is real hyperlink (Clause 11.1) -->
+                <MudTd DataLabel="Approval Number">
+                    <a href="/workplace-approvals/@context.Id" class="d-flex align-center gap-1 font-monospace fw-bold text-primary text-decoration-none">
+                        <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Small" />
+                        <span>@(string.IsNullOrWhiteSpace(context.ApprovalNumber) ? $"WPA-{context.Id}" : context.ApprovalNumber)</span>
+                    </a>
+                </MudTd>
+                <MudTd DataLabel="Employer">
+                    <div>
+                        <div class="fw-semibold">@(context.Organisation?.CompanyName ?? "Unknown")</div>
+                        <div class="text-secondary" style="font-size: 0.8rem;">SDL: @(context.Organisation?.SdlNumber ?? "N/A")</div>
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="Qualification">
+                    <div class="fw-medium">@context.QualificationTitle</div>
+                    @if (context.SaqaQualificationId.HasValue)
+                    {
+                        <div class="text-secondary" style="font-size: 0.8rem;">SAQA ID: @context.SaqaQualificationId</div>
+                    }
+                </MudTd>
+                <MudTd DataLabel="Inspection Date">
+                    @(context.InspectionDate?.ToString("yyyy-MM-dd") ?? "Pending")
+                </MudTd>
+                <MudTd DataLabel="Expiry Date">
+                    @(context.ExpiryDate?.ToString("yyyy-MM-dd") ?? "—")
+                </MudTd>
+                <MudTd DataLabel="Mentors">
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info" Icon="@Icons.Material.Filled.Engineering">
+                        @(context.Mentors?.Count ?? 0) Mentors
+                    </MudChip>
+                </MudTd>
+                <MudTd DataLabel="Status">
+                    <!-- Non-clickable status pill (Clause 6.1, 7.2) -->
+                    <StatusBadge Status="@(context.ApprovalStatusCode ?? "Pending")" Size="Size.Small" />
+                </MudTd>
+                <MudTd Style="text-align: right;" DataLabel="Actions">
+                    <div class="d-flex justify-end gap-1">
+                        <MudTooltip Text="View Approval">
+                            <MudIconButton Icon="@Icons.Material.Filled.Visibility" 
+                                           Color="Color.Primary" 
+                                           Size="Size.Small" 
+                                           OnClick="@(() => Navigation.NavigateTo($"/workplace-approvals/{context.Id}"))" 
+                                           aria-label="View Approval" />
+                        </MudTooltip>
+                    </div>
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <!-- Fixed page size ladder (Clause 11.3.3) -->
+                <MudTablePager PageSizeOptions="new int[] { 5, 10, 20, 50, 100, 250, 500 }" />
+            </PagerContent>
+        </MudTable>
+    </ChildContent>
+</DataGridShell>
 
 @code {
     private List<WorkplaceApproval> _approvals = new();
+    private HashSet<WorkplaceApproval> _selectedApprovals = new();
     private bool _loading = true;
-    private string _searchString = "";
-    private string? _selectedStatus;
+    private string _searchString = string.Empty;
+    private string _selectedStatus = "All";
 
     private List<BreadcrumbItem> _breadcrumbItems = new()
     {
-        new BreadcrumbItem("Dashboard", href: "/"),
-        new BreadcrumbItem("Workplace Approvals", href: null, disabled: true)
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Core Registries", href: null, disabled: true),
+        new BreadcrumbItem("Workplace Approvals", href: "/workplace-approvals")
     };
 
     protected override async Task OnInitializedAsync()
@@ -147,11 +189,8 @@ else
         _loading = true;
         try
         {
-            _approvals = await ApprovalService.GetAllAsync(_searchString, _selectedStatus);
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Error loading approvals: {ex.Message}", Severity.Error);
+            var statusArg = _selectedStatus == "All" ? null : _selectedStatus;
+            _approvals = await ApprovalService.GetAllAsync(_searchString, statusArg);
         }
         finally
         {
@@ -159,29 +198,26 @@ else
         }
     }
 
-    private async Task OnSearch(string text)
+    private async Task OnStatusFilterChanged(string val)
     {
-        _searchString = text;
+        _selectedStatus = val;
         await LoadData();
     }
 
-    private async Task OnStatusFilterChanged(string value)
+    private async Task ClearFilters()
     {
-        _selectedStatus = value;
+        _searchString = string.Empty;
+        _selectedStatus = "All";
         await LoadData();
     }
 
-    private async Task DeleteApproval(int id)
+    private void OnSelectedApprovalsChanged(HashSet<WorkplaceApproval> selected)
     {
-        var success = await ApprovalService.DeleteAsync(id, "ADMIN");
-        if (success)
-        {
-            Snackbar.Add("Workplace approval record deleted successfully.", Severity.Success);
-            await LoadData();
-        }
-        else
-        {
-            Snackbar.Add("Failed to delete record.", Severity.Error);
-        }
+        _selectedApprovals = selected;
+    }
+
+    private void ExportSelected()
+    {
+        Snackbar.Add($"Exporting {_selectedApprovals.Count} workplace approvals to CSV...", Severity.Info);
     }
 }

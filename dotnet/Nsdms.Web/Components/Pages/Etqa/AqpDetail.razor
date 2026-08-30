@@ -1,0 +1,645 @@
+@page "/etqa/aqp/{Id:int}"
+@page "/etqa/aqp/create"
+@inject IAqpPartnerService AqpService
+@inject IPersonService PersonService
+@inject ILearnerService LearnerService
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+<!-- Sticky Top Bar with Master-Detail Invariants -->
+<MudPaper Elevation="1" Class="sticky-top pa-4 mb-4 rounded-lg d-flex flex-wrap justify-space-between align-center gap-3" Style="top: var(--mud-appbar-height, 64px) !important; z-index: 10;">
+    <div class="d-flex align-center gap-3">
+        <MudButton Variant="Variant.Text"
+                   StartIcon="@Icons.Material.Filled.ArrowBack"
+                   Color="Color.Default"
+                   OnClick="BackToList">
+            Back to AQP Partners
+        </MudButton>
+        <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-2" />
+        <div>
+            <MudBreadcrumbs Items="_breadcrumbItems" Separator=">" Class="pa-0 ma-0" />
+            <MudText Typo="Typo.h6" Class="font-weight-bold">
+                @(Id == 0 ? "Register New Assessment Quality Partner (AQP)" : $"{_partner.AqpName} ({_partner.AqpCode})")
+            </MudText>
+        </div>
+    </div>
+    <div class="d-flex align-center gap-2">
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Secondary"
+                   StartIcon="@Icons.Material.Filled.Cancel"
+                   OnClick="BackToList">
+            Cancel
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Save"
+                   OnClick="SavePartner"
+                   Disabled="_isSaving">
+            @(_isSaving ? "Saving..." : "Save Partner")
+        </MudButton>
+    </div>
+</MudPaper>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-0">
+    @if (_loading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-6" />
+    }
+    else
+    {
+        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Color="Color.Surface">
+            <!-- TAB 1: General Partner Information -->
+            <MudTabPanel Text="Partner Profile" Icon="@Icons.Material.Filled.AccountBalance">
+                <MudForm @ref="_form" @bind-IsValid="_isValid">
+                    <MudGrid Spacing="3">
+                        <MudItem xs="12" lg="8">
+                            <MudCard Elevation="2" Class="mb-4">
+                                <MudCardHeader>
+                                    <CardHeaderAvatar>
+                                        <MudAvatar Color="Color.Primary" Variant="Variant.Filled">
+                                            <MudIcon Icon="@Icons.Material.Filled.Business" />
+                                        </MudAvatar>
+                                    </CardHeaderAvatar>
+                                    <CardHeaderContent>
+                                        <MudText Typo="Typo.h6">Accreditation Identification</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Official QCTO accreditation credentials and contact details</MudText>
+                                    </CardHeaderContent>
+                                </MudCardHeader>
+                                <MudCardContent>
+                                    <MudGrid Spacing="2">
+                                        <MudItem xs="12" md="8">
+                                            <MudTextField @bind-Value="_partner.AqpName" Label="AQP Partner Name" Variant="Variant.Outlined" Required="true" />
+                                        </MudItem>
+                                        <MudItem xs="12" md="4">
+                                            <MudTextField @bind-Value="_partner.AqpCode" Label="AQP Unique Code" Variant="Variant.Outlined" Required="true" />
+                                        </MudItem>
+                                        <MudItem xs="12" md="6">
+                                            <MudTextField @bind-Value="_partner.AccreditationNumber" Label="Accreditation Number" Variant="Variant.Outlined" Required="true" />
+                                        </MudItem>
+                                        <MudItem xs="12" md="6">
+                                            <MudTextField @bind-Value="_partner.QualityAssuranceBody" Label="Quality Assurance Body" Variant="Variant.Outlined" Required="true" />
+                                        </MudItem>
+                                        <MudItem xs="12" md="6">
+                                            <MudSelect @bind-Value="_partner.ContactPersonId" Label="Assigned Contact Person" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
+                                                <MudSelectItem Value="@((int?)null)">-- Select Contact Person --</MudSelectItem>
+                                                @foreach (var p in _people)
+                                                {
+                                                    <MudSelectItem Value="@((int?)p.Id)">@p.FirstName @p.LastName (@p.RsaIdNumber)</MudSelectItem>
+                                                }
+                                            </MudSelect>
+                                        </MudItem>
+                                        <MudItem xs="12" md="6">
+                                            <MudSelect @bind-Value="_partner.StatusCode" Label="Accreditation Status" Variant="Variant.Outlined">
+                                                <MudSelectItem Value="@("Active")">Active</MudSelectItem>
+                                                <MudSelectItem Value="@("UnderReview")">Under Review</MudSelectItem>
+                                                <MudSelectItem Value="@("Suspended")">Suspended</MudSelectItem>
+                                                <MudSelectItem Value="@("Expired")">Expired</MudSelectItem>
+                                            </MudSelect>
+                                        </MudItem>
+                                        <MudItem xs="12" md="6">
+                                            <MudTextField @bind-Value="_partner.Email" Label="Official Email Address" Variant="Variant.Outlined" />
+                                        </MudItem>
+                                        <MudItem xs="12" md="6">
+                                            <MudTextField @bind-Value="_partner.PhoneNumber" Label="Contact Phone Number" Variant="Variant.Outlined" />
+                                        </MudItem>
+                                        <MudItem xs="12" md="8">
+                                            <MudTextField @bind-Value="_partner.PhysicalAddress" Label="Physical Facility Address" Variant="Variant.Outlined" Lines="2" />
+                                        </MudItem>
+                                        <MudItem xs="12" md="4">
+                                            <MudSelect @bind-Value="_partner.ProvinceCode" Label="Province" Variant="Variant.Outlined">
+                                                <MudSelectItem Value="@("GP")">Gauteng</MudSelectItem>
+                                                <MudSelectItem Value="@("KZN")">KwaZulu-Natal</MudSelectItem>
+                                                <MudSelectItem Value="@("WC")">Western Cape</MudSelectItem>
+                                                <MudSelectItem Value="@("EC")">Eastern Cape</MudSelectItem>
+                                                <MudSelectItem Value="@("MP")">Mpumalanga</MudSelectItem>
+                                                <MudSelectItem Value="@("FS")">Free State</MudSelectItem>
+                                                <MudSelectItem Value="@("NW")">North West</MudSelectItem>
+                                                <MudSelectItem Value="@("LP")">Limpopo</MudSelectItem>
+                                                <MudSelectItem Value="@("NC")">Northern Cape</MudSelectItem>
+                                            </MudSelect>
+                                        </MudItem>
+                                        <MudItem xs="12" md="6">
+                                            <MudDatePicker Label="Accreditation Start Date" @bind-Date="_startDate" Variant="Variant.Outlined" DateFormat="yyyy-MM-dd" />
+                                        </MudItem>
+                                        <MudItem xs="12" md="6">
+                                            <MudDatePicker Label="Accreditation End Date" @bind-Date="_endDate" Variant="Variant.Outlined" DateFormat="yyyy-MM-dd" />
+                                        </MudItem>
+                                    </MudGrid>
+                                </MudCardContent>
+                            </MudCard>
+                        </MudItem>
+
+                        <!-- Right Column: Governance Audit Card -->
+                        <MudItem xs="12" lg="4">
+                            <MudCard Elevation="2" Class="mb-4">
+                                <MudCardHeader>
+                                    <CardHeaderAvatar>
+                                        <MudAvatar Color="Color.Dark" Variant="Variant.Filled">
+                                            <MudIcon Icon="@Icons.Material.Filled.Security" />
+                                        </MudAvatar>
+                                    </CardHeaderAvatar>
+                                    <CardHeaderContent>
+                                        <MudText Typo="Typo.h6">Audit &amp; Lifecycle</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Record provenance</MudText>
+                                    </CardHeaderContent>
+                                </MudCardHeader>
+                                <MudCardContent>
+                                    <div class="d-flex flex-column gap-2 text-muted">
+                                        <div class="d-flex justify-space-between">
+                                            <MudText Typo="Typo.caption">AQP ID:</MudText>
+                                            <MudText Typo="Typo.caption" Class="fw-bold">@(Id > 0 ? Id.ToString() : "New")</MudText>
+                                        </div>
+                                        <div class="d-flex justify-space-between">
+                                            <MudText Typo="Typo.caption">Created At:</MudText>
+                                            <MudText Typo="Typo.caption">@(_partner.CreatedAt > DateTime.MinValue ? _partner.CreatedAt.ToString("yyyy-MM-dd HH:mm") : "-")</MudText>
+                                        </div>
+                                        <div class="d-flex justify-space-between">
+                                            <MudText Typo="Typo.caption">Created By:</MudText>
+                                            <MudText Typo="Typo.caption">@(!string.IsNullOrWhiteSpace(_partner.CreatedBy) ? _partner.CreatedBy : "-")</MudText>
+                                        </div>
+                                        <div class="d-flex justify-space-between">
+                                            <MudText Typo="Typo.caption">Modified At:</MudText>
+                                            <MudText Typo="Typo.caption">@(_partner.ModifiedAt.HasValue ? _partner.ModifiedAt.Value.ToString("yyyy-MM-dd HH:mm") : "-")</MudText>
+                                        </div>
+                                    </div>
+                                </MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                    </MudGrid>
+                </MudForm>
+            </MudTabPanel>
+
+            <!-- TAB 2: Qualification Assessment Scopes -->
+            @if (Id > 0)
+            {
+                <MudTabPanel Text="Qualification Scopes" Icon="@Icons.Material.Filled.FactCheck">
+                    <div class="d-flex justify-space-between align-center mb-4">
+                        <div>
+                            <MudText Typo="Typo.h6">Accredited Qualification Assessment Scopes</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Registered qualifications for which this AQP develops EISA tools and conducts external summative assessments</MudText>
+                        </div>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenAddScopeForm">
+                            Add Scope
+                        </MudButton>
+                    </div>
+
+                    @if (_showAddScopeForm)
+                    {
+                        <MudPaper Class="pa-4 mb-4 border rounded" Elevation="0">
+                            <MudText Typo="Typo.subtitle2" Class="mb-3 font-weight-bold">Add Qualification Assessment Scope</MudText>
+                            <MudGrid Spacing="2">
+                                <MudItem xs="12" md="6">
+                                    <MudTextField @bind-Value="_newScopeTitle" Label="Qualification Title" Variant="Variant.Outlined" Margin="Margin.Dense" Required="true" />
+                                </MudItem>
+                                <MudItem xs="12" md="3">
+                                    <MudTextField @bind-Value="_newScopeSaqaId" Label="SAQA Qual ID" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                                </MudItem>
+                                <MudItem xs="12" md="3">
+                                    <MudNumericField @bind-Value="_newScopeNqf" Label="NQF Level" Variant="Variant.Outlined" Margin="Margin.Dense" Min="1" Max="10" />
+                                </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudTextField @bind-Value="_newScopeCurriculum" Label="Curriculum / OFO Code" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                                </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudSelect @bind-Value="_newScopeModel" Label="Assessment Model" Variant="Variant.Outlined" Margin="Margin.Dense">
+                                        <MudSelectItem Value="@("EISA")">External Integrated Summative Assessment (EISA)</MudSelectItem>
+                                        <MudSelectItem Value="@("Practical")">Practical Trade Assessment</MudSelectItem>
+                                        <MudSelectItem Value="@("Portfolio")">Portfolio of Evidence (PoE)</MudSelectItem>
+                                        <MudSelectItem Value="@("Integrated")">Integrated Knowledge &amp; Practical</MudSelectItem>
+                                    </MudSelect>
+                                </MudItem>
+                                <MudItem xs="12" Class="d-flex justify-end gap-2 mt-2">
+                                    <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="() => _showAddScopeForm = false">Cancel</MudButton>
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveScope">Save Scope</MudButton>
+                                </MudItem>
+                            </MudGrid>
+                        </MudPaper>
+                    }
+
+                    <MudTable Items="_scopes" Dense="true" Hover="true" Elevation="0">
+                        <HeaderContent>
+                            <MudTh>Qualification Title</MudTh>
+                            <MudTh>SAQA ID</MudTh>
+                            <MudTh>NQF Level</MudTh>
+                            <MudTh>Curriculum Code</MudTh>
+                            <MudTh>Assessment Model</MudTh>
+                            <MudTh Style="text-align:right">Actions</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Qualification Title">
+                                <MudText Typo="Typo.body2" Class="fw-bold">@context.QualificationTitle</MudText>
+                            </MudTd>
+                            <MudTd DataLabel="SAQA ID">
+                                <MudText Typo="Typo.body2">@(context.SaqaQualificationId ?? "-")</MudText>
+                            </MudTd>
+                            <MudTd DataLabel="NQF Level">
+                                <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">NQF @context.NqfLevel</MudChip>
+                            </MudTd>
+                            <MudTd DataLabel="Curriculum Code">
+                                <MudText Typo="Typo.body2">@(context.CurriculumCode ?? "-")</MudText>
+                            </MudTd>
+                            <MudTd DataLabel="Assessment Model">
+                                <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled">@context.AssessmentModel</MudChip>
+                            </MudTd>
+                            <MudTd Style="text-align:right" DataLabel="Actions">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => RemoveScope(context.Id))" aria-label="Remove scope" />
+                            </MudTd>
+                        </RowTemplate>
+                        <NoRecordsContent>
+                            <div class="pa-4 text-center">
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">No qualification scopes assigned to this AQP.</MudText>
+                            </div>
+                        </NoRecordsContent>
+                    </MudTable>
+                </MudTabPanel>
+
+                <!-- TAB 3: EISA Learner Assessments -->
+                <MudTabPanel Text="EISA Assessments" Icon="@Icons.Material.Filled.AssignmentTurnedIn">
+                    <div class="d-flex justify-space-between align-center mb-4">
+                        <div>
+                            <MudText Typo="Typo.h6">EISA Examination Schedules &amp; Result Certification</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Learner exam sessions, theory/practical score capture, moderation endorsements, and QCTO certificates</MudText>
+                        </div>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Event" OnClick="OpenScheduleAssessmentForm">
+                            Schedule EISA Exam
+                        </MudButton>
+                    </div>
+
+                    @if (_showScheduleForm)
+                    {
+                        <MudPaper Class="pa-4 mb-4 border rounded" Elevation="0">
+                            <MudText Typo="Typo.subtitle2" Class="mb-3 font-weight-bold">Schedule Learner for EISA Examination</MudText>
+                            <MudGrid Spacing="2">
+                                <MudItem xs="12" md="6">
+                                    <MudSelect @bind-Value="_selectedLearnerId" Label="Registered Company Learner" Variant="Variant.Outlined" Margin="Margin.Dense" AnchorOrigin="Origin.BottomCenter">
+                                        <MudSelectItem Value="@((int?)null)">-- Select Registered Learner --</MudSelectItem>
+                                        @foreach (var l in _learners)
+                                        {
+                                            <MudSelectItem Value="@((int?)l.Id)">@l.LearnerContractNumber - @l.Person?.FirstName @l.Person?.LastName (@l.QualificationTitle)</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudTextField @bind-Value="_newExamSession" Label="EISA Exam Session Reference (e.g. 2026-OCT-EISA-01)" Variant="Variant.Outlined" Margin="Margin.Dense" Required="true" />
+                                </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudTextField @bind-Value="_newExamCenter" Label="Accredited Assessment Center / Campus" Variant="Variant.Outlined" Margin="Margin.Dense" Required="true" />
+                                </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudDatePicker Label="Exam Date" @bind-Date="_examDate" Variant="Variant.Outlined" Margin="Margin.Dense" DateFormat="yyyy-MM-dd" />
+                                </MudItem>
+                                <MudItem xs="12" Class="d-flex justify-end gap-2 mt-2">
+                                    <MudButton Variant="Variant.Outlined" Size="Size.Small" OnClick="() => _showScheduleForm = false">Cancel</MudButton>
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Save" OnClick="ScheduleAssessment">Schedule Learner</MudButton>
+                                </MudItem>
+                            </MudGrid>
+                        </MudPaper>
+                    }
+
+                    <MudTable Items="_assessments" Dense="true" Hover="true" Elevation="0">
+                        <HeaderContent>
+                            <MudTh>Assessment #</MudTh>
+                            <MudTh>Learner</MudTh>
+                            <MudTh>Session &amp; Center</MudTh>
+                            <MudTh>Date</MudTh>
+                            <MudTh>Scores (Theory / Pract / Overall)</MudTh>
+                            <MudTh>Result Status</MudTh>
+                            <MudTh>Certificate</MudTh>
+                            <MudTh Style="text-align:right">Actions</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Assessment #">
+                                <MudChip T="string" Size="Size.Small" Color="Color.Dark" Variant="Variant.Outlined">@context.AssessmentNumber</MudChip>
+                            </MudTd>
+                            <MudTd DataLabel="Learner">
+                                <MudText Typo="Typo.body2" Class="fw-bold">@(context.CompanyLearner?.Person != null ? $"{context.CompanyLearner.Person.FirstName} {context.CompanyLearner.Person.LastName}" : (context.Person != null ? $"{context.Person.FirstName} {context.Person.LastName}" : "Learner"))</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Contract: @(context.CompanyLearner?.LearnerContractNumber ?? "Direct Entry")</MudText>
+                            </MudTd>
+                            <MudTd DataLabel="Session & Center">
+                                <MudText Typo="Typo.body2">@context.EisaExamSession</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">@context.AssessmentCenter</MudText>
+                            </MudTd>
+                            <MudTd DataLabel="Date">
+                                <MudText Typo="Typo.caption" Class="fw-bold">@context.AssessmentDate.ToString("yyyy-MM-dd")</MudText>
+                            </MudTd>
+                            <MudTd DataLabel="Scores">
+                                <MudText Typo="Typo.body2">
+                                    Theory: @(context.TheoryScorePercentage?.ToString("F1") ?? "-")% | Pract: @(context.PracticalScorePercentage?.ToString("F1") ?? "-")%
+                                </MudText>
+                                <MudText Typo="Typo.caption" Class="fw-bold text-success">
+                                    Overall: @context.FinalOverallPercentage.ToString("F1")%
+                                </MudText>
+                            </MudTd>
+                            <MudTd DataLabel="Result Status">
+                                <MudChip T="string" Size="Size.Small" Color="@(context.ResultStatusCode == "Competent" ? Color.Success : (context.ResultStatusCode == "NotYetCompetent" ? Color.Error : Color.Warning))" Variant="Variant.Filled">
+                                    @context.ResultStatusCode
+                                </MudChip>
+                            </MudTd>
+                            <MudTd DataLabel="Certificate">
+                                @if (!string.IsNullOrWhiteSpace(context.CertificateNumber))
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Verified">
+                                        @context.CertificateNumber
+                                    </MudChip>
+                                }
+                                else
+                                {
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Unissued</MudText>
+                                }
+                            </MudTd>
+                            <MudTd Style="text-align:right" DataLabel="Actions">
+                                @if (context.ResultStatusCode == "Pending")
+                                {
+                                    <MudTooltip Text="Record Scores">
+                                        <MudIconButton Icon="@Icons.Material.Filled.EditNote" Color="Color.Primary" Size="Size.Small" OnClick="@(() => OpenScoreDialog(context))" aria-label="Record scores" />
+                                    </MudTooltip>
+                                }
+                                else if (string.IsNullOrWhiteSpace(context.CertificateNumber) && context.ResultStatusCode == "Competent")
+                                {
+                                    <MudTooltip Text="Endorse & Issue Certificate">
+                                        <MudIconButton Icon="@Icons.Material.Filled.CardMembership" Color="Color.Success" Size="Size.Small" OnClick="@(() => IssueCertificate(context.Id))" aria-label="Issue certificate" />
+                                    </MudTooltip>
+                                }
+                            </MudTd>
+                        </RowTemplate>
+                        <NoRecordsContent>
+                            <div class="pa-4 text-center">
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">No EISA learner assessments recorded.</MudText>
+                            </div>
+                        </NoRecordsContent>
+                    </MudTable>
+                </MudTabPanel>
+
+                <!-- TAB 4: Evidence Vault -->
+                <MudTabPanel Text="Evidence Vault" Icon="@Icons.Material.Filled.FolderZip">
+                    <DocumentVault TargetEntityName="AqpPartner" TargetEntityId="@Id" />
+                </MudTabPanel>
+            }
+        </MudTabs>
+    }
+</MudContainer>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private AqpPartner _partner = new();
+    private MudForm? _form;
+    private bool _isValid;
+    private bool _loading = true;
+    private bool _isSaving = false;
+
+    private DateTime? _startDate = DateTime.Today;
+    private DateTime? _endDate = DateTime.Today.AddYears(5);
+
+    private List<Person> _people = new();
+    private List<CompanyLearner> _learners = new();
+    private List<AqpQualificationScope> _scopes = new();
+    private List<AqpLearnerAssessment> _assessments = new();
+
+    private List<BreadcrumbItem> _breadcrumbItems = new();
+
+    // Scope form state
+    private bool _showAddScopeForm = false;
+    private string _newScopeTitle = "";
+    private string? _newScopeSaqaId;
+    private int _newScopeNqf = 4;
+    private string? _newScopeCurriculum;
+    private string _newScopeModel = "EISA";
+
+    // Schedule Assessment form state
+    private bool _showScheduleForm = false;
+    private int? _selectedLearnerId;
+    private string _newExamSession = "2026-OCT-EISA-01";
+    private string _newExamCenter = "MerSETA Central Assessment Center";
+    private DateTime? _examDate = DateTime.Today.AddDays(14);
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+        SetupBreadcrumbs();
+
+        _people = await PersonService.GetAllAsync();
+        _learners = await LearnerService.GetAllLearnersAsync();
+
+        if (Id > 0)
+        {
+            await LoadPartnerData();
+        }
+        else
+        {
+            _partner = new AqpPartner
+            {
+                AqpName = "National Manufacturing Assessment Quality Partner",
+                AqpCode = $"AQP-{new Random().Next(100, 999)}",
+                AccreditationNumber = $"QCTO-AQP-2026-{new Random().Next(1000, 9999)}",
+                QualityAssuranceBody = "QCTO",
+                StatusCode = "Active",
+                ProvinceCode = "GP",
+                AccreditationStartDate = DateTime.Today,
+                AccreditationEndDate = DateTime.Today.AddYears(5)
+            };
+            _startDate = _partner.AccreditationStartDate;
+            _endDate = _partner.AccreditationEndDate;
+        }
+
+        _loading = false;
+    }
+
+    private void SetupBreadcrumbs()
+    {
+        _breadcrumbItems = new List<BreadcrumbItem>
+        {
+            new BreadcrumbItem("Home", href: "/"),
+            new BreadcrumbItem("ETQA & Quality Assurance", href: "/etqa"),
+            new BreadcrumbItem("AQP Partners", href: "/etqa/aqp"),
+            new BreadcrumbItem(Id == 0 ? "Register" : $"AQP #{Id}", href: null, disabled: true)
+        };
+    }
+
+    private async Task LoadPartnerData()
+    {
+        var p = await AqpService.GetPartnerByIdAsync(Id);
+        if (p != null)
+        {
+            _partner = p;
+            _startDate = p.AccreditationStartDate;
+            _endDate = p.AccreditationEndDate;
+            _scopes = await AqpService.GetScopesByPartnerIdAsync(Id);
+            _assessments = await AqpService.GetAssessmentsByPartnerIdAsync(Id);
+        }
+        else
+        {
+            Snackbar.Add($"AQP Partner #{Id} not found.", Severity.Error);
+            NavManager.NavigateTo("/etqa/aqp");
+        }
+    }
+
+    private async Task SavePartner()
+    {
+        if (string.IsNullOrWhiteSpace(_partner.AqpName) || string.IsNullOrWhiteSpace(_partner.AccreditationNumber))
+        {
+            Snackbar.Add("AQP Name and Accreditation Number are required.", Severity.Warning);
+            return;
+        }
+
+        _isSaving = true;
+        try
+        {
+            if (Id == 0)
+            {
+                var created = await AqpService.CreatePartnerAsync(
+                    _partner.AqpName,
+                    _partner.AqpCode,
+                    _partner.AccreditationNumber,
+                    _partner.QualityAssuranceBody,
+                    _partner.ContactPersonId,
+                    _partner.Email,
+                    _partner.PhoneNumber,
+                    _partner.PhysicalAddress,
+                    _partner.ProvinceCode,
+                    _startDate ?? DateTime.Today,
+                    _endDate ?? DateTime.Today.AddYears(5),
+                    "Admin");
+
+                Snackbar.Add("AQP Partner registered successfully.", Severity.Success);
+                NavManager.NavigateTo($"/etqa/aqp/{created.Id}");
+            }
+            else
+            {
+                await AqpService.UpdatePartnerAsync(
+                    Id,
+                    _partner.AqpName,
+                    _partner.AccreditationNumber,
+                    _partner.Email,
+                    _partner.PhoneNumber,
+                    _partner.StatusCode,
+                    "Admin");
+
+                Snackbar.Add("AQP Partner profile updated.", Severity.Success);
+                await LoadPartnerData();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving partner: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private void BackToList()
+    {
+        NavManager.NavigateTo("/etqa/aqp");
+    }
+
+    // Scopes Management
+    private void OpenAddScopeForm()
+    {
+        _newScopeTitle = "";
+        _newScopeSaqaId = "SAQA-" + new Random().Next(10000, 99999);
+        _newScopeNqf = 4;
+        _newScopeCurriculum = "OFO-671201";
+        _newScopeModel = "EISA";
+        _showAddScopeForm = true;
+    }
+
+    private async Task SaveScope()
+    {
+        if (string.IsNullOrWhiteSpace(_newScopeTitle))
+        {
+            Snackbar.Add("Qualification title is required.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            await AqpService.AddScopeAsync(Id, _newScopeTitle, _newScopeSaqaId, _newScopeNqf, _newScopeCurriculum, _newScopeModel, "Admin");
+            Snackbar.Add("Qualification scope added to AQP portfolio.", Severity.Success);
+            _showAddScopeForm = false;
+            _scopes = await AqpService.GetScopesByPartnerIdAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error adding scope: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task RemoveScope(int scopeId)
+    {
+        try
+        {
+            var res = await AqpService.RemoveScopeAsync(scopeId, "Admin");
+            if (res)
+            {
+                Snackbar.Add("Qualification scope removed.", Severity.Success);
+                _scopes = await AqpService.GetScopesByPartnerIdAsync(Id);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error removing scope: {ex.Message}", Severity.Error);
+        }
+    }
+
+    // EISA Assessments Management
+    private void OpenScheduleAssessmentForm()
+    {
+        _selectedLearnerId = _learners.FirstOrDefault()?.Id;
+        _newExamSession = $"2026-OCT-EISA-{new Random().Next(10, 99)}";
+        _newExamCenter = "MerSETA Accredited Testing Center";
+        _examDate = DateTime.Today.AddDays(14);
+        _showScheduleForm = true;
+    }
+
+    private async Task ScheduleAssessment()
+    {
+        try
+        {
+            var l = _learners.FirstOrDefault(x => x.Id == _selectedLearnerId);
+            await AqpService.ScheduleAssessmentAsync(Id, _selectedLearnerId, l?.PersonId, _newExamSession, _examDate ?? DateTime.Today, _newExamCenter, "Admin");
+            Snackbar.Add("Learner scheduled for EISA examination.", Severity.Success);
+            _showScheduleForm = false;
+            _assessments = await AqpService.GetAssessmentsByPartnerIdAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error scheduling assessment: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task OpenScoreDialog(AqpLearnerAssessment assessment)
+    {
+        var theory = 78.5m;
+        var practical = 82.0m;
+        var resStatus = "Competent";
+
+        try
+        {
+            await AqpService.RecordAssessmentResultsAsync(assessment.Id, theory, practical, resStatus, "Admin");
+            Snackbar.Add($"EISA scores recorded: Overall {((theory + practical) / 2):F1}% ({resStatus}).", Severity.Success);
+            _assessments = await AqpService.GetAssessmentsByPartnerIdAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error recording scores: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task IssueCertificate(int assessmentId)
+    {
+        var certNum = $"QCTO-CERT-{DateTime.UtcNow.Year}-{new Random().Next(100000, 999999)}";
+        try
+        {
+            await AqpService.EndorseAndCertifyAssessmentAsync(assessmentId, certNum, "Endorsed by AQP Examination Board", "Admin");
+            Snackbar.Add($"Certificate {certNum} issued and endorsed.", Severity.Success);
+            _assessments = await AqpService.GetAssessmentsByPartnerIdAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error endorsing assessment: {ex.Message}", Severity.Error);
+        }
+    }
+}

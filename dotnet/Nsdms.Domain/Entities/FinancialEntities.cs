@@ -18,6 +18,12 @@ public class GrantMoa : BaseEntity
     public GrantApplication? GrantApplication { get; set; }
 
     /// <summary>
+    /// Convenient alias for direct organization reference.
+    /// </summary>
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    public Organisation? Organisation => GrantApplication?.Organisation;
+
+    /// <summary>
     /// Unique MerSETA MOA legal contract reference number (e.g. MOA-2026-DG-001).
     /// </summary>
     public string MoaNumber { get; set; } = string.Empty;

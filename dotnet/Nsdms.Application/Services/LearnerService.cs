@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Nsdms.Application.Common;
+using Nsdms.Application.Common.Models;
 using Nsdms.Domain.Entities;
 
 namespace Nsdms.Application.Services;
@@ -8,6 +9,7 @@ public interface ILearnerService
 {
     // Company Learners
     Task<List<CompanyLearner>> GetAllLearnersAsync(string? search = null, string? status = null, int? organisationId = null, string? programmeType = null);
+    Task<PagedResult<LearnerListDto>> GetPagedAsync(PaginationQuery query, CancellationToken cancellationToken = default);
     Task<CompanyLearner?> GetLearnerByIdAsync(int id);
     Task<CompanyLearner> RegisterLearnerAsync(CompanyLearner learner, string currentUsername = "SYSTEM");
     Task<CompanyLearner> UpdateLearnerAsync(CompanyLearner learner, string currentUsername = "SYSTEM");
@@ -32,6 +34,58 @@ public class LearnerService : ILearnerService
     {
         _contextFactory = contextFactory;
         _audit = audit;
+    }
+
+    public async Task<PagedResult<LearnerListDto>> GetPagedAsync(PaginationQuery query, CancellationToken cancellationToken = default)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var baseQuery = db.CompanyLearners.AsNoTracking();
+
+        if (query.FilterParams.TryGetValue("status", out var statusVal) && !string.IsNullOrWhiteSpace(statusVal) && statusVal != "All")
+        {
+            baseQuery = baseQuery.Where(l => l.EnrolmentStatusCode == statusVal || l.EnrolmentStatusId == statusVal);
+        }
+
+        if (query.FilterParams.TryGetValue("programmeType", out var progVal) && !string.IsNullOrWhiteSpace(progVal) && progVal != "All")
+        {
+            baseQuery = baseQuery.Where(l => l.LearningProgrammeTypeCode == progVal);
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.SearchText))
+        {
+            var s = query.SearchText.Trim();
+            baseQuery = baseQuery.Where(l =>
+                (l.LearnerContractNumber != null && l.LearnerContractNumber.Contains(s)) ||
+                (l.QualificationTitle != null && l.QualificationTitle.Contains(s)) ||
+                (l.Person != null && (l.Person.FirstName.Contains(s) || l.Person.LastName.Contains(s) || l.Person.RsaIdNumber.Contains(s))) ||
+                (l.Organisation != null && (l.Organisation.CompanyName.Contains(s) || l.Organisation.SdlNumber.Contains(s))));
+        }
+
+        var totalCount = await baseQuery.CountAsync(cancellationToken);
+
+        var pagedEntities = await baseQuery
+            .Include(l => l.Person)
+            .Include(l => l.Organisation)
+            .OrderByDescending(l => l.Id)
+            .Skip(query.PageIndex * query.PageSize)
+            .Take(query.PageSize)
+            .ToListAsync(cancellationToken);
+
+        var items = pagedEntities.Select(l => new LearnerListDto(
+            l.Id,
+            l.LearnerContractNumber ?? "LRN-" + l.Id,
+            l.Person != null ? $"{l.Person.FirstName} {l.Person.LastName}".Trim() : "Unknown",
+            l.Person?.RsaIdNumber,
+            l.Organisation?.CompanyName ?? "Unlinked",
+            l.Organisation?.SdlNumber,
+            l.QualificationTitle ?? "Skills Programme",
+            l.LearningProgrammeTypeCode,
+            l.NqfLevel,
+            l.RegistrationDate,
+            l.EnrolmentStatusCode ?? "Registered"
+        )).ToList();
+
+        return new PagedResult<LearnerListDto>(items, totalCount, query.PageIndex, query.PageSize);
     }
 
     public async Task<List<CompanyLearner>> GetAllLearnersAsync(string? search = null, string? status = null, int? organisationId = null, string? programmeType = null)

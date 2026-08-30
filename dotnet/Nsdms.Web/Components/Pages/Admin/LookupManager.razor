@@ -1,128 +1,248 @@
 @page "/admin/lookups/{TableName}"
-@inject LookupService LookupService
+@using Nsdms.Application.Services
+@using Nsdms.Web.Components.Shared
+@using MudBlazor
+@inject ILookupService LookupService
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
 @rendermode InteractiveServer
 
-<MudPaper Elevation="1" Class="sticky-top pa-3 mb-4 rounded-lg d-flex justify-space-between align-center" Style="top: var(--mud-appbar-height, 64px); z-index: 10;">
-    <div class="d-flex align-center gap-2">
-        <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack" OnClick="BackToHub">Back to Lookups Hub</MudButton>
-        <MudText Typo="Typo.h6">lookup.@TableName</MudText>
-        <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Outlined">@_totalCount items</MudChip>
-    </div>
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenCreateDialog">
-        Add New Code
-    </MudButton>
-</MudPaper>
+@*
+  UI-STANDARD.md Archetype: T3 (Reference Data Maintenance View/Edit)
+  Clauses: 4.3, 5.1, 5.2.3, 6.2, 8.3, 10, 11.9
+  Rules:
+  - Reference data is deactivated, never deleted once referenced (Clause 6.2).
+  - Open in View mode, explicit Edit action.
+  - Page size ladder: 5, 10, 20, 50, 100, 250, 500.
+*@
 
-@if (_editingItem != null)
-{
-    <MudCard Outlined="true" Class="pa-4 mb-4">
-        <MudText Typo="Typo.subtitle1" Class="fw-bold mb-3">
-            @(_isNew ? $"Add New {TableName} Record" : $"Edit Code {_editingItem.Code}")
-        </MudText>
-        <MudGrid>
-            <MudItem xs="12" md="3">
-                <MudTextField T="string" Label="Code (Primary Key, varchar 50)" Required="true" Disabled="@(!_isNew)" @bind-Value="_editingItem.Code" MaxLength="50" HelperText="Unique code identifier" />
-            </MudItem>
-            <MudItem xs="12" md="4">
-                <MudTextField T="string" Label="Display Name" Required="true" @bind-Value="_editingItem.Name" MaxLength="250" />
-            </MudItem>
-            <MudItem xs="12" md="5">
-                <MudTextField T="string" Label="Description" @bind-Value="_editingItem.Description" MaxLength="500" />
-            </MudItem>
-            <MudItem xs="12">
-                <MudSwitch T="bool" @bind-Value="_editingItem.Active" Color="Color.Success" Label="Active Status" />
-            </MudItem>
-            <MudItem xs="12" Class="d-flex gap-2">
-                <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveItem">Save Code</MudButton>
-                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Cancel" OnClick="CancelEdit">Cancel</MudButton>
-            </MudItem>
-        </MudGrid>
-    </MudCard>
-}
+<EntityHeader Title="@($"lookup.{TableName}")"
+              Subtitle="@($"Statutory reference table codes and descriptions for {TableName}")"
+              ReferenceKey="@TableName"
+              Status="Active"
+              BreadcrumbItems="@_breadcrumbs">
+    <ActionZone>
+        @if (_pageMode == FormShell.PageMode.View)
+        {
+            <MudButton Variant="Variant.Filled" 
+                       Color="Color.Primary" 
+                       StartIcon="@Icons.Material.Filled.Add" 
+                       OnClick="OpenCreateMode">
+                Add Reference Code
+            </MudButton>
+        }
+    </ActionZone>
+</EntityHeader>
 
-<MudPaper Class="pa-4" Elevation="1">
-    <div class="d-flex justify-space-between align-center mb-3">
-        <MudTextField @bind-Value="_searchString" Placeholder="Filter codes and names..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true" OnKeyUp="HandleSearch" Clearable="true" OnClearButtonClick="HandleSearch" />
-    </div>
-
-    @if (_loading)
+<FormShell Mode="@_pageMode" 
+           IsDirty="@_isDirty" 
+           IsSaving="@_isSaving" 
+           OnSave="SaveItemAsync" 
+           OnCancel="CancelEdit">
+    @if (_pageMode != FormShell.PageMode.View && _editingItem != null)
     {
-        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+        <MudCard Outlined="true" Class="pa-4 mb-4 border-default">
+            <MudText Typo="Typo.subtitle1" Class="fw-bold mb-3">
+                @(_pageMode == FormShell.PageMode.Create ? $"Capture New {TableName} Code" : $"Edit Reference Code: {_editingItem.Code}")
+            </MudText>
+            <MudGrid>
+                <MudItem xs="12" md="3">
+                    <FieldGroup Label="Code Identifier" 
+                                Required="true" 
+                                HelperText="Unique uppercase primary key (varchar 50)">
+                        <MudTextField T="string" 
+                                      Required="true" 
+                                      Disabled="@(_pageMode == FormShell.PageMode.Edit)" 
+                                      @bind-Value="_editingItem.Code" 
+                                      @bind-Value:after="MarkDirty"
+                                      MaxLength="50" 
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense" />
+                    </FieldGroup>
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <FieldGroup Label="Display Name" 
+                                Required="true" 
+                                HelperText="Official title or label">
+                        <MudTextField T="string" 
+                                      Required="true" 
+                                      @bind-Value="_editingItem.Name" 
+                                      @bind-Value:after="MarkDirty"
+                                      MaxLength="250" 
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense" />
+                    </FieldGroup>
+                </MudItem>
+                <MudItem xs="12" md="5">
+                    <FieldGroup Label="Description" 
+                                HelperText="Optional operational explanation">
+                        <MudTextField T="string" 
+                                      @bind-Value="_editingItem.Description" 
+                                      @bind-Value:after="MarkDirty"
+                                      MaxLength="500" 
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense" />
+                    </FieldGroup>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudSwitch T="bool" 
+                               @bind-Value="_editingItem.Active" 
+                               @bind-Value:after="MarkDirty"
+                               Color="Color.Success" 
+                               Label="Active Status (Deactivating prevents future selection while preserving legacy audit integrity)" />
+                </MudItem>
+            </MudGrid>
+        </MudCard>
     }
-    else
-    {
-        <MudTable Items="@_items" Hover="true" Dense="true" T="LookupItemDto">
-            <HeaderContent>
-                <MudTh>Code (PK)</MudTh>
-                <MudTh>Name</MudTh>
-                <MudTh>Description</MudTh>
-                <MudTh>Status</MudTh>
-                <MudTh Style="text-align:right">Actions</MudTh>
-            </HeaderContent>
-            <RowTemplate>
-                <MudTd DataLabel="Code"><MudChip T="string" Size="Size.Small" Color="Color.Dark" Variant="Variant.Outlined" Class="font-monospace">@context.Code</MudChip></MudTd>
-                <MudTd DataLabel="Name"><MudText Typo="Typo.body2" Class="fw-bold">@context.Name</MudText></MudTd>
-                <MudTd DataLabel="Description">@context.Description</MudTd>
-                <MudTd DataLabel="Status">
-                    <MudChip T="string" Color="@(context.Active ? Color.Success : Color.Error)" Size="Size.Small">
-                        @(context.Active ? "Active" : "Inactive")
-                    </MudChip>
-                </MudTd>
-                <MudTd Style="text-align:right">
-                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Warning" Size="Size.Small" OnClick="@(() => OpenEditDialog(context))" aria-label="Edit Item" />
-                </MudTd>
-            </RowTemplate>
-            <PagerContent>
-                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
-            </PagerContent>
-        </MudTable>
-    }
-</MudPaper>
+
+    <!-- Table of Reference Data (Baseline 11.9) -->
+    <MudPaper Class="pa-4 border-default" Elevation="1">
+        <div class="d-flex justify-space-between align-center mb-3">
+            <MudTextField @bind-Value="_searchString" 
+                          Placeholder="Filter reference codes and names..." 
+                          Adornment="Adornment.Start" 
+                          AdornmentIcon="@Icons.Material.Filled.Search" 
+                          Immediate="true" 
+                          OnKeyUp="HandleSearchAsync" 
+                          Clearable="true" 
+                          OnClearButtonClick="HandleSearchAsync"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense" />
+            <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Outlined">
+                @_totalCount total records
+            </MudChip>
+        </div>
+
+        @if (_loading)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+        }
+        else if (!_items.Any())
+        {
+            <EmptyState Title="No Codes Found"
+                        Message="No reference codes match your search query."
+                        ActionLabel="Clear Search"
+                        OnAction="ClearSearchAsync" />
+        }
+        else
+        {
+            <MudTable Items="@_items" Hover="true" Dense="true" T="LookupItemDto" Elevation="0" Class="border-default">
+                <HeaderContent>
+                    <MudTh>Code (PK)</MudTh>
+                    <MudTh>Display Name</MudTh>
+                    <MudTh>Description</MudTh>
+                    <MudTh>Status</MudTh>
+                    <MudTh Style="text-align:right">Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Code">
+                        <MudChip T="string" Size="Size.Small" Color="Color.Dark" Variant="Variant.Outlined" Class="font-monospace fw-bold">
+                            @context.Code
+                        </MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Name">
+                        <MudText Typo="Typo.body2" Class="fw-bold">@context.Name</MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Description">
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">@(string.IsNullOrWhiteSpace(context.Description) ? "—" : context.Description)</MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Status">
+                        <StatusBadge Status="@(context.Active ? "Active" : "Inactive")" Size="Size.Small" />
+                    </MudTd>
+                    <MudTd Style="text-align:right">
+                        <div class="d-flex justify-end gap-1">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" 
+                                           Color="Color.Primary" 
+                                           Size="Size.Small" 
+                                           OnClick="@(() => OpenEditMode(context))" 
+                                           aria-label="Edit Item" />
+                            <MudIconButton Icon="@(context.Active ? Icons.Material.Filled.ToggleOn : Icons.Material.Filled.ToggleOff)" 
+                                           Color="@(context.Active ? Color.Success : Color.Secondary)" 
+                                           Size="Size.Small" 
+                                           OnClick="@(() => ToggleActiveStatusAsync(context))" 
+                                           aria-label="@(context.Active ? "Deactivate Code" : "Activate Code")" />
+                        </div>
+                    </MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager PageSizeOptions="new int[] { 5, 10, 20, 50, 100, 250, 500 }" />
+                </PagerContent>
+            </MudTable>
+        }
+    </MudPaper>
+</FormShell>
 
 @code {
-    [Parameter] public string TableName { get; set; } = string.Empty;
+    [Parameter] 
+    public string TableName { get; set; } = string.Empty;
 
     private List<LookupItemDto> _items = new();
     private string _searchString = string.Empty;
     private int _totalCount = 0;
     private bool _loading = true;
+    private bool _isDirty = false;
+    private bool _isSaving = false;
+    private FormShell.PageMode _pageMode = FormShell.PageMode.View;
     private LookupItemDto? _editingItem;
-    private bool _isNew;
+
+    private List<BreadcrumbItem> _breadcrumbs = new();
 
     protected override async Task OnParametersSetAsync()
     {
-        await LoadData();
+        _breadcrumbs = new()
+        {
+            new BreadcrumbItem("Home", href: "/"),
+            new BreadcrumbItem("Lookup Hub", href: "/admin/lookups"),
+            new BreadcrumbItem(TableName, href: null, disabled: true)
+        };
+
+        await LoadDataAsync();
     }
 
-    private async Task LoadData()
+    private async Task LoadDataAsync()
     {
         _loading = true;
-        _totalCount = await LookupService.GetLookupItemsCountAsync(TableName, _searchString);
-        _items = await LookupService.GetLookupItemsAsync(TableName, _searchString, 0, 500);
-        _loading = false;
+        try
+        {
+            _totalCount = await LookupService.GetLookupItemsCountAsync(TableName, _searchString);
+            _items = await LookupService.GetLookupItemsAsync(TableName, _searchString, 0, 500);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading reference data: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
     }
 
-    private async Task HandleSearch()
+    private async Task HandleSearchAsync()
     {
-        await LoadData();
+        await LoadDataAsync();
     }
 
-    private void BackToHub()
+    private async Task ClearSearchAsync()
     {
-        NavManager.NavigateTo("/admin/lookups");
+        _searchString = string.Empty;
+        await LoadDataAsync();
     }
 
-    private void OpenCreateDialog()
+    private void MarkDirty()
     {
-        _isNew = true;
+        _isDirty = true;
+    }
+
+    private void OpenCreateMode()
+    {
         _editingItem = new LookupItemDto { Active = true };
+        _pageMode = FormShell.PageMode.Create;
+        _isDirty = false;
     }
 
-    private void OpenEditDialog(LookupItemDto item)
+    private void OpenEditMode(LookupItemDto item)
     {
-        _isNew = false;
         _editingItem = new LookupItemDto
         {
             Code = item.Code,
@@ -130,14 +250,18 @@
             Description = item.Description,
             Active = item.Active
         };
+        _pageMode = FormShell.PageMode.Edit;
+        _isDirty = false;
     }
 
     private void CancelEdit()
     {
         _editingItem = null;
+        _pageMode = FormShell.PageMode.View;
+        _isDirty = false;
     }
 
-    private async Task SaveItem()
+    private async Task SaveItemAsync()
     {
         if (_editingItem == null) return;
 
@@ -147,16 +271,51 @@
             return;
         }
 
+        _isSaving = true;
         try
         {
-            await LookupService.SaveLookupItemAsync(TableName, _editingItem);
-            Snackbar.Add($"Lookup code {_editingItem.Code} saved successfully.", Severity.Success);
+            await LookupService.SaveLookupItemAsync(TableName, _editingItem, "Admin");
+            Snackbar.Add($"Reference code {_editingItem.Code} saved successfully.", Severity.Success);
             _editingItem = null;
-            await LoadData();
+            _pageMode = FormShell.PageMode.View;
+            _isDirty = false;
+            await LoadDataAsync();
         }
         catch (Exception ex)
         {
-            Snackbar.Add(ex.Message, Severity.Error);
+            Snackbar.Add($"Error saving code: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task ToggleActiveStatusAsync(LookupItemDto item)
+    {
+        var actionVerb = item.Active ? "Deactivate" : "Activate";
+        bool? confirmed = await DialogService.ShowMessageBoxAsync(
+            $"{actionVerb} Reference Code: {item.Code}?",
+            item.Active 
+                ? $"Deactivating code '{item.Code} ({item.Name})' will prevent users from selecting it in future records. Existing historical records referencing this code will remain intact."
+                : $"Reactivating code '{item.Code} ({item.Name})' will make it available for selection across all modules.",
+            yesText: $"{actionVerb} Code",
+            cancelText: "Cancel"
+        );
+
+        if (confirmed == true)
+        {
+            item.Active = !item.Active;
+            try
+            {
+                await LookupService.SaveLookupItemAsync(TableName, item, "Admin");
+                Snackbar.Add($"Reference code {item.Code} status updated to {(item.Active ? "Active" : "Inactive")}.", Severity.Success);
+                await LoadDataAsync();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error updating status: {ex.Message}", Severity.Error);
+            }
         }
     }
 }

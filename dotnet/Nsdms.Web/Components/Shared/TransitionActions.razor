@@ -1,0 +1,243 @@
+@namespace Nsdms.Web.Components.Shared
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@using MudBlazor
+@inject IWorkflowEngineService WorkflowService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+@*
+  UI-STANDARD.md Contract (Section 9.2, Clause 8.3):
+  Component: TransitionActions
+  Inputs: EntityId, EntityType (or ProcessCode)
+  Renders: Queries the transition service and renders only permitted transitions.
+*@
+
+<div class="nsdms-transition-actions d-flex flex-wrap align-center gap-2" role="group" aria-label="Workflow Transitions">
+    @if (_loading)
+    {
+        <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Primary" />
+    }
+    else if (_instance == null)
+    {
+        <MudButton Variant="Variant.Filled" 
+                   Color="Color.Primary" 
+                   Size="Size.Medium"
+                   StartIcon="@Icons.Material.Filled.PlayArrow"
+                   Disabled="@_isProcessing"
+                   OnClick="StartWorkflowAsync">
+            Initiate Workflow
+        </MudButton>
+    }
+    else if (!_instance.IsCompleted && _availableTransitions.Any())
+    {
+        @foreach (var transition in _availableTransitions)
+        {
+            var isReject = transition.ActionName.Contains("Reject", StringComparison.OrdinalIgnoreCase) || 
+                           transition.ActionName.Contains("Decline", StringComparison.OrdinalIgnoreCase) ||
+                           transition.ActionName.Contains("Withdraw", StringComparison.OrdinalIgnoreCase);
+
+            <MudButton Variant="Variant.Filled"
+                       Color="@(isReject ? Color.Error : Color.Primary)"
+                       Size="Size.Medium"
+                       StartIcon="@(isReject ? Icons.Material.Filled.Cancel : Icons.Material.Filled.CheckCircle)"
+                       Disabled="@_isProcessing"
+                       OnClick="() => HandleTransitionClickAsync(transition)">
+                @transition.ActionName
+            </MudButton>
+        }
+    }
+    else if (_instance.IsCompleted)
+    {
+        <MudChip T="string" Color="Color.Success" Variant="Variant.Outlined" Size="Size.Small" Icon="@Icons.Material.Filled.Lock">
+            Workflow Completed
+        </MudChip>
+    }
+
+    @if (_showCommentModal && _selectedTransition != null)
+    {
+        <MudPaper Elevation="3" Class="pa-4 mt-2 rounded-lg border-default" Style="min-width: 320px; max-width: 480px; position: absolute; z-index: 100; right: 0;">
+            <MudText Typo="Typo.subtitle2" Class="font-weight-bold mb-1">
+                Confirm Transition: @_selectedTransition.ActionName
+            </MudText>
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block mb-3">
+                @( _selectedTransition.RequiresComments ? "A mandatory reason is required to perform this action." : "Provide optional notes for the audit trail." )
+            </MudText>
+            <MudTextField @bind-Value="_commentText" 
+                          Label="Action Comments / Justification" 
+                          Variant="Variant.Outlined" 
+                          Lines="3" 
+                          FullWidth="true"
+                          Required="@_selectedTransition.RequiresComments" />
+            <div class="d-flex justify-end gap-2 mt-3">
+                <MudButton Variant="Variant.Text" OnClick="() => _showCommentModal = false" Disabled="@_isProcessing">
+                    Cancel
+                </MudButton>
+                <MudButton Variant="Variant.Filled" 
+                           Color="Color.Primary" 
+                           OnClick="ExecuteTransitionAsync" 
+                           Disabled="@(_isProcessing || (_selectedTransition.RequiresComments && string.IsNullOrWhiteSpace(_commentText)))">
+                    Confirm Transition
+                </MudButton>
+            </div>
+        </MudPaper>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int EntityId { get; set; }
+
+    [Parameter]
+    public string EntityType { get; set; } = string.Empty;
+
+    [Parameter]
+    public string? ProcessCode { get; set; }
+
+    [Parameter]
+    public string EntityTitle { get; set; } = string.Empty;
+
+    [Parameter]
+    public string EntityRef { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> OnStatusChanged { get; set; }
+
+    private bool _loading = true;
+    private bool _isProcessing = false;
+    private bool _showCommentModal = false;
+    private string _commentText = string.Empty;
+    private WorkflowInstance? _instance;
+    private List<WorkflowTransition> _availableTransitions = new();
+    private WorkflowTransition? _selectedTransition;
+
+    private string EffectiveProcessCode => !string.IsNullOrWhiteSpace(ProcessCode) ? ProcessCode : EntityType;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (EntityId > 0 && !string.IsNullOrWhiteSpace(EffectiveProcessCode))
+        {
+            await LoadTransitionsAsync();
+        }
+        else
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task LoadTransitionsAsync()
+    {
+        _loading = true;
+        try
+        {
+            _instance = await WorkflowService.GetInstanceByEntityAsync(EffectiveProcessCode, EntityId);
+            if (_instance != null && !_instance.IsCompleted)
+            {
+                _availableTransitions = await WorkflowService.GetAvailableTransitionsAsync(_instance.Id, null);
+            }
+            else
+            {
+                _availableTransitions.Clear();
+            }
+        }
+        catch
+        {
+            _availableTransitions.Clear();
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task StartWorkflowAsync()
+    {
+        _isProcessing = true;
+        try
+        {
+            var result = await WorkflowService.StartWorkflowAsync(
+                EffectiveProcessCode, 
+                EntityId, 
+                string.IsNullOrWhiteSpace(EntityTitle) ? $"{EntityType} #{EntityId}" : EntityTitle, 
+                string.IsNullOrWhiteSpace(EntityRef) ? $"REF-{EntityId}" : EntityRef, 
+                "admin@merseta.org.za", 
+                "System Administrator");
+
+            if (result.Success)
+            {
+                Snackbar.Add($"Workflow initiated: {result.NewStateName}", Severity.Success);
+                await LoadTransitionsAsync();
+                if (OnStatusChanged.HasDelegate && result.NewStateName != null)
+                {
+                    await OnStatusChanged.InvokeAsync(result.NewStateName);
+                }
+            }
+            else
+            {
+                Snackbar.Add(result.Message, Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error starting workflow: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+
+    private async Task HandleTransitionClickAsync(WorkflowTransition transition)
+    {
+        _selectedTransition = transition;
+        if (transition.RequiresComments || transition.ActionName.Contains("Reject", StringComparison.OrdinalIgnoreCase) || transition.ActionName.Contains("Decline", StringComparison.OrdinalIgnoreCase))
+        {
+            _commentText = string.Empty;
+            _showCommentModal = true;
+        }
+        else
+        {
+            await ExecuteTransitionAsync();
+        }
+    }
+
+    private async Task ExecuteTransitionAsync()
+    {
+        if (_instance == null || _selectedTransition == null) return;
+        _isProcessing = true;
+        _showCommentModal = false;
+
+        try
+        {
+            var result = await WorkflowService.AdvanceWorkflowAsync(
+                _instance.Id,
+                _selectedTransition.Id,
+                "admin@merseta.org.za",
+                "System Administrator",
+                "Administrator",
+                _commentText);
+
+            if (result.Success)
+            {
+                Snackbar.Add(result.Message, Severity.Success);
+                await LoadTransitionsAsync();
+                if (OnStatusChanged.HasDelegate && result.NewStateName != null)
+                {
+                    await OnStatusChanged.InvokeAsync(result.NewStateName);
+                }
+            }
+            else
+            {
+                Snackbar.Add(result.Message, Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error executing transition: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+}

@@ -1,6 +1,8 @@
-﻿@page "/admin/settings"
+@page "/admin/settings"
 @using Nsdms.Application.Common.Interfaces
 @using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@using MudBlazor
 @inject IFeatureFlagService FeatureFlags
 @inject ISystemConfigurationService ConfigService
 @inject IErpIntegrationService ErpService
@@ -8,48 +10,53 @@
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 
-<PageTitle>System Settings & Feature Flags | merSETA NSDMS</PageTitle>
+@*
+  UI-STANDARD.md Archetype: T3 (System Settings & Feature Flags Configuration)
+  Clauses: 4.2, 4.3, 5.1, 8.3, 10, 11.9
+*@
 
-<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
-    <!-- Top Bar -->
-    <MudCard Elevation="2" Class="mb-4">
-        <MudCardContent Class="d-flex align-center justify-space-between py-3">
-            <div>
-                <MudBreadcrumbs Items="_breadcrumbs" Class="pa-0 mb-1" />
-                <MudText Typo="Typo.h5" Class="fw-bold">System Configuration & Feature Flags</MudText>
-                <MudText Typo="Typo.body2" Color="Color.Secondary">
-                    Cascading enterprise configuration engine. Dynamic database overrides with double-write audit logging.
-                </MudText>
-            </div>
-            <MudStack Row="true" Spacing="2">
-                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadDataAsync">
-                    Refresh
-                </MudButton>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenNewConfigDrawer">
-                    Add Parameter
-                </MudButton>
-            </MudStack>
-        </MudCardContent>
-    </MudCard>
+<PageTitle>System Settings &amp; Feature Flags | MerSETA NSDMS</PageTitle>
 
-    @if (_isLoading)
-    {
-        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
-    }
+<EntityHeader Title="System Configuration &amp; Feature Flags"
+              Subtitle="Cascading enterprise configuration engine with dynamic database overrides and double-write audit logging."
+              ReferenceKey="SYS-CONFIG"
+              Status="Active"
+              BreadcrumbItems="@_breadcrumbs">
+    <ActionZone>
+        <MudButton Variant="Variant.Outlined" 
+                   Color="Color.Primary" 
+                   StartIcon="@Icons.Material.Filled.Refresh" 
+                   OnClick="LoadDataAsync">
+            Refresh
+        </MudButton>
+        <MudButton Variant="Variant.Filled" 
+                   Color="Color.Primary" 
+                   StartIcon="@Icons.Material.Filled.Add" 
+                   OnClick="OpenNewConfigDrawer">
+            Add Parameter
+        </MudButton>
+    </ActionZone>
+</EntityHeader>
 
-    <!-- Tabs -->
-    <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6" Color="Color.Primary">
-        <!-- Tab 1: Feature Flags -->
-        <MudTabPanel Text="Feature Flags & Integrations" Icon="@Icons.Material.Filled.ToggleOn">
+@if (_isLoading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+}
+
+<!-- Tabs -->
+<MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Color="Color.Primary" Class="mb-4">
+    <!-- Tab 1: Feature Flags -->
+    <MudTabPanel Text="Feature Flags &amp; Integrations" Icon="@Icons.Material.Filled.ToggleOn">
+        <div class="pa-4">
             <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-4">
-                <strong>Zero-Risk Policy:</strong> Third-party integrations (Dynamics GP, Sage ERP, Live DHET SFTP, Live SARS FTP, SMS OTP) are <strong>OFF by default</strong>. Workflows automatically execute in mock simulation mode when disabled.
+                <strong>Zero-Risk Invariant:</strong> Third-party integrations (Dynamics GP, Sage ERP, Live DHET SFTP, Live SARS FTP, SMS OTP) are <strong>OFF by default</strong>. Workflows automatically execute in mock simulation mode when disabled.
             </MudAlert>
 
             <MudGrid>
                 @foreach (var flag in _featureFlags)
                 {
                     <MudItem xs="12" md="6">
-                        <MudCard Outlined="true" Class="pa-3 h-100">
+                        <MudCard Outlined="true" Class="pa-3 h-100 border-default">
                             <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
                                 <div>
                                     <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
@@ -59,18 +66,25 @@
                                         </MudChip>
                                     </MudStack>
                                     <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block mt-1">@flag.Description</MudText>
-                                    <MudText Typo="Typo.caption" Class="font-monospace text-muted">Key: @flag.FeatureKey</MudText>
+                                    <MudText Typo="Typo.caption" Class="font-monospace text-secondary">Key: @flag.FeatureKey</MudText>
                                 </div>
-                                <MudSwitch T="bool" Value="@flag.IsEnabled" ValueChanged="@((bool val) => ToggleFeatureAsync(flag, val))" Color="Color.Success" />
+                                <MudSwitch T="bool" 
+                                           Value="@flag.IsEnabled" 
+                                           ValueChanged="@((bool val) => ToggleFeatureAsync(flag, val))" 
+                                           Color="Color.Success" 
+                                           Label="@(flag.IsEnabled ? "Enabled" : "Disabled")"
+                                           aria-label="@($"Toggle {flag.FeatureName}")" />
                             </MudStack>
                         </MudCard>
                     </MudItem>
                 }
             </MudGrid>
-        </MudTabPanel>
+        </div>
+    </MudTabPanel>
 
-        <!-- Tab 2: System Configurations -->
-        <MudTabPanel Text="System Configurations" Icon="@Icons.Material.Filled.Settings">
+    <!-- Tab 2: System Configurations -->
+    <MudTabPanel Text="System Configurations" Icon="@Icons.Material.Filled.Settings">
+        <div class="pa-4">
             <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-3" Spacing="2">
                 <MudChipSet T="string" @bind-SelectedValue="_selectedCategory" SelectionMode="SelectionMode.SingleSelection">
                     <MudChip T="string" Value="@("All")" Color="Color.Primary" Variant="@(_selectedCategory == "All" ? Variant.Filled : Variant.Outlined)">All</MudChip>
@@ -83,11 +97,19 @@
                 </MudChipSet>
             </MudStack>
 
-            <MudTable Items="_configs" Hover="true" Dense="true" Elevation="0" Outlined="true" Filter="FilterConfigs">
+            <MudTable Items="_configs" Hover="true" Dense="true" Elevation="0" Outlined="true" Filter="FilterConfigs" Class="border-default">
                 <ToolBarContent>
-                    <MudText Typo="Typo.h6">Configuration Parameters</MudText>
+                    <MudText Typo="Typo.h6" Class="fw-bold">Configuration Parameters</MudText>
                     <MudSpacer />
-                    <MudTextField @bind-Value="_searchConfig" Placeholder="Search setting key or value..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Immediate="true" />
+                    <MudTextField @bind-Value="_searchConfig" 
+                                  Placeholder="Search setting key or value..." 
+                                  Adornment="Adornment.Start" 
+                                  AdornmentIcon="@Icons.Material.Filled.Search" 
+                                  IconSize="Size.Medium" 
+                                  Class="mt-0" 
+                                  Immediate="true"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" />
                 </ToolBarContent>
                 <HeaderContent>
                     <MudTh>Key</MudTh>
@@ -108,18 +130,31 @@
                     <MudTd DataLabel="Type">@context.DataType</MudTd>
                     <MudTd DataLabel="Description">@context.Description</MudTd>
                     <MudTd DataLabel="Actions" Style="text-align: right;">
-                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" OnClick="@(() => OpenEditConfigDrawer(context))" Title="Edit Parameter" />
-                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteConfigAsync(context.ConfigKey))" Title="Deactivate" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Edit" 
+                                       Color="Color.Primary" 
+                                       Size="Size.Small" 
+                                       OnClick="@(() => OpenEditConfigDrawer(context))" 
+                                       aria-label="Edit Parameter" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" 
+                                       Color="Color.Error" 
+                                       Size="Size.Small" 
+                                       OnClick="@(() => DeleteConfigAsync(context.ConfigKey))" 
+                                       aria-label="Deactivate Parameter" />
                     </MudTd>
                 </RowTemplate>
+                <PagerContent>
+                    <MudTablePager PageSizeOptions="new int[] { 5, 10, 20, 50, 100, 250, 500 }" />
+                </PagerContent>
             </MudTable>
-        </MudTabPanel>
+        </div>
+    </MudTabPanel>
 
-        <!-- Tab 3: Integration Diagnostics -->
-        <MudTabPanel Text="Integration Diagnostics" Icon="@Icons.Material.Filled.Speed">
+    <!-- Tab 3: Integration Diagnostics -->
+    <MudTabPanel Text="Integration Diagnostics" Icon="@Icons.Material.Filled.Speed">
+        <div class="pa-4">
             <MudGrid>
                 <MudItem xs="12" md="6">
-                    <MudCard Outlined="true" Class="pa-4">
+                    <MudCard Outlined="true" Class="pa-4 border-default">
                         <MudText Typo="Typo.h6" Class="fw-bold mb-2">ERP Ledger Integration Status</MudText>
                         <MudText Typo="Typo.body2" Class="mb-3">
                             Active Provider: <strong>@ErpService.GetActiveProviderName()</strong>
@@ -138,7 +173,7 @@
                 </MudItem>
 
                 <MudItem xs="12" md="6">
-                    <MudCard Outlined="true" Class="pa-4">
+                    <MudCard Outlined="true" Class="pa-4 border-default">
                         <MudText Typo="Typo.h6" Class="fw-bold mb-2">PDF Document Generation Diagnostics</MudText>
                         <MudText Typo="Typo.body2" Class="mb-3">
                             Engine: <strong>QuestPDF 2026.8.0</strong> • Vector rendering with merSETA headers.
@@ -155,18 +190,22 @@
                     </MudCard>
                 </MudItem>
             </MudGrid>
-        </MudTabPanel>
-    </MudTabs>
+        </div>
+    </MudTabPanel>
+</MudTabs>
 
-    <!-- Configuration Edit/Create Drawer -->
-    <MudDrawer @bind-Open="_drawerOpen" Anchor="Anchor.End" Elevation="4" Variant="DrawerVariant.Temporary" Width="480px" Class="pa-4">
-        <MudDrawerHeader>
-            <MudText Typo="Typo.h6" Class="fw-bold">@(_isNewConfig ? "Add New Parameter" : "Edit Parameter")</MudText>
-        </MudDrawerHeader>
-        <MudStack Spacing="3">
-            <MudTextField @bind-Value="_editModel.ConfigKey" Label="Configuration Key" Variant="Variant.Outlined" Disabled="@(!_isNewConfig)" HelperText="Hierarchical key, e.g. Finance:Tranche1Percentage" Required="true" />
-            
-            <MudSelect @bind-Value="_editModel.ConfigCategory" Label="Category" Variant="Variant.Outlined">
+<!-- Configuration Edit/Create Drawer -->
+<MudDrawer @bind-Open="_drawerOpen" Anchor="Anchor.End" Elevation="4" Variant="DrawerVariant.Temporary" Width="480px" Class="pa-4">
+    <MudDrawerHeader>
+        <MudText Typo="Typo.h6" Class="fw-bold">@(_isNewConfig ? "Add New Parameter" : "Edit Parameter")</MudText>
+    </MudDrawerHeader>
+    <MudStack Spacing="3">
+        <FieldGroup Label="Configuration Key" Required="true" HelperText="Hierarchical key, e.g. Finance:Tranche1Percentage">
+            <MudTextField @bind-Value="_editModel.ConfigKey" Variant="Variant.Outlined" Disabled="@(!_isNewConfig)" Required="true" Margin="Margin.Dense" />
+        </FieldGroup>
+        
+        <FieldGroup Label="Category">
+            <MudSelect @bind-Value="_editModel.ConfigCategory" Variant="Variant.Outlined" Margin="Margin.Dense">
                 <MudSelectItem Value="@("Finance")">Finance</MudSelectItem>
                 <MudSelectItem Value="@("Governance")">Governance</MudSelectItem>
                 <MudSelectItem Value="@("Compliance")">Compliance</MudSelectItem>
@@ -174,56 +213,58 @@
                 <MudSelectItem Value="@("Integrations")">Integrations</MudSelectItem>
                 <MudSelectItem Value="@("General")">General</MudSelectItem>
             </MudSelect>
+        </FieldGroup>
 
-            <MudSelect @bind-Value="_editModel.DataType" Label="Data Type" Variant="Variant.Outlined">
+        <FieldGroup Label="Data Type">
+            <MudSelect @bind-Value="_editModel.DataType" Variant="Variant.Outlined" Margin="Margin.Dense">
                 <MudSelectItem Value="@("String")">String</MudSelectItem>
                 <MudSelectItem Value="@("Integer")">Integer</MudSelectItem>
                 <MudSelectItem Value="@("Decimal")">Decimal</MudSelectItem>
                 <MudSelectItem Value="@("Boolean")">Boolean</MudSelectItem>
                 <MudSelectItem Value="@("Json")">Json</MudSelectItem>
             </MudSelect>
+        </FieldGroup>
 
-            <MudTextField @bind-Value="_editModel.ConfigValue" Label="Configuration Value" Variant="Variant.Outlined" Lines="@(_editModel.DataType == "Json" ? 4 : 1)" Required="true" />
+        <FieldGroup Label="Configuration Value" Required="true">
+            <MudTextField @bind-Value="_editModel.ConfigValue" Variant="Variant.Outlined" Lines="@(_editModel.DataType == "Json" ? 4 : 1)" Required="true" Margin="Margin.Dense" />
+        </FieldGroup>
 
-            <MudTextField @bind-Value="_editModel.Description" Label="Description / Operational Rationale" Variant="Variant.Outlined" Lines="2" />
+        <FieldGroup Label="Description / Operational Rationale">
+            <MudTextField @bind-Value="_editModel.Description" Variant="Variant.Outlined" Lines="2" Margin="Margin.Dense" />
+        </FieldGroup>
 
-            <MudStack Row="true" Spacing="2" Class="mt-4">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveConfigAsync">
-                    Save Parameter
-                </MudButton>
-                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="@(() => _drawerOpen = false)">
-                    Cancel
-                </MudButton>
-            </MudStack>
+        <MudStack Row="true" Spacing="2" Class="mt-4">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveConfigAsync">
+                Save Parameter
+            </MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="@(() => _drawerOpen = false)">
+                Cancel
+            </MudButton>
         </MudStack>
-    </MudDrawer>
-</MudContainer>
+    </MudStack>
+</MudDrawer>
 
 @code {
-    private List<BreadcrumbItem> _breadcrumbs = new()
-    {
-        new BreadcrumbItem("Home", href: "/"),
-        new BreadcrumbItem("Administration", href: "/admin/lookups"),
-        new BreadcrumbItem("System Settings", href: null, disabled: true)
-    };
-
     private List<SystemFeatureFlag> _featureFlags = new();
     private List<SystemConfig> _configs = new();
     private bool _isLoading = true;
-    private string _searchConfig = string.Empty;
     private string _selectedCategory = "All";
-    private ErpDisbursementResult? _erpTestResult;
-    private int _pdfGeneratedBytes = 0;
-
-    // Drawer state
+    private string _searchConfig = string.Empty;
     private bool _drawerOpen = false;
     private bool _isNewConfig = false;
     private SystemConfig _editModel = new();
+    private ErpDisbursementResult? _erpTestResult;
+    private int _pdfGeneratedBytes = 0;
+
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("System Governance", href: null, disabled: true),
+        new BreadcrumbItem("Settings", href: "/admin/settings")
+    };
 
     protected override async Task OnInitializedAsync()
     {
-        await FeatureFlags.SeedDefaultFeatureFlagsAsync();
-        await ConfigService.SeedDefaultConfigsAsync();
         await LoadDataAsync();
     }
 
@@ -235,23 +276,19 @@
             _featureFlags = await FeatureFlags.GetAllFeatureFlagsAsync();
             _configs = await ConfigService.GetAllConfigsAsync();
         }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Failed to load settings: {ex.Message}", Severity.Error);
-        }
         finally
         {
             _isLoading = false;
         }
     }
 
-    private async Task ToggleFeatureAsync(SystemFeatureFlag flag, bool isEnabled)
+    private async Task ToggleFeatureAsync(SystemFeatureFlag flag, bool newValue)
     {
         try
         {
-            await FeatureFlags.SetFeatureFlagAsync(flag.FeatureKey, isEnabled, flag.FeatureName, flag.Category, flag.Description, "AdminUser");
-            flag.IsEnabled = isEnabled;
-            Snackbar.Add($"Feature '{flag.FeatureName}' set to {(isEnabled ? "ENABLED" : "DISABLED")}.", Severity.Success);
+            await FeatureFlags.SetFeatureFlagAsync(flag.FeatureKey, newValue, flag.FeatureName, flag.Category ?? "Integrations", flag.Description, "Admin");
+            flag.IsEnabled = newValue;
+            Snackbar.Add($"Feature '{flag.FeatureName}' {(newValue ? "Enabled" : "Disabled")}.", Severity.Success);
         }
         catch (Exception ex)
         {
@@ -261,23 +298,21 @@
 
     private bool FilterConfigs(SystemConfig config)
     {
-        if (_selectedCategory != "All" && config.Category != _selectedCategory) return false;
+        if (_selectedCategory != "All" && !config.Category.Equals(_selectedCategory, StringComparison.OrdinalIgnoreCase))
+            return false;
 
-        if (string.IsNullOrWhiteSpace(_searchConfig)) return true;
+        if (string.IsNullOrWhiteSpace(_searchConfig))
+            return true;
+
         return config.ConfigKey.Contains(_searchConfig, StringComparison.OrdinalIgnoreCase) ||
-               (config.ConfigValue != null && config.ConfigValue.Contains(_searchConfig, StringComparison.OrdinalIgnoreCase)) ||
-               config.Category.Contains(_searchConfig, StringComparison.OrdinalIgnoreCase) ||
-               (config.Description != null && config.Description.Contains(_searchConfig, StringComparison.OrdinalIgnoreCase));
+               (config.ConfigValue?.Contains(_searchConfig, StringComparison.OrdinalIgnoreCase) ?? false) ||
+               (config.Description?.Contains(_searchConfig, StringComparison.OrdinalIgnoreCase) ?? false);
     }
 
     private void OpenNewConfigDrawer()
     {
         _isNewConfig = true;
-        _editModel = new SystemConfig
-        {
-            ConfigCategory = "General",
-            DataType = "String"
-        };
+        _editModel = new SystemConfig { ConfigCategory = "General", DataType = "String" };
         _drawerOpen = true;
     }
 
@@ -288,10 +323,10 @@
         {
             Id = config.Id,
             ConfigKey = config.ConfigKey,
-            ConfigValue = config.ConfigValue,
             ConfigCategory = config.ConfigCategory,
-            Description = config.Description,
-            DataType = config.DataType
+            DataType = config.DataType,
+            ConfigValue = config.ConfigValue,
+            Description = config.Description
         };
         _drawerOpen = true;
     }
@@ -306,32 +341,37 @@
 
         try
         {
-            await ConfigService.SetConfigAsync(
-                _editModel.ConfigKey,
-                _editModel.ConfigValue,
-                _editModel.ConfigCategory,
-                _editModel.Description,
-                _editModel.DataType,
-                "AdminUser");
-
-            Snackbar.Add($"Parameter '{_editModel.ConfigKey}' saved successfully.", Severity.Success);
+            await ConfigService.SetConfigAsync(_editModel.ConfigKey, _editModel.ConfigValue, _editModel.ConfigCategory ?? "General", _editModel.Description, _editModel.DataType ?? "String", "Admin");
+            Snackbar.Add($"Configuration '{_editModel.ConfigKey}' saved successfully.", Severity.Success);
             _drawerOpen = false;
             await LoadDataAsync();
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Failed to save parameter: {ex.Message}", Severity.Error);
+            Snackbar.Add($"Error saving configuration: {ex.Message}", Severity.Error);
         }
     }
 
     private async Task DeleteConfigAsync(string key)
     {
-        var confirm = await DialogService.ShowMessageBoxAsync("Confirm Deactivation", $"Are you sure you want to deactivate configuration '{key}'?", yesText: "Deactivate", cancelText: "Cancel");
+        bool? confirm = await DialogService.ShowMessageBoxAsync(
+            "Deactivate Parameter?",
+            $"Deactivating parameter '{key}' will revert runtime lookups to application defaults.",
+            yesText: "Deactivate",
+            cancelText: "Cancel");
+
         if (confirm == true)
         {
-            await ConfigService.DeleteConfigAsync(key, "AdminUser");
-            Snackbar.Add($"Configuration '{key}' deactivated.", Severity.Info);
-            await LoadDataAsync();
+            try
+            {
+                await ConfigService.DeleteConfigAsync(key, "Admin");
+                Snackbar.Add($"Configuration '{key}' deactivated.", Severity.Info);
+                await LoadDataAsync();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+            }
         }
     }
 
@@ -339,8 +379,13 @@
     {
         try
         {
-            _erpTestResult = await ErpService.DisbursePaymentAsync("SDL-TEST-001", 75000m, "Test ERP Disbursement Diagnostic", "AdminUser");
-            Snackbar.Add("ERP disbursement diagnostic completed successfully.", Severity.Success);
+            _erpTestResult = await ErpService.DisbursePaymentAsync(
+                "VENDOR-TEST-001",
+                150000m,
+                "Tranche 1 Diagnostic Verification",
+                "Admin");
+
+            Snackbar.Add($"ERP test disbursement completed via {ErpService.GetActiveProviderName()}.", Severity.Success);
         }
         catch (Exception ex)
         {
@@ -352,21 +397,23 @@
     {
         try
         {
-            var sampleTest = new LearnerTradeTest
+            var testApp = new LearnerTradeTestApplication
             {
-                TradeTitle = "Automotive Motor Mechanic",
-                SerialCertificateNumber = "CERT-2026-009988",
-                CertificateIssueDate = DateTime.UtcNow,
-                TestCenterName = "merSETA Gauteng Regional Assessment Centre",
                 CompanyLearner = new CompanyLearner
                 {
-                    Person = new Person { FirstName = "Sipho", LastName = "Nkosi", RsaIdNumber = "9805125009081" }
-                }
+                    Person = new Person { FirstName = "Sipho", LastName = "Dlamini", RsaIdNumber = "9801015009087" },
+                    LearnerContractNumber = "L-2026-001"
+                },
+                TradeTitle = "Diesel Mechanic (653306)",
+                AssessmentCenterName = "Indlela Assessment Centre",
+                AssessmentDate = DateTime.UtcNow,
+                SerialCertificateNumber = "TTC-2026-991"
             };
 
-            var bytes = await PdfService.GenerateTradeTestCertificateAsync(sampleTest);
-            _pdfGeneratedBytes = bytes.Length;
-            Snackbar.Add($"Generated PDF certificate ({bytes.Length:N0} bytes).", Severity.Success);
+            var pdfBytes = await PdfService.GenerateArtisanTradeCertificatePdfAsync(testApp);
+
+            _pdfGeneratedBytes = pdfBytes.Length;
+            Snackbar.Add($"PDF generated successfully ({_pdfGeneratedBytes / 1024} KB).", Severity.Success);
         }
         catch (Exception ex)
         {

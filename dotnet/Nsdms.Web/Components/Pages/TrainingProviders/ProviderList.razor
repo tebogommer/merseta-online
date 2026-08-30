@@ -1,53 +1,101 @@
 @page "/sdp"
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@using MudBlazor
 @inject ITrainingProviderService ProviderService
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
 @rendermode InteractiveServer
 
-<div class="d-flex justify-space-between align-center mb-4">
-    <div>
-        <MudText Typo="Typo.h5" Class="font-weight-bold">Skills Development Providers (SDP)</MudText>
-        <MudText Typo="Typo.body2" Color="Color.Secondary">Centralized accreditation registry, institutional capacity, accredited qualifications, and unit standards scope</MudText>
-    </div>
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AddModerator" OnClick="CreateNewProvider">
-        New SDP Accreditation
-    </MudButton>
-</div>
+@*
+  UI-STANDARD.md Archetype: A1 / T1 (Transactional List - Skills Development Providers)
+  Clauses: 4.2, 4.3, 6.1, 7.2, 8.1, 8.3, 11.1–11.9, 15.2.5
+*@
 
-<MudPaper Class="pa-4 mb-4" Elevation="1">
-    <div class="d-flex flex-wrap gap-4 align-center justify-space-between mb-3">
-        <div class="d-flex align-center gap-3 flex-grow-1" style="max-width: 600px;">
-            <MudTextField @bind-Value="_searchString"
-                          Placeholder="Search by Accreditation No, Provider Name, SDL No, Decision No..."
-                          Adornment="Adornment.Start"
-                          AdornmentIcon="@Icons.Material.Filled.Search"
-                          IconSize="Size.Medium"
-                          Class="mt-0"
-                          Immediate="true"
-                          Clearable="true" />
-        </div>
-        <div class="d-flex align-center gap-2">
-            <MudChipSet T="string" @bind-SelectedValue="_statusFilter" SelectionMode="SelectionMode.SingleSelection">
-                <MudChip T="string" Value="@("All")" Color="Color.Default" Variant="@(_statusFilter == "All" ? Variant.Filled : Variant.Outlined)">All</MudChip>
-                <MudChip T="string" Value="@("Active")" Color="Color.Success" Variant="@(_statusFilter == "Active" ? Variant.Filled : Variant.Outlined)">Active Only</MudChip>
-                <MudChip T="string" Value="@("Inactive")" Color="Color.Error" Variant="@(_statusFilter == "Inactive" ? Variant.Filled : Variant.Outlined)">Inactive</MudChip>
-            </MudChipSet>
-        </div>
-    </div>
+<EntityHeader Title="Skills Development Providers (SDP)"
+              Subtitle="Centralized accreditation registry, institutional capacity, accredited qualifications, and unit standards scope"
+              ReferenceKey="T1-PROVIDERS"
+              Status="Active"
+              BreadcrumbItems="@_breadcrumbs">
+    <ActionZone>
+        <MudButton Variant="Variant.Filled" 
+                   Color="Color.Primary" 
+                   StartIcon="@Icons.Material.Filled.AddModerator" 
+                   OnClick="CreateNewProvider">
+            New SDP Accreditation
+        </MudButton>
+    </ActionZone>
+</EntityHeader>
 
-    @if (_loading)
-    {
-        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
-    }
-    else
-    {
+<!-- Filter Bar (Clause 11.4) -->
+<FilterBar SearchPlaceholder="Search by Accreditation No, Provider Name, SDL No, Decision No..."
+           @bind-SearchText="_searchString"
+           OnSearch="HandleFilterChanged"
+           OnClear="HandleFilterCleared">
+    <FilterContent>
+        <MudSelect T="string" 
+                   Label="Status Filter" 
+                   @bind-Value="_statusFilter" 
+                   @bind-Value:after="HandleFilterChanged"
+                   Variant="Variant.Outlined" 
+                   Margin="Margin.Dense"
+                   Dense="true">
+            <MudSelectItem Value="@("All")">All Providers</MudSelectItem>
+            <MudSelectItem Value="@("Active")">Active Only</MudSelectItem>
+            <MudSelectItem Value="@("Inactive")">Inactive Only</MudSelectItem>
+        </MudSelect>
+    </FilterContent>
+    <ActiveFilterChips>
+        @if (!string.IsNullOrWhiteSpace(_searchString))
+        {
+            <MudChip T="string" Size="Size.Small" OnClose="@(() => { _searchString = string.Empty; HandleFilterChanged(); })">
+                Keyword: @_searchString
+            </MudChip>
+        }
+        @if (_statusFilter != "All")
+        {
+            <MudChip T="string" Size="Size.Small" Color="Color.Primary" OnClose="@(() => { _statusFilter = "All"; HandleFilterChanged(); })">
+                Status: @_statusFilter
+            </MudChip>
+        }
+    </ActiveFilterChips>
+</FilterBar>
+
+<!-- Data Grid Shell (Clause 11.9) -->
+<DataGridShell TItem="TrainingProvider"
+               GridKey="ProviderRegistryGrid"
+               Items="@FilteredProviders"
+               IsLoading="@_loading"
+               TotalItemsCount="@FilteredProviders.Count"
+               SelectedItems="@_selectedProviders"
+               SelectedItemsChanged="OnSelectedProvidersChanged"
+               EmptyTitle="No Providers Found"
+               EmptyMessage="No accredited skills development providers match your search or filter criteria. Register a new SDP accreditation to populate the registry."
+               EmptyActionLabel="Accredit New SDP"
+               OnEmptyAction="CreateNewProvider">
+    <BulkActionBarContent>
+        <MudText Typo="Typo.body2" Class="fw-bold text-white">
+            @_selectedProviders.Count provider(s) selected
+        </MudText>
+        <MudButton Variant="Variant.Filled" 
+                   Color="Color.Surface" 
+                   Size="Size.Small" 
+                   StartIcon="@Icons.Material.Filled.FileDownload"
+                   OnClick="ExportSelected">
+            Export Selected
+        </MudButton>
+    </BulkActionBarContent>
+    <ChildContent>
         <MudTable Items="@FilteredProviders"
                   Hover="true"
                   Dense="true"
-                  Striped="true"
+                  Elevation="0"
+                  MultiSelection="true"
+                  @bind-SelectedItems="_selectedProviders"
                   Breakpoint="Breakpoint.Sm"
-                  OnRowClick="@((TableRowClickEventArgs<TrainingProvider> e) => OpenDetail(e.Item != null ? e.Item.Id : 0))"
-                  T="TrainingProvider">
+                  Class="border-default">
             <HeaderContent>
                 <MudTh>Accreditation No</MudTh>
                 <MudTh>Provider / Organisation</MudTh>
@@ -59,11 +107,12 @@
                 <MudTh Style="text-align:right">Actions</MudTh>
             </HeaderContent>
             <RowTemplate>
+                <!-- Key column is real hyperlink (Clause 11.1) -->
                 <MudTd DataLabel="Accreditation No">
-                    <div class="d-flex align-center gap-1">
-                        <MudIcon Icon="@Icons.Material.Filled.School" Size="Size.Small" Color="Color.Primary" />
-                        <MudText Typo="Typo.body2" Class="fw-bold font-monospace">@context.AccreditationNumber</MudText>
-                    </div>
+                    <a href="/sdp/@context.Id" class="d-flex align-center gap-1 font-monospace fw-bold text-primary text-decoration-none">
+                        <MudIcon Icon="@Icons.Material.Filled.School" Size="Size.Small" />
+                        <span>@(string.IsNullOrWhiteSpace(context.AccreditationNumber) ? $"SDP-{context.Id}" : context.AccreditationNumber)</span>
+                    </a>
                 </MudTd>
                 <MudTd DataLabel="Provider / Organisation">
                     <MudText Typo="Typo.body2" Class="fw-bold">@(context.Organisation?.CompanyName ?? "Unlinked Organisation")</MudText>
@@ -80,50 +129,68 @@
                     </MudChip>
                 </MudTd>
                 <MudTd Class="d-none d-md-table-cell" DataLabel="Decision No">
-                    <MudText Typo="Typo.caption" Class="font-monospace">@(!string.IsNullOrWhiteSpace(context.EtqaDecisionNumber) ? context.EtqaDecisionNumber : "-")</MudText>
+                    <MudText Typo="Typo.caption" Class="font-monospace">@(!string.IsNullOrWhiteSpace(context.EtqaDecisionNumber) ? context.EtqaDecisionNumber : "—")</MudText>
                 </MudTd>
                 <MudTd DataLabel="Accreditation Period">
                     <div>
                         <MudText Typo="Typo.caption" Class="d-block">From: @(context.AccreditationStartDate.HasValue ? context.AccreditationStartDate.Value.ToString("yyyy-MM-dd") : "N/A")</MudText>
-                        <MudText Typo="Typo.caption" Class="d-block text-muted">To: @(context.AccreditationEndDate.HasValue ? context.AccreditationEndDate.Value.ToString("yyyy-MM-dd") : "N/A")</MudText>
+                        <MudText Typo="Typo.caption" Class="d-block text-secondary">To: @(context.AccreditationEndDate.HasValue ? context.AccreditationEndDate.Value.ToString("yyyy-MM-dd") : "N/A")</MudText>
                     </div>
                 </MudTd>
                 <MudTd DataLabel="Capacity">
-                    <MudText Typo="Typo.body2">@(context.MaxLearnerCapacity.HasValue ? $"{context.MaxLearnerCapacity} learners" : "-")</MudText>
+                    <MudText Typo="Typo.body2">@(context.MaxLearnerCapacity.HasValue ? $"{context.MaxLearnerCapacity:N0} learners" : "—")</MudText>
                 </MudTd>
                 <MudTd DataLabel="Status">
-                    <MudChip T="string" Color="@(context.IsActive ? Color.Success : Color.Error)" Size="Size.Small" Variant="Variant.Filled">
-                        @(context.IsActive ? "Active" : "Inactive")
-                    </MudChip>
+                    <!-- Non-clickable status pill (Clause 6.1, 7.2) -->
+                    <StatusBadge Status="@(context.IsActive ? "Active" : "Inactive")" Size="Size.Small" />
                 </MudTd>
                 <MudTd Style="text-align:right" DataLabel="Actions">
                     <div class="d-flex justify-end gap-1">
-                        <MudTooltip Text="View & Edit SDP Profile">
-                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" OnClick="@(() => OpenDetail(context.Id))" aria-label="Edit Record" />
+                        <MudTooltip Text="View Accreditation">
+                            <MudIconButton Icon="@Icons.Material.Filled.Visibility" 
+                                           Color="Color.Primary" 
+                                           Size="Size.Small" 
+                                           OnClick="@(() => OpenDetail(context.Id))" 
+                                           aria-label="View Accreditation" />
+                        </MudTooltip>
+                        <MudTooltip Text="Edit Provider">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" 
+                                           Color="Color.Secondary" 
+                                           Size="Size.Small" 
+                                           OnClick="@(() => OpenEdit(context.Id))" 
+                                           aria-label="Edit Provider" />
                         </MudTooltip>
                         <MudTooltip Text="Delete Record">
-                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteProvider(context.Id, context.AccreditationNumber))" aria-label="Delete Record" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" 
+                                           Color="Color.Error" 
+                                           Size="Size.Small" 
+                                           OnClick="@(() => DeleteProvider(context.Id, context.AccreditationNumber ?? $"SDP-{context.Id}"))" 
+                                           aria-label="Delete Record" />
                         </MudTooltip>
                     </div>
                 </MudTd>
             </RowTemplate>
-            <NoRecordsContent>
-                <div class="pa-4 text-center">
-                    <MudText Typo="Typo.body1" Color="Color.Secondary">No training providers found matching search criteria.</MudText>
-                </div>
-            </NoRecordsContent>
             <PagerContent>
-                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
+                <!-- Fixed page size ladder (Clause 11.3.3) -->
+                <MudTablePager PageSizeOptions="new int[] { 5, 10, 20, 50, 100, 250, 500 }" />
             </PagerContent>
         </MudTable>
-    }
-</MudPaper>
+    </ChildContent>
+</DataGridShell>
 
 @code {
     private List<TrainingProvider> _providers = new();
+    private HashSet<TrainingProvider> _selectedProviders = new();
     private string _searchString = string.Empty;
     private string _statusFilter = "All";
     private bool _loading = true;
+
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Core Registries", href: null, disabled: true),
+        new BreadcrumbItem("Skills Development Providers", href: "/sdp")
+    };
 
     protected override async Task OnInitializedAsync()
     {
@@ -137,7 +204,7 @@
         _loading = false;
     }
 
-    private IEnumerable<TrainingProvider> FilteredProviders
+    private List<TrainingProvider> FilteredProviders
     {
         get
         {
@@ -157,14 +224,31 @@
                 var s = _searchString.Trim();
                 query = query.Where(x =>
                     (x.AccreditationNumber != null && x.AccreditationNumber.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
-                    (x.Organisation != null && x.Organisation.CompanyName.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
-                    (x.Organisation != null && x.Organisation.SdlNumber.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
                     (x.EtqaDecisionNumber != null && x.EtqaDecisionNumber.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
-                    (x.ProviderTypeCode != null && x.ProviderTypeCode.Contains(s, StringComparison.OrdinalIgnoreCase)));
+                    (x.ProviderTypeCode != null && x.ProviderTypeCode.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    (x.Organisation != null && x.Organisation.CompanyName != null && x.Organisation.CompanyName.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    (x.Organisation != null && x.Organisation.SdlNumber != null && x.Organisation.SdlNumber.Contains(s, StringComparison.OrdinalIgnoreCase)));
             }
 
-            return query;
+            return query.ToList();
         }
+    }
+
+    private void HandleFilterChanged()
+    {
+        StateHasChanged();
+    }
+
+    private void HandleFilterCleared()
+    {
+        _searchString = string.Empty;
+        _statusFilter = "All";
+        StateHasChanged();
+    }
+
+    private void OnSelectedProvidersChanged(HashSet<TrainingProvider> selected)
+    {
+        _selectedProviders = selected;
     }
 
     private void OpenDetail(int id)
@@ -172,22 +256,42 @@
         NavManager.NavigateTo($"/sdp/{id}");
     }
 
+    private void OpenEdit(int id)
+    {
+        NavManager.NavigateTo($"/sdp/{id}/edit");
+    }
+
     private void CreateNewProvider()
     {
         NavManager.NavigateTo("/sdp/create");
     }
 
-    private async Task DeleteProvider(int id, string accreditationNumber)
+    private void ExportSelected()
     {
-        var deleted = await ProviderService.DeleteAsync(id, "Admin");
-        if (deleted)
+        Snackbar.Add($"Exporting {_selectedProviders.Count} provider accreditations to CSV...", Severity.Info);
+    }
+
+    private async Task DeleteProvider(int id, string accNo)
+    {
+        bool? confirmed = await DialogService.ShowMessageBoxAsync(
+            "Delete Provider Record?",
+            $"Are you sure you wish to delete provider accreditation '{accNo}'? This action will perform an audit-tracked soft delete.",
+            yesText: "Delete Record",
+            cancelText: "Cancel"
+        );
+
+        if (confirmed == true)
         {
-            Snackbar.Add($"Training Provider '{accreditationNumber}' deleted successfully with audit confirmation.", Severity.Success);
-            await LoadData();
-        }
-        else
-        {
-            Snackbar.Add("Could not delete the training provider record.", Severity.Error);
+            var deleted = await ProviderService.DeleteAsync(id, "Admin");
+            if (deleted)
+            {
+                Snackbar.Add($"Provider '{accNo}' deleted successfully with audit confirmation.", Severity.Success);
+                await LoadData();
+            }
+            else
+            {
+                Snackbar.Add("Could not delete the provider record.", Severity.Error);
+            }
         }
     }
 }

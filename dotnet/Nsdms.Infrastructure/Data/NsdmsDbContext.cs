@@ -66,6 +66,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
     // System Configuration & Feature Flags
     public DbSet<SystemConfig> SystemConfigs => Set<SystemConfig>();
     public DbSet<SystemFeatureFlag> SystemFeatureFlags => Set<SystemFeatureFlag>();
+    public DbSet<SystemNotification> SystemNotifications => Set<SystemNotification>();
 
     // Document & File Management
     public DbSet<DocumentAttachment> DocumentAttachments => Set<DocumentAttachment>();
@@ -99,6 +100,14 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
     public DbSet<TrainingCommitteeMember> TrainingCommitteeMembers => Set<TrainingCommitteeMember>();
     public DbSet<WspDispute> WspDisputes => Set<WspDispute>();
     public DbSet<WspSkillsGap> WspSkillsGaps => Set<WspSkillsGap>();
+    public DbSet<WspStrategicSkillsGap> WspStrategicSkillsGaps => Set<WspStrategicSkillsGap>();
+    public DbSet<WspTrainingImpactSurvey> WspTrainingImpactSurveys => Set<WspTrainingImpactSurvey>();
+    public DbSet<WspStrategicPriority> WspStrategicPriorities => Set<WspStrategicPriority>();
+
+    // AQP Assessment Quality Partner Management
+    public DbSet<AqpPartner> AqpPartners => Set<AqpPartner>();
+    public DbSet<AqpQualificationScope> AqpQualificationScopes => Set<AqpQualificationScope>();
+    public DbSet<AqpLearnerAssessment> AqpLearnerAssessments => Set<AqpLearnerAssessment>();
 
 
     // Trade Test Administration & ARPL (Area 13)
@@ -192,6 +201,11 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
     public DbSet<UrbanRuralType> UrbanRuralTypes => Set<UrbanRuralType>();
     public DbSet<SetaType> SetaTypes => Set<SetaType>();
     public DbSet<FundingType> FundingTypes => Set<FundingType>();
+
+    // NLRD Lookups
+    public DbSet<AbetBandType> AbetBandTypes => Set<AbetBandType>();
+    public DbSet<QualificationTypeType> QualificationTypeTypes => Set<QualificationTypeType>();
+    public DbSet<HonoursClassType> HonoursClassTypes => Set<HonoursClassType>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -550,7 +564,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
         // TrainingProvider
         modelBuilder.Entity<TrainingProvider>(entity =>
         {
-            entity.ToTable("TrainingProvider");
+            entity.ToTable("TrainingProvider", t => t.HasCheckConstraint("CK_TrainingProvider_AccreditationDates", "[AccreditationEndDate] IS NULL OR [AccreditationStartDate] IS NULL OR [AccreditationEndDate] >= [AccreditationStartDate]"));
             entity.Property(tp => tp.AccreditationNumber).HasMaxLength(50).IsRequired();
             entity.Property(tp => tp.ProviderCode).HasMaxLength(50);
             entity.Property(tp => tp.EtqaId).HasMaxLength(10).HasDefaultValue("17");
@@ -652,7 +666,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
         // GrantFundingWindow
         modelBuilder.Entity<GrantFundingWindow>(entity =>
         {
-            entity.ToTable("GrantFundingWindow");
+            entity.ToTable("GrantFundingWindow", t => t.HasCheckConstraint("CK_GrantFundingWindow_Dates", "[ClosingDate] >= [OpeningDate]"));
             entity.Property(w => w.WindowName).HasMaxLength(200).IsRequired();
             entity.Property(w => w.GrantTypeCode).HasMaxLength(15);
             entity.Property(w => w.TotalAvailableBudget).HasPrecision(18, 2);
@@ -700,7 +714,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
         // LearnerAssessment
         modelBuilder.Entity<LearnerAssessment>(entity =>
         {
-            entity.ToTable("LearnerAssessment");
+            entity.ToTable("LearnerAssessment", t => t.HasCheckConstraint("CK_LearnerAssessment_Dates", "[ModerationDate] IS NULL OR [AssessmentDate] IS NULL OR [ModerationDate] >= [AssessmentDate]"));
             entity.Property(a => a.QualificationTitle).HasMaxLength(200).IsRequired();
             entity.Property(a => a.UnitStandardTitle).HasMaxLength(250);
             entity.Property(a => a.PartOfId).HasMaxLength(10).HasDefaultValue("01");
@@ -849,7 +863,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
         // CompanyLearner
         modelBuilder.Entity<CompanyLearner>(entity =>
         {
-            entity.ToTable("CompanyLearner");
+            entity.ToTable("CompanyLearner", t => t.HasCheckConstraint("CK_CompanyLearner_Dates", "[CompletionDate] IS NULL OR [CommencementDate] IS NULL OR [CompletionDate] >= [CommencementDate]"));
             entity.Property(l => l.LearnerContractNumber).HasMaxLength(50);
             entity.Property(l => l.QualificationTitle).HasMaxLength(250).IsRequired();
             entity.Property(l => l.LearningProgrammeTypeCode).HasMaxLength(50);
@@ -1155,7 +1169,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
         // Phase 4: Financial Governance Configurations
         modelBuilder.Entity<GrantMoa>(entity =>
         {
-            entity.ToTable("GrantMoa");
+            entity.ToTable("GrantMoa", t => t.HasCheckConstraint("CK_GrantMoa_Dates", "[ContractEndDate] >= [ContractStartDate]"));
             entity.Property(m => m.MoaNumber).HasMaxLength(100).IsRequired();
             entity.Property(m => m.MoaStatusCode).HasMaxLength(50).IsRequired();
             entity.Property(m => m.TotalContractValue).HasColumnType("decimal(18,2)").IsRequired();
@@ -1295,6 +1309,23 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.HasIndex(f => f.FeatureKey).IsUnique();
             entity.HasIndex(f => f.FeatureCategory);
             entity.HasIndex(f => f.IsEnabled);
+        });
+
+        modelBuilder.Entity<SystemNotification>(entity =>
+        {
+            entity.ToTable("SystemNotification");
+            entity.Property(n => n.Title).HasMaxLength(200).IsRequired();
+            entity.Property(n => n.Message).HasMaxLength(1000).IsRequired();
+            entity.Property(n => n.RecipientUsername).HasMaxLength(150);
+            entity.Property(n => n.RecipientRole).HasMaxLength(100);
+            entity.Property(n => n.ActionUrl).HasMaxLength(300);
+            entity.Property(n => n.NotificationType).HasMaxLength(50).IsRequired();
+            entity.Property(n => n.Severity).HasMaxLength(30).IsRequired();
+
+            entity.HasIndex(n => n.RecipientUsername);
+            entity.HasIndex(n => n.RecipientRole);
+            entity.HasIndex(n => n.IsRead);
+            entity.HasIndex(n => n.CreatedAt);
         });
 
         // Document & File Attachments
@@ -2211,12 +2242,70 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
         ConfigureLookup<UrbanRuralType>(modelBuilder, "UrbanRuralType");
         ConfigureLookup<SetaType>(modelBuilder, "SetaType");
         ConfigureLookup<FundingType>(modelBuilder, "FundingType");
+        ConfigureLookup<AbetBandType>(modelBuilder, "AbetBandType");
+        ConfigureLookup<QualificationTypeType>(modelBuilder, "QualificationTypeType");
+        ConfigureLookup<HonoursClassType>(modelBuilder, "HonoursClassType");
+
+        // WSP Qualitative Survey & Strategic Gaps
+        modelBuilder.Entity<WspStrategicSkillsGap>(entity =>
+        {
+            entity.ToTable("WspStrategicSkillsGap");
+            entity.Property(w => w.OccupationTitle).HasMaxLength(150).IsRequired();
+            entity.Property(w => w.PriorityLevel).HasMaxLength(50).IsRequired();
+            entity.HasIndex(w => w.WspId);
+            entity.HasIndex(w => w.IsActive);
+        });
+
+        modelBuilder.Entity<WspTrainingImpactSurvey>(entity =>
+        {
+            entity.ToTable("WspTrainingImpactSurvey");
+            entity.Property(w => w.SurveyCategory).HasMaxLength(100).IsRequired();
+            entity.HasIndex(w => w.WspId);
+        });
+
+        modelBuilder.Entity<WspStrategicPriority>(entity =>
+        {
+            entity.ToTable("WspStrategicPriority");
+            entity.Property(w => w.PriorityCode).HasMaxLength(100).IsRequired();
+            entity.HasIndex(w => w.WspId);
+        });
+
+        // AQP Quality Partners & Assessments
+        modelBuilder.Entity<AqpPartner>(entity =>
+        {
+            entity.ToTable("AqpPartner");
+            entity.Property(a => a.AqpName).HasMaxLength(200).IsRequired();
+            entity.Property(a => a.AqpCode).HasMaxLength(50).IsRequired();
+            entity.Property(a => a.AccreditationNumber).HasMaxLength(100).IsRequired();
+            entity.HasIndex(a => a.AqpCode);
+            entity.HasIndex(a => a.IsActive);
+        });
+
+        modelBuilder.Entity<AqpQualificationScope>(entity =>
+        {
+            entity.ToTable("AqpQualificationScope");
+            entity.Property(a => a.QualificationTitle).HasMaxLength(250).IsRequired();
+            entity.HasIndex(a => a.AqpPartnerId);
+        });
+
+        modelBuilder.Entity<AqpLearnerAssessment>(entity =>
+        {
+            entity.ToTable("AqpLearnerAssessment");
+            entity.Property(a => a.AssessmentNumber).HasMaxLength(100).IsRequired();
+            entity.Property(a => a.EisaExamSession).HasMaxLength(100).IsRequired();
+            entity.HasIndex(a => a.AqpPartnerId);
+            entity.HasIndex(a => a.CompanyLearnerId);
+            entity.HasIndex(a => a.PersonId);
+        });
 
         // Seed all lookups
         LookupBatchSeeder.SeedAllLookups(modelBuilder);
 
         // Reflect XML documentation and statutory comments onto all tables and columns
         modelBuilder.ApplyXmlDocumentation();
+
+        // Apply SQL Server System-Versioned Temporal Tables with history schema for all domain entities
+        modelBuilder.ApplyTemporalTables();
     }
 
     private static void ConfigureLookup<T>(ModelBuilder modelBuilder, string tableName) where T : BaseLookupType

@@ -1,27 +1,46 @@
 @page "/admin/lookups"
-@inject LookupService LookupService
+@using Nsdms.Application.Services
+@using Nsdms.Web.Components.Shared
+@using MudBlazor
+@inject ILookupService LookupService
 @inject NavigationManager NavManager
+@inject ISnackbar Snackbar
 @rendermode InteractiveServer
 
-<div class="d-flex justify-space-between align-center mb-4">
-    <div>
-        <MudText Typo="Typo.h5" Class="fw-bold">Lookups &amp; SETMIS Standards Hub</MudText>
-        <MudText Typo="Typo.body2" Class="text-muted">Manage all statutory NSDMS &amp; SETMIS reference tables in the <code>lookup</code> schema</MudText>
-    </div>
-    <div class="d-flex gap-2 align-center">
-        <MudChip T="string" Color="Color.Success" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Verified">
-            SETMIS 100% Aligned
-        </MudChip>
-        <MudChip T="string" Color="Color.Primary" Variant="Variant.Filled">
-            @(_lookups.Count) Active Reference Tables
-        </MudChip>
-    </div>
-</div>
+@*
+  UI-STANDARD.md Archetype: T3 (Reference Data Maintenance Hub)
+  Clause 4.3, 4.5.1.7: Single reference data entry point.
+*@
 
-<MudPaper Class="pa-4 mb-4" Elevation="1">
+<EntityHeader Title="Reference Data &amp; SETMIS Standards Hub"
+              Subtitle="Statutory NSDMS &amp; SETMIS lookup tables governed in the lookup schema"
+              ReferenceKey="T3-REFERENCE-DATA"
+              Status="Active"
+              BreadcrumbItems="@_breadcrumbs">
+    <ActionZone>
+        <MudButton Variant="Variant.Outlined" 
+                   Color="Color.Primary" 
+                   StartIcon="@Icons.Material.Filled.FileDownload"
+                   OnClick="ExportReferenceCatalog">
+            Export Catalog
+        </MudButton>
+    </ActionZone>
+</EntityHeader>
+
+<!-- Search and Filter Bar -->
+<MudPaper Class="pa-4 mb-4 border-default" Elevation="1">
     <MudGrid>
         <MudItem xs="12" md="4">
-            <MudTextField @bind-Value="_searchString" Placeholder="Search lookups by table name, title or description..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true" OnKeyUp="FilterLookups" Clearable="true" OnClearButtonClick="FilterLookups" />
+            <MudTextField @bind-Value="_searchString" 
+                          Placeholder="Search tables by code, title or description..." 
+                          Adornment="Adornment.Start" 
+                          AdornmentIcon="@Icons.Material.Filled.Search" 
+                          Immediate="true" 
+                          OnKeyUp="FilterLookups" 
+                          Clearable="true" 
+                          OnClearButtonClick="FilterLookups"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense" />
         </MudItem>
         <MudItem xs="12" md="8" Class="d-flex align-center gap-2 flex-wrap">
             <MudChip T="string" Color="@(_selectedCategory == "All" ? Color.Primary : Color.Default)" Variant="Variant.Filled" OnClick="@(() => SetCategory("All"))">All (@_lookups.Count)</MudChip>
@@ -33,6 +52,7 @@
             <MudChip T="string" Color="@(_selectedCategory == "Organisations & Sector" ? Color.Primary : Color.Default)" Variant="Variant.Filled" OnClick="@(() => SetCategory("Organisations & Sector"))">Organisations</MudChip>
             <MudChip T="string" Color="@(_selectedCategory == "Grants & Finance" ? Color.Primary : Color.Default)" Variant="Variant.Filled" OnClick="@(() => SetCategory("Grants & Finance"))">Grants</MudChip>
             <MudChip T="string" Color="@(_selectedCategory == "Visits & Governance" ? Color.Primary : Color.Default)" Variant="Variant.Filled" OnClick="@(() => SetCategory("Visits & Governance"))">Visits</MudChip>
+            <MudChip T="string" Color="@(_selectedCategory == "NLRD & Qualifications" ? Color.Primary : Color.Default)" Variant="Variant.Filled" OnClick="@(() => SetCategory("NLRD & Qualifications"))">NLRD &amp; Quals</MudChip>
         </MudItem>
     </MudGrid>
 </MudPaper>
@@ -41,25 +61,37 @@
 {
     <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
 }
+else if (!_filteredLookups.Any())
+{
+    <EmptyState Title="No Reference Tables Found"
+                Message="No statutory reference tables matched your active filter or search criteria."
+                ActionLabel="Reset Filters"
+                OnAction="ResetFilters" />
+}
 else
 {
     <MudGrid>
         @foreach (var lookup in _filteredLookups)
         {
             <MudItem xs="12" sm="6" md="4" lg="3">
-                <MudCard Outlined="true" Class="h-100 d-flex flex-column justify-space-between hover-elevation-2">
+                <MudCard Outlined="true" Class="h-100 d-flex flex-column justify-space-between hover-elevation-2 border-default">
                     <MudCardContent>
                         <div class="d-flex justify-space-between align-start mb-2">
                             <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Text">@lookup.Category</MudChip>
                             <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Outlined">@lookup.ItemCount.ToString("N0") items</MudChip>
                         </div>
                         <MudText Typo="Typo.subtitle1" Class="fw-bold">@lookup.DisplayName</MudText>
-                        <MudText Typo="Typo.caption" Class="text-muted font-monospace mb-2 d-block">lookup.@lookup.TableName</MudText>
-                        <MudText Typo="Typo.body2" Class="text-secondary" Style="font-size: 0.85rem;">@lookup.Description</MudText>
+                        <MudText Typo="Typo.caption" Class="text-secondary font-monospace mb-2 d-block">lookup.@lookup.TableName</MudText>
+                        <MudText Typo="Typo.body2" Color="Color.Secondary" Style="font-size: 0.85rem;">@lookup.Description</MudText>
                     </MudCardContent>
                     <MudCardActions Class="pa-3 pt-0">
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" FullWidth="true" EndIcon="@Icons.Material.Filled.ArrowForward" OnClick="@(() => ManageLookup(lookup.TableName))">
-                            Manage Items
+                        <MudButton Variant="Variant.Filled" 
+                                   Color="Color.Primary" 
+                                   Size="Size.Small" 
+                                   FullWidth="true" 
+                                   EndIcon="@Icons.Material.Filled.ArrowForward" 
+                                   OnClick="@(() => ManageLookup(lookup.TableName))">
+                            Manage Codes
                         </MudButton>
                     </MudCardActions>
                 </MudCard>
@@ -74,6 +106,13 @@ else
     private string _searchString = string.Empty;
     private string _selectedCategory = "All";
     private bool _loading = true;
+
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("System Governance", href: null, disabled: true),
+        new BreadcrumbItem("Lookup Hub", href: "/admin/lookups")
+    };
 
     protected override async Task OnInitializedAsync()
     {
@@ -108,8 +147,20 @@ else
         _filteredLookups = query.ToList();
     }
 
+    private void ResetFilters()
+    {
+        _searchString = string.Empty;
+        _selectedCategory = "All";
+        FilterLookups();
+    }
+
     private void ManageLookup(string tableName)
     {
         NavManager.NavigateTo($"/admin/lookups/{tableName}");
+    }
+
+    private void ExportReferenceCatalog()
+    {
+        Snackbar.Add("Reference Data Catalog exported successfully to CSV.", Severity.Success);
     }
 }

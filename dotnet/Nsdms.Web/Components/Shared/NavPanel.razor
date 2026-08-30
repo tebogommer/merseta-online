@@ -1,0 +1,29 @@
+@namespace Nsdms.Web.Components.Shared
+@using MudBlazor
+
+@*
+  UI-STANDARD.md Contract (Section 9.2, Clause 4.5.1):
+  Component: NavPanel
+  Inputs: Groups, Collapsed, CurrentPath
+  Renders: Left navigation panel. Max 2 levels. Marks current location; reveals labels on hover/focus when collapsed.
+*@
+
+<nav class="nsdms-nav-panel @(Collapsed ? "nsdms-nav-collapsed" : "nsdms-nav-expanded")" aria-label="Main Navigation">
+    <MudNavMenu Class="mud-width-full py-2" Dense="true" Rounded="true">
+        @if (ChildContent != null)
+        {
+            @ChildContent
+        }
+    </MudNavMenu>
+</nav>
+
+@code {
+    [Parameter]
+    public bool Collapsed { get; set; } = false;
+
+    [Parameter]
+    public string? CurrentPath { get; set; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+}

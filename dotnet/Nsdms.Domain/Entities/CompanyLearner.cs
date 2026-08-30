@@ -87,17 +87,23 @@ public class CompanyLearner : BaseEntity
     /// <summary>
     /// Programme hierarchy and articulation type code (references lookup.PartOfType: 01 Stand-alone, 02 Part of Qualification, 03 Part of Learnership).
     /// </summary>
-    public string PartOfId { get; set; } = "01";
+    public string? PartOfId { get; set; } = "01";
 
     /// <summary>
     /// Learner delivery mode classification code (references lookup.EnrolmentType: 01 Contact, 02 Distance, 03 Mixed Mode, 04 Workplace Based).
     /// </summary>
-    public string EnrolmentTypeId { get; set; } = "01";
+    public string? EnrolmentTypeId { get; set; } = "01";
 
     /// <summary>
     /// Current statutory enrolment lifecycle status code (references lookup.EnrolmentStatusType: 01 Enrolled, 02 Achieved, 03 Certificated, 04 Terminated, 05 Transferred).
     /// </summary>
-    public string EnrolmentStatusId { get; set; } = "01";
+    public string? EnrolmentStatusId { get; set; } = "01";
+
+    [NotMapped]
+    public string? EnrolmentStatus { get => EnrolmentStatusId; set => EnrolmentStatusId = value; }
+
+    [NotMapped]
+    public string? Status { get => EnrolmentStatusId; set => EnrolmentStatusId = value; }
 
     /// <summary>
     /// Date when current enrolment status milestone became effective (SETMIS Files 500, 501, 502).
@@ -117,7 +123,7 @@ public class CompanyLearner : BaseEntity
     /// <summary>
     /// Submitting ETQA ID of the registered Assessor (references lookup.SetaType, default 17 for merSETA).
     /// </summary>
-    public string AssessorEtqaId { get; set; } = "17";
+    public string? AssessorEtqaId { get; set; } = "17";
 
     /// <summary>
     /// Secondary practical training provider code for decentralized apprenticeship workplace programmes (SETMIS File 501).
@@ -137,12 +143,12 @@ public class CompanyLearner : BaseEntity
     /// <summary>
     /// Learner economic employment standing code (references lookup.EconomicStatusType: 01 Employed 18.1, 02 Unemployed 18.2, 03 Student).
     /// </summary>
-    public string EconomicStatusId { get; set; } = "01";
+    public string? EconomicStatusId { get; set; } = "01";
 
     /// <summary>
     /// Geographic intervention area classification (references lookup.UrbanRuralType: 01 Urban, 02 Rural, 98 Unknown).
     /// </summary>
-    public string UrbanRuralId { get; set; } = "01";
+    public string? UrbanRuralId { get; set; } = "01";
 
     /// <summary>
     /// Cumulative Discretionary Grant / Levy stipend funding disbursed to date in ZAR.
@@ -179,7 +185,7 @@ public class CompanyLearner : BaseEntity
     /// <summary>
     /// Funding source lookup identifier (references lookup.FundingType: 01 SETA Funded, 02 Employer Funded, 03 NSF).
     /// </summary>
-    public string FundingId { get; set; } = "01";
+    public string? FundingId { get; set; } = "01";
 
     /// <summary>
     /// Legacy enrolment status code mapping.
