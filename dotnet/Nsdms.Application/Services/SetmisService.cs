@@ -16,7 +16,7 @@ public class SetmisService : ISetmisService
 
     public async Task<string> GenerateSetmisFileContentAsync(string fileCode)
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
         var sb = new StringBuilder();
 
         switch (fileCode.ToUpperInvariant())
@@ -122,7 +122,7 @@ public class SetmisService : ISetmisService
 
     public async Task<List<SetmisValidationMessage>> ValidateSetmisDataAsync()
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
         var messages = new List<SetmisValidationMessage>();
 
         // 1. Validate Learners (File 504)
@@ -252,7 +252,7 @@ public class SetmisService : ISetmisService
 
     public async Task<List<SetmisSubmissionBatch>> GetSubmissionBatchesAsync()
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
         return await context.SetmisSubmissionBatches
             .OrderByDescending(b => b.GeneratedDate)
             .ToListAsync();
@@ -260,7 +260,7 @@ public class SetmisService : ISetmisService
 
     public async Task<SetmisSubmissionBatch> CreateSubmissionBatchAsync(string period, string fileCode, string userId)
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
         var validationMessages = await ValidateSetmisDataAsync();
         var errorCount = validationMessages.Count(m => m.Severity == "Error");
 
@@ -303,7 +303,7 @@ public class SetmisService : ISetmisService
 
     public async Task<bool> UpdateBatchStatusAsync(int batchId, string status, string? ackRef, string userId)
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
         var batch = await context.SetmisSubmissionBatches.FirstOrDefaultAsync(b => b.Id == batchId);
         if (batch == null) return false;
 

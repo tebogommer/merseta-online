@@ -16,7 +16,7 @@ public class WorkflowEngineService : IWorkflowEngineService
 
     public async Task<WorkflowInstance?> GetInstanceByEntityAsync(string processCode, int entityId)
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
         return await context.WorkflowInstances
             .Include(i => i.WorkflowDefinition)
             .Include(i => i.CurrentWorkflowState)
@@ -30,7 +30,7 @@ public class WorkflowEngineService : IWorkflowEngineService
 
     public async Task<WorkflowInstance?> GetInstanceByIdAsync(int instanceId)
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
         return await context.WorkflowInstances
             .Include(i => i.WorkflowDefinition)
             .Include(i => i.CurrentWorkflowState)
@@ -44,7 +44,7 @@ public class WorkflowEngineService : IWorkflowEngineService
 
     public async Task<List<WorkflowTransition>> GetAvailableTransitionsAsync(int instanceId, ClaimsPrincipal? user)
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
         var instance = await context.WorkflowInstances
             .Include(i => i.CurrentWorkflowState)
             .FirstOrDefaultAsync(i => i.Id == instanceId);
@@ -70,7 +70,7 @@ public class WorkflowEngineService : IWorkflowEngineService
         string initiatorUserId, 
         string initiatorName)
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
         var def = await context.WorkflowDefinitions
             .Include(d => d.States)
             .FirstOrDefaultAsync(d => d.Code == processCode && d.IsActive);
@@ -131,7 +131,7 @@ public class WorkflowEngineService : IWorkflowEngineService
         string actorRole, 
         string? comments = null)
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
         var instance = await context.WorkflowInstances
             .Include(i => i.WorkflowDefinition)
             .Include(i => i.CurrentWorkflowState)
@@ -255,7 +255,7 @@ public class WorkflowEngineService : IWorkflowEngineService
 
     public async Task<List<WorkflowTask>> GetUserTasksAsync(string? userRole = null, string? userId = null)
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
         var query = context.WorkflowTasks
             .Include(t => t.WorkflowInstance)
                 .ThenInclude(i => i!.CurrentWorkflowState)
@@ -281,7 +281,7 @@ public class WorkflowEngineService : IWorkflowEngineService
 
     public async Task<WorkflowTask?> ClaimTaskAsync(int taskId, string userId, string userName)
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
         var task = await context.WorkflowTasks.FirstOrDefaultAsync(t => t.Id == taskId);
         if (task == null || task.TaskStatus == "Completed")
         {
@@ -301,7 +301,7 @@ public class WorkflowEngineService : IWorkflowEngineService
 
     public async Task<List<WorkflowHistory>> GetWorkflowHistoryAsync(int instanceId)
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
         return await context.WorkflowHistories
             .Include(h => h.FromState)
             .Include(h => h.ToState)
@@ -312,7 +312,7 @@ public class WorkflowEngineService : IWorkflowEngineService
 
     public async Task<List<WorkflowNotification>> GetUserNotificationsAsync(string userId, bool unreadOnly = false)
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
         var query = context.WorkflowNotifications
             .Where(n => n.RecipientUserId == userId);
 
@@ -326,7 +326,7 @@ public class WorkflowEngineService : IWorkflowEngineService
 
     public async Task<bool> MarkNotificationReadAsync(int notificationId)
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
         var notification = await context.WorkflowNotifications.FirstOrDefaultAsync(n => n.Id == notificationId);
         if (notification == null) return false;
 

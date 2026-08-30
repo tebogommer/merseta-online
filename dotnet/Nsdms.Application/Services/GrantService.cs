@@ -406,4 +406,59 @@ public class GrantService : IGrantService
     public async Task<decimal> RecalculateApplicationBudgetAsync(int applicationId)
     {
         using var db = await _contextFactory.CreateDbContextAsync();
-        var application = await db.GrantAppli
+        var application = await db.GrantApplications.FindAsync(applicationId);
+        if (application == null)
+        {
+            throw new KeyNotFoundException($"GrantApplication with ID {applicationId} was not found.");
+        }
+
+        var budgets = await db.GrantProjectBudgets
+            .Where(b => b.GrantApplicationId == applicationId)
+            .ToListAsync();
+
+        var totalBudget = budgets.Sum(b => b.TotalCost);
+        application.RequestedAmount = totalBudget;
+        application.ModifiedAt = DateTime.UtcNow;
+
+        await db.SaveChangesAsync();
+
+        return totalBudget;
+    }
+
+    public async Task<bool> RemoveBudgetItemAsync(int budgetId, string currentUsername = "SYSTEM")
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var budget = await db.GrantProjectBudgets.FindAsync(budgetId);
+        if (budget == null)
+        {
+            return false;
+        }
+
+        var applicationId = budget.GrantApplicationId;
+        var beforeState = new { budget.Id, budget.GrantApplicationId, budget.ExpenseCategory, budget.TotalCost };
+
+        db.GrantProjectBudgets.Remove(budget);
+        await db.SaveChangesAsync();
+
+        var budgets = await db.GrantProjectBudgets
+            .Where(b => b.GrantApplicationId == applicationId)
+            .ToListAsync();
+        var totalBudget = budgets.Sum(b => b.TotalCost);
+        var app = await db.GrantApplications.FindAsync(applicationId);
+        if (app != null)
+        {
+            app.RequestedAmount = totalBudget;
+            app.ModifiedAt = DateTime.UtcNow;
+        }
+
+        _audit.LogAction(db, "GrantProjectBudget", budgetId, "RemoveBudgetItem", currentUsername, beforeState, null);
+        await db.SaveChangesAsync();
+
+        return true;
+    }
+
+    public async Task<bool> RemoveProjectBudgetAsync(int budgetId, string currentUsername = "SYSTEM")
+    {
+        return await RemoveBudgetItemAsync(budgetId, currentUsername);
+    }
+}

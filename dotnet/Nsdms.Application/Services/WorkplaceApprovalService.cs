@@ -26,18 +26,19 @@ public interface IWorkplaceApprovalService
 
 public class WorkplaceApprovalService : IWorkplaceApprovalService
 {
-    private readonly INsdmsDbContext _db;
+    private readonly INsdmsDbContextFactory _contextFactory;
     private readonly IAuditService _audit;
 
-    public WorkplaceApprovalService(INsdmsDbContext db, IAuditService audit)
+    public WorkplaceApprovalService(INsdmsDbContextFactory contextFactory, IAuditService audit)
     {
-        _db = db;
+        _contextFactory = contextFactory;
         _audit = audit;
     }
 
     public async Task<List<WorkplaceApproval>> GetAllAsync(string? search = null, string? status = null, int? organisationId = null)
     {
-        var query = _db.WorkplaceApprovals
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var query = db.WorkplaceApprovals
             .Include(w => w.Organisation)
             .Include(w => w.OrganisationSite)
             .Include(w => w.AssessorPerson)
@@ -71,7 +72,8 @@ public class WorkplaceApprovalService : IWorkplaceApprovalService
 
     public async Task<WorkplaceApproval?> GetByIdAsync(int id)
     {
-        return await _db.WorkplaceApprovals
+        using var db = await _contextFactory.CreateDbContextAsync();
+        return await db.WorkplaceApprovals
             .Include(w => w.Organisation)
             .Include(w => w.OrganisationSite)
             .Include(w => w.AssessorPerson)
@@ -107,19 +109,22 @@ public class WorkplaceApprovalService : IWorkplaceApprovalService
             approval.ApprovalStatusCode = "Pending";
         }
 
+        using var db = await _contextFactory.CreateDbContextAsync();
         approval.CreatedAt = DateTime.UtcNow;
         approval.CreatedBy = currentUsername;
 
-        _db.WorkplaceApprovals.Add(approval);
-        await _db.SaveChangesAsync();
+        db.WorkplaceApprovals.Add(approval);
+        await db.SaveChangesAsync();
 
-        await _audit.LogActionAsync("WorkplaceApproval", approval.Id, "Create", currentUsername, null, approval);
+        _audit.LogAction(db, "WorkplaceApproval", approval.Id, "Create", currentUsername, null, approval);
+        await db.SaveChangesAsync();
         return approval;
     }
 
     public async Task<WorkplaceApproval> UpdateAsync(WorkplaceApproval approval, string currentUsername = "SYSTEM")
     {
-        var existing = await _db.WorkplaceApprovals.FindAsync(approval.Id);
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var existing = await db.WorkplaceApprovals.FindAsync(approval.Id);
         if (existing == null) throw new KeyNotFoundException($"WorkplaceApproval with ID {approval.Id} not found.");
 
         var beforeState = new { existing.ApprovalNumber, existing.ApprovalStatusCode, existing.QualificationTitle, existing.InspectionDate };
@@ -137,8 +142,8 @@ public class WorkplaceApprovalService : IWorkplaceApprovalService
         existing.ModifiedAt = DateTime.UtcNow;
         existing.ModifiedBy = currentUsername;
 
-        await _db.SaveChangesAsync();
-        await _audit.LogActionAsync("WorkplaceApproval", existing.Id, "Update", currentUsername, beforeState, existing);
+        _audit.LogAction(db, "WorkplaceApproval", existing.Id, "Update", currentUsername, beforeState, existing);
+        await db.SaveChangesAsync();
         return existing;
     }
 
@@ -150,68 +155,73 @@ public class WorkplaceApprovalService : IWorkplaceApprovalService
 
     public async Task<bool> DeleteAsync(int id, string currentUsername = "SYSTEM")
     {
-        var item = await _db.WorkplaceApprovals.Include(w => w.Mentors).Include(w => w.ToolItems).FirstOrDefaultAsync(w => w.Id == id);
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var item = await db.WorkplaceApprovals.Include(w => w.Mentors).Include(w => w.ToolItems).FirstOrDefaultAsync(w => w.Id == id);
         if (item == null) return false;
 
         var beforeState = new { item.Id, item.ApprovalNumber, item.QualificationTitle, item.OrganisationId };
-        _db.WorkplaceApprovals.Remove(item);
-        await _db.SaveChangesAsync();
-
-        await _audit.LogActionAsync("WorkplaceApproval", id, "Delete", currentUsername, beforeState, null);
+        db.WorkplaceApprovals.Remove(item);
+        _audit.LogAction(db, "WorkplaceApproval", id, "Delete", currentUsername, beforeState, null);
+        await db.SaveChangesAsync();
         return true;
     }
 
     public async Task<WorkplaceApprovalMentor> AddMentorAsync(WorkplaceApprovalMentor mentor, string currentUsername = "SYSTEM")
     {
+        using var db = await _contextFactory.CreateDbContextAsync();
         mentor.CreatedAt = DateTime.UtcNow;
         mentor.CreatedBy = currentUsername;
 
-        _db.WorkplaceApprovalMentors.Add(mentor);
-        await _db.SaveChangesAsync();
+        db.WorkplaceApprovalMentors.Add(mentor);
+        await db.SaveChangesAsync();
 
-        await _audit.LogActionAsync("WorkplaceApprovalMentor", mentor.Id, "AddMentor", currentUsername, null, mentor);
+        _audit.LogAction(db, "WorkplaceApprovalMentor", mentor.Id, "AddMentor", currentUsername, null, mentor);
+        await db.SaveChangesAsync();
         return mentor;
     }
 
     public async Task<bool> RemoveMentorAsync(int mentorId, string currentUsername = "SYSTEM")
     {
-        var mentor = await _db.WorkplaceApprovalMentors.FindAsync(mentorId);
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var mentor = await db.WorkplaceApprovalMentors.FindAsync(mentorId);
         if (mentor == null) return false;
 
-        _db.WorkplaceApprovalMentors.Remove(mentor);
-        await _db.SaveChangesAsync();
-
-        await _audit.LogActionAsync("WorkplaceApprovalMentor", mentorId, "RemoveMentor", currentUsername, null, null);
+        db.WorkplaceApprovalMentors.Remove(mentor);
+        _audit.LogAction(db, "WorkplaceApprovalMentor", mentorId, "RemoveMentor", currentUsername, null, null);
+        await db.SaveChangesAsync();
         return true;
     }
 
     public async Task<WorkplaceApprovalToolList> AddToolItemAsync(WorkplaceApprovalToolList toolItem, string currentUsername = "SYSTEM")
     {
+        using var db = await _contextFactory.CreateDbContextAsync();
         toolItem.CreatedAt = DateTime.UtcNow;
         toolItem.CreatedBy = currentUsername;
 
-        _db.WorkplaceApprovalToolLists.Add(toolItem);
-        await _db.SaveChangesAsync();
+        db.WorkplaceApprovalToolLists.Add(toolItem);
+        await db.SaveChangesAsync();
 
-        await _audit.LogActionAsync("WorkplaceApprovalToolList", toolItem.Id, "AddToolItem", currentUsername, null, toolItem);
+        _audit.LogAction(db, "WorkplaceApprovalToolList", toolItem.Id, "AddToolItem", currentUsername, null, toolItem);
+        await db.SaveChangesAsync();
         return toolItem;
     }
 
     public async Task<bool> RemoveToolItemAsync(int toolItemId, string currentUsername = "SYSTEM")
     {
-        var tool = await _db.WorkplaceApprovalToolLists.FindAsync(toolItemId);
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var tool = await db.WorkplaceApprovalToolLists.FindAsync(toolItemId);
         if (tool == null) return false;
 
-        _db.WorkplaceApprovalToolLists.Remove(tool);
-        await _db.SaveChangesAsync();
-
-        await _audit.LogActionAsync("WorkplaceApprovalToolList", toolItemId, "RemoveToolItem", currentUsername, null, null);
+        db.WorkplaceApprovalToolLists.Remove(tool);
+        _audit.LogAction(db, "WorkplaceApprovalToolList", toolItemId, "RemoveToolItem", currentUsername, null, null);
+        await db.SaveChangesAsync();
         return true;
     }
 
     public async Task<WorkplaceApproval> ApproveWorkplaceAsync(int id, string recommendations, string currentUsername = "SYSTEM")
     {
-        var existing = await _db.WorkplaceApprovals.FindAsync(id);
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var existing = await db.WorkplaceApprovals.FindAsync(id);
         if (existing == null) throw new KeyNotFoundException($"WorkplaceApproval with ID {id} not found.");
 
         var beforeState = new { existing.ApprovalStatusCode, existing.ApprovalDate };
@@ -222,14 +232,15 @@ public class WorkplaceApprovalService : IWorkplaceApprovalService
         existing.ModifiedAt = DateTime.UtcNow;
         existing.ModifiedBy = currentUsername;
 
-        await _db.SaveChangesAsync();
-        await _audit.LogActionAsync("WorkplaceApproval", existing.Id, "ApproveWorkplace", currentUsername, beforeState, existing);
+        _audit.LogAction(db, "WorkplaceApproval", existing.Id, "ApproveWorkplace", currentUsername, beforeState, existing);
+        await db.SaveChangesAsync();
         return existing;
     }
 
     public async Task<WorkplaceApproval> RejectWorkplaceAsync(int id, string reason, string currentUsername = "SYSTEM")
     {
-        var existing = await _db.WorkplaceApprovals.FindAsync(id);
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var existing = await db.WorkplaceApprovals.FindAsync(id);
         if (existing == null) throw new KeyNotFoundException($"WorkplaceApproval with ID {id} not found.");
 
         var beforeState = new { existing.ApprovalStatusCode };
@@ -238,8 +249,8 @@ public class WorkplaceApprovalService : IWorkplaceApprovalService
         existing.ModifiedAt = DateTime.UtcNow;
         existing.ModifiedBy = currentUsername;
 
-        await _db.SaveChangesAsync();
-        await _audit.LogActionAsync("WorkplaceApproval", existing.Id, "RejectWorkplace", currentUsername, beforeState, existing);
+        _audit.LogAction(db, "WorkplaceApproval", existing.Id, "RejectWorkplace", currentUsername, beforeState, existing);
+        await db.SaveChangesAsync();
         return existing;
     }
 }

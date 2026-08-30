@@ -16,12 +16,12 @@ public class LookupItemDto
 
 public class LookupService
 {
-    private readonly INsdmsDbContext _db;
+    private readonly INsdmsDbContextFactory _contextFactory;
     private readonly IAuditService _audit;
 
-    public LookupService(INsdmsDbContext db, IAuditService audit)
+    public LookupService(INsdmsDbContextFactory contextFactory, IAuditService audit)
     {
-        _db = db;
+        _contextFactory = contextFactory;
         _audit = audit;
     }
 
@@ -85,34 +85,35 @@ public class LookupService
 
     public async Task<List<LookupItemDto>> GetLookupItemsAsync(string tableName, string? search = null)
     {
+        using var db = await _contextFactory.CreateDbContextAsync();
         var items = tableName switch
         {
-            "StatusType" => await _db.StatusTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "GenderType" => await _db.GenderTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "EquityType" => await _db.EquityTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "CitizenStatusType" => await _db.CitizenStatusTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "NationalityType" => await _db.NationalityTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "HomeLanguageType" => await _db.HomeLanguageTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "ProvinceType" => await _db.ProvinceTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "DisabilityType" => await _db.DisabilityTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "CategoryType" => await _db.CategoryTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "OrganisationType" => await _db.OrganisationTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "CompanySizeType" => await _db.CompanySizeTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "SectorType" => await _db.SectorTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "ChamberType" => await _db.ChamberTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "SicCodeType" => await _db.SicCodeTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "LearningProgrammeType" => await _db.LearningProgrammeTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "EnrolmentType" => await _db.EnrolmentTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "EnrolmentStatusType" => await _db.EnrolmentStatusTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "ProviderType" => await _db.ProviderTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "ProviderStatusType" => await _db.ProviderStatusTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "GrantTypeType" => await _db.GrantTypeTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "InterventionType" => await _db.InterventionTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "OfoCodeType" => await _db.OfoCodeTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "VisitTypeType" => await _db.VisitTypeTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "SiteVisitApprovalStatusType" => await _db.SiteVisitApprovalStatusTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            "EmployerApprovalStatusType" => await _db.EmployerApprovalStatusTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
-            _ => await _db.StatusTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync()
+            "StatusType" => await db.StatusTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
+            "GenderType" => await db.GenderTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
+            "EquityType" => await db.EquityTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
+            "CitizenStatusType" => await db.CitizenStatusTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
+            "NationalityType" => await db.NationalityTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
+            "HomeLanguageType" => await db.HomeLanguageTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
+            "ProvinceType" => await db.ProvinceTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
+            "DisabilityType" => await db.DisabilityTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
+            "CategoryType" => await db.CategoryTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
+            "OrganisationType" => await db.OrganisationTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
+            "CompanySizeType" => await db.CompanySizeTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
+            "SectorType" => await db.SectorTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
+            "ChamberType" => await db.ChamberTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
+            "SicCodeType" => await db.SicCodeTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
+            "LearningProgrammeType" => await db.LearningProgrammeTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
+            "EnrolmentType" => await db.EnrolmentTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
+            "EnrolmentStatusType" => await db.EnrolmentStatusTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
+            "ProviderType" => await db.ProviderTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
+            "ProviderStatusType" => await db.ProviderStatusTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
+            "GrantTypeType" => await db.GrantTypeTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
+            "InterventionType" => await db.InterventionTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
+            "OfoCodeType" => await db.OfoCodeTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
+            "VisitTypeType" => await db.VisitTypeTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
+            "SiteVisitApprovalStatusType" => await db.SiteVisitApprovalStatusTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
+            "EmployerApprovalStatusType" => await db.EmployerApprovalStatusTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync(),
+            _ => await db.StatusTypes.Select(x => new LookupItemDto { Code = x.Code, Name = x.Name, Description = x.Description, Active = x.Active }).ToListAsync()
         };
 
         if (!string.IsNullOrWhiteSpace(search))
@@ -133,57 +134,59 @@ public class LookupService
 
         item.Code = item.Code.Trim().ToUpperInvariant();
 
+        using var db = await _contextFactory.CreateDbContextAsync();
+
         // Save into respective DbSet
         if (tableName == "ProvinceType")
         {
-            var existing = await _db.ProvinceTypes.FindAsync(item.Code);
+            var existing = await db.ProvinceTypes.FindAsync(item.Code);
             if (existing == null)
             {
-                _db.ProvinceTypes.Add(new() { Code = item.Code, Name = item.Name, Description = item.Description, Active = item.Active });
-                await _audit.LogActionAsync("lookup.ProvinceType", 0, "Create", currentUser, null, item);
+                db.ProvinceTypes.Add(new() { Code = item.Code, Name = item.Name, Description = item.Description, Active = item.Active });
+                _audit.LogAction(db, "lookup.ProvinceType", 0, "Create", currentUser, null, item);
             }
             else
             {
                 existing.Name = item.Name;
                 existing.Description = item.Description;
                 existing.Active = item.Active;
-                await _audit.LogActionAsync("lookup.ProvinceType", 0, "Update", currentUser, null, item);
+                _audit.LogAction(db, "lookup.ProvinceType", 0, "Update", currentUser, null, item);
             }
         }
         else if (tableName == "CategoryType")
         {
-            var existing = await _db.CategoryTypes.FindAsync(item.Code);
+            var existing = await db.CategoryTypes.FindAsync(item.Code);
             if (existing == null)
             {
-                _db.CategoryTypes.Add(new() { Code = item.Code, Name = item.Name, Description = item.Description, Active = item.Active });
-                await _audit.LogActionAsync("lookup.CategoryType", 0, "Create", currentUser, null, item);
+                db.CategoryTypes.Add(new() { Code = item.Code, Name = item.Name, Description = item.Description, Active = item.Active });
+                _audit.LogAction(db, "lookup.CategoryType", 0, "Create", currentUser, null, item);
             }
             else
             {
                 existing.Name = item.Name;
                 existing.Description = item.Description;
                 existing.Active = item.Active;
-                await _audit.LogActionAsync("lookup.CategoryType", 0, "Update", currentUser, null, item);
+                _audit.LogAction(db, "lookup.CategoryType", 0, "Update", currentUser, null, item);
             }
         }
         else
         {
-            var existing = await _db.StatusTypes.FindAsync(item.Code);
+            var existing = await db.StatusTypes.FindAsync(item.Code);
             if (existing == null)
             {
-                _db.StatusTypes.Add(new() { Code = item.Code, Name = item.Name, Description = item.Description, Active = item.Active });
-                await _audit.LogActionAsync($"lookup.{tableName}", 0, "Create", currentUser, null, item);
+                db.StatusTypes.Add(new() { Code = item.Code, Name = item.Name, Description = item.Description, Active = item.Active });
+                _audit.LogAction(db, $"lookup.{tableName}", 0, "Create", currentUser, null, item);
             }
             else
             {
                 existing.Name = item.Name;
                 existing.Description = item.Description;
                 existing.Active = item.Active;
-                await _audit.LogActionAsync($"lookup.{tableName}", 0, "Update", currentUser, null, item);
+                _audit.LogAction(db, $"lookup.{tableName}", 0, "Update", currentUser, null, item);
             }
         }
 
-        await _db.SaveChangesAsync();
+        await db.SaveChangesAsync();
         return true;
     }
 }

@@ -15,7 +15,7 @@ public class AnalyticsService : IAnalyticsService
 
     public async Task<List<SspChamberMetricDto>> GetSspChamberMetricsAsync()
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
         var chambers = await context.ChamberTypes.Where(c => c.Active).ToListAsync();
         var orgs = await context.Organisations.ToListAsync();
         var wsps = await context.WspSubmissions.Include(w => w.Organisation).ToListAsync();
@@ -54,7 +54,7 @@ public class AnalyticsService : IAnalyticsService
 
     public async Task<List<SspEquityMetricDto>> GetSspEquityMetricsAsync()
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
         var learners = await context.CompanyLearners
             .Include(l => l.Person)
             .ToListAsync();
@@ -77,7 +77,7 @@ public class AnalyticsService : IAnalyticsService
 
     public async Task<List<SspProvincialMetricDto>> GetSspProvincialMetricsAsync()
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
         var provinces = await context.ProvinceTypes.Where(p => p.Active).ToListAsync();
         var orgs = await context.Organisations.ToListAsync();
         var providers = await context.TrainingProviders.Include(p => p.Organisation).ToListAsync();
@@ -127,7 +127,7 @@ public class AnalyticsService : IAnalyticsService
 
     public async Task<(decimal TotalCommitted, decimal TotalDisbursed, decimal TotalRebates)> GetFinancialOverviewAsync()
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
         var moas = await context.GrantMoas.ToListAsync();
         var payments = await context.GrantTranchePayments.Where(p => p.PaymentStatusCode == "Paid").ToListAsync();
         var rebates = await context.MandatoryGrantDisbursements.Where(d => d.DisbursementStatusCode == "Paid").ToListAsync();

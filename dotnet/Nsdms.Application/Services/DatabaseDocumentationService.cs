@@ -19,7 +19,7 @@ public class DatabaseDocumentationService : IDatabaseDocumentationService
 
     public async Task<List<TableDocumentationDto>> GetDatabaseSchemaDocumentationAsync()
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
         var model = context.Model;
         var tables = new List<TableDocumentationDto>();
 

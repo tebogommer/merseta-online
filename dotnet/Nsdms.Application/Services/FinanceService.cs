@@ -15,7 +15,7 @@ public class FinanceService : IFinanceService
 
     public async Task<List<GrantMoa>> GetGrantMoasAsync()
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
         return await context.GrantMoas
             .Include(m => m.GrantApplication)
                 .ThenInclude(g => g!.Organisation)
@@ -27,7 +27,7 @@ public class FinanceService : IFinanceService
 
     public async Task<GrantMoa?> GetGrantMoaByIdAsync(int id)
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
         return await context.GrantMoas
             .Include(m => m.GrantApplication)
                 .ThenInclude(g => g!.Organisation)
@@ -38,7 +38,7 @@ public class FinanceService : IFinanceService
 
     public async Task<GrantMoa> CreateGrantMoaAsync(GrantMoa moa, string userId)
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
         moa.CreatedAt = DateTime.UtcNow;
         moa.CreatedBy = userId;
 
@@ -78,7 +78,7 @@ public class FinanceService : IFinanceService
 
     public async Task<GrantMoa> UpdateGrantMoaAsync(GrantMoa moa, string userId)
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
         var existing = await context.GrantMoas.FirstOrDefaultAsync(m => m.Id == moa.Id);
         if (existing == null) throw new InvalidOperationException($"MOA #{moa.Id} not found.");
 
@@ -109,7 +109,7 @@ public class FinanceService : IFinanceService
 
     public async Task<bool> DeleteGrantMoaAsync(int id, string userId)
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
         var moa = await context.GrantMoas.Include(m => m.Milestones).FirstOrDefaultAsync(m => m.Id == id);
         if (moa == null) return false;
 
@@ -129,7 +129,7 @@ public class FinanceService : IFinanceService
 
     public async Task<GrantMoaMilestone?> GetMilestoneByIdAsync(int milestoneId)
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
         return await context.GrantMoaMilestones
             .Include(m => m.GrantMoa)
             .Include(m => m.Payments)
@@ -138,7 +138,7 @@ public class FinanceService : IFinanceService
 
     public async Task<bool> VerifyMilestoneAsync(int milestoneId, string userId, string comments)
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
         var ms = await context.GrantMoaMilestones.FirstOrDefaultAsync(m => m.Id == milestoneId);
         if (ms == null) return false;
 
@@ -165,7 +165,7 @@ public class FinanceService : IFinanceService
 
     public async Task<List<GrantTranchePayment>> GetTranchePaymentsAsync(int? moaId = null)
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
         var query = context.GrantTranchePayments
             .Include(p => p.GrantMoaMilestone)
                 .ThenInclude(m => m!.GrantMoa)
@@ -183,7 +183,7 @@ public class FinanceService : IFinanceService
 
     public async Task<GrantTranchePayment> SubmitTranchePaymentAsync(GrantTranchePayment payment, string userId)
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
         payment.CreatedAt = DateTime.UtcNow;
         payment.CreatedBy = userId;
         payment.PaymentStatusCode = "Submitted";
@@ -211,7 +211,7 @@ public class FinanceService : IFinanceService
 
     public async Task<bool> ApproveTranchePaymentAsync(int paymentId, string userId, string batchNumber, string? comments = null)
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
         var pay = await context.GrantTranchePayments.FirstOrDefaultAsync(p => p.Id == paymentId);
         if (pay == null) return false;
 
@@ -240,7 +240,7 @@ public class FinanceService : IFinanceService
 
     public async Task<bool> ProcessTranchePayoutAsync(int paymentId, string userId, string bankReference)
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
         var pay = await context.GrantTranchePayments.Include(p => p.GrantMoaMilestone).FirstOrDefaultAsync(p => p.Id == paymentId);
         if (pay == null) return false;
 
@@ -273,7 +273,7 @@ public class FinanceService : IFinanceService
 
     public async Task<List<MandatoryGrantDisbursement>> GetMandatoryDisbursementsAsync(int? finYear = null)
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
         var query = context.MandatoryGrantDisbursements
             .Include(d => d.WspSubmission)
             .Include(d => d.Organisation)
@@ -289,7 +289,7 @@ public class FinanceService : IFinanceService
 
     public async Task<int> CalculateMandatoryGrantRebatesAsync(int finYear, string userId)
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
         var approvedWsps = await context.WspSubmissions
             .Include(w => w.Organisation)
             .Where(w => w.FinYear == finYear && (w.StatusCode == "Approved" || w.StatusCode == "Approved by CLO" || w.StatusCode == "SUBMITTED"))
@@ -336,7 +336,7 @@ public class FinanceService : IFinanceService
 
     public async Task<bool> ApproveMandatoryDisbursementAsync(int id, string userId, string batchNumber)
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
         var disb = await context.MandatoryGrantDisbursements.FirstOrDefaultAsync(d => d.Id == id);
         if (disb == null) return false;
 
@@ -361,7 +361,7 @@ public class FinanceService : IFinanceService
 
     public async Task<bool> ProcessMandatoryDisbursementPayoutAsync(int id, string userId)
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
         var disb = await context.MandatoryGrantDisbursements.FirstOrDefaultAsync(d => d.Id == id);
         if (disb == null) return false;
 
@@ -386,7 +386,7 @@ public class FinanceService : IFinanceService
 
     public async Task<List<InterSetaTransfer>> GetInterSetaTransfersAsync()
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
         return await context.InterSetaTransfers
             .Include(t => t.Organisation)
             .OrderByDescending(t => t.EffectiveDate)
@@ -395,7 +395,7 @@ public class FinanceService : IFinanceService
 
     public async Task<InterSetaTransfer?> GetInterSetaTransferByIdAsync(int id)
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
         return await context.InterSetaTransfers
             .Include(t => t.Organisation)
             .FirstOrDefaultAsync(t => t.Id == id);
@@ -403,7 +403,7 @@ public class FinanceService : IFinanceService
 
     public async Task<InterSetaTransfer> SaveInterSetaTransferAsync(InterSetaTransfer transfer, string userId)
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
         if (transfer.Id == 0)
         {
             transfer.CreatedAt = DateTime.UtcNow;
@@ -445,7 +445,7 @@ public class FinanceService : IFinanceService
 
     public async Task<bool> ApproveInterSetaTransferAsync(int id, string userId, string? dhetRef = null)
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
         var trf = await context.InterSetaTransfers.FirstOrDefaultAsync(t => t.Id == id);
         if (trf == null) return false;
 
@@ -470,7 +470,7 @@ public class FinanceService : IFinanceService
 
     public async Task<bool> DeleteInterSetaTransferAsync(int id, string userId)
     {
-        var context = await _contextFactory.CreateDbContextAsync();
+        using var context = await _contextFactory.CreateDbContextAsync();
         var trf = await context.InterSetaTransfers.FirstOrDefaultAsync(t => t.Id == id);
         if (trf == null) return false;
 

@@ -65,4 +65,16 @@ def test_developer_docs_suite():
         if arch_tab.count() > 0:
             arch_tab.first.click()
             page.wait_for_selector("text=MerSETA NSDMS Architecture Standards", timeout=5000)
-         
+            print("  [PASS] Architecture & Governance Tab rendered with standards specification")
+
+        browser.close()
+
+        if errors:
+            print(f"\n[WARNING] Encountered {len(errors)} console/page warnings/errors:")
+            for err in errors[:5]:
+                print(f"  - {err}")
+        else:
+            print("\n[SUCCESS] All Developer Documentation & Schema Playwright tests passed with ZERO errors!")
+
+if __name__ == "__main__":
+    test_developer_docs_suite()

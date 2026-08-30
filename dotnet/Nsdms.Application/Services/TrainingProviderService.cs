@@ -27,18 +27,19 @@ public interface ITrainingProviderService
 
 public class TrainingProviderService : ITrainingProviderService
 {
-    private readonly INsdmsDbContext _db;
+    private readonly INsdmsDbContextFactory _contextFactory;
     private readonly IAuditService _audit;
 
-    public TrainingProviderService(INsdmsDbContext db, IAuditService audit)
+    public TrainingProviderService(INsdmsDbContextFactory contextFactory, IAuditService audit)
     {
-        _db = db;
+        _contextFactory = contextFactory;
         _audit = audit;
     }
 
     public async Task<List<TrainingProvider>> GetAllAsync(string? search = null, string? providerType = null, string? status = null)
     {
-        var query = _db.TrainingProviders
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var query = db.TrainingProviders
             .Include(tp => tp.Organisation)
             .Include(tp => tp.PrimaryContactPerson)
             .Include(tp => tp.Qualifications)
@@ -71,7 +72,8 @@ public class TrainingProviderService : ITrainingProviderService
 
     public async Task<TrainingProvider?> GetByIdAsync(int id)
     {
-        return await _db.TrainingProviders
+        using var db = await _contextFactory.CreateDbContextAsync();
+        return await db.TrainingProviders
             .Include(tp => tp.Organisation)
             .Include(tp => tp.PrimaryContactPerson)
             .Include(tp => tp.Qualifications)
@@ -81,7 +83,8 @@ public class TrainingProviderService : ITrainingProviderService
 
     public async Task<TrainingProvider?> GetByOrganisationIdAsync(int organisationId)
     {
-        return await _db.TrainingProviders
+        using var db = await _contextFactory.CreateDbContextAsync();
+        return await db.TrainingProviders
             .Include(tp => tp.Organisation)
             .Include(tp => tp.PrimaryContactPerson)
             .Include(tp => tp.Qualifications)
@@ -96,20 +99,23 @@ public class TrainingProviderService : ITrainingProviderService
             throw new ArgumentException("Accreditation number is required.");
         }
 
+        using var db = await _contextFactory.CreateDbContextAsync();
         provider.CreatedAt = DateTime.UtcNow;
         provider.CreatedBy = currentUsername;
 
-        _db.TrainingProviders.Add(provider);
-        await _db.SaveChangesAsync();
+        db.TrainingProviders.Add(provider);
+        await db.SaveChangesAsync();
 
-        await _audit.LogActionAsync("TrainingProvider", provider.Id, "Create", currentUsername, null, provider);
+        _audit.LogAction(db, "TrainingProvider", provider.Id, "Create", currentUsername, null, provider);
+        await db.SaveChangesAsync();
 
         return provider;
     }
 
     public async Task<TrainingProvider> UpdateAsync(TrainingProvider provider, string currentUsername = "SYSTEM")
     {
-        var existing = await _db.TrainingProviders.FindAsync(provider.Id);
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var existing = await db.TrainingProviders.FindAsync(provider.Id);
         if (existing == null)
         {
             throw new KeyNotFoundException($"TrainingProvider with ID {provider.Id} was not found.");
@@ -140,9 +146,8 @@ public class TrainingProviderService : ITrainingProviderService
         existing.ModifiedAt = DateTime.UtcNow;
         existing.ModifiedBy = currentUsername;
 
-        await _db.SaveChangesAsync();
-
-        await _audit.LogActionAsync("TrainingProvider", existing.Id, "Update", currentUsername, beforeState, existing);
+        _audit.LogAction(db, "TrainingProvider", existing.Id, "Update", currentUsername, beforeState, existing);
+        await db.SaveChangesAsync();
 
         return existing;
     }
@@ -159,7 +164,8 @@ public class TrainingProviderService : ITrainingProviderService
 
     public async Task<bool> DeleteAsync(int id, string currentUsername = "SYSTEM")
     {
-        var provider = await _db.TrainingProviders.FindAsync(id);
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var provider = await db.TrainingProviders.FindAsync(id);
         if (provider == null)
         {
             return false;
@@ -174,10 +180,9 @@ public class TrainingProviderService : ITrainingProviderService
             provider.IsActive
         };
 
-        _db.TrainingProviders.Remove(provider);
-        await _db.SaveChangesAsync();
-
-        await _audit.LogActionAsync("TrainingProvider", id, "Delete", currentUsername, beforeState, null);
+        db.TrainingProviders.Remove(provider);
+        _audit.LogAction(db, "TrainingProvider", id, "Delete", currentUsername, beforeState, null);
+        await db.SaveChangesAsync();
 
         return true;
     }
@@ -189,13 +194,15 @@ public class TrainingProviderService : ITrainingProviderService
             throw new ArgumentException("A valid TrainingProviderId must be specified.");
         }
 
+        using var db = await _contextFactory.CreateDbContextAsync();
         qualification.CreatedAt = DateTime.UtcNow;
         qualification.CreatedBy = currentUsername;
 
-        _db.TrainingProviderQualifications.Add(qualification);
-        await _db.SaveChangesAsync();
+        db.TrainingProviderQualifications.Add(qualification);
+        await db.SaveChangesAsync();
 
-        await _audit.LogActionAsync("TrainingProviderQualification", qualification.Id, "AddQualification", currentUsername, null, qualification);
+        _audit.LogAction(db, "TrainingProviderQualification", qualification.Id, "AddQualification", currentUsername, null, qualification);
+        await db.SaveChangesAsync();
 
         return qualification;
     }
@@ -208,7 +215,8 @@ public class TrainingProviderService : ITrainingProviderService
 
     public async Task<List<TrainingProviderQualification>> GetQualificationsAsync(int trainingProviderId)
     {
-        return await _db.TrainingProviderQualifications
+        using var db = await _contextFactory.CreateDbContextAsync();
+        return await db.TrainingProviderQualifications
             .Where(q => q.TrainingProviderId == trainingProviderId)
             .OrderBy(q => q.QualificationTitle)
             .ToListAsync();
@@ -216,7 +224,8 @@ public class TrainingProviderService : ITrainingProviderService
 
     public async Task<bool> RemoveQualificationAsync(int qualificationId, string currentUsername = "SYSTEM")
     {
-        var qualification = await _db.TrainingProviderQualifications.FindAsync(qualificationId);
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var qualification = await db.TrainingProviderQualifications.FindAsync(qualificationId);
         if (qualification == null)
         {
             return false;
@@ -230,10 +239,9 @@ public class TrainingProviderService : ITrainingProviderService
             qualification.QualificationTitle
         };
 
-        _db.TrainingProviderQualifications.Remove(qualification);
-        await _db.SaveChangesAsync();
-
-        await _audit.LogActionAsync("TrainingProviderQualification", qualificationId, "RemoveQualification", currentUsername, beforeState, null);
+        db.TrainingProviderQualifications.Remove(qualification);
+        _audit.LogAction(db, "TrainingProviderQualification", qualificationId, "RemoveQualification", currentUsername, beforeState, null);
+        await db.SaveChangesAsync();
 
         return true;
     }
@@ -245,13 +253,15 @@ public class TrainingProviderService : ITrainingProviderService
             throw new ArgumentException("A valid TrainingProviderId must be specified.");
         }
 
+        using var db = await _contextFactory.CreateDbContextAsync();
         unitStandard.CreatedAt = DateTime.UtcNow;
         unitStandard.CreatedBy = currentUsername;
 
-        _db.TrainingProviderUnitStandards.Add(unitStandard);
-        await _db.SaveChangesAsync();
+        db.TrainingProviderUnitStandards.Add(unitStandard);
+        await db.SaveChangesAsync();
 
-        await _audit.LogActionAsync("TrainingProviderUnitStandard", unitStandard.Id, "AddUnitStandard", currentUsername, null, unitStandard);
+        _audit.LogAction(db, "TrainingProviderUnitStandard", unitStandard.Id, "AddUnitStandard", currentUsername, null, unitStandard);
+        await db.SaveChangesAsync();
 
         return unitStandard;
     }
@@ -264,7 +274,8 @@ public class TrainingProviderService : ITrainingProviderService
 
     public async Task<List<TrainingProviderUnitStandard>> GetUnitStandardsAsync(int trainingProviderId)
     {
-        return await _db.TrainingProviderUnitStandards
+        using var db = await _contextFactory.CreateDbContextAsync();
+        return await db.TrainingProviderUnitStandards
             .Where(u => u.TrainingProviderId == trainingProviderId)
             .OrderBy(u => u.UnitStandardTitle)
             .ToListAsync();
@@ -272,7 +283,8 @@ public class TrainingProviderService : ITrainingProviderService
 
     public async Task<bool> RemoveUnitStandardAsync(int unitStandardId, string currentUsername = "SYSTEM")
     {
-        var unitStandard = await _db.TrainingProviderUnitStandards.FindAsync(unitStandardId);
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var unitStandard = await db.TrainingProviderUnitStandards.FindAsync(unitStandardId);
         if (unitStandard == null)
         {
             return false;
@@ -286,10 +298,9 @@ public class TrainingProviderService : ITrainingProviderService
             unitStandard.UnitStandardTitle
         };
 
-        _db.TrainingProviderUnitStandards.Remove(unitStandard);
-        await _db.SaveChangesAsync();
-
-        await _audit.LogActionAsync("TrainingProviderUnitStandard", unitStandardId, "RemoveUnitStandard", currentUsername, beforeState, null);
+        db.TrainingProviderUnitStandards.Remove(unitStandard);
+        _audit.LogAction(db, "TrainingProviderUnitStandard", unitStandardId, "RemoveUnitStandard", currentUsername, beforeState, null);
+        await db.SaveChangesAsync();
 
         return true;
     }

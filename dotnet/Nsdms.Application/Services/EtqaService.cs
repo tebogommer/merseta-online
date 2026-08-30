@@ -46,12 +46,12 @@ public interface IEtqaService
 
 public class EtqaService : IEtqaService
 {
-    private readonly INsdmsDbContext _db;
+    private readonly INsdmsDbContextFactory _contextFactory;
     private readonly IAuditService _audit;
 
-    public EtqaService(INsdmsDbContext db, IAuditService audit)
+    public EtqaService(INsdmsDbContextFactory contextFactory, IAuditService audit)
     {
-        _db = db;
+        _contextFactory = contextFactory;
         _audit = audit;
     }
 
@@ -62,7 +62,8 @@ public class EtqaService : IEtqaService
             throw new ArgumentException("A valid PersonId is required to register an ETQA Assessor/Moderator.");
         }
 
-        var personExists = await _db.People.AnyAsync(p => p.Id == assessor.PersonId);
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var personExists = await db.People.AnyAsync(p => p.Id == assessor.PersonId);
         if (!personExists)
         {
             throw new KeyNotFoundException($"Person with ID {assessor.PersonId} was not found.");
@@ -92,10 +93,11 @@ public class EtqaService : IEtqaService
         assessor.CreatedAt = DateTime.UtcNow;
         assessor.CreatedBy = currentUsername;
 
-        _db.EtqaAssessors.Add(assessor);
-        await _db.SaveChangesAsync();
+        db.EtqaAssessors.Add(assessor);
+        await db.SaveChangesAsync();
 
-        await _audit.LogActionAsync("EtqaAssessor", assessor.Id, "RegisterAssessor", currentUsername, null, assessor);
+        _audit.LogAction(db, "EtqaAssessor", assessor.Id, "RegisterAssessor", currentUsername, null, assessor);
+        await db.SaveChangesAsync();
 
         return assessor;
     }
@@ -121,7 +123,8 @@ public class EtqaService : IEtqaService
 
     public async Task<EtqaAssessor?> GetAssessorByIdAsync(int id)
     {
-        return await _db.EtqaAssessors
+        using var db = await _contextFactory.CreateDbContextAsync();
+        return await db.EtqaAssessors
             .Include(a => a.Person)
             .Include(a => a.Scopes)
             .Include(a => a.Assessments)
@@ -138,7 +141,8 @@ public class EtqaService : IEtqaService
 
     public async Task<List<EtqaAssessor>> GetAllAssessorsAsync(string? search = null, string? role = null, bool? activeOnly = null)
     {
-        var query = _db.EtqaAssessors
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var query = db.EtqaAssessors
             .Include(a => a.Person)
             .Include(a => a.Scopes)
             .Include(a => a.Assessments)
@@ -175,7 +179,8 @@ public class EtqaService : IEtqaService
 
     public async Task<EtqaAssessor> UpdateAssessorAsync(EtqaAssessor assessor, string currentUsername = "SYSTEM")
     {
-        var existing = await _db.EtqaAssessors.FindAsync(assessor.Id);
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var existing = await db.EtqaAssessors.FindAsync(assessor.Id);
         if (existing == null)
         {
             throw new KeyNotFoundException($"EtqaAssessor with ID {assessor.Id} was not found.");
@@ -200,9 +205,8 @@ public class EtqaService : IEtqaService
         existing.ModifiedAt = DateTime.UtcNow;
         existing.ModifiedBy = currentUsername;
 
-        await _db.SaveChangesAsync();
-
-        await _audit.LogActionAsync("EtqaAssessor", existing.Id, "UpdateAssessor", currentUsername, beforeState, existing);
+        _audit.LogAction(db, "EtqaAssessor", existing.Id, "UpdateAssessor", currentUsername, beforeState, existing);
+        await db.SaveChangesAsync();
 
         return existing;
     }
@@ -214,7 +218,8 @@ public class EtqaService : IEtqaService
 
     public async Task<bool> DeleteAssessorAsync(int id, string currentUsername = "SYSTEM")
     {
-        var assessor = await _db.EtqaAssessors.FindAsync(id);
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var assessor = await db.EtqaAssessors.FindAsync(id);
         if (assessor == null)
         {
             return false;
@@ -228,17 +233,17 @@ public class EtqaService : IEtqaService
             assessor.EtqaRole
         };
 
-        _db.EtqaAssessors.Remove(assessor);
-        await _db.SaveChangesAsync();
-
-        await _audit.LogActionAsync("EtqaAssessor", id, "DeleteAssessor", currentUsername, beforeState, null);
+        db.EtqaAssessors.Remove(assessor);
+        _audit.LogAction(db, "EtqaAssessor", id, "DeleteAssessor", currentUsername, beforeState, null);
+        await db.SaveChangesAsync();
 
         return true;
     }
 
     public async Task<bool> DeactivateAssessorAsync(int id, string currentUsername = "SYSTEM")
     {
-        var assessor = await _db.EtqaAssessors.FindAsync(id);
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var assessor = await db.EtqaAssessors.FindAsync(id);
         if (assessor == null)
         {
             return false;
@@ -250,9 +255,8 @@ public class EtqaService : IEtqaService
         assessor.ModifiedAt = DateTime.UtcNow;
         assessor.ModifiedBy = currentUsername;
 
-        await _db.SaveChangesAsync();
-
-        await _audit.LogActionAsync("EtqaAssessor", id, "DeactivateAssessor", currentUsername, beforeState, assessor);
+        _audit.LogAction(db, "EtqaAssessor", id, "DeactivateAssessor", currentUsername, beforeState, assessor);
+        await db.SaveChangesAsync();
 
         return true;
     }
@@ -264,7 +268,8 @@ public class EtqaService : IEtqaService
 
     public async Task<AssessorModeratorScope> AssignScopeAsync(int assessorId, AssessorModeratorScope scope, string currentUsername = "SYSTEM")
     {
-        var assessor = await _db.EtqaAssessors.FindAsync(assessorId);
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var assessor = await db.EtqaAssessors.FindAsync(assessorId);
         if (assessor == null)
         {
             throw new KeyNotFoundException($"EtqaAssessor with ID {assessorId} was not found.");
@@ -294,10 +299,11 @@ public class EtqaService : IEtqaService
         scope.CreatedAt = DateTime.UtcNow;
         scope.CreatedBy = currentUsername;
 
-        _db.AssessorModeratorScopes.Add(scope);
-        await _db.SaveChangesAsync();
+        db.AssessorModeratorScopes.Add(scope);
+        await db.SaveChangesAsync();
 
-        await _audit.LogActionAsync("AssessorModeratorScope", scope.Id, "AddScope", currentUsername, null, scope);
+        _audit.LogAction(db, "AssessorModeratorScope", scope.Id, "AddScope", currentUsername, null, scope);
+        await db.SaveChangesAsync();
 
         return scope;
     }
@@ -309,7 +315,8 @@ public class EtqaService : IEtqaService
 
     public async Task<List<AssessorModeratorScope>> GetScopesByAssessorIdAsync(int assessorId)
     {
-        return await _db.AssessorModeratorScopes
+        using var db = await _contextFactory.CreateDbContextAsync();
+        return await db.AssessorModeratorScopes
             .Where(s => s.EtqaAssessorId == assessorId)
             .OrderBy(s => s.QualificationTitle)
             .ToListAsync();
@@ -317,7 +324,8 @@ public class EtqaService : IEtqaService
 
     public async Task<bool> RemoveScopeAsync(int scopeId, string currentUsername = "SYSTEM")
     {
-        var scope = await _db.AssessorModeratorScopes.FindAsync(scopeId);
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var scope = await db.AssessorModeratorScopes.FindAsync(scopeId);
         if (scope == null)
         {
             return false;
@@ -331,17 +339,17 @@ public class EtqaService : IEtqaService
             scope.QualificationTitle
         };
 
-        _db.AssessorModeratorScopes.Remove(scope);
-        await _db.SaveChangesAsync();
-
-        await _audit.LogActionAsync("AssessorModeratorScope", scopeId, "RemoveScope", currentUsername, beforeState, null);
+        db.AssessorModeratorScopes.Remove(scope);
+        _audit.LogAction(db, "AssessorModeratorScope", scopeId, "RemoveScope", currentUsername, beforeState, null);
+        await db.SaveChangesAsync();
 
         return true;
     }
 
     public async Task<AssessorValidationResult> ValidateAssessorForAssessmentAsync(int assessorId, int saqaQualificationId, DateTime assessmentDate)
     {
-        var assessor = await _db.EtqaAssessors
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var assessor = await db.EtqaAssessors
             .Include(a => a.Scopes)
             .FirstOrDefaultAsync(a => a.Id == assessorId);
 
@@ -433,32 +441,35 @@ public class EtqaService : IEtqaService
             assessment.CompetencyStatusCode = "Competent";
         }
 
+        using var db = await _contextFactory.CreateDbContextAsync();
         assessment.CreatedAt = DateTime.UtcNow;
         assessment.CreatedBy = currentUsername;
 
-        _db.LearnerAssessments.Add(assessment);
-        await _db.SaveChangesAsync();
+        db.LearnerAssessments.Add(assessment);
+        await db.SaveChangesAsync();
 
-        await _audit.LogActionAsync("LearnerAssessment", assessment.Id, "RecordAssessment", currentUsername, null, assessment);
+        _audit.LogAction(db, "LearnerAssessment", assessment.Id, "RecordAssessment", currentUsername, null, assessment);
+        await db.SaveChangesAsync();
 
         return assessment;
     }
 
     public async Task<bool> RemoveLearnerAssessmentAsync(int assessmentId, string currentUsername = "SYSTEM")
     {
-        var item = await _db.LearnerAssessments.FindAsync(assessmentId);
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var item = await db.LearnerAssessments.FindAsync(assessmentId);
         if (item == null) return false;
 
-        _db.LearnerAssessments.Remove(item);
-        await _db.SaveChangesAsync();
-
-        await _audit.LogActionAsync("LearnerAssessment", assessmentId, "RemoveAssessment", currentUsername, null, null);
+        db.LearnerAssessments.Remove(item);
+        _audit.LogAction(db, "LearnerAssessment", assessmentId, "RemoveAssessment", currentUsername, null, null);
+        await db.SaveChangesAsync();
         return true;
     }
 
     public async Task<LearnerAssessment> RecordModerationAsync(int assessmentId, int moderatorPersonId, DateTime moderationDate, string currentUsername = "SYSTEM")
     {
-        var assessment = await _db.LearnerAssessments.FindAsync(assessmentId);
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var assessment = await db.LearnerAssessments.FindAsync(assessmentId);
         if (assessment == null)
         {
             throw new KeyNotFoundException($"LearnerAssessment with ID {assessmentId} was not found.");
@@ -476,16 +487,16 @@ public class EtqaService : IEtqaService
         assessment.ModifiedAt = DateTime.UtcNow;
         assessment.ModifiedBy = currentUsername;
 
-        await _db.SaveChangesAsync();
-
-        await _audit.LogActionAsync("LearnerAssessment", assessment.Id, "RecordModeration", currentUsername, beforeState, assessment);
+        _audit.LogAction(db, "LearnerAssessment", assessment.Id, "RecordModeration", currentUsername, beforeState, assessment);
+        await db.SaveChangesAsync();
 
         return assessment;
     }
 
     public async Task<LearnerAssessment?> GetLearnerAssessmentByIdAsync(int id)
     {
-        return await _db.LearnerAssessments
+        using var db = await _contextFactory.CreateDbContextAsync();
+        return await db.LearnerAssessments
             .Include(a => a.EtqaAssessor)
             .Include(a => a.Person)
             .Include(a => a.Organisation)
@@ -495,7 +506,8 @@ public class EtqaService : IEtqaService
 
     public async Task<List<LearnerAssessment>> GetLearnerAssessmentsAsync(int? personId = null, int? organisationId = null, int? assessorId = null)
     {
-        var query = _db.LearnerAssessments
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var query = db.LearnerAssessments
             .Include(a => a.EtqaAssessor)
             .Include(a => a.Person)
             .Include(a => a.Organisation)
