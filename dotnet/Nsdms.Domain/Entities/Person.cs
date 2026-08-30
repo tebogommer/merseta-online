@@ -14,6 +14,7 @@ public class Person : BaseEntity
     public string? Gender { get; set; }
     public string? GenderCode { get; set; }
     public bool? IsSouthAfricanCitizen { get; set; }
+    public string? CitizenStatusCode { get; set; }
     public string? EquityCode { get; set; }
     public string? DisabilityCode { get; set; }
     public string? NationalityCode { get; set; }

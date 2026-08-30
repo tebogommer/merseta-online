@@ -14,7 +14,14 @@ public class LookupItemDto
     public bool Active { get; set; } = true;
 }
 
-public class LookupService
+public interface ILookupService
+{
+    Task<List<LookupCategoryMetadata>> GetAllLookupMetadataAsync(string? search = null, string? category = null);
+    Task<List<LookupItemDto>> GetLookupItemsAsync(string tableName, string? search = null);
+    Task<bool> SaveLookupItemAsync(string tableName, LookupItemDto item, string currentUser = "Admin");
+}
+
+public class LookupService : ILookupService
 {
     private readonly INsdmsDbContextFactory _contextFactory;
     private readonly IAuditService _audit;

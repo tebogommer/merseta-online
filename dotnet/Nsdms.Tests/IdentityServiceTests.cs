@@ -8,21 +8,19 @@ namespace Nsdms.Tests;
 
 public class IdentityServiceTests
 {
-    private static NsdmsDbContext CreateInMemoryDbContext()
+    private static (TestDbContextFactory factory, NsdmsDbContext db, AuditService audit, IdentityService service) CreateTestContext()
     {
-        var options = new DbContextOptionsBuilder<NsdmsDbContext>()
-            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-            .Options;
-
-        return new NsdmsDbContext(options);
+        var factory = new TestDbContextFactory(Guid.NewGuid().ToString());
+        var db = (NsdmsDbContext)factory.CreateDbContext();
+        var audit = new AuditService(factory);
+        var service = new IdentityService(factory, audit);
+        return (factory, db, audit, service);
     }
 
     [Fact]
     public async Task CreateUserAsync_HashesPasswordAndAssignsRole()
     {
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new IdentityService(db, audit);
+        var (factory, db, audit, service) = CreateTestContext();
 
         var user = new ApplicationUser
         {
@@ -46,9 +44,7 @@ public class IdentityServiceTests
     [Fact]
     public async Task ValidateCredentialsAsync_ValidAndInvalidPasswords()
     {
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new IdentityService(db, audit);
+        var (factory, db, audit, service) = CreateTestContext();
 
         var user = new ApplicationUser
         {
@@ -70,9 +66,7 @@ public class IdentityServiceTests
     [Fact]
     public async Task LinkUserToPersonAsync_AndUnlink_UpdatesAndLogsAudit()
     {
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new IdentityService(db, audit);
+        var (factory, db, audit, service) = CreateTestContext();
 
         var person = new Person { FirstName = "Mandla", LastName = "Zulu", Email = "mandla@merseta.org.za" };
         db.People.Add(person);
@@ -101,9 +95,7 @@ public class IdentityServiceTests
     [Fact]
     public async Task ChangePasswordAsync_ValidatesCurrentPasswordBeforeChanging()
     {
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new IdentityService(db, audit);
+        var (factory, db, audit, service) = CreateTestContext();
 
         var user = new ApplicationUser { UserName = "testpwd", Email = "testpwd@merseta.org.za" };
         await service.CreateUserAsync(user, "InitialPass123!", currentUsername: "Admin");
@@ -124,9 +116,7 @@ public class IdentityServiceTests
     [Fact]
     public async Task DeactivateUserAsync_SetsInactiveAndLogsAudit()
     {
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new IdentityService(db, audit);
+        var (factory, db, audit, service) = CreateTestContext();
 
         var user = new ApplicationUser { UserName = "deact_me", Email = "deact@merseta.org.za" };
         await service.CreateUserAsync(user, "Password123!", currentUsername: "Admin");

@@ -14,9 +14,9 @@ public static class Phase4FinancialSchemaMigrator
         var logger = scope.ServiceProvider.GetService<ILogger<NsdmsDbContext>>();
 
         var ddl = @"
-IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'grant_moa')
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'GrantMoa')
 BEGIN
-    CREATE TABLE [dbo].[grant_moa] (
+    CREATE TABLE [dbo].[GrantMoa] (
         [Id] INT IDENTITY(1,1) PRIMARY KEY,
         [GrantApplicationId] INT NOT NULL,
         [MoaNumber] NVARCHAR(100) NOT NULL,
@@ -32,16 +32,16 @@ BEGIN
         [CreatedBy] NVARCHAR(100) NULL,
         [ModifiedAt] DATETIME2 NULL,
         [ModifiedBy] NVARCHAR(100) NULL,
-        CONSTRAINT [FK_grant_moa_GrantApplication] FOREIGN KEY ([GrantApplicationId]) REFERENCES [dbo].[GrantApplication]([Id])
+        CONSTRAINT [FK_GrantMoa_GrantApplication] FOREIGN KEY ([GrantApplicationId]) REFERENCES [dbo].[GrantApplication]([Id])
     );
-    CREATE UNIQUE INDEX [IX_grant_moa_MoaNumber] ON [dbo].[grant_moa]([MoaNumber]);
-    CREATE INDEX [IX_grant_moa_GrantApplicationId] ON [dbo].[grant_moa]([GrantApplicationId]);
-    CREATE INDEX [IX_grant_moa_MoaStatusCode] ON [dbo].[grant_moa]([MoaStatusCode]);
+    CREATE UNIQUE INDEX [IX_GrantMoa_MoaNumber] ON [dbo].[GrantMoa]([MoaNumber]);
+    CREATE INDEX [IX_GrantMoa_GrantApplicationId] ON [dbo].[GrantMoa]([GrantApplicationId]);
+    CREATE INDEX [IX_GrantMoa_MoaStatusCode] ON [dbo].[GrantMoa]([MoaStatusCode]);
 END
 
-IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'grant_moa_milestone')
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'GrantMoaMilestone')
 BEGIN
-    CREATE TABLE [dbo].[grant_moa_milestone] (
+    CREATE TABLE [dbo].[GrantMoaMilestone] (
         [Id] INT IDENTITY(1,1) PRIMARY KEY,
         [GrantMoaId] INT NOT NULL,
         [MilestoneNumber] INT NOT NULL,
@@ -59,15 +59,15 @@ BEGIN
         [CreatedBy] NVARCHAR(100) NULL,
         [ModifiedAt] DATETIME2 NULL,
         [ModifiedBy] NVARCHAR(100) NULL,
-        CONSTRAINT [FK_grant_moa_milestone_GrantMoa] FOREIGN KEY ([GrantMoaId]) REFERENCES [dbo].[grant_moa]([Id]) ON DELETE CASCADE
+        CONSTRAINT [FK_GrantMoaMilestone_GrantMoa] FOREIGN KEY ([GrantMoaId]) REFERENCES [dbo].[GrantMoa]([Id]) ON DELETE CASCADE
     );
-    CREATE INDEX [IX_grant_moa_milestone_GrantMoaId] ON [dbo].[grant_moa_milestone]([GrantMoaId]);
-    CREATE INDEX [IX_grant_moa_milestone_MilestoneStatusCode] ON [dbo].[grant_moa_milestone]([MilestoneStatusCode]);
+    CREATE INDEX [IX_GrantMoaMilestone_GrantMoaId] ON [dbo].[GrantMoaMilestone]([GrantMoaId]);
+    CREATE INDEX [IX_GrantMoaMilestone_MilestoneStatusCode] ON [dbo].[GrantMoaMilestone]([MilestoneStatusCode]);
 END
 
-IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'grant_tranche_payment')
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'GrantTranchePayment')
 BEGIN
-    CREATE TABLE [dbo].[grant_tranche_payment] (
+    CREATE TABLE [dbo].[GrantTranchePayment] (
         [Id] INT IDENTITY(1,1) PRIMARY KEY,
         [GrantMoaMilestoneId] INT NOT NULL,
         [GrantApplicationId] INT NOT NULL,
@@ -87,18 +87,18 @@ BEGIN
         [CreatedBy] NVARCHAR(100) NULL,
         [ModifiedAt] DATETIME2 NULL,
         [ModifiedBy] NVARCHAR(100) NULL,
-        CONSTRAINT [FK_grant_tranche_payment_Milestone] FOREIGN KEY ([GrantMoaMilestoneId]) REFERENCES [dbo].[grant_moa_milestone]([Id]),
-        CONSTRAINT [FK_grant_tranche_payment_GrantApp] FOREIGN KEY ([GrantApplicationId]) REFERENCES [dbo].[GrantApplication]([Id])
+        CONSTRAINT [FK_GrantTranchePayment_Milestone] FOREIGN KEY ([GrantMoaMilestoneId]) REFERENCES [dbo].[GrantMoaMilestone]([Id]),
+        CONSTRAINT [FK_GrantTranchePayment_GrantApp] FOREIGN KEY ([GrantApplicationId]) REFERENCES [dbo].[GrantApplication]([Id])
     );
-    CREATE UNIQUE INDEX [IX_grant_tranche_payment_PaymentReference] ON [dbo].[grant_tranche_payment]([PaymentReferenceNumber]);
-    CREATE INDEX [IX_grant_tranche_payment_MilestoneId] ON [dbo].[grant_tranche_payment]([GrantMoaMilestoneId]);
-    CREATE INDEX [IX_grant_tranche_payment_GrantAppId] ON [dbo].[grant_tranche_payment]([GrantApplicationId]);
-    CREATE INDEX [IX_grant_tranche_payment_PaymentStatus] ON [dbo].[grant_tranche_payment]([PaymentStatusCode]);
+    CREATE UNIQUE INDEX [IX_GrantTranchePayment_PaymentReference] ON [dbo].[GrantTranchePayment]([PaymentReferenceNumber]);
+    CREATE INDEX [IX_GrantTranchePayment_MilestoneId] ON [dbo].[GrantTranchePayment]([GrantMoaMilestoneId]);
+    CREATE INDEX [IX_GrantTranchePayment_GrantAppId] ON [dbo].[GrantTranchePayment]([GrantApplicationId]);
+    CREATE INDEX [IX_GrantTranchePayment_PaymentStatus] ON [dbo].[GrantTranchePayment]([PaymentStatusCode]);
 END
 
-IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'mandatory_grant_disbursement')
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'MandatoryGrantDisbursement')
 BEGIN
-    CREATE TABLE [dbo].[mandatory_grant_disbursement] (
+    CREATE TABLE [dbo].[MandatoryGrantDisbursement] (
         [Id] INT IDENTITY(1,1) PRIMARY KEY,
         [WspSubmissionId] INT NOT NULL,
         [OrganisationId] INT NOT NULL,
@@ -116,18 +116,18 @@ BEGIN
         [CreatedBy] NVARCHAR(100) NULL,
         [ModifiedAt] DATETIME2 NULL,
         [ModifiedBy] NVARCHAR(100) NULL,
-        CONSTRAINT [FK_mandatory_grant_disbursement_Wsp] FOREIGN KEY ([WspSubmissionId]) REFERENCES [dbo].[WspSubmission]([Id]),
-        CONSTRAINT [FK_mandatory_grant_disbursement_Org] FOREIGN KEY ([OrganisationId]) REFERENCES [dbo].[Organisation]([Id])
+        CONSTRAINT [FK_MandatoryGrantDisbursement_Wsp] FOREIGN KEY ([WspSubmissionId]) REFERENCES [dbo].[WspSubmission]([Id]),
+        CONSTRAINT [FK_MandatoryGrantDisbursement_Org] FOREIGN KEY ([OrganisationId]) REFERENCES [dbo].[Organisation]([Id])
     );
-    CREATE UNIQUE INDEX [IX_mandatory_grant_disb_Ref] ON [dbo].[mandatory_grant_disbursement]([DisbursementReference]);
-    CREATE INDEX [IX_mandatory_grant_disb_WspId] ON [dbo].[mandatory_grant_disbursement]([WspSubmissionId]);
-    CREATE INDEX [IX_mandatory_grant_disb_OrgId] ON [dbo].[mandatory_grant_disbursement]([OrganisationId]);
-    CREATE INDEX [IX_mandatory_grant_disb_Status] ON [dbo].[mandatory_grant_disbursement]([DisbursementStatusCode]);
+    CREATE UNIQUE INDEX [IX_MandatoryGrantDisbursement_Ref] ON [dbo].[MandatoryGrantDisbursement]([DisbursementReference]);
+    CREATE INDEX [IX_MandatoryGrantDisbursement_WspId] ON [dbo].[MandatoryGrantDisbursement]([WspSubmissionId]);
+    CREATE INDEX [IX_MandatoryGrantDisbursement_OrgId] ON [dbo].[MandatoryGrantDisbursement]([OrganisationId]);
+    CREATE INDEX [IX_MandatoryGrantDisbursement_Status] ON [dbo].[MandatoryGrantDisbursement]([DisbursementStatusCode]);
 END
 
-IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'inter_seta_transfer')
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'InterSetaTransfer')
 BEGIN
-    CREATE TABLE [dbo].[inter_seta_transfer] (
+    CREATE TABLE [dbo].[InterSetaTransfer] (
         [Id] INT IDENTITY(1,1) PRIMARY KEY,
         [OrganisationId] INT NOT NULL,
         [TransferType] NVARCHAR(50) NOT NULL,
@@ -144,11 +144,11 @@ BEGIN
         [CreatedBy] NVARCHAR(100) NULL,
         [ModifiedAt] DATETIME2 NULL,
         [ModifiedBy] NVARCHAR(100) NULL,
-        CONSTRAINT [FK_inter_seta_transfer_Org] FOREIGN KEY ([OrganisationId]) REFERENCES [dbo].[Organisation]([Id])
+        CONSTRAINT [FK_InterSetaTransfer_Org] FOREIGN KEY ([OrganisationId]) REFERENCES [dbo].[Organisation]([Id])
     );
-    CREATE INDEX [IX_inter_seta_transfer_OrgId] ON [dbo].[inter_seta_transfer]([OrganisationId]);
-    CREATE INDEX [IX_inter_seta_transfer_Status] ON [dbo].[inter_seta_transfer]([TransferStatusCode]);
-    CREATE INDEX [IX_inter_seta_transfer_OtherSeta] ON [dbo].[inter_seta_transfer]([OtherSetaCode]);
+    CREATE INDEX [IX_InterSetaTransfer_OrgId] ON [dbo].[InterSetaTransfer]([OrganisationId]);
+    CREATE INDEX [IX_InterSetaTransfer_Status] ON [dbo].[InterSetaTransfer]([TransferStatusCode]);
+    CREATE INDEX [IX_InterSetaTransfer_OtherSeta] ON [dbo].[InterSetaTransfer]([OtherSetaCode]);
 END
 ";
 

@@ -93,34 +93,43 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
     {
         base.OnModelCreating(modelBuilder);
 
-        // Identity table mapping & indexes
+        // Identity table mapping
         modelBuilder.Entity<ApplicationUser>(entity =>
         {
-            entity.ToTable("app_user");
+            entity.ToTable("AppUser");
+            entity.Property(u => u.UserName).HasMaxLength(100).IsRequired();
+            entity.Property(u => u.NormalizedUserName).HasMaxLength(100).IsRequired();
+            entity.Property(u => u.Email).HasMaxLength(150);
+            entity.Property(u => u.NormalizedEmail).HasMaxLength(150);
+            entity.Property(u => u.PhoneNumber).HasMaxLength(50);
+            entity.Property(u => u.IsActive).HasDefaultValue(true);
+
             entity.HasOne(u => u.Person)
-                  .WithMany()
-                  .HasForeignKey(u => u.PersonId)
-                  .OnDelete(DeleteBehavior.Restrict);
+                  .WithOne()
+                  .HasForeignKey<ApplicationUser>(u => u.PersonId)
+                  .OnDelete(DeleteBehavior.SetNull);
 
             entity.HasOne(u => u.DefaultOrganisation)
                   .WithMany()
                   .HasForeignKey(u => u.DefaultOrganisationId)
-                  .OnDelete(DeleteBehavior.Restrict);
+                  .OnDelete(DeleteBehavior.SetNull);
 
-            entity.HasIndex(u => u.PersonId);
+            entity.HasIndex(u => u.PersonId).IsUnique();
             entity.HasIndex(u => u.DefaultOrganisationId);
-            entity.HasIndex(u => u.IsActive);
         });
 
         modelBuilder.Entity<ApplicationRole>(entity =>
         {
-            entity.ToTable("app_role");
-            entity.HasIndex(r => r.Active);
+            entity.ToTable("AppRole");
+            entity.Property(r => r.Name).HasMaxLength(100).IsRequired();
+            entity.Property(r => r.NormalizedName).HasMaxLength(100).IsRequired();
+            entity.Property(r => r.Description).HasMaxLength(250);
+            entity.Property(r => r.Active).HasDefaultValue(true);
         });
 
         modelBuilder.Entity<IdentityUserRole<int>>(entity =>
         {
-            entity.ToTable("app_user_role");
+            entity.ToTable("AppUserRole");
         });
 
         modelBuilder.Entity<IdentityUserClaim<int>>(entity =>
@@ -882,7 +891,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
         // Phase 4: Financial Governance Configurations
         modelBuilder.Entity<GrantMoa>(entity =>
         {
-            entity.ToTable("grant_moa");
+            entity.ToTable("GrantMoa");
             entity.Property(m => m.MoaNumber).HasMaxLength(100).IsRequired();
             entity.Property(m => m.MoaStatusCode).HasMaxLength(50).IsRequired();
             entity.Property(m => m.TotalContractValue).HasColumnType("decimal(18,2)").IsRequired();
@@ -901,7 +910,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
 
         modelBuilder.Entity<GrantMoaMilestone>(entity =>
         {
-            entity.ToTable("grant_moa_milestone");
+            entity.ToTable("GrantMoaMilestone");
             entity.Property(m => m.MilestoneTitle).HasMaxLength(200).IsRequired();
             entity.Property(m => m.MilestoneStatusCode).HasMaxLength(50).IsRequired();
             entity.Property(m => m.TranchePercentage).HasColumnType("decimal(5,2)").IsRequired();
@@ -920,7 +929,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
 
         modelBuilder.Entity<GrantTranchePayment>(entity =>
         {
-            entity.ToTable("grant_tranche_payment");
+            entity.ToTable("GrantTranchePayment");
             entity.Property(p => p.PaymentReferenceNumber).HasMaxLength(100).IsRequired();
             entity.Property(p => p.InvoiceNumber).HasMaxLength(100).IsRequired();
             entity.Property(p => p.ClaimedAmount).HasColumnType("decimal(18,2)").IsRequired();
@@ -948,7 +957,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
 
         modelBuilder.Entity<MandatoryGrantDisbursement>(entity =>
         {
-            entity.ToTable("mandatory_grant_disbursement");
+            entity.ToTable("MandatoryGrantDisbursement");
             entity.Property(d => d.DisbursementReference).HasMaxLength(100).IsRequired();
             entity.Property(d => d.LeviesReceivedAmount).HasColumnType("decimal(18,2)").IsRequired();
             entity.Property(d => d.CalculatedRebateAmount).HasColumnType("decimal(18,2)").IsRequired();
@@ -975,7 +984,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
 
         modelBuilder.Entity<InterSetaTransfer>(entity =>
         {
-            entity.ToTable("inter_seta_transfer");
+            entity.ToTable("InterSetaTransfer");
             entity.Property(t => t.TransferType).HasMaxLength(50).IsRequired();
             entity.Property(t => t.OtherSetaCode).HasMaxLength(50).IsRequired();
             entity.Property(t => t.OtherSetaName).HasMaxLength(150).IsRequired();
@@ -999,7 +1008,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
         // Phase 5: SETMIS Submission Batch Configuration
         modelBuilder.Entity<SetmisSubmissionBatch>(entity =>
         {
-            entity.ToTable("setmis_submission_batch");
+            entity.ToTable("SetmisSubmissionBatch");
             entity.Property(b => b.BatchNumber).HasMaxLength(100).IsRequired();
             entity.Property(b => b.FileCode).HasMaxLength(50).IsRequired();
             entity.Property(b => b.SubmissionPeriod).HasMaxLength(50).IsRequired();

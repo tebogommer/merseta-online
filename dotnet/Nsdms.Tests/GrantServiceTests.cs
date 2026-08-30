@@ -8,22 +8,20 @@ namespace Nsdms.Tests;
 
 public class GrantServiceTests
 {
-    private static NsdmsDbContext CreateInMemoryDbContext()
+    private static (TestDbContextFactory factory, NsdmsDbContext db, AuditService audit, GrantService service) CreateTestContext()
     {
-        var options = new DbContextOptionsBuilder<NsdmsDbContext>()
-            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-            .Options;
-
-        return new NsdmsDbContext(options);
+        var factory = new TestDbContextFactory(Guid.NewGuid().ToString());
+        var db = (NsdmsDbContext)factory.CreateDbContext();
+        var audit = new AuditService(factory);
+        var service = new GrantService(factory, audit);
+        return (factory, db, audit, service);
     }
 
     [Fact]
     public async Task CreateFundingWindowAsync_CreatesWindowAndLogsAudit()
     {
         // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new GrantService(db, audit);
+        var (factory, db, audit, service) = CreateTestContext();
 
         var window = new GrantFundingWindow
         {
@@ -52,9 +50,7 @@ public class GrantServiceTests
     public async Task CreateApplicationAsync_GeneratesApplicationNumberAndLogsAudit()
     {
         // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new GrantService(db, audit);
+        var (factory, db, audit, service) = CreateTestContext();
 
         var org = new Organisation { CompanyName = "Auto Parts Manufacturer", SdlNumber = "L333444555" };
         db.Organisations.Add(org);
@@ -84,9 +80,7 @@ public class GrantServiceTests
     public async Task AddBudgetItemAsync_CalculatesTotalCostAndUpdatesApplicationRequestedAmount()
     {
         // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new GrantService(db, audit);
+        var (factory, db, audit, service) = CreateTestContext();
 
         var org = new Organisation { CompanyName = "Toolmaker Org", SdlNumber = "L444" };
         db.Organisations.Add(org);
@@ -127,9 +121,7 @@ public class GrantServiceTests
     public async Task RemoveBudgetItemAsync_UpdatesApplicationRequestedAmount()
     {
         // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new GrantService(db, audit);
+        var (factory, db, audit, service) = CreateTestContext();
 
         var org = new Organisation { CompanyName = "Tuition Org", SdlNumber = "L555" };
         db.Organisations.Add(org);
@@ -158,9 +150,7 @@ public class GrantServiceTests
     public async Task GetAllApplicationsAsync_FiltersCorrectly()
     {
         // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new GrantService(db, audit);
+        var (factory, db, audit, service) = CreateTestContext();
 
         var org = new Organisation { CompanyName = "Filter Org", SdlNumber = "L666" };
         db.Organisations.Add(org);

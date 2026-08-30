@@ -14,9 +14,9 @@ public static class Phase5SetmisSchemaMigrator
         var logger = scope.ServiceProvider.GetService<ILogger<NsdmsDbContext>>();
 
         var ddl = @"
-IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'setmis_submission_batch')
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'SetmisSubmissionBatch')
 BEGIN
-    CREATE TABLE [dbo].[setmis_submission_batch] (
+    CREATE TABLE [dbo].[SetmisSubmissionBatch] (
         [Id] INT IDENTITY(1,1) PRIMARY KEY,
         [BatchNumber] NVARCHAR(100) NOT NULL,
         [FileCode] NVARCHAR(50) NOT NULL DEFAULT 'ALL',
@@ -35,9 +35,9 @@ BEGIN
         [ModifiedAt] DATETIME2 NULL,
         [ModifiedBy] NVARCHAR(100) NULL
     );
-    CREATE UNIQUE INDEX [IX_setmis_batch_Number] ON [dbo].[setmis_submission_batch]([BatchNumber]);
-    CREATE INDEX [IX_setmis_batch_Period] ON [dbo].[setmis_submission_batch]([SubmissionPeriod]);
-    CREATE INDEX [IX_setmis_batch_Status] ON [dbo].[setmis_submission_batch]([Status]);
+    CREATE UNIQUE INDEX [IX_SetmisSubmissionBatch_BatchNumber] ON [dbo].[SetmisSubmissionBatch]([BatchNumber]);
+    CREATE INDEX [IX_SetmisSubmissionBatch_SubmissionPeriod] ON [dbo].[SetmisSubmissionBatch]([SubmissionPeriod]);
+    CREATE INDEX [IX_SetmisSubmissionBatch_Status] ON [dbo].[SetmisSubmissionBatch]([Status]);
 END
 ";
 

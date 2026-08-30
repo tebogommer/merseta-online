@@ -19,8 +19,8 @@ public class DatabaseDocumentationTests
         Assert.NotEmpty(tables);
         Assert.Contains(tables, t => t.TableName.Equals("Organisation", StringComparison.OrdinalIgnoreCase));
         Assert.Contains(tables, t => t.TableName.Equals("CompanyLearner", StringComparison.OrdinalIgnoreCase) || t.TableName.Equals("CompanyLearners", StringComparison.OrdinalIgnoreCase));
-        Assert.Contains(tables, t => t.TableName.Equals("grant_moa", StringComparison.OrdinalIgnoreCase) || t.TableName.Equals("GrantMoa", StringComparison.OrdinalIgnoreCase));
-        Assert.Contains(tables, t => t.TableName.Equals("setmis_submission_batch", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(tables, t => t.TableName.Equals("GrantMoa", StringComparison.OrdinalIgnoreCase) || t.TableName.Equals("grant_moa", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(tables, t => t.TableName.Equals("SetmisSubmissionBatch", StringComparison.OrdinalIgnoreCase) || t.TableName.Equals("setmis_submission_batch", StringComparison.OrdinalIgnoreCase));
 
         // Verify lookup tables
         Assert.Contains(tables, t => t.SchemaName == "lookup");

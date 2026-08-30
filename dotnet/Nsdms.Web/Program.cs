@@ -43,48 +43,65 @@ builder.Services.AddSingleton<INsdmsDbContextFactory, NsdmsDbContextFactory>();
 
 // Application Services
 builder.Services.AddScoped<IAuditService, AuditService>();
+builder.Services.AddScoped<AuditService>(sp => (AuditService)sp.GetRequiredService<IAuditService>());
+
 builder.Services.AddScoped<IPersonService, PersonService>();
-builder.Services.AddScoped<PersonService>();
+builder.Services.AddScoped<PersonService>(sp => (PersonService)sp.GetRequiredService<IPersonService>());
+
 builder.Services.AddScoped<IOrganisationService, OrganisationService>();
-builder.Services.AddScoped<OrganisationService>();
+builder.Services.AddScoped<OrganisationService>(sp => (OrganisationService)sp.GetRequiredService<IOrganisationService>());
+
 builder.Services.AddScoped<IIdentityService, IdentityService>();
-builder.Services.AddScoped<IdentityService>();
-builder.Services.AddScoped<VisitService>();
-builder.Services.AddScoped<LookupService>();
+builder.Services.AddScoped<IdentityService>(sp => (IdentityService)sp.GetRequiredService<IIdentityService>());
+
+builder.Services.AddScoped<IVisitService, VisitService>();
+builder.Services.AddScoped<VisitService>(sp => (VisitService)sp.GetRequiredService<IVisitService>());
+
+builder.Services.AddScoped<ILookupService, LookupService>();
+builder.Services.AddScoped<LookupService>(sp => (LookupService)sp.GetRequiredService<ILookupService>());
+
 builder.Services.AddScoped<ITrainingProviderService, TrainingProviderService>();
-builder.Services.AddScoped<TrainingProviderService>();
+builder.Services.AddScoped<TrainingProviderService>(sp => (TrainingProviderService)sp.GetRequiredService<ITrainingProviderService>());
+
 builder.Services.AddScoped<IWspService, WspService>();
-builder.Services.AddScoped<WspService>();
+builder.Services.AddScoped<WspService>(sp => (WspService)sp.GetRequiredService<IWspService>());
+
 builder.Services.AddScoped<IGrantService, GrantService>();
-builder.Services.AddScoped<GrantService>();
+builder.Services.AddScoped<GrantService>(sp => (GrantService)sp.GetRequiredService<IGrantService>());
+
 builder.Services.AddScoped<ILevyService, LevyService>();
-builder.Services.AddScoped<LevyService>();
+builder.Services.AddScoped<LevyService>(sp => (LevyService)sp.GetRequiredService<ILevyService>());
+
 builder.Services.AddScoped<IEtqaService, EtqaService>();
-builder.Services.AddScoped<EtqaService>();
+builder.Services.AddScoped<EtqaService>(sp => (EtqaService)sp.GetRequiredService<IEtqaService>());
+
 builder.Services.AddScoped<IWorkplaceApprovalService, WorkplaceApprovalService>();
-builder.Services.AddScoped<WorkplaceApprovalService>();
+builder.Services.AddScoped<WorkplaceApprovalService>(sp => (WorkplaceApprovalService)sp.GetRequiredService<IWorkplaceApprovalService>());
+
 builder.Services.AddScoped<ILearnerService, LearnerService>();
-builder.Services.AddScoped<LearnerService>();
+builder.Services.AddScoped<LearnerService>(sp => (LearnerService)sp.GetRequiredService<ILearnerService>());
 
 // Workflow Engine & Storage Services
 builder.Services.AddScoped<IWorkflowEngineService, WorkflowEngineService>();
-builder.Services.AddScoped<WorkflowEngineService>();
+builder.Services.AddScoped<WorkflowEngineService>(sp => (WorkflowEngineService)sp.GetRequiredService<IWorkflowEngineService>());
+
 builder.Services.AddScoped<IStorageService, StorageService>();
-builder.Services.AddScoped<StorageService>();
+builder.Services.AddScoped<StorageService>(sp => (StorageService)sp.GetRequiredService<IStorageService>());
 
 // Financial Governance & MOA Services (Phase 4)
 builder.Services.AddScoped<IFinanceService, FinanceService>();
-builder.Services.AddScoped<FinanceService>();
+builder.Services.AddScoped<FinanceService>(sp => (FinanceService)sp.GetRequiredService<IFinanceService>());
 
 // SETMIS Compliance & Business Intelligence (Phase 5)
 builder.Services.AddScoped<ISetmisService, SetmisService>();
-builder.Services.AddScoped<SetmisService>();
+builder.Services.AddScoped<SetmisService>(sp => (SetmisService)sp.GetRequiredService<ISetmisService>());
+
 builder.Services.AddScoped<IAnalyticsService, AnalyticsService>();
-builder.Services.AddScoped<AnalyticsService>();
+builder.Services.AddScoped<AnalyticsService>(sp => (AnalyticsService)sp.GetRequiredService<IAnalyticsService>());
 
 // Developer Documentation & Database Schema Engine
 builder.Services.AddScoped<IDatabaseDocumentationService, DatabaseDocumentationService>();
-builder.Services.AddScoped<DatabaseDocumentationService>();
+builder.Services.AddScoped<DatabaseDocumentationService>(sp => (DatabaseDocumentationService)sp.GetRequiredService<IDatabaseDocumentationService>());
 
 var app = builder.Build();
 

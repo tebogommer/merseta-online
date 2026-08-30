@@ -9,6 +9,7 @@ public interface IPersonService
 {
     Task<List<Person>> GetAllAsync(string? search = null);
     Task<Person?> GetByIdAsync(int id);
+    Task<Person?> GetByRsaIdAsync(string rsaId);
     Task<Person> CreateAsync(Person person, string currentUsername = "SYSTEM");
     Task<Person> UpdateAsync(Person person, string currentUsername = "SYSTEM");
     Task<bool> DeleteAsync(int id, string currentUsername = "SYSTEM");
@@ -53,9 +54,31 @@ public class PersonService : IPersonService
         return await db.People.FirstOrDefaultAsync(p => p.Id == id);
     }
 
+    public async Task<Person?> GetByRsaIdAsync(string rsaId)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        return await db.People.FirstOrDefaultAsync(p => p.RsaIdNumber == rsaId);
+    }
+
     public async Task<Person> CreateAsync(Person person, string currentUsername = "SYSTEM")
     {
         using var db = await _contextFactory.CreateDbContextAsync();
+
+        if (!string.IsNullOrWhiteSpace(person.RsaIdNumber))
+        {
+            var parse = RsaIdValidator.Parse(person.RsaIdNumber);
+            if (!parse.IsValid)
+            {
+                throw new ArgumentException($"Invalid RSA ID number: {parse.ErrorMessage}");
+            }
+
+            var duplicate = await db.People.AnyAsync(p => p.RsaIdNumber == person.RsaIdNumber);
+            if (duplicate)
+            {
+                throw new InvalidOperationException($"A person with RSA ID {person.RsaIdNumber} already exists.");
+            }
+        }
+
         // Auto-calculate demographic data from RSA ID if provided
         AutoPopulateFromRsaId(person);
 
@@ -96,6 +119,7 @@ public class PersonService : IPersonService
             existing.Gender,
             existing.GenderCode,
             existing.IsSouthAfricanCitizen,
+            existing.CitizenStatusCode,
             existing.EquityCode,
             existing.DisabilityCode,
             existing.NationalityCode,
@@ -119,6 +143,7 @@ public class PersonService : IPersonService
         existing.Gender = person.Gender;
         existing.GenderCode = person.GenderCode;
         existing.IsSouthAfricanCitizen = person.IsSouthAfricanCitizen;
+        existing.CitizenStatusCode = person.CitizenStatusCode;
         existing.EquityCode = person.EquityCode;
         existing.DisabilityCode = person.DisabilityCode;
         existing.NationalityCode = person.NationalityCode;
@@ -158,8 +183,11 @@ public class PersonService : IPersonService
             person.IsActive
         };
 
-        db.People.Remove(person);
-        _audit.LogAction(db, "Person", id, "Delete", currentUsername, beforeState, null);
+        person.IsActive = false;
+        person.ModifiedAt = DateTime.UtcNow;
+        person.ModifiedBy = currentUsername;
+
+        _audit.LogAction(db, "Person", id, "Delete", currentUsername, beforeState, person);
         await db.SaveChangesAsync();
 
         return true;
@@ -189,6 +217,7 @@ public class PersonService : IPersonService
             if (parseResult.IsSouthAfricanCitizen.HasValue)
             {
                 person.IsSouthAfricanCitizen = parseResult.IsSouthAfricanCitizen.Value;
+                person.CitizenStatusCode ??= parseResult.IsSouthAfricanCitizen.Value ? "SA_CIT" : "PERM_RES";
             }
         }
     }

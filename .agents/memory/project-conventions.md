@@ -15,8 +15,12 @@ updated: 2026-07-12
 - Do not claim compatibility with Claude Code, Cursor, Copilot, Windsurf, or other assistants unless the user explicitly expands scope.
 - Copy on the website, docs, FAQ, README, and marketing should describe AG Kit as a toolkit for Gemini CLI / Antigravity-style agent setups.
 
+## Domain Nomenclature & Entity Semantics
+- We work with **Organisations** across all entity types (NPOs, NGOs, public entities, private corporations, levy payers, non-levy payers).
+- Always use **`Organisation`** (not `Company`) across database tables, entity models, DTOs, service methods, and UI views, unless referring to a specific corporate subtype.
+
 ## Database & EF Core Naming Conventions
-- Database entities, tables, and properties must use **PascalCase** (e.g. `GrantMoa`, `SetmisSubmissionBatch`, `MandatoryGrantDisbursement`, `Organisation`, `Visit`).
+- Database entities, tables, and properties must use **PascalCase** (e.g. `Organisation`, `OrganisationContact`, `OrganisationSite`, `GrantMoa`, `SetmisSubmissionBatch`, `MandatoryGrantDisbursement`, `Visit`).
 - Every business table must have an auto-generated integer primary key `Id` and audit columns (`CreatedAt`, `CreatedBy`, `ModifiedAt`, `ModifiedBy`).
 - Lookup tables must be placed under a dedicated **`lookup` schema** (e.g., `lookup.CategoryType`, `lookup.StatusType`, `lookup.ProvinceType`) with `*Type` suffix and unique `Code` (`varchar(15)`).
 - Implement explicit performance indexing on all foreign keys, status columns, and search queries in Fluent API.

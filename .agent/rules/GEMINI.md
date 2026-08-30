@@ -498,6 +498,7 @@ The agent may only declare testing phase complete when:
    - Lookups: `*Type` suffix with unique `Code`, indexed `Name`, `Description`, `Active`.
 5. **Employer Visit Requirement**: When building features that schedule or execute ANY type of "Visit" activity against an Employer, ALWAYS enforce selection of a specific Contact Person (`contact_person_id` / `ContactPersonId`).
 6. **UI Pattern**: MudBlazor Stacked Master-Detail layout (`/employers` table -> `/employers/{id}` full-page view with sticky top bar, breadcrumb back button, and confirmation toasts).
+7. **Organisation Nomenclature**: We work with organisations across all legal forms (NPOs, NGOs, public entities, private corporations, levy payers, non-levy payers). The database, domain models, services, and UI components must consistently use `Organisation` (not `Company`), unless specifically referring to a registered corporate entity subtype.
 
 ---
 

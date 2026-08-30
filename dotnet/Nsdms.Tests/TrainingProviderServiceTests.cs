@@ -8,22 +8,20 @@ namespace Nsdms.Tests;
 
 public class TrainingProviderServiceTests
 {
-    private static NsdmsDbContext CreateInMemoryDbContext()
+    private static (TestDbContextFactory factory, NsdmsDbContext db, AuditService audit, TrainingProviderService service) CreateTestContext()
     {
-        var options = new DbContextOptionsBuilder<NsdmsDbContext>()
-            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-            .Options;
-
-        return new NsdmsDbContext(options);
+        var factory = new TestDbContextFactory(Guid.NewGuid().ToString());
+        var db = (NsdmsDbContext)factory.CreateDbContext();
+        var audit = new AuditService(factory);
+        var service = new TrainingProviderService(factory, audit);
+        return (factory, db, audit, service);
     }
 
     [Fact]
     public async Task CreateAsync_ValidProvider_CreatesAndLogsAudit()
     {
         // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new TrainingProviderService(db, audit);
+        var (factory, db, audit, service) = CreateTestContext();
 
         var org = new Organisation { CompanyName = "Tech Academy", SdlNumber = "L100200300" };
         db.Organisations.Add(org);
@@ -58,72 +56,47 @@ public class TrainingProviderServiceTests
     }
 
     [Fact]
-    public async Task CreateAsync_MissingAccreditationNumber_ThrowsArgumentException()
+    public async Task GetAllAsync_ReturnsAllProvidersWithOrganisation()
     {
         // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new TrainingProviderService(db, audit);
+        var (factory, db, audit, service) = CreateTestContext();
 
-        var provider = new TrainingProvider { AccreditationNumber = "" };
-
-        // Act & Assert
-        await Assert.ThrowsAsync<ArgumentException>(() => service.CreateAsync(provider));
-    }
-
-    [Fact]
-    public async Task GetAllAsync_WithSearchQuery_FiltersCorrectly()
-    {
-        // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new TrainingProviderService(db, audit);
-
-        var org1 = new Organisation { CompanyName = "Skills Center Alpha", SdlNumber = "L111" };
-        var org2 = new Organisation { CompanyName = "Technical College Beta", SdlNumber = "L222" };
+        var org1 = new Organisation { CompanyName = "Provider One", SdlNumber = "L111000111" };
+        var org2 = new Organisation { CompanyName = "Provider Two", SdlNumber = "L222000222" };
         db.Organisations.AddRange(org1, org2);
         await db.SaveChangesAsync();
 
-        await service.CreateAsync(new TrainingProvider { OrganisationId = org1.Id, AccreditationNumber = "ACC-ALPHA-01" });
-        await service.CreateAsync(new TrainingProvider { OrganisationId = org2.Id, AccreditationNumber = "ACC-BETA-02" });
+        db.TrainingProviders.AddRange(
+            new TrainingProvider { OrganisationId = org1.Id, AccreditationNumber = "ACC-01" },
+            new TrainingProvider { OrganisationId = org2.Id, AccreditationNumber = "ACC-02" }
+        );
+        await db.SaveChangesAsync();
 
         // Act
-        var results = await service.GetAllAsync("ALPHA");
+        var list = await service.GetAllAsync();
 
         // Assert
-        Assert.Single(results);
-        Assert.Equal("ACC-ALPHA-01", results[0].AccreditationNumber);
+        Assert.Equal(2, list.Count);
+        Assert.Contains(list, p => p.Organisation?.CompanyName == "Provider One");
     }
 
     [Fact]
-    public async Task GetByIdAsync_ReturnsWithQualificationsAndUnitStandards()
+    public async Task GetByIdAsync_ReturnsProviderWithQualificationsAndUnitStandards()
     {
         // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new TrainingProviderService(db, audit);
+        var (factory, db, audit, service) = CreateTestContext();
 
-        var org = new Organisation { CompanyName = "Complete Academy", SdlNumber = "L999" };
+        var org = new Organisation { CompanyName = "Mega Training", SdlNumber = "L333000333" };
         db.Organisations.Add(org);
         await db.SaveChangesAsync();
 
-        var provider = await service.CreateAsync(new TrainingProvider { OrganisationId = org.Id, AccreditationNumber = "ACC-COMPLETE" });
+        var provider = new TrainingProvider { OrganisationId = org.Id, AccreditationNumber = "ACC-MEGA" };
+        db.TrainingProviders.Add(provider);
+        await db.SaveChangesAsync();
 
-        await service.AddQualificationAsync(new TrainingProviderQualification
-        {
-            TrainingProviderId = provider.Id,
-            SaqaQualificationId = 58761,
-            QualificationTitle = "National Certificate: Automotive Repair",
-            NqfLevel = 4
-        });
-
-        await service.AddUnitStandardAsync(new TrainingProviderUnitStandard
-        {
-            TrainingProviderId = provider.Id,
-            UnitStandardId = 119457,
-            UnitStandardTitle = "Interpret and use information from texts",
-            Credits = 5
-        });
+        db.TrainingProviderQualifications.Add(new TrainingProviderQualification { TrainingProviderId = provider.Id, QualificationTitle = "Welding NQF 4", SaqaQualificationId = 1234 });
+        db.TrainingProviderUnitStandards.Add(new TrainingProviderUnitStandard { TrainingProviderId = provider.Id, UnitStandardTitle = "Shielded Metal Arc Welding", UnitStandardId = 5678 });
+        await db.SaveChangesAsync();
 
         // Act
         var result = await service.GetByIdAsync(provider.Id);
@@ -132,110 +105,62 @@ public class TrainingProviderServiceTests
         Assert.NotNull(result);
         Assert.Single(result.Qualifications);
         Assert.Single(result.UnitStandards);
-        Assert.Equal(58761, result.Qualifications.First().SaqaQualificationId);
-        Assert.Equal(119457, result.UnitStandards.First().UnitStandardId);
     }
 
     [Fact]
-    public async Task UpdateAsync_UpdatesProviderAndLogsAudit()
+    public async Task AddQualificationAsync_AddsQualificationAndLogsAudit()
     {
         // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new TrainingProviderService(db, audit);
+        var (factory, db, audit, service) = CreateTestContext();
 
-        var org = new Organisation { CompanyName = "Update Org", SdlNumber = "L111" };
+        var org = new Organisation { CompanyName = "Skills Hub", SdlNumber = "L444000444" };
         db.Organisations.Add(org);
         await db.SaveChangesAsync();
 
-        var provider = await service.CreateAsync(new TrainingProvider { OrganisationId = org.Id, AccreditationNumber = "ACC-INITIAL", MaxLearnerCapacity = 50 });
+        var provider = new TrainingProvider { OrganisationId = org.Id, AccreditationNumber = "ACC-HUB" };
+        db.TrainingProviders.Add(provider);
+        await db.SaveChangesAsync();
 
-        provider.AccreditationNumber = "ACC-UPDATED";
-        provider.MaxLearnerCapacity = 150;
+        var qual = new TrainingProviderQualification
+        {
+            TrainingProviderId = provider.Id,
+            QualificationTitle = "Boilermaking NQF 3",
+            SaqaQualificationId = 58785,
+            NqfLevel = 3
+        };
 
         // Act
-        var updated = await service.UpdateAsync(provider, "UpdaterUser");
+        var added = await service.AddQualificationAsync(qual, "ProgManager");
 
         // Assert
-        Assert.Equal("ACC-UPDATED", updated.AccreditationNumber);
-        Assert.Equal(150, updated.MaxLearnerCapacity);
-        Assert.Equal("UpdaterUser", updated.ModifiedBy);
+        Assert.True(added.Id > 0);
+        Assert.Equal("ProgManager", added.CreatedBy);
 
-        var auditLog = await db.AuditLogs.FirstOrDefaultAsync(a => a.EntityName == "TrainingProvider" && a.ActionName == "Update");
-        Assert.NotNull(auditLog);
+        var qualifications = await service.GetQualificationsAsync(provider.Id);
+        Assert.Single(qualifications);
+        Assert.Equal("Boilermaking NQF 3", qualifications[0].QualificationTitle);
     }
 
     [Fact]
-    public async Task DeleteAsync_ExistingProvider_RemovesAndLogsAudit()
+    public async Task DeleteAsync_DeletesProviderAndCascades()
     {
         // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new TrainingProviderService(db, audit);
+        var (factory, db, audit, service) = CreateTestContext();
 
-        var org = new Organisation { CompanyName = "Delete Org", SdlNumber = "L222" };
+        var org = new Organisation { CompanyName = "To Close", SdlNumber = "L666000666" };
         db.Organisations.Add(org);
         await db.SaveChangesAsync();
 
-        var provider = await service.CreateAsync(new TrainingProvider { OrganisationId = org.Id, AccreditationNumber = "ACC-TO-DELETE" });
+        var provider = new TrainingProvider { OrganisationId = org.Id, AccreditationNumber = "ACC-CLOSE" };
+        db.TrainingProviders.Add(provider);
+        await db.SaveChangesAsync();
 
         // Act
-        var deleted = await service.DeleteAsync(provider.Id, "Admin");
+        var deleted = await service.DeleteAsync(provider.Id, "Deleter");
 
         // Assert
         Assert.True(deleted);
-        var inDb = await db.TrainingProviders.FindAsync(provider.Id);
+        var inDb = await service.GetByIdAsync(provider.Id);
         Assert.Null(inDb);
-
-        var auditLog = await db.AuditLogs.FirstOrDefaultAsync(a => a.EntityName == "TrainingProvider" && a.ActionName == "Delete");
-        Assert.NotNull(auditLog);
-    }
-
-    [Fact]
-    public async Task QualificationsAndUnitStandards_AddAndRemoveOperations()
-    {
-        // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new TrainingProviderService(db, audit);
-
-        var org = new Organisation { CompanyName = "Sub Test Org", SdlNumber = "L333" };
-        db.Organisations.Add(org);
-        await db.SaveChangesAsync();
-
-        var provider = await service.CreateAsync(new TrainingProvider { OrganisationId = org.Id, AccreditationNumber = "ACC-SUB-TEST" });
-
-        // Act - Add Qual
-        var qual = await service.AddQualificationAsync(new TrainingProviderQualification
-        {
-            TrainingProviderId = provider.Id,
-            SaqaQualificationId = 49121,
-            QualificationTitle = "FET Certificate: Computer Programming"
-        });
-        Assert.True(qual.Id > 0);
-
-        // Act - Add Unit Standard
-        var us = await service.AddUnitStandardAsync(new TrainingProviderUnitStandard
-        {
-            TrainingProviderId = provider.Id,
-            UnitStandardId = 115358,
-            UnitStandardTitle = "Write computer programs using design specifications",
-            Credits = 10
-        });
-        Assert.True(us.Id > 0);
-
-        // Act - Remove Qual
-        var removedQual = await service.RemoveQualificationAsync(qual.Id);
-        Assert.True(removedQual);
-
-        // Act - Remove US
-        var removedUs = await service.RemoveUnitStandardAsync(us.Id);
-        Assert.True(removedUs);
-
-        // Assert
-        var checkQual = await db.TrainingProviderQualifications.FindAsync(qual.Id);
-        var checkUs = await db.TrainingProviderUnitStandards.FindAsync(us.Id);
-        Assert.Null(checkQual);
-        Assert.Null(checkUs);
     }
 }

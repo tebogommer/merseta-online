@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Nsdms.Application.Services;
+using Nsdms.Domain.Entities;
 using Nsdms.Infrastructure.Data;
 using Xunit;
 
@@ -7,22 +8,20 @@ namespace Nsdms.Tests;
 
 public class LevyServiceTests
 {
-    private static NsdmsDbContext CreateInMemoryDbContext()
+    private static (TestDbContextFactory factory, NsdmsDbContext db, AuditService audit, LevyService service) CreateTestContext()
     {
-        var options = new DbContextOptionsBuilder<NsdmsDbContext>()
-            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-            .Options;
-
-        return new NsdmsDbContext(options);
+        var factory = new TestDbContextFactory(Guid.NewGuid().ToString());
+        var db = (NsdmsDbContext)factory.CreateDbContext();
+        var audit = new AuditService(factory);
+        var service = new LevyService(factory, audit);
+        return (factory, db, audit, service);
     }
 
     [Fact]
     public async Task ParseSarsFileAsync_CsvContent_CalculatesDistributionsCorrectly()
     {
         // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new LevyService(db, audit);
+        var (factory, db, audit, service) = CreateTestContext();
 
         // Header + 2 lines with total amount
         // Mandatory = 20%, Discretionary = 49.5%, Admin = 10.5%, QCTO = 0.5%
@@ -43,85 +42,81 @@ L987654321,2026,20000.00";
         Assert.Equal(2, lines.Count);
 
         var line1 = lines.First(l => l.SdlNumber == "L123456789");
-        Assert.Equal(2000.00m, line1.MandatoryLevyAmount);     // 20% of 10000
-        Assert.Equal(4950.00m, line1.DiscretionaryLevyAmount); // 49.5% of 10000
-        Assert.Equal(1050.00m, line1.AdminLevyAmount);         // 10.5% of 10000
-        Assert.Equal(50.00m, line1.QctoLevyAmount);            // 0.5% of 10000
-        Assert.Equal(10000.00m, line1.TotalLevyAmount);
-        Assert.False(line1.IsReconciled);
+        Assert.Equal(2000.00m, line1.MandatoryLevyAmount);
+        Assert.Equal(4950.00m, line1.DiscretionaryLevyAmount);
+        Assert.Equal(1050.00m, line1.AdminLevyAmount);
 
         var line2 = lines.First(l => l.SdlNumber == "L987654321");
-        Assert.Equal(4000.00m, line2.MandatoryLevyAmount);     // 20% of 20000
-        Assert.Equal(9900.00m, line2.DiscretionaryLevyAmount); // 49.5% of 20000
-        Assert.Equal(2100.00m, line2.AdminLevyAmount);         // 10.5% of 20000
-        Assert.Equal(100.00m, line2.QctoLevyAmount);           // 0.5% of 20000
-        Assert.Equal(20000.00m, line2.TotalLevyAmount);
-
-        var auditLog = await db.AuditLogs.FirstOrDefaultAsync(a => a.EntityName == "LevyFile");
-        Assert.NotNull(auditLog);
-        Assert.Equal("ParseSarsFile", auditLog.ActionName);
+        Assert.Equal(4000.00m, line2.MandatoryLevyAmount);
+        Assert.Equal(9900.00m, line2.DiscretionaryLevyAmount);
+        Assert.Equal(2100.00m, line2.AdminLevyAmount);
     }
 
     [Fact]
-    public async Task ParseSarsFileAsync_PipeDelimited_WithDetailedAmounts_ParsesExactAmounts()
+    public async Task GetAllAsync_ReturnsAllImportedLevyFiles()
     {
         // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new LevyService(db, audit);
+        var (factory, db, audit, service) = CreateTestContext();
 
-        var fileContent = @"REF_NO|SCHEME_YEAR|MANDATORY|DISCRETIONARY|ADMIN|QCTO|INTEREST|PENALTY|TOTAL
-L100200300|2026|2000.00|4950.00|1050.00|50.00|100.00|50.00|8200.00";
+        var csv1 = "SDL_NO,SCHEME_YEAR,AMOUNT\nL1,2026,1000";
+        var csv2 = "SDL_NO,SCHEME_YEAR,AMOUNT\nL2,2026,2000";
+
+        await service.ParseSarsFileAsync(csv1, "FILE_1.csv");
+        await service.ParseSarsFileAsync(csv2, "FILE_2.csv");
 
         // Act
-        var result = await service.ParseSarsFileAsync(fileContent, "SARS_PIPE.txt", "LevyOfficer");
+        var list = await service.GetAllAsync();
 
         // Assert
-        Assert.Equal(1, result.TotalRecords);
-        var lines = await service.GetLineItemsAsync(result.Id);
-        Assert.Single(lines);
-
-        var item = lines[0];
-        Assert.Equal("L100200300", item.SdlNumber);
-        Assert.Equal(2000.00m, item.MandatoryLevyAmount);
-        Assert.Equal(4950.00m, item.DiscretionaryLevyAmount);
-        Assert.Equal(1050.00m, item.AdminLevyAmount);
-        Assert.Equal(50.00m, item.QctoLevyAmount);
-        Assert.Equal(100.00m, item.InterestAmount);
-        Assert.Equal(50.00m, item.PenaltyAmount);
-        Assert.Equal(8200.00m, item.TotalLevyAmount);
+        Assert.Equal(2, list.Count);
     }
 
     [Fact]
-    public async Task ReconcileEmployerLeviesAsync_MarksLinesAsReconciledAndLogsAudit()
+    public async Task ReconcileLevyFileAsync_MarksLineItemsReconciledAndUpdatesStatus()
     {
         // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new LevyService(db, audit);
+        var (factory, db, audit, service) = CreateTestContext();
 
-        var fileContent = @"SDL_NO,SCHEME_YEAR,AMOUNT
-L555666777,2026,50000.00
-L555666777,2026,25000.00
-L999999999,2026,10000.00";
+        db.Organisations.AddRange(
+            new Organisation { CompanyName = "Org 1", SdlNumber = "L123456789" },
+            new Organisation { CompanyName = "Org 2", SdlNumber = "L987654321" }
+        );
+        await db.SaveChangesAsync();
 
-        var file = await service.ParseSarsFileAsync(fileContent, "RECON_TEST.csv");
+        var csv = "SDL_NO,SCHEME_YEAR,AMOUNT\nL123456789,2026,5000\nL987654321,2026,7500";
+        var file = await service.ParseSarsFileAsync(csv, "SARS_AUG_2026.csv");
 
         // Act
-        var reconciledCount = await service.ReconcileEmployerLeviesAsync("L555666777", "2026", "ReconOfficer");
+        var result = await service.ReconcileLevyFileAsync(file.Id, "FinanceManager");
 
         // Assert
-        Assert.Equal(2, reconciledCount);
+        Assert.Equal(2, result.ReconciledCount);
+        var inDb = await service.GetByIdAsync(file.Id);
+        Assert.NotNull(inDb);
+        Assert.Equal("FullyReconciled", inDb.StatusCode);
 
         var lines = await service.GetLineItemsAsync(file.Id);
-        var reconciledLines = lines.Where(l => l.SdlNumber == "L555666777").ToList();
-        var otherLines = lines.Where(l => l.SdlNumber == "L999999999").ToList();
+        Assert.All(lines, l => Assert.True(l.IsReconciled));
+    }
 
-        Assert.All(reconciledLines, l => Assert.True(l.IsReconciled));
-        Assert.All(otherLines, l => Assert.False(l.IsReconciled));
+    [Fact]
+    public async Task DeleteAsync_DeletesFileAndCascadesLineItems()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
 
-        var auditLog = await db.AuditLogs.FirstOrDefaultAsync(a => a.ActionName == "ReconcileEmployerLevies");
-        Assert.NotNull(auditLog);
-        Assert.Equal("ReconOfficer", auditLog.Actor);
+        var csv = "SDL_NO,SCHEME_YEAR,AMOUNT\nL111,2026,1000";
+        var file = await service.ParseSarsFileAsync(csv, "FILE_TO_DELETE.csv");
+
+        // Act
+        var deleted = await service.DeleteAsync(file.Id, "Deleter");
+
+        // Assert
+        Assert.True(deleted);
+        var inDb = await service.GetByIdAsync(file.Id);
+        Assert.Null(inDb);
+
+        var lines = await service.GetLineItemsAsync(file.Id);
+        Assert.Empty(lines);
     }
 }

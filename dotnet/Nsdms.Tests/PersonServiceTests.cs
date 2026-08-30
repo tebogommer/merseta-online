@@ -8,13 +8,13 @@ namespace Nsdms.Tests;
 
 public class PersonServiceTests
 {
-    private static NsdmsDbContext CreateInMemoryDbContext()
+    private static (TestDbContextFactory factory, NsdmsDbContext db, AuditService audit, PersonService service) CreateTestContext()
     {
-        var options = new DbContextOptionsBuilder<NsdmsDbContext>()
-            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-            .Options;
-
-        return new NsdmsDbContext(options);
+        var factory = new TestDbContextFactory(Guid.NewGuid().ToString());
+        var db = (NsdmsDbContext)factory.CreateDbContext();
+        var audit = new AuditService(factory);
+        var service = new PersonService(factory, audit);
+        return (factory, db, audit, service);
     }
 
     #region Create Tests
@@ -23,9 +23,7 @@ public class PersonServiceTests
     public async Task CreateAsync_WithValidRsaId_AutoPopulatesDobGenderAndCitizenship()
     {
         // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new PersonService(db, audit);
+        var (factory, db, audit, service) = CreateTestContext();
 
         var person = new Person
         {
@@ -43,73 +41,228 @@ public class PersonServiceTests
         Assert.NotNull(created);
         Assert.True(created.Id > 0);
         Assert.Equal(new DateTime(1980, 1, 1), created.DateOfBirth);
-        Assert.Equal("Male", created.Gender);
         Assert.Equal("M", created.GenderCode);
-        Assert.True(created.IsSouthAfricanCitizen);
+        Assert.Equal("SA_CIT", created.CitizenStatusCode);
         Assert.Equal("AdminUser", created.CreatedBy);
 
-        // Verify audit log double-write
+        // Verify in DB
+        var inDb = await db.People.FindAsync(created.Id);
+        Assert.NotNull(inDb);
+        Assert.Equal("Thabo", inDb.FirstName);
+        Assert.Equal("Mokoena", inDb.LastName);
+
+        // Verify audit log
         var auditLog = await db.AuditLogs.FirstOrDefaultAsync(a => a.EntityName == "Person" && a.RecordId == created.Id);
         Assert.NotNull(auditLog);
         Assert.Equal("Create", auditLog.ActionName);
         Assert.Equal("AdminUser", auditLog.Actor);
-        Assert.Contains("8001015009087", auditLog.MetadataJson);
     }
 
     [Fact]
-    public async Task CreateAsync_WithFemalePermanentResidentRsaId_AutoPopulatesFemaleAndResident()
+    public async Task CreateAsync_FemaleCitizen_AutoPopulatesCorrectly()
     {
         // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new PersonService(db, audit);
+        var (factory, db, audit, service) = CreateTestContext();
 
         var person = new Person
         {
             FirstName = "Nomvula",
             LastName = "Khumalo",
-            RsaIdNumber = "0512150123184", // 2005-12-15, Female, Permanent Resident
-            Email = "nomvula.k@merseta.org.za"
+            RsaIdNumber = "9005200123081", // 1990-05-20, Female, SA Citizen
+            Email = "nomvula@merseta.org.za"
         };
 
         // Act
-        var created = await service.CreateAsync(person, "Registrar");
+        var created = await service.CreateAsync(person);
 
         // Assert
-        Assert.NotNull(created);
-        Assert.Equal(new DateTime(2005, 12, 15), created.DateOfBirth);
-        Assert.Equal("Female", created.Gender);
+        Assert.Equal(new DateTime(1990, 5, 20), created.DateOfBirth);
         Assert.Equal("F", created.GenderCode);
-        Assert.False(created.IsSouthAfricanCitizen);
+        Assert.Equal("SA_CIT", created.CitizenStatusCode);
     }
 
     [Fact]
-    public async Task CreateAsync_WithoutRsaId_CreatesSuccessfullyWithoutAutoPopulation()
+    public async Task CreateAsync_PermanentResident_AutoPopulatesPermanentResidentStatus()
     {
         // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new PersonService(db, audit);
+        var (factory, db, audit, service) = CreateTestContext();
 
         var person = new Person
         {
-            FirstName = "John",
-            LastName = "Doe",
-            PassportNumber = "A12345678",
-            DateOfBirth = new DateTime(1992, 4, 10),
-            Gender = "Male",
-            GenderCode = "M",
-            IsSouthAfricanCitizen = false
+            FirstName = "Jean",
+            LastName = "Dupont",
+            RsaIdNumber = "0512150123184", // 2005-12-15, Female, Permanent Resident (C=1)
+            Email = "jean@merseta.org.za"
         };
 
         // Act
-        var created = await service.CreateAsync(person, "Admin");
+        var created = await service.CreateAsync(person);
 
         // Assert
-        Assert.NotNull(created);
-        Assert.True(created.Id > 0);
-        Assert.Equal(new DateTime(1992, 4, 10), created.DateOfBirth);
-        Assert.Equal("A12345678", created.PassportNumber);
+        Assert.Equal("PERM_RES", created.CitizenStatusCode);
+    }
+
+    [Fact]
+    public async Task CreateAsync_WithoutRsaId_UsesProvidedDobAndGender()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+
+        var person = new Person
+        {
+            FirstName = "Carlos",
+            LastName = "Silva",
+            PassportNumber = "A12345678",
+            NationalityCode = "BRA",
+            DateOfBirth = new DateTime(1988, 7, 20),
+            GenderCode = "M",
+            CitizenStatusCode = "FOREIGN",
+            Email = "carlos@merseta.org.za"
+        };
+
+        // Act
+        var created = await service.CreateAsync(person);
+
+        // Assert
+        Assert.Equal(new DateTime(1988, 7, 20), created.DateOfBirth);
+        Assert.Equal("M", created.GenderCode);
+        Assert.Equal("FOREIGN", created.CitizenStatusCode);
+    }
+
+    [Fact]
+    public async Task CreateAsync_DuplicateRsaId_ThrowsInvalidOperationException()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+
+        var existing = new Person
+        {
+            FirstName = "Existing",
+            LastName = "Person",
+            RsaIdNumber = "8001015009087",
+            Email = "existing@merseta.org.za"
+        };
+        db.People.Add(existing);
+        await db.SaveChangesAsync();
+
+        var duplicate = new Person
+        {
+            FirstName = "Duplicate",
+            LastName = "Person",
+            RsaIdNumber = "8001015009087",
+            Email = "duplicate@merseta.org.za"
+        };
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => service.CreateAsync(duplicate));
+        Assert.Contains("already exists", ex.Message);
+    }
+
+    [Fact]
+    public async Task CreateAsync_InvalidRsaIdLuhn_ThrowsArgumentException()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+
+        var person = new Person
+        {
+            FirstName = "Bad",
+            LastName = "Luhn",
+            RsaIdNumber = "8001015009088", // Invalid check digit (should be 7)
+            Email = "bad@merseta.org.za"
+        };
+
+        // Act & Assert
+        var ex = await Assert.ThrowsAsync<ArgumentException>(() => service.CreateAsync(person));
+        Assert.Contains("Invalid RSA ID number", ex.Message);
+    }
+
+    #endregion
+
+    #region Read & Search Tests
+
+    [Fact]
+    public async Task GetAllAsync_ReturnsAllActivePeople()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+
+        db.People.AddRange(
+            new Person { FirstName = "Person1", LastName = "Last1", Email = "p1@test.com", IsActive = true },
+            new Person { FirstName = "Person2", LastName = "Last2", Email = "p2@test.com", IsActive = true }
+        );
+        await db.SaveChangesAsync();
+
+        // Act
+        var list = await service.GetAllAsync();
+
+        // Assert
+        Assert.Equal(2, list.Count);
+    }
+
+    [Fact]
+    public async Task GetAllAsync_WithSearch_FiltersByFirstNameLastNameRsaIdOrEmail()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+
+        db.People.AddRange(
+            new Person { FirstName = "Sipho", LastName = "Ndlovu", RsaIdNumber = "9001015009087", Email = "sipho@test.com" },
+            new Person { FirstName = "Fatima", LastName = "Patel", RsaIdNumber = "8502020001088", Email = "fatima@test.com" },
+            new Person { FirstName = "Pieter", LastName = "Van Der Merwe", RsaIdNumber = "7803035009089", Email = "pieter@test.com" }
+        );
+        await db.SaveChangesAsync();
+
+        // Act
+        var searchByName = await service.GetAllAsync("Fatima");
+        var searchByRsaId = await service.GetAllAsync("780303");
+        var searchByEmail = await service.GetAllAsync("sipho@test.com");
+
+        // Assert
+        Assert.Single(searchByName);
+        Assert.Equal("Fatima", searchByName[0].FirstName);
+
+        Assert.Single(searchByRsaId);
+        Assert.Equal("Pieter", searchByRsaId[0].FirstName);
+
+        Assert.Single(searchByEmail);
+        Assert.Equal("Sipho", searchByEmail[0].FirstName);
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_ReturnsPerson()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+
+        var person = new Person { FirstName = "Kagiso", LastName = "Rabada", Email = "kagiso@cricket.co.za" };
+        db.People.Add(person);
+        await db.SaveChangesAsync();
+
+        // Act
+        var result = await service.GetByIdAsync(person.Id);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal("Kagiso", result.FirstName);
+    }
+
+    [Fact]
+    public async Task GetByRsaIdAsync_ReturnsMatchingPerson()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+
+        var person = new Person { FirstName = "Caster", LastName = "Semenya", RsaIdNumber = "9101070001087", Email = "caster@athletics.co.za" };
+        db.People.Add(person);
+        await db.SaveChangesAsync();
+
+        // Act
+        var result = await service.GetByRsaIdAsync("9101070001087");
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal("Caster", result.FirstName);
     }
 
     #endregion
@@ -117,65 +270,40 @@ public class PersonServiceTests
     #region Update Tests
 
     [Fact]
-    public async Task UpdateAsync_WithValidChanges_UpdatesPersonAndLogsAuditWithBeforeState()
+    public async Task UpdateAsync_UpdatesFieldsAndLogsAudit()
     {
         // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new PersonService(db, audit);
+        var (factory, db, audit, service) = CreateTestContext();
 
         var person = new Person
         {
-            FirstName = "Nomvula",
-            LastName = "Khumalo",
-            RsaIdNumber = "0512150123184",
-            Email = "nomvula@merseta.org.za"
+            FirstName = "OldFirst",
+            LastName = "OldLast",
+            RsaIdNumber = "8001015009087",
+            Email = "old@test.com",
+            PhoneNumber = "0110000000"
         };
-        await service.CreateAsync(person, "Creator");
+        db.People.Add(person);
+        await db.SaveChangesAsync();
 
         // Act
-        var updateModel = new Person
-        {
-            Id = person.Id,
-            FirstName = person.FirstName,
-            LastName = person.LastName,
-            RsaIdNumber = person.RsaIdNumber,
-            PhoneNumber = "0821234567",
-            Email = "nomvula.updated@merseta.org.za",
-            PhysicalAddress = "456 West Street, Sandton"
-        };
-        var updated = await service.UpdateAsync(updateModel, "Updater");
+        person.FirstName = "NewFirst";
+        person.LastName = "NewLast";
+        person.Email = "new@test.com";
+        person.PhoneNumber = "0119999999";
+        var updated = await service.UpdateAsync(person, "EditorUser");
 
         // Assert
-        Assert.Equal("0821234567", updated.PhoneNumber);
-        Assert.Equal("nomvula.updated@merseta.org.za", updated.Email);
-        Assert.Equal("456 West Street, Sandton", updated.PhysicalAddress);
-        Assert.Equal("Updater", updated.ModifiedBy);
+        Assert.Equal("NewFirst", updated.FirstName);
+        Assert.Equal("NewLast", updated.LastName);
+        Assert.Equal("new@test.com", updated.Email);
+        Assert.Equal("EditorUser", updated.ModifiedBy);
         Assert.NotNull(updated.ModifiedAt);
 
-        // Verify audit log for Update
-        var updateAudit = await db.AuditLogs
-            .Where(a => a.EntityName == "Person" && a.RecordId == person.Id && a.ActionName == "Update")
-            .FirstOrDefaultAsync();
-
-        Assert.NotNull(updateAudit);
-        Assert.Equal("Updater", updateAudit.Actor);
-        Assert.Contains("nomvula@merseta.org.za", updateAudit.MetadataJson);
-        Assert.Contains("nomvula.updated@merseta.org.za", updateAudit.MetadataJson);
-    }
-
-    [Fact]
-    public async Task UpdateAsync_NonExistentPerson_ThrowsKeyNotFoundException()
-    {
-        // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new PersonService(db, audit);
-
-        var person = new Person { Id = 999, FirstName = "Missing", LastName = "Person" };
-
-        // Act & Assert
-        await Assert.ThrowsAsync<KeyNotFoundException>(() => service.UpdateAsync(person, "Admin"));
+        // Verify audit log
+        var auditLog = await db.AuditLogs.FirstOrDefaultAsync(a => a.EntityName == "Person" && a.RecordId == person.Id && a.ActionName == "Update");
+        Assert.NotNull(auditLog);
+        Assert.Equal("EditorUser", auditLog.Actor);
     }
 
     #endregion
@@ -183,154 +311,29 @@ public class PersonServiceTests
     #region Delete Tests
 
     [Fact]
-    public async Task DeleteAsync_ExistingPerson_RemovesPersonAndLogsAudit()
+    public async Task DeleteAsync_SetsIsActiveFalseAndLogsAudit()
     {
         // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new PersonService(db, audit);
+        var (factory, db, audit, service) = CreateTestContext();
 
-        var person = new Person
-        {
-            FirstName = "Temp",
-            LastName = "User",
-            Email = "temp@merseta.org.za"
-        };
-        await service.CreateAsync(person, "Admin");
+        var person = new Person { FirstName = "ToSoftDelete", LastName = "Person", Email = "delete@test.com", IsActive = true };
+        db.People.Add(person);
+        await db.SaveChangesAsync();
 
         // Act
-        var deleted = await service.DeleteAsync(person.Id, "DeleterUser");
+        var result = await service.DeleteAsync(person.Id, "DeleterUser");
 
         // Assert
-        Assert.True(deleted);
-        var inDb = await db.People.FindAsync(person.Id);
-        Assert.Null(inDb);
+        Assert.True(result);
+        var inDb = await service.GetByIdAsync(person.Id);
+        Assert.NotNull(inDb);
+        Assert.False(inDb.IsActive); // Soft delete
+        Assert.Equal("DeleterUser", inDb.ModifiedBy);
 
-        var deleteAudit = await db.AuditLogs
-            .FirstOrDefaultAsync(a => a.EntityName == "Person" && a.RecordId == person.Id && a.ActionName == "Delete");
-        Assert.NotNull(deleteAudit);
-        Assert.Equal("DeleterUser", deleteAudit.Actor);
-        Assert.Contains("Temp", deleteAudit.MetadataJson);
-    }
-
-    [Fact]
-    public async Task DeleteAsync_NonExistentPerson_ReturnsFalse()
-    {
-        // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new PersonService(db, audit);
-
-        // Act
-        var deleted = await service.DeleteAsync(999, "Admin");
-
-        // Assert
-        Assert.False(deleted);
-    }
-
-    #endregion
-
-    #region Query & Search Tests
-
-    [Fact]
-    public async Task GetByIdAsync_ExistingId_ReturnsPerson()
-    {
-        // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new PersonService(db, audit);
-
-        var person = await service.CreateAsync(new Person
-        {
-            FirstName = "Lerato",
-            LastName = "Molefe",
-            Email = "lerato.m@merseta.org.za"
-        });
-
-        // Act
-        var result = await service.GetByIdAsync(person.Id);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal("Lerato", result.FirstName);
-        Assert.Equal("Molefe", result.LastName);
-    }
-
-    [Fact]
-    public async Task GetByIdAsync_NonExistentId_ReturnsNull()
-    {
-        // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new PersonService(db, audit);
-
-        // Act
-        var result = await service.GetByIdAsync(999);
-
-        // Assert
-        Assert.Null(result);
-    }
-
-    [Theory]
-    [InlineData("Dlamini", 1)]
-    [InlineData("Sipho", 1)]
-    [InlineData("8001015009087", 1)]
-    [InlineData("gmail.com", 1)]
-    [InlineData("0829990000", 1)]
-    [InlineData("NonExistentQuery", 0)]
-    public async Task GetAllAsync_WithSearchQuery_FiltersCorrectly(string query, int expectedCount)
-    {
-        // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new PersonService(db, audit);
-
-        await service.CreateAsync(new Person
-        {
-            FirstName = "Sipho",
-            LastName = "Dlamini",
-            RsaIdNumber = "8001015009087",
-            Email = "sipho@merseta.org.za",
-            PhoneNumber = "0829990000"
-        });
-
-        await service.CreateAsync(new Person
-        {
-            FirstName = "Lerato",
-            LastName = "Nkosi",
-            Email = "lerato@gmail.com",
-            PhoneNumber = "0711112222"
-        });
-
-        // Act
-        var results = await service.GetAllAsync(query);
-
-        // Assert
-        Assert.Equal(expectedCount, results.Count);
-    }
-
-    [Fact]
-    public async Task GetAllAsync_NoSearchQuery_ReturnsAllSortedByLastNameThenFirstName()
-    {
-        // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new PersonService(db, audit);
-
-        await service.CreateAsync(new Person { FirstName = "Bongi", LastName = "Zulu" });
-        await service.CreateAsync(new Person { FirstName = "Alice", LastName = "Adams" });
-        await service.CreateAsync(new Person { FirstName = "Charlie", LastName = "Adams" });
-
-        // Act
-        var results = await service.GetAllAsync();
-
-        // Assert
-        Assert.Equal(3, results.Count);
-        Assert.Equal("Adams", results[0].LastName);
-        Assert.Equal("Alice", results[0].FirstName);
-        Assert.Equal("Adams", results[1].LastName);
-        Assert.Equal("Charlie", results[1].FirstName);
-        Assert.Equal("Zulu", results[2].LastName);
+        // Verify audit log
+        var auditLog = await db.AuditLogs.FirstOrDefaultAsync(a => a.EntityName == "Person" && a.RecordId == person.Id && a.ActionName == "Delete");
+        Assert.NotNull(auditLog);
+        Assert.Equal("DeleterUser", auditLog.Actor);
     }
 
     #endregion

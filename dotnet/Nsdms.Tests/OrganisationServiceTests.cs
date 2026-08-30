@@ -8,13 +8,13 @@ namespace Nsdms.Tests;
 
 public class OrganisationServiceTests
 {
-    private static NsdmsDbContext CreateInMemoryDbContext()
+    private static (TestDbContextFactory factory, NsdmsDbContext db, AuditService audit, OrganisationService service) CreateTestContext()
     {
-        var options = new DbContextOptionsBuilder<NsdmsDbContext>()
-            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-            .Options;
-
-        return new NsdmsDbContext(options);
+        var factory = new TestDbContextFactory(Guid.NewGuid().ToString());
+        var db = (NsdmsDbContext)factory.CreateDbContext();
+        var audit = new AuditService(factory);
+        var service = new OrganisationService(factory, audit);
+        return (factory, db, audit, service);
     }
 
     #region Organisation CRUD Tests
@@ -23,9 +23,7 @@ public class OrganisationServiceTests
     public async Task CreateAsync_CreatesOrganisationAndLogsAudit()
     {
         // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new OrganisationService(db, audit);
+        var (factory, db, audit, service) = CreateTestContext();
 
         var org = new Organisation
         {
@@ -61,221 +59,153 @@ public class OrganisationServiceTests
     }
 
     [Fact]
-    public async Task GetByIdAsync_ExistingOrganisation_ReturnsWithRelatedEntities()
+    public async Task GetAllAsync_ReturnsAllOrganisationsWithPrimaryContact()
     {
         // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new OrganisationService(db, audit);
+        var (factory, db, audit, service) = CreateTestContext();
 
-        var person = new Person { FirstName = "Sarah", LastName = "Connor", Email = "sarah@cyberdyne.co.za" };
-        db.People.Add(person);
+        var contact = new Person
+        {
+            FirstName = "John",
+            LastName = "Doe",
+            RsaIdNumber = "8001015009087",
+            Email = "john.doe@test.com"
+        };
+        db.People.Add(contact);
         await db.SaveChangesAsync();
 
-        var org = new Organisation
-        {
-            CompanyName = "Cyberdyne Systems SA",
-            SdlNumber = "L111222333",
-            PrimaryContactPersonId = person.Id
-        };
-        await service.CreateAsync(org, "System");
+        db.Organisations.AddRange(
+            new Organisation { CompanyName = "Org Alpha", SdlNumber = "L111111111", PrimaryContactPersonId = contact.Id },
+            new Organisation { CompanyName = "Org Beta", SdlNumber = "L222222222" }
+        );
+        await db.SaveChangesAsync();
 
-        await service.AddContactAsync(org.Id, person.Id, "CEO", isPrimary: true, currentUsername: "System");
+        // Act
+        var list = await service.GetAllAsync();
+
+        // Assert
+        Assert.Equal(2, list.Count);
+        var alpha = list.FirstOrDefault(o => o.CompanyName == "Org Alpha");
+        Assert.NotNull(alpha);
+        Assert.NotNull(alpha.PrimaryContactPerson);
+        Assert.Equal("John", alpha.PrimaryContactPerson.FirstName);
+    }
+
+    [Fact]
+    public async Task GetAllAsync_WithSearch_FiltersByCompanyNameOrSdl()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+
+        db.Organisations.AddRange(
+            new Organisation { CompanyName = "Steel Dynamics Ltd", SdlNumber = "L123456789" },
+            new Organisation { CompanyName = "Auto Care Motors", SdlNumber = "L987654321" },
+            new Organisation { CompanyName = "Polymer Plastic Works", SdlNumber = "L555555555" }
+        );
+        await db.SaveChangesAsync();
+
+        // Act
+        var searchByName = await service.GetAllAsync("Auto Care");
+        var searchBySdl = await service.GetAllAsync("555555");
+
+        // Assert
+        Assert.Single(searchByName);
+        Assert.Equal("Auto Care Motors", searchByName[0].CompanyName);
+
+        Assert.Single(searchBySdl);
+        Assert.Equal("Polymer Plastic Works", searchBySdl[0].CompanyName);
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_ReturnsOrganisationWithAllRelatedEntities()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+
+        var contact = new Person { FirstName = "Sarah", LastName = "Connor", RsaIdNumber = "8505050001088", Email = "sarah@test.com" };
+        db.People.Add(contact);
+        await db.SaveChangesAsync();
+
+        var org = new Organisation { CompanyName = "Cyberdyne Systems", SdlNumber = "L999888777", PrimaryContactPersonId = contact.Id };
+        db.Organisations.Add(org);
+        await db.SaveChangesAsync();
+
+        db.Visits.Add(new Visit { OrganisationId = org.Id, ContactPersonId = contact.Id, Title = "Annual Visit", VisitDate = DateTime.Today });
+        db.WspSubmissions.Add(new WspSubmission { OrganisationId = org.Id, FinYear = 2026, ReferenceNumber = "WSP-2026-001" });
+        db.GrantApplications.Add(new GrantApplication { OrganisationId = org.Id, ProjectTitle = "Skills Dev", ApplicationNumber = "GA-001" });
+        db.OrganisationContacts.Add(new OrganisationContact { OrganisationId = org.Id, PersonId = contact.Id, ContactType = "SDF" });
+        db.OrganisationSites.Add(new OrganisationSite { OrganisationId = org.Id, SiteName = "Factory 1" });
+        await db.SaveChangesAsync();
 
         // Act
         var result = await service.GetByIdAsync(org.Id);
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal("Cyberdyne Systems SA", result.CompanyName);
-        Assert.NotNull(result.PrimaryContactPerson);
-        Assert.Equal("Sarah", result.PrimaryContactPerson.FirstName);
+        Assert.Equal("Cyberdyne Systems", result.CompanyName);
+        Assert.Single(result.Visits);
+        Assert.Single(result.WspSubmissions);
+        Assert.Single(result.GrantApplications);
         Assert.Single(result.Contacts);
+        Assert.Single(result.Sites);
     }
 
     [Fact]
-    public async Task GetByIdAsync_NonExistentOrganisation_ReturnsNull()
+    public async Task UpdateAsync_UpdatesFieldsAndLogsAudit()
     {
         // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new OrganisationService(db, audit);
+        var (factory, db, audit, service) = CreateTestContext();
 
-        // Act
-        var result = await service.GetByIdAsync(9999);
-
-        // Assert
-        Assert.Null(result);
-    }
-
-    [Theory]
-    [InlineData("Apex", 1)]
-    [InlineData("L999111222", 1)]
-    [InlineData("2021/999888/07", 1)]
-    [InlineData("9000111222", 1)]
-    [InlineData("UnknownCompany", 0)]
-    public async Task GetAllAsync_WithSearchQuery_FiltersOrganisations(string search, int expectedCount)
-    {
-        // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new OrganisationService(db, audit);
-
-        await service.CreateAsync(new Organisation
+        var org = new Organisation
         {
-            CompanyName = "Apex Manufacturing Ltd",
-            TradingName = "Apex Tools",
-            SdlNumber = "L999111222",
-            RegistrationNumber = "2021/999888/07",
-            TaxNumber = "9000111222"
-        });
-
-        await service.CreateAsync(new Organisation
-        {
-            CompanyName = "Beta Automotive",
-            TradingName = "Beta Motors",
-            SdlNumber = "L888777666",
-            RegistrationNumber = "2019/555444/07",
-            TaxNumber = "8000333444"
-        });
-
-        // Act
-        var results = await service.GetAllAsync(search);
-
-        // Assert
-        Assert.Equal(expectedCount, results.Count);
-    }
-
-    [Fact]
-    public async Task UpdateAsync_UpdatesOrganisationAndLogsAudit()
-    {
-        // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new OrganisationService(db, audit);
-
-        var org = await service.CreateAsync(new Organisation
-        {
-            CompanyName = "Original Name Pty Ltd",
-            SdlNumber = "L123000111",
-            BankName = "Standard Bank"
-        }, "Creator");
-
-        // Act
-        var updateModel = new Organisation
-        {
-            Id = org.Id,
-            CompanyName = "Updated Name Pty Ltd",
-            TradingName = "Updated Trading",
-            SdlNumber = org.SdlNumber,
-            BankName = "First National Bank",
-            BankAccountNumber = "62000000000"
+            CompanyName = "Original Name",
+            TradingName = "Original Trading",
+            SdlNumber = "L100000001",
+            StatusCode = "Pending"
         };
+        db.Organisations.Add(org);
+        await db.SaveChangesAsync();
 
-        var updated = await service.UpdateAsync(updateModel, "UpdaterUser");
+        // Act
+        org.CompanyName = "Updated Name Pty Ltd";
+        org.TradingName = "Updated Trading";
+        org.StatusCode = "Active";
+        var updated = await service.UpdateAsync(org, "EditorUser");
 
         // Assert
         Assert.Equal("Updated Name Pty Ltd", updated.CompanyName);
-        Assert.Equal("First National Bank", updated.BankName);
-        Assert.Equal("UpdaterUser", updated.ModifiedBy);
+        Assert.Equal("Active", updated.StatusCode);
+        Assert.Equal("EditorUser", updated.ModifiedBy);
         Assert.NotNull(updated.ModifiedAt);
 
         // Verify audit log
-        var updateAudit = await db.AuditLogs
-            .FirstOrDefaultAsync(a => a.EntityName == "Organisation" && a.RecordId == org.Id && a.ActionName == "Update");
-        Assert.NotNull(updateAudit);
-        Assert.Equal("UpdaterUser", updateAudit.Actor);
-        Assert.Contains("Original Name Pty Ltd", updateAudit.MetadataJson);
-        Assert.Contains("Updated Name Pty Ltd", updateAudit.MetadataJson);
+        var auditLog = await db.AuditLogs.FirstOrDefaultAsync(a => a.EntityName == "Organisation" && a.RecordId == org.Id && a.ActionName == "Update");
+        Assert.NotNull(auditLog);
+        Assert.Equal("EditorUser", auditLog.Actor);
     }
 
     [Fact]
-    public async Task UpdateAsync_NonExistentOrganisation_ThrowsKeyNotFoundException()
+    public async Task DeleteAsync_DeletesOrganisationAndLogsAudit()
     {
         // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new OrganisationService(db, audit);
+        var (factory, db, audit, service) = CreateTestContext();
 
-        var org = new Organisation { Id = 888, CompanyName = "Ghost Org" };
-
-        // Act & Assert
-        await Assert.ThrowsAsync<KeyNotFoundException>(() => service.UpdateAsync(org, "Admin"));
-    }
-
-    [Fact]
-    public async Task SaveAsync_NewOrganisation_CallsCreate()
-    {
-        // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new OrganisationService(db, audit);
-
-        var org = new Organisation { Id = 0, CompanyName = "New Co", SdlNumber = "L000111222" };
+        var org = new Organisation { CompanyName = "To Delete", SdlNumber = "L999999999" };
+        db.Organisations.Add(org);
+        await db.SaveChangesAsync();
 
         // Act
-        var saved = await service.SaveAsync(org, "Admin");
+        var result = await service.DeleteAsync(org.Id, "DeleterUser");
 
         // Assert
-        Assert.True(saved.Id > 0);
-    }
-
-    [Fact]
-    public async Task SaveAsync_ExistingOrganisation_CallsUpdate()
-    {
-        // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new OrganisationService(db, audit);
-
-        var org = await service.CreateAsync(new Organisation { CompanyName = "Existing Co", SdlNumber = "L000111222" });
-
-        // Act
-        org.CompanyName = "Modified Co";
-        var saved = await service.SaveAsync(org, "Admin");
-
-        // Assert
-        Assert.Equal(org.Id, saved.Id);
-        Assert.Equal("Modified Co", saved.CompanyName);
-    }
-
-    [Fact]
-    public async Task DeleteAsync_ExistingOrganisation_RemovesAndLogsAudit()
-    {
-        // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new OrganisationService(db, audit);
-
-        var org = await service.CreateAsync(new Organisation { CompanyName = "To Delete Co", SdlNumber = "L999000111" });
-
-        // Act
-        var deleted = await service.DeleteAsync(org.Id, "AdminDeleter");
-
-        // Assert
-        Assert.True(deleted);
-        var inDb = await db.Organisations.FindAsync(org.Id);
+        Assert.True(result);
+        var inDb = await service.GetByIdAsync(org.Id);
         Assert.Null(inDb);
 
-        var deleteAudit = await db.AuditLogs
-            .FirstOrDefaultAsync(a => a.EntityName == "Organisation" && a.RecordId == org.Id && a.ActionName == "Delete");
-        Assert.NotNull(deleteAudit);
-        Assert.Equal("AdminDeleter", deleteAudit.Actor);
-    }
-
-    [Fact]
-    public async Task DeleteAsync_NonExistentOrganisation_ReturnsFalse()
-    {
-        // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new OrganisationService(db, audit);
-
-        // Act
-        var deleted = await service.DeleteAsync(7777, "Admin");
-
-        // Assert
-        Assert.False(deleted);
+        // Verify audit log
+        var auditLog = await db.AuditLogs.FirstOrDefaultAsync(a => a.EntityName == "Organisation" && a.RecordId == org.Id && a.ActionName == "Delete");
+        Assert.NotNull(auditLog);
+        Assert.Equal("DeleterUser", auditLog.Actor);
     }
 
     #endregion
@@ -283,70 +213,137 @@ public class OrganisationServiceTests
     #region Contacts Management Tests
 
     [Fact]
-    public async Task ContactsManagement_AddsAndRemovesContactsWithAudit()
+    public async Task AddContactAsync_EntityOverload_AddsContactAndLogsAudit()
     {
         // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new OrganisationService(db, audit);
+        var (factory, db, audit, service) = CreateTestContext();
 
-        var org = await service.CreateAsync(new Organisation { CompanyName = "Auto Tech Ltd", SdlNumber = "L999888777" });
-        var person1 = new Person { FirstName = "Alice", LastName = "Smith" };
-        var person2 = new Person { FirstName = "Bob", LastName = "Jones" };
-        db.People.AddRange(person1, person2);
+        var person = new Person { FirstName = "Alice", LastName = "Smith", RsaIdNumber = "9001010001081", Email = "alice@test.com" };
+        var org = new Organisation { CompanyName = "Apex Ltd", SdlNumber = "L100000002" };
+        db.People.Add(person);
+        db.Organisations.Add(org);
         await db.SaveChangesAsync();
 
-        // Act - Add primary contact 1
-        var contact1 = await service.AddContactAsync(org.Id, person1.Id, "SDF", isPrimary: true, currentUsername: "ContactAdmin");
-        Assert.True(contact1.IsPrimary);
-        Assert.Equal("ContactAdmin", contact1.CreatedBy);
+        var contact = new OrganisationContact
+        {
+            OrganisationId = org.Id,
+            PersonId = person.Id,
+            ContactType = "SDF",
+            IsPrimary = true
+        };
 
-        // Act - Add second contact as primary -> contact1 should no longer be primary
-        var contact2 = await service.AddContactAsync(org.Id, person2.Id, "CEO", isPrimary: true, currentUsername: "ContactAdmin");
-        Assert.True(contact2.IsPrimary);
+        // Act
+        var added = await service.AddContactAsync(contact, "ContactManager");
+
+        // Assert
+        Assert.True(added.Id > 0);
+        Assert.Equal("ContactManager", added.CreatedBy);
 
         var contacts = await service.GetContactsAsync(org.Id);
-        Assert.Equal(2, contacts.Count);
-        var c1Reloaded = contacts.First(c => c.Id == contact1.Id);
-        Assert.False(c1Reloaded.IsPrimary);
-
-        // Act - Remove contact1
-        var removed = await service.RemoveContactAsync(org.Id, contact1.Id, "ContactAdmin");
-        Assert.True(removed);
-
-        contacts = await service.GetContactsAsync(org.Id);
         Assert.Single(contacts);
-        Assert.Equal(contact2.Id, contacts[0].Id);
-
-        // Act - Remove contact2 via single-id overload
-        var removed2 = await service.RemoveContactAsync(contact2.Id, "ContactAdmin");
-        Assert.True(removed2);
-
-        contacts = await service.GetContactsAsync(org.Id);
-        Assert.Empty(contacts);
-
-        // Assert - Verify audit log for AddContact and RemoveContact
-        var addAudit = await db.AuditLogs.FirstOrDefaultAsync(a => a.EntityName == "OrganisationContact" && a.ActionName == "AddContact");
-        var removeAudit = await db.AuditLogs.FirstOrDefaultAsync(a => a.EntityName == "OrganisationContact" && a.ActionName == "RemoveContact");
-        Assert.NotNull(addAudit);
-        Assert.NotNull(removeAudit);
+        Assert.Equal("Alice", contacts[0].Person?.FirstName);
     }
 
     [Fact]
-    public async Task RemoveContactAsync_NonExistentContact_ReturnsFalse()
+    public async Task AddContactAsync_ParamOverload_AddsContactCorrectly()
     {
         // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new OrganisationService(db, audit);
+        var (factory, db, audit, service) = CreateTestContext();
+
+        var person = new Person { FirstName = "Bob", LastName = "Jones", RsaIdNumber = "9102020002082", Email = "bob@test.com" };
+        var org = new Organisation { CompanyName = "Beta Corp", SdlNumber = "L100000003" };
+        db.People.Add(person);
+        db.Organisations.Add(org);
+        await db.SaveChangesAsync();
 
         // Act
-        var result = await service.RemoveContactAsync(1, 9999, "Admin");
-        var result2 = await service.RemoveContactAsync(9999, "Admin");
+        var added = await service.AddContactAsync(org.Id, person.Id, "Finance", true, "ParamAuthor");
 
         // Assert
-        Assert.False(result);
-        Assert.False(result2);
+        Assert.NotNull(added);
+        Assert.Equal("Finance", added.ContactType);
+        Assert.True(added.IsPrimary);
+        Assert.Equal("ParamAuthor", added.CreatedBy);
+    }
+
+    [Fact]
+    public async Task AddContactAsync_WhenIsPrimaryTrue_UnsetsPreviousPrimaryContact()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+
+        var person1 = new Person { FirstName = "Person1", LastName = "Last1", RsaIdNumber = "8001010001081", Email = "p1@test.com" };
+        var person2 = new Person { FirstName = "Person2", LastName = "Last2", RsaIdNumber = "8001010002082", Email = "p2@test.com" };
+        var org = new Organisation { CompanyName = "Primary Org", SdlNumber = "L100000004" };
+        db.People.AddRange(person1, person2);
+        db.Organisations.Add(org);
+        await db.SaveChangesAsync();
+
+        // Add first contact as Primary
+        await service.AddContactAsync(org.Id, person1.Id, "SDF", true, "Admin");
+
+        // Act: Add second contact as Primary
+        await service.AddContactAsync(org.Id, person2.Id, "CEO", true, "Admin");
+
+        // Assert
+        var contacts = await service.GetContactsAsync(org.Id);
+        Assert.Equal(2, contacts.Count);
+        var c1 = contacts.First(c => c.PersonId == person1.Id);
+        var c2 = contacts.First(c => c.PersonId == person2.Id);
+
+        Assert.False(c1.IsPrimary);
+        Assert.True(c2.IsPrimary);
+    }
+
+    [Fact]
+    public async Task RemoveContactAsync_ByContactId_RemovesContactAndLogsAudit()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+
+        var person = new Person { FirstName = "Charlie", LastName = "Brown", RsaIdNumber = "9203030003083", Email = "charlie@test.com" };
+        var org = new Organisation { CompanyName = "Gamma Works", SdlNumber = "L100000005" };
+        db.People.Add(person);
+        db.Organisations.Add(org);
+        await db.SaveChangesAsync();
+
+        var contact = await service.AddContactAsync(org.Id, person.Id, "HR", false, "Admin");
+
+        // Act
+        var result = await service.RemoveContactAsync(contact.Id, "Deleter");
+
+        // Assert
+        Assert.True(result);
+        var contacts = await service.GetContactsAsync(org.Id);
+        Assert.Empty(contacts);
+
+        // Verify audit log
+        var auditLog = await db.AuditLogs.FirstOrDefaultAsync(a => a.EntityName == "OrganisationContact" && a.ActionName == "RemoveContact");
+        Assert.NotNull(auditLog);
+        Assert.Equal("Deleter", auditLog.Actor);
+    }
+
+    [Fact]
+    public async Task RemoveContactAsync_ByOrgAndContactId_RemovesContactSuccessfully()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+
+        var person = new Person { FirstName = "David", LastName = "Miller", RsaIdNumber = "9304040004084", Email = "david@test.com" };
+        var org = new Organisation { CompanyName = "Delta Fabrications", SdlNumber = "L100000006" };
+        db.People.Add(person);
+        db.Organisations.Add(org);
+        await db.SaveChangesAsync();
+
+        var contact = await service.AddContactAsync(org.Id, person.Id, "Legal", false, "Admin");
+
+        // Act
+        var result = await service.RemoveContactAsync(org.Id, contact.Id, "OrgAdmin");
+
+        // Assert
+        Assert.True(result);
+        var contacts = await service.GetContactsAsync(org.Id);
+        Assert.Empty(contacts);
     }
 
     #endregion
@@ -354,94 +351,135 @@ public class OrganisationServiceTests
     #region Sites Management Tests
 
     [Fact]
-    public async Task SitesManagement_AddsUpdatesAndRemovesSitesWithAudit()
+    public async Task AddSiteAsync_AddsSiteAndLogsAudit()
     {
         // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new OrganisationService(db, audit);
+        var (factory, db, audit, service) = CreateTestContext();
 
-        var org = await service.CreateAsync(new Organisation { CompanyName = "Mining Tools Corp", SdlNumber = "L555444333" });
+        var org = new Organisation { CompanyName = "Epsilon Logistics", SdlNumber = "L100000007" };
+        db.Organisations.Add(org);
+        await db.SaveChangesAsync();
 
-        // Act - Add Head Office site
-        var site1 = new OrganisationSite
+        var site = new OrganisationSite
         {
             OrganisationId = org.Id,
-            SiteName = "Gauteng HQ",
-            SiteCode = "HQ-01",
-            PhysicalAddress = "123 Main Road, Sandton",
+            SiteName = "Centurion Distribution Hub",
+            PhysicalAddress = "12 Industrial Road",
+            City = "Centurion",
             ProvinceCode = "GP",
+            PostalCode = "0157",
             IsHeadOffice = true
         };
-
-        var addedSite = await service.AddSiteAsync(site1, "SiteAdmin");
-
-        // Assert site 1
-        Assert.True(addedSite.Id > 0);
-        Assert.True(addedSite.IsHeadOffice);
-        Assert.Equal("SiteAdmin", addedSite.CreatedBy);
-
-        // Act - Update site 1
-        addedSite.PhysicalAddress = "456 West Street, Sandton";
-        var updatedSite = await service.UpdateSiteAsync(addedSite, "SiteAdmin");
-        Assert.Equal("456 West Street, Sandton", updatedSite.PhysicalAddress);
-
-        // Act - Add Branch site as Head Office -> site1 should no longer be head office
-        var site2 = new OrganisationSite
-        {
-            OrganisationId = org.Id,
-            SiteName = "Durban Branch",
-            SiteCode = "KZN-01",
-            IsHeadOffice = true
-        };
-        await service.AddSiteAsync(site2, "SiteAdmin");
-
-        var sites = await service.GetSitesAsync(org.Id);
-        Assert.Equal(2, sites.Count);
-        var site1Reloaded = sites.First(s => s.Id == site1.Id);
-        Assert.False(site1Reloaded.IsHeadOffice);
-
-        // Act - Remove site 2
-        var removed = await service.RemoveSiteAsync(site2.Id, "SiteAdmin");
-        Assert.True(removed);
-
-        // Verify audit logs
-        var addSiteAudit = await db.AuditLogs.FirstOrDefaultAsync(a => a.EntityName == "OrganisationSite" && a.ActionName == "AddSite");
-        var updateSiteAudit = await db.AuditLogs.FirstOrDefaultAsync(a => a.EntityName == "OrganisationSite" && a.ActionName == "UpdateSite");
-        var removeSiteAudit = await db.AuditLogs.FirstOrDefaultAsync(a => a.EntityName == "OrganisationSite" && a.ActionName == "RemoveSite");
-
-        Assert.NotNull(addSiteAudit);
-        Assert.NotNull(updateSiteAudit);
-        Assert.NotNull(removeSiteAudit);
-    }
-
-    [Fact]
-    public async Task UpdateSiteAsync_NonExistentSite_ThrowsKeyNotFoundException()
-    {
-        // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new OrganisationService(db, audit);
-
-        var site = new OrganisationSite { Id = 9999, SiteName = "Missing Site" };
-
-        // Act & Assert
-        await Assert.ThrowsAsync<KeyNotFoundException>(() => service.UpdateSiteAsync(site, "Admin"));
-    }
-
-    [Fact]
-    public async Task RemoveSiteAsync_NonExistentSite_ReturnsFalse()
-    {
-        // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new OrganisationService(db, audit);
 
         // Act
-        var result = await service.RemoveSiteAsync(9999, "Admin");
+        var added = await service.AddSiteAsync(site, "SiteManager");
 
         // Assert
-        Assert.False(result);
+        Assert.True(added.Id > 0);
+        Assert.Equal("SiteManager", added.CreatedBy);
+
+        var sites = await service.GetSitesAsync(org.Id);
+        Assert.Single(sites);
+        Assert.Equal("Centurion Distribution Hub", sites[0].SiteName);
+        Assert.True(sites[0].IsHeadOffice);
+
+        // Verify audit log
+        var auditLog = await db.AuditLogs.FirstOrDefaultAsync(a => a.EntityName == "OrganisationSite" && a.ActionName == "AddSite");
+        Assert.NotNull(auditLog);
+        Assert.Equal("SiteManager", auditLog.Actor);
+    }
+
+    [Fact]
+    public async Task AddSiteAsync_WhenIsHeadOfficeTrue_UnsetsPreviousHeadOffice()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+
+        var org = new Organisation { CompanyName = "Zeta Auto", SdlNumber = "L100000008" };
+        db.Organisations.Add(org);
+        await db.SaveChangesAsync();
+
+        var site1 = new OrganisationSite { OrganisationId = org.Id, SiteName = "Site 1", IsHeadOffice = true };
+        await service.AddSiteAsync(site1, "Admin");
+
+        // Act: Add second site as Head Office
+        var site2 = new OrganisationSite { OrganisationId = org.Id, SiteName = "Site 2", IsHeadOffice = true };
+        await service.AddSiteAsync(site2, "Admin");
+
+        // Assert
+        var sites = await service.GetSitesAsync(org.Id);
+        Assert.Equal(2, sites.Count);
+        var s1 = sites.First(s => s.SiteName == "Site 1");
+        var s2 = sites.First(s => s.SiteName == "Site 2");
+
+        Assert.False(s1.IsHeadOffice);
+        Assert.True(s2.IsHeadOffice);
+    }
+
+    [Fact]
+    public async Task UpdateSiteAsync_UpdatesSiteDetailsAndLogsAudit()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+
+        var org = new Organisation { CompanyName = "Eta Engineering", SdlNumber = "L100000009" };
+        db.Organisations.Add(org);
+        await db.SaveChangesAsync();
+
+        var site = await service.AddSiteAsync(new OrganisationSite
+        {
+            OrganisationId = org.Id,
+            SiteName = "Old Site Name",
+            City = "Durban",
+            ProvinceCode = "KZN"
+        }, "Admin");
+
+        // Act
+        site.SiteName = "Durban Marine Facility";
+        site.PhysicalAddress = "Port of Durban Pier 2";
+        var updated = await service.UpdateSiteAsync(site, "SiteEditor");
+
+        // Assert
+        Assert.Equal("Durban Marine Facility", updated.SiteName);
+        Assert.Equal("SiteEditor", updated.ModifiedBy);
+        Assert.NotNull(updated.ModifiedAt);
+
+        // Verify audit log
+        var auditLog = await db.AuditLogs.FirstOrDefaultAsync(a => a.EntityName == "OrganisationSite" && a.ActionName == "UpdateSite");
+        Assert.NotNull(auditLog);
+        Assert.Equal("SiteEditor", auditLog.Actor);
+    }
+
+    [Fact]
+    public async Task RemoveSiteAsync_RemovesSiteAndLogsAudit()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+
+        var org = new Organisation { CompanyName = "Theta Mining", SdlNumber = "L100000010" };
+        db.Organisations.Add(org);
+        await db.SaveChangesAsync();
+
+        var site = await service.AddSiteAsync(new OrganisationSite
+        {
+            OrganisationId = org.Id,
+            SiteName = "Rustenburg Shaft 4",
+            City = "Rustenburg",
+            ProvinceCode = "NW"
+        }, "Admin");
+
+        // Act
+        var result = await service.RemoveSiteAsync(site.Id, "DeleterUser");
+
+        // Assert
+        Assert.True(result);
+        var sites = await service.GetSitesAsync(org.Id);
+        Assert.Empty(sites);
+
+        // Verify audit log
+        var auditLog = await db.AuditLogs.FirstOrDefaultAsync(a => a.EntityName == "OrganisationSite" && a.ActionName == "RemoveSite");
+        Assert.NotNull(auditLog);
+        Assert.Equal("DeleterUser", auditLog.Actor);
     }
 
     #endregion

@@ -8,22 +8,20 @@ namespace Nsdms.Tests;
 
 public class EtqaServiceTests
 {
-    private static NsdmsDbContext CreateInMemoryDbContext()
+    private static (TestDbContextFactory factory, NsdmsDbContext db, AuditService audit, EtqaService service) CreateTestContext()
     {
-        var options = new DbContextOptionsBuilder<NsdmsDbContext>()
-            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-            .Options;
-
-        return new NsdmsDbContext(options);
+        var factory = new TestDbContextFactory(Guid.NewGuid().ToString());
+        var db = (NsdmsDbContext)factory.CreateDbContext();
+        var audit = new AuditService(factory);
+        var service = new EtqaService(factory, audit);
+        return (factory, db, audit, service);
     }
 
     [Fact]
     public async Task RegisterAssessorAsync_GeneratesRegistrationNumberAndLogsAudit()
     {
         // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new EtqaService(db, audit);
+        var (factory, db, audit, service) = CreateTestContext();
 
         var person = new Person { FirstName = "Themba", LastName = "Nkosi", RsaIdNumber = "8001015009087" };
         db.People.Add(person);
@@ -53,9 +51,7 @@ public class EtqaServiceTests
     public async Task RegisterModerator_GeneratesModPrefix()
     {
         // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new EtqaService(db, audit);
+        var (factory, db, audit, service) = CreateTestContext();
 
         var person = new Person { FirstName = "Nalini", LastName = "Moodley" };
         db.People.Add(person);
@@ -78,9 +74,7 @@ public class EtqaServiceTests
     public async Task AddScopeAsync_AddsScopeAndLogsAudit()
     {
         // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new EtqaService(db, audit);
+        var (factory, db, audit, service) = CreateTestContext();
 
         var person = new Person { FirstName = "Scope", LastName = "Person" };
         db.People.Add(person);
@@ -113,9 +107,7 @@ public class EtqaServiceTests
     public async Task RemoveScopeAsync_RemovesScope()
     {
         // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new EtqaService(db, audit);
+        var (factory, db, audit, service) = CreateTestContext();
 
         var person = new Person { FirstName = "Scope", LastName = "Remover" };
         db.People.Add(person);
@@ -142,9 +134,7 @@ public class EtqaServiceTests
     public async Task RecordLearnerAssessmentAsync_CreatesAssessmentRecordAndLogsAudit()
     {
         // Arrange
-        var db = CreateInMemoryDbContext();
-        var audit = new AuditService(db);
-        var service = new EtqaService(db, audit);
+        var (factory, db, audit, service) = CreateTestContext();
 
         var assessorPerson = new Person { FirstName = "Assessor", LastName = "John" };
         var learnerPerson = new Person { FirstName = "Learner", LastName = "Jane" };
