@@ -1,0 +1,357 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+
+	<p:fieldset legend="#{lang['qualifications']}">
+		<p:dataTable var="rowVar" value="#{sdpextensionofscopeUI.newQualificationList}" rowKey="#{rowVar.id}" reflow="true" styleClass="borderless">
+			<p:column headerText="#{lang['expand.row']}" width="45">
+				<p:rowToggler rendered="#{rowVar.trainingProviderDocParent ne null}"></p:rowToggler>
+			</p:column>
+			<p:column headerText="#{lang['code']}">
+				<h:outputText value="#{rowVar.qualification.code}" />
+			</p:column>
+			<p:column headerText="#{lang['qualification']}">
+				<h:outputText value="#{rowVar.qualification.description}" />
+			</p:column>
+			<p:column headerText="#{lang['level']}">
+				<h:outputText value="#{rowVar.qualification.nqflevelg2description}" />
+			</p:column>
+			<p:column headerText="Approve" width="60">
+				<center>
+					<p:selectBooleanCheckbox value="#{rowVar.accept}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalEdit}">
+						<p:ajax update=":mainForm:trainingProviderTabView:skillsProgramPanel :mainForm:trainingProviderTabView:skillsSetPanel" listener="#{sdpextensionofscopeUI.autoAcceptsSkillsProgramSetByQualification(rowVar)}" />
+					</p:selectBooleanCheckbox>
+				</center>
+			</p:column>
+			<p:rowExpansion>
+				<p:panelGrid columns="1" style="width:100%" id="docListQualifications" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<p:dataTable value="#{rowVar.docList}" var="rv2" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv2.id}">
+						<p:column headerText="#{lang['type']}" width="18%">Supporting Document</p:column>
+						<p:column headerText="#{lang['original.file.name']}" priority="4">
+							<p:outputLabel value="#{rv2.originalFname}" styleClass="Fs12"></p:outputLabel>
+						</p:column>
+						<p:column headerText="#{lang['uploaded.by']}">#{rv2.users.firstName} #{rv2.users.lastName}</p:column>
+						<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+							<h:outputText value="#{rv2.createDate}">
+								<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+							</h:outputText>
+						</p:column>
+						<p:column headerText="#{lang['version']}" width="10%" priority="4">
+							<h:outputText value="#{rv2.versionNo}">
+							</h:outputText>
+						</p:column>
+						<p:column headerText="#{lang['original.required']}" rendered="false">
+							<center>
+								<h:panelGroup rendered="#{rv2.configDoc.originalRequired}" styleClass="green">
+									<i class="fa fa-files-o fa-3x" aria-hidden="true"></i>
+								</h:panelGroup>
+								<h:panelGroup rendered="#{not rv2.configDoc.originalRequired}" styleClass="red">
+									<i class="fa fa-times fa-3x" aria-hidden="true"></i>
+								</h:panelGroup>
+							</center>
+						</p:column>
+						<p:column width="180" headerText="Actions">
+							<p:commandButton ajax="false" icon="fa fa-download" action="#{uploadDocUI.download}" id="dlbq" rendered="#{rv2.id ne null}" immediate="true">
+								<f:setPropertyActionListener value="#{rv2}" target="#{uploadDocUI.doc}" />
+							</p:commandButton>
+							<p:tooltip for="dlbq" value="#{lang['download.the.file']}" position="left" rendered="#{rv2.id ne null}" />
+
+							<p:spacer width="5" rendered="#{rv2.id ne null}" />
+							<p:commandButton icon="fa fa-bars " id="dhistq" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv2.id ne null}" process="@this">
+								<f:setPropertyActionListener value="#{rv2}" target="#{uploadDocUI.doc}" />
+							</p:commandButton>
+
+							<p:tooltip for="dhistq" value="#{lang['document.tracker']}" position="left" rendered="#{rv2.id ne null}" />
+							<h:panelGroup id="panelGroupThreeq" rendered="#{rv2.note ne null and rv2.note.length() gt 0}">
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-comment-o" id="dnoteq" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel" process="@this">
+									<f:setPropertyActionListener value="#{rv2}" target="#{uploadDocUI.doc}" />
+								</p:commandButton>
+								<p:tooltip for="dnoteq" value="#{lang['view.note']}" position="left" />
+							</h:panelGroup>
+
+							<h:panelGroup id="panelGroupFourq" rendered="#{rv2.extension.toLowerCase() eq 'pdf' or rv2.extension.toLowerCase() eq 'png' or rv2.extension.toLowerCase() eq 'jpg' or rv2.extension.toLowerCase() eq 'jpeg' or rv2.extension.toLowerCase() eq 'gif'}">
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-eye " id="viewerButtonq" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}" process="@this">
+									<f:setPropertyActionListener value="#{rv2}" target="#{uploadDocUI.doc}" />
+								</p:commandButton>
+								<p:tooltip for="viewerButtonq" value="#{lang['view.document']} " position="left" />
+							</h:panelGroup>
+						</p:column>
+					</p:dataTable>
+				</p:panelGrid>
+			</p:rowExpansion>
+		</p:dataTable>
+	</p:fieldset>
+
+
+	<p:outputPanel id="skillsProgramPanel">
+		<p:fieldset legend="#{lang['skills.programme']}" rendered="#{sdpextensionofscopeUI.trainingProviderApplication.accreditationApplicationTypeEnum ne AccreditationApplicationTypeEnum.QCTOTradeTestCentre}">
+			<p:dataTable var="rowVarPS" value="#{sdpextensionofscopeUI.newSkillsProgramList}" rowKey="#{rowVarPS.id}" reflow="true" styleClass="borderless">
+				<p:column headerText="#{lang['expand.row']}" width="45">
+					<p:rowToggler rendered="#{rowVarPS.docList.size() ne 0}"></p:rowToggler>
+				</p:column>
+				<p:column headerText="#{lang['code']}">
+					<h:outputText value="#{rowVarPS.skillsProgram.programmeID}" />
+				</p:column>
+				<p:column headerText="Skills Programme">
+					<h:outputText value="#{rowVarPS.skillsProgram.description}" />
+				</p:column>
+				<p:column headerText="Approve" width="60">
+					<center>
+						<p:selectBooleanCheckbox value="#{rowVarPS.accept}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalEdit}">
+							<p:ajax></p:ajax>
+						</p:selectBooleanCheckbox>
+					</center>
+				</p:column>
+				<p:rowExpansion>
+					<p:panelGrid columns="1" style="width:100%" id="docListSP" layout="grid" styleClass="ui-panelgrid-blank form-group">
+						<p:dataTable value="#{rowVarPS.docList}" var="rv3" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv3.id}">
+							<p:column headerText="#{lang['type']}" width="18%">Supporting Document</p:column>
+							<p:column headerText="#{lang['original.file.name']}" priority="4">
+								<p:outputLabel value="#{rv3.originalFname}" styleClass="Fs12"></p:outputLabel>
+							</p:column>
+							<p:column headerText="#{lang['uploaded.by']}">#{rv3.users.firstName} #{rv3.users.lastName}</p:column>
+							<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+								<h:outputText value="#{rv3.createDate}">
+									<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['version']}" width="10%" priority="4">
+								<h:outputText value="#{rv3.versionNo}">
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['original.required']}" rendered="false">
+								<center>
+									<h:panelGroup rendered="#{rv3.configDoc.originalRequired}" styleClass="green">
+										<i class="fa fa-files-o fa-3x" aria-hidden="true"></i>
+									</h:panelGroup>
+									<h:panelGroup rendered="#{not rv3.configDoc.originalRequired}" styleClass="red">
+										<i class="fa fa-times fa-3x" aria-hidden="true"></i>
+									</h:panelGroup>
+								</center>
+							</p:column>
+							<p:column width="180" headerText="Actions">
+								<p:commandButton ajax="false" icon="fa fa-download" action="#{uploadDocUI.download}" id="dlbsp" rendered="#{rv3.id ne null}" immediate="true">
+									<f:setPropertyActionListener value="#{rv3}" target="#{uploadDocUI.doc}" />
+								</p:commandButton>
+								<p:tooltip for="dlbsp" value="#{lang['download.the.file']}" position="left" rendered="#{rv3.id ne null}" />
+
+								<p:spacer width="5" rendered="#{rv3.id ne null}" />
+								<p:commandButton icon="fa fa-bars " id="dhistsp" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv3.id ne null}" process="@this">
+									<f:setPropertyActionListener value="#{rv3}" target="#{uploadDocUI.doc}" />
+								</p:commandButton>
+
+								<p:tooltip for="dhistsp" value="#{lang['document.tracker']}" position="left" rendered="#{rv3.id ne null}" />
+								<h:panelGroup id="panelGroupThreesp" rendered="#{rv3.note ne null and rv3.note.length() gt 0}">
+									<p:spacer width="5" />
+									<p:commandButton icon="fa fa-comment-o" id="dnotesp" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel" process="@this">
+										<f:setPropertyActionListener value="#{rv3}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="dnotesp" value="#{lang['view.note']}" position="left" />
+								</h:panelGroup>
+
+								<h:panelGroup id="panelGroupFourssp" rendered="#{rv3.extension.toLowerCase() eq 'pdf' or rv3.extension.toLowerCase() eq 'png' or rv3.extension.toLowerCase() eq 'jpg' or rv3.extension.toLowerCase() eq 'jpeg' or rv3.extension.toLowerCase() eq 'gif'}">
+									<p:spacer width="5" />
+									<p:commandButton icon="fa fa-eye " id="viewerButtonsp" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}" process="@this">
+										<f:setPropertyActionListener value="#{rv3}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="viewerButtonsp" value="#{lang['view.document']} " position="left" />
+								</h:panelGroup>
+							</p:column>
+						</p:dataTable>
+					</p:panelGrid>
+				</p:rowExpansion>
+			</p:dataTable>
+		</p:fieldset>
+	</p:outputPanel>
+
+	<p:outputPanel id="skillsSetPanel">
+		<p:fieldset legend="#{lang['skills.set']}" rendered="#{sdpextensionofscopeUI.trainingProviderApplication.accreditationApplicationTypeEnum ne AccreditationApplicationTypeEnum.QCTOTradeTestCentre}">
+			<p:dataTable var="rowVarSS" value="#{sdpextensionofscopeUI.tpSkillsSetList}" rowKey="#{rowVar.id}" reflow="true" styleClass="borderless">
+				<p:column headerText="#{lang['expand.row']}" width="45">
+					<p:rowToggler rendered="#{rowVarSS.trainingProviderDocParent ne null}"></p:rowToggler>
+				</p:column>
+				<p:column headerText="#{lang['code']}">
+					<h:outputText value="#{rowVarSS.skillsSet.programmeID}" />
+				</p:column>
+				<p:column headerText="Skills Set">
+					<h:outputText value="#{rowVarSS.skillsSet.description}" />
+				</p:column>
+				<p:column headerText="Approve" width="60">
+					<center>
+						<p:selectBooleanCheckbox value="#{rowVarSS.accept}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalEdit}">
+							<p:ajax></p:ajax>
+						</p:selectBooleanCheckbox>
+					</center>
+				</p:column>
+				<p:rowExpansion>
+					<p:panelGrid columns="1" style="width:100%" id="docListSS" layout="grid" styleClass="ui-panelgrid-blank form-group">
+						<p:dataTable value="#{rowVarSS.docList}" var="rv4" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv4.id}">
+							<p:column headerText="#{lang['type']}" width="18%">Supporting Document</p:column>
+							<p:column headerText="#{lang['original.file.name']}" priority="4">
+								<p:outputLabel value="#{rv4.originalFname}" styleClass="Fs12"></p:outputLabel>
+							</p:column>
+							<p:column headerText="#{lang['uploaded.by']}">#{rv4.users.firstName} #{rv4.users.lastName}</p:column>
+							<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+								<h:outputText value="#{rv4.createDate}">
+									<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['version']}" width="10%" priority="4">
+								<h:outputText value="#{rv4.versionNo}">
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['original.required']}" rendered="false">
+								<center>
+									<h:panelGroup rendered="#{rv4.configDoc.originalRequired}" styleClass="green">
+										<i class="fa fa-files-o fa-3x" aria-hidden="true"></i>
+									</h:panelGroup>
+									<h:panelGroup rendered="#{not rv4.configDoc.originalRequired}" styleClass="red">
+										<i class="fa fa-times fa-3x" aria-hidden="true"></i>
+									</h:panelGroup>
+								</center>
+							</p:column>
+							<p:column width="180" headerText="Actions">
+								<p:commandButton ajax="false" icon="fa fa-download" action="#{uploadDocUI.download}" id="dlbSS" rendered="#{rv4.id ne null}" immediate="true">
+									<f:setPropertyActionListener value="#{rv4}" target="#{uploadDocUI.doc}" />
+								</p:commandButton>
+								<p:tooltip for="dlbSS" value="#{lang['download.the.file']}" position="left" rendered="#{rv4.id ne null}" />
+
+								<p:spacer width="5" rendered="#{rv4.id ne null}" />
+								<p:commandButton icon="fa fa-bars " id="dhistSS" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv4.id ne null}" process="@this">
+									<f:setPropertyActionListener value="#{rv4}" target="#{uploadDocUI.doc}" />
+								</p:commandButton>
+
+								<p:tooltip for="dhistSS" value="#{lang['document.tracker']}" position="left" rendered="#{rv4.id ne null}" />
+								<h:panelGroup id="panelGroupThreeSS" rendered="#{rv4.note ne null and rv4.note.length() gt 0}">
+									<p:spacer width="5" />
+									<p:commandButton icon="fa fa-comment-o" id="dnoteSS" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel" process="@this">
+										<f:setPropertyActionListener value="#{rv4}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="dnoteSS" value="#{lang['view.note']}" position="left" />
+								</h:panelGroup>
+
+								<h:panelGroup id="panelGroupFoursSS" rendered="#{rv4.extension.toLowerCase() eq 'pdf' or rv4.extension.toLowerCase() eq 'png' or rv4.extension.toLowerCase() eq 'jpg' or rv4.extension.toLowerCase() eq 'jpeg' or rv4.extension.toLowerCase() eq 'gif'}">
+									<p:spacer width="5" />
+									<p:commandButton icon="fa fa-eye " id="viewerButtonSS" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}" process="@this">
+										<f:setPropertyActionListener value="#{rv4}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="viewerButtonSS" value="#{lang['view.document']} " position="left" />
+								</h:panelGroup>
+							</p:column>
+						</p:dataTable>
+					</p:panelGrid>
+				</p:rowExpansion>
+			</p:dataTable>
+		</p:fieldset>
+	</p:outputPanel>
+
+	<p:outputPanel id="unitStandardsPanel">
+		<p:fieldset legend="#{lang['unit.standards']}" rendered="#{sdpextensionofscopeUI.trainingProviderApplication.accreditationApplicationTypeEnum ne AccreditationApplicationTypeEnum.QCTOTradeTestCentre}">
+			<p:dataTable var="rowVarUS" value="#{sdpextensionofscopeUI.newUnitStandards}" rowKey="#{rowVar.id}" reflow="true" styleClass="borderless">
+				<p:column headerText="#{lang['expand.row']}" width="45">
+					<p:rowToggler rendered="#{rowVarUS.trainingProviderDocParent ne null}"></p:rowToggler>
+				</p:column>
+				<p:column headerText="#{lang['code']}">
+					<h:outputText value="#{rowVarUS.unitStandard.code}" />
+				</p:column>
+				<p:column headerText="Tilte">
+					<h:outputText value="#{rowVarUS.unitStandard.title}" />
+				</p:column>
+				<p:column headerText="#{lang['level']}">
+					<h:outputText value="#{rowVarUS.unitStandard.nqf}" />
+				</p:column>
+				<p:column headerText="Approve" width="60">
+					<center>
+						<p:selectBooleanCheckbox value="#{rowVarUS.accept}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalEdit}">
+							<p:ajax />
+						</p:selectBooleanCheckbox>
+					</center>
+				</p:column>
+				<p:rowExpansion>
+					<p:panelGrid columns="1" style="width:100%" id="docListUnitStandard" layout="grid" styleClass="ui-panelgrid-blank form-group">
+						<p:dataTable value="#{rowVarUS.docList}" var="rv1" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv1.id}">
+							<p:column headerText="#{lang['type']}" width="18%">Supporting Document</p:column>
+							<p:column headerText="#{lang['original.file.name']}" priority="4">
+								<p:outputLabel value="#{rv1.originalFname}" styleClass="Fs12"></p:outputLabel>
+							</p:column>
+							<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+							<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+								<h:outputText value="#{rv1.createDate}">
+									<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['version']}" width="10%" priority="4">
+								<h:outputText value="#{rv1.versionNo}">
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['original.required']}" rendered="false">
+								<center>
+									<h:panelGroup rendered="#{rv1.configDoc.originalRequired}" styleClass="green">
+										<i class="fa fa-files-o fa-3x" aria-hidden="true"></i>
+									</h:panelGroup>
+									<h:panelGroup rendered="#{not rv1.configDoc.originalRequired}" styleClass="red">
+										<i class="fa fa-times fa-3x" aria-hidden="true"></i>
+									</h:panelGroup>
+								</center>
+							</p:column>
+							<p:column width="180" headerText="Actions">
+								<p:commandButton ajax="false" icon="fa fa-download" action="#{uploadDocUI.download}" id="dlb" rendered="#{rv1.id ne null}" immediate="true">
+									<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+								</p:commandButton>
+								<p:tooltip for="dlb" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+
+								<p:spacer width="5" rendered="#{rv1.id ne null}" />
+								<p:commandButton icon="fa fa-bars " id="dhist" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}" process="@this">
+									<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+								</p:commandButton>
+
+								<p:tooltip for="dhist" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+								<h:panelGroup id="panelGroupThree" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+									<p:spacer width="5" />
+									<p:commandButton icon="fa fa-comment-o" id="dnote" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel" process="@this">
+										<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="dnote" value="#{lang['view.note']}" position="left" />
+								</h:panelGroup>
+
+								<h:panelGroup id="panelGroupFour" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+									<p:spacer width="5" />
+									<p:commandButton icon="fa fa-eye " id="viewerButton" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}" process="@this">
+										<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="viewerButton" value="#{lang['view.document']} " position="left" />
+								</h:panelGroup>
+							</p:column>
+						</p:dataTable>
+					</p:panelGrid>
+				</p:rowExpansion>
+			</p:dataTable>
+		</p:fieldset>
+	</p:outputPanel>
+
+	<p:fieldset legend="Skills programme route" rendered="false">
+		<p:panelGrid columns="3" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+			<h:panelGroup>
+				<p:outputLabel styleClass="FontBold Fs15" style="font-weight:bold" value="Skills programme route will be used for obtaining the unit standards?" />
+			</h:panelGroup>
+
+			<h:panelGroup>
+				<p:selectOneMenu disabled="true" id="svUseSkillProgrammeRoute" value="#{sdpextensionofscopeUI.trainingProviderApplication.useSkillProgrammeRoute}" style="width:100%" required="true" requiredMessage="#{lang['use.skill.programme.route.error.msg']}">
+					<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+				</p:selectOneMenu>
+			</h:panelGroup>
+
+			<h:panelGroup styleClass="md-inputfield" id="spPg" rendered="#{sdpextensionofscopeUI.trainingProviderApplication.useSkillProgrammeRoute eq YesNoEnum.Yes}">
+				<p:autoComplete required="true" disabled="true" id="skillsProgram" value="#{sdpextensionofscopeUI.trainingProviderApplication.skillsProgram}" completeMethod="#{autoCompleteUI.completeSkillsProgram}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true"
+					converter="SkillsProgramConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+					<p:ajax event="itemSelect" update="@form" />
+					<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+					<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+				</p:autoComplete>
+				<p:outputLabel value="Skills Program" for="skillsProgram" styleClass="gray" />
+			</h:panelGroup>
+		</p:panelGrid>
+	</p:fieldset>
+
+</ui:composition>

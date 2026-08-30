@@ -1,0 +1,157 @@
+<ui:composition xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+	
+		<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+		<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+		<p:importEnum type="haj.com.entity.enums.UsersStatusEnum" />
+		<p:growl showDetail="false" sticky="false" id="msg">
+			<p:autoUpdate />
+		</p:growl>
+		
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card">
+					<h:form id="allWorkplaceMonitoringForm">
+						<h1>Company Workplace Monitoring</h1>
+						<p:dataTable var="rowVar" value="#{allWorkplaceMonitoringSdfViewUI.sdfCompanyDataModel}" id="companyList" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+							paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+							<p:column headerText="#{lang['companyName']}" filterBy="#{rowVar.company.companyName}">
+								<h:outputText value="#{rowVar.company.companyName}" />
+							</p:column>
+							<p:column headerText="#{lang['sdl.number']}" filterBy="#{rowVar.company.levyNumber}">
+								<h:outputText value="#{rowVar.company.levyNumber}" />
+							</p:column>
+							<p:column headerText="#{lang['email']}">
+								<h:outputText value="#{rowVar.company.email}" />
+							</p:column>
+							<p:column headerText="#{lang['status']}">
+								<h:outputText value="#{lang[rowVar.company.companyStatus.registrationName]}" />
+							</p:column>
+							<p:column width="30" exportable="false" styleClass="action-column">
+								<p:commandButton update=":allWorkplaceMonitoringForm:siteVisitPanel :monitoringInfoForm" icon="fa fa-search" title="View WPM" onstart="uploadStart()" oncomplete="uploadDone()" action="#{allWorkplaceMonitoringSdfViewUI.selectCompany}" actionListener="#{workplaceMonitoringInformationViewUI.closeMonitoringViewNoMessage}">
+									<f:setPropertyActionListener value="#{rowVar.company}" target="#{allWorkplaceMonitoringSdfViewUI.selectedCompany}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+						<p:outputPanel id="siteVisitPanel">
+							<c:if test="#{allWorkplaceMonitoringSdfViewUI.selectedCompany ne null}">
+								<h2>Company: #{allWorkplaceMonitoringSdfViewUI.selectedCompany.companyName} (#{allWorkplaceMonitoringSdfViewUI.selectedCompany.levyNumber}) Selected.</h2>
+								<ui:include src="/pages/includes/download_lazy.xhtml">
+									<ui:param name="file_name" value="#{allWorkplaceMonitoringSdfViewUI.selectedCompany.levyNumber}_Workplace_Monitoring_Extract" />
+									<ui:param name="target" value="allWorkplaceMonitoringDT" />
+								</ui:include>
+								<ui:include src="/pages/includes/filterGuide.xhtml" />
+								<p:dataTable var="rowVarAllWpm" value="#{allWorkplaceMonitoringSdfViewUI.allWorkplaceMonitoringSiteVisitDataModel}" id="allWorkplaceMonitoringDT" rowKey="#{rowVarAllWpm.id}" paginator="true" rows="5" paginatorPosition="bottom"
+									paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20,40" reflow="true" lazy="true">
+									<p:column headerText="NSDMS Ref ID" sortBy="#{rowVarAllWpm.id}">
+										<h:outputText value="#{rowVarAllWpm.id}" />
+									</p:column>
+									<p:column headerText="Generated Date" sortBy="#{rowVarAllWpm.createDate}">
+										<h:outputText value="#{rowVarAllWpm.createDate}" rendered="#{rowVarAllWpm.createDate ne null}">
+											<f:convertDateTime pattern="dd MMMM yyyy HH:mm" />
+										</h:outputText>
+									</p:column>
+									<p:column headerText="Monitoring Date" sortBy="#{rowVarAllWpm.monitoringDate}">
+										<h:outputText value="#{rowVarAllWpm.monitoringDate}" rendered="#{rowVarAllWpm.monitoringDate ne null}">
+											<f:convertDateTime pattern="dd MMMM yyyy HH:mm" />
+										</h:outputText>
+										<h:outputText value="Date Not Set" rendered="#{rowVarAllWpm.monitoringDate eq null}" />
+									</p:column>
+									<p:column headerText="Status" sortBy="#{rowVarAllWpm.status}">
+										<h:outputText value="#{rowVarAllWpm.status.friendlyName}" />
+									</p:column>
+									<p:column headerText="Create User" sortBy="#{rowVarAllWpm.status}">
+										<h:outputText value="#{rowVarAllWpm.createUser.firstName} #{rowVarAllWpm.createUser.lastName}" />
+									</p:column>
+
+									<p:column width="30" exportable="false" styleClass="action-column">
+										<p:commandButton update=":monitoringInfoForm" icon="fa fa-search" title="View Company Information" onstart="uploadStart()" oncomplete="uploadDone()" action="#{workplaceMonitoringInformationViewUI.selectMonitoringToView}">
+											<f:setPropertyActionListener value="#{rowVarAllWpm}" target="#{workplaceMonitoringInformationViewUI.workplaceMonitoringSiteVisit}" />
+										</p:commandButton>
+									</p:column>
+								</p:dataTable>
+							</c:if>
+						</p:outputPanel>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12" id="wpmInfoViewDiv">
+				<h:form id="monitoringInfoForm">
+					<c:if test="#{workplaceMonitoringInformationViewUI.workplaceMonitoringSiteVisit ne null and workplaceMonitoringInformationViewUI.workplaceMonitoringSiteVisit.id ne null}">
+						<div class="card card-w-title">
+							<h2>Workplace Monitoring Selected For Company: #{workplaceMonitoringInformationViewUI.workplaceMonitoringSiteVisit.company.companyName} (#{workplaceMonitoringInformationViewUI.workplaceMonitoringSiteVisit.company.levyNumber}). Reference ID:
+								#{workplaceMonitoringInformationViewUI.workplaceMonitoringSiteVisit.id}</h2>
+							<p:commandButton icon="fa fa-times" value="Close View" update=":monitoringInfoForm" onstart="uploadStart()" oncomplete="uploadDone()" action="#{workplaceMonitoringInformationViewUI.closeMonitoringView}" />
+							<div class="EmptyBox10" />
+							<p:tabView id="wpmTabView" dynamic="true" cache="true">
+								<p:tab title="Current Organisation Info" rendered="#{workplaceMonitoringInformationViewUI.workplaceMonitoringSiteVisit.company ne null and workplaceMonitoringInformationViewUI.workplaceMonitoringSiteVisit.company.id ne null}">
+									<ui:include src="/pages/includes/companyInformationDisplay.xhtml">
+										<ui:param name="company" value="#{workplaceMonitoringInformationViewUI.workplaceMonitoringSiteVisit.company}" />
+										<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+									</ui:include>
+								</p:tab>
+								<p:tab title="Learner Induction">
+									<ui:include src="/pages/includes/workplaceMonitoringInc/learnerInductionIncludeDisplay.xhtml">
+										<ui:param name="LearnerInductionList" value="#{workplaceMonitoringInformationViewUI.workplaceMonitoringLearnerInductionDataModel}" />
+									</ui:include>
+								</p:tab>
+								<p:tab title="Learner Monitoring Survey">
+									<ui:include src="/pages/includes/workplaceMonitoringInc/learnerSurveyIncludeDisplay.xhtml">
+										<ui:param name="LearnerMonitoringSurveyList" value="#{workplaceMonitoringInformationViewUI.workplaceMonitoringLearnerSurveyDataModel}" />
+										<ui:param name="updateLocation" value=":monitoringInfoForm:wpmTabView:" />
+									</ui:include>
+								</p:tab>
+								<p:tab title="Discretionary Grant Compliance Survey">
+									<ui:include src="/pages/includes/workplaceMonitoringInc/discGrantComplianceSurveyIncludeDisplay.xhtml">
+										<ui:param name="GrantComplianceSurveyList" value="#{workplaceMonitoringInformationViewUI.workplaceMonitoringDiscretionaryGrantComplianceSurveyDataModel}" />
+									</ui:include>
+								</p:tab>
+								<p:tab title="Action Plan To Improve Company Category">
+									<ui:include src="/pages/includes/workplaceMonitoringInc/actionPlanIncludeDisplay.xhtml">
+										<ui:param name="ActionPlanList" value="#{workplaceMonitoringInformationViewUI.workplaceMonitoringActionPlanDataModel}" />
+									</ui:include>
+								</p:tab>
+								<p:tab title="Mitigation Plan">
+									<ui:include src="/pages/includes/workplaceMonitoringInc/mitigationPlanIncludeDisplay.xhtml">
+										<ui:param name="MitigationPlanList" value="#{workplaceMonitoringInformationViewUI.workplaceMonitoringMitigationPlanDataModel}" />
+									</ui:include>
+								</p:tab>
+								<p:tab title="Sign Off Assigned" rendered="#{workplaceMonitoringInformationViewUI.signoffList ne null and workplaceMonitoringInformationViewUI.signoffList.size() gt 0}">
+									<ui:include src="/pages/includes/signoffInclude.xhtml">
+										<ui:param name="SignOffList" value="#{workplaceMonitoringInformationViewUI.signoffList}" />
+										<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+										<ui:param name="acknowledge" value="#{lang['i.acknowledge.read.understand.terms.and.conditions']}" />
+									</ui:include>
+								</p:tab>
+								<p:tab title="Documents Assigned" rendered="#{workplaceMonitoringInformationViewUI.workplaceMonitoringSiteVisit.docs ne null and workplaceMonitoringInformationViewUI.workplaceMonitoringSiteVisit.docs.size() gt 0}">
+									<ui:include src="/pages/includes/documents_info_display.xhtml">
+										<ui:param name="docs" value="#{workplaceMonitoringInformationViewUI.workplaceMonitoringSiteVisit.docs}" />
+									</ui:include>
+								</p:tab>
+							</p:tabView>
+						</div>
+					</c:if>
+				</h:form>
+			</div>
+		</div>
+
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+			<h:form>
+				<p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="fa fa-check" />
+				<p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="fa fa-times" />
+			</h:form>
+		</p:confirmDialog>
+
+		<script type="text/javascript">
+			function scrollTo() {
+				setTimeout(function() {
+					$('html,body').animate({
+						scrollTop : $('#publisherSectionDiv').offset().top
+					}, 1000);
+				}, 0);
+			}
+		</script>
+	</ui:define>
+</ui:composition>

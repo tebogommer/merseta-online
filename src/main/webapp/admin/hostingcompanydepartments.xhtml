@@ -1,0 +1,204 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>#{lang['hosting.company.departments']}</h1>
+					<h:form id="hostingcompanydepartmentsInsForm">
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:panelGrid columns="1" style="width:100%" id="hostingcompanydepartmentsInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup>
+
+								<p:autoComplete size="90" id="hostCompanyAutoComplete" placeholder="#{lang['company.name']}" value="#{hostingcompanydepartmentsUI.hostingcompanydepartments.hostingCompany}" completeMethod="#{hostingCompanyEmployeesUI.completeHostingCompany}" converter="HostingCompanyConvertor" var="rv"
+									itemLabel="#{rv.companyName}" itemValue="#{rv}" forceSelection="true" dropdown="true" minQueryLength="1" maxResults="10" required="true" requiredMessage="#{lang['select.host.company']}">
+									<p:ajax event="itemSelect" update="@form" listener="#{hostingcompanydepartmentsUI.putInSession}" />
+									<p:ajax event="change" update="@form" />
+									<p:column headerText="#{lang['company.name']}" style="white-space: nowrap">#{rv.companyName}</p:column>
+									<p:column headerText="#{lang['company.reg.number']}" style="white-space: nowrap">#{rv.companyRegNumber}</p:column>
+								</p:autoComplete>
+
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="desc" value="#{hostingcompanydepartmentsUI.hostingcompanydepartments.department}" style="width:95%" />
+								<p:outputLabel value="#{lang['department']}" for="desc" />
+							</h:panelGroup>
+							<h:panelGroup rendered="#{hostingcompanydepartmentsUI.hostingcompanydepartments.id ne null}">
+								<p:outputLabel value="#{lang['parent.department']}" styleClass="gray Fs13" />
+								<p:spacer width="10" />
+								<p:selectOneMenu id="hostingCompanyDepartmentsId" value="#{hostingcompanydepartmentsUI.hostingcompanydepartments.parentDepartment}" converter="HostingCompanyDepartmentsConvertor" style="width:95%">
+									<f:selectItem itemLabel="#{lang['select.parent.department']}" noSelectionOption="true" />
+									<f:selectItems value="#{hostingcompanydepartmentsUI.selectlist}" var="rv" itemLabel="#{rv.department}" itemValue="#{rv}" />
+								</p:selectOneMenu>
+							</h:panelGroup>
+
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:hostingcompanydepartmentsList :hostingcompanydepartmentsInsForm:hostingcompanydepartmentsInsGrid" action="#{hostingcompanydepartmentsUI.hostingcompanydepartmentsInsert}" />
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="hostingcompanydepartmentsInsGrid" process="@this" action="#{hostingcompanydepartmentsUI.prepareNew}">
+									<p:resetInput target="hostingcompanydepartmentsInsGrid" />
+								</p:commandButton>
+							</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{hostingcompanydepartmentsUI.dataModel}" emptyMessage="#{lang['no.records.found']}" filteredValue="#{hostingcompanydepartmentsUI.hostingCompanyDepartmentsfilteredList}" id="hostingcompanydepartmentsList" rowKey="#{rowVar.id}" paginator="true" rows="10"
+							paginatorPosition="bottom" paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,15,20,25" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['hostingCompany']}" rendered="false">
+								<h:outputText value="#{rowVar.hostingCompany.companyName}" />
+							</p:column>
+							<p:column headerText="#{lang['department']}">
+								<h:outputText value="#{rowVar.department}" />
+							</p:column>
+
+							<p:column headerText="#{lang['parent.department']}">
+								<h:outputText value="#{rowVar.parentDepartment.department}" />
+							</p:column>
+
+							<p:column width="200">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":hostingcompanydepartmentsInsForm:hostingcompanydepartmentsInsGrid" action="#{hostingcompanydepartmentsUI.findDepartments}">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{hostingcompanydepartmentsUI.hostingcompanydepartments}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:hostingcompanydepartmentsList" action="#{hostingcompanydepartmentsUI.hostingcompanydepartmentsDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{hostingcompanydepartmentsUI.hostingcompanydepartments}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-sitemap" title="#{lang['processes']}" action="#{hostingcompanydepartmentsUI.viewProcesses}" ajax="false">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{hostingcompanydepartmentsUI.hostingcompanydepartments}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton id="empInfoDlg" title="#{lang['add.employee.to.department']}" icon="fa fa-user" oncomplete="PF('employeeDlg').show()" action="#{hostingcompanydepartmentsUI.viewEmployees}" update=":empForm">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{hostingcompanydepartmentsUI.hostingcompanydepartments}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton id="empChatDlg" title="Chat Group Employees" icon="ui-icon-chat" oncomplete="PF('employeeChatDlg').show()" action="#{hostingcompanydepartmentsUI.viewChatEmployees}" update=":empChatForm">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{hostingcompanydepartmentsUI.hostingcompanydepartments}" />
+								</p:commandButton>
+							</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+
+		<p:dialog modal="true" header="#{lang['department.employees']}" widgetVar="employeeDlg" draggable="false" resizable="false" hideEffect="clip" showEffect="clip" id="InfoPopUp" width="70%" responsive="true">
+			<h:form id="empForm">
+				<h1 class="red">#{lang['configure.only.managers-Will.determine.which.dashboards.they.see']}</h1>
+				<h3>#{lang['department']}: #{hostingcompanydepartmentsUI.hostingcompanydepartments.department}</h3>
+				<p:panelGrid columns="1" style="width :100%" layout="grid" styleClass="ui-panelgrid-blank">
+					<h:outputLabel value="#{lang['employee.name']}" for="empName" />
+
+					<p:selectOneMenu converter="HostingCompanyEmployeesConvertor" id="empName" value="#{hostingcompanydepartmentsUI.employee.hostingCompanyEmployees}" style="width:95%" filter="true" filterMatchMode="startsWith" var="t">
+						<f:selectItems value="#{hostingcompanydepartmentsUI.employees}" var="rv" itemLabel="#{rv.users.firstName} #{rv.users.lastName}" itemValue="#{rv}" />
+						<p:column style="width:40%" headerText="User">
+							<h:outputText value="#{t.users.firstName} #{t.users.lastName}" />
+						</p:column>
+						<p:column style="width:40%" headerText="Job title">
+							<h:outputText value="#{t.jobTitle.description}" />
+						</p:column>
+						<p:column style="width:20%" headerText="Role">
+							<h:outputText value="#{t.jobTitle.roles.description}" />
+						</p:column>
+
+					</p:selectOneMenu>
+					<p:selectOneMenu converter="RolesConvertor" id="role" value="#{hostingcompanydepartmentsUI.employee.role}" style="width:95%" rendered="false">
+
+						<f:selectItems value="#{hostingcompanydepartmentsUI.roles}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+					</p:selectOneMenu>
+					<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update="@form" action="#{hostingcompanydepartmentsUI.addEmployee}" />
+				</p:panelGrid>
+
+				<p:dataTable value="#{hostingcompanydepartmentsUI.hostingCompanyDepartmentsEmployeesList}" var="rv" reflow="true">
+					<p:column headerText="#{lang['employees.for.department']}" width="50%">
+				     #{rv.hostingCompanyEmployees.users.firstName}   #{rv.hostingCompanyEmployees.users.lastName}
+				   </p:column>
+					<p:column headerText="#{lang['roles']}">
+				     #{rv.role.description}
+				   </p:column>
+					<p:column headerText="#{lang['dashboard']}">
+				     #{rv.role.dashboard}
+				   </p:column>
+					<p:column width="40">
+
+						<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":empForm" action="#{hostingcompanydepartmentsUI.deleteEmployee}">
+							<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+							<f:setPropertyActionListener value="#{rv}" target="#{hostingcompanydepartmentsUI.employee}" />
+						</p:commandButton>
+
+
+					</p:column>
+				</p:dataTable>
+
+				<p:confirmDialog showEffect="clip" hideEffect="clip" global="true">
+					<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes" icon="fa fa-check " type="button" />
+					<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no" icon="fa fa-times " />
+				</p:confirmDialog>
+
+			</h:form>
+		</p:dialog>
+
+		<p:dialog modal="true" header="Chat users" widgetVar="employeeChatDlg" draggable="false" resizable="false" hideEffect="clip" showEffect="clip" id="employeeChatDlg" width="70%" responsive="true">
+			<h:form id="empChatForm">
+
+				<h3>#{lang['department']}: #{hostingcompanydepartmentsUI.hostingcompanydepartments.department}</h3>
+				<p:panelGrid columns="1" style="width :100%" layout="grid" styleClass="ui-panelgrid-blank">
+					<h:outputLabel value="#{lang['employee.name']}" for="empName" />
+
+					<p:selectOneMenu converter="HostingCompanyEmployeesConvertor" id="empName" value="#{hostingcompanydepartmentsUI.chatEmployee.hostingCompanyEmployees}" style="width:95%" filter="true" filterMatchMode="startsWith" var="t">
+						<f:selectItems value="#{hostingcompanydepartmentsUI.chatEmployees}" var="rv" itemLabel="#{rv.users.firstName} #{rv.users.lastName}" itemValue="#{rv}" />
+						<p:column style="width:40%" headerText="User">
+							<h:outputText value="#{t.users.firstName} #{t.users.lastName}" />
+						</p:column>
+						<p:column style="width:40%" headerText="Job title">
+							<h:outputText value="#{t.jobTitle.description}" />
+						</p:column>
+						<p:column style="width:20%" headerText="Role">
+							<h:outputText value="#{t.jobTitle.roles.description}" />
+						</p:column>
+
+					</p:selectOneMenu>
+
+					<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update="@form" action="#{hostingcompanydepartmentsUI.addChatEmployee}" />
+				</p:panelGrid>
+
+				<p:dataTable value="#{hostingcompanydepartmentsUI.hostingCompanyDepartmentsChatEmployeesList}" var="rv" reflow="true">
+					<p:column headerText="Chat #{lang['employees.for.department']}" >
+				     #{rv.hostingCompanyEmployees.users.firstName}   #{rv.hostingCompanyEmployees.users.lastName}
+				   </p:column>
+
+					<p:column width="30">
+						<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update="@form" action="#{hostingcompanydepartmentsUI.deleteChatEmployee}">
+							<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+							<f:setPropertyActionListener value="#{rv}" target="#{hostingcompanydepartmentsUI.chatEmployee}" />
+						</p:commandButton>
+					</p:column>
+				</p:dataTable>
+
+				<p:confirmDialog showEffect="clip" hideEffect="clip" global="true" width="300">
+					<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes" icon="fa fa-check " type="button" />
+					<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no" icon="fa fa-times " />
+				</p:confirmDialog>
+
+			</h:form>
+		</p:dialog>
+		<!-- 	<ui:include src="/pages/includes/orgchartCommon.xhtml" /> -->
+	</ui:define>
+
+</ui:composition>

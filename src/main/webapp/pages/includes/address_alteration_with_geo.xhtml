@@ -1,0 +1,120 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui">
+
+	<c:if test="false">
+		<!--  
+			<ui:include src="/pages/includes/address_alteration_with_geo.xhtml">		
+				<ui:param name="address" value=" " />	
+				<ui:param name="disableEntry" value=" " />			
+			</ui:include> 
+		-->
+	</c:if>
+
+	<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText disabled="#{disableEntry}" id="addInfoIncGeoLineOne" value="#{address.addressLine1}" style="opacity: 1 !important; color: black; width:100%" required="true" requiredMessage="#{lang['enter.residential.address']}">
+				<p:ajax/>
+				<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['residentialAddress.lineone.length.error']}" />
+			</p:inputText>
+			<p:outputLabel value="#{lang['address.line.1']}" for="addInfoIncGeoLineOne" />
+		</h:panelGroup>
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText disabled="#{disableEntry}" id="addInfoIncGeoLineTwo" style="opacity: 1 !important; color: black; width:100%" value="#{address.addressLine2}" required="#{trainingproviderUI.company.id eq null or trainingproviderUI.tpResidentialAddress.addressLine2.length() ne 0}" requiredMessage="Provide Address Line 2">
+				<p:ajax/>
+				<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['residentialAddress.linetwo.length.error']}" />
+			</p:inputText>
+			<p:outputLabel value="#{lang['address.line.2']}" for="addInfoIncGeoLineTwo" />
+		</h:panelGroup>
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText disabled="#{disableEntry}" id="addInfoIncGeoLineThree" style="opacity: 1 !important; color: black; width:100%" value="#{address.addressLine3}">
+				<p:ajax/>
+				<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['residentialAddress.linethree.length.error']}" />
+			</p:inputText>
+			<p:outputLabel value="#{lang['address.line.3']}" for="addInfoIncGeoLineThree" />
+		</h:panelGroup>
+		<h:panelGroup styleClass="md-inputfield">
+			<p:autoComplete disabled="#{disableEntry}" id="addInfoIncGeoTownSelection" value="#{address.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rvt" itemLabel="#{rvt.description}" itemValue="#{rvt}" forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3" maxResults="10"
+				inputStyle="width: 100%" style="width: 100%" required="true" requiredMessage="#{lang['please.select.a.town']}">
+				<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rvt.description}</p:column>
+				<p:ajax event="itemSelect" />
+			</p:autoComplete>
+			<p:outputLabel value="#{lang['town']}" for="addInfoIncGeoTownSelection" />
+		</h:panelGroup>
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText disabled="#{disableEntry}" id="addInfoIncGeoTownPostCode" style="opacity: 1 !important; color: black; width:100%" value="#{address.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}">
+				<p:ajax/>
+				<o:validator validatorId="javax.faces.Length" minimum="0" maximum="4" message="#{lang['residentialAddress.code.length.error']}" />
+			</p:inputText>
+			<p:outputLabel value="#{lang['post.code']}" for="addInfoIncGeoTownPostCode" />
+		</h:panelGroup>
+		<h:panelGroup styleClass="md-inputfield" id="addInfoIncGeoMuncipalityPG">
+			<p:autoComplete disabled="#{disableEntry}" id="addInfoIncGeoMuncipality" value="#{address.municipality}" completeMethod="#{autoCompleteUI.completeMunicipality}" var="rvm" itemLabel="#{rvm.municipalityDesc}" itemValue="#{rvm}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true" minQueryLength="3"
+				maxResults="10" inputstyle="opacity: 1 !important; color: black; width: 100%" style="opacity: 1 !important; color: black; width: 100%" required="true" requiredMessage="#{lang['select.municipality']}">
+				<p:column headerText="#{lang['province']}" style="white-space: nowrap">#{rvm.province.provinceDesc}</p:column>
+				<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">#{rvm.municipalityDesc}</p:column>
+				<p:ajax event="change" update="addInfoIncGeoProvincePG"></p:ajax>
+				<p:ajax event="itemSelect" update="addInfoIncGeoProvincePG addInfoIncGeoMuncipalityPG addInfoIncGeoProviceOP"></p:ajax>
+			</p:autoComplete>
+			<p:outputLabel value="#{lang['municipality']}" for="addInfoIncGeoMuncipality" />
+		</h:panelGroup>
+		<p:outputPanel id="addInfoIncGeoProviceOP">
+			<h:panelGroup rendered="#{address.municipality ne null}" styleClass="md-inputfield" id="addInfoIncGeoProvincePG">
+				<p:inputText disabled="true" id="addInfoIncGeoProvince" value="#{address.municipality.province.provinceDesc}" style="opacity: 1 !important; color: black; width:100%" />
+				<p:outputLabel value="#{lang['province']}" for="addInfoIncGeoProvince" />
+			</h:panelGroup>
+		</p:outputPanel>
+	</p:panelGrid>
+
+	<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank">
+		<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank">
+			<h:panelGroup styleClass="md-inputfield">
+				<p:inputText disabled="#{disableEntry}" type="number" rendered="true" id="addInfoIncGeoLongitudeDegreestp" style="opacity: 1 !important; color: black; width:100%" value="#{address.longitudeDegrees}" required="true" requiredMessage="Enter #{lang['longitude']}: Degrees">
+					<p:ajax/>
+				</p:inputText>
+				<p:outputLabel value="#{lang['longitude']}: Degrees" for="addInfoIncGeoLongitudeDegreestp" />
+			</h:panelGroup>
+
+			<h:panelGroup styleClass="md-inputfield">
+				<p:inputText disabled="#{disableEntry}" type="number" id="addInfoIncGeoLongitudeMinutestp" value="#{address.longitudeMinutes}" style="opacity: 1 !important; color: black; width:100%" required="true" requiredMessage="Enter #{lang['longitude']}: Minutes">
+					<p:ajax></p:ajax>
+				</p:inputText>
+				<p:outputLabel value="#{lang['longitude']}: Minutes" for="addInfoIncGeoLongitudeMinutestp" />
+			</h:panelGroup>
+
+			<h:panelGroup styleClass="md-inputfield">
+				<p:inputText disabled="#{disableEntry}" type="number" id="addInfoIncGeoLongitudeSecondstp" value="#{address.longitudeSeconds}" style="opacity: 1 !important; color: black; width:100%" required="true" requiredMessage="Enter #{lang['longitude']}: Seconds">
+					<p:ajax></p:ajax>
+				</p:inputText>
+				<p:outputLabel value="#{lang['longitude']}: Seconds" for="addInfoIncGeoLongitudeSecondstp" />
+			</h:panelGroup>
+		</p:panelGrid>
+
+		<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank">
+			<h:panelGroup styleClass="md-inputfield">
+				<p:inputText disabled="#{disableEntry}" type="number" rendered="true" id="addInfoIncGeoLatitudeDegreestp" style="opacity: 1 !important; color: black; width:100%" value="#{address.latitudeDegrees}" required="true" requiredMessage="Enter #{lang['latitude']}: Degrees">
+					<p:ajax></p:ajax>
+				</p:inputText>
+				<p:outputLabel value="#{lang['latitude']}: Degrees" for="addInfoIncGeoLatitudeDegreestp" />
+			</h:panelGroup>
+
+			<h:panelGroup styleClass="md-inputfield">
+				<p:inputText disabled="#{disableEntry}" type="number" id="addInfoIncGeoLatitudeMinutestp" value="#{address.latitudeMinutes}" style="opacity: 1 !important; color: black; width:100%" required="true" requiredMessage="Enter #{lang['latitude']}: Minutes">
+					<p:ajax></p:ajax>
+				</p:inputText>
+				<p:outputLabel value="#{lang['latitude']}: Minutes" for="addInfoIncGeoLatitudeMinutestp" />
+			</h:panelGroup>
+
+			<h:panelGroup styleClass="md-inputfield">
+				<p:inputText disabled="#{disableEntry}" type="number" id="addInfoIncGeoLatitudeSecondstp" value="#{address.latitudeSeconds}" style="opacity: 1 !important; color: black; width:100%" required="true" requiredMessage="Enter #{lang['latitude']}: Seconds">
+					<p:ajax></p:ajax>
+				</p:inputText>
+				<p:outputLabel value="#{lang['latitude']}: Seconds" for="addInfoIncGeoLatitudeSecondstp" />
+			</h:panelGroup>
+		</p:panelGrid>
+		<h:panelGroup styleClass="md-inputfield" rendered="false">
+			<!-- <a href="https://getlatlong.net" target="_blank">Check GPS Coordinate</a> -->
+			<a href="https://www.gps-coordinates.net" target="_blank">Check GPS Coordinate</a>
+		</h:panelGroup>
+	</p:panelGrid>
+
+
+</ui:composition>

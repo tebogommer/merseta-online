@@ -1,0 +1,289 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+	<ui:define name="content">
+		<style>
+.borderless .ui-datalist-content {
+	border: none;
+}
+
+.error {
+	background-color: #F44336 !important;
+	color: white !important;
+	font-weight: bold;
+}
+</style>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Workplace Approval Reporting</h1>
+					<h:form id="mainForm">
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:fieldset legend="Filter Selection">
+							<p:panelGrid columns="6" style="width : 100%" styleClass="ui-panelgrid-blank" layout="grid" id="filterSelection">
+								<p:outputLabel value="Filter By Date:" />
+								<p:selectBooleanCheckbox value="#{workplaceApproavlReportingUI.filterByDateRange}">
+									<p:ajax update="@form" listener="#{workplaceApproavlReportingUI.hideReportResults}" />
+								</p:selectBooleanCheckbox>
+								<p:outputLabel value="Filter By Status Selection:" />
+								<p:selectBooleanCheckbox value="#{workplaceApproavlReportingUI.filterByStatus}">
+									<p:ajax update="@form" listener="#{workplaceApproavlReportingUI.hideReportResults}" />
+								</p:selectBooleanCheckbox>
+								<p:outputLabel value="Filter By Qualification / Trade:" />
+								<p:selectBooleanCheckbox value="#{workplaceApproavlReportingUI.filterTradeQualification}">
+									<p:ajax update="@form" listener="#{workplaceApproavlReportingUI.hideReportResults}" />
+								</p:selectBooleanCheckbox>
+								<p:outputLabel value="Filter By Province:" />
+								<p:selectBooleanCheckbox value="#{workplaceApproavlReportingUI.filterByProvince}">
+									<p:ajax update="@form" listener="#{workplaceApproavlReportingUI.hideReportResults}" />
+								</p:selectBooleanCheckbox>
+							</p:panelGrid>
+						</p:fieldset>
+
+
+
+						<!--  -->
+
+						<c:if test="#{workplaceApproavlReportingUI.filterByProvince}">
+							<p:fieldset legend="Province Selection">
+								<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" layout="grid">
+									<h:panelGroup>
+										<div>
+											<p:outputLabel value="#{lang['province']}" for="proc" styleClass="gray" />
+										</div>
+										<div>
+											<p:selectOneMenu id="proc" value="#{workplaceApproavlReportingUI.selectedProvince}" style="width:75%" required="false" requiredMessage="#{lang['please.select.a.province']}" converter="ProvinceConvertor">
+												<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+												<f:selectItems value="#{selectItemsUI.selectItemsProvince}" var="rv" itemLabel="#{rv.provinceDesc}" />
+											</p:selectOneMenu>
+										</div>
+									</h:panelGroup>
+									<div class="EmptyBox5" />
+									<p:commandButton icon="fa fa-plus" update="@form" value="Add Province" action="#{workplaceApproavlReportingUI.addProvince}" />
+									<div class="EmptyBox5" />
+									<p:dataTable var="rvp" value="#{workplaceApproavlReportingUI.provinceList}" id="selectedProvinceDT" paginator="true" paginatorPosition="bottom" rows="3"
+											paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="3" reflow="true">
+											<f:facet name="header">
+												Selected Qualifications
+												</f:facet>
+											<p:column headerText="(Code) Province">
+												<h:outputText value="(#{rvp.code}) #{rvp.provinceDesc}" />
+											</p:column>
+											<p:column width="8%">
+												<p:commandButton icon="fa fa-trash-o" update="@form" title="Remove Qualification" action="#{workplaceApproavlReportingUI.removeProvince}">
+													<f:setPropertyActionListener value="#{rvp}" target="#{workplaceApproavlReportingUI.selectedProvince}" />
+												</p:commandButton>
+											</p:column>
+										</p:dataTable>
+								</p:panelGrid>
+							</p:fieldset>
+						</c:if>
+						<c:if test="#{workplaceApproavlReportingUI.filterTradeQualification}">
+							<p:fieldset legend="Qualification / Trade Selection">
+								<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" layout="grid">
+									<p:fieldset legend="Qualification Selection">
+										<h:panelGroup class="md-inputfield" style="margin-top:19px;">
+											<p:autoComplete style="width:95%" inputStyle="width:50%" required="false" id="qualificationSelection" value="#{workplaceApproavlReportingUI.selectedQualification}" completeMethod="#{workplaceApproavlReportingUI.completeMersetaQualification}" var="rowVarq"
+												itemLabel="#{rowVarq.description}" itemValue="#{rowVarq}" forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+												<p:column headerText="SAQA ID" style="white-space: nowrap">#{rowVarq.code}</p:column>
+												<p:column headerText="#{lang['description']}" style="white-space: nowrap">#{rowVarq.description}</p:column>
+												<p:ajax event="itemSelect" />
+											</p:autoComplete>
+											<p:outputLabel value="#{lang['qualification']}" for="qualificationSelection"></p:outputLabel>
+										</h:panelGroup>
+										<div class="EmptyBox5" />
+										<p:commandButton icon="fa fa-plus" update="@form" value="Add Qualification" action="#{workplaceApproavlReportingUI.addQualification}" />
+										<div class="EmptyBox5" />
+										<p:dataTable var="rvsq" value="#{workplaceApproavlReportingUI.qualificationList}" id="selectedQualificationDT" paginator="true" paginatorPosition="bottom" rows="3"
+											paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="3" reflow="true">
+											<f:facet name="header">
+												Selected Qualifications
+												</f:facet>
+											<p:column headerText="(SAQA ID) Qualification Description">
+												<h:outputText value="(#{rvsq.code}) #{rvsq.description}" />
+											</p:column>
+											<p:column width="8%">
+												<p:commandButton icon="fa fa-trash-o" update="@form" title="Remove Qualification" action="#{workplaceApproavlReportingUI.removeQualification}">
+													<f:setPropertyActionListener value="#{rvsq}" target="#{workplaceApproavlReportingUI.selectedQualification}" />
+												</p:commandButton>
+											</p:column>
+										</p:dataTable>
+									</p:fieldset>
+									<p:fieldset legend="Trade Selection">
+										<h:panelGroup class="md-inputfield" style="margin-top:19px;">
+											<p:autoComplete id="ofoCode" value="#{workplaceApproavlReportingUI.selectedOfoCodes}" completeMethod="#{autoCompleteUI.completeOfoCodes}" var="rv" itemLabel="#{rv.ofoDescription}" itemValue="#{rv}" forceSelection="true" converter="OfoCodesConvertor" dropdown="true" minQueryLength="3"
+												maxResults="10" inputStyle="opacity: 1 !important; color: black; width: 50%" style="opacity: 1 !important; color: black; width: 95%" required="false" requiredMessage="#{lang['select.ofo.code']}">
+												<p:column headerText="OfoCodes" style="white-space: nowrap">#{rv.ofoCodeParent}</p:column>
+												<p:column headerText="Description" style="white-space: nowrap">#{rv.description}</p:column>
+												<p:ajax event="itemSelect" />
+											</p:autoComplete>
+											<p:outputLabel value="Trade" for="ofoCode" />
+										</h:panelGroup>
+										<div class="EmptyBox5" />
+										<p:commandButton icon="fa fa-plus" update="@form" value="Add Trade" action="#{workplaceApproavlReportingUI.addOfoCode}" />
+										<div class="EmptyBox5" />
+										<p:dataTable var="rvso" value="#{workplaceApproavlReportingUI.ofoCodesList}" id="selectedTradeDT" paginator="true" paginatorPosition="bottom" rows="3"
+											paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="3" reflow="true">
+											<f:facet name="header">
+													Selected Trades
+													</f:facet>
+											<p:column headerText="(Ofo Codes) Qualification Description">
+												<h:outputText value="(#{rvso.ofoCodeParent}) #{rvso.description}" />
+											</p:column>
+											<p:column width="8%">
+												<p:commandButton icon="fa fa-trash-o" update="@form" title="Remove Trade" action="#{workplaceApproavlReportingUI.removeOfoCode}">
+													<f:setPropertyActionListener value="#{rvso}" target="#{workplaceApproavlReportingUI.selectedOfoCodes}" />
+												</p:commandButton>
+											</p:column>
+										</p:dataTable>
+									</p:fieldset>
+								</p:panelGrid>
+							</p:fieldset>
+							<div class="EmptyBox20" />
+						</c:if>
+
+						<c:if test="#{workplaceApproavlReportingUI.filterByDateRange}">
+							<p:fieldset legend="Date Selection">
+								<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" layout="grid" id="dateFilterSelection">
+									<p:outputLabel value="Filter By Approced or Creation Date:" />
+									<p:selectOneRadio id="console" columns="1" layout="responsive" value="#{workplaceApproavlReportingUI.createApproveDatefilter}">
+										<f:selectItem itemLabel="Create Date" itemValue="true" />
+										<f:selectItem itemLabel="Approved Date" itemValue="false" />
+									</p:selectOneRadio>
+									<p:outputLabel value="From Date Selection:" />
+									<p:calendar value="#{workplaceApproavlReportingUI.fromDate}" showOn="button" pattern="dd MMMM yyyy" navigator="true" />
+									<p:outputLabel value="To Date Selection:" />
+									<p:calendar value="#{workplaceApproavlReportingUI.toDate}" showOn="button" pattern="dd MMMM yyyy" navigator="true" />
+								</p:panelGrid>
+							</p:fieldset>
+							<div class="EmptyBox20" />
+						</c:if>
+
+
+						<c:if test="#{workplaceApproavlReportingUI.filterByStatus}">
+							<p:fieldset legend="Status Selection">
+								<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" layout="grid">
+									<p:fieldset legend="Avalible Status For Selection">
+										<p:repeat var="rva" value="#{workplaceApproavlReportingUI.statusForSelection}">
+											<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" layout="grid">
+												<p:outputLabel value="#{rva.friendlyName}" />
+												<p:commandButton icon="fa fa-plus" update="@form" title="Add Status For Filter" action="#{workplaceApproavlReportingUI.addStatusForFilter}">
+													<f:setPropertyActionListener value="#{rva}" target="#{workplaceApproavlReportingUI.addRemoveStatus}" />
+												</p:commandButton>
+											</p:panelGrid>
+										</p:repeat>
+									</p:fieldset>
+
+									<p:fieldset legend="Selected Status">
+										<p:repeat var="rvas" value="#{workplaceApproavlReportingUI.statusSelected}">
+											<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" layout="grid">
+												<p:outputLabel value="#{rvas.friendlyName}" />
+												<p:commandButton icon="fa fa-trash-o" update="@form" title="Remove Status" action="#{workplaceApproavlReportingUI.removeStatusForFilter}">
+													<f:setPropertyActionListener value="#{rvas}" target="#{workplaceApproavlReportingUI.addRemoveStatus}" />
+												</p:commandButton>
+											</p:panelGrid>
+										</p:repeat>
+									</p:fieldset>
+									<p:dataTable rendered="false" var="rv" value="#{workplaceApproavlReportingUI.statusForSelection}" id="avalibleStatus" paginator="false" paginatorPosition="bottom"
+										paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="3" reflow="true">
+										<f:facet name="header">
+								Avalible Status For Selection
+								</f:facet>
+										<p:column headerText="Status">
+											<h:outputText value="#{rv.friendlyName}" />
+										</p:column>
+										<p:column width="8%">
+											<p:commandButton icon="fa fa-plus" update="@form" title="Add Status For Filter" action="#{workplaceApproavlReportingUI.addStatusForFilter}">
+												<f:setPropertyActionListener value="#{rv}" target="#{workplaceApproavlReportingUI.addRemoveStatus}" />
+											</p:commandButton>
+										</p:column>
+									</p:dataTable>
+									<p:dataTable rendered="false" var="rvs" value="#{workplaceApproavlReportingUI.statusSelected}" id="selectedStatus" paginator="false" paginatorPosition="bottom"
+										paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="3" reflow="true">
+										<f:facet name="header">
+								Selected Multiple Status
+								</f:facet>
+										<p:column headerText="Status">
+											<h:outputText value="#{rvs.friendlyName}" />
+										</p:column>
+										<p:column width="8%">
+											<p:commandButton icon="fa fa-trash-o" update="@form" title="Remove Status" action="#{workplaceApproavlReportingUI.removeStatusForFilter}">
+												<f:setPropertyActionListener value="#{rvs}" target="#{workplaceApproavlReportingUI.addRemoveStatus}" />
+											</p:commandButton>
+										</p:column>
+									</p:dataTable>
+								</p:panelGrid>
+							</p:fieldset>
+							<div class="EmptyBox20" />
+						</c:if>
+						<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" layout="grid">
+							<p:commandButton icon="fa fa-clipboard" value="Generate Report" update="resultsWorkplaceApprovalReport" action="#{workplaceApproavlReportingUI.generateReport}" />
+							<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="@form" action="#{workplaceApproavlReportingUI.clear}" />
+						</p:panelGrid>
+						<p:outputPanel id="resultsWorkplaceApprovalReport">
+							<c:if test="#{workplaceApproavlReportingUI.displayReport}">
+								<ui:include src="/pages/includes/download_lazy.xhtml">
+									<ui:param name="file_name" value="WPA Results List" />
+									<ui:param name="target" value="reportResults" />
+								</ui:include>
+								<br />
+								<p:dataTable var="rowVar" value="#{workplaceApproavlReportingUI.dataModelWorkPlaceApproval}" id="reportResults" rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom"
+									paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,15,20,25,50,100" reflow="true" sortBy="#{rowVar.approvalEnum}" lazy="true">
+									<p:column headerText="ID">
+										<h:outputText value="#{rowVar.id}" />
+									</p:column>
+									<p:column headerText="Company Name">
+										<h:outputText value="#{rowVar.company.companyName}" />
+									</p:column>
+									<p:column headerText="Trading Name" style="display:none">
+										<h:outputText value="#{rowVar.company.tradingName}" />
+									</p:column>
+									<p:column headerText="#{lang['entity.id']}">
+										<h:outputText value="#{rowVar.company.levyNumber}" />
+									</p:column>
+									<p:column headerText="Site" sortBy="#{rowVar.sites}" style="display:none">
+										<p:outputLabel value="#{rowVar.sites.companyName}" rendered="#{rowVar.sites ne null}" />
+										<p:outputLabel value="N/A" rendered="#{rowVar.sites eq null}" />
+									</p:column>
+									<p:column headerText="Address" style="display:none">
+										<p:outputLabel value="#{rowVar.sites.registeredAddress.addressLine1}" rendered="#{rowVar.sites ne null}" />
+										<p:outputLabel value="#{rowVar.company.residentialAddress.addressLine1}" rendered="#{rowVar.company.residentialAddress ne null}" />
+										<p:spacer width="5" />
+										<p:outputLabel value="#{rowVar.sites.registeredAddress.addressLine2}" rendered="#{rowVar.sites ne null}" />
+										<p:outputLabel value="#{rowVar.company.residentialAddress.addressLine2}" rendered="#{rowVar.company.residentialAddress ne null}" />
+										<p:spacer width="5" />
+										<p:outputLabel value="#{rowVar.sites.registeredAddress.addressLine3}" rendered="#{rowVar.sites ne null}" />
+										<p:outputLabel value="#{rowVar.company.residentialAddress.addressLine3}" rendered="#{rowVar.company.residentialAddress ne null}" />
+										<p:spacer width="5" />
+										<p:outputLabel value="#{rowVar.sites.registeredAddress.town.description}" rendered="#{rowVar.sites ne null}" />
+										<p:outputLabel value="#{rowVar.company.residentialAddress.town.description}" rendered="#{rowVar.company.residentialAddress ne null}" />
+										<p:spacer width="5" />
+									</p:column>
+									<p:column headerText="Qualification/Trade Code">
+										<p:outputLabel value="#{rowVar.qualification.code}" rendered="#{rowVar.qualification.code ne null}" />
+										<p:outputLabel value="#{rowVar.ofoCodes.ofoCodeParent}" rendered="#{rowVar.ofoCodes ne null}" />
+									</p:column>
+									<p:column headerText="Qualification/Trade Title">
+										<p:outputLabel value=" #{rowVar.qualification.description}" rendered="#{rowVar.qualification ne null}" />
+										<p:outputLabel value=" #{rowVar.ofoCodes.description}" rendered="#{rowVar.ofoCodes ne null}" />
+									</p:column>
+									<p:column headerText="Application Status">
+										<h:outputText value="#{rowVar.approvalEnum.friendlyName}" />
+									</p:column>
+									<p:column headerText="Approval Date">
+										<p:outputLabel value="#{rowVar.approvalDate}">
+											<f:convertDateTime pattern="dd MMMM yyyy" />
+										</p:outputLabel>
+									</p:column>
+								</p:dataTable>
+							</c:if>
+						</p:outputPanel>
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+	</ui:define>
+
+</ui:composition>

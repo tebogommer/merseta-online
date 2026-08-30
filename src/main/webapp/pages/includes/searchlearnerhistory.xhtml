@@ -1,0 +1,32 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<p:dataTable value="#{companylearnersUI.companylearners.companyLearnersList}" var="rv" lazy="true" reflow="true" emptyMessage="#{lang['no.records.found']}">
+		
+		<p:column headerText="#{lang['companyName']}">#{rv.company.companyName}</p:column>
+		<p:column headerText="#{lang['companyRegistrationNumber']}">#{rv.company.companyRegistrationNumber}</p:column>
+		<p:column headerText="#{lang['entity.id']}">#{rv.company.levyNumber}</p:column>
+		<p:column headerText="#{lang['company.status']}" width="10%">#{lang[rv.company.companyStatus.registrationName]}</p:column>
+		<p:column headerText="Size of Company" width="10%">#{rv.company.sizeOfCompany.detailDescription}</p:column>
+
+		<p:column headerText="#{lang['levy.paying']}" width="110" style="text-align:center">
+			<p:outputPanel rendered="#{rv.company.nonLevyPaying}">
+				<i class="fa fa-times fa-3x red" aria-hidden="true"></i>
+			</p:outputPanel>
+			<p:outputPanel rendered="#{not rv.company.nonLevyPaying}">
+				<i class="fa fa-check fa-3x green" aria-hidden="true"></i>
+			</p:outputPanel>
+		</p:column>
+		<p:column headerText="#{lang['RAG']}" width="37">
+			<h:graphicImage value="/resources/hls/images/red.svg" rendered="#{rv.company.companyStatus eq CompanyStatusEnum.Pending}" width="40" styleClass="animated pulse infinite" />
+			<h:graphicImage value="/resources/hls/images/green.svg" rendered="#{rv.company.companyStatus eq CompanyStatusEnum.Active}" width="30" />
+		</p:column>
+		
+		<p:column width="40" rendered="true" headerText="#{lang['view']}">
+			<p:commandButton icon="fa fa-search-plus" title="#{lang['learner.history']}" action="#{companylearnersUI.prepareLearnerHistory}" update="@form">
+				<f:setPropertyActionListener value="#{rv}" target="#{companylearnersUI.selectedCompanyLearnerHistory}" />
+			</p:commandButton>
+		</p:column>
+	
+
+
+	</p:dataTable>
+</ui:composition>

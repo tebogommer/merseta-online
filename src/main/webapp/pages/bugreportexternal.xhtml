@@ -1,0 +1,115 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+
+		<h:form id="styleForm">
+			<style>
+.prescriptionButton {
+	width: 75%;
+	height: 60px !important;
+	font-size: 18px !important;
+}
+
+.ui-fileupload-content {
+	height: 150px !important;
+	background-image:
+		url("#{request.contextPath}/resources/hls/images/upload.png")
+		!important;
+	background-repeat: no-repeat;
+	background-position: center;
+}
+
+.prescriptionImage {
+	width: 50%;
+	box-shadow: 0 0 4px rgba(0, 0, 0, .8);
+	-webkit-box-shadow: 0 0 4px rgba(0, 0, 0, .8);
+	-moz-box-shadow: 0 0 4px rgba(0, 0, 0, .8);
+}
+
+.prescriptionDlgImage {
+	max-width: 80%;
+	box-shadow: 0 0 4px rgba(0, 0, 0, .8);
+	-webkit-box-shadow: 0 0 4px rgba(0, 0, 0, .8);
+	-moz-box-shadow: 0 0 4px rgba(0, 0, 0, .8);
+	margin-bottom: 5px;
+}
+</style>
+		</h:form>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>#{lang['issue.request.report']}</h1>
+					<h:form id="bugreportInsForm">
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+
+						<div class="ui-g">
+							<div class="ui-g-12 ui-md-12 ui-lg-12" style="color: gray">
+								#{lang['please.ensure.you.give.a.detailed.description.of.the.issue.request']}. <br />#{lang['if.it.is.an.issue.that.you.report.please.note.the.following']}.
+								<ul>
+									<li>#{lang['the.greater.the.details.the.easier.it.is.for.our.team.to.resolve.the.issue']}.</li>
+									<li>#{lang['if.possible.please.give.us.the.steps.you.went.through.to.encounter.the.issue']}.</li>
+									<li>#{lang['there.is.a.place.to.upload.a.screenshot.if.you.have.one']}. #{lang['this.picture.is.not.required']}.</li>
+								</ul>
+							</div>
+							
+							<div class="ui-g-12 ui-md-12 ui-lg-12" style="margin-top: 20px">
+								<h:panelGroup styleClass="md-inputfield" style="width:100%;">
+									<br />
+									<p:autoComplete style="width:50%" id="company" value="#{bugReportExternalUI.bugreport.companyUsers}" required="false" requiredMessage="Select Company" 
+													completeMethod="#{bugReportExternalUI.completeCompanyUsers}" var="rv" itemLabel="#{rv.company.companyNameDisplay}" itemValue="#{rv}" forceSelection="false" 
+													converter="CompanyUsersConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+										<p:column headerText="#{lang['companyName']}" style="white-space: nowrap">#{rv.company.companyName}</p:column>
+										<p:column headerText="#{lang['entity.id']}" style="white-space: nowrap">#{rv.company.levyNumber}</p:column>
+										<p:ajax  event="itemSelect" />
+									</p:autoComplete>
+									<p:outputLabel value="#{lang['company']}" for="company" />
+								</h:panelGroup>
+							</div>
+							
+							<div class="ui-g-12 ui-md-12 ui-lg-12" style="margin-top: 20px">
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="bugTitle" value="#{bugReportExternalUI.bugreport.bugTitle}" style="width:95%" required="true" requiredMessage="#{lang['please.give.the.issue.request.a.title']}" />
+									<p:outputLabel value="#{lang['issue.request.title']}" for="bugTitle" />
+								</h:panelGroup>
+							</div>
+							<div class="ui-g-12 ui-md-12 ui-lg-12">
+								<p:outputLabel value="#{lang['issue.request.description']}" for="bugReport" />
+							</div>
+
+							<div class="ui-g-12 ui-md-12 ui-lg-12">
+
+								<p:textEditor id="bugReport" widgetVar="editor1" value="#{bugReportExternalUI.bugreport.bugReport}" height="300" style="margin-bottom:10px" required="true" requiredMessage="#{lang['please.provide.details.on.the.issue.request']}." />
+
+							</div>
+
+							<div class="ui-g-12 ui-md-12 ui-lg-12" style="margin-top: 20px">
+
+								<div class="ui-g-12 ui-md-6 ui-lg-6">
+									<div style="color: red">#{lang['this.picture.is.not.required']}.</div>
+									<p:fileUpload id="imgUpload" fileUploadListener="#{bugReportExternalUI.saveImage}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.a.screen.shot.of.the.issue']}" fileLimitMessage="#{lang['one.file.allowed']}" allowTypes="/(\.|\/)(gif|jpe?g|png)$/" multiple="false"
+										fileLimit="1" immediate="false" auto="true" update=":bugreportInsForm:bugImage styleForm" />
+								</div>
+								<p:outputPanel styleClass="ui-g-12 ui-md-6 ui-lg-6" id="bugImage">
+									<h:panelGroup rendered="#{bugReportExternalUI.bugreport.bugImage ne null}">
+										<div align="center">
+											<img class="prescriptionImage" src="#{bugReportExternalUI.imageString}" />
+										</div>
+									</h:panelGroup>
+								</p:outputPanel>
+
+							</div>
+
+							<div class="ui-g-12 ui-md-12 ui-lg-12" style="text-align: center">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":bugreportInsForm" action="#{bugReportExternalUI.submitBug}" />
+							</div>
+
+						</div>
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+
+</ui:composition>

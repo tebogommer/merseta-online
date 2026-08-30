@@ -1,0 +1,126 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Mandatory Grant Evaluation</h1>
+					<h:form id="mandatorygrantevaluationInsForm">
+						<p:growl sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:panelGrid columns="1" style="width:100%" id="mandatorygrantevaluationInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="description" value="#{mandatorygrantevaluationUI.mandatorygrantevaluation.description}" style="width:95%" />
+								<p:outputLabel value="#{lang['criteria']}" for="description" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="yesScore" value="#{mandatorygrantevaluationUI.mandatorygrantevaluation.yesScore}" style="width:95%" />
+								<p:outputLabel value="#{lang['yesScore']}" for="yesScore" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="weightedScore" value="#{mandatorygrantevaluationUI.mandatorygrantevaluation.weightedScore}" style="width:95%" />
+								<p:outputLabel value="#{lang['weightedScore']}" for="weightedScore" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="noScore" value="#{mandatorygrantevaluationUI.mandatorygrantevaluation.noScore}" style="width:95%" />
+								<p:outputLabel value="#{lang['noScore']}" for="noScore" />
+							</h:panelGroup>
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="Size Of Company" for="SizeOfCompany" />
+								</div>
+								<div>
+									<p:selectOneMenu id="SizeOfCompany" value="#{mandatorygrantevaluationUI.mandatorygrantevaluation.sizeOfCompany}" converter="SizeOfCompanyConvertor" style="width:95%" required="true">
+										<p:ajax></p:ajax>
+										<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+										<f:selectItems value="#{selectItemsUI.sizeOfCompany}" var="il" itemLabel="#{il.description}" />
+									</p:selectOneMenu>
+								</div>
+							</h:panelGroup>
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="#{lang['wsp.application.type']}"></p:outputLabel>
+								</div>
+								<div>
+									<p:selectOneMenu value="#{mandatorygrantevaluationUI.mandatorygrantevaluation.wspTypeEnum}">
+										<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+										<f:selectItems value="#{enumUI.wspTypeEnumDD}" />
+									</p:selectOneMenu>
+								</div>
+							</h:panelGroup>
+							<h:panelGroup id="pgDgAllocation">
+								<p:selectBooleanCheckbox id="dgAllocation" value="#{mandatorygrantevaluationUI.mandatorygrantevaluation.validationForm}" />
+								<p:spacer width="5" />
+								<p:outputLabel value="Validation Form" for="dgAllocation" />
+							</h:panelGroup>
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:mandatorygrantevaluationList :mandatorygrantevaluationInsForm:mandatorygrantevaluationInsGrid" action="#{mandatorygrantevaluationUI.mandatorygrantevaluationInsert}" />
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="mandatorygrantevaluationInsGrid" process="@this" action="#{mandatorygrantevaluationUI.prepareNew}">
+									<p:resetInput target="mandatorygrantevaluationInsGrid" />
+								</p:commandButton>
+							</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{mandatorygrantevaluationUI.dataModel}" filteredValue="#{mandatorygrantevaluationUI.mandatoryGrantEvaluationfilteredList}" id="mandatorygrantevaluationList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+							<p:column headerText="#{lang['criteria']}">
+								<h:outputText value="#{rowVar.description}" />
+							</p:column>
+							<p:column headerText="#{lang['yesScore']}">
+								<h:outputText value="#{rowVar.yesScore}" />
+							</p:column>
+							<p:column headerText="#{lang['weightedScore']}">
+								<h:outputText value="#{rowVar.weightedScore}" />
+							</p:column>
+							<p:column headerText="#{lang['noScore']}">
+								<h:outputText value="#{rowVar.noScore}" />
+							</p:column>
+							<p:column headerText="Size Of Company">
+								<h:outputText value="#{rowVar.sizeOfCompany.description}" />
+							</p:column>
+							<p:column width="80">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":mandatorygrantevaluationInsForm:mandatorygrantevaluationInsGrid">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{mandatorygrantevaluationUI.mandatorygrantevaluation}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:mandatorygrantevaluationList" action="#{mandatorygrantevaluationUI.mandatorygrantevaluationDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{mandatorygrantevaluationUI.mandatorygrantevaluation}" />
+								</p:commandButton>
+							</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+	<!-- 
+yesScore = yesScore
+weightedScore = weightedScore
+totalScore = totalScore
+wsp = wsp
+noScore = noScore
+description = description
+setmisCode = setmisCode
+qctoCode = qctoCode
+createDate = createDate
+nlrdCode = nlrdCode
+code = code
+smsCode = smsCode
+
+-->
+</ui:composition>

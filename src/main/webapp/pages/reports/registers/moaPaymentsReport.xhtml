@@ -1,0 +1,98 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<p:growl sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>MOA Payments Report</h1>
+					<h:form id="mainForm" >
+						
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="Filter By: Financial Year / Grant Year" for="selectedFinYear" style="width:100%; color:#977949" />
+							</div>
+							<div>
+								<p:selectOneMenu id="selectedFinYear" value="#{moaPaymentsReportUI.selectedYear}" style="width:95%">
+									<p:ajax event="itemSelect" update="@form" listener="#{moaPaymentsReportUI.selectFinYear}" />
+									<f:selectItems value="#{moaPaymentsReportUI.financialYears}" />
+								</p:selectOneMenu>
+							</div>
+							<div class="EmptyBox10" />
+						</h:panelGroup>
+
+
+						<c:if test="#{moaPaymentsReportUI.selectedYear ne null}">
+						
+							<div class="EmptyBox10" />
+							<c:if test="#{moaPaymentsReportUI.displayNormalDownload}">
+								<ui:include src="/pages/includes/download_lazy.xhtml">
+									<ui:param name="file_name" value="MOA_Payments_Report" />
+									<ui:param name="target" value="moaPipDT" />
+								</ui:include>
+							</c:if>
+
+							<c:if test="false">	
+								<ui:include src="/pages/includes/filterGuide.xhtml" />
+							</c:if>
+							<div class="EmptyBox5"/>
+							
+							<p:dataTable emptyMessage="No Results Found" id="moaPipDT" var="rowVar" value="#{moaPaymentsReportUI.activeContractDetailDataModel}" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+								paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+								<p:column headerText="#{lang['entity.id']}">
+									<p:outputLabel value="#{rowVar.activeContracts.dgAllocationParent.wsp.company.levyNumber}" />
+								</p:column>
+								<p:column headerText="#{lang['company.name']}" >
+									<p:outputLabel value="#{rowVar.activeContracts.dgAllocationParent.wsp.company.companyName}" />
+								</p:column>
+								<p:column headerText="DG Year">
+									<h:outputText value="#{rowVar.activeContracts.dgAllocationParent.wsp.finYear}" styleClass="Fright"/>
+								</p:column>
+								<p:column headerText="#{lang['refno']}">
+									<h:outputText value="#{rowVar.activeContracts.refnoAuto}" />
+								</p:column>
+								<p:column headerText="Type of MOA">
+									<h:outputText value="#{rowVar.activeContracts.moaType.friendlyName}" />
+								</p:column>
+								<p:column headerText="Intervention Type">
+									<h:outputText value="#{rowVar.projectImplementationPlan.interventionType.description}" />
+								</p:column>
+								<p:column headerText="Intervention Qualification/SP/US Code">
+									<h:outputText value="#{rowVar.projectImplementationPlan.interventionQualificationDesc}" />
+								</p:column>
+								<p:column headerText="Number of Learners against PIP (Partially Funded + Fully Funded)">
+									<h:outputText value="#{rowVar.projectImplementationPlan.coFundingLearnersAwarded + rowVar.projectImplementationPlan.fullyFundedLearnerAwarded}" styleClass="Fright"/>
+								</p:column>
+								<p:column headerText="Tranch Number">
+									<h:outputText value="#{rowVar.trancheEnum.friendlyName}"/>
+								</p:column>
+								<p:column headerText="PIP Total Awarded">
+									<h:outputText value="#{rowVar.projectImplementationPlan.totalAwardAmount}" styleClass="Fright">
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Projected Tranche Amount (Payment Amount)">
+									<h:outputText value="#{rowVar.total}" styleClass="Fright">
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Status">
+									<h:outputText value="#{rowVar.status.friendlyName}" >
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Status Date">
+									<h:outputText value="#{rowVar.approvalDate}" rendered="#{rowVar.approvalDate ne null}">
+										<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME}"/>
+									</h:outputText>
+									<h:outputText value="N/A" rendered="#{rowVar.approvalDate eq null}"/>
+								</p:column>
+							</p:dataTable>
+						</c:if>
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+</ui:composition>

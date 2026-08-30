@@ -1,0 +1,64 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{qdfcompanyusersUI.dataModel}" filteredValue="#{qdfcompanyusersUI.qdfcompanyusersfilteredList}" id="qdfcompanyusersList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+							<p:column style="width:16px" exportable="false">
+					            <p:rowToggler />
+					        </p:column>  
+							<p:column headerText="#{lang['createDate']}">
+								<h:outputText value="#{rowVar.qdfCompany.qualificationsCurriculumDevelopment.createDate}"><f:convertDateTime pattern="dd MMM yyyy (HH:mm)" /></h:outputText>
+							</p:column>
+							<p:column headerText="Approved Date">
+								<h:outputText value="#{rowVar.qdfCompany.approvalDate}"> <f:convertDateTime pattern="dd MMM yyyy (HH:mm)" /></h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['status']}">
+								<h:outputText value="#{rowVar.qdfCompany.qualificationsCurriculumDevelopment.templateType.friendlyName}" />
+							</p:column>
+							<p:column headerText="Ofo code / qualification">
+								<h:outputText value="#{rowVar.qdfCompany.qualificationsCurriculumDevelopment.ofoCodes.description}" rendered="#{rowVar.qdfCompany.qualificationsCurriculumDevelopment.ofoCodes.description ne null}" />
+								<h:outputText value="#{rowVar.qdfCompany.qualificationsCurriculumDevelopment.qualification.description}" rendered="#{rowVar.qdfCompany.qualificationsCurriculumDevelopment.qualification.description ne null}" />
+							</p:column>
+
+							<p:column width="80" rendered="false">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update="@form">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{qdfcompanyusersUI.qdfcompanyusers}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:qdfcompanyusersList" action="#{qdfcompanyusersUI.qdfcompanyusersDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{qdfcompanyusersUI.qdfcompanyusers}" />
+								</p:commandButton>
+							</p:column>
+							
+							<p:rowExpansion>
+					        	<p:fieldset legend="Qualification Development Document(s)">
+									<ui:include src="/pages/includes/documents_info_display.xhtml">
+											<ui:param name="docs" value="#{rowVar.qdfCompany.docs}" />
+									</ui:include>
+								</p:fieldset>
+							</p:rowExpansion>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+	</ui:define>
+	<!-- 
+_lang_
+-->
+</ui:composition>

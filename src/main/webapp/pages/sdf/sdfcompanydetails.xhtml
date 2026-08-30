@@ -1,0 +1,477 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui">
+	<h1>#{lang['head.company.info']}</h1>
+
+	<ui:include src="/pages/includes/tabinfo.xhtml">
+		<ui:param name="showInfoCircle" value="true" />
+		<ui:param name="cssClass" value="secondaryText Fs15" />
+		<ui:param name="helpTxt" value="#{lang['The.system.will.auto-fill.based.selections']}" />
+	</ui:include>
+
+	<p:panelGrid columns="2" style="width:100%" id="companyInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+		<h:panelGroup>
+			<div>
+				<p:outputLabel value="#{lang['relationship.to.company']}" for="relationship" styleClass="gray" />
+			</div>
+			<div>
+				<p:selectOneMenu disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="relationship" value="#{sdfDetailUI.companysdf.relationshipToCompany}" style="width:75%"
+					converter="RelationshipToCompanyConvertor" required="true">
+					<p:ajax />
+					<f:selectItem itemLabel="---#{lang['select.one']}---" itemValue="" noSelectionOption="true" />
+					<f:selectItems value="#{selectItemsUI.relationshipToCompany}" var="rv" itemLabel="#{rv.description}" />
+				</p:selectOneMenu>
+			</div>
+		</h:panelGroup>
+
+		<h:panelGroup>
+			<div>
+				<p:outputLabel value="#{lang['scope.of.responsibility']}" for="scope" styleClass="gray" />
+			</div>
+			<div>
+				<p:selectOneMenu disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="scope" value="#{sdfDetailUI.companysdf.scopeOfResponsibility}" style="width:75%"
+					converter="ScopeOfResponsibilityConvertor" required="true">
+					<p:ajax />
+					<f:selectItem itemLabel="---#{lang['select.one']}---" itemValue="" noSelectionOption="true" />
+					<f:selectItems value="#{selectItemsUI.scopeOfResponsibility}" var="rv" itemLabel="#{rv.description}" />
+				</p:selectOneMenu>
+			</div>
+		</h:panelGroup>
+
+
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText maxlength="#{sdfDetailUI.MAX_COMPANY_NAME_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="companyName" value="#{sdfDetailUI.companysdf.company.companyName}"
+				style="width:95%" required="true" requiredMessage="#{lang['enter.the.company.name']}">
+			</p:inputText>
+			<p:outputLabel value="#{lang['companyName']}" for="companyName" />
+		</h:panelGroup>
+
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="tradingName" value="#{sdfDetailUI.companysdf.company.tradingName}" style="width:95%" required="true"
+				requiredMessage="#{lang['enter.the.trading.name']}">
+			</p:inputText>
+			<p:outputLabel value="#{lang['tradingName']}" for="tradingName" />
+		</h:panelGroup>
+
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText maxlength="70" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="companyWebsite" value="#{sdfDetailUI.companysdf.company.companyWebsite}" style="width:95%"
+				required="false" requiredMessage="#{lang['company.website.required']}">
+			</p:inputText>
+			<p:outputLabel value="#{lang['company.website']}" for="companyWebsite" />
+		</h:panelGroup>
+
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputMask mask="#{sdfDetailUI.TELPHONE_FORMAT}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="telNumber" value="#{sdfDetailUI.companysdf.company.telNumber}" style="width:95%"
+				required="true" requiredMessage="#{lang['enter.the.tel.number']}">
+			</p:inputMask>
+			<p:outputLabel value="#{lang['telNumber']}" for="telNumber" />
+		</h:panelGroup>
+
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputMask id="faxNumber" mask="#{sdfDetailUI.FAX_NUMBER_FORMAT}" validatorMessage="#{lang['user.faxnumber.length']}" value="#{sdfUI.formUser.faxNumber}" maxlength="#{sdfUI.MAX_FAX_NUMBER}" style="width:95%" required="false" requiredMessage="#{lang['fax.number']}"
+				disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}">
+			</p:inputMask>
+			<p:outputLabel value="#{lang['faxNumber']}" for="faxNumber" />
+		</h:panelGroup>
+
+		<h:panelGroup styleClass="md-inputfield" rendered="#{not sdfDetailUI.companysdf.company.nonLevyPaying}">
+			<p:inputMask mask="#{sdfDetailUI.companyRegistrationNumberFormat}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="companyRegistrationNumber"
+				value="#{sdfDetailUI.companysdf.company.companyRegistrationNumber}" style="width:95%" required="true" requiredMessage="#{lang['enter.company.registration.number']}">
+			</p:inputMask>
+			<p:outputLabel value="#{lang['companyRegistrationNumber']}" for="companyRegistrationNumber" />
+		</h:panelGroup>
+
+		<h:panelGroup styleClass="md-inputfield" rendered="#{sdfDetailUI.companysdf.company.nonLevyPaying}">
+			<p:inputMask disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="companyRegistrationNumbera" value="#{sdfDetailUI.companysdf.company.companyRegistrationNumber}" style="width:95%"
+				required="true" requiredMessage="#{lang['enter.company.registration.number']}">
+			</p:inputMask>
+			<p:outputLabel value="#{lang['companyRegistrationNumber']}" for="companyRegistrationNumbera" />
+		</h:panelGroup>
+
+
+		<p:fieldset legend="#{lang['residentialAddress']}" style="margin-top: 20px">
+			<p:panelGrid columns="1" style="width : 95%" styleClass="ui-panelgrid-blank" id="addrPcode">
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="addr1"
+						value="#{sdfDetailUI.companysdf.company.residentialAddress.addressLine1}" style="width:95%" required="true" requiredMessage="#{lang['enter.residential.address']}">
+					</p:inputText>
+					<p:outputLabel value="#{lang['address.line.1']}" for="addr1" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="addr2" style="width:95%"
+						value="#{sdfDetailUI.companysdf.company.residentialAddress.addressLine2}" required="true" requiredMessage="#{lang['address.line.2.required']}">
+					</p:inputText>
+					<p:outputLabel value="#{lang['address.line.2']}" for="addr2" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="addr3" style="width:95%"
+						value="#{sdfDetailUI.companysdf.company.residentialAddress.addressLine3}">
+					</p:inputText>
+					<p:outputLabel value="#{lang['address.line.3']}" for="addr3" />
+				</h:panelGroup>
+
+				<h:panelGroup>
+					<div>
+						<h:outputLabel value="#{lang['town']}" for="town" />
+					</div>
+					<div>
+						<p:autoComplete id="town" value="#{sdfDetailUI.companysdf.company.residentialAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3"
+							maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true" requiredMessage="#{lang['please.select.a.town']}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}">
+							<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+						</p:autoComplete>
+					</div>
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_CODE_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="pcode" style="width:95%"
+						value="#{sdfDetailUI.companysdf.company.residentialAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}">
+					</p:inputText>
+					<p:outputLabel value="#{lang['post.code']}" for="pcode" />
+				</h:panelGroup>
+
+				<h:panelGroup>
+					<div>
+						<h:outputLabel value="#{lang['municipality']}" for="MunicipalityID" />
+					</div>
+					<div>
+						<p:autoComplete disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="MunicipalityID" value="#{sdfDetailUI.companysdf.company.residentialAddress.municipality}" required="true"
+							completeMethod="#{sdfDetailUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityProvince}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%"
+							requiredMessage="#{lang['select.municipality']}">
+							<p:column headerText="#{lang['province']}" style="white-space: nowrap">
+								#{rv.province.provinceDesc}
+							</p:column>
+							<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">
+								#{rv.municipalityDesc}
+							</p:column>
+						</p:autoComplete>
+					</div>
+				</h:panelGroup>
+
+
+				<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank">
+
+					<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank">
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText type="number" rendered="true" required="true" requiredMessage="Enter #{lang['longitude']}: Degrees" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}"
+								id="longitudeDegrees" style="opacity: 1 !important; color: black; width:100%" value="#{sdfDetailUI.companysdf.company.residentialAddress.longitudeDegrees}">
+								<p:ajax></p:ajax>
+							</p:inputText>
+							<p:outputLabel value="#{lang['longitude']}: Degrees" for="longitudeDegrees" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText type="number" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="longitudeMinutes" value="#{sdfDetailUI.companysdf.company.residentialAddress.longitudeMinutes}"
+								style="opacity: 1 !important; color: black; width:100%" required="true" requiredMessage="Enter #{lang['longitude']}: Minutes">
+								<p:ajax></p:ajax>
+							</p:inputText>
+							<p:outputLabel value="#{lang['longitude']}: Minutes" for="longitudeMinutes" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText type="number" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="longitudeSeconds" value="#{sdfDetailUI.companysdf.company.residentialAddress.longitudeSeconds}"
+								style="opacity: 1 !important; color: black; width:100%" required="true" requiredMessage="Enter #{lang['longitude']}: Seconds">
+								<p:ajax></p:ajax>
+							</p:inputText>
+							<p:outputLabel value="#{lang['longitude']}: Seconds" for="longitudeSeconds" />
+						</h:panelGroup>
+					</p:panelGrid>
+
+					<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank">
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText type="number" rendered="true" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="latitudeDegrees" style="opacity: 1 !important; color: black; width:100%"
+								value="#{sdfDetailUI.companysdf.company.residentialAddress.latitudeDegrees}" required="true" requiredMessage="Enter #{lang['latitude']}: Degrees">
+								<p:ajax></p:ajax>
+							</p:inputText>
+							<p:outputLabel value="#{lang['latitude']}: Degrees" for="latitudeDegrees" />
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText type="number" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="latitudeMinutes" value="#{sdfDetailUI.companysdf.company.residentialAddress.latitudeMinutes}"
+								style="opacity: 1 !important; color: black; width:100%" required="true" requiredMessage="Enter #{lang['latitude']}: Minutes">
+								<p:ajax></p:ajax>
+							</p:inputText>
+							<p:outputLabel value="#{lang['latitude']}: Minutes" for="latitudeMinutes" />
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText type="number" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="latitudeSeconds" value="#{sdfDetailUI.companysdf.company.residentialAddress.latitudeSeconds}"
+								style="opacity: 1 !important; color: black; width:100%" required="true" requiredMessage="Enter #{lang['latitude']}: Seconds">
+								<p:ajax></p:ajax>
+							</p:inputText>
+							<p:outputLabel value="#{lang['latitude']}: Seconds" for="latitudeSeconds" />
+						</h:panelGroup>
+					</p:panelGrid>
+					<h:panelGroup styleClass="md-inputfield" rendered="true">
+						<!-- <a href="https://getlatlong.net" target="_blank">Check GPS Coordinate</a> -->
+						<a href="https://www.gps-coordinates.net" target="_blank">Check GPS Coordinate</a>
+					</h:panelGroup>
+				</p:panelGrid>
+			</p:panelGrid>
+		</p:fieldset>
+
+		<p:fieldset legend="#{lang['postalAddress']}" style="margin-top: 20px">
+			<p:panelGrid columns="1" style="width : 95%" styleClass="ui-panelgrid-blank" id="postalAddress">
+				<h:panelGroup styleClass="md-inputfield" rendered="#{not sdfDetailUI.copyAddress}">
+					<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="postalAddressaddr1"
+						value="#{sdfDetailUI.companysdf.company.postalAddress.addressLine1}" style="width:95%" required="true" requiredMessage="#{lang['enter.postal.address']}">
+					</p:inputText>
+					<p:outputLabel value="#{lang['address.line.1']}" for="postalAddressaddr1" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield" rendered="#{not sdfDetailUI.copyAddress}">
+					<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="postalAddressaddr2" style="width:95%"
+						value="#{sdfDetailUI.companysdf.company.postalAddress.addressLine2}" required="true" requiredMessage="#{lang['address.line.2.required']}">
+
+					</p:inputText>
+					<p:outputLabel value="#{lang['address.line.2']}" for="postalAddressaddr2" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield" rendered="#{not sdfDetailUI.copyAddress}">
+					<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="postalAddressaddr3" style="width:95%"
+						value="#{sdfDetailUI.companysdf.company.postalAddress.addressLine3}">
+
+					</p:inputText>
+					<p:outputLabel value="#{lang['address.line.3']}" for="postalAddressaddr3" />
+				</h:panelGroup>
+				<h:panelGroup rendered="#{not sdfDetailUI.copyAddress}">
+					<div>
+						<h:outputLabel value="#{lang['town']}" for="townPostal" />
+					</div>
+					<div>
+						<p:autoComplete id="townPostal" value="#{sdfDetailUI.companysdf.company.postalAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3"
+							maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true" requiredMessage="#{lang['please.select.a.town']}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}">
+							<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+						</p:autoComplete>
+					</div>
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield" rendered="#{not sdfDetailUI.copyAddress}">
+					<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_CODE_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="postalAddressPcode" style="width:95%"
+						value="#{sdfDetailUI.companysdf.company.postalAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}">
+						<o:validator validatorId="javax.faces.Length" minimum="0" maximum="4" message="#{lang['postalAddress.code.length.error']}" />
+					</p:inputText>
+					<p:outputLabel value="#{lang['post.code']}" for="postalAddressPcode" />
+				</h:panelGroup>
+
+				<h:panelGroup rendered="#{not sdfDetailUI.copyAddress}">
+					<div>
+						<h:outputLabel value="#{lang['municipality']}" for="postalAddressMunicipalityID" />
+					</div>
+					<div>
+						<p:autoComplete disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="postalAddressMunicipalityID" required="true"
+							value="#{sdfDetailUI.companysdf.company.postalAddress.municipality}" completeMethod="#{sdfDetailUI.completeMunicipality}" var="rv" requiredMessage="Municipality is Required" itemLabel="#{rv.municipalityProvince}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor"
+							dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%">
+							<p:column headerText="#{lang['province']}" style="white-space: nowrap">
+								#{rv.province.provinceDesc}
+							</p:column>
+							<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">
+								#{rv.municipalityDesc}
+							</p:column>
+						</p:autoComplete>
+					</div>
+				</h:panelGroup>
+
+				<h:panelGroup>
+					<div>
+						<p:outputLabel value="#{lang['same.as.my.address']}" styleClass="FontLight" />
+					</div>
+					<div>
+						<p:selectBooleanCheckbox disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" value="#{sdfDetailUI.copyAddress}">
+							<p:ajax update=":companyInsForm:postalAddress" listener="#{sdfDetailUI.clearPostal}" />
+						</p:selectBooleanCheckbox>
+					</div>
+				</h:panelGroup>
+
+
+				<h:panelGroup styleClass="md-inputfield">
+					<div class="EmptyBox40"></div>
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield">
+					<div class="EmptyBox40"></div>
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield">
+					<div class="EmptyBox10"></div>
+				</h:panelGroup>
+			</p:panelGrid>
+		</p:fieldset>
+
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText maxlength="#{sdfDetailUI.MAX_EMAIL_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="email" value="#{sdfDetailUI.companysdf.company.email}" style="width:95%"
+				required="true" requiredMessage="#{lang['enter.email.address']}">
+			</p:inputText>
+			<p:outputLabel value="#{lang['email']}" for="email" />
+		</h:panelGroup>
+
+		<h:panelGroup styleClass="md-inputfield" rendered="#{not sdfDetailUI.companysdf.company.nonLevyPaying}">
+			<p:inputMask mask="#{sdfDetailUI.companyLevyNumberFormat}" disabled="true" id="levyNumber" value="#{sdfDetailUI.companysdf.company.levyNumber}" style="width:95%" required="true" requiredMessage="#{lang['enter.levy.number']}">
+			</p:inputMask>
+			<p:outputLabel value="#{lang['levyNumber']}" for="levyNumber" />
+		</h:panelGroup>
+
+
+		<h:panelGroup>
+			<div style="margin-top: -20px !important;">
+				<p:outputLabel value="#{lang['organisation.type']}" for="organisationType" styleClass="gray Fs12" style="margin-left:5px" />
+			</div>
+			<div>
+				<p:selectOneMenu disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="organisationType" value="#{sdfDetailUI.companysdf.company.organisationType}"
+					converter="OrganisationTypeConvertor" style="width:95%" required="true" requiredMessage=" #{lang['select.organisation.type']}">
+					<f:selectItem itemLabel="-- #{lang['select.one']} --" noSelectionOption="true" />
+					<f:selectItems value="#{sdfDetailUI.organisationTypeList}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+				</p:selectOneMenu>
+			</div>
+		</h:panelGroup>
+
+
+		<h:panelGroup>
+			<div style="margin-top: -20px !important;">
+				<p:outputLabel value="#{lang['sicCode']}" for="sicCodeNew" styleClass="gray Fs12" style="margin-left:5px">
+				</p:outputLabel>
+			</div>
+			<div>
+				<p:autoComplete disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="sicCodeNew" value="#{sdfDetailUI.companysdf.company.sicCode}" style="width: 95%"
+					completeMethod="#{autoCompleteUI.completeSIC}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SICCodeConvertor" dropdown="true" minQueryLength="1" maxResults="10" required="true" requiredMessage="#{lang['sic.code.error']}">
+					<p:ajax update="chambers" event="itemSelect"></p:ajax>
+					<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+					<p:column headerText="#{lang['description']}" style="white-space: nowrap">#{rv.description}</p:column>
+				</p:autoComplete>
+			</div>
+		</h:panelGroup>
+
+		<h:panelGroup id="chambers">
+			<div style="margin-top: -20px !important;">
+				<p:outputLabel value="#{lang['chamber']}" for="chamber" styleClass="gray Fs12" style="margin-left:5px" />
+			</div>
+			<div>
+				<p:selectOneMenu disabled="true" id="chamber" value="#{sdfDetailUI.companysdf.company.sicCode.chamber}" converter="ChamberConvertor" style="width:95%" required="true" requiredMessage="#{lang['select.a.chamber']}">
+					<f:selectItem itemLabel="-- #{lang['select.one']} --" noSelectionOption="true" />
+					<f:selectItems value="#{sdfDetailUI.chambers}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+				</p:selectOneMenu>
+			</div>
+		</h:panelGroup>
+
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText maxlength="#{sdfDetailUI.MAX_NUMBER_OF_EMPLOYEES_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="numberOfEmployees"
+				value="#{sdfDetailUI.companysdf.company.numberOfEmployees}" style="width:95%" required="true" requiredMessage="#{lang['enter.number.of.employees']}">
+			</p:inputText>
+			<p:outputLabel value="#{lang['numberOfEmployees']}" for="numberOfEmployees" />
+		</h:panelGroup>
+
+		<p:spacer rendered="#{sdfDetailUI.companysdf.company.nonLevyPaying}"></p:spacer>
+		<p:fieldset>
+			<p:panelGrid columns="1" style="width : 95%" styleClass="ui-panelgrid-blank">
+				<h:panelGroup id="startMonth">
+					<div style="margin-top: -20px !important;">
+						<p:outputLabel value="Financial Year Start Month" for="aw" styleClass="gray Fs12" style="margin-left:5px" />
+					</div>
+					<div>
+						<p:selectOneMenu id="aw" value="#{sdfDetailUI.companysdf.company.financialYearStartMonth}" style="width:95%" required="true" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}">
+							<p:ajax update="startDay"></p:ajax>
+							<f:selectItem itemLabel="-- #{lang['select.one']} --" noSelectionOption="true" />
+							<f:selectItems value="#{enumUI.months}" var="rv" itemValue="#{rv}" />
+						</p:selectOneMenu>
+					</div>
+				</h:panelGroup>
+
+				<h:panelGroup id="startDay">
+					<h:outputLabel for="minMax" value="Financial Year Start Day" />
+					<p:spinner id="minMax" value="#{sdfDetailUI.companysdf.company.financialYearStartDay}" min="1" max="#{sdfDetailUI.companysdf.company.financialYearStartMonth.length(false)}" required="true"
+						disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" />
+				</h:panelGroup>
+			</p:panelGrid>
+		</p:fieldset>
+
+		<p:fieldset>
+			<p:panelGrid columns="1" style="width : 95%" styleClass="ui-panelgrid-blank">
+				<h:panelGroup id="endMonth">
+					<div style="margin-top: -20px !important;">
+						<p:outputLabel value="Financial Year End Month" for="aww" styleClass="gray Fs12" style="margin-left:5px" />
+					</div>
+					<div>
+						<p:selectOneMenu id="aww" value="#{sdfDetailUI.companysdf.company.financialYearEndMonth}" style="width:95%" required="true" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}">
+							<p:ajax update="endDay"></p:ajax>
+							<f:selectItem itemLabel="-- #{lang['select.one']} --" noSelectionOption="true" />
+							<f:selectItems value="#{enumUI.months}" var="rv" itemValue="#{rv}" />
+						</p:selectOneMenu>
+					</div>
+				</h:panelGroup>
+
+				<h:panelGroup id="endDay">
+					<h:outputLabel for="endDayInput" value="Financial Year End Day" />
+					<p:spinner id="endDayInput" value="#{sdfDetailUI.companysdf.company.financialYearEndDay}" min="1" max="#{sdfDetailUI.companysdf.company.financialYearEndMonth.length(false)}" required="true"
+						disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" />
+				</h:panelGroup>
+			</p:panelGrid>
+		</p:fieldset>
+		<h:panelGroup>
+			<div>
+				<p:outputLabel value="#{lang['does.a.recognition.agreement.exist.between.the.organisation.and.labour.unions']}" for="recAgr" />
+			</div>
+			<div>
+				<p:selectOneRadio value="#{sdfDetailUI.companysdf.company.recognitionAgreement}" converter="YesNoLookupConvertor" columns="2" layout="grid" id="recAgr" required="true" requiredMessage="Recognition Agreement is required"
+					disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}">
+					<p:ajax update="majUnion"></p:ajax>
+					<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+				</p:selectOneRadio>
+			</div>
+		</h:panelGroup>
+
+		<p:outputPanel id="majUnion">
+			<h:panelGroup>
+				<div>
+					<p:outputLabel value="#{lang['majority.union']}?" for="union" />
+				</div>
+				<div>
+					<p:selectOneMenu id="union" converter="OrganisedLabourUnionConvertor" style="width:95%" required="true" value="#{sdfDetailUI.companysdf.company.majorityUnion}"
+						disabled="#{(sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload) or (sdfDetailUI.companysdf.company.recognitionAgreement eq null or sdfDetailUI.companysdf.company.recognitionAgreement.yesNoName.toLowerCase() eq 'no')}">
+						<f:selectItem itemLabel="-- #{lang['select.one']} --" noSelectionOption="true" />
+						<f:selectItems value="#{selectItemsUI.selectItemsOrganisedLabourUnion}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+					</p:selectOneMenu>
+				</div>
+			</h:panelGroup>
+		</p:outputPanel>
+
+		<h:panelGroup rendered="#{sdfDetailUI.companysdf.company.nonLevyPaying}">
+			<h:panelGroup styleClass="md-inputfield" rendered="true">
+				<p:inputMask disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="levyNumberNSC" mask="#{searchCompanyUI.companyLevyNumberFormat}"
+					value="#{sdfDetailUI.companysdf.company.payeSDLNumber}" style="width:95%" requiredMessage="Provide SDL Number" required="false">
+					<p:ajax></p:ajax>
+				</p:inputMask>
+				<p:outputLabel value="SDL Number" for="levyNumberNSC" />
+			</h:panelGroup>
+		</h:panelGroup>
+
+
+		<h:panelGroup rendered="#{sdfDetailUI.companysdf.company.nonLevyPaying}">
+			<div style="margin-top: -20px !important;">
+				<p:outputLabel value="Primary SETA " for="setaSelection" styleClass="gray Fs12" style="margin-left:5px">
+				</p:outputLabel>
+			</div>
+			<div>
+				<p:selectOneMenu disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="setaSelection" value="#{sdfDetailUI.companysdf.company.etqa}" style="width: 95%" converter="EtqaConvertor"
+					required="true" requiredMessage="Provide: Primary SETA">
+					<f:selectItems value="#{selectItemsUI.selectItemsEtqa}" var="rcseta" itemLabel="#{rcseta.description} (#{rcseta.code})" />
+					<p:ajax update="infoGridForNonLevySetaSelection" event="itemSelect" />
+				</p:selectOneMenu>
+			</div>
+		</h:panelGroup>
+
+
+
+
+
+
+	</p:panelGrid>
+	<p:outputPanel id="infoGridForNonLevySetaSelection">
+		<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{sdfDetailUI.companysdf.company.nonLevyPaying}">
+			<p:outputLabel value="If upon verification, it should come to merSETA's attention that an entity has indicated that they belong to merSETA but that the entity belongs to another SETA, the matter will be submitted for legal review." style="color:red;font-size:20px;font-weight: bold;"
+				rendered="#{sdfDetailUI.companysdf.company.etqa ne null and sdfDetailUI.companysdf.company.etqa.code eq '599'}" />
+		</p:panelGrid>
+	</p:outputPanel>
+	<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+		<p:commandButton id="submitCompInfo" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Edit or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload}" value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm companyInsForm"
+			action="#{sdfDetailUI.updateCompany}" />
+		<p:commandButton process="@this" value="#{lang['clear']}" icon="ui-icon-close" update="companyInsForm mainForm" action="#{sdfDetailUI.clearCompany}" />
+	</p:panelGrid>
+
+
+	<p:fieldset rendered="#{sdfDetailUI.setmisValidationErrors ne null and sdfDetailUI.setmisValidationErrors ne ''}" styleClass="error Fs12">
+		<h4>Validation Error(s):</h4>
+		<p:outputLabel value="#{sdfDetailUI.setmisValidationErrors}" escape="false"></p:outputLabel>
+	</p:fieldset>
+
+</ui:composition>

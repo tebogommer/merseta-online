@@ -1,0 +1,851 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+		<style>
+body.layout-compact .ui-radiobutton .ui-radiobutton-box {
+	opacity: 1 !important;
+}
+
+body .ui-selectmanycheckbox.ui-widget label, body .ui-selectoneradio.ui-widget label
+	{
+	opacity: 1 !important;
+}
+</style>
+		<p:growl showDetail="false" sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<ui:include src="/pages/includes/taskdiagram.xhtml" />
+				<br />
+				<ui:include src="/pages/includes/tabinfo.xhtml">
+					<ui:param name="showInfoCircle" value="true" />
+					<ui:param name="cssClass" value="secondaryText Fs15" />
+					<ui:param name="helpTxt" value="#{lang['The.system.will.auto-fill.based.selections']}" />
+				</ui:include>
+			</div>
+		</div>
+		<div class="ui-g">
+			<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+			<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+			<h:form id="discgrantTableForm">
+				<c:if test="#{mandatoryGrantVerificationUI.dataModel ne null}">
+					<div class="ui-g-12">
+						<div class="card">
+							<h2>#{mandatoryGrantVerificationUI.company.companyName} #{lang['mandatory.grant.verification']}</h2>
+							<p:fieldset id="companyInfo" legend="#{lang['company.information']}">
+								<p:panelGrid columns="2" style="width:100%" id="companyInsGrid" layout="grid" styleClass="ui-panelgrid-blank">
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['companyName']}" for="companyName" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel id="companyName" value="#{mandatoryGrantVerificationUI.company.companyName}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.company.name']}" />
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['tradingName']}" for="tradingName" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel id="tradingName" value="#{mandatoryGrantVerificationUI.company.tradingName}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.trading.name']}" />
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['telNumber']}" for="telNumberComp" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel id="telNumberComp" value="#{mandatoryGrantVerificationUI.company.telNumber}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.tel.number']}" />
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['faxNumber']}" for="faxNumberComp" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel id="faxNumberComp" value="#{mandatoryGrantVerificationUI.company.faxNumber}" style="width:95%" rendered="#{mandatoryGrantVerificationUI.company.faxNumber ne null and mandatoryGrantVerificationUI.company.faxNumber.length() gt 0}" />
+										<p:outputLabel id="faxNumberComp2" value="N/A" style="width:95%" rendered="#{mandatoryGrantVerificationUI.company.faxNumber eq null or mandatoryGrantVerificationUI.company.faxNumber.length() eq 0}" />
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['companyRegistrationNumber']}" for="companyRegistrationNumber" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel id="companyRegistrationNumber" value="#{mandatoryGrantVerificationUI.company.companyRegistrationNumber}" style="width:95%" />
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['email']}" for="emailComp" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel id="emailComp" value="#{mandatoryGrantVerificationUI.company.email}" style="width:95%" />
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['levyNumber']}" for="levyNumber" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel id="levyNumber" value="#{mandatoryGrantVerificationUI.company.levyNumber}" style="width:95%" />
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['numberOfEmployees']}" for="numberOfEmployees" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel id="numberOfEmployees" value="#{mandatoryGrantVerificationUI.company.numberOfEmployees}" style="width:95%" />
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['sicCode']}" for="sicCode" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel id="sicCode" value="#{mandatoryGrantVerificationUI.company.sicCode.description}" style="width:95%" required="true" requiredMessage="#{lang['enter.sic.code']}" />
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['chamber']}" for="sicCode" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel id="chamber" value="#{mandatoryGrantVerificationUI.company.chamber.description}" style="width:95%" />
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['organisation.type']}" for="organisationType" styleClass="Fs12 FontLight" />
+										<br />
+										<p:outputLabel value="N/A" rendered="#{mandatoryGrantVerificationUI.company.organisationType eq null}" />
+										<p:outputLabel id="organisationType" value="#{mandatoryGrantVerificationUI.company.organisationType.description}" style="width:95%" rendered="#{mandatoryGrantVerificationUI.company.organisationType ne null}" />
+									</h:panelGroup>
+								</p:panelGrid>
+								<p:panelGrid columns="2" style="width:100%" id="companyInsGrida" layout="grid" styleClass="ui-panelgrid-blank">
+									<p:fieldset legend="#{lang['residentialAddress']}">
+										<p:panelGrid columns="2" style="width : 95%" styleClass="ui-panelgrid-blank" id="addrPcode">
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['address.line.1']}" for="addr1" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="addr1" value="#{mandatoryGrantVerificationUI.company.residentialAddress.addressLine1}" style="width:95%" required="true" requiredMessage="#{lang['enter.residential.address']}" />
+												<br />
+												<p:outputLabel value="#{lang['address.line.2']}" for="addr2" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel value="N/A" style="width:95%" rendered="#{mandatoryGrantVerificationUI.company.residentialAddress.addressLine2 eq null or mandatoryGrantVerificationUI.company.residentialAddress.addressLine2.length() eq 0}" />
+												<p:outputLabel id="addr2" style="width:95%" value="#{mandatoryGrantVerificationUI.company.residentialAddress.addressLine2}"
+													rendered="#{mandatoryGrantVerificationUI.company.residentialAddress.addressLine2 ne null and mandatoryGrantVerificationUI.company.residentialAddress.addressLine2.length() gt 0}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['address.line.3']}" for="addr3" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="addr3" style="width:95%" value="#{mandatoryGrantVerificationUI.company.residentialAddress.addressLine3}"
+													rendered="#{mandatoryGrantVerificationUI.company.residentialAddress.addressLine3 ne null and mandatoryGrantVerificationUI.company.residentialAddress.addressLine3.length() gt 0}" />
+												<p:outputLabel value="N/A" style="width:95%" rendered="#{mandatoryGrantVerificationUI.company.residentialAddress.addressLine3 eq null or mandatoryGrantVerificationUI.company.residentialAddress.addressLine3.length() eq 0}" />
+												<br />
+												<p:outputLabel value="#{lang['address.line.4']}" for="addr4" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="addr4" style="width:95%" value="#{mandatoryGrantVerificationUI.company.residentialAddress.addressLine4}"
+													rendered="#{mandatoryGrantVerificationUI.company.residentialAddress.addressLine4 ne null and mandatoryGrantVerificationUI.company.residentialAddress.addressLine4.length() gt 0}" />
+												<p:outputLabel value="N/A" style="width:95%" rendered="#{mandatoryGrantVerificationUI.company.residentialAddress.addressLine4 eq null or mandatoryGrantVerificationUI.company.residentialAddress.addressLine4.length() eq 0}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['post.code']}" for="pcode" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="pcode" style="width:95%" value="#{mandatoryGrantVerificationUI.company.residentialAddress.postcode}"
+													rendered="#{mandatoryGrantVerificationUI.company.residentialAddress.postcode ne null and mandatoryGrantVerificationUI.company.residentialAddress.postcode.length() gt 0}" />
+												<p:outputLabel value="N/A" style="width:95%" rendered="#{mandatoryGrantVerificationUI.company.residentialAddress.postcode eq null or mandatoryGrantVerificationUI.company.residentialAddress.postcode.length() eq 0}" />
+												<br />
+												<h:outputLabel value="#{lang['municipality']}" for="MunicipalityID" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="MunicipalityID" style="width:95%" value="#{mandatoryGrantVerificationUI.company.residentialAddress.municipality.municipalityDesc}" />
+											</h:panelGroup>
+
+											<h:panelGroup>
+												<div class="EmptyBox40"></div>
+											</h:panelGroup>
+										</p:panelGrid>
+									</p:fieldset>
+
+									<p:fieldset legend="#{lang['postalAddress']}">
+										<p:panelGrid columns="2" style="width : 95%" styleClass="ui-panelgrid-blank" id="postalAddress">
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['address.line.1']}" for="postalAddressaddr1" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="postalAddressaddr1" value="#{mandatoryGrantVerificationUI.company.postalAddress.addressLine1}" style="width:95%" required="true" requiredMessage="#{lang['enter.postal.address']}" />
+												<br />
+												<p:outputLabel value="#{lang['address.line.2']}" for="postalAddressaddr2" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="postalAddressaddr2" style="width:95%" value="#{mandatoryGrantVerificationUI.company.postalAddress.addressLine2}" />
+												<p:outputLabel value="N/A" style="width:95%" rendered="#{mandatoryGrantVerificationUI.company.postalAddress.addressLine2 eq null or mandatoryGrantVerificationUI.company.postalAddress.addressLine2.length() eq 0}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['address.line.3']}" for="postalAddressaddr3" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="postalAddressaddr3" style="width:95%" value="#{mandatoryGrantVerificationUI.company.postalAddress.addressLine3}" />
+												<p:outputLabel value="N/A" style="width:95%" rendered="#{mandatoryGrantVerificationUI.company.postalAddress.addressLine3 eq null or mandatoryGrantVerificationUI.company.postalAddress.addressLine3.length() eq 0}" />
+												<br />
+												<p:outputLabel value="#{lang['address.line.4']}" for="postalAddressaddr4" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="postalAddressaddr4" style="width:95%" value="#{mandatoryGrantVerificationUI.company.postalAddress.addressLine4}" />
+												<p:outputLabel value="N/A" style="width:95%" rendered="#{mandatoryGrantVerificationUI.company.postalAddress.addressLine4 eq null or mandatoryGrantVerificationUI.company.postalAddress.addressLine4.length() eq 0}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['post.code']}" for="postalAddressPcode" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="postalAddressPcode" style="width:95%" value="#{mandatoryGrantVerificationUI.company.postalAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}" />
+												<p:outputLabel value="N/A" style="width:95%" rendered="#{mandatoryGrantVerificationUI.company.postalAddress.postcode eq null or mandatoryGrantVerificationUI.company.postalAddress.postcode.length() eq 0}" />
+												<br />
+												<h:outputLabel value="#{lang['municipality']}" for="postalAddressMunicipalityID" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="postalAddressMunicipalityID" style="width:95%" value="#{mandatoryGrantVerificationUI.company.postalAddress.municipality.municipalityDesc}" />
+											</h:panelGroup>
+
+											<h:panelGroup>
+												<div>
+													<p:outputLabel value="#{lang['same.as.my.address']}" styleClass="Fs12 FontLight" />
+												</div>
+												<div>
+													<p:selectBooleanCheckbox value="#{mandatoryGrantVerificationUI.company.postalAddress.sameAddress}" disabled="true">
+													</p:selectBooleanCheckbox>
+												</div>
+											</h:panelGroup>
+										</p:panelGrid>
+									</p:fieldset>
+								</p:panelGrid>
+							</p:fieldset>
+							<div class="EmptyBox10" />
+						</div>
+					</div>
+
+					<div class="ui-g-12">
+						<div class="card">
+							<p:fieldset legend="#{lang['mandatory.grants.verification']}">
+								<p:panelGrid columns="2" style="width :100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText style="width:95%; opacity:1 !important;" value="#{mandatoryGrantVerificationUI.mgVerification.wsp.finYear}" disabled="true" />
+										<p:outputLabel value=" #{lang['grant.year']}" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText style="width:95%; opacity:1 !important;" value="#{mandatoryGrantVerificationUI.mgVerification.wsp.createUsers.firstName} #{mandatoryGrantVerificationUI.mgVerification.wsp.createUsers.lastName}" disabled="true" />
+										<p:outputLabel value="#{lang['sdf.name.and.surname']}" />
+									</h:panelGroup>
+
+									<p:outputLabel value="#{lang['organised.labour.union']}" rendered="false" />
+									<p:selectOneRadio value="#{mandatoryGrantVerificationUI.mgVerification.organisedLabourUnion}" columns="2" disabled="true" converter="YesNoLookupConvertor" rendered="false">
+										<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="rv" itemLabel="#{rv.yesNoName}"></f:selectItems>
+									</p:selectOneRadio>
+
+									<h:panelGroup rendered="false">
+										<p:outputLabel value="#{lang['involvement.of.training.committee']}" />
+									</h:panelGroup>
+
+									<p:selectOneRadio value="#{searchCompanyUI.companyRegOrSDLEnum}" columns="2" rendered="false">
+										<f:selectItem itemLabel="Yes" itemValue="Yes" />
+										<f:selectItem itemLabel="No" itemValue="No" />
+									</p:selectOneRadio>
+
+									<p:outputLabel value="#{lang['employer.representative']}" rendered="false" />
+
+									<p:selectOneRadio value="#{searchCompanyUI.companyRegOrSDLEnum}" columns="2" rendered="false">
+										<f:selectItem itemLabel="Yes" itemValue="Yes" />
+										<f:selectItem itemLabel="No" itemValue="No" />
+									</p:selectOneRadio>
+
+									<p:outputLabel value="#{lang['union.employee.representative']}" rendered="false" />
+
+									<p:selectOneRadio value="#{searchCompanyUI.companyRegOrSDLEnum}" columns="2" rendered="false">
+										<f:selectItem itemLabel="Yes" itemValue="Yes" />
+										<f:selectItem itemLabel="No" itemValue="No" />
+									</p:selectOneRadio>
+
+									<p:outputLabel value="#{lang['mandatory.grant.signed.off.by.all.parties.where.relevant']}" rendered="false" />
+									<p:selectOneRadio value="#{mandatoryGrantVerificationUI.mgVerification.mgSignedOff}" columns="2" disabled="true" converter="YesNoLookupConvertor" rendered="false">
+										<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="rv" itemLabel="#{rv.yesNoName}"></f:selectItems>
+									</p:selectOneRadio>
+
+								</p:panelGrid>
+
+								<p:panelGrid columns="1" style="width:100%" id="workplaceTradesChecklist2" layout="grid" styleClass="ui-panelgrid-blank">
+									<p:dataTable var="rowVar" value="#{mandatoryGrantVerificationUI.dataModelMgDetails}" lazy="true" id="employeesimportList" rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+										paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,15,20,25,50,100" reflow="true">
+										<p:column headerText="#{lang['expand.row']}" width="45">
+											<p:rowToggler rendered="#{rowVar.docs.size() gt 0}"></p:rowToggler>
+										</p:column>
+										<p:column headerText="#{lang['ofo.codes']}">
+											<p:outputLabel value="#{rowVar.ofoCodes.ofoDescription}" style="width:95%" />
+										</p:column>
+										<p:column headerText="Enrolment Status">
+											<p:outputLabel value="#{rowVar.enrolmentStatus.description}" style="width:95%" />
+										</p:column>
+										<p:column headerText="#{lang['employment.status']}">
+											<p:outputLabel value="#{rowVar.employmentStatus.friendlyName}" style="width:95%" />
+										</p:column>
+										<p:column headerText="#{lang['intervention.type']}">
+											<p:outputLabel value="#{rowVar.interventionType.description}" style="width:95%" />
+										</p:column>
+										<p:column headerText="#{lang['intervention.title']}">
+											<p:outputLabel value="(#{rowVar.qualification.code}) #{rowVar.qualification.description}" decimalPlaces="0" disabled="true" rendered="#{rowVar.qualification ne null}" />
+											<p:outputLabel value="(#{rowVar.skillsProgram.programmeID}) #{rowVar.skillsProgram.description}" decimalPlaces="0" disabled="true" rendered="#{rowVar.skillsProgram ne null}" />
+											<p:outputLabel value="(#{rowVar.skillsSet.programmeID}) #{rowVar.skillsSet.description}" decimalPlaces="0" disabled="true" rendered="#{rowVar.skillsSet ne null}" />
+											<p:outputLabel value="(#{rowVar.unitStandard.code}) #{rowVar.unitStandard.title}" rendered="#{rowVar.unitStandard ne null}" />
+											<p:outputLabel value="(#{rowVar.nonCreditBearingIntervationTitle.code}) #{rowVar.nonCreditBearingIntervationTitle.description}" rendered="#{rowVar.nonCreditBearingIntervationTitle ne null}" />
+										</p:column>
+										<p:column headerText="#{lang['nqf.level']}">
+											<p:outputLabel minValue="0" value="#{rowVar.nqfLevels.description}" decimalPlaces="0" disabled="true" />
+										</p:column>
+										<p:column headerText="#{lang['number.of.learners']}">
+											<h:outputText value="#{rowVar.noPlannedLearners}" styleClass="Fright" />
+											<p:outputLabel rendered="false" value="#{rowVar.noPlannedLearners}" style="width:95%" />
+										</p:column>
+										<p:column headerText="No. of Learners Started / Registered ">
+											<h:outputText value="#{rowVar.noLearnersStarted}" rendered="#{rowVar.noLearnersStarted ne null}" styleClass="Fright" />
+											<h:outputText value="Not Provided" rendered="#{rowVar.noLearnersStarted eq null}" style="color:red;" />
+											<p:inputNumber rendered="false" decimalPlaces="0" disabled="true" value="#{rowVar.noLearnersStarted}" symbolPosition="s" emptyValue="sign" required="true" requiredMessage="No. of Learners Started / Registered ">
+											</p:inputNumber>
+										</p:column>
+										<p:column headerText="No. of Learners Withdrawn">
+											<h:outputText value="#{rowVar.noLearnersWithdrawn}" rendered="#{rowVar.noLearnersWithdrawn ne null}" styleClass="Fright" />
+											<h:outputText value="Not Provided" rendered="#{rowVar.noLearnersWithdrawn eq null}" style="color:red;" />
+											<p:inputNumber rendered="false" decimalPlaces="0" disabled="true" value="#{rowVar.noLearnersWithdrawn}" symbolPosition="s" emptyValue="sign" required="true" requiredMessage="No. of Learners Withdrawn">
+											</p:inputNumber>
+										</p:column>
+										<p:column headerText="No. of Learners Completed">
+											<h:outputText value="#{rowVar.noLearnersCompleted}" rendered="#{rowVar.noLearnersCompleted ne null}" styleClass="Fright" />
+											<h:outputText value="Not Provided" rendered="#{rowVar.noLearnersCompleted eq null}" style="color:red;" />
+											<p:inputNumber rendered="false" decimalPlaces="0" disabled="true" value="#{rowVar.noLearnersCompleted}" symbolPosition="s" emptyValue="sign" required="true" requiredMessage="No. of Learners Completed">
+											</p:inputNumber>
+										</p:column>
+										<p:column headerText="Reason for Deviation">
+											<p:outputLabel value="#{rowVar.deviationReason.description}" rendered="#{rowVar.deviationReason ne null}" />
+											<p:outputLabel value="Not Provided" rendered="#{rowVar.deviationReason eq null}" style="color:red;" />
+											<p:selectOneMenu rendered="false" disabled="true" id="proc" value="#{rowVar.deviationReason}" style="width:95%" required="true" requiredMessage="#{lang['please.select.a.skills.identification']}" converter="DeviationReasonConvertor">
+												<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+												<f:selectItems value="#{selectItemsUI.deviationReason}" var="rv" itemLabel="#{rv.description}" />
+												<p:ajax></p:ajax>
+											</p:selectOneMenu>
+										</p:column>
+										<p:column headerText="Action Plan">
+											<p:outputLabel value="#{rowVar.actionPlan}" rendered="#{rowVar.actionPlan ne null}" />
+											<p:outputLabel value="Not Provided" rendered="#{rowVar.actionPlan eq null}" style="color:red;" />
+											<p:inputText rendered="false" disabled="true" value="#{rowVar.actionPlan}" required="true" requiredMessage="Action Plan" />
+										</p:column>
+										<p:column headerText="Evidence Required" style="width: 5%">
+											<center>
+												<p:selectBooleanCheckbox disabled="true" value="#{rowVar.evidanceRequired}" />
+											</center>
+										</p:column>
+										<p:column headerText="Actions" width="90">
+
+											<p:commandButton icon="fa fa-upload" title="Upload" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Upload}" oncomplete="PF('dlgUpload').show()" process="@this" update="@form" action="#{mandatoryGrantVerificationUI.prepNewDoc}"
+												rendered="#{rowVar.doc.id eq null and rowVar.evidanceRequired}" styleClass="#{rowVar.doc.originalFname eq null ? 'red-btn' : 'green-btn'} flat">
+												<f:setPropertyActionListener value="#{rowVar}" target="#{mandatoryGrantVerificationUI.mgVerificationDetails}" />
+											</p:commandButton>
+											<p:commandButton ajax="false" icon="fa fa-download" action="#{uploadDocUI.download}" id="dlbtest" rendered="#{rowVar.doc.id ne null}" process="@this" immediate="true">
+												<f:setPropertyActionListener value="#{rowVar.doc}" target="#{uploadDocUI.doc}" />
+												<p:tooltip for="dlbtest" value="#{lang['download.the.file']}" position="left" rendered="#{rowVar.doc.id ne null}" />
+											</p:commandButton>
+
+											<p:spacer width="5" />
+											<p:commandButton update="informationForm" icon="fa fa-search" oncomplete="PF('dlgInformation').show()" action="#{mandatoryGrantVerificationUI.prepViewForInformation}" title="View Information" process="@this" immediate="true">
+												<f:setPropertyActionListener value="#{rowVar}" target="#{mandatoryGrantVerificationUI.mgVerificationDetails}" />
+											</p:commandButton>
+
+										</p:column>
+										<p:rowExpansion>
+											<p:dataTable value="#{rowVar.docs}" var="rv1" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+												<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+												<p:column headerText="#{lang['uploaded']}" width="15%">
+													<h:outputText value="#{rv1.createDate}">
+														<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+													</h:outputText>
+												</p:column>
+												<p:column headerText="#{lang['version']}" width="15%">
+													<h:outputText value="#{rv1.versionNo}">
+													</h:outputText>
+												</p:column>
+												<p:column headerText="Upload Evidence" width="180">
+													<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}">
+														<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+													</p:commandButton>
+													<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+
+													<p:spacer width="5" rendered="#{rv1.id ne null}" />
+													<p:commandButton icon="fa fa-bars " id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}">
+														<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+													</p:commandButton>
+													<p:tooltip for="dhistUserDocs" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+
+													<!-- only with permission to upload can upload a new version -->
+													<p:commandButton rendered="#{rowVar.doc.id ne null and (sessionUI.task.processRole eq null or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload)}" icon="fa fa-upload" id="uploadUserDocs"
+														styleClass="#{rv1.originalFname eq null ? 'red-btn' : ''} flat" oncomplete="PF('dlgUpload').show()" process="@this" update="@form">
+														<f:setPropertyActionListener value="#{rv1}" target="#{mandatoryGrantVerificationUI.doc}" />
+													</p:commandButton>
+													<p:tooltip for="uploadUserDocs" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+
+													<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+														<p:spacer width="5" />
+														<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+															<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+															<f:setPropertyActionListener value="#{sessionUI.activeUser}" target="#{uploadDocUI.viewUser}" />
+														</p:commandButton>
+														<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+													</h:panelGroup>
+												</p:column>
+											</p:dataTable>
+										</p:rowExpansion>
+									</p:dataTable>
+
+									<div class="EmptyBox10" />
+									<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText disabled="true" requiredMessage="Provide Comments" required="true" id="com" value="#{mandatoryGrantVerificationUI.mgVerification.cloComment}" style="width:95%">
+												<p:ajax />
+											</p:inputText>
+											<p:outputLabel value="Comments" for="com" />
+										</h:panelGroup>
+									</p:panelGrid>
+								</p:panelGrid>
+							</p:fieldset>
+						</div>
+
+
+					</div>
+
+					<c:if test="false">
+						<div class="ui-g-12 ui-lg-6" rendered="false">
+							<div class="card">
+								<p:fieldset legend="#{lang['audit.checklist.workplace.skills.plan']}">
+									<p:panelGrid columns="2" style="width :100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+										<h:panelGroup>
+											<p:outputLabel value="#{lang['completion.of.all.pages']}" />
+										</h:panelGroup>
+										<p:selectOneRadio value="#{mandatoryGrantVerificationUI.mgVerification.wspSubmitted}" columns="2" disabled="true" converter="YesNoLookupConvertor">
+											<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="rv" itemLabel="#{rv.yesNoName}"></f:selectItems>
+										</p:selectOneRadio>
+
+										<p:outputLabel value="#{lang['has.training.commenced']}" />
+										<p:selectOneRadio value="#{mandatoryGrantVerificationUI.mgVerification.trainingCommenced}" columns="2" converter="YesNoLookupConvertor">
+											<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="rv" itemLabel="#{rv.yesNoName}"></f:selectItems>
+										</p:selectOneRadio>
+
+										<p:outputLabel value="#{lang['will.company.able.complete.indentified.training.for.the.relevant.year']}" />
+										<p:selectOneRadio value="#{mandatoryGrantVerificationUI.mgVerification.completeInYear}" columns="2" disabled="true" converter="YesNoLookupConvertor">
+											<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="rv" itemLabel="#{rv.yesNoName}"></f:selectItems>
+										</p:selectOneRadio>
+
+									</p:panelGrid>
+								</p:fieldset>
+							</div>
+						</div>
+
+						<div class="ui-g-12 ui-lg-6">
+							<div class="card">
+								<p:fieldset legend="#{lang['audit.Checklist.annual.training.report']}">
+									<p:panelGrid columns="2" style="width :100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+										<h:panelGroup>
+											<p:outputLabel value="#{lang['atr.submitted']}" />
+										</h:panelGroup>
+										<p:selectOneRadio value="#{mandatoryGrantVerificationUI.mgVerification.atrSubmitted}" columns="2" disabled="true" converter="YesNoLookupConvertor">
+											<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="rv" itemLabel="#{rv.yesNoName}"></f:selectItems>
+										</p:selectOneRadio>
+										<p:outputLabel value="#{lang['training.completed.per.previous.years.workplace.skills.plan']}" />
+										<p:selectOneRadio value="#{mandatoryGrantVerificationUI.mgVerification.trainingCompletedAsPrevious}" columns="2" converter="YesNoLookupConvertor">
+											<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="rv" itemLabel="#{rv.yesNoName}"></f:selectItems>
+										</p:selectOneRadio>
+										<p:outputLabel value="#{lang['proof.of.training.verified']}" />
+										<p:selectOneRadio value="#{mandatoryGrantVerificationUI.mgVerification.proofTrainingVerified}" columns="2" disabled="true" converter="YesNoLookupConvertor">
+											<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="rv" itemLabel="#{rv.yesNoName}"></f:selectItems>
+										</p:selectOneRadio>
+									</p:panelGrid>
+								</p:fieldset>
+							</div>
+						</div>
+
+						<div class="ui-g-12">
+							<div class="card">
+								<p:fieldset legend="#{lang['summary.and.action.take.place.site.visit']}">
+									<p:panelGrid columns="1" style="width :100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+										<p:outputLabel value="#{lang['ensure.that.explanation.the.visit.detail.support.etc.needs.explained.detail.wayforward']}" />
+										<p:inputTextarea style="width:95%"></p:inputTextarea>
+									</p:panelGrid>
+								</p:fieldset>
+							</div>
+						</div>
+
+						<div class="ui-g-12">
+							<div class="card">
+								<p:fieldset legend="#{lang['sign.off']}">
+									<p:repeat var="rv" value="#{mandatoryGrantVerificationUI.mgVerification.signOffs}">
+										<div class="ui-g-12 ui-lg-6">
+											<p:panel>
+												<h:panelGroup>
+													<p:selectBooleanCheckbox value="#{rv.accept}" itemLabel="I acknowledge and accept the above" style="width:100%" styleClass="gray"
+														disabled="#{(rv.completed and rv.user eq sessionUI.activeUser) or rv.user ne sessionUI.activeUser or mandatoryGrantVerificationUI.mgVerification.status ne ApprovalEnum.PendingSignOff}">
+														<p:ajax></p:ajax>
+													</p:selectBooleanCheckbox>
+													<br />
+													<br />
+													<p:outputLabel value="#{rv.user.firstName} #{rv.user.lastName}" />
+													<br />
+													<p:outputLabel value="#{rv.signOffTitle}" />
+													<br />
+													<p:outputLabel value="#{sessionUI.now}">
+														<f:convertDateTime pattern="dd MMMM yyyy" />
+													</p:outputLabel>
+												</h:panelGroup>
+											</p:panel>
+										</div>
+									</p:repeat>
+								</p:fieldset>
+							</div>
+						</div>
+						<div class="ui-g-12">
+
+							<c:if test="#{mandatoryGrantVerificationUI.mgVerification.status eq ApprovalEnum.PendingSignOff and mandatoryGrantVerificationUI.disableSignOffButton}">
+								<div class="card">
+									<p:fieldset id="dgVerificationFeildSet">
+										<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{!mandatoryGrantVerificationUI.disableEdit}">
+											<p:commandButton id="updateDGVerification" value="#{lang['sign.off']}" process="dgVerificationFeildSet" action="#{mandatoryGrantVerificationUI.signOffVerification}" update="@form" styleClass="Fs18 flat green-btn" style="height: 50px" />
+										</p:panelGrid>
+									</p:fieldset>
+								</div>
+							</c:if>
+
+							<c:if test="#{mandatoryGrantVerificationUI.mgVerification.status eq null}">
+								<div class="card">
+									<p:fieldset id="dgVerificationFeildSet">
+										<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{!mandatoryGrantVerificationUI.disableEdit}">
+											<p:commandButton id="updateDGVerification" value="#{lang['submit.for.sign.off']}" process="dgVerificationFeildSet" action="#{mandatoryGrantVerificationUI.updateMgVerification}" update="@form" styleClass="Fs18 flat" style="height: 50px" />
+										</p:panelGrid>
+									</p:fieldset>
+								</div>
+							</c:if>
+						</div>
+					</c:if>
+
+					<p:outputPanel id="rejectReasons" style="width: 100%" rendered="#{mandatoryGrantVerificationUI.rejectReason.size() gt 0 and mandatoryGrantVerificationUI.mgVerification.status eq ApprovalEnum.Rejected and false}">
+						<h:panelGroup id="rejectReasonsId">
+							<div class="ui-g dashboard">
+								<div class="ui-g-12">
+									<p:fieldset legend="Reject Reasons">
+										<h3>#{mandatoryGrantVerificationUI.mgVerification.status.friendlyName}</h3>
+										<p:dataTable var="rowVar" value="#{mandatoryGrantVerificationUI.rejectReason}" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+											paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+											<p:column headerText="Create Date">
+												<p:outputLabel value="#{rowVar.createDate}">
+													<f:convertDateTime pattern="dd MMMM yyyy" />
+												</p:outputLabel>
+											</p:column>
+											<p:column headerText="Reason for Rejection">
+												<p:outputLabel value="#{rowVar.description}"></p:outputLabel>
+											</p:column>
+										</p:dataTable>
+									</p:fieldset>
+								</div>
+							</div>
+						</h:panelGroup>
+					</p:outputPanel>
+					<c:if test="#{mandatoryGrantVerificationUI.signOffLists.size() ne 0}">
+						<div class="ui-g-12">
+							<div class="card card-w-title">
+								<h1>Sign Offs:</h1>
+								<p:dataTable var="rv" value="#{mandatoryGrantVerificationUI.signOffLists}" id="signOffList" rowKey="#{rowVar.id}" reflow="true">
+									<p:column headerText="#{lang['signed.off.by']}">
+										<p:outputLabel value="#{rv.user.firstName} #{rv.user.lastName}" rendered="#{rv.user ne null}" />
+										<p:outputLabel value="Awaiting Assignment" rendered="#{rv.user eq null}" />
+									</p:column>
+									<p:column headerText="#{lang['date']}">
+										<p:outputLabel value="Pending Sign Off" rendered="#{rv.signOffDate eq null}" />
+										<p:outputLabel value="#{rv.signOffDate}" rendered="#{rv.signOffDate ne null}">
+											<f:convertDateTime pattern="dd/MM/yyyy HH:MM" />
+										</p:outputLabel>
+									</p:column>
+									<p:column headerText="#{lang['acknowledge']}" rendered="true">
+										<div>
+											<p:selectBooleanCheckbox style="width:100%" value="#{rv.accept}" disabled="true">
+											</p:selectBooleanCheckbox>
+										</div>
+										<div>
+											<p:outputLabel value="#{lang['site.visit.report.declaration.text']}"></p:outputLabel>
+										</div>
+									</p:column>
+									<p:column headerText="Actions" exportable="false" style="width:5%">
+										<p:commandButton rendered="#{rv.user.id eq sessionUI.activeUser.id and (rv.accept eq null or !rv.accept)}" title="Sign Off" icon="fa fa-pencil" update="signOffForm" action="#{mandatoryGrantVerificationUI.prepSignOff}">
+											<f:setPropertyActionListener value="#{rv}" target="#{mandatoryGrantVerificationUI.signOffSelected}" />
+										</p:commandButton>
+									</p:column>
+								</p:dataTable>
+							</div>
+						</div>
+					</c:if>
+					<div class="ui-g-12">
+						<div class="card">
+							<c:if test="#{mandatoryGrantVerificationUI.rejectReason.size() gt 0}">
+								<h2>Rejection Reasons Provided:</h2>
+								<p:repeat var="rowVarRR" value="#{mandatoryGrantVerificationUI.rejectReason}">
+									<p:outputLabel value="#{rowVarRR.description}" style="font-weight:bold; font-size: 20px; color: red;" />
+									<br />
+									<p:outputLabel value="#{rowVarRR.howTo}" style="color: grey;" />
+									<br />
+									<br />
+								</p:repeat>
+								<br />
+							</c:if>
+
+							<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload}">
+								<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" update="@form" action="#{mandatoryGrantVerificationUI.uploadMGVerificationEvidence}" styleClass="flat green-btn Fs18" style="height: 50px;">
+								</p:commandButton>
+							</p:panelGrid>
+
+							<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve}">
+								<p:commandButton value="#{lang['approve']}" icon="ui-icon-save" update="@form" action="#{mandatoryGrantVerificationUI.cloCrmReviewMgVerificationEvidence}" styleClass="flat green-btn Fs18" style="height: 50px;">
+								</p:commandButton>
+								<p:commandButton value="#{lang['reject.am']}" icon="ui-icon-save" update="@form" oncomplete="PF('rejectReasonsDlg').show()" process="@this" styleClass="flat red-btn Fs18" style="height: 50px;">
+								</p:commandButton>
+							</p:panelGrid>
+
+							<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval}">
+								<p:commandButton value="Final Approve" icon="ui-icon-save" update="@form" action="#{mandatoryGrantVerificationUI.finalApproveMgVerification}" styleClass="flat green-btn Fs18" style="height: 50px;">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+								</p:commandButton>
+								<p:commandButton value="Final Reject" icon="ui-icon-save" update="@form" oncomplete="PF('finalRejectReasonsDlg').show()" process="@this" styleClass="flat red-btn Fs18" style="height: 50px;">
+								</p:commandButton>
+								<p:commandButton value="#{lang['reject.am']} Task" icon="ui-icon-save" update="@form" oncomplete="PF('rejectReasonsDlg').show()" process="@this" styleClass="flat red-btn Fs18" style="height: 50px;">
+								</p:commandButton>
+							</p:panelGrid>
+						</div>
+					</div>
+				</c:if>
+
+			</h:form>
+		</div>
+
+		<p:dialog header="Information" position="top" widgetVar="dlgInformation" resizable="false" hideEffect="clip" showEffect="clip" id="dialogInformation" width="80%" responsive="true" modal="true" dynamic="true" closeOnEscape="true">
+			<h:form id="informationForm">
+				<ui:include src="/pages/includes/tabinfo.xhtml">
+					<ui:param name="showInfoCircle" value="true" />
+					<ui:param name="cssClass" value="secondaryText Fs15" />
+					<ui:param name="helpTxt" value="#{lang['The.system.will.auto-fill.based.selections']}" />
+				</ui:include>
+				<p:panelGrid columns="1" style="width:100%" id="informationGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<p:fieldset legend="Information">
+						<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText style="width:95%; opacity:1 !important;" value="#{mandatoryGrantVerificationUI.mgVerificationDetails.ofoCodes.ofoDescription}" disabled="true" />
+								<p:outputLabel value="#{lang['ofo.codes']}" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText style="width:95%; opacity:1 !important;" value="#{mandatoryGrantVerificationUI.mgVerificationDetails.enrolmentStatus.description}" disabled="true" />
+								<p:outputLabel value="Enrolment Status" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText style="width:95%; opacity:1 !important;" value="#{mandatoryGrantVerificationUI.mgVerificationDetails.employmentStatus.friendlyName}" disabled="true" />
+								<p:outputLabel value="#{lang['employment.status']}" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText style="width:95%; opacity:1 !important;" value="#{mandatoryGrantVerificationUI.mgVerificationDetails.interventionType.description}" disabled="true" />
+								<p:outputLabel value="#{lang['intervention.type']}" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText rendered="#{mandatoryGrantVerificationUI.mgVerificationDetails.qualification ne null}" style="width:95%; opacity:1 !important;"
+									value="(#{mandatoryGrantVerificationUI.mgVerificationDetails.qualification.code}) #{mandatoryGrantVerificationUI.mgVerificationDetails.qualification.description}" disabled="true" />
+								<p:inputText rendered="#{mandatoryGrantVerificationUI.mgVerificationDetails.skillsProgram ne null}" style="width:95%; opacity:1 !important;"
+									value="(#{mandatoryGrantVerificationUI.mgVerificationDetails.skillsProgram.programmeID}) #{mandatoryGrantVerificationUI.mgVerificationDetails.skillsProgram.description}" disabled="true" />
+								<p:inputText rendered="#{mandatoryGrantVerificationUI.mgVerificationDetails.skillsSet ne null}" style="width:95%; opacity:1 !important;"
+									value="(#{mandatoryGrantVerificationUI.mgVerificationDetails.skillsSet.programmeID}) #{mandatoryGrantVerificationUI.mgVerificationDetails.skillsSet.description}" disabled="true" />
+								<p:inputText rendered="#{mandatoryGrantVerificationUI.mgVerificationDetails.unitStandard ne null}" style="width:95%; opacity:1 !important;"
+									value="(#{mandatoryGrantVerificationUI.mgVerificationDetails.unitStandard.code}) #{mandatoryGrantVerificationUI.mgVerificationDetails.unitStandard.title}" disabled="true" />
+								<p:inputText rendered="#{mandatoryGrantVerificationUI.mgVerificationDetails.nonCreditBearingIntervationTitle ne null}" style="width:95%; opacity:1 !important;"
+									value="(#{mandatoryGrantVerificationUI.mgVerificationDetails.nonCreditBearingIntervationTitle.code}) #{mandatoryGrantVerificationUI.mgVerificationDetails.nonCreditBearingIntervationTitle.description}" disabled="true" />
+								<p:outputLabel value="#{lang['intervention.title']}" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText style="width:95%; opacity:1 !important;" value="#{mandatoryGrantVerificationUI.mgVerificationDetails.nqfLevels.description}" disabled="true" />
+								<p:outputLabel value="#{lang['nqf.level']}" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText style="width:95%; opacity:1 !important;" value="#{mandatoryGrantVerificationUI.mgVerificationDetails.noPlannedLearners}" disabled="true" />
+								<p:outputLabel value="#{lang['number.of.learners']}" />
+							</h:panelGroup>
+						</p:panelGrid>
+					</p:fieldset>
+					<p:fieldset legend="Information Provided" rendered="#{!mandatoryGrantVerificationapplicationUI.alterInfo}">
+						<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText style="width:95%; opacity:1 !important;" value="#{mandatoryGrantVerificationUI.mgVerificationDetails.noLearnersStarted}" disabled="true" />
+								<p:outputLabel value="No. of Learners Started / Registered" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText style="width:95%; opacity:1 !important;" value="#{mandatoryGrantVerificationUI.mgVerificationDetails.noLearnersWithdrawn}" disabled="true" />
+								<p:outputLabel value="No. of Learners Withdrawn" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText style="width:95%; opacity:1 !important;" value="#{mandatoryGrantVerificationUI.mgVerificationDetails.noLearnersCompleted}" disabled="true" />
+								<p:outputLabel value="No. of Learners Completed" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText style="width:95%; opacity:1 !important;" value="#{mandatoryGrantVerificationUI.mgVerificationDetails.noLearnersCompleted}" disabled="true" />
+								<p:outputLabel value="No. of Learners Completed" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText style="width:95%; opacity:1 !important;" value="#{mandatoryGrantVerificationUI.mgVerificationDetails.actionPlan}" disabled="true" />
+								<p:outputLabel value="Action Plan" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText style="width:95%; opacity:1 !important;" value="#{mandatoryGrantVerificationUI.mgVerificationDetails.deviationReason.description}" disabled="true" />
+								<p:outputLabel value="Reason for Deviation" />
+							</h:panelGroup>
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="Evidence Required" />
+								</div>
+								<div>
+									<p:selectBooleanCheckbox value="#{mandatoryGrantVerificationUI.mgVerificationDetails.evidanceRequired}" disabled="true">
+										<p:ajax />
+									</p:selectBooleanCheckbox>
+								</div>
+							</h:panelGroup>
+						</p:panelGrid>
+					</p:fieldset>
+					<p:fieldset legend="Required Information" rendered="#{mandatoryGrantVerificationUI.alterInfo}">
+						<p:panelGrid id="entryPanel" columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputNumber inputStyle="width: 95%; opacity:1 !important;" id="noLearnersStartedEntry" value="#{mandatoryGrantVerificationUI.mgVerificationDetails.noLearnersStarted}" required="true" requiredMessage="No. of Learners Started / Registered " decimalPlaces="0">
+									<f:convertNumber type="number" maxIntegerDigits="5" maxFractionDigits="5" groupingUsed="false" />
+									<p:ajax update="entryPanel"></p:ajax>
+								</p:inputNumber>
+								<p:outputLabel value="No. of Learners Started / Registered" for="noLearnersStartedEntry" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputNumber inputStyle="width: 95%; opacity:1 !important;" id="noLearnersWithDrawnEntry" value="#{mandatoryGrantVerificationUI.mgVerificationDetails.noLearnersWithdrawn}" symbolPosition="s" emptyValue="sign" required="true" requiredMessage="No. of Learners Withdrawn"
+									maxValue="#{mandatoryGrantVerificationUI.mgVerificationDetails.noLearnersStarted}" decimalPlaces="0" minValue="-1000.999">
+									<f:convertNumber type="number" maxIntegerDigits="5" maxFractionDigits="5" groupingUsed="false" />
+									<p:ajax></p:ajax>
+								</p:inputNumber>
+								<p:outputLabel value="No. of Learners Withdrawn" for="noLearnersWithDrawnEntry" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputNumber inputStyle="width: 95%; opacity:1 !important;" id="noLearnersCompletedEntry" value="#{mandatoryGrantVerificationUI.mgVerificationDetails.noLearnersCompleted}" symbolPosition="s" emptyValue="sign" required="true" requiredMessage="No. of Learners Completed"
+									maxValue="#{mandatoryGrantVerificationUI.mgVerificationDetails.noLearnersCompleted}" decimalPlaces="0" minValue="-1000.999">
+									<f:convertNumber type="number" maxIntegerDigits="5" maxFractionDigits="5" groupingUsed="false" />
+									<p:ajax></p:ajax>
+								</p:inputNumber>
+								<p:outputLabel value="No. of Learners Completed" for="noLearnersCompletedEntry" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText style="width: 95%;" value="#{mandatoryGrantVerificationUI.mgVerificationDetails.actionPlan}" id="actionPlanEntry" required="true" requiredMessage="Provide Action Plan">
+									<p:ajax></p:ajax>
+								</p:inputText>
+								<p:outputLabel value="Action Plan" for="actionPlanEntry" />
+							</h:panelGroup>
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="Evidence Required" for="evidanceRequiredSelection" />
+								</div>
+								<div>
+									<p:selectBooleanCheckbox id="evidanceRequiredSelection" value="#{mandatoryGrantVerificationUI.mgVerificationDetails.evidanceRequired}">
+										<p:ajax />
+									</p:selectBooleanCheckbox>
+								</div>
+							</h:panelGroup>
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="Reason for Deviation" for="proc" />
+								</div>
+								<div>
+									<p:selectOneMenu id="proc" value="#{mandatoryGrantVerificationUI.mgVerificationDetails.deviationReason}" style="width:95%" required="true" requiredMessage="#{lang['please.select.a.skills.identification']}" converter="DeviationReasonConvertor">
+										<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+										<f:selectItems value="#{selectItemsUI.deviationReason}" var="rv" itemLabel="#{rv.description}" />
+										<p:ajax />
+									</p:selectOneMenu>
+								</div>
+							</h:panelGroup>
+						</p:panelGrid>
+					</p:fieldset>
+				</p:panelGrid>
+				<p:panelGrid columns="2" style="width:100%" id="actionGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<p:commandButton style="height: 50px;" update="informationForm discgrantTableForm" action="#{mandatoryGrantVerificationUI.closeDialog}" styleClass="flat Fs18" icon="fa fa-times" value="Close" oncomplete="PF('dlgInformation').hide()" />
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250" dynamic="false">
+			<h:form>
+				<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" immediate="false" />
+				<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" immediate="false" />
+			</h:form>
+		</p:confirmDialog>
+
+		<p:dialog header="Reject Reasons" widgetVar="finalRejectReasonsDlg" hideEffect="clip" showEffect="clip" id="dialogFinalRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="finalRejectReasonForm">
+				<!-- Final Reject Reasons -->
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{mandatoryGrantVerificationUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{mandatoryGrantVerificationUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+							</p:selectManyMenu>
+						</div>
+					</div>
+					<p:commandButton value="Final Reject" action="#{mandatoryGrantVerificationUI.finalRejectMGVerification}" update="@form" />
+				</div>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="Reject Reasons" widgetVar="rejectReasonsDlg" hideEffect="clip" showEffect="clip" id="dialogRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonForm">
+				<!-- Final Reject Reasons -->
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{mandatoryGrantVerificationUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{mandatoryGrantVerificationUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+							</p:selectManyMenu>
+						</div>
+					</div>
+					<p:commandButton value="Reject" action="#{mandatoryGrantVerificationUI.rejectMGVerification}" update="@form" />
+				</div>
+			</h:form>
+		</p:dialog>
+
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+		
+		<p:dialog position="top" header="Sign Off" widgetVar="signOffDlg" resizable="false" hideEffect="clip" showEffect="clip" id="signOffDialog" width="80%" responsive="true" modal="true" dynamic="true">
+			<h:form id="signOffForm">
+				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+					<h:panelGroup styleClass="md-inputfield" style="margin-top:19px;">
+						<p:inputText value="#{mandatoryGrantVerificationUI.signOffSelected.user.firstName} #{mandatoryGrantVerificationUI.signOffSelected.user.lastName}" readonly="true" />
+						<p:outputLabel value="Sign Off User" />
+					</h:panelGroup>
+					<h:panelGroup>
+					</h:panelGroup>
+					<h:panelGroup>
+						<div>
+							<p:selectBooleanCheckbox value="#{mandatoryGrantVerificationUI.signOffSelected.accept}" disabled="false">
+							</p:selectBooleanCheckbox>
+						</div>
+						<div>
+							<p:outputLabel value="#{lang['site.visit.report.declaration.text']}"></p:outputLabel>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup>
+						<p:commandButton title="Sign Off" icon="fa fa-pencil" value="Sign Off" action="#{mandatoryGrantVerificationUI.signOff}" update=":signOffForm :discgrantTableForm" process="signOffForm">
+							<p:confirm header="Confirmation" message="Are You Sure?" icon="fa fa-exclamation-triangle" />
+						</p:commandButton>
+					</h:panelGroup>
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true">
+			<h:form id="uploadForm">
+				<h:panelGroup id="uploadGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{mandatoryGrantVerificationUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{mandatoryGrantVerificationUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{mandatoryGrantVerificationUI.storeNewFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}"
+										update="discgrantTableForm @form" multiple="false" fileLimit="1" allowTypes="/(\.|\/)(gif|jpe?g|png|pdf|docx|txt)$/" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+	</ui:define>
+</ui:composition>

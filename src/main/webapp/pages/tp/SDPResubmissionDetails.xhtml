@@ -1,0 +1,444 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+	<ui:define name="content">
+		<style>
+.borderless .ui-datalist-content {
+	border: none;
+}
+
+.error {
+	background-color: #F44336 !important;
+	color: white !important;
+	font-weight: bold;
+}
+</style>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<ui:include src="/pages/includes/taskdiagram.xhtml" />
+			</div>
+		</div>
+
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card">
+					<h:form id="mainForm">
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+
+						<!-- If error accrued or information not provided -->
+						<p:fieldset rendered="#{sdpreaccreditationUI.exceptions ne null}" styleClass="error Fs12">
+							<h4>#{lang['action.required.message']}:</h4>
+							<p:outputLabel value="#{sdpreaccreditationUI.exceptions}" escape="false"></p:outputLabel>
+						</p:fieldset>
+
+						<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+						<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+						<p:importEnum type="haj.com.entity.enums.ConfigDocProcessEnum" var="ConfigDocProcessEnum" />
+						<p:importEnum type="haj.com.entity.enums.YesNoEnum"></p:importEnum>
+						<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+						<p:importEnum type="haj.com.entity.enums.AccreditationApplicationTypeEnum"></p:importEnum>
+						
+						<p:fieldset legend="#{lang['rejection.reason']}" collapsed="false" toggleable="true" rendered="#{sdpreaccreditationUI.rejectReason.size() gt 0 and sdpreaccreditationUI.trainingProviderApplication.approvalStatus eq ApprovalEnum.Rejected}">
+							<c:if test="#{sdpreaccreditationUI.rejectReason.size() gt 0}">
+								<h4>Status: #{sdpreaccreditationUI.trainingProviderApplication.approvalStatus.friendlyName}</h4>
+							</c:if>									
+							<c:if test="#{sdpreaccreditationUI.rejectReason.size() gt 0}">
+								<p:dataTable var="rowVar" value="#{sdpreaccreditationUI.rejectReason}" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+									
+									<p:column headerText="Create Date">
+										<p:outputLabel value="#{rowVar.createDate}">
+											<f:convertDateTime pattern="dd MMMM yyyy" />
+										</p:outputLabel>
+									</p:column>
+									<p:column headerText="Reason for Rejection">
+										<p:outputLabel value="#{rowVar.description}"></p:outputLabel>
+									</p:column>	
+									<p:column headerText="How to fix">
+										<p:outputLabel value="#{rowVar.howTo}"></p:outputLabel>
+									</p:column>
+								</p:dataTable>
+							</c:if>
+						</p:fieldset>
+						<div class="EmptyBox10" />
+						<p:panelGrid columns="1" style="width:100%">
+							<h3>Type Of Application: #{sdpreaccreditationUI.trainingProviderApplication.accreditationApplicationTypeEnum.friendlyName} Re-Submission</h3>
+						</p:panelGrid>
+						<br/>
+						<!-- Tab View Start -->
+						<p:tabView style="width: 100%" id="trainingProviderTabView">
+							<p:tab title="#{lang['company.info']}" id="tpCompanyInfomation">
+								<h:panelGrid id="compInfoPG" style="width:100%">
+									<br />
+									<p:fieldset id="compInfoFS" legend="#{lang['company.info']}" rendered="true">
+										<h:form id="companyInsForm">
+											<ui:include src="/pages/tp/includes/tpResubmissionCompanyDetails.xhtml"/>
+										</h:form>
+									</p:fieldset>
+									
+								</h:panelGrid>
+							</p:tab>
+
+							<p:tab title="#{lang['training.provider.information']}" id="tpUserInfomation">
+								<br />
+								<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+									<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+									<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+								</p:confirmDialog>
+
+								<p:fieldset legend="#{lang['raining.provider.representative']}">
+									<h:panelGrid id="gpUserInfoPG" style="width:100%">
+										<ui:include src="/pages/includes/user_info_display.xhtml">
+											<ui:param name="user" value="#{sdpreaccreditationUI.trainingProviderUser}" />
+										</ui:include>
+									</h:panelGrid>
+								</p:fieldset>
+
+								<p:fieldset legend="#{lang['accreditation.detail']}">
+									<p:panelGrid columns="2" style="width:100%" id="accreditGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+										
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText id="providerType" value="#{sdpreaccreditationUI.trainingProviderApplication.providerType.description}" style="width:95%" required="true" disabled="true" />
+											<p:outputLabel value="Provider Type" for="providerType" />
+										</h:panelGroup>
+										
+										
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText id="providerClass" value="#{sdpreaccreditationUI.trainingProviderApplication.providerClass.description}" style="width:95%" required="true" disabled="true" />
+											<p:outputLabel value="Provider Class" for="providerClass" />
+										</h:panelGroup>
+										
+										
+										
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText id="txtEtqa" value="#{sdpreaccreditationUI.trainingProviderApplication.etqa.description}" style="width:95%" required="true" disabled="true" />
+											<p:outputLabel value="#{lang['etqa']}" for="txtEtqa" />
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText id="AccreditationNumber" value="#{sdpreaccreditationUI.trainingProviderApplication.accreditationNumber}" style="width:95%" required="true" disabled="true" />
+											<p:outputLabel value="Accreditation Number" for="AccreditationNumber" />
+										</h:panelGroup>
+										
+										<h:panelGroup styleClass="md-inputfield" style="margin-top:16px">
+											<p:inputText id="AccreditationStatus" value="#{sdpreaccreditationUI.trainingProviderApplication.accreditationStatus.description}" style="width:95%" required="true" disabled="true" />
+											<p:outputLabel value="Accreditation Status" for="AccreditationStatus" />
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield" rendered="false">
+											<p:inputText id="AccreditationPeriod" value="#{sdpreaccreditationUI.trainingProviderApplication.accreditationPeriod}" style="width:95%" required="true" disabled="true"  />
+											<p:outputLabel value="Accreditation Period" for="AccreditationPeriod" />
+										</h:panelGroup>
+
+										<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank" rendered="true">
+											<h:panelGroup styleClass="md-inputfield" style="width:100%">
+												<p:calendar id="ExpiryDate" value="#{sdpreaccreditationUI.trainingProviderApplication.expiriyDate}" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" style="width: 95%" inputStyle="width: 90%" disabled="true">
+													<p:ajax event="dateSelect">
+													</p:ajax>
+												</p:calendar>
+												<p:outputLabel value="Accreditation End Date" for="ExpiryDate" />
+											</h:panelGroup>
+											
+											<h:panelGroup styleClass="md-inputfield" style="width:100%">
+												<p:calendar id="startDate" value="#{sdpreaccreditationUI.trainingProviderApplication.startDate}"  pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" style="width: 95%" inputStyle="width: 90%" disabled="true">
+													<p:ajax event="dateSelect">
+													</p:ajax>
+												</p:calendar>
+												<p:outputLabel value="Start Date" for="startDate" />
+											</h:panelGroup>
+										</p:panelGrid>
+
+									</p:panelGrid>
+									
+									<p:fieldset>
+										<p:panelGrid columns="2" style="width:100%" id="pgAssessment" layout="grid" styleClass="ui-panelgrid-blank form-group">
+										
+											<h:panelGroup >
+												<p:outputLabel value="Training and Assessment" for="activeCheck" />
+												<p:spacer width="10"></p:spacer>
+												<p:selectBooleanCheckbox label="Training and Assessment" id="activeCheck" value="#{sdpreaccreditationUI.trainingProviderApplication.trainingAssessment}" disabled="true"/>
+											</h:panelGroup>
+											
+											<h:panelGroup >
+												<p:outputLabel value="Assessment Only" for="financeCheck" />
+												<p:spacer width="10"></p:spacer>
+												<p:selectBooleanCheckbox id="financeCheck" value="#{sdpreaccreditationUI.trainingProviderApplication.assessmentOnly}" disabled="true"/>
+											</h:panelGroup>
+											</p:panelGrid>
+										</p:fieldset>
+								</p:fieldset>
+
+								<!-- User Documents -->
+								<p:fieldset legend="#{lang['raining.provider.representative.docs']}" id="userDocs" rendered="#{sdpreaccreditationUI.trainingProviderUser.docs.size() gt 0}">
+									<p:dataTable emptyMessage="#{lang['no.records.found']}" value="#{sdpreaccreditationUI.trainingProviderUser.docs}" var="rv1" rowKey="#{rv1.id}"
+										rows="5" paginator="true" paginatorPosition="bottom"
+			                         paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+			                         rowsPerPageTemplate="5,10,15,20,25,50,100,150,300,600,900">
+			                         
+										<p:column headerText="#{lang['type']}" width="20%">
+							                       #{rv1.configDoc.name}
+							                    </p:column>
+										<p:column headerText="#{lang['uploaded.by']}">
+							                       #{rv1.users.firstName} #{rv1.users.lastName}
+							                    </p:column>
+										<p:column headerText="#{lang['uploaded']}" width="15%">
+											<h:outputText value="#{rv1.createDate}">
+												<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+											</h:outputText>
+										</p:column>
+										<p:column headerText="#{lang['version']}" width="15%">
+											<h:outputText value="#{rv1.versionNo}">
+											</h:outputText>
+										</p:column>
+
+										<p:column width="180">
+											<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}">
+												<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+											</p:commandButton>
+											<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+
+											<p:spacer width="5" rendered="#{rv1.id ne null}" />
+											<p:commandButton icon="fa fa-bars" id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}">
+												<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+											</p:commandButton>
+											<p:tooltip for="dhistUserDocs" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+
+											<p:commandButton rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload}" icon="fa fa-upload" id="uploadUserDocs" styleClass="#{rv1.originalFname eq null ? 'red-btn' : ''} flat" actionListener="#{sdpreaccreditationUI.prepUploadCloseCompanyInformationForUser}" process="@this"
+												oncomplete="PF('dlgUpload').show()" update=":uploadForm">
+												<f:setPropertyActionListener value="#{rv1}" target="#{sdpreaccreditationUI.doc}" />
+											</p:commandButton>
+											<p:tooltip rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload}" for="uploadUserDocs" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+
+											<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+												<p:spacer width="5" />
+												<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+													<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+												</p:commandButton>
+												<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+											</h:panelGroup>
+
+											<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+												<p:spacer width="5" />
+												<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+													<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+												</p:commandButton>
+												<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+											</h:panelGroup>
+
+										</p:column>
+									</p:dataTable>
+								</p:fieldset>
+								<br/>
+								<p:panelGrid columns="1" style="width:100%">
+									<h:outputText value="Declaration For Application With merSETA" styleClass="FontBold Fs15" />
+									<p>
+										I, the undersigned, confirm that I am authorised by 
+										this organisation to submit the Skills Development 
+										Provider application. I declare that to the best of my 
+										knowledge, the information contained herein, is accurate 
+										and up to date. 
+									</p>
+									<div class="EmptyBox20"></div>
+									<p:panel header="#{lang['accept.code.of.conduct']}" style="text-align:center">
+										<h:form id="cocForm">
+											<p:panelGrid columns="6" id="pgAccept" style="width:100%">
+						
+												<h:outputText value="#{lang['name']}:" styleClass="FontBold Fs15" />
+												<h:outputText value="#{sdpreaccreditationUI.trainingProviderUser.firstName} #{sdpreaccreditationUI.trainingProviderUser.lastName}" />
+						
+												<h:outputText value="#{lang['date']}:"  styleClass="FontBold Fs15" />
+												
+												<h:outputText value="#{sdpreaccreditationUI.trainingProviderApplication.codeOfConductAcceptDate}">
+													 <f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+												</h:outputText>
+						
+												<h:outputText value="#{lang['accept']}:" styleClass="FontBold Fs15" />
+												<p:selectBooleanCheckbox style="width:100%" id="cbAccept" disabled="#{sdpreaccreditationUI.trainingProviderApplication.codeOfConductAccepted}" value="#{sdpreaccreditationUI.trainingProviderApplication.codeOfConductAccepted}">
+													
+												</p:selectBooleanCheckbox>
+						
+											</p:panelGrid>
+										</h:form>
+									</p:panel>
+								</p:panelGrid>
+								<div class="EmptyBox10" />
+							</p:tab>
+							
+							<p:tab title="#{lang['sdp.contact.persons']}" id="contactPersonsTab">
+							
+								<ui:include src="/pages/tp/includes/sdpResubmissionContactPerson.xhtml"/>
+								<div class="EmptyBox10" />
+							
+							</p:tab>
+							
+							<p:tab rendered="true"  title="#{lang['assessor.moderator.details']}" id="assModInfo">
+								<ui:include src="/pages/tp/includes/sdpResubmissionAssessorMod.xhtml"/>
+								<div class="EmptyBox10" />
+							</p:tab>
+							
+							<p:tab title="#{lang['qualification.details']}" id="qualVerification">
+								<ui:include src="/pages/tp/includes/sdpResubmissionQualifications.xhtml"/>
+							</p:tab>
+							
+						</p:tabView>
+						<!-- Tab View End -->
+						
+					</h:form>
+					
+				</div>
+
+				<div class="card card-w-title">
+					<h:form>
+						<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Approve and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalApproval}">
+							<p:commandButton  onstart="uploadStart()" value="#{lang['approve.task']}" actionListener="#{sdpreaccreditationUI.approveResubmissionApplication}" icon="ui-icon-save" update="@form" styleClass="flat green-btn Fs18" style="height: 50px;">
+							</p:commandButton>
+							<p:commandButton rendered="false" value="#{lang['reject.task']}" icon="ui-icon-save" update="@form" oncomplete="PF('rejectReasonsDlg').show()" styleClass="flat red-btn Fs18" style="height: 50px;" process="@this">
+							</p:commandButton>
+							<p:commandButton value="#{lang['final.reject']}" icon="ui-icon-save" update="@form" oncomplete="PF('rejectReasonsDlg').show()" styleClass="flat red-btn Fs18" style="height: 50px;" process="@this">
+								
+							</p:commandButton>
+						</p:panelGrid>
+					</h:form>
+				</div>
+
+
+			</div>
+		</div>
+		
+		<p:dialog closeOnEscape="true" header="#{lang['add.contact.person']}" widgetVar="dlgAddContact" resizable="false" hideEffect="clip" showEffect="clip" id="dlgAddContact" width="60%" height="60vh" responsive="true" modal="true" >
+			<h:form id="usersInsForm">
+				<ui:include src="/pages/tp/includes/addUser.xhtml">
+					<ui:param name="addAssFacilitator" value="#{sdpreaccreditationUI.addAssFacilitator}" />
+				</ui:include>
+			</h:form>
+		</p:dialog>
+		
+		 <p:dialog  rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval}" header="#{lang['review.committee.date.scheduling']}" widgetVar="dateSchedule" hideEffect="clip" showEffect="clip" id="dateSchedule" appendTo="@(body)" modal="true" closable="true" width="80%" height="50vh" responsive="true">
+				<h:form id="tableForm">
+				
+					<p:commandButton icon="fa fa-calendar" value="Add New Schedule" update="@form" action="#{amDetailUI.redirectToSchedule}">
+					</p:commandButton>
+					<br />
+					<br />
+					<ui:include src="/pages/includes/tabinfo.xhtml">
+						<ui:param name="showInfoCircle" value="true" />
+						<ui:param name="cssClass" value="secondaryText Fs15" />
+						<ui:param name="helpTxt" value="#{lang['note.only.meeting.that.is.schedule.after.site.visit.date.can.be.selected']}" />
+					</ui:include>
+					 <p:dataTable var="var" value="#{sdpreaccreditationUI.getTPReviewCommitteeMeetingList()}" widgetVar="scheduleTable"  rows="5"
+					 		paginator="true"
+	                         paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+	                         rowsPerPageTemplate="5,10,15" paginatorPosition="bottom">
+				        <f:facet name="header">
+				            <p:outputPanel>
+				                <h:outputText value="Select Review Committee Date" />
+				            </p:outputPanel>
+				        </f:facet>
+				        
+				        <p:column filterBy="#{var.title}" sortBy="#{var.title}" headerText="#{lang['title']}" >
+				            <h:outputText value="#{var.title}" />
+				        </p:column>
+				        
+				        <p:column filterBy="#{var.fromDateTime}" sortBy="#{var.fromDateTime}" headerText="#{lang['from']}" >
+				            <h:outputText value="#{var.fromDateTime}" >
+				            	 <f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME}" />
+				            </h:outputText>
+				        </p:column>
+				        
+				         <p:column filterBy="#{var.toDateTime}" sortBy="#{var.toDateTime}" headerText="#{lang['to']}" >
+				            <h:outputText value="#{var.toDateTime}" >
+				            	 <f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME}" />
+				            </h:outputText>
+				        </p:column>
+				        
+				        <p:column filterBy="#{var.venue}" sortBy="#{var.venue}" headerText="#{lang['venue']}" >
+				            <h:outputText value="#{var.venue}" />
+				        </p:column>
+				        
+				        <p:column style="width:120px" >
+				             <p:commandButton value="#{lang['schedule']}" icon="ui-icon-check" update="@form" action="#{sdpreaccreditationUI.approveTask}"  styleClass="flat green-btn Fs18">
+								<f:setPropertyActionListener value="#{var}" target="#{sdpreaccreditationUI.reviewCommitteeMeeting}" />
+							</p:commandButton>
+				        </p:column>
+			        
+			        </p:dataTable>
+		        
+		        </h:form>
+				<br/>
+				<p:fieldset rendered="false" legend="#{lang['add.review.committee.date.schedule']}" collapsed="true" toggleable="true" >
+					<ui:include src="/pages/etqaReviewCommittee/include/scheduleDetails.xhtml">
+				     </ui:include>
+			    </p:fieldset>
+			
+			</p:dialog>
+		
+		<p:dialog closeOnEscape="true" header="ETQA Review Committee Date" widgetVar="dlgReviewComDateApprove" resizable="false" hideEffect="clip" showEffect="clip" id="dlgReviewComDateApprove"  responsive="true" modal="true" >
+			<h:form id="revcomForm">
+			
+			 <p:calendar id="inline"  mode="inline" value="#{sdpreaccreditationUI.trainingProviderApplication.etqaReviewCommitteeDate}"/>
+			 <br/>
+			<p:commandButton oncomplete="PF('dlgReviewComDateApprove').hide()" value="#{lang['submit']}" icon="ui-icon-save" update="mainForm" action="#{sdpreaccreditationUI.approveTtApplicationAndSendCertificate}">
+			</p:commandButton>
+				
+			</h:form>
+		</p:dialog>
+		
+		<p:dialog header="Reject Reasons" widgetVar="rejectReasonsDlg" hideEffect="clip" showEffect="clip" id="dialogRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonForm">
+				<!-- Final Reject Reasons -->
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{sdpreaccreditationUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:100%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{sdpreaccreditationUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+							</p:selectManyMenu>
+						</div>
+					</div>
+					<p:commandButton onstart="uploadStart()" value="Reject Training Provider" action="#{sdpreaccreditationUI.rejectResubmissionApplication}" update="@form" />
+				</div>
+			</h:form>
+		</p:dialog>
+		
+		
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true">
+			<h:form id="uploadForm">
+				<h:panelGroup id="uploadGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{sdpreaccreditationUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{sdpreaccreditationUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span>
+										<br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{sdpreaccreditationUI.storeFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update="mainForm" multiple="false" fileLimit="1" immediate="false" auto="true" />
+								</p:panel>
+
+
+								<div class="EmptyBox10" />
+
+
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+	</ui:define>
+
+</ui:composition>

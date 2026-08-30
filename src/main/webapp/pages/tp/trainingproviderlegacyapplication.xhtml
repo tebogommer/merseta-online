@@ -1,0 +1,161 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">	
+			
+			<h:form id="sdpInfoForm" style="width:100%">
+				<h:panelGroup style="width:100%">
+					<div class="ui-g" >
+						<div class="ui-g-12">
+							<div class="card card-w-title">
+							 	<p:growl  showDetail="false" life="10000" sticky="false">
+									<p:autoUpdate />
+								</p:growl>
+								<p:dataTable var="rv" value="#{trainingProviderLegacyApplicationUI.tpDataModel}" id="tpList" rowKey="#{rv.id}" paginator="true" rows="5" paginatorPosition="bottom"
+									paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" 
+									rowsPerPageTemplate="5,10,20,40,60,80,100" reflow="true" lazy="true" selectionMode="single" selection="#{trainingProviderLegacyApplicationUI.selectedTrainingProviderApplication}">
+									<p:ajax event="rowSelect" update="sdpInfoForm" listener="#{trainingProviderLegacyApplicationUI.legacyprovideraccreditationInfo}" />
+									
+									<p:column headerText="#{lang['company.name']}" filterBy="#{rv.company.companyName}" sortBy="#{rv.company.companyName}" filterStyle="width: 95%">
+										<h:outputText value="#{rv.company.companyName}" />
+									</p:column>
+									
+									<p:column headerText="#{lang['tradingName']}" filterBy="#{rv.company.tradingName}" sortBy="#{rv.company.tradingName}" filterStyle="width: 95%">
+										<h:outputText value="#{rv.company.tradingName}" />
+									</p:column>
+									
+									<p:column headerText="#{lang['entity.id']}" filterBy="#{rv.company.levyNumber}" sortBy="#{rv.company.levyNumber}" filterStyle="width: 95%">
+										<h:outputText value="#{rv.company.levyNumber}" />
+									</p:column>
+									
+									<p:column headerText="#{lang['accreditation.number']}" filterBy="#{rv.certificateNumber}" sortBy="#{rv.certificateNumber}" filterStyle="width: 95%">
+										<h:outputText rendered="#{rv.certificateNumber ne null}" value="#{rv.certificateNumber}" />
+										<h:outputText rendered="#{rv.certificateNumber eq null}" value="#{rv.accreditationNumber}" />
+										<h:outputText rendered="#{(rv.certificateNumber eq null or rv.certificateNumber eq '') and (rv.accreditationNumber eq null or rv.accreditationNumber eq '') }" value="N/A" />
+									</p:column>
+									
+									<p:column headerText="#{lang['start.date']}" sortBy="#{rv.startDate}" filterStyle="width: 95%">
+										<h:outputText value="#{rv.startDate}" >
+											 <f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+										</h:outputText>
+										<h:outputText rendered="#{rv.startDate eq null}" value="N/A" />
+									</p:column>
+									
+									<p:column headerText="Accreditation End Date " sortBy="#{rv.expiriyDate}" filterStyle="width: 95%">
+										<h:outputText value="#{rv.expiriyDate}" >
+											 <f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+										</h:outputText>
+										<h:outputText rendered="#{rv.expiriyDate eq null}" value="N/A" />
+									</p:column>
+									
+									<p:column headerText="#{lang['review.committee.date']}"  sortBy="#{rvwpa.approvalDate}">
+											<h:outputText value="#{rv.reviewCommitteeMeeting.fromDateTime}">
+												 <f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+											</h:outputText>
+											<h:outputText rendered="#{rv.reviewCommitteeMeeting.fromDateTime eq null}" value="N/A" />
+											
+									</p:column>
+									
+									<p:column headerText="#{lang['decision.number']}"  sortBy="#{rv.reviewCommitteeMeetingAgenda.decisionNumber}">
+											<h:outputText rendered="#{rv.reviewCommitteeMeetingAgenda ne null}" value="#{rv.reviewCommitteeMeetingAgenda.decisionNumber}" />
+											<h:outputText rendered="#{rv.reviewCommitteeMeetingAgenda eq null}" value="N/A" />
+									</p:column>
+									
+									<p:column headerText="#{lang['type.of.application']}"  sortBy="#{rv.accreditationApplicationTypeEnum}" filterStyle="width: 95%">
+										<h:outputText value="#{rv.accreditationApplicationTypeEnum.friendlyName}" />
+									</p:column>
+									
+									<p:column headerText="#{lang['company.approval']}" sortBy="#{rv.company.companyStatus}" filterStyle="width: 95%" rendered="false">
+										<h:outputText value="#{lang[rv.company.companyStatus.registrationName]}" />
+									</p:column>
+									
+									<p:column headerText="#{lang['tp.application.status']}" sortBy="#{rv.approvalStatus}" filterStyle="width: 95%">
+										<h:outputText value="#{rv.approvalStatus.friendlyName}" />
+									</p:column>
+									
+									<p:column width="145" rendered="true" headerText="#{lang['view.edit']}">
+										
+											<p:commandButton action="#{trainingProviderLegacyApplicationUI.legacyprovideraccreditationInfo}" icon="fa fa-search-plus" title="View Details"  
+											update="sdpInfoForm">
+												<f:setPropertyActionListener value="#{rv}" target="#{trainingProviderLegacyApplicationUI.selectedTrainingProviderApplication}" />
+											</p:commandButton>											
+										
+									</p:column>
+								</p:dataTable>		
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+				<h:panelGroup style="width:100%" rendered="#{trainingProviderLegacyApplicationUI.showLegacyProviderAccreditation}">
+					<div class="ui-g" >
+						<div class="ui-g-12">
+							<div class="card card-w-title">
+								<h1>Company SDP Legacy Accreditation</h1>	
+								<ui:include src="/pages/includes/providerlegacyaccreditation.xhtml">
+									<ui:param name="legacyDataModel" value="#{trainingProviderLegacyApplicationUI.legacyDataModel}"/>
+								</ui:include>		
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+				
+				<h:panelGroup style="width:100%" rendered="#{trainingProviderLegacyApplicationUI.showLegacyLists}">
+					<div class="ui-g" >
+						<div class="ui-g-12">
+							<div class="card card-w-title">
+								<p:tabView>
+									<p:tab title="Qualifications" rendered="false">
+										<p:fieldset legend="Qualifications" style="margin-bottom:20px">
+											<ui:include src="/pages/includes/providerqualificationlegacyaccreditation.xhtml">
+												<ui:param name="legacyProviderQualificationList" value="#{trainingProviderLegacyApplicationUI.legacyProviderQualificationLazyDataModel}"/>
+											</ui:include>
+										</p:fieldset>
+									</p:tab>
+									
+									<p:tab title="Learnership">
+										<p:fieldset legend="Learnership" style="margin-bottom:20px">
+											<ui:include src="/pages/includes/providerlearnershiplegacyaccreditation.xhtml">
+												<ui:param name="legacyproviderlearnershipList" value="#{trainingProviderLegacyApplicationUI.legacyProviderLearnershipLazyDataModel}"/>
+											</ui:include>
+											<br />	
+											
+										</p:fieldset>
+									</p:tab>
+									
+									<p:tab title="Skills Programme">
+										<p:fieldset legend="Skills Programme" style="margin-bottom:20px">
+											<ui:include src="/pages/includes/providerskillsprogramelegacyaccreditation.xhtml">
+												<ui:param name="legacyProviderSkillsProgrammeList" value="#{trainingProviderLegacyApplicationUI.legacyProviderSkillsProgrammeLazyDataModel}"/>
+											</ui:include>
+											<br />	
+											
+										</p:fieldset>
+									</p:tab>
+									
+									<p:tab title="Unit Standart">
+										<p:fieldset legend="Unit Standart" style="margin-bottom:20px">
+											<ui:include src="/pages/includes/providerunitstandartlegacyaccreditation.xhtml">
+												<ui:param name="legacyProviderUnitStandardList" value="#{trainingProviderLegacyApplicationUI.legacyProviderUnitStandardLazyDataModel}"/>
+											</ui:include>
+											<br />	
+											
+										</p:fieldset>	
+									</p:tab>
+									
+								</p:tabView>
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+				
+			</h:form>
+		</div>
+	
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+			<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+			<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+		</p:confirmDialog>
+		
+	
+	</ui:define>
+</ui:composition>

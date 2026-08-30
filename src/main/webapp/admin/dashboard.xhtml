@@ -1,0 +1,650 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml">
+
+
+	<ui:define name="head">
+		<script src="#{request.contextPath}/js/highcharts.js" />
+		<script src="#{request.contextPath}/js/highcharts-3d.js" />
+		<script src="#{request.contextPath}/js/modules/map.js" />
+		<script src="#{request.contextPath}/js/exporting.js" />
+		<style>
+div.ui-treenode-children {
+	padding-left: 0px !important
+}
+</style>
+	</ui:define>
+
+	<ui:define name="content">
+
+
+		<h1>Dashboard</h1>
+		<!--
+		<div class="card">
+			<h1>#{lang['admin.dashboard']}</h1>
+		</div>
+		 -->
+
+		<h:form id="taskTotalsFormId">
+			<ui:include src="/pages/reports/tasktotals.xhtml" />
+		</h:form>
+
+		<h:form rendered="false">
+			<div class="card">
+				<h1>#{lang['tasks.per.work.flow.process']}</h1>
+				<ui:include src="/pages/reports/tasktotalsByType.xhtml" />
+			</div>
+		</h:form>
+
+		<!-- <br />
+		<div class="ui-g" >
+			<div class="card">
+				<div class="ui-g-12">
+					<h:form rendered="false">
+						<ui:include src="/pages/reports/usersbyType.xhtml" />
+					</h:form>
+				</div>
+			</div>
+		</div> -->
+
+		<div class="ui-g">
+			<div class="ui-g-12">
+
+
+				<h:form rendered="false">
+					<ui:include src="/pages/reports/companiesPerProvince.xhtml" />
+				</h:form>
+
+				<!-- 		<div class="ui-g">
+					<div class="ui-g-12 ui-md-4 ui-lg-4">
+						<div class="card card-w-title">
+							<h:form id="dashForm">
+								<ui:include src="/pages/includes/sdfPerProvince.xhtml" />
+							</h:form>
+						</div>
+					</div>
+					<div class="ui-g-12 ui-md-4 ui-lg-4">
+						<div class="card card-w-title">
+							<h:form id="dashForm2">
+								<ui:include src="/pages/includes/sdfPerProfile.xhtml" />
+								<ui:include src="/pages/includes/sdfPerTownArea.xhtml" />
+							</h:form>
+						</div>
+					</div>
+					<div class="ui-g-12 ui-md-4 ui-lg-4">
+						<div class="card card-w-title">
+							<h:form id="dashForm3">
+								<ui:include src="/pages/includes/sdfPerRelationship.xhtml" />
+							</h:form>
+						</div>
+					</div>
+
+				</div> -->
+				<!-- <div class="card card-w-title">
+					<div class="ui-g"> -->
+				<h:form id="dashForm5" rendered="false">
+					<div class="ui-g-12 ui-md-6 ui-lg-6">
+
+						<H1>Grants Submissions</H1>
+
+						<p:repeat var="rvRepOne" value="#{dashBoardExecutiveManagerUI.wspReportByYear}">
+							<p:dataTable var="rowVar" value="#{rvRepOne.wspReportList}" paginator="true" rows="10" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,15,20,25,50" reflow="true">
+								<p:column headerText="Grant Year: #{rvRepOne.finYear}">
+									<h:outputText value="#{rowVar.wspType}" />
+								</p:column>
+								<p:column headerText="Small Companies" width="100">
+									<h:outputText value="#{rowVar.smallCount}" />
+								</p:column>
+								<p:column headerText="Medium Companies" width="100">
+									<h:outputText value="#{rowVar.midCount}" />
+								</p:column>
+								<p:column headerText="Large Companies" width="100">
+									<h:outputText value="#{rowVar.largeCount}" />
+								</p:column>
+							</p:dataTable>
+							<div class="EmptyBox10" />
+						</p:repeat>
+
+						<p:dataTable rendered="false" var="rowVar" value="#{dashBoardExecutiveManagerUI.wspReports}" paginator="true" rows="10" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,15,20,25,50" reflow="true">
+							<p:column>
+								<h:outputText value="#{rowVar.wspType}" />
+							</p:column>
+							<p:column headerText="Small Companies" width="100">
+								<h:outputText value="#{rowVar.smallCount}" />
+							</p:column>
+							<p:column headerText="Medium Companies" width="100">
+								<h:outputText value="#{rowVar.midCount}" />
+							</p:column>
+							<p:column headerText="Large Companies" width="100">
+								<h:outputText value="#{rowVar.largeCount}" />
+							</p:column>
+						</p:dataTable>
+
+					</div>
+					<div class="ui-g-12 ui-md-6 ui-lg-6">
+						<H1>Grant Applications</H1>
+
+						<p:repeat var="rvRepTwo" value="#{dashBoardExecutiveManagerUI.wspReportByYear2}">
+							<p:dataTable var="rowVar" value="#{rvRepTwo.wspReportList}" paginator="true" rows="10" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,15,20,25,50" reflow="true">
+								<p:column headerText="Grant Year: #{rvRepTwo.finYear}">
+									<h:outputText value="#{rowVar.wspType}" />
+								</p:column>
+								<p:column headerText="Small Companies" width="100">
+									<h:outputText value="#{rowVar.smallCount}" />
+								</p:column>
+								<p:column headerText="Medium Companies" width="100">
+									<h:outputText value="#{rowVar.midCount}" />
+								</p:column>
+								<p:column headerText="Large Companies" width="100">
+									<h:outputText value="#{rowVar.largeCount}" />
+								</p:column>
+								<p:column headerText="Total" width="100">
+									<h:outputText value="#{rowVar.total}" />
+								</p:column>
+							</p:dataTable>
+							<div class="EmptyBox10" />
+						</p:repeat>
+
+						<p:dataTable rendered="false" var="rowVar" value="#{dashBoardExecutiveManagerUI.wspReports2}" paginator="true" rows="10" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,15,20,25,50" reflow="true">
+
+							<p:column>
+								<h:outputText value="#{rowVar.wspType}" />
+							</p:column>
+							<p:column headerText="Small Companies" width="100">
+								<h:outputText value="#{rowVar.smallCount}" />
+							</p:column>
+							<p:column headerText="Medium Companies" width="100">
+								<h:outputText value="#{rowVar.midCount}" />
+							</p:column>
+							<p:column headerText="Large Companies" width="100">
+								<h:outputText value="#{rowVar.largeCount}" />
+							</p:column>
+							<p:column headerText="Total" width="100">
+								<h:outputText value="#{rowVar.total}" />
+							</p:column>
+						</p:dataTable>
+					</div>
+					<br />
+					<br />
+					<br />
+					<div class="ui-g-12">
+						<h:panelGroup>
+							<div>
+								<h3>Select Financial Year Filter For Grants Submissions &amp; Application Details</h3>
+							</div>
+							<div>
+								<p:selectOneMenu id="finyearSelection" value="#{dashBoardExecutiveManagerUI.selectedFinYear}" style="width:75%" required="false">
+									<p:ajax event="itemSelect" listener="#{dashBoardExecutiveManagerUI.populateFinYearWspReport}" update="grantSubmissionDetailPanel grantApplicationDetailPanel" />
+									<f:selectItems value="#{dashBoardExecutiveManagerUI.finYearByGrantList}" var="rv" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+						<div class="EmptyBox10" />
+					</div>
+					<div class="ui-g-12">
+						<p:outputPanel id="grantSubmissionDetailPanel">
+							<H1>Grants Submissions Details. Selected Year: #{dashBoardExecutiveManagerUI.selectedFinYear}</H1>
+							<ui:include src="/pages/includes/download_lazy.xhtml">
+								<ui:param name="file_name" value="Company_Grant_Submission" />
+								<ui:param name="target" value="grantSubmission" />
+							</ui:include>
+							<br />
+							<p:dataTable id="grantSubmission" var="rowVar" value="#{dashBoardExecutiveManagerUI.wspsByFinYear}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25,50" reflow="true" lazy="true">
+
+								<p:column headerText="#{lang['sdl.number']}" groupRow="true" sortBy="#{rowVar.wsp.company.levyNumber}" filterBy="#{rowVar.wsp.company.levyNumber}">
+									<h:outputText value="#{rowVar.wsp.company.levyNumber}" />
+								</p:column>
+
+								<p:column headerText="Organisation Name" groupRow="true" sortBy="#{rowVar.wsp.company.companyName}" filterBy="#{rowVar.wsp.company.companyName}">
+									<h:outputText value="#{rowVar.wsp.company.companyName}" />
+								</p:column>
+
+								<p:column headerText="Trading Name" groupRow="true" sortBy="#{rowVar.wsp.company.tradingName}" filterBy="#{rowVar.wsp.company.tradingName}">
+									<h:outputText value="#{rowVar.wsp.company.tradingName}" />
+								</p:column>
+
+								<p:column headerText="Region Town" groupRow="true" exportable="false">
+									<h:outputText value="#{rowVar.wsp.regionTown.region.description}" />
+									<h:outputText value="#{rowVar.wsp.company.companyName}" style="display: none !important" />
+								</p:column>
+
+								<p:column headerText="Region Town" groupRow="true" sortBy="#{rowVar.wsp.regionTown.description}" filterBy="#{rowVar.wsp.regionTown.description}" style="display: none !important">
+									<h:outputText value="#{rowVar.wsp.regionTown.region.description}" />
+								</p:column>
+
+								<p:column headerText="Company Size" groupRow="true" exportable="false">
+									<h:outputText value="#{rowVar.wsp.company.sizeOfCompany.detailDescription}" />
+									<h:outputText value="#{rowVar.wsp.company.companyName}" style="display: none !important" />
+								</p:column>
+
+								<p:column headerText="Company Size" groupRow="true" style="display: none !important">
+									<h:outputText value="#{rowVar.wsp.company.sizeOfCompany.detailDescription}" />
+								</p:column>
+
+								<p:column headerText="Organisation Type" groupRow="true" exportable="false">
+									<h:outputText value="#{rowVar.wsp.company.organisationType.description}" />
+									<h:outputText value="#{rowVar.wsp.company.companyName}" style="display: none !important" />
+								</p:column>
+
+								<p:column headerText="Organisation Type" groupRow="true" style="display: none !important">
+									<h:outputText value="#{rowVar.wsp.company.organisationType.description}" />
+								</p:column>
+
+								<p:column headerText="Recognition Agreement" groupRow="true" exportable="false">
+									<h:outputText value="#{rowVar.wsp.company.recognitionAgreement.yesNoName}" />
+									<h:outputText value="#{rowVar.wsp.company.companyName}" style="display: none !important" />
+								</p:column>
+
+								<p:column headerText="Recognition Agreement" groupRow="true" rendered="false">
+									<h:outputText value="#{rowVar.wsp.company.recognitionAgreement.yesNoName}" />
+								</p:column>
+
+								<p:column headerText="Application Type" groupRow="true" exportable="false">
+									<h:outputText value="#{rowVar.wsp.applicationType}" />
+									<h:outputText value="#{rowVar.wsp.company.companyName}" style="display: none !important" />
+								</p:column>
+
+								<p:column headerText="Application Status" groupRow="true" exportable="false">
+									<h:outputText value="#{rowVar.wsp.wspStatusEnum.friendlyName}" />
+								</p:column>
+
+								<p:column headerText="Application Type" groupRow="true" style="display: none !important">
+									<h:outputText value="#{rowVar.wsp.applicationType}" />
+								</p:column>
+
+								<p:column headerText="Application Status" groupRow="true" style="display: none !important">
+									<h:outputText value="#{rowVar.wsp.wspStatusEnum.friendlyName}" />
+								</p:column>
+
+								<p:column headerText="Year" groupRow="false" exportable="true">
+									<h:outputText value="#{rowVar.wsp.finYear}" />
+								</p:column>
+
+								<p:column headerText="Submission Date" groupRow="true" exportable="false">
+									<h:outputText value="#{rowVar.wsp.submissionDate}" />
+									<h:outputText value="#{rowVar.wsp.company.companyName}" style="display: none !important" />
+								</p:column>
+
+								<p:column headerText="Submission Date" style="display: none !important">
+									<h:outputText value="#{rowVar.wsp.submissionDate}" />
+								</p:column>
+
+								<p:column headerText="Sign Offs" exportable="false">
+									<p:outputLabel value="#{rowVar.user.firstName} #{rowVar.user.lastName}"></p:outputLabel>
+									<h:outputText value="#{rowVar.wsp.company.companyName}" style="display: none !important" />
+								</p:column>
+								<p:column headerText="Sign Offs" style="display: none !important">
+									<p:outputLabel value="#{rowVar.user.firstName} #{rowVar.user.lastName}"></p:outputLabel>
+								</p:column>
+
+								<p:column headerText="SDF Type" sortBy="#{rowVar.sdfType.description}" exportable="false">
+									<p:outputLabel value="#{rowVar.sdfType.description}"></p:outputLabel>
+									<h:outputText value="#{rowVar.user.firstName} #{rowVar.user.lastName}" style="display: none !important" />
+								</p:column>
+
+								<p:column headerText="SDF Type" style="display: none !important">
+									<p:outputLabel value="#{rowVar.sdfType.description}"></p:outputLabel>
+								</p:column>
+
+								<p:column headerText="Sign Off Date" sortBy="#{rowVar.signOffDate}">
+									<p:outputLabel value="#{rowVar.signOffDate}">
+										<f:convertDateTime pattern="dd MMMM yyyy HH:mm:ss" />
+									</p:outputLabel>
+								</p:column>
+
+							</p:dataTable>
+						</p:outputPanel>
+					</div>
+					<div class="ui-g-12">
+						<br />
+						<p:outputPanel id="grantApplicationDetailPanel">
+							<H1>Grants Applications Details. Selected Year: #{dashBoardExecutiveManagerUI.selectedFinYear}</H1>
+							<div align="right">
+								<h:commandLink id="eExcel1">
+									<i class="fa fa-file-excel-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+									<p:dataExporter type="xls" target="grantSubmission2" fileName="GrantsApplicationsDetails" pageOnly="false" />
+								</h:commandLink>
+								<h:commandLink id="ePdf1" rendered="false">
+									<i class="fa fa-file-pdf-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+									<p:dataExporter type="pdf" target="grantSubmission2" fileName="GrantsApplicationsDetails" pageOnly="false" />
+								</h:commandLink>
+								<h:commandLink id="eCsv1">
+									<i class="fa fa-file-text-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+									<p:dataExporter type="csv" target="grantSubmission2" fileName="GrantsApplicationsDetails" pageOnly="false" />
+								</h:commandLink>
+								<h:commandLink id="eXml1">
+									<i class="fa fa-file-code-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+									<p:dataExporter type="xml" target="grantSubmission2" fileName="GrantsApplicationsDetails" pageOnly="false" />
+								</h:commandLink>
+
+								<p:tooltip for="eExcel1" value="#{lang['export.search.results.to.excel']}" position="left" />
+								<p:tooltip for="ePdf1" value="#{lang['export.search.results.to.pdf']}" position="left" />
+								<p:tooltip for="eCsv1" value="#{lang['export.search.results.as.a.csv']}" position="left" />
+								<p:tooltip for="eXml1" value="#{lang['export.search.results.as.a.xml']}" position="left" />
+							</div>
+							<p:dataTable id="grantSubmission2" var="rowVar" value="#{dashBoardExecutiveManagerUI.wsps2ByFinYear}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25,50" reflow="true" lazy="true">
+
+								<p:column headerText="#{lang['sdl.number']}" groupRow="true" sortBy="#{rowVar.company.levyNumber}" filterBy="#{rowVar.company.levyNumber}">
+									<h:outputText value="#{rowVar.company.levyNumber}" />
+								</p:column>
+
+								<p:column headerText="Organisation Name" groupRow="true" sortBy="#{rowVar.company.companyName}" filterBy="#{rowVar.company.companyName}">
+									<h:outputText value="#{rowVar.company.companyName}" />
+								</p:column>
+
+								<p:column headerText="Trading Name" groupRow="true" sortBy="#{rowVar.company.tradingName}" filterBy="#{rowVar.company.tradingName}">
+									<h:outputText value="#{rowVar.company.tradingName}" />
+								</p:column>
+
+								<p:column headerText="Company Size" groupRow="true" exportable="false">
+									<h:outputText value="#{rowVar.company.sizeOfCompany.detailDescription}" />
+									<h:outputText value="#{rowVar.company.companyName}" style="display: none !important" />
+								</p:column>
+
+								<p:column headerText="Company Size" groupRow="true" style="display: none !important">
+									<h:outputText value="#{rowVar.company.sizeOfCompany.detailDescription}" />
+								</p:column>
+
+								<p:column headerText="Organisation Type" groupRow="true" exportable="false">
+									<h:outputText value="#{rowVar.company.organisationType.description}" />
+									<h:outputText value="#{rowVar.company.companyName}" style="display: none !important" />
+								</p:column>
+
+								<p:column headerText="Organisation Type" groupRow="true" style="display: none !important">
+									<h:outputText value="#{rowVar.company.organisationType.description}" />
+								</p:column>
+
+								<p:column headerText="Recognition Agreement" groupRow="true" exportable="false">
+									<h:outputText value="#{rowVar.company.recognitionAgreement.yesNoName}" />
+									<h:outputText value="#{rowVar.company.companyName}" style="display: none !important" />
+								</p:column>
+
+								<p:column headerText="Recognition Agreement" groupRow="true" rendered="false">
+									<h:outputText value="#{rowVar.company.recognitionAgreement.yesNoName}" />
+								</p:column>
+
+								<p:column headerText="Application Status" groupRow="true" exportable="false">
+									<h:outputText value="#{rowVar.wspStatusEnum.friendlyName}" />
+								</p:column>
+
+								<p:column headerText="Application Status" groupRow="true" style="display: none !important">
+									<h:outputText value="#{rowVar.wspStatusEnum.friendlyName}" />
+								</p:column>
+
+								<p:column headerText="Region" exportable="false">
+									<h:outputText value="#{rowVar.regionTown.region.description}" />
+									<h:outputText value="#{rowVar.company.companyName}" style="display: none !important" />
+								</p:column>
+
+								<p:column headerText="Region" groupRow="true" rendered="false">
+									<h:outputText value="#{rowVar.regionTown.region.description}" />
+								</p:column>
+
+								<p:column headerText="Town">
+									<h:outputText value="#{rowVar.regionTown.town.description}" />
+								</p:column>
+
+								<p:column headerText="CLO First Name">
+									<h:outputText value="#{rowVar.regionTown.clo.users.firstName}" />
+								</p:column>
+
+								<p:column headerText="CLO Last Name">
+									<h:outputText value="#{rowVar.regionTown.clo.users.lastName}" />
+								</p:column>
+
+								<p:column headerText="SDF First name">
+									<p:outputLabel value="#{rowVar.sdf.firstName}"></p:outputLabel>
+								</p:column>
+
+								<p:column headerText="SDF Last name">
+									<p:outputLabel value="#{rowVar.sdf.lastName}"></p:outputLabel>
+								</p:column>
+
+								<p:column headerText="SDF Email">
+									<p:outputLabel value="#{rowVar.sdf.email}"></p:outputLabel>
+								</p:column>
+
+								<p:column headerText="SDF Contact Number">
+									<p:outputLabel value="#{rowVar.sdf.cellNumber}"></p:outputLabel>
+								</p:column>
+
+							</p:dataTable>
+						</p:outputPanel>
+					</div>
+				</h:form>
+				<!-- 	</div>
+				</div> -->
+				<!--
+				<div class="ui-g">
+					<div class="ui-g-12 ui-md-4 ui-lg-4">
+						<div class="card card-w-title">
+							<h:form id="dashForm5">
+								<ui:include src="/pages/includes/sdfPerTownArea.xhtml" />
+							</h:form>
+						</div>
+					</div>
+
+
+				</div> -->
+
+
+				<!-- 	<h:form>
+					<ui:include src="/pages/reports/execManagement.xhtml" />
+				</h:form> -->
+
+				<div id="allSystemTasksId"></div>
+
+				<div class="card">
+
+					<h1>All System Tasks</h1>
+					<h:form id="mainForm">
+
+						<p:importEnum type="haj.com.entity.enums.RagEnum" />
+
+						<ui:include src="/pages/includes/download_lazy.xhtml">
+							<ui:param name="file_name" value="Outstanding_Tasks" />
+							<ui:param name="target" value="tasksList" />
+						</ui:include>
+						<br />
+
+						<p:dataTable var="rowVar" value="#{tasksUI.dataModel}" filteredValue="#{tasksUI.tasksfilteredList}" id="tasksList" emptyMessage="#{lang['no.records.found']}" rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom" paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+							rowsPerPageTemplate="10,20,40,80,160,320" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['process.name']}">
+								<h:outputText value="#{lang[rowVar.workflowProcess.registrationName]}" />
+							</p:column>
+
+							<p:column headerText="#{lang['description']}" width="30%" filterBy="#{rowVar.description}">
+								<h:outputText value="#{rowVar.description}" />
+							</p:column>
+
+							<p:column headerText="#{lang['last.action.user']}" sortBy="#{rowVar.actionUser.lastName}">
+								<h:outputText value="#{rowVar.actionUser.firstName} #{rowVar.actionUser.lastName}" />
+							</p:column>
+
+
+
+							<p:column headerText="#{lang['status']}" width="120" sortBy="#{rowVar.taskStatus}">
+								<h:outputText value="#{lang[rowVar.taskStatus.registrationName]}" />
+							</p:column>
+
+							<p:column headerText="#{lang['create.date']}" width="120" sortBy="#{rowVar.createDate}">
+								<h:outputText value="#{rowVar.createDate}">
+									<f:convertDateTime pattern="dd MMM yyyy" />
+								</h:outputText>
+							</p:column>
+
+							<p:column headerText="First #{lang['actionDate']}" width="120" sortBy="#{rowVar.startDate}">
+								<h:outputText value="#{rowVar.startDate}">
+									<f:convertDateTime pattern="dd MMM yyyy" />
+								</h:outputText>
+							</p:column>
+
+							<p:column headerText="Days to action" width="40" style="text-align: center !important;">
+
+								<h:outputText value="#{rowVar.noDays}" styleClass="#{rowVar.noDays gt 5?'FontBold Fs20 red':((rowVar.noDays gt 0 and rowVar.noDays le 5)?'FontBold Fs16 orange':null) }" />
+
+							</p:column>
+							<p:column headerText="Last #{lang['actionDate']}" width="120" sortBy="#{rowVar.actionDate}">
+								<h:outputText value="#{rowVar.actionDate}">
+									<f:convertDateTime pattern="dd MMM yyyy" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['dueDate']}" width="120" sortBy="#{rowVar.dueDate}">
+								<h:outputText value="#{rowVar.dueDate}">
+									<f:convertDateTime pattern="dd MMM yyyy" />
+								</h:outputText>
+							</p:column>
+
+							<p:column headerText="#{lang['RAG']}" exportable="false" width="5%" styleClass="Fs13">
+								<center>
+									<h:graphicImage value="/resources/hls/images/red.svg" rendered="#{rowVar.rag eq RagEnum.Red}" width="33" styleClass="animated pulse infinite" />
+									<h:graphicImage value="/resources/hls/images/amber.svg" rendered="#{rowVar.rag eq RagEnum.Amber}" width="31" />
+									<h:graphicImage value="/resources/hls/images/green.svg" rendered="#{rowVar.rag eq RagEnum.Green}" width="22" />
+								</center>
+							</p:column>
+
+
+							<p:column width="100" headerText="View" exportable="false">
+								<p:commandButton title="Remove Current Action User" icon="fa fa-user" action="#{tasksUI.resetTask}" update="@form">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{tasksUI.tasks}" />
+									<p:confirm header="#{lang['confirmation']}" message="Are you sure you want to remove the current action user?" icon="ui-icon-warning" />
+								</p:commandButton>
+								<p:spacer width="5"></p:spacer>
+								<p:commandButton icon="fa fa-search" title="View Current Process Step" update="currentProcessStepForm" action="#{taskDiagramUI.doDiagram(rowVar)}" oncomplete="PF('currentProcessStep').show()">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{taskDiagramUI.task}"></f:setPropertyActionListener>
+								</p:commandButton>
+							</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+						<div class="ui-g"></div>
+
+						<!-- HIDDEN BUTTONS TO POPULATE DASHBOARD TASK LIST AT THE BOTTOM AND SCROLL DOWN THERE AS WELL BELOW -->
+
+						<div>
+							<p:commandButton update="@form" id="externalOpenTasksButtonId" actionListener="#{tasksUI.populateAllSystemsTasksTable('externalOpenTasks')}" action="#{dashBoardUI.pageFocusRun('allSystemTasksId')}" style="visibility: hidden;">
+								<f:ajax render="tasksList" />
+							</p:commandButton>
+							<p:commandButton update="@form" id="externalUnderwayTasksButtonId" actionListener="#{tasksUI.populateAllSystemsTasksTable('externalUnderwayTasks')}" action="#{dashBoardUI.pageFocusRun('allSystemTasksId')}" style="visibility: hidden;">
+								<f:ajax render="tasksList" />
+							</p:commandButton>
+							<p:commandButton update="@form" id="externalCompletedTasksButtonId" actionListener="#{tasksUI.populateAllSystemsTasksTable('externalCompletedTasks')}" action="#{dashBoardUI.pageFocusRun('allSystemTasksId')}" style="visibility: hidden;">
+								<f:ajax render="tasksList" />
+							</p:commandButton>
+							<p:commandButton update="@form" id="employeesOpenTasksButtonId" actionListener="#{tasksUI.populateAllSystemsTasksTable('employeesOpenTasks')}" action="#{dashBoardUI.pageFocusRun('allSystemTasksId')}" style="visibility: hidden;">
+								<f:ajax render="tasksList" />
+							</p:commandButton>
+							<p:commandButton update="@form" id="employeesUnderwayTasksButtonId" actionListener="#{tasksUI.populateAllSystemsTasksTable('employeesUnderwayTasks')}" action="#{dashBoardUI.pageFocusRun('allSystemTasksId')}" style="visibility: hidden;">
+								<f:ajax render="tasksList" />
+							</p:commandButton>
+							<p:commandButton update="@form" id="employeesCompletedTasksButtonId" actionListener="#{tasksUI.populateAllSystemsTasksTable('employeesCompletedTasks')}" action="#{dashBoardUI.pageFocusRun('allSystemTasksId')}" style="visibility: hidden;">
+								<f:ajax render="tasksList" />
+							</p:commandButton>
+							<p:commandButton update="@form" id="allEmployeesTasksButtonId" actionListener="#{tasksUI.populateAllSystemsTasksTable('allEmployeesTasks')}" action="#{dashBoardUI.pageFocusRun('allSystemTasksId')}" style="visibility: hidden;">
+								<f:ajax render="tasksList" />
+							</p:commandButton>
+							<p:commandButton update="@form" id="allExternalTasksButtonId" actionListener="#{tasksUI.populateAllSystemsTasksTable('allExternalTasks')}" action="#{dashBoardUI.pageFocusRun('allSystemTasksId')}" style="visibility: hidden;">
+								<f:ajax render="tasksList" />
+							</p:commandButton>
+							<p:commandButton update="@form" id="allTasksButtonId" actionListener="#{tasksUI.populateAllSystemsTasksTable('allTasks')}" action="#{dashBoardUI.pageFocusRun('allSystemTasksId')}" style="visibility: hidden;">
+								<f:ajax render="tasksList" />
+							</p:commandButton>
+							<p:commandButton update="@form" id="allTasksDefaultButtonId" actionListener="#{tasksUI.populateAllSystemsTasksTable('')}" style="visibility: hidden;">
+								<f:ajax render="tasksList" />
+							</p:commandButton>
+						</div>
+
+						<script type="text/javascript">
+							//alert('onLoad fired !');
+
+							window.onload = function() {
+
+								document.getElementById(
+										"mainForm:allTasksDefaultButtonId")
+										.click();
+							}
+
+							function changeColor() {
+
+								$('[data-nodetype="none"]').children().css({
+									"background-color" : "#C5913E !important",
+									"color" : "white"
+								});
+								$('[data-nodetype="none"]  .ui-tree-toggler')
+										.css("color", "white");
+
+								$('[data-nodetype="notstarted"]').children()
+										.css({
+											"background-color" : "#E22412",
+											"color" : "white"
+										});
+								$(
+										'[data-nodetype="notstarted"]  .ui-tree-toggler')
+										.css("color", "white");
+								$('[data-nodetype="underway"]').children().css(
+										{
+											"background-color" : "#FFB90B",
+											"color" : "black"
+										});
+								$(
+										'[data-nodetype="underway"]  .ui-tree-toggler')
+										.css("color", "black");
+								$('[data-nodetype="completed"]').children()
+										.css({
+											"background-color" : "#20D90A",
+											"color" : "white"
+										});
+								$(
+										'[data-nodetype="completed"]  .ui-tree-toggler')
+										.css("color", "white");
+							}
+						</script>
+
+					</h:form>
+
+				</div>
+
+			</div>
+		</div>
+
+
+		<ui:include src="/pages/includes/taskTree.xhtml" />
+
+
+		<p:dialog header="Current Process Step" closeOnEscape="true" onShow="changeColor()" widgetVar="currentProcessStep" resizable="false" hideEffect="clip" showEffect="clip" id="dlgID" width="50%" responsive="true" modal="true" dynamic="true">
+			<h:form id="currentProcessStepForm">
+				<h:outputText value="#{lang['task']}: " styleClass="FontBold Fs15" />
+				<h:outputText value="#{taskDiagramUI.task.description}" styleClass="FontLight Fs15" />
+				<div class="EmptyBox5" />
+				<p:tree value="#{taskDiagramUI.root}" var="node" orientation="horizontal">
+					<p:treeNode type="notstarted">
+						<h:outputText value="#{node.roles.description} (Days To Complete #{node.numberOfDays != null ? node.numberOfDays : 5})" rendered="#{node.roles.description ne null}" />
+						<h:outputText value="#{lang[node.companyUserType.type]} (Days To Complete #{node.numberOfDays != null ? node.numberOfDays : 5})" rendered="#{node.roles.description eq null}" />
+					</p:treeNode>
+					<p:treeNode type="underway">
+						<h:outputText value="#{node.roles.description} (Days To Complete #{node.numberOfDays != null ? node.numberOfDays : 5})" rendered="#{node.roles.description ne null}" />
+						<h:outputText value="#{lang[node.companyUserType.type]} (Days To Complete #{node.numberOfDays != null ? node.numberOfDays : 5})" rendered="#{node.roles.description eq null}" />
+					</p:treeNode>
+					<p:treeNode type="completed">
+						<h:outputText value="#{node.roles.description} (Days To Complete #{node.numberOfDays != null ? node.numberOfDays : 5})" rendered="#{node.roles.description ne null}" />
+						<h:outputText value="#{lang[node.companyUserType.type]} (Days To Complete #{node.numberOfDays != null ? node.numberOfDays : 5})" rendered="#{node.roles.description eq null}" />
+					</p:treeNode>
+					<p:treeNode type="none">
+						<h:outputText value="#{node.roles.description}" rendered="#{node.roles.description ne null}" />
+						<h:outputText value="#{lang[node.companyUserType.type]}" rendered="#{node.roles.description eq null}" />
+					</p:treeNode>
+					<p:treeNode>
+						<h:outputText value="#{node.roles.description} (Days To Complete #{node.numberOfDays != null ? node.numberOfDays : 5})" rendered="#{node.roles.description ne null}" />
+						<h:outputText value="#{lang[node.companyUserType.type]} (Days To Complete #{node.numberOfDays != null ? node.numberOfDays : 5})" rendered="#{node.roles.description eq null}" />
+					</p:treeNode>
+				</p:tree>
+			</h:form>
+		</p:dialog>
+
+	</ui:define>
+
+</ui:composition>

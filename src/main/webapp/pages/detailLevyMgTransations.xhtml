@@ -1,0 +1,183 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+
+					<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+					<p:importEnum type="haj.com.entity.enums.UsersStatusEnum" />
+
+					<p:growl showDetail="false" sticky="false" id="msg">
+						<p:autoUpdate />
+					</p:growl>
+
+					<h1>Monitor SARS Levy Detail For MG Transactions</h1>
+
+					<h:form id="mainForm">
+
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+
+						<p:dataTable var="rv" value="#{detailLevyMgTransationUI.sarsFilesDataModel}" id="sarsfilesList" rowKey="#{rv.id}" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="6,12,24,36,48,60,120,180,360" reflow="true" lazy="true">
+							<p:column headerText="NSDMS REF ID">
+								<h:outputText value="#{rv.id}" />
+							</p:column>
+							<p:column headerText="#{lang['for.month']}" sortBy="#{rv.forMonth}">
+								<h:outputText value="#{rv.forMonth}">
+									<f:convertDateTime pattern="MMMM yyyy" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="Process: MG Payments" width="80" exportable="false" styleClass="action-column">
+								<p:selectBooleanCheckbox disabled="true" value="#{rv.canProcessMgPayments}" />
+							</p:column>
+							<p:column headerText="Process: MG Payments" style="display:none">
+								<p:outputLabel value="Yes" rendered="#{rv.canProcessMgPayments}" />
+								<p:outputLabel value="No" rendered="#{rv.canProcessMgPayments eq null or !rv.canProcessMgPayments}" />
+							</p:column>
+							<p:column width="80" exportable="false">
+								<p:commandButton  icon="ui-icon-zoom-in" title="View Levy Detail" update=":mainForm:levyDetailPanel" onstart="uploadStart()" oncomplete="uploadDone()" action="#{detailLevyMgTransationUI.selectSarsFile}">
+									<f:setPropertyActionListener value="#{rv}" target="#{detailLevyMgTransationUI.sarsFile}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+
+						<p:outputPanel id="levyDetailPanel">
+							<c:if test="#{detailLevyMgTransationUI.sarsFile ne null and detailLevyMgTransationUI.sarsFile.id ne null}">
+								<div class="EmptyBox10" />
+								<h3>SARS Levy Detail (REF ID: #{detailLevyMgTransationUI.sarsFile.id}) Selected</h3>
+								<ui:include src="/pages/includes/filterGuide.xhtml" />
+								<p:dataTable var="rvLD" value="#{detailLevyMgTransationUI.sarsLevyDetailsDataModel}" id="sarslevydetailList" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+									paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="6,12,24,36,48,60,120,180,360" reflow="true" lazy="true">
+									<f:facet name="header">SARS Levy Details</f:facet>
+									<p:column headerText="NSDMS REF ID" sortBy="#{rvLD.id}">
+										<p:outputLabel value="#{rvLD.id}"/>
+									</p:column>
+									<p:column headerText="Entity ID" filterBy="#{rvLD.refNo}">
+									 	<p:outputLabel value="#{rvLD.refNo}" />
+									</p:column>
+									<p:column headerText="Scheme Year">
+										<p:outputLabel value="#{rvLD.schemeYear}" />
+									</p:column>
+									<p:column headerText="Arrival Date 1">
+										<p:outputLabel value="#{rvLD.arrivalDate1}" >
+											<f:convertDateTime pattern="dd/MM/yyyy" />
+										</p:outputLabel>
+									</p:column>
+									<p:column headerText="Arrival Date 2">
+										<p:outputLabel value="#{rvLD.arrivalDate2}" >
+											<f:convertDateTime pattern="dd/MM/yyyy" />
+										</p:outputLabel>
+									</p:column>
+									<p:column headerText="Total">
+										<p:outputLabel value="#{rvLD.totalD}" styleClass="Fright" >
+											<f:convertNumber pattern="###,###,###,###,##0.00" />
+										</p:outputLabel>
+									</p:column>
+									<p:column headerText="Mandatory Levy">
+										<p:outputLabel value="#{rvLD.mandatoryLevyD}" styleClass="Fright" >
+											<f:convertNumber pattern="###,###,###,###,##0.00" />
+										</p:outputLabel>
+									</p:column>
+									<p:column headerText="Discretionary Levy">
+										<p:outputLabel value="#{rvLD.discretionaryLevyD}" styleClass="Fright" >
+											<f:convertNumber pattern="###,###,###,###,##0.00" />
+										</p:outputLabel>
+									</p:column>
+									<p:column headerText="Admin Levy">
+										<p:outputLabel value="#{rvLD.adminLevyD}" styleClass="Fright" >
+											<f:convertNumber pattern="###,###,###,###,##0.00" />
+										</p:outputLabel>
+									</p:column>
+									<p:column headerText="Interest">
+										<p:outputLabel value="#{rvLD.interestD}" styleClass="Fright" >
+											<f:convertNumber pattern="###,###,###,###,##0.00" />
+										</p:outputLabel>
+									</p:column>
+									<p:column headerText="Penalty">
+										<p:outputLabel value="#{rvLD.penaltyD}" styleClass="Fright" >
+											<f:convertNumber pattern="###,###,###,###,##0.00" />
+										</p:outputLabel>
+									</p:column>
+									<p:column headerText="Process: MG Payments" width="80" exportable="false" styleClass="action-column" sortBy="#{rvLD.canAppearOnMgPayments}">
+										<p:selectBooleanCheckbox disabled="true" value="#{rvLD.canAppearOnMgPayments}" />
+									</p:column>
+									<p:column headerText="Actions" width="80" exportable="false" styleClass="action-column">
+										<p:commandButton action="#{detailLevyMgTransationUI.updateSarsLevyDetail}" styleClass="red-btn" icon="fa fa-times" update=":mainForm:levyDetailPanel :historyForm" onstart="uploadStart()" oncomplete="uploadDone()" title="Remove: Process MG Payments" rendered="#{rvLD.canAppearOnMgPayments}">
+											<p:confirm header="Confirmation" message="Are you sure you want to remove from: MG Transactions?" icon="fa fa-exclamation-triangle" />
+											<f:setPropertyActionListener value="#{rvLD}" target="#{detailLevyMgTransationUI.sarsLevyDetails}" />
+										</p:commandButton>
+										<p:commandButton action="#{detailLevyMgTransationUI.updateSarsLevyDetail}" styleClass="green-btn" icon="fa fa-check" update=":mainForm:levyDetailPanel :historyForm" onstart="uploadStart()" oncomplete="uploadDone()" title="Allow: Process MG Payments" rendered="#{!rvLD.canAppearOnMgPayments}">
+											<p:confirm header="Confirmation" message="Are you sure you want to allow: MG transactions?" icon="fa fa-exclamation-triangle" />
+											<f:setPropertyActionListener value="#{rvLD}" target="#{detailLevyMgTransationUI.sarsLevyDetails}" />
+										</p:commandButton>
+									</p:column>
+								</p:dataTable>
+							</c:if>
+						</p:outputPanel>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="historyForm">
+						<h1>Action History</h1>
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+						<ui:include src="/pages/includes/download_lazy.xhtml">
+							<ui:param name="file_name" value="Action_History_SARS_Levy_Detail_MG_Transactions" />
+							<ui:param name="target" value="historyListDT" />
+						</ui:include>
+						<p:dataTable var="rowVarHist" id="historyListDT" value="#{detailLevyMgTransationUI.levyDetailMgPaymentsAlterAuditDataModel}" rowKey="#{rowVarHist.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}" lazy="true"
+							paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+							<f:facet name="header">History</f:facet>
+							<p:column headerText="AUDIT REF ID" sortBy="#{rowVarHist.id}">
+								<h:outputText value="#{rowVarHist.id}" />
+							</p:column>
+							<p:column headerText="Action Date" sortBy="#{rowVarHist.createDate}">
+								<p:outputLabel value="#{rowVarHist.createDate}">
+									<f:convertDateTime pattern="dd MMMM yyyy (HH:mm:ss)" />
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="Action User" sortBy="#{rowVarHist.users}">
+								<h:outputText value="#{rowVarHist.users.firstName} #{rowVarHist.users.lastName} (#{rowVarHist.users.email})" />
+							</p:column>
+							<p:column headerText="SARS File For DHET/ SARS month" sortBy="#{rowVarHist.sarsFile.forMonth}">
+								<h:outputText value="#{rowVarHist.sarsFile.forMonth}">
+									<f:convertDateTime pattern="MMMM yyyy" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="SARS Levy Detail REF ID" sortBy="#{rowVarHist.sarsLevyDetails.id}">
+								<h:outputText value="#{rowVarHist.sarsLevyDetails.id}">
+								</h:outputText>
+							</p:column>
+							<p:column headerText="SARS Levy Detail: Entity ID" filterBy="#{rowVarHist.sarsLevyDetails.refNo}">
+								<h:outputText value="#{rowVarHist.sarsLevyDetails.refNo}">
+								</h:outputText>
+							</p:column>
+							<p:column headerText="SARS Levy Detail: Total Amount" >
+								<h:outputText value="#{rowVarHist.sarsLevyDetails.totalD}" styleClass="Fright">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="Process: MG Payments" exportable="false" styleClass="action-column" sortBy="#{rowVarHist.mgCanProcess}">
+								<p:selectBooleanCheckbox disabled="true" value="#{rowVarHist.mgCanProcess}" />
+							</p:column>
+							<p:column headerText="Process: MG Payments" style="display:none">
+								<h:outputText value="Yes" rendered="#{rowVarHist.mgCanProcess}" />
+								<h:outputText value="No" rendered="#{!rowVarHist.mgCanProcess}" />
+							</p:column>
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+			<h:form>
+				<p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="fa fa-check" />
+				<p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="fa fa-times" />
+			</h:form>
+		</p:confirmDialog>
+
+	</ui:define>
+</ui:composition>

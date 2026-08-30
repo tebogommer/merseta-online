@@ -1,0 +1,377 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui"
+	template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+		<p:growl showDetail="false" life="10000" sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+		<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="viewEntryForm" rendered="#{sessionUI.user.userPermissions.legacySiteAllocation}">
+						<h1>Provider Legacy Applications: Site Allocation View</h1>
+						<ui:include src="/pages/includes/download_lazy_with_page.xhtml">
+							<ui:param name="file_name" value="Provider_Alteration_list" />
+							<ui:param name="target" value="actionList" />
+						</ui:include>
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+						<p:dataTable var="rowVarLSA" value="#{legacySiteApplicationSiteAllocationUI.legacyProviderApplicationSiteAllocationDataModel}" expandableRowGroups="true" id="actionList" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" reflow="true" lazy="true">
+							<p:column headerText="#{lang['expand.row']}" width="45" exportable="false" styleClass="action-column">
+								<p:rowToggler rendered="#{rowVarLSA.doc.size() gt 0}"></p:rowToggler>
+							</p:column>
+							<p:column headerText="NSDMS REF ID" sortBy="#{rowVarLSA.id}" style="width:5%">
+								<p:outputLabel value="#{rowVarLSA.id}" />
+							</p:column>
+							<p:column headerText="Action Date" sortBy="#{rowVarLSA.createDate}">
+								<p:outputLabel value="#{rowVarLSA.createDate}">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME_SECOND}" />
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="Action User" sortBy="#{rowVarLSA.createUser}">
+								<p:outputLabel value="#{rowVarLSA.createUser.firstName} #{rowVarLSA.createUser.lastName} (#{rowVarLSA.createUser.email})" />
+							</p:column>
+							<p:column headerText="Company Name" filterBy="#{rowVarLSA.company.companyName}" sortBy="#{rowVar.company.companyName}">
+								<p:outputLabel value="#{rowVarLSA.company.companyName}" />
+							</p:column>
+							<p:column headerText="Entity ID" filterBy="#{rowVar.company.levyNumber}" sortBy="#{rowVar.company.levyNumber}">
+								<p:outputLabel value="#{rowVarLSA.company.levyNumber}" />
+							</p:column>
+							<p:column headerText="Application Accreditation Number At Capture" filterBy="#{rowVarLSA.accreditationNumberAtTime}">
+								<p:outputLabel value="#{rowVarLSA.accreditationNumberAtTime}" />
+							</p:column>
+							<p:column headerText="Current Application Accreditation Number" filterBy="#{rowVarLSA.trainingProviderApplication.accreditationNumber}">
+								<p:outputLabel value="#{rowVarLSA.trainingProviderApplication.accreditationNumber}" />
+							</p:column>
+							<p:column headerText="Site Name Assigned" filterBy="#{rowVarLSA.trainingSite.siteName}">
+								<p:outputLabel value="#{rowVarLSA.trainingSite.siteName}" />
+							</p:column>
+							<p:column headerText="Reason" filterBy="#{rowVarLSA.reason}" rendered="false">
+								<p:outputLabel value="#{rowVarLSA.reason}" />
+							</p:column>
+							<p:rowExpansion>
+								<p:dataTable value="#{rowVarLSA.doc}" var="rowVarLiDocList" rowKey="#{rowVarLiDocList.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+									<f:facet name="Header">Documents</f:facet>
+									<p:column headerText="#{lang['uploaded.by']}">#{rowVarLiDocList.users.firstName} #{rowVarLiDocList.users.lastName}</p:column>
+									<p:column headerText="Type">Supporting Document</p:column>
+									<p:column headerText="Orginal File Name">#{rowVarLiDocList.originalFname}</p:column>
+									<p:column headerText="#{lang['uploaded']}" width="15%">
+										<h:outputText value="#{rowVarLiDocList.createDate}">
+											<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+										</h:outputText>
+									</p:column>
+									<p:column headerText="#{lang['version']}" width="15%">
+										<h:outputText value="#{rowVarLiDocList.versionNo}">
+										</h:outputText>
+									</p:column>
+									<p:column width="180" headerText="#{lang['view.edit']}" styleClass="action-column">
+										<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" rendered="#{rowVarLiDocList.id ne null}">
+											<f:setPropertyActionListener value="#{rowVarLiDocList}" target="#{uploadDocUI.doc}" />
+											<p:tooltip value="#{lang['download.the.file']}" position="left" rendered="#{rowVarLiDocList.id ne null}" />
+										</p:commandButton>
+
+										<p:commandButton icon="fa fa-bars" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rowVarLiDocList.id ne null and sessionUI.employee}">
+											<f:setPropertyActionListener value="#{rowVarLiDocList}" target="#{uploadDocUI.doc}" />
+											<p:tooltip value="#{lang['document.tracker']}" position="left" rendered="#{rowVarLiDocList.id ne null}" />
+										</p:commandButton>
+
+										<p:commandButton rendered="#{rowVarLiDocList.note ne null and rowVarLiDocList.note.length() gt 0}" icon="fa fa-comment-o" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+											<f:setPropertyActionListener value="#{rowVarLiDocList}" target="#{uploadDocUI.doc}" />
+											<p:tooltip value="#{lang['view.note']}" position="left" />
+										</p:commandButton>
+
+										<p:commandButton rendered="#{rowVarLiDocList.extension.toLowerCase() eq 'pdf' or rowVarLiDocList.extension.toLowerCase() eq 'png' or rowVarLiDocList.extension.toLowerCase() eq 'jpg' or rowVarLiDocList.extension.toLowerCase() eq 'jpeg' or rowVarLiDocList.extension.toLowerCase() eq 'gif'}"
+											icon="fa fa-eye " oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+											<f:setPropertyActionListener value="#{rowVarLiDocList}" target="#{uploadDocUI.doc}" />
+											<p:tooltip value="#{lang['view.document']} " position="left" />
+										</p:commandButton>
+									</p:column>
+								</p:dataTable>
+							</p:rowExpansion>
+						</p:dataTable>
+					</h:form>
+				</div>
+				<h:form id="mainForm" rendered="#{sessionUI.user.userPermissions.legacySiteAllocationAlter}">
+					<div class="card card-w-title">
+						<h1>Provider Legacy Applications: Site Allocation</h1>
+						<p:dataTable var="rowVar" value="#{legacySiteApplicationSiteAllocationUI.trainingProviderApplicationDataModel}" id="providerList" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10" reflow="true" lazy="true">
+
+							<p:column headerText="NSDMS REF ID" sortBy="#{rowVar.id}">
+								<h:outputText value="#{rowVar.id}" />
+							</p:column>
+
+							<p:column headerText="#{lang['company.name']}" filterBy="#{rowVar.company.companyName}" sortBy="#{rowVar.company.companyName}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.company.companyName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['tradingName']}" filterBy="#{rowVar.company.tradingName}" sortBy="#{rowVar.company.tradingName}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.company.tradingName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['entity.id']}" filterBy="#{rowVar.company.levyNumber}" sortBy="#{rowVar.company.levyNumber}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.company.levyNumber}" />
+							</p:column>
+
+							<p:column headerText="Site Name" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.trainingSite.siteName}" rendered="#{rowVar.trainingSite ne null}" />
+								<h:outputText value="N/A" rendered="#{rowVar.trainingSite eq null}" />
+							</p:column>
+
+							<p:column headerText="#{lang['accreditation.number']}" filterBy="#{rowVar.certificateNumber}" sortBy="#{rowVar.certificateNumber}" filterStyle="width: 95%">
+								<h:outputText rendered="#{rowVar.certificateNumber ne null}" value="#{rowVar.certificateNumber}" />
+								<h:outputText rendered="#{rowVar.certificateNumber eq null}" value="#{rowVar.accreditationNumber}" />
+								<h:outputText rendered="#{(rowVar.certificateNumber eq null or rowVar.certificateNumber eq '') and (rowVar.accreditationNumber eq null or rowVar.accreditationNumber eq '') }" value="N/A" />
+							</p:column>
+
+							<p:column headerText="#{lang['start.date']}" sortBy="#{rowVar.startDate}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.startDate}">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</h:outputText>
+								<h:outputText rendered="#{rowVar.startDate eq null}" value="N/A" />
+							</p:column>
+
+							<p:column headerText="Accreditation End Date " sortBy="#{rowVar.expiriyDate}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.expiriyDate}">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</h:outputText>
+								<h:outputText rendered="#{rowVar.expiriyDate eq null}" value="N/A" />
+							</p:column>
+
+							<p:column headerText="#{lang['type.of.application']}" sortBy="#{rowVar.accreditationApplicationTypeEnum}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.accreditationApplicationTypeEnum.friendlyName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['tp.application.status']}" sortBy="#{rowVar.approvalStatus}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.approvalStatus.friendlyName}" />
+							</p:column>
+
+							<p:column exportable="false">
+								<p:commandButton icon="fa fa-check" process="@this" title="Select Application" update=":mainForm:actionGrid" action="#{legacySiteApplicationSiteAllocationUI.selectProviderApplication}">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{legacySiteApplicationSiteAllocationUI.selectedTrainingProviderApplication}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+
+
+						<p:outputPanel id="actionGrid">
+							<c:if test="#{legacySiteApplicationSiteAllocationUI.selectedTrainingProviderApplication ne null}">
+								<div class="EmptyBox10" />
+								<p:fieldset legend="Training Site Assignment">
+									<p:outputPanel id="siteAssignedmentPanel">
+										<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+											<p:commandButton process="@this" value="New Training Site" icon="fa fa-plus" update=":mainForm:siteAssignedmentSelectionPanel" action="#{legacySiteApplicationSiteAllocationUI.prepNewSite}" />
+											<ui:include src="/pages/includes/filterGuide.xhtml" />
+											<p:dataTable var="rvSite" id="trainingSiteDM" value="#{legacySiteApplicationSiteAllocationUI.trainingSiteDataModel}" rowKey="#{rvSite.id}" paginator="true" rows="5" paginatorPosition="bottom"
+												paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" reflow="true" lazy="true">
+												<f:facet name="header"> Available Training Sites For Selection </f:facet>
+												<p:column headerText="NSDMS REF ID" sortBy="#{rvSite.id}">
+													<p:outputLabel value="#{rvSite.id}" />
+												</p:column>
+												<p:column headerText="Site Name" sortBy="#{rvSite.siteName}" filterBy="#{rvSite.siteName}">
+													<p:outputLabel value="#{rvSite.siteName}" />
+												</p:column>
+												<p:column headerText="Region">
+													<p:outputLabel value="#{rvSite.regionTown.region.description}" rendered="#{rvSite.regionTown ne null}" />
+													<p:outputLabel value="Unable to locate region" rendered="#{rvSite.regionTown eq null}" />
+												</p:column>
+												<p:column headerText="Action" exportable="false" style="width:5%">
+													<p:commandButton process="@this" update=":mainForm:siteAssignedmentSelectionPanel" title="Select Site For Application" icon="fa fa-check" action="#{legacySiteApplicationSiteAllocationUI.selectTrainingSite}">
+														<f:setPropertyActionListener value="#{rvSite}" target="#{legacySiteApplicationSiteAllocationUI.assignedTrainingSite}" />
+													</p:commandButton>
+												</p:column>
+											</p:dataTable>
+										</p:panelGrid>
+									</p:outputPanel>
+									<p:outputPanel id="siteAssignedmentSelectionPanel">
+										<c:if test="#{legacySiteApplicationSiteAllocationUI.assignedTrainingSite ne null and legacySiteApplicationSiteAllocationUI.assignedTrainingSite.id ne null}">
+											<h3>Training Site Selected (NSDMS REF ID: #{legacySiteApplicationSiteAllocationUI.assignedTrainingSite.id})</h3>
+											<p:commandButton id="cancelSiteBtn" icon="fa fa-times" value="Cancel Selection" update=":mainForm:siteAssignedmentSelectionPanel" action="#{legacySiteApplicationSiteAllocationUI.clearSelectionOfSite}" />
+											<div class="EmptyBox10" />
+											<p:panel header="Training Site Information">
+												<div class="EmptyBox10"></div>
+												<ui:include src="/pages/includes/training_site_info_display.xhtml">
+													<ui:param name="trainingSite" value="#{legacySiteApplicationSiteAllocationUI.assignedTrainingSite}" />
+												</ui:include>
+												<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+													<p:outputPanel rendered="#{legacySiteApplicationSiteAllocationUI.assignedTrainingSite.residentialAddress ne null}">
+														<ui:include src="/pages/includes/addressInformation.xhtml">
+															<ui:param name="header" value="#{lang['residentialAddress']}" />
+															<ui:param name="address" value="#{legacySiteApplicationSiteAllocationUI.assignedTrainingSite.residentialAddress}" />
+														</ui:include>
+													</p:outputPanel>
+													<p:outputPanel rendered="#{legacySiteApplicationSiteAllocationUI.assignedTrainingSite.postalAddress ne null}">
+														<ui:include src="/pages/includes/addressInformation.xhtml">
+															<ui:param name="header" value="Postal Address" />
+															<ui:param name="address" value="#{legacySiteApplicationSiteAllocationUI.assignedTrainingSite.postalAddress}" />
+														</ui:include>
+													</p:outputPanel>
+												</p:panelGrid>
+											</p:panel>
+										</c:if>
+										<c:if test="#{legacySiteApplicationSiteAllocationUI.assignedTrainingSite ne null and legacySiteApplicationSiteAllocationUI.assignedTrainingSite.id eq null}">
+											<h3>New Training Site Action Selected.</h3>
+											<div class="EmptyBox10" />
+											<p:commandButton process="@this" id="cancelNewSiteBtn" icon="fa fa-times" value="Cancel Selection" update=":mainForm:siteAssignedmentSelectionPanel" action="#{legacySiteApplicationSiteAllocationUI.clearSelectionOfSite}" />
+											<div class="EmptyBox10" />
+											<p:panel header="Training Site Information">
+												<ui:include src="/pages/includes/training_site_info_alteration.xhtml">
+													<ui:param name="trainingSite" value="#{legacySiteApplicationSiteAllocationUI.assignedTrainingSite}" />
+												</ui:include>
+												<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+													<p:fieldset legend="#{lang['residentialAddress']}" style="margin-top: 20px">
+														<ui:include src="/pages/includes/address_alteration_with_geo.xhtml">
+															<ui:param name="address" value="#{legacySiteApplicationSiteAllocationUI.assignedTrainingSite.residentialAddress}" />
+															<ui:param name="disableEntry" value="#{!legacySiteApplicationSiteAllocationUI.newSite}" />
+														</ui:include>
+													</p:fieldset>
+													<p:fieldset legend="#{lang['postalAddress']}" style="margin-top: 20px">
+														<ui:include src="/pages/includes/address_alteration_postal_with_same_func_for_leg.xhtml">
+															<ui:param name="address" value="#{legacySiteApplicationSiteAllocationUI.assignedTrainingSite.postalAddress}" />
+															<ui:param name="disableEntry" value="#{!legacySiteApplicationSiteAllocationUI.newSite}" />
+														</ui:include>
+													</p:fieldset>
+												</p:panelGrid>
+											</p:panel>
+										</c:if>
+										<c:if test="#{legacySiteApplicationSiteAllocationUI.assignedTrainingSite ne null}">
+											<p:dataTable rendered="false" var="rvSDP" id="sdpDM" value="#{legacySiteApplicationSiteAllocationUI.sdpCompanyDataModel}" rowKey="#{rvSDP.id}" paginator="true" rows="5" paginatorPosition="bottom"
+												paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" reflow="true" lazy="true">
+												<f:facet name="header"> Assigned Contact Person(s) </f:facet>
+												<p:column headerText="SDP Full Name">
+													<p:outputLabel value="#{rvSDP.sdp.firstName} #{rvSDP.sdp.lastName}" />
+												</p:column>
+												<p:column headerText="Designation" sortBy="#{rvSDP.sdpType}">
+													<p:outputLabel value="#{rvSDP.sdpType.description}" />
+												</p:column>
+											</p:dataTable>
+											<div class="EmptyBox10" />
+											<p:panelGrid columns="1" id="docPanelGrid" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+												<p:commandButton process="docPanelGrid" icon="fa fa-upload" value="Upload Supporting Documents" oncomplete="PF('uploadSupportingDocDlg').show()" update=":uploadSupportingDocForm" action="#{legacySiteApplicationSiteAllocationUI.prepUpload}" />
+
+												<c:if test="#{legacySiteApplicationSiteAllocationUI.supportingDocs ne null and legacySiteApplicationSiteAllocationUI.supportingDocs.size() gt 0}">
+
+													<div class="EmptyBox10" />
+
+													<p:dataTable value="#{legacySiteApplicationSiteAllocationUI.supportingDocs}" var="rv1" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+														<f:facet name="header"> Supporting Documents</f:facet>
+														<p:column headerText="#{lang['type']}" width="20%">Supporting Document</p:column>
+														<p:column headerText="#{lang['uploaded.by']}">
+															<p:outputLabel value="#{rv1.users.firstName} #{rv1.users.lastName}" rendered="#{rv1.users ne null}" />
+															<p:outputLabel value="Awaiting Submission" rendered="#{rv1.users eq null}" />
+														</p:column>
+														<p:column headerText="#{lang['uploaded']}" width="15%">
+															<h:outputText value="#{rv1.createDate}" rendered="#{rv1.createDate ne null}">
+																<f:convertDateTime pattern="dd MMM yyyy" />
+															</h:outputText>
+															<h:outputText value="Awaiting Submission" rendered="#{rv1.createDate eq null}">
+															</h:outputText>
+														</p:column>
+
+														<p:column headerText="Original File Name" width="150">
+															<h:outputText value="#{rv1.originalFname}">
+															</h:outputText>
+														</p:column>
+
+														<p:column headerText="Note" width="150">
+															<h:outputText value="#{rv1.note}">
+															</h:outputText>
+														</p:column>
+
+														<p:column headerText="#{lang['document.is.required']}" width="150" rendered="false">
+															<p:selectBooleanCheckbox value="#{rv1.configDoc.requiredDocument}" disabled="true" style="opacity: 1 !important" rendered="#{not rv1.required}"></p:selectBooleanCheckbox>
+															<p:selectBooleanCheckbox value="#{rv1.required}" disabled="true" style="opacity: 1 !important" rendered="#{rv1.required}"></p:selectBooleanCheckbox>
+														</p:column>
+
+														<p:column headerText="#{lang['original.required']}" width="150" rendered="false">
+															<p:selectBooleanCheckbox value="#{rv1.configDoc.originalRequired}" disabled="true" style="opacity: 1 !important" rendered="#{not rv1.configDoc.originalRequired}"></p:selectBooleanCheckbox>
+															<p:selectBooleanCheckbox value="#{rv1.configDoc.originalRequired}" disabled="true" style="opacity: 1 !important" rendered="#{rv1.configDoc.originalRequired}"></p:selectBooleanCheckbox>
+														</p:column>
+
+														<p:column headerText="#{lang['version']}" width="15%" rendered="false">
+															<h:outputText value="#{rv1.versionNo}">
+															</h:outputText>
+														</p:column>
+
+														<p:column width="5%" headerText="Actions">
+															<p:commandButton process="@this" ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}">
+																<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+																<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+															</p:commandButton>
+															<p:commandButton process="@this" ajax="false" icon="fa fa-download " action="#{uploadDocUI.download(rv1)}" id="dlbUserDocsMemory" rendered="#{rv1.id eq null}">
+																<p:tooltip for="dlbUserDocsMemory" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+															</p:commandButton>
+															<p:spacer width="5" />
+															<p:commandButton process="@this" rendered="#{rv1.id eq null}" update=":mainForm:siteAssignedmentSelectionPanel" icon="fa fa-times" title="Remove Entry" action="#{legacySiteApplicationSiteAllocationUI.removeDocFromList}">
+																<p:confirm header="Confirmation" message="Are You Sure?" icon="fa fa-exclamation-triangle" />
+																<f:setPropertyActionListener value="#{rv1}" target="#{legacySiteApplicationSiteAllocationUI.doc}" />
+															</p:commandButton>
+														</p:column>
+													</p:dataTable>
+												</c:if>
+											</p:panelGrid>
+
+
+
+											<div class="EmptyBox10" />
+
+
+											<p:commandButton value="Submit" process="@form" icon="fa fa-plus" update=":mainForm :viewEntryForm" action="#{legacySiteApplicationSiteAllocationUI.submitNewEntry}" >
+												<p:confirm header="Confirmation" message="Are you sure?" icon="fa fa-exclamation-triangle" />
+											</p:commandButton>
+										</c:if>
+										<c:if test="#{legacySiteApplicationSiteAllocationUI.setmisValidiationSite ne null and legacySiteApplicationSiteAllocationUI.setmisValidiationSite ne ''}">
+											<p:fieldset legend="Training Site Validation Error(s)" styleClass="error Fs12">
+												<p:outputLabel value="#{legacySiteApplicationSiteAllocationUI.setmisValidiationSite}" escape="false"></p:outputLabel>
+											</p:fieldset>
+										</c:if>
+									</p:outputPanel>
+								</p:fieldset>
+							</c:if>
+						</p:outputPanel>
+
+					</div>
+				</h:form>
+			</div>
+		</div>
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+			<h:form>
+				<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+				<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+			</h:form>
+		</p:confirmDialog>
+
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="uploadSupportingDocDlg" resizable="false" hideEffect="clip" showEffect="clip" id="uploadSupportingDocDialog" width="80%" responsive="true" modal="true">
+			<h:form id="uploadSupportingDocForm">
+				<h:panelGroup id="uploadGroupUser">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">Upload Supporting Documents</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{legacySiteApplicationSiteAllocationUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{legacySiteApplicationSiteAllocationUI.storeNewFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}"
+										update="@form :mainForm" multiple="false" fileLimit="1" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+
+	</ui:define>
+
+</ui:composition>

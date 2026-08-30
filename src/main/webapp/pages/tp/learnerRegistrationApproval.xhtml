@@ -1,0 +1,483 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml" xmlns:o="http://omnifaces.org/ui">
+	<ui:define name="content">
+		<p:importEnum type="haj.com.entity.enums.CompanyRegOrSDLEnum" var="regSDL"></p:importEnum>
+		<p:importEnum type="haj.com.entity.enums.YesNoEnum"></p:importEnum>
+		<p:importEnum type="haj.com.entity.enums.PivotNonPivotEnum" />
+		<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+		<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+		<p:importEnum type="haj.com.entity.enums.ConfigDocProcessEnum" />
+		
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<ui:include src="/pages/includes/taskdiagram.xhtml" />
+			</div>
+		</div>
+				
+		<h:form id="learnerRegUserForm">			
+			<p:growl showDetail="false" sticky="false">
+				<p:autoUpdate />
+			</p:growl>			
+			<c:if test="#{learnerRegistrationFormUI.companylearners.interventionType.form eq '002'}">
+				<ui:include src="/pages/tp/includes/learnershipapprenticeform.xhtml">
+					<ui:param name="disableFields" value="#{learnerRegistrationFormUI.disableFields}" />
+					<ui:param name="disableEmail" value="true" />
+				</ui:include>
+			</c:if>
+			<c:if test="#{learnerRegistrationFormUI.companylearners.interventionType.form eq '015'}">
+				<ui:include src="/pages/tp/includes/otherapplicationform.xhtml">
+					<ui:param name="disableFields" value="#{learnerRegistrationFormUI.disableFields}" />
+					<ui:param name="disableEmail" value="true" />
+				</ui:include>
+			</c:if>
+			
+			<p:outputPanel style="width: 100%" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalUpload and learnerRegistrationFormUI.companylearners.interventionType.form eq '002'}">
+				<p class="Fs12" style="margin: 0px;">Please download and upload the signed agreement form</p>
+				<div class="card">
+					<p:commandButton value="#{lang['download']}" ajax="false" icon="fa fa-download"  action="#{learnerRegistrationFormUI.downloadForOfficeUseOnlyForm}" styleClass="flat green-btn Fs18" style="height: 50px;">
+					</p:commandButton>				
+				</div>
+			</p:outputPanel>
+			
+			<p:outputPanel styleClass="card" id="learnerRegUploadForm" style="width: 100%" rendered="#{learnerRegistrationFormUI.companylearners.docs.size() gt 0}">
+				<h:panelGroup id="docList">
+					<p:fieldset legend="#{lang['documents']}" id="userDocs" rendered="#{learnerRegistrationFormUI.companylearners.docs.size() gt 0}">
+						<p:dataTable value="#{learnerRegistrationFormUI.companylearners.docs}" var="rv1" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+							<p:column headerText="#{lang['type']}" width="20%">
+								<p:outputLabel value="#{rv1.configDoc.name} #{rv1.configDoc.requiredDocument ? '*' : ''}"></p:outputLabel>
+							</p:column>
+							<p:column headerText="#{lang['uploaded.by']}">
+								<p:outputLabel value="#{rv1.users.firstName} #{rv1.users.lastName}"></p:outputLabel>
+							</p:column>
+							<p:column headerText="#{lang['uploaded']}" width="15%">
+								<h:outputText value="#{rv1.createDate}">
+									<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['version']}" width="15%">
+								<h:outputText value="#{rv1.versionNo}">
+								</h:outputText>
+							</p:column>
+
+							<p:column width="180" headerText="#{lang['view.edit']}">
+								<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null and rv1.originalFname ne null}">
+									<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+								</p:commandButton>
+								<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null and rv1.originalFname ne null}" />
+
+								<p:spacer width="5" rendered="#{rv1.id ne null}" />
+								<p:commandButton icon="fa fa-bars " id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null and rv1.originalFname ne null}">
+									<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+								</p:commandButton>
+								<p:tooltip for="dhistUserDocs" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null and rv1.originalFname ne null}" />
+
+								<!-- only with permission to upload can upload a new version -->
+								<p:commandButton rendered="#{(sessionUI.task.processRole eq null or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalUpload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload)}" icon="fa fa-upload" id="uploadUserDocs" styleClass="#{rv1.originalFname eq null ? 'red-btn' : ''} flat" process="@this" oncomplete="PF('dlgUpload').show()"
+									update=":uploadForm">
+									<f:setPropertyActionListener value="#{rv1}" target="#{learnerRegistrationFormUI.doc}" />
+								</p:commandButton>
+								<p:tooltip for="uploadUserDocs" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+
+								<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+									<p:spacer width="5" />
+									<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+										<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+								</h:panelGroup>
+
+								<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+									<p:spacer width="5" />
+									<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+										<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+								</h:panelGroup>
+
+							</p:column>
+						</p:dataTable>
+					</p:fieldset>
+
+				</h:panelGroup>
+			</p:outputPanel>
+
+			<p:outputPanel id="rejectReasons" style="width: 100%" rendered="#{(learnerRegistrationFormUI.companylearners.status eq ApprovalEnum.Rejected or  learnerRegistrationFormUI.companylearners.documentChangeStatus eq ApprovalEnum.Rejected) and learnerRegistrationFormUI.rejectReason.size() gt 0}">
+				<h:panelGroup id="rejectReasonsId">
+					<div class="ui-g dashboard">
+						<div class="ui-g-12">
+							<p:fieldset legend="Reject Reasons">
+								<h3>#{learnerRegistrationFormUI.companylearners.status.friendlyName}</h3>
+								<p:dataTable var="rowVar" value="#{learnerRegistrationFormUI.rejectReason}" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+									<p:column headerText="Create Date" rendered="false">
+										<p:outputLabel value="#{rowVar.createDate}">
+											<f:convertDateTime pattern="dd MMMM yyyy" />
+										</p:outputLabel>
+									</p:column>
+									<p:column headerText="Reason for Rejection">
+										<p:outputLabel value="#{rowVar.description}"></p:outputLabel>
+									</p:column>
+								</p:dataTable>
+							</p:fieldset>
+						</div>
+					</div>
+				</h:panelGroup>
+			</p:outputPanel>
+
+			<p:outputPanel style="width:100%" rendered="#{sessionUI.task.processRole ne null}">			
+				<div class="card" >
+				<BR />
+				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+				
+					<h:panelGroup styleClass="md-inputfield" >
+						<p:outputLabel value="Learner Signed Date" for="signedDate" styleClass="gray" />
+						<br />
+						<p:calendar inputStyle="width:calc(99% - 40px);" navigator="true" id="signedDate" 
+							value="#{learnerRegistrationFormUI.companylearners.signedDate}" size="19" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" 
+							mask="true" readonlyInput="true"  requiredMessage="Select Learner Signed Date" required="true" 
+							disabled="#{!learnerRegistrationFormUI.showsignedDate}" >
+							<p:ajax event="dateSelect"></p:ajax>
+						</p:calendar>
+					</h:panelGroup>
+															
+					<h:panelGroup styleClass="md-inputfield" rendered="#{learnerRegistrationFormUI.companylearners.interventionType.form eq '002'}">
+							<p:outputLabel value="Conditional Placement Date " for="conditionalPlacementDate " styleClass="gray" />	
+							<br />
+							<p:calendar inputStyle="width:calc(99% - 40px);" navigator="true" id="conditionalPlacementDate" 
+								value="#{learnerRegistrationFormUI.companylearners.conditionalPlacementDate}" size="19" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" 
+								mask="true" readonlyInput="true"  requiredMessage="Select Conditional Placement Date" required="true" 
+								disabled="#{!learnerRegistrationFormUI.showsignedDate}" >
+								<p:ajax event="dateSelect"></p:ajax>
+							</p:calendar>
+						</h:panelGroup>
+					</p:panelGrid>
+					<BR />
+				</div>
+			</p:outputPanel>
+						
+			<p:outputPanel style="width: 100%" rendered="#{sessionUI.task.workflowProcess eq ConfigDocProcessEnum.Learner}">				
+				<div class="card">
+					<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve}">
+						<p:commandButton value="#{lang['approve']}" icon="ui-icon-save" update="@form" action="#{learnerRegistrationFormUI.completeCompanyLearnersForReview}" styleClass="flat green-btn Fs18" style="height: 50px;">
+						</p:commandButton>
+						<p:commandButton value="#{lang['reject.task']}" icon="ui-icon-save" oncomplete="PF('rejectReason').show()" update="@form" styleClass="flat red-btn Fs18" style="height: 50px;" process="@this">
+						</p:commandButton>
+					</p:panelGrid>
+					<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval}">
+						<p:commandButton value="#{lang['approve']}" icon="ui-icon-save" update="@form" action="#{learnerRegistrationFormUI.finalApproveCompanyLearners}" styleClass="flat green-btn Fs18" style="height: 50px;">
+						</p:commandButton>
+						<p:commandButton value="#{lang['reject.task']}" icon="ui-icon-save" oncomplete="PF('rejectReasonReview').show()" update="@form" styleClass="flat Fs18" style="height: 50px;" process="@this">
+
+						</p:commandButton>
+					</p:panelGrid>
+					<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.View}">
+						<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" update="@form" action="#{learnerRegistrationFormUI.completeCompanyLearners}" styleClass="flat green-btn Fs18" style="height: 50px;">
+						</p:commandButton>
+
+						<p:commandButton oncomplete="PF('dateSchedule').show()" styleClass="flat green-btn Fs18" style="height: 50px;" update="@form" process="@this" value="#{lang['schedule.meeting']}" icon="ui-icon-save" rendered="false">
+						</p:commandButton>
+						
+					</p:panelGrid>
+
+					<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Approve and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalApproval and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.View}">
+						<p:commandButton value="#{lang['approve']}" icon="ui-icon-save" update="@form" action="#{learnerRegistrationFormUI.completeNewCompanyLearners}" styleClass="flat green-btn Fs18" style="height: 50px;" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Edit}">
+						</p:commandButton>
+						<p:commandButton value="#{lang['reject.task']}" icon="ui-icon-save" oncomplete="PF('rejectReason').show()" update="@form" styleClass="flat Fs18" style="height: 50px;" process="@this" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Edit}">
+						</p:commandButton>
+						<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" update="@form" action="#{learnerRegistrationFormUI.completeCompanyLearnersToRegion}" styleClass="flat green-btn Fs18" style="height: 50px;" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload}">
+						</p:commandButton>
+						
+						<p:commandButton process="@this" value="#{lang['withdraw']}" icon="fa fa-trash-o" update="@form" action="#{learnerRegistrationFormUI.withdrawCompanyLearners}" styleClass="flat red-btn Fs18" style="height: 50px;">
+							<p:confirm header="#{lang['confirmation']}" message="Are you sure you want to withdraw this application" icon="ui-icon-warning" />
+						</p:commandButton>
+					</p:panelGrid>
+				</div>				
+			</p:outputPanel>
+			
+			
+			<p:outputPanel style="width:100%" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval and sessionUI.task.workflowProcess ne ConfigDocProcessEnum.LearnerRegistrationDocuments}">					
+				<div class="card" >					
+					<p:panel style="background:#eeeeee">
+						<h5 style="margin-top: 10px; margin-bottom: 10px">#{lang['learner.registration.acknowledgement']}</h5>
+						<p class="Fs12" style="margin: 0px;">#{lang['learner.registration.declaration.paragraph']}</p>
+						<br />
+						<p:selectBooleanCheckbox id="signoff1" value="#{learnerRegistrationFormUI.signoff}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalApproval}" >
+						</p:selectBooleanCheckbox>
+					</p:panel>						
+				</div>
+			</p:outputPanel>
+			
+			<p:outputPanel style="width: 100%" rendered="#{sessionUI.task.workflowProcess eq ConfigDocProcessEnum.CompanyLearner}">			
+				<div class="card">
+					<p:panelGrid columns="3" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload}">
+						<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" update="@form" action="#{learnerRegistrationFormUI.uploadSignedDocuments}" styleClass="flat green-btn Fs18" style="height: 50px;">
+						</p:commandButton>
+					</p:panelGrid>
+					<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve}">
+						<p:commandButton value="#{lang['approve']}" icon="ui-icon-save" update="@form" action="#{learnerRegistrationFormUI.approveCompanyLearner}" styleClass="flat green-btn Fs18" style="height: 50px;">
+						</p:commandButton>
+						<p:commandButton value="#{lang['reject.task']}" icon="ui-icon-save" oncomplete="PF('rejectReasonReview').show()" update="@form" styleClass="flat red-btn Fs18" style="height: 50px;" process="@this">
+						</p:commandButton>
+					</p:panelGrid>
+					<p:panelGrid columns="3" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval}">
+						<p:commandButton value="#{lang['approve']}" icon="ui-icon-save" update="@form" action="#{learnerRegistrationFormUI.finalApproveWorkflow}" styleClass="flat green-btn Fs18" style="height: 50px;">
+						</p:commandButton>
+						<p:commandButton value="#{lang['reject.task']}" icon="ui-icon-save" oncomplete="PF('rejectCompanyLearnerReason').show()" update="@form" styleClass="flat Fs18" style="height: 50px;" process="@this">
+						</p:commandButton>
+						<p:commandButton value="#{lang['final.reject']}" icon="ui-icon-save" oncomplete="PF('rejectReasonReview').show()" update="@form" styleClass="flat red-btn Fs18" style="height: 50px;" process="@this">
+						</p:commandButton>
+					</p:panelGrid>
+					<p:panelGrid columns="3" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalUpload}">
+						<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" update="@form" action="#{learnerRegistrationFormUI.uploadSignedDocument}" styleClass="flat green-btn Fs18" style="height: 50px;">
+						</p:commandButton>
+					</p:panelGrid>
+				</div>
+			</p:outputPanel>
+			
+			<p:outputPanel style="width: 100%" rendered="#{sessionUI.task.workflowProcess eq ConfigDocProcessEnum.LearnerFileManagement}">		
+				<div class="card">	
+					<p:panelGrid columns="3" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole eq null}">
+						<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" update="@form" action="#{learnerRegistrationFormUI.createLearnerFileManagementWorkflow}" styleClass="flat green-btn Fs18" style="height: 50px;" rendered="#{sessionUI.task.processRole eq null}">
+						</p:commandButton>
+					</p:panelGrid>
+				
+					<p:panelGrid columns="3" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval}">
+						<p:commandButton value="#{lang['approve']}" icon="ui-icon-save" update="@form" action="#{learnerRegistrationFormUI.finalApprovalFileManagementWorkflow}" styleClass="flat green-btn Fs18" style="height: 50px;">
+						</p:commandButton>
+						<p:commandButton value="#{lang['reject.task']}" icon="ui-icon-save" oncomplete="PF('rejectLearnerFileManangerReason').show()" update="@form" styleClass="flat Fs18" style="height: 50px;" process="@this">
+						</p:commandButton>
+					</p:panelGrid>	
+				</div>		
+			</p:outputPanel>
+			
+			<p:outputPanel style="width: 100%" rendered="#{sessionUI.task.workflowProcess eq ConfigDocProcessEnum.LearnerRegistration or sessionUI.task.workflowProcess eq ConfigDocProcessEnum.UnemployedBursaryLearnerRegistration}">
+				<div class="card">	
+					<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload}">					
+						<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" update="@form" action="#{learnerRegistrationFormUI.completeCompanyLearnersToRegion}" styleClass="flat green-btn Fs18" style="height: 50px;" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload}">
+						</p:commandButton>	
+						
+						<p:commandButton process="@this" immediate="true" onstart="uploadStart()" value="#{lang['withdraw']}" icon="fa fa-trash-o" update="@form" action="#{learnerRegistrationFormUI.withdrawCompanyLearners}" styleClass="flat red-btn Fs18" style="height: 50px;">
+							<p:confirm header="#{lang['confirmation']}" message="Are you sure you want to withdraw this application" icon="ui-icon-warning" />
+						</p:commandButton>
+					</p:panelGrid>
+					
+					<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve}">
+						<p:commandButton value="#{lang['approve']}" icon="ui-icon-save" update="@form" action="#{learnerRegistrationFormUI.completeCompanyLearnersToFinalApproval}" styleClass="flat green-btn Fs18" style="height: 50px;">
+						</p:commandButton>
+						<p:commandButton value="#{lang['reject.task']}" icon="ui-icon-save" oncomplete="PF('rejectReason').show()" update="@form" styleClass="flat red-btn Fs18" style="height: 50px;" process="@this">
+						</p:commandButton>
+					</p:panelGrid>
+					
+					<p:panelGrid columns="3" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval}">
+						<p:commandButton value="#{lang['approve']}" icon="ui-icon-save" update="@form" action="#{learnerRegistrationFormUI.finalApproveWorkflow}" styleClass="flat green-btn Fs18" style="height: 50px;">
+						</p:commandButton>
+						<p:commandButton value="#{lang['reject.task']}" icon="ui-icon-save" oncomplete="PF('rejectCompanyLearnerReason').show()" update="@form" styleClass="flat Fs18" style="height: 50px;" process="@this">
+						</p:commandButton>
+						<p:commandButton value="#{lang['final.reject']}" icon="ui-icon-save" oncomplete="PF('rejectReasonReview').show()" update="@form" styleClass="flat red-btn Fs18" style="height: 50px;" process="@this">
+						</p:commandButton>
+					</p:panelGrid>
+					
+					<p:panelGrid columns="3" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalUpload}">
+						<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" update="@form" action="#{learnerRegistrationFormUI.uploadSignedDocument}" styleClass="flat green-btn Fs18" style="height: 50px;">
+						</p:commandButton>
+					</p:panelGrid>
+				</div>
+			</p:outputPanel>
+			<p:outputPanel style="width: 100%" rendered="#{sessionUI.task.workflowProcess eq ConfigDocProcessEnum.LearnerRegistrationDocuments}">
+				<div class="card">
+					<p:fieldset legend="Document Change Reasons">
+						<p:dataTable var="rowVar" value="#{learnerRegistrationFormUI.dateChangeReasonAvalibleSelectionList}" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+							<p:column headerText="Create Date">
+								<p:outputLabel value="#{rowVar.createDate}">
+									<f:convertDateTime pattern="dd MMMM yyyy" />
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="Reason for document change">
+								<p:outputLabel value="#{rowVar.description}"></p:outputLabel>
+							</p:column>
+						</p:dataTable>
+					</p:fieldset>
+				</div>
+							
+				<div class="card">
+					<p:panelGrid columns="3" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload}">
+						<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" update="@form" action="#{learnerRegistrationFormUI.uploadChangeDocuments}" styleClass="flat green-btn Fs18" style="height: 50px;">
+						</p:commandButton>
+					</p:panelGrid>
+					<p:panelGrid columns="3" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval}">
+						<p:commandButton value="#{lang['approve']}" icon="ui-icon-save" update="@form" action="#{learnerRegistrationFormUI.finalApproveDocuments}" styleClass="flat green-btn Fs18" style="height: 50px;">
+						</p:commandButton>
+						<p:commandButton value="#{lang['reject.task']}" icon="ui-icon-save" oncomplete="PF('rejectCompanyLearnerDocumets').show()" update="@form" styleClass="flat Fs18" style="height: 50px;" process="@this">
+						</p:commandButton>
+						<p:commandButton value="#{lang['final.reject']}" icon="ui-icon-save" oncomplete="PF('rejectReasonReview').show()" update="@form" styleClass="flat red-btn Fs18" style="height: 50px;" process="@this" rendered="false">
+						</p:commandButton>
+					</p:panelGrid>
+				</div>
+			</p:outputPanel>
+		</h:form>
+
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+		
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true" dynamic="true">
+			<h:form id="uploadForm">
+				<h:panelGroup id="uploadGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{learnerRegistrationFormUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{learnerRegistrationFormUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span>
+										<br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{learnerRegistrationFormUI.storeFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update="learnerRegUserForm:learnerRegUploadForm" multiple="false" fileLimit="1" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="Reject Reasons" widgetVar="rejectReason" hideEffect="clip" showEffect="clip" id="dialogRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{learnerRegistrationFormUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{learnerRegistrationFormUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+
+							</p:selectManyMenu>
+
+							<br />
+							<br />
+						</div>
+					</div>
+					<p:commandButton oncomplete="PF('rejectReason').hide()" update="learnerRegUserForm" value="Reject" action="#{learnerRegistrationFormUI.rejectCompanyLearners}">
+					</p:commandButton>
+				</div>
+			</h:form>
+		</p:dialog>
+		
+		<p:dialog header="Reject Reasons" widgetVar="rejectCompanyLearnerReason" hideEffect="clip" showEffect="clip" id="dialogCompanyLearnerRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectCompanyLearnerReasonForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{learnerRegistrationFormUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{learnerRegistrationFormUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+
+							</p:selectManyMenu>
+
+							<br />
+							<br />
+						</div>
+					</div>
+					<p:commandButton oncomplete="PF('rejectCompanyLearnerReason').hide()" update="learnerRegUserForm" value="Reject" action="#{learnerRegistrationFormUI.rejectCompanyLearner}">
+					</p:commandButton>
+				</div>
+			</h:form>
+		</p:dialog>
+		
+		<p:dialog header="Reject Reasons" widgetVar="rejectLearnerFileManangerReason" hideEffect="clip" showEffect="clip" id="rejectLearnerFileManangerReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectLearnerFileManangerReasonForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{learnerRegistrationFormUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{learnerRegistrationFormUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+
+							</p:selectManyMenu>
+
+							<br />
+							<br />
+						</div>
+					</div>
+					<p:commandButton oncomplete="PF('rejectLearnerFileManangerReason').hide()" update="learnerRegUserForm" value="Reject" action="#{learnerRegistrationFormUI.finalRejectFileManagementWorkflow}">
+					</p:commandButton>
+				</div>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="Reject Reasons" widgetVar="rejectReasonReview" hideEffect="clip" showEffect="clip" id="dialogRejectReasonReview" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonReviewForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{learnerRegistrationFormUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{learnerRegistrationFormUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+
+							</p:selectManyMenu>
+
+							<br />
+							<br />
+						</div>
+					</div>
+					<p:commandButton oncomplete="PF('rejectReasonReview').hide()" update="learnerRegUserForm" value="Reject" action="#{learnerRegistrationFormUI.finalRejectCompanyLearners}">
+					</p:commandButton>
+				</div>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="Reject Reasons" widgetVar="rejectCompanyLearnerDocumets" hideEffect="clip" showEffect="clip" id="dialogCompanyLearnerDocumets" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectCompanyLearnerDocumets">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{learnerRegistrationFormUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{learnerRegistrationFormUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+
+							</p:selectManyMenu>
+
+							<br />
+							<br />
+						</div>
+					</div>
+					<p:commandButton oncomplete="PF('rejectCompanyLearnerDocumets').hide()" update="learnerRegUserForm" value="Reject" action="#{learnerRegistrationFormUI.rejectCompanyLearnerDocuments}">
+					</p:commandButton>
+				</div>
+			</h:form>
+		</p:dialog>
+		
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+			<p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="pi pi-check" />
+			<p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="pi pi-times" />
+		</p:confirmDialog>
+	</ui:define>
+</ui:composition>

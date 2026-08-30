@@ -1,0 +1,84 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Sars Levies Paid</h1>
+					<h:form id="sarsleviespaidInsForm">
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:panelGrid columns="1" style="width:100%" id="sarsleviespaidInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="glPostingDate" value="#{sarsleviespaidUI.sarsleviespaid.glPostingDate}" style="width:95%" />
+								<p:outputLabel value="#{lang['glPostingDate']}" for="glPostingDate" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="checkbookAmount" value="#{sarsleviespaidUI.sarsleviespaid.checkbookAmount}" style="width:95%" />
+								<p:outputLabel value="#{lang['checkbookAmount']}" for="checkbookAmount" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="levyFile" value="#{sarsleviespaidUI.sarsleviespaid.levyFile}" style="width:95%" />
+								<p:outputLabel value="#{lang['levyFile']}" for="levyFile" />
+							</h:panelGroup>
+
+
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:sarsleviespaidList :sarsleviespaidInsForm:sarsleviespaidInsGrid" action="#{sarsleviespaidUI.sarsleviespaidInsert}" />
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="sarsleviespaidInsGrid" process="@this" action="#{sarsleviespaidUI.prepareNew}">
+									<p:resetInput target="sarsleviespaidInsGrid" />
+								</p:commandButton>
+							</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{sarsleviespaidUI.dataModel}" filteredValue="#{sarsleviespaidUI.sarsLeviesPaidfilteredList}" id="sarsleviespaidList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['glPostingDate']}">
+								<h:outputText value="#{rowVar.glPostingDate}" />
+							</p:column>
+							<p:column headerText="#{lang['checkbookAmount']}">
+								<h:outputText value="#{rowVar.checkbookAmount}" />
+							</p:column>
+							<p:column headerText="#{lang['levyFile']}">
+								<h:outputText value="#{rowVar.levyFile}" />
+							</p:column>
+
+
+							<p:column width="80">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":sarsleviespaidInsForm:sarsleviespaidInsGrid">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{sarsleviespaidUI.sarsleviespaid}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:sarsleviespaidList" action="#{sarsleviespaidUI.sarsleviespaidDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{sarsleviespaidUI.sarsleviespaid}" />
+								</p:commandButton>
+							</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+	<!-- 
+glPostingDate = glPostingDate
+checkbookAmount = checkbookAmount
+levyFile = levyFile
+
+-->
+</ui:composition>

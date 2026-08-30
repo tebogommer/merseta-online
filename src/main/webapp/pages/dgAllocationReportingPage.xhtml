@@ -1,0 +1,506 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Discretionary Grant Allocation Reporting Page</h1>
+					<h:form id="mainForm">
+						<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<!-- Reporting Done In Tab View -->
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="Financial Year / Grant Year" />
+							</div>
+							<div>
+								<p:selectOneMenu id="test" value="#{dgAllocationReportingUI.selectedYear}" style="width:75%">
+									<p:ajax />
+									<f:selectItems value="#{dgAllocationReportingUI.financialYears}" />
+								</p:selectOneMenu>
+							</div>
+							<div class="EmptyBox10" />
+						</h:panelGroup>
+
+						<p:tabView id="tabView" activeIndex="#{dgAllocationReportingUI.index}">
+							<p:ajax event="tabChange" listener="#{dgAllocationReportingUI.onTabChange}" update="@form" />
+							<p:tab title="Discretionary Grant Allocation By Financial Year" id="dgByFinYearTab">
+								<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+									<h3>Report To Display Detailed Information Regarding DG Allocation For The Selected Financial Year</h3>
+									<p:commandButton update=":mainForm:tabView:resultsPanelDgByFinYearTab" action="#{dgAllocationReportingUI.populateDgAllocationDetailedReportByFinYear}" value="Generate Report" />
+								</p:panelGrid>
+								<p:outputPanel id="resultsPanelDgByFinYearTab">
+									<c:if test="#{dgAllocationReportingUI.displayReport}">
+										<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+											<ui:include src="/pages/includes/download_lazy.xhtml">
+												<ui:param name="file_name" value="DG_Allocation_Report_By_Fin_Year" />
+												<ui:param name="target" value="dgAllocationDetRepDT" />
+											</ui:include>
+											<p:dataTable rendered="#{dgAllocationReportingUI.displayReport}" var="dgallo" value="#{dgAllocationReportingUI.dataModelDgAllocationDetailed}" id="dgAllocationDetRepDT" rowKey="#{dgallo.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+												paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+												
+												<p:column headerText="Ref ID" rendered="true">
+													<p:outputLabel value="#{dgallo.id}" />
+												</p:column>
+												
+												<p:column headerText="Entity ID" rendered="true">
+													<p:outputLabel value="#{dgallo.mandatoryGrant.wsp.company.levyNumber}" />
+												</p:column>
+
+												<p:column headerText="Company Name" >
+													<p:outputLabel value="#{dgallo.mandatoryGrant.wsp.company.companyName}" />
+												</p:column>
+												
+												<p:column headerText="Chamber">
+													<p:outputLabel value="#{dgallo.mandatoryGrant.wsp.company.sicCode.chamber.description}"></p:outputLabel>
+												</p:column>
+												
+												<p:column headerText="Region Town">
+													<p:outputLabel value="#{dgallo.mandatoryGrant.wsp.company.regionTown.region.description}" />
+												</p:column>
+												
+												<p:column headerText="Number Of Employees">
+													<p:outputLabel value="#{dgallo.mandatoryGrant.wsp.company.numberOfEmployees}" />
+												</p:column>	
+												
+												<p:column headerText="Company Size">
+													<p:outputLabel value="Small Company" rendered="#{dgallo.mandatoryGrant.wsp.company.numberOfEmployees eq 0}" />
+													<p:outputLabel value="Small Company" rendered="#{dgallo.mandatoryGrant.wsp.company.numberOfEmployees gt 0 and dgallo.mandatoryGrant.wsp.company.numberOfEmployees lt 50}" />
+													<p:outputLabel value="Medium Company" rendered="#{dgallo.mandatoryGrant.wsp.company.numberOfEmployees gt 49 and dgallo.mandatoryGrant.wsp.company.numberOfEmployees lt 150}" />
+													<p:outputLabel value="Large Company" rendered="#{dgallo.mandatoryGrant.wsp.company.numberOfEmployees gt 149}" />
+												</p:column>	
+												
+												<p:column headerText="Organisation Type">
+													<p:outputLabel value="#{dgallo.mandatoryGrant.wsp.company.organisationType.description}" />
+												</p:column>	
+												
+												<p:column headerText="Categorization" >
+													<h:outputText value="#{dgallo.dgAllocationParent.companyCategorization}" />
+												</p:column>
+												
+												<p:column headerText="DG Levy (49.5%)" >
+													<p:outputLabel value="#{dgallo.dgAllocationParent.dgLevyAmount}"></p:outputLabel>
+												</p:column>
+												
+												<p:column headerText="Mandatory Grant Status" >
+													<p:outputLabel value="#{dgallo.mandatoryGrant.wsp.wspStatusEnum.friendlyName}" />
+													<p:outputLabel rendered="#{dgallo.mandatoryGrant.wsp.wspStatusEnum.friendlyName eq 'Rejected'}" value=" - #{dgallo.mandatoryGrant.wsp.rejectionReasons}">
+													</p:outputLabel>
+												</p:column>
+												
+												<p:column headerText="Co Funding" >
+													<p:outputLabel value="#{dgallo.mandatoryGrant.wsp.coFundingPartnership.yesNoName}" rendered="#{dgallo.mandatoryGrant.wsp.coFundingPartnership ne null}" />
+													<p:outputLabel value="Require Information" rendered="#{dgallo.mandatoryGrant.wsp.coFundingPartnership eq null}" />
+												</p:column>
+
+												<p:column headerText="DG verification Status">
+													<p:outputLabel value="#{dgallo.mandatoryGrant.wsp.dgVerificationStatus.friendlyName}" />
+												</p:column>
+												
+												<p:column headerText="Requested Intervention">
+													<p:outputLabel value="#{dgallo.mandatoryGrant.interventionType.description}"></p:outputLabel>
+												</p:column>
+												
+												<p:column headerText="Recommended Intervention">
+													<p:outputLabel value="#{dgallo.interventionType.description}"></p:outputLabel>
+												</p:column>
+												
+												<p:column headerText="Recommended Intervention Title">
+													<p:outputLabel value="#{dgallo.mandatoryGrant.qualification.description}" rendered="#{dgallo.lastestMandatoryGrantRecommendation eq null and dgallo.mandatoryGrant.qualification ne null}"/>
+													<p:outputLabel value="#{dgallo.mandatoryGrant.unitStandard.title}" rendered="#{dgallo.lastestMandatoryGrantRecommendation eq null and dgallo.mandatoryGrant.unitStandard ne null}"/>
+													<p:outputLabel value="#{dgallo.mandatoryGrant.skillsProgram.description}" rendered="#{dgallo.lastestMandatoryGrantRecommendation eq null and dgallo.mandatoryGrant.skillsProgram ne null}"/>
+													<p:outputLabel value="#{dgallo.mandatoryGrant.skillsSet.description}" rendered="#{dgallo.lastestMandatoryGrantRecommendation eq null and dgallo.mandatoryGrant.skillsSet ne null}"/>
+													<p:outputLabel value="#{dgallo.mandatoryGrant.nonCreditBearingIntervationTitle.description}" rendered="#{dgallo.lastestMandatoryGrantRecommendation eq null and dgallo.mandatoryGrant.nonCreditBearingIntervationTitle ne null}"/>
+													<p:outputLabel value="#{dgallo.lastestMandatoryGrantRecommendation.qualification.description}" rendered="#{dgallo.lastestMandatoryGrantRecommendation ne null and dgallo.lastestMandatoryGrantRecommendation.qualification ne null}"/>
+													<p:outputLabel value="#{dgallo.lastestMandatoryGrantRecommendation.unitStandards.title}" rendered="#{dgallo.lastestMandatoryGrantRecommendation ne null and dgallo.lastestMandatoryGrantRecommendation.unitStandards ne null}" />
+													<p:outputLabel value="#{dgallo.lastestMandatoryGrantRecommendation.skillsProgram.description}" rendered="#{dgallo.lastestMandatoryGrantRecommendation ne null and dgallo.lastestMandatoryGrantRecommendation.skillsProgram ne null}" />
+													<p:outputLabel value="#{dgallo.lastestMandatoryGrantRecommendation.skillsSet.description}" rendered="#{dgallo.lastestMandatoryGrantRecommendation ne null and dgallo.lastestMandatoryGrantRecommendation.skillsSet ne null}" />
+													<p:outputLabel value="#{dgallo.lastestMandatoryGrantRecommendation.nonCreditBearingIntervationTitle.description}" rendered="#{dgallo.lastestMandatoryGrantRecommendation ne null and dgallo.lastestMandatoryGrantRecommendation.nonCreditBearingIntervationTitle ne null}" />
+												</p:column>
+												
+												<p:column headerText="Ofo Code">
+													<p:outputLabel value="#{dgallo.mandatoryGrant.ofoCodes.ofoDescription}"></p:outputLabel>
+												</p:column>
+
+												<p:column headerText="Requested Learners">
+													<p:outputLabel value="#{dgallo.totalLearners}" rendered="#{dgallo.changeAllocationLearners eq null}"></p:outputLabel>
+													<p:outputLabel value="#{dgallo.initialLearners} -&gt; #{dgallo.changeAllocationLearners}" rendered="#{dgallo.changeAllocationLearners ne null}"></p:outputLabel>
+												</p:column>
+												
+												<p:column headerText="Requested learners with disability">
+													<p:outputLabel value="#{dgallo.disabledTotalLearners}"></p:outputLabel>
+												</p:column>
+
+												<p:column headerText="Recommended Learners">
+													<p:outputLabel value="#{dgallo.numberOfLearners}"></p:outputLabel>
+												</p:column>
+
+												<p:column headerText="Awarded Learners">
+													<p:outputLabel value="#{dgallo.maxPossibleLearners}"></p:outputLabel>
+												</p:column>
+
+												<p:column headerText="Partial Funding Awarded Learners">
+													<p:outputLabel value="#{dgallo.coFundingLearnersAwarded}"></p:outputLabel>
+												</p:column>
+
+												<p:column headerText="Partial Funding Award Amount" styleClass="FontBold">
+													<p:outputLabel value="#{dgallo.coFundingAwardAmount}" styleClass="FontBold" style="color: #f7941e" rendered="#{dgallo.coFundingAwardAmount gt 0}">
+														<f:convertNumber type="currency" currencySymbol="R" />
+													</p:outputLabel>
+													<p:outputLabel value="#{dgallo.coFundingAwardAmount}" styleClass="FontBold" rendered="#{dgallo.coFundingAwardAmount lt 0.1}">
+														<f:convertNumber type="currency" currencySymbol="R" />
+													</p:outputLabel>
+												</p:column>
+
+												<p:column headerText="Requested Amount">
+													<p:outputLabel value="#{dgallo.requestedAmount}">
+														<f:convertNumber type="currency" currencySymbol="R" />
+													</p:outputLabel>
+												</p:column>
+
+												<p:column headerText="Recommended Amount">
+													<p:outputLabel value="#{dgallo.recommendedAmount}">
+														<f:convertNumber type="currency" currencySymbol="R" />
+													</p:outputLabel>
+												</p:column>
+
+												<p:column headerText="Award Amount">
+													<p:outputLabel value="#{dgallo.awardAmount}" styleClass="FontBold" style="color: #5ecf80" rendered="#{dgallo.awardAmount gt 0}">
+														<f:convertNumber type="currency" currencySymbol="R" />
+													</p:outputLabel>
+													<p:outputLabel value="#{dgallo.awardAmount}" styleClass="FontBold" rendered="#{dgallo.awardAmount lt 0.1}">
+														<f:convertNumber type="currency" currencySymbol="R" />
+													</p:outputLabel>
+												</p:column>
+
+												<p:column headerText="Balance">
+													<p:outputLabel value="#{dgallo.balanceRemaining}">
+														<f:convertNumber type="currency" currencySymbol="R" />
+													</p:outputLabel>
+												</p:column>
+
+												<p:column headerText="Partial Funding Balance">
+													<p:outputLabel value="#{dgallo.remainingCoFundingGrantAmount}">
+														<f:convertNumber type="currency" currencySymbol="R" />
+													</p:outputLabel>
+												</p:column>
+
+												<p:column headerText="Disabled Grant Amount">
+													<p:outputLabel value="#{dgallo.disabledGrantAmount}">
+														<f:convertNumber type="currency" currencySymbol="R" />
+													</p:outputLabel>
+												</p:column>
+
+												<p:column headerText="Total Awarded" styleClass="FontBold">
+													<p:outputLabel value="#{dgallo.totalAwardAmount}" styleClass="FontBold" style="color: #5ecf80" rendered="#{dgallo.totalAwardAmount gt 0}">
+														<f:convertNumber type="currency" currencySymbol="R" />
+													</p:outputLabel>
+													<p:outputLabel value="#{dgallo.totalAwardAmount}" styleClass="FontBold" rendered="#{dgallo.totalAwardAmount lt 0.1}">
+														<f:convertNumber type="currency" currencySymbol="R" />
+													</p:outputLabel>
+												</p:column>
+												<p:column headerText="Grant Year" rendered="false" exportable="false">
+													<p:outputLabel value="#{dgallo.mandatoryGrant.wsp.finYear}" />
+												</p:column>
+												
+												<p:column headerText="Partial Funding Amount" rendered="false" exportable="false">
+													<p:outputLabel value="#{dgallo.dgAllocationParent.availableCoFundingAmount}">
+														<f:convertNumber type="currency" currencySymbol="R" />
+													</p:outputLabel>
+												</p:column>
+												
+												<p:column headerText="Total" rendered="false" exportable="false">
+													<p:outputLabel value="#{dgallo.availableAmount + dgallo.dgAllocationParent.availableCoFundingAmount}">
+														<f:convertNumber type="currency" currencySymbol="R" />
+													</p:outputLabel>
+												</p:column>
+
+												<p:column headerText="DG Status" rendered="false" exportable="false">
+													<p:outputLabel value="#{rvDgFinStatus.status.friendlyName}" rendered="#{rvDgFinStatus.status ne null}" />
+													<p:outputLabel rendered="#{rvDgFinStatus.status.friendlyName eq 'Rejected'}" value=" - #{rvDgFinStatus.dgVerificationRejectionReasons}">
+													</p:outputLabel>
+													<p:outputLabel value="Not Started / In Progress" rendered="#{rvDgFinStatus.status eq null}" />
+												</p:column>
+
+											</p:dataTable>
+										</p:panelGrid>
+									</c:if>
+								</p:outputPanel>
+							</p:tab>
+							<p:tab title="Allocation Forecast BY WSP" id="dgBForcastTab">
+							
+								<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+									<h3>Report To Display Forecast Allocation By WSP Selected</h3>
+									<p:commandButton update=":mainForm:tabView:resultsPanelDgForCast" action="#{dgAllocationReportingUI.populateDgAllocationForcatByWsp}" value="Display Companies" rendered="false"/>
+								</p:panelGrid>
+								<p:outputPanel id="resultsPanelDgForCast">
+									<p:commandButton value="Re-run company list" action="#{dgAllocationReportingUI.rerunComapnySelection}" update=":mainForm:tabView:resultsPanelDgForCast"/>
+									<div class="emptyBox10" />
+					
+									<p:dataTable rendered="true" var="rowVarC" value="#{dgAllocationReportingUI.companyDataModel}" lazy="true" id="companyList" rowKey="#{rowVarC.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+										paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+										<f:facet name="header">Comapnies With DG Verifications</f:facet>
+										<p:column headerText="#{lang['company.name']}" filterBy="#{rowVarC.companyName}" sortBy="#{rowVarC.companyName}" filterStyle="width: 95%">
+											<h:outputText value="#{rowVarC.companyName}" />
+										</p:column>
+										<p:column headerText="#{lang['tradingName']}" filterBy="#{rowVarC.tradingName}" sortBy="#{rowVarC.tradingName}" filterStyle="width: 95%">
+											<h:outputText value="#{rowVarC.tradingName}" />
+										</p:column>
+										<p:column headerText="#{lang['entity.id']}" filterBy="#{rowVarC.levyNumber}" sortBy="#{rowVarC.levyNumber}" filterStyle="width: 95%" width="10%">
+											<h:outputText value="#{rowVarC.levyNumber}" />
+										</p:column>
+										<p:column headerText="Grant Status" width="13%" rendered="true">
+											<h:outputText value="#{rowVarC.lastestGrantStatus}" />
+										</p:column>
+										<p:column headerText="DG Verification Status" width="13%" rendered="true">
+											<h:outputText value="#{rowVarC.lastestDgVerificationStatus}" />
+										</p:column>
+										<p:column headerText="#{lang['status']}" sortBy="#{rowVarC.companyStatus}" width="10%" rendered="false">
+											<h:outputText value="#{lang[rowVarC.companyStatus.registrationName]}" />
+										</p:column>
+										<p:column width="7%">
+											<p:commandButton icon="fa fa-search" update=":mainForm:tabView:resultsPanelDgForCast" action="#{dgAllocationReportingUI.selectCompany}">
+												<f:setPropertyActionListener value="#{rowVarC}" target="#{dgAllocationReportingUI.selectedCompany}" />
+											</p:commandButton>
+										</p:column>
+									</p:dataTable>
+									
+									<c:if test="#{dgAllocationReportingUI.displayDgVerification}">
+										<h4>#{dgAllocationReportingUI.selectedCompany.companyName} Selected</h4>
+										<p:dataTable var="rowVarDg" value="#{dgAllocationReportingUI.dgVerificationDataModel}" lazy="true" id="allwspList" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+											emptyMessage="#{lang['no.records.found']}" paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+											<f:facet name="header">DG Verifications</f:facet>
+											<p:column headerText="#{lang['reference.id']}" width="100">
+												<p:outputLabel value="#{rowVarDg.id}" />
+											</p:column>
+											<p:column headerText="#{lang['year']}">
+												<h:outputText value="#{rowVarDg.wsp.finYear}" />
+											</p:column>
+											<p:column headerText="#{lang['companyName']}">
+												<h:outputText value="#{rowVarDg.wsp.company.companyName}" />
+											</p:column>
+											<p:column headerText="Grant #{lang['status']}">
+												<h:outputText value="#{rowVarDg.wsp.wspStatusEnum.friendlyName}" />
+											</p:column>
+											<p:column headerText="Verification #{lang['status']}">
+												<h:outputText value="#{rowVarDg.status.friendlyName}" rendered="#{rowVarDg.status ne null}" />
+												<h:outputText value="Not Yet Started" rendered="#{rowVarDg.status eq null}" />
+											</p:column>
+											<p:column width="7%">
+												<p:commandButton icon="fa fa-search" update=":mainForm:tabView:resultsPanelDgForCast" action="#{dgAllocationReportingUI.populateDgAllocationForcatByWsp}">
+													<f:setPropertyActionListener value="#{rowVarDg.wsp}" target="#{dgAllocationReportingUI.selectedWsp}" />
+												</p:commandButton>
+											</p:column>
+										</p:dataTable>
+									</c:if>
+								
+									<c:if test="#{dgAllocationReportingUI.displayReport}">	
+										<h4>#{dgAllocationReportingUI.selectedCompany.companyName}, #{dgAllocationReportingUI.selectedWsp.finYear} Allocation Forcast Report Generated</h4>
+										<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+											<div align="right">
+												<h:commandLink id="eExcelTsk">
+													<i class="fa fa-file-excel-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+													<p:dataExporter type="xls" target="dgForcastReportDT" fileName="DG_Allocation_Forecast_Report" pageOnly="false" />
+												</h:commandLink>
+												<h:commandLink id="ePdfTsk" rendered="false">
+													<i class="fa fa-file-pdf-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+													<p:dataExporter type="pdf" target="dgForcastReportDT" fileName="DG_Allocation_Forecast_Report" pageOnly="false" />
+												</h:commandLink>
+												<h:commandLink id="eCsvTsk">
+													<i class="fa fa-file-text-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+													<p:dataExporter type="csv" target="dgForcastReportDT" fileName="DG_Allocation_Forecast_Report" pageOnly="false" />
+												</h:commandLink>
+												<h:commandLink id="eXmlTsk">
+													<i class="fa fa-file-code-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+													<p:dataExporter type="xml" target="dgForcastReportDT" fileName="DG_Allocation_Forecast_Report" pageOnly="false" />
+												</h:commandLink>
+												<p:tooltip for="eExcelTsk" value="#{lang['export.search.results.to.excel']}" position="left" />
+												<p:tooltip for="ePdfTsk" value="#{lang['export.search.results.to.pdf']}" position="left" />
+												<p:tooltip for="eCsvTsk" value="#{lang['export.search.results.as.a.csv']}" position="left" />
+												<p:tooltip for="eXmlTsk" value="#{lang['export.search.results.as.a.xml']}" position="left" />
+											</div>
+											<br />
+											<p:dataTable rendered="#{dgAllocationReportingUI.displayReport}" var="dgallo" value="#{dgAllocationReportingUI.forcastAllocationList}" id="dgForcastReportDT" rowKey="#{dgallo.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+												paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" >	
+												<f:facet name="header">Allocation Forcast Report</f:facet>
+												<p:column headerText="Ref ID" rendered="true">
+													<p:outputLabel value="#{dgallo.id}" />
+												</p:column>
+												<p:column headerText="Entity ID" rendered="true">
+													<p:outputLabel value="#{dgallo.mandatoryGrant.wsp.company.levyNumber}" />
+												</p:column>
+
+												<p:column headerText="Company Name" >
+													<p:outputLabel value="#{dgallo.mandatoryGrant.wsp.company.companyName}" />
+												</p:column>
+												
+												<p:column headerText="Chamber">
+													<p:outputLabel value="#{dgallo.mandatoryGrant.wsp.company.sicCode.chamber.description}"></p:outputLabel>
+												</p:column>
+												
+												<p:column headerText="Region Town">
+													<p:outputLabel value="#{dgallo.mandatoryGrant.wsp.company.regionTown.region.description}" />
+												</p:column>
+												
+												<p:column headerText="Number Of Employees">
+													<p:outputLabel value="#{dgallo.mandatoryGrant.wsp.company.numberOfEmployees}" />
+												</p:column>	
+												
+												<p:column headerText="Company Size">
+													<p:outputLabel value="Small Company" rendered="#{dgallo.mandatoryGrant.wsp.company.numberOfEmployees eq 0}" />
+													<p:outputLabel value="Small Company" rendered="#{dgallo.mandatoryGrant.wsp.company.numberOfEmployees gt 0 and dgallo.mandatoryGrant.wsp.company.numberOfEmployees lt 50}" />
+													<p:outputLabel value="Medium Company" rendered="#{dgallo.mandatoryGrant.wsp.company.numberOfEmployees gt 49 and dgallo.mandatoryGrant.wsp.company.numberOfEmployees lt 150}" />
+													<p:outputLabel value="Large Company" rendered="#{dgallo.mandatoryGrant.wsp.company.numberOfEmployees gt 149}" />
+												</p:column>	
+												
+												<p:column headerText="Organisation Type">
+													<p:outputLabel value="#{dgallo.mandatoryGrant.wsp.company.organisationType.description}" />
+												</p:column>	
+												
+												<p:column headerText="Categorization" >
+													<h:outputText value="#{dgallo.dgAllocationParent.companyCategorization}" />
+												</p:column>
+												
+												<p:column headerText="DG Levy (49.5%)" >
+													<p:outputLabel value="#{dgallo.dgAllocationParent.dgLevyAmount}"></p:outputLabel>
+												</p:column>
+												
+												<p:column headerText="Mandatory Grant Status" >
+													<p:outputLabel value="#{dgallo.mandatoryGrant.wsp.wspStatusEnum.friendlyName}" />
+													<p:outputLabel rendered="#{dgallo.mandatoryGrant.wsp.wspStatusEnum.friendlyName eq 'Rejected'}" value=" - #{dgallo.mandatoryGrant.wsp.rejectionReasons}">
+													</p:outputLabel>
+												</p:column>
+												
+												<p:column headerText="Co Funding" >
+													<p:outputLabel value="#{dgallo.mandatoryGrant.wsp.coFundingPartnership.yesNoName}" rendered="#{dgallo.mandatoryGrant.wsp.coFundingPartnership ne null}" />
+													<p:outputLabel value="Require Information" rendered="#{dgallo.mandatoryGrant.wsp.coFundingPartnership eq null}" />
+												</p:column>
+
+												<p:column headerText="DG verification Status">
+													<p:outputLabel value="#{dgallo.mandatoryGrant.wsp.dgVerificationStatus.friendlyName}" />
+												</p:column>
+												
+												<p:column headerText="Available Amount" rendered="true" exportable="false">
+													<p:outputLabel value="#{dgallo.availableAmount}">
+														<f:convertNumber type="currency" currencySymbol="R" />
+													</p:outputLabel>
+												</p:column>
+												
+												<p:column headerText="Requested Intervention">
+													<p:outputLabel value="#{dgallo.mandatoryGrant.interventionType.description}"></p:outputLabel>
+												</p:column>
+												
+												<p:column headerText="Recommended Intervention">
+													<p:outputLabel value="#{dgallo.interventionType.description}"></p:outputLabel>
+												</p:column>
+												
+												<p:column headerText="Recommended Intervention Title">
+													<p:outputLabel value="#{dgallo.mandatoryGrant.qualification.description}" rendered="#{dgallo.lastestMandatoryGrantRecommendation eq null and dgallo.mandatoryGrant.qualification ne null}"/>
+													<p:outputLabel value="#{dgallo.mandatoryGrant.unitStandard.title}" rendered="#{dgallo.lastestMandatoryGrantRecommendation eq null and dgallo.mandatoryGrant.unitStandard ne null}"/>
+													<p:outputLabel value="#{dgallo.mandatoryGrant.skillsProgram.description}" rendered="#{dgallo.lastestMandatoryGrantRecommendation eq null and dgallo.mandatoryGrant.skillsProgram ne null}"/>
+													<p:outputLabel value="#{dgallo.mandatoryGrant.skillsSet.description}" rendered="#{dgallo.lastestMandatoryGrantRecommendation eq null and dgallo.mandatoryGrant.skillsSet ne null}"/>
+													<p:outputLabel value="#{dgallo.mandatoryGrant.nonCreditBearingIntervationTitle.description}" rendered="#{dgallo.lastestMandatoryGrantRecommendation eq null and dgallo.mandatoryGrant.nonCreditBearingIntervationTitle ne null}"/>
+													
+													<p:outputLabel value="#{dgallo.lastestMandatoryGrantRecommendation.qualification.description}" rendered="#{dgallo.lastestMandatoryGrantRecommendation ne null and dgallo.lastestMandatoryGrantRecommendation.qualification ne null}"/>
+													<p:outputLabel value="#{dgallo.lastestMandatoryGrantRecommendation.unitStandards.title}" rendered="#{dgallo.lastestMandatoryGrantRecommendation ne null and dgallo.lastestMandatoryGrantRecommendation.unitStandards ne null}" />
+													<p:outputLabel value="#{dgallo.lastestMandatoryGrantRecommendation.skillsProgram.description}" rendered="#{dgallo.lastestMandatoryGrantRecommendation ne null and dgallo.lastestMandatoryGrantRecommendation.skillsProgram ne null}" />
+													<p:outputLabel value="#{dgallo.lastestMandatoryGrantRecommendation.skillsSet.description}" rendered="#{dgallo.lastestMandatoryGrantRecommendation ne null and dgallo.lastestMandatoryGrantRecommendation.skillsSet ne null}" />
+													<p:outputLabel value="#{dgallo.lastestMandatoryGrantRecommendation.nonCreditBearingIntervationTitle.description}" rendered="#{dgallo.lastestMandatoryGrantRecommendation ne null and dgallo.lastestMandatoryGrantRecommendation.nonCreditBearingIntervationTitle ne null}" />
+												</p:column>
+												
+												<p:column headerText="Ofo Code">
+													<p:outputLabel value="#{dgallo.mandatoryGrant.ofoCodes.ofoDescription}"></p:outputLabel>
+												</p:column>
+
+												<p:column headerText="Requested Learners">
+													<p:outputLabel value="#{dgallo.totalLearners}" rendered="#{dgallo.changeAllocationLearners eq null}"></p:outputLabel>
+													<p:outputLabel value="#{dgallo.initialLearners} -&gt; #{dgallo.changeAllocationLearners}" rendered="#{dgallo.changeAllocationLearners ne null}"></p:outputLabel>
+												</p:column>
+												
+												<p:column headerText="Requested learners with disability">
+													<p:outputLabel value="#{dgallo.disabledTotalLearners}"></p:outputLabel>
+												</p:column>
+
+												<p:column headerText="Recommended Learners">
+													<p:outputLabel value="#{dgallo.numberOfLearners}"></p:outputLabel>
+												</p:column>
+
+												<p:column headerText="Awarded Learners">
+													<p:outputLabel value="#{dgallo.maxPossibleLearners}"></p:outputLabel>
+												</p:column>
+
+												<p:column headerText="Partial Funding Awarded Learners">
+													<p:outputLabel value="#{dgallo.coFundingLearnersAwarded}"></p:outputLabel>
+												</p:column>
+
+												<p:column headerText="Partial Funding Award Amount" styleClass="FontBold">
+													<p:outputLabel value="#{dgallo.coFundingAwardAmount}" styleClass="FontBold" style="color: #f7941e" rendered="#{dgallo.coFundingAwardAmount gt 0}">
+														<f:convertNumber type="currency" currencySymbol="R" />
+													</p:outputLabel>
+													<p:outputLabel value="#{dgallo.coFundingAwardAmount}" styleClass="FontBold" rendered="#{dgallo.coFundingAwardAmount lt 0.1}">
+														<f:convertNumber type="currency" currencySymbol="R" />
+													</p:outputLabel>
+												</p:column>
+
+												<p:column headerText="Requested Amount">
+													<p:outputLabel value="#{dgallo.requestedAmount}">
+														<f:convertNumber type="currency" currencySymbol="R" />
+													</p:outputLabel>
+												</p:column>
+
+												<p:column headerText="Recommended Amount">
+													<p:outputLabel value="#{dgallo.recommendedAmount}">
+														<f:convertNumber type="currency" currencySymbol="R" />
+													</p:outputLabel>
+												</p:column>
+
+												<p:column headerText="Award Amount">
+													<p:outputLabel value="#{dgallo.awardAmount}" styleClass="FontBold" style="color: #5ecf80" rendered="#{dgallo.awardAmount gt 0}">
+														<f:convertNumber type="currency" currencySymbol="R" />
+													</p:outputLabel>
+													<p:outputLabel value="#{dgallo.awardAmount}" styleClass="FontBold" rendered="#{dgallo.awardAmount lt 0.1}">
+														<f:convertNumber type="currency" currencySymbol="R" />
+													</p:outputLabel>
+												</p:column>
+
+												<p:column headerText="Balance">
+													<p:outputLabel value="#{dgallo.balanceRemaining}">
+														<f:convertNumber type="currency" currencySymbol="R" />
+													</p:outputLabel>
+												</p:column>
+
+												<p:column headerText="Partial Funding Balance">
+													<p:outputLabel value="#{dgallo.remainingCoFundingGrantAmount}">
+														<f:convertNumber type="currency" currencySymbol="R" />
+													</p:outputLabel>
+												</p:column>
+
+												<p:column headerText="Disabled Grant Amount">
+													<p:outputLabel value="#{dgallo.disabledGrantAmount}">
+														<f:convertNumber type="currency" currencySymbol="R" />
+													</p:outputLabel>
+												</p:column>
+
+												<p:column headerText="Total Awarded" styleClass="FontBold">
+													<p:outputLabel value="#{dgallo.totalAwardAmount}" styleClass="FontBold" style="color: #5ecf80" rendered="#{dgallo.totalAwardAmount gt 0}">
+														<f:convertNumber type="currency" currencySymbol="R" />
+													</p:outputLabel>
+													<p:outputLabel value="#{dgallo.totalAwardAmount}" styleClass="FontBold" rendered="#{dgallo.totalAwardAmount lt 0.1}">
+														<f:convertNumber type="currency" currencySymbol="R" />
+													</p:outputLabel>
+												</p:column>
+											</p:dataTable>
+											
+										</p:panelGrid>
+									</c:if>
+								</p:outputPanel>
+							</p:tab>
+						</p:tabView>
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+</ui:composition>

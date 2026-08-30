@@ -1,0 +1,147 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui">
+		<p:panelGrid columns="1" style="width:100%">
+			<h:outputText value="Accredited Qualification(s) And Unit Standard(s)" styleClass="FontBold Fs15" />
+			<p:fieldset legend="View" collapsed="true" toggleable="true">
+				<p:dataTable var="var" value="#{assesorModiratorUI.userQualifications}"  paginator="true"
+				                paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+				                rowsPerPageTemplate="5,10,15" paginatorPosition="bottom">
+					<p:column headerText="#{lang['qualifications']}">
+						<h:outputText value="#{var.qualification.description}" />
+					</p:column>
+				
+					<p:column headerText="#{lang['saqa.id']}">
+						<h:outputText value="#{var.qualification.code}" />
+					</p:column>
+				
+					<p:column headerText="#{lang['nqf.level']}">
+						<h:outputText value="#{var.qualification.nqflevel.description}" />
+					</p:column>
+				</p:dataTable>
+				<br/>
+				
+				<p:dataTable var="var" value="#{assesorModiratorUI.userUnitStandards}"
+								paginator="true"
+				                paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+				                rowsPerPageTemplate="5,10,15" paginatorPosition="bottom">
+					<p:column headerText="#{lang['name.of.unit.standard(s)']}">
+						<h:outputText value="#{var.unitStandard.title}" />
+					</p:column>
+			
+					<p:column headerText="#{lang['code']}">
+						<h:outputText value="#{var.unitStandard.code}" />
+					</p:column>
+			
+					<p:column headerText="#{lang['nqf.level']}">
+						<h:outputText value="#{var.unitStandard.nqf}" />
+					</p:column>
+			
+				</p:dataTable>
+			</p:fieldset>
+		</p:panelGrid>
+		<br/>
+		<p:panelGrid columns="1" style="width:100%">
+			<h:outputText value="Upload Document(s)" styleClass="FontBold Fs15" />
+			<p:panelGrid columns="4" style="width:100%">
+				<h:panelGroup id="docListUser" rendered="#{assesorModiratorUI.assessorModReRegistration.docs.size() gt 0}">
+						<br />
+						<span class="FontBold">
+							<i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+							#{lang['please.upload.the.following.compulsory.documents']}
+						</span>
+						<br />
+						<div class="ui-g dashboard">
+							<div class="ui-g-12">
+								<p:repeat var="rc" value="#{assesorModiratorUI.assessorModReRegistration.docs}" varStatus="x">
+									<div class="ui-g-12 ui-md-6 ui-lg-3">
+										<div class="ui-g card colorbox #{rc.originalFname eq null ? 'colorbox-5' : 'colorbox-1'}">
+											<div class="ui-g-4">
+												<i class="material-icons">#{rc.originalFname eq null ? 'cloud_upload' : 'check_circle'}</i>
+											</div>
+											<div class="ui-g-8">
+												<span class="colorbox-name">#{rc.configDoc.name}</span>
+												<span class="colorbox-count">
+		
+													<p:commandButton icon="fa fa-download" id="cbDownload1" rendered="#{rc.originalFname ne null}" action="#{assesorModiratorUI.download(rc)}" ajax="false" value="#{lang['download']}" immediate="true" process="@parent">
+														<p:ajax onevent="oneventFunction" />
+													</p:commandButton>
+		
+													<p:commandButton value="#{rc.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" styleClass="#{rc.originalFname eq null ? 'red-btn' : 'green-btn'} flat" process="@this" oncomplete="PF('dlgUploadUser').show()" update="@form">
+														<f:setPropertyActionListener value="#{rc}" target="#{assesorModiratorUI.doc}" />
+													</p:commandButton>
+												</span>
+											</div>
+										</div>
+									</div>
+								</p:repeat>
+							</div>
+						</div>
+				</h:panelGroup>
+			</p:panelGrid>
+		</p:panelGrid>
+		<br/>
+		<h:panelGroup id="pgCodeOfConductDialog">
+		
+				<p:panelGrid columns="1" style="width:100%">
+				
+					<h:outputText value="CODE OF CONDUCT FOR ASSESSORS / MODERATORS" styleClass="FontBold Fs15" />
+				
+					<p>All assessors / moderators registered by the merSETA will be expected to adhere to a Code of Conduct. This Code of Conduct is built on the basic principles of good assessment / moderation practice and around ensuring that all learners have a fair, valid and reliable assessment experience.</p>
+				
+				
+					<p>
+						<b>The purpose of the Code of Conduct is to:</b>
+					</p>
+					<ul>
+						<li>Define accepted and acceptable assessment / moderation behaviours;</li>
+						<li>Promote high standards of assessment / moderation practice;</li>
+						<li>Provide a benchmark for assessors / moderators to use for evaluating their own practices and behaviours; and</li>
+						<li>Establish a framework for professional assessment / moderation behaviour and responsibilities.</li>
+					</ul>
+				
+					<p>
+						<b>The purpose of the Code of Conduct is to:</b>
+					</p>
+					<ol>
+						<li>Conduct assessment / moderation within the accreditation requirements of an accredited provider;</li>
+						<li>Comply with all criteria for registration as assessors / moderators with the merSETA;</li>
+						<li>Comply with and carry out all assessment / moderation responsibilities in accordance with the assessment / moderation criteria and guidelines set for the qualifications and/or unit standards they are registered by the merSETA to assess / moderate;</li>
+						<li>Use plain language during the assessment / moderation and in all reports, excepting where technical language or terms are required;</li>
+						<li>Treat all those they assess / moderate with dignity and respect;</li>
+						<li>Behave in a supportive and encouraging manner towards all assessment / moderation candidates;</li>
+						<li>Behave towards candidates in ways that are not intimidating;</li>
+						<li>Be honest in all their dealings with assessment / moderation;</li>
+						<li>Maintain the confidentiality of assessments / moderation and respect the right to privacy;</li>
+						<li>Record the outcomes of assessments / moderation in the appropriate format during or immediately after the assessment / moderation; and</li>
+						<li>Report the outcomes of each assessment / moderation together with recommendations for further development as soon after the assessment / moderation as possible.</li>
+					</ol>
+				
+					<div class="EmptyBox20"></div>
+				
+					<p:panel header="#{lang['accept.code.of.conduct']}" style="text-align:center">
+						<p:panelGrid columns="6" id="pgAccept1" style="width:100%">
+				
+							<h:outputText value="#{lang['name']}:" styleClass="FontBold Fs15" />
+							<h:outputText value="#{assesorModiratorUI.sessionUI.activeUser.firstName} #{assesorModiratorUI.sessionUI.activeUser.lastName}" />
+							<h:outputText value="#{lang['accept']}:" styleClass="FontBold Fs15" />
+							<p:selectBooleanCheckbox required="true" requiredMessage="#{lang['accept.code.of.conduct']}" style="width:100%" id="cbAccept1" value="#{assesorModiratorUI.codeOfConductAccepted}">
+									<p:ajax event="change" update="pgAccept1" />
+								</p:selectBooleanCheckbox>
+				
+							</p:panelGrid>
+							<br/>
+											
+						</p:panel>
+						<h:panelGroup>
+							<p:commandButton onstart="uploadStart()" value="Submit" action="#{assesorModiratorUI.sendReRegistrationRequest}" update="@form extOFScopeForm" icon="fa fa-save" title="Re-Registration"/>
+							<p:spacer width="40"></p:spacer>
+							<p:commandButton  value="#{lang['cancel']}" process="@this" icon="fa fa-recycle" update="@form extOFScopeForm" action="#{assesorModiratorUI.clearAssessorModReRegistration}">
+								<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+							</p:commandButton>
+						</h:panelGroup>
+							 
+					</p:panelGrid>
+				
+			</h:panelGroup>
+			<br/>
+		
+</ui:composition>

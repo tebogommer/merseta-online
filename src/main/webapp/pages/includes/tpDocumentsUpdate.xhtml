@@ -1,0 +1,100 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	
+    <p:dataTable value="#{trainingproviderapplicationUI.docList}" var="rv1" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv1.id}">
+		<p:column headerText="#{lang['type']}" width="18%">#{rv1.configDoc.name}</p:column>
+		<p:column headerText="#{lang['original.file.name']}" priority="4">
+			<p:outputLabel value="#{rv1.originalFname}" styleClass="Fs12"></p:outputLabel>
+		</p:column>
+		<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+		<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+			<h:outputText value="#{rv1.createDate}">
+				<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+			</h:outputText>
+		</p:column>
+		<p:column headerText="#{lang['version']}" width="10%" priority="4">
+			<h:outputText value="#{rv1.versionNo}">
+			</h:outputText>
+		</p:column>
+		<p:column headerText="#{lang['approval.status']}" width="10%" priority="4">
+			<h:outputText value="#{rv1.approvalStatus.friendlyName}">
+			</h:outputText>
+		</p:column>
+
+		<p:column width="180" headerText="View">
+			<p:commandButton immediate="true" process="@this" ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlb" rendered="#{rv1.id ne null}">
+				<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+			</p:commandButton>
+			<p:tooltip for="dlb" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+			<p:spacer width="5" rendered="true" />
+			
+			<p:commandButton icon="fa fa-upload" id="upload" styleClass="flat" process="@this" oncomplete="PF('dlgChangeReason').show()" update=":cpChangeReasonForm" rendered="#{trainingproviderapplicationUI.selectedTrainingProviderApplication.approvalStatus eq ApprovalEnum.Approved and (rv1.approvalStatus eq null or rv1.approvalStatus ne ApprovalEnum.PendingApproval) and false}">
+				<f:setPropertyActionListener value="#{rv1}" target="#{trainingproviderapplicationUI.docChange}" />
+				<f:setPropertyActionListener value="dlgUploadAndCreateTask" target="#{trainingproviderapplicationUI.redirectTo}" />
+			</p:commandButton>
+			<p:tooltip for="upload" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+
+			<p:spacer width="5" rendered="#{rv1.id ne null}" />
+			<p:commandButton process="@this" icon="fa fa-bars " id="dhist" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}">
+				<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+			</p:commandButton>
+			<p:tooltip for="dhist" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+			
+			<h:panelGroup id="panelGroupThree" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+				<p:spacer width="5" />
+				<p:commandButton process="@this" icon="fa fa-comment-o" id="dnote" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+					<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+				</p:commandButton>
+				<p:tooltip for="dnote" value="#{lang['view.note']}" position="left" />
+			</h:panelGroup>
+			
+			<h:panelGroup id="panelGroupFour" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+				<p:spacer width="5" />
+				<p:commandButton icon="fa fa-eye " id="viewerButton" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+					<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+				</p:commandButton>
+				<p:tooltip for="viewerButton" value="#{lang['view.document']} " position="left" />
+			</h:panelGroup>
+		</p:column>
+	</p:dataTable>
+    
+    <br/>
+    <p:panelGrid columns="5" style="width:100%" rendered="#{trainingproviderapplicationUI.selectedTrainingProviderApplication.approvalStatus eq ApprovalEnum.Approved}">
+    	<h:panelGroup>
+    	   <center>
+	    	   <p:commandButton icon="fa fa-download" value="Download Letter For Full Accreditation" action="#{trainingproviderapplicationUI.downloadETQTP017()}" ajax="false" title="Download Pro-Forma Letter For Full Accreditation">
+	    	   </p:commandButton>
+    	   </center>
+    	</h:panelGroup>
+    	
+    	<h:panelGroup>
+    		 <center>
+    			 <p:commandButton  icon="fa fa-download" value="Download Provider Certificate" action="#{trainingproviderapplicationUI.downloadProviderCertificate()}" disabled="#{trainingproviderapplicationUI.selectedTrainingProviderApplication.accreditationApplicationTypeEnum ne AccreditationApplicationTypeEnum.ACCREDITATIONAPPROVAL}" ajax="false" title=" Download Provider Certificate">
+    			 </p:commandButton>
+    		 </center>
+    	</h:panelGroup>
+    	
+    	<h:panelGroup>
+    		 <center>
+    			 <p:commandButton icon="fa fa-download" rendered="#{trainingproviderapplicationUI.selectedTrainingProviderApplication.accreditationApplicationTypeEnum eq AccreditationApplicationTypeEnum.ACCREDITATIONAPPROVAL}" value="Download Statement Of Qualifications" action="#{trainingproviderapplicationUI.downloadETQTP011()}" ajax="false" title="Download Statement Of Qualifications">
+    			 </p:commandButton>
+    			  <p:commandButton icon="fa fa-download" rendered="#{trainingproviderapplicationUI.selectedTrainingProviderApplication.accreditationApplicationTypeEnum ne AccreditationApplicationTypeEnum.ACCREDITATIONAPPROVAL}" value="Download Approval Report" action="#{trainingproviderapplicationUI.downloadETQTP009()}" ajax="false" title="Download Statement Of Qualifications">
+    			 </p:commandButton>
+    		 </center>
+    	</h:panelGroup>
+    	
+    	<h:panelGroup>
+    		 <center>
+    		 	<p:commandButton icon="fa fa-download" value="Download Application Form" action="#{trainingproviderapplicationUI.downloadETQFM002A()}" ajax="false" title="Download Accreditation Approval Application Form">
+    		 	</p:commandButton>
+    		 </center>
+    	</h:panelGroup>
+    	
+    	<h:panelGroup>
+    		 <center>
+		    	<p:commandButton  oncomplete="PF('documentsHistoruDl').show()" action="#{trainingproviderapplicationUI.documentHistoryInfo()}" update="documentsHistoruDl" icon="fa fa-history" value="View Document(s) History"  title="View Document(s) History"/>
+		    		
+	 		 </center>
+	  </h:panelGroup>
+    </p:panelGrid>
+	
+	</ui:composition>

@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.5.1.final using JasperReports Library version 6.5.1  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="merSETAReport_SDF_signature" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="0" bottomMargin="0" uuid="027f97f2-34d1-4be3-8367-fa08cace25f5">
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="MersetaDataAdapter.xml"/>
+	<parameter name="company_id" class="java.lang.Long">
+		<parameterDescription><![CDATA[]]></parameterDescription>
+	</parameter>
+	<queryString language="SQL">
+		<![CDATA[/*Company SDF(s) Information*/
+SELECT  users.first_name AS SDFFirstName,users.last_name AS SDFLastName,users.nationality_id AS SDFNationalId,
+users.passport_number AS SDFPassportNumber,users.rsa_id_number AS SDFRSAID,users.cell_number AS SDFCellNumber,
+users.email AS SDFEmail, users.fax_number AS SDFFaxNum,users.tel_number AS SDFTellNumber,
+
+sdf_type.description AS SDFType
+
+/*Company*/
+FROM merseta.company AS company
+
+LEFT JOIN  merseta.sdf_company AS sdf_company
+ON company.id=sdf_company.company_id
+
+LEFT JOIN  merseta.sdf_type AS sdf_type
+ON sdf_type.id=sdf_company.sdf_type_id
+
+
+/*user and SDF company Join*/
+LEFT JOIN merseta.users AS users
+ON users.id = sdf_company.sdf_id
+
+WHERE company.id=$P{company_id}]]>
+	</queryString>
+	<field name="SDFFirstName" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="SDFFirstName"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="users"/>
+	</field>
+	<field name="SDFLastName" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="SDFLastName"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="users"/>
+	</field>
+	<field name="SDFNationalId" class="java.lang.Long">
+		<property name="com.jaspersoft.studio.field.label" value="SDFNationalId"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="users"/>
+	</field>
+	<field name="SDFPassportNumber" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="SDFPassportNumber"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="users"/>
+	</field>
+	<field name="SDFRSAID" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="SDFRSAID"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="users"/>
+	</field>
+	<field name="SDFCellNumber" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="SDFCellNumber"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="users"/>
+	</field>
+	<field name="SDFEmail" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="SDFEmail"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="users"/>
+	</field>
+	<field name="SDFFaxNum" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="SDFFaxNum"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="users"/>
+	</field>
+	<field name="SDFTellNumber" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="SDFTellNumber"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="users"/>
+	</field>
+	<field name="SDFType" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="SDFType"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="sdf_type"/>
+	</field>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+	<title>
+		<band height="41">
+			<staticText>
+				<reportElement mode="Opaque" x="0" y="14" width="555" height="25" backcolor="#DCDCDC" uuid="131fbedc-bb13-43c5-9d6c-69bdbd6a06d0"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="14" isBold="true"/>
+					<paragraph lineSpacing="AtLeast"/>
+				</textElement>
+				<text><![CDATA[SKILLS DEVELOPMENT FACILITATORS]]></text>
+			</staticText>
+		</band>
+	</title>
+	<detail>
+		<band height="82">
+			<textField isBlankWhenNull="true">
+				<reportElement mode="Opaque" x="0" y="11" width="555" height="30" backcolor="#DCDCDC" uuid="43cc7e21-9a41-4f28-87ec-808b2e5b9ee2"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font size="14" isBold="true"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{SDFType}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement mode="Opaque" x="0" y="41" width="181" height="20" backcolor="#DCDCDC" uuid="41aac859-9f32-45c3-b6e3-25a1d5f29b7e"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font size="12" isBold="true"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[FULL NAME]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement x="181" y="41" width="374" height="20" uuid="f8805881-cee7-4461-9a29-649ebfef3496"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font size="12"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{SDFFirstName}+" "+$F{SDFLastName}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="181" y="61" width="374" height="20" uuid="b2e6d0ba-e6c3-459a-976c-926843cbe382"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font size="12" isBold="false"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{SDFRSAID}==null|| $F{SDFRSAID}.equals("") ?($F{SDFPassportNumber}):($F{SDFRSAID})]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement mode="Opaque" x="0" y="61" width="181" height="20" backcolor="#DCDCDC" uuid="9c3fb2ed-c48f-4bf8-ac1a-debd92f7405a"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font size="12" isBold="true"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{SDFRSAID}==null|| $F{SDFRSAID}.equals("") ?("PASSPORT NUMBER"):("IDENTITY NUMBER")]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement mode="Transparent" x="0" y="-39" width="554" height="10" backcolor="#6CCFF0" uuid="89dc181a-08d4-47ec-aa59-8769a092d7e6"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+		</band>
+	</detail>
+</jasperReport>

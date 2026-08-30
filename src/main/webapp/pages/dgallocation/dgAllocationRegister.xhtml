@@ -1,0 +1,175 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+					<p:importEnum type="haj.com.entity.enums.UsersStatusEnum" />
+					<p:importEnum type="haj.com.entity.enums.MoaTypeEnum" />
+					<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+
+					<p:growl showDetail="false" sticky="false" id="msg">
+						<p:autoUpdate />
+					</p:growl>
+					<h1>DG Allocation Register</h1>
+					<h:form id="mainForm">
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+						<p:dataTable rendered="true" var="rowVarC" value="#{dgAllocationRegisterUI.companyDataModel}" lazy="true" id="companyList" rowKey="#{rowVarC.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+							paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+							<f:facet name="header">Company List</f:facet>
+							<p:column headerText="#{lang['company.name']}" filterBy="#{rowVarC.companyName}" sortBy="#{rowVarC.companyName}" filterStyle="width: 95%" exportable="true">
+								<h:outputText value="#{rowVarC.companyName}" />
+							</p:column>
+							<p:column headerText="#{lang['tradingName']}" filterBy="#{rowVarC.tradingName}" sortBy="#{rowVarC.tradingName}" filterStyle="width: 95%" exportable="true">
+								<h:outputText value="#{rowVarC.tradingName}" />
+							</p:column>
+							<p:column headerText="#{lang['entity.id']}" filterBy="#{rowVarC.levyNumber}" sortBy="#{rowVarC.levyNumber}" filterStyle="width: 95%" width="10%" exportable="true">
+								<h:outputText value="#{rowVarC.levyNumber}" />
+							</p:column>
+							<p:column headerText="#{lang['status']}" sortBy="#{rowVarC.companyStatus}" width="10%" rendered="false">
+								<h:outputText value="#{lang[rowVarC.companyStatus.registrationName]}" />
+							</p:column>
+							<p:column width="7%" exportable="false">
+								<p:commandButton icon="fa fa-search" update=":mainForm:contractsOutputPanel" action="#{dgAllocationRegisterUI.selectCompany}" onstart="uploadStart()" oncomplete="uploadDone()">
+									<f:setPropertyActionListener value="#{rowVarC}" target="#{dgAllocationRegisterUI.selectedCompany}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+						<p:outputPanel id="contractsOutputPanel">
+							<c:if test="#{dgAllocationRegisterUI.selectedCompany ne null}">
+								<h3>Company: #{dgAllocationRegisterUI.selectedCompany.companyName} (#{dgAllocationRegisterUI.selectedCompany.levyNumber}) Selected.</h3>
+								<p:dataTable var="rowVarAC" value="#{dgAllocationRegisterUI.activeContractsDataModel}" lazy="true" id="activeContractsDT" rowKey="#{rowVarC.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+									paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+									<f:facet name="header"> MOAs Assigned </f:facet>
+									<p:column headerText="MOA REF ID" sortBy="#{rowVarAC.id}">
+										<h:outputText value="#{rowVarAC.id}" />
+									</p:column>
+									<p:column headerText="Type Of MOA" sortBy="#{rowVarAC.moaType.friendlyName}">
+										<h:outputText value="#{rowVarAC.moaType.friendlyName}" />
+									</p:column>
+									<p:column headerText="DG Grant Year">
+										<h:outputText value="N/A" rendered="#{rowVarAC.moaType eq MoaTypeEnum.SpecialProject}" />
+										<h:outputText value="#{rowVarAC.dgAllocationParent.wsp.finYear}" rendered="#{rowVarAC.moaType eq MoaTypeEnum.DGMOA}" />
+									</p:column>
+									<p:column headerText="NSDMS Status">
+										<h:outputText value="N/A" rendered="#{rowVarAC.moaType eq MoaTypeEnum.SpecialProject}" />
+										<h:outputText value="#{rowVarAC.status.friendlyName}" rendered="#{rowVarAC.moaType eq MoaTypeEnum.DGMOA}" />
+									</p:column>
+									<p:column headerText="MOA Status">
+										<h:outputText value="#{rowVarAC.contractStatusEnum.friendlyName}" />
+									</p:column>
+									<p:column width="10%" exportable="false">
+										<p:commandButton icon="fa fa-list" update="tasksViewForm" title="View Tasks Assigned" action="#{dgAllocationRegisterUI.viewActiveContractsTasks}">
+											<f:setPropertyActionListener value="#{rowVarAC}" target="#{dgAllocationRegisterUI.selectedActiveContract}" />
+										</p:commandButton>
+										<p:spacer width="5" rendered="#{rowVarAC.moaType eq MoaTypeEnum.DGMOA and rowVarAC.status ne ApprovalEnum.Withdrawn and rowVarAC.status ne ApprovalEnum.Rejected and sessionUI.user.withdrawContracts}" />
+										<p:commandButton rendered="#{rowVarAC.moaType eq MoaTypeEnum.DGMOA and rowVarAC.status ne ApprovalEnum.Withdrawn and rowVarAC.status ne ApprovalEnum.Rejected and sessionUI.user.withdrawContracts}" icon="fa fa-times" styleClass="red-btn" update="withdrawApplicationForm" title="Withdraw Application" action="#{dgAllocationRegisterUI.prepWithdrawOfContract}">
+											<p:confirm header="#{lang['confirmation']}" message="Are you sure to want to withdraw the application?" icon="ui-icon-warning" />
+											<f:setPropertyActionListener value="#{rowVarAC}" target="#{dgAllocationRegisterUI.withdrawActiveContract}" />
+										</p:commandButton>
+									</p:column>
+								</p:dataTable>
+							</c:if>
+						</p:outputPanel>
+					</h:form>
+					
+					<p:dialog position="top" header="Withdraw Application" widgetVar="dlgSelectReasonWithdrawal" resizable="false" hideEffect="clip" showEffect="clip" id="dialogSelectReasonWithdrawal" appendTo="@(body)" modal="true" width="70%" height="80vh" responsive="true" dynamic="true">
+						<h:form id="withdrawApplicationForm">
+							<h:panelGroup>
+								<h:panelGroup id="typeofApp">
+									<div>
+										<p:outputLabel value="Reason for withdrawal"></p:outputLabel>
+									</div>
+									<div>
+										<p:selectOneMenu requiredMessage="Provide: Reason for withdrawal" style="width:100%" required="true" value="#{dgAllocationRegisterUI.withdrawalAppealEnum}">
+											<p:ajax />
+											<f:selectItem itemLabel="---Select One---" noSelectionOption="true" />
+											<f:selectItems value="#{enumUI.discretionalWithdrawalEmployeeEnumDD}" />
+										</p:selectOneMenu>
+									</div>
+								</h:panelGroup>
+							</h:panelGroup>
+							<br />
+							<div class="ui-g dashboard">
+								<div class="ui-g-12">
+									<div class="ui-g-12 ui-md-12 ui-lg-6">
+										<div class="ui-g card colorbox #{activecontractsUI.doc.originalFname eq null ? 'colorbox-5' : 'colorbox-1'}">
+											<div class="ui-g-4">
+												<i class="material-icons">#{activecontractsUI.doc.originalFname eq null ? 'cloud_upload' : 'check_circle'}</i>
+											</div>
+											<div class="ui-g-8">
+												<span class="colorbox-name">Reason Of Withdraw</span> <span class="colorbox-count"> <p:commandButton icon="fa fa-download" id="cbDownload" rendered="#{dgAllocationRegisterUI.doc.originalFname ne null}" action="#{dgAllocationRegisterUI.download(dgAllocationRegisterUI.doc)}"
+														ajax="false" value="#{lang['download']}" immediate="true" process="@parent">
+														<p:ajax onevent="oneventFunction" />
+													</p:commandButton> <p:spacer width="5" rendered="#{dgAllocationRegisterUI.doc.originalFname ne null}"></p:spacer> <p:tooltip for="cbDownload" value="#{lang['download']} #{dgAllocationRegisterUI.doc.originalFname}" position="left" rendered="#{dgAllocationRegisterUI.doc.originalFname ne null}" /> <p:commandButton
+														id="uploadCID" value="#{dgAllocationRegisterUI.doc.originalFname eq null ? lang['click.to.upload'] :  lang['re.upload'] }" styleClass="#{dgAllocationRegisterUI.doc.originalFname eq null ? 'red-btn' : 'green-btn'} flat" process="@this" oncomplete="PF('dlgUploadMemory').show()"
+														update=":uploadMemoryForm">
+													</p:commandButton>
+												</span>
+											</div>
+
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<br />
+							<p:commandButton value="Withdraw Application" icon="fa fa-user-times" action="#{dgAllocationRegisterUI.withdrawActiveContractsCompanyContact}" update="@form :mainForm:contractsOutputPanel">
+								<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+							</p:commandButton>
+						</h:form>
+					</p:dialog>
+
+					<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUploadMemory" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOADMemory" width="80%" responsive="true" modal="true" dynamic="true">
+						<h:form id="uploadMemoryForm">
+							<h:panelGroup id="uploadMemoryGroup">
+								<div class="ui-g">
+									<div class="ui-g-12">
+										<div class="card">
+											<h1 style="font-weight: bold; font-size: 25px;">Upload Evidence</h1>
+											<p:panel>
+												<h:panelGrid columns="2" style="width: 100%">
+													<p:outputLabel value="#{lang['notes']}:" for="note" />
+													<p:inputTextarea id="note" value="#{dgAllocationRegisterUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+														<p:ajax />
+													</p:inputTextarea>
+												</h:panelGrid>
+												<div class="TexAlCenter">
+													<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+												</div>
+												<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{dgAllocationRegisterUI.storeFileMemory}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}"
+													update="@form :withdrawApplicationForm" multiple="false" fileLimit="1" immediate="false" auto="true" />
+											</p:panel>
+											<div class="EmptyBox10" />
+										</div>
+									</div>
+								</div>
+							</h:panelGroup>
+						</h:form>
+					</p:dialog>
+
+
+					<p:dialog position="top" header="Tasks View" widgetVar="tasksDlg" resizable="false" hideEffect="clip" showEffect="clip" id="tasksDialog" appendTo="@(body)" modal="true" width="70%" height="80vh" responsive="true" dynamic="true">
+						<h:form id="tasksViewForm">
+							<ui:include src="/pages/includes/taskInformationInclude.xhtml">
+								<ui:param name="TaskList" value="#{dgAllocationRegisterUI.tasksDataModel}" />
+								<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+							</ui:include>
+							<div class="EmptyBox10" />
+							<p:commandButton value="Close View" icon="fa fa-times" process="@this" update="@form :mainForm" action="#{dgAllocationRegisterUI.closeTaskView}" />
+						</h:form>
+					</p:dialog>
+
+					<p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+						<h:form>
+							<p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="fa fa-check" />
+							<p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="fa fa-times" />
+						</h:form>
+					</p:confirmDialog>
+				</div>
+			</div>
+		</div>
+
+	</ui:define>
+</ui:composition>

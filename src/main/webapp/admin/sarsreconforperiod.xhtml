@@ -1,0 +1,230 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>#{lang['reconciliation']} for period</h1>
+					<h:form id="mainForm">
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+
+						<p:panelGrid columns="2" style="width:100%" id="mainGrid1" layout="grid" styleClass="ui-panelgrid-blank">
+
+							<p:fieldset legend="SARS/DHET">
+								<p:panelGrid columns="2" style="width:100%" id="mainGrid2" layout="grid" styleClass="ui-panelgrid-blank">
+									<p:outputLabel value="SARS/DHET from date" for="sarsDateF" styleClass="FontBold" />
+									<p:calendar id="sarsDateF" value="#{reconByDateUI.fromDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" readonlyInput="true" required="true" requiredMessage="Enter SARS/DHET from date" maxdate="#{reconByDateUI.maxLevyDate}" mask="true" yearRange="c-30:c">
+										<p:ajax event="dateSelect" update="sarsDateT" listener="#{reconByDateUI.initToDate}" />
+									</p:calendar>
+
+									<p:outputLabel value="SARS/DHET to date" for="sarsDateT" />
+									<p:calendar id="sarsDateT" value="#{reconByDateUI.toDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" readonlyInput="true" mask="true" yearRange="c-30:c" />
+
+									<p:outputLabel value="SARS/DHET scheme year" for="sarsDateF1" styleClass="FontLight" />
+									<p:selectOneMenu id="sarsDateF1" value="#{reconByDateUI.sarsReconSchemeYears}" style="width: 90px !important;">
+										<f:selectItems value="#{reconByDateUI.sarsYears}" var="sars" itemLabel="#{sars.year}" itemValue="#{sars.year}" />
+									</p:selectOneMenu>
+								</p:panelGrid>
+							</p:fieldset>
+
+							<p:fieldset legend="Posting">
+								<p:panelGrid columns="2" style="width:100%" id="mainGrid3" layout="grid" styleClass="ui-panelgrid-blank">
+									<p:outputLabel value="Posting from date" for="glPostingDateF" styleClass="FontBold" />
+									<p:calendar id="glPostingDateF" value="#{reconByDateUI.fromDateInv}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" readonlyInput="true" required="true" requiredMessage="Enter Posting from date" mask="true" yearRange="c-30:c" maxdate="#{reconByDateUI.maxPostDate}">
+										<p:ajax event="dateSelect" update="glPostingDateT" listener="#{reconByDateUI.initToDateInv}" />
+									</p:calendar>
+
+									<p:outputLabel value="Posting to date" for="glPostingDateT" />
+									<p:calendar id="glPostingDateT" value="#{reconByDateUI.toDateInv}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" readonlyInput="true" mask="true" yearRange="c-30:c" />
+
+									<p:outputLabel value="Posting scheme year" for="glPostingDateF1" styleClass="FontLight" />
+									<p:selectOneMenu id="glPostingDateF1" value="#{reconByDateUI.setaReconSchemeYears}" style="width: 90px !important;">
+										<f:selectItems value="#{reconByDateUI.setaYears}" var="seta" itemLabel="#{seta.year}" itemValue="#{seta.year}" />
+									</p:selectOneMenu>
+								</p:panelGrid>
+							</p:fieldset>
+
+
+						</p:panelGrid>
+
+
+
+
+
+						<p:panelGrid columns="1" style="width:100%" id="mainGrid4" layout="grid" styleClass="ui-panelgrid-blank">
+
+							<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update="@form" action="#{reconByDateUI.run}" ajax="false" />
+
+							<p:spacer />
+						</p:panelGrid>
+
+
+						<p:fieldset rendered="#{reconByDateUI.sarsLevyDetails ne null}" legend="Result">
+
+							<p:panelGrid columns="3" style="width:70%" layout="grid" styleClass="ui-panelgrid-blank">
+								<p:outputLabel value="#{lang['mandatory.levy']}" />
+								<p:spacer />
+								<h:outputText value="#{reconByDateUI.sarsLevyDetails.mandatoryLevyD}" styleClass="Fright FontBold">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</h:outputText>
+
+
+								<p:outputLabel value="#{lang['invoice.amount']}" />
+								<p:spacer />
+								<h:outputText value="#{reconByDateUI.ts2.documentAmountD}" styleClass="Fright FontBold">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</h:outputText>
+
+
+								<p:outputLabel value="#{lang['difference']}" />
+								<p:spacer />
+								<h:outputText value="#{reconByDateUI.difference}" styleClass="Fright FontBold red">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</h:outputText>
+
+								<p:spacer />
+								<p:spacer />
+								<h:panelGroup>
+									<h:dataTable value="#{reconByDateUI.ingterSetaTransferBeanList}" var="rv" width="100%">
+										<h:column>
+											<span class="FontLight">Inter Seta </span>
+											<h:outputText value="(#{rv.description})" styleClass="FontBold" />
+										</h:column>
+										<h:column>
+											<h:outputText value="#{rv.amount}" styleClass="Fright">
+												<f:convertNumber pattern="###,###,###,###,##0.00" />
+											</h:outputText>
+										</h:column>
+									</h:dataTable>
+
+								</h:panelGroup>
+
+								<p:outputLabel value="Mail detail excel report" for="emailId" rendered="false" />
+								<p:inputText id="emailId" value="#{reconByDateUI.email}" required="true" requiredMessage="Enter email address" style="width: 70%" placeholder="Email address" rendered="false" />
+								<p:commandButton value="Download detail report" icon="ui-icon-mail-outline" styleClass="Fright">
+									<p:confirm header="#{lang['confirmation']}" message="This report might take some time to generate. Do you want to continue?" icon="ui-icon-warning" />
+								</p:commandButton>
+
+
+
+
+							</p:panelGrid>
+
+							<p:confirmDialog global="true" showEffect="clip" hideEffect="clip" width="600">
+								<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" onclick="clickDownload()" />
+								<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+							</p:confirmDialog>
+
+							<p:commandButton value="Download detail report" action="#{reconByDateUI.mailDetail}" id="dreport" style="display:none;" ajax="false" />
+						</p:fieldset>
+						<br />
+
+						<p:poll interval="5" update="resDetail" rendered="#{reconByDateUI.sarsLevyDetails ne null}" stop="#{reconByDateUI.reconSchemeYears ne null}" />
+						<h:panelGroup id="resDetail">
+							<br />
+							<p:panel rendered="#{reconByDateUI.reconSchemeYears eq null and reconByDateUI.sarsLevyDetails ne null}" header="PLEASE WAIT....for Summary per scheme year report">
+
+								<center>
+									<p:graphicImage name="images/468.gif" library="hls" />
+								</center>
+
+							</p:panel>
+
+							<h:panelGroup rendered="#{reconByDateUI.reconSchemeYears ne null}">
+								<h3 class="FontLight">Summary per scheme year</h3>
+								<h:panelGroup>
+									<div align="right">
+										<h:commandLink id="eExcel">
+											<i class="fa fa-file-excel-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+											<p:dataExporter type="xls" target="sarsfilesList" fileName="ReconPerSchemeYear" />
+										</h:commandLink>
+
+
+										<p:tooltip for="eExcel" value="#{lang['export.search.results.to.excel']}" position="left" />
+
+									</div>
+								</h:panelGroup>
+								<br />
+								<p:dataTable var="rv" value="#{reconByDateUI.reconSchemeYears}" id="sarsfilesList" reflow="true">
+
+									<p:column headerText="#{lang['scheme.year']}">
+										<h:outputText value="#{rv.year}" />
+									</p:column>
+									<p:column headerText="#{lang['mandatory.grant']}">
+										<h:outputText value="#{rv.sarsLevyDetails.mandatoryLevyD}" styleClass="Fright">
+											<f:convertNumber pattern="###,###,###,##0.00" />
+										</h:outputText>
+									</p:column>
+									<p:column headerText="Posted">
+										<h:outputText value="#{rv.ts2.documentAmountD}" styleClass="Fright">
+											<f:convertNumber pattern="###,###,###,##0.00" />
+										</h:outputText>
+									</p:column>
+									<p:column headerText="Difference">
+										<h:outputText value="#{rv.difference}" styleClass="Fright">
+											<f:convertNumber pattern="###,###,###,##0.00" />
+										</h:outputText>
+									</p:column>
+									<p:column headerText="Transfers In">
+										<h:outputText value="#{rv.transferIn}" styleClass="Fright">
+											<f:convertNumber pattern="###,###,###,##0.00" />
+										</h:outputText>
+									</p:column>
+									<p:column headerText="Transfers Out">
+										<h:outputText value="#{rv.transferOut}" styleClass="Fright">
+											<f:convertNumber pattern="###,###,###,##0.00" />
+										</h:outputText>
+									</p:column>
+								</p:dataTable>
+
+							</h:panelGroup>
+						</h:panelGroup>
+
+						<h:panelGroup rendered="#{reconByDateUI.dataModel ne null}">
+							<ui:include src="/pages/includes/filterGuide.xhtml" />
+							<p:dataTable var="rv" value="#{reconByDateUI.dataModel}" id="mandatorygrantList" rowKey="#{rv.sdlnumber}" paginator="true" rows="100" paginatorPosition="bottom"
+								paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,15,20,25,50,100" reflow="true" lazy="true">
+
+								<p:column headerText="#{lang['sdl.number']}" filterBy="#{rv.sdlnumber}" filterStyle="width: 95%">
+									<h:outputText value="#{rv.sdlnumber}" />
+								</p:column>
+								<p:column headerText="#{lang['mandatory.grant']}">
+									<h:outputText value="#{rv.mandatoryLevyD}" styleClass="Fright">
+										<f:convertNumber pattern="###,###,###,##0.00" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Posted">
+									<h:outputText value="#{rv.posted}" styleClass="Fright">
+										<f:convertNumber pattern="###,###,###,##0.00" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Difference">
+									<h:outputText value="#{rv.difference}" styleClass="Fright">
+										<f:convertNumber pattern="###,###,###,##0.00" />
+									</h:outputText>
+								</p:column>
+							</p:dataTable>
+						</h:panelGroup>
+					</h:form>
+
+				</div>
+			</div>
+
+		</div>
+		<script>
+function clickDownload() {
+
+
+	 setTimeout(() => {
+		 $("#mainForm\\:dreport").click();
+	    }, 10);
+
+
+
+}
+</script>
+	</ui:define>
+
+</ui:composition>

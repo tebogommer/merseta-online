@@ -1,0 +1,99 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:c="http://java.sun.com/jsp/jstl/core"
+                template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>CompanyUnitStandard</h1>
+					<h:form id="companyunitstandardInsForm">
+						<p:growl autoUpdate="true" sticky="false" />
+						<p:panelGrid columns="1" style="width:100%" id="companyunitstandardInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+       						         							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="createDate" value="#{companyunitstandardUI.companyunitstandard.createDate}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['createDate']}" for="createDate"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="note" value="#{companyunitstandardUI.companyunitstandard.note}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['note']}" for="note"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="company" value="#{companyunitstandardUI.companyunitstandard.company}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['company']}" for="company"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="softDelete" value="#{companyunitstandardUI.companyunitstandard.softDelete}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['softDelete']}" for="softDelete"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="unitStandard" value="#{companyunitstandardUI.companyunitstandard.unitStandard}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['unitStandard']}" for="unitStandard"/>
+     							</h:panelGroup>  
+
+
+        					    <p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+									<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:companyunitstandardList :companyunitstandardInsForm:companyunitstandardInsGrid" action="#{companyunitstandardUI.companyunitstandardInsert}" />
+									<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="companyunitstandardInsGrid" process="@this" action="#{companyunitstandardUI.prepareNew}">
+										<p:resetInput target="companyunitstandardInsGrid" />
+									</p:commandButton>									
+								</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{companyunitstandardUI.dataModel}" filteredValue="#{companyunitstandardUI.companyUnitStandardfilteredList}" id="companyunitstandardList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+           						              					<p:column headerText="#{lang['createDate']}">  
+                        			<h:outputText value="#{rowVar.createDate}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['note']}">  
+                        			<h:outputText value="#{rowVar.note}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['company']}">  
+                        			<h:outputText value="#{rowVar.company}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['softDelete']}">  
+                        			<h:outputText value="#{rowVar.softDelete}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['unitStandard']}">  
+                        			<h:outputText value="#{rowVar.unitStandard}" />  
+            					</p:column>      
+
+
+           						<p:column width="80">
+									<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":companyunitstandardInsForm:companyunitstandardInsGrid">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{companyunitstandardUI.companyunitstandard}" />
+									</p:commandButton>
+									<p:spacer width="5" />
+									<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:companyunitstandardList" action="#{companyunitstandardUI.companyunitstandardDelete}">
+										<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+										<f:setPropertyActionListener value="#{rowVar}" target="#{companyunitstandardUI.companyunitstandard}" />
+									</p:commandButton>
+								</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+<!-- 
+_lang_
+-->
+</ui:composition>

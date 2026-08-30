@@ -1,0 +1,179 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+	<p:importEnum type="haj.com.entity.enums.QCDTemplateTypeEnum" />
+	<div class="ui-g">
+		<div class="ui-g-12">
+
+			<p:panelGrid columns="2" style="width:95%" id="qualificationsCurriculumDevelopmentInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup id="tempType" styleClass="md-inputfield">
+					<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{qualificationsCurriculumDevelopmentUI.selectedQualDevelopment.templateType.friendlyName}" />
+					<p:outputLabel value="#{lang['qual.development.type']}" />
+				</h:panelGroup>
+
+				<h:panelGroup id="fisrtQual" styleClass="md-inputfield" rendered="#{qualificationsCurriculumDevelopmentUI.selectedQualDevelopment.templateType ne null and qualificationsCurriculumDevelopmentUI.selectedQualDevelopment.templateType eq QCDTemplateTypeEnum.NewDevelopment}">
+					<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{qualificationsCurriculumDevelopmentUI.selectedQualDevelopment.newDevelopment1}" />
+					<p:outputLabel value="#{lang['qcd.new.development.description.1']}" />
+				</h:panelGroup>
+
+				<h:panelGroup id="ofo" styleClass="md-inputfield" rendered="#{qualificationsCurriculumDevelopmentUI.selectedQualDevelopment.ofoCodes ne null}">
+					<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="(#{qualificationsCurriculumDevelopmentUI.selectedQualDevelopment.ofoCodes.ofoCodeParent})#{qualificationsCurriculumDevelopmentUI.selectedQualDevelopment.ofoCodes.description}" />
+					<p:outputLabel value="#{lang['ofo.code']}" />
+				</h:panelGroup>
+
+				<h:panelGroup id="curr" styleClass="md-inputfield" rendered="#{qualificationsCurriculumDevelopmentUI.selectedQualDevelopment.templateType ne null and qualificationsCurriculumDevelopmentUI.selectedQualDevelopment.templateType eq QCDTemplateTypeEnum.ReAlignment}">
+					<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{qualificationsCurriculumDevelopmentUI.selectedQualDevelopment.templateType.friendlyName}" />
+					<p:outputLabel value="#{lang['qcd.realignment.description']}" />
+				</h:panelGroup>
+
+			</p:panelGrid>
+
+			<p:panelGrid columns="1" style="width:95%" id="tablesInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="false">
+				<p:dataTable var="rowVar" value="#{qualificationsCurriculumDevelopmentUI.selectedQualDevelopment.reAlignmentQualificationList}" id="reAlignmentQualificationListId" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+					<p:column headerText="#{lang['description']}">
+						<h:outputText value="#{rowVar.saqaQualification}" />
+					</p:column>
+					<p:column width="5%">
+						<p:commandButton disabled="#{sessionUI.task.processRole ne null and (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload)}" icon="fa fa-trash-o" title="#{lang['delete']}" update="reAlignmentQualificationListId" action="#{qualificationsCurriculumDevelopmentUI.removeFromQualificationToRealignmentTable}">
+							<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+							<f:setPropertyActionListener value="#{rowVar}" target="#{qualificationsCurriculumDevelopmentUI.selectedRealignmentQualification}" />
+						</p:commandButton>
+					</p:column>
+				</p:dataTable>
+				<p:dataTable var="rowVar" value="#{qualificationsCurriculumDevelopmentUI.selectedQualDevelopment.reviewQualificationList}" id="reviewQualificationListId" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+					<p:column headerText="#{lang['description']}">
+						<h:outputText value="#{rowVar.saqaQualification}" />
+					</p:column>
+					<p:column width="5%">
+						<p:commandButton disabled="#{sessionUI.task.processRole ne null and (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload)}" icon="fa fa-trash-o" title="#{lang['delete']}" update="reviewQualificationListId" action="#{qualificationsCurriculumDevelopmentUI.removeFromQualificationToReviewTable}">
+							<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+							<f:setPropertyActionListener value="#{rowVar}" target="#{qualificationsCurriculumDevelopmentUI.selectedReviewQualification}" />
+						</p:commandButton>
+					</p:column>
+				</p:dataTable>
+			</p:panelGrid>
+
+			<p:panelGrid columns="1" style="width:95%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup style="width:45%">
+					<div>
+						<p:outputLabel value="#{lang['qcd.economic.drivers']}" />
+					</div>
+					<br />
+					<div>
+						<p:outputLabel value="#{lang['qcd.economic.drivers.description.1']}" styleClass="gray Fs13" />
+					</div>
+				</h:panelGroup>
+			</p:panelGrid>
+
+
+			<p:panelGrid columns="2" style="width:95%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup style="width:95%">
+					<p:selectBooleanCheckbox disabled="true" value="#{qualificationsCurriculumDevelopmentUI.selectedQualDevelopment.nationalDevelopmentPlanChecked}">
+						<f:ajax render="checkboxesEvidence" />
+					</p:selectBooleanCheckbox>
+					<p:outputLabel value="#{lang['qcd.economic.drivers.evidence.ndp']}" />
+				</h:panelGroup>
+				<h:panelGroup style="width:95%">
+					<p:selectBooleanCheckbox disabled="true" value="#{qualificationsCurriculumDevelopmentUI.selectedQualDevelopment.newGrowthPlanChecked}">
+						<f:ajax render="checkboxesEvidence" />
+					</p:selectBooleanCheckbox>
+					<p:outputLabel value="#{lang['qcd.economic.drivers.evidence.ngp']}" />
+				</h:panelGroup>
+				<h:panelGroup style="width:95%">
+					<p:selectBooleanCheckbox disabled="true">
+						<f:ajax render="checkboxesEvidence" />
+					</p:selectBooleanCheckbox>
+					<p:outputLabel value="#{lang['qcd.economic.drivers.evidence.ipap']}" />
+				</h:panelGroup>
+				<h:panelGroup style="width:95%">
+					<p:selectBooleanCheckbox disabled="true" value="#{qualificationsCurriculumDevelopmentUI.selectedQualDevelopment.economicDriversInStrategicInfrastructureProjectsChecked}">
+						<f:ajax render="checkboxesEvidence" />
+					</p:selectBooleanCheckbox>
+					<p:outputLabel value="#{lang['qcd.economic.drivers.evidence.edisip']}" />
+				</h:panelGroup>
+			</p:panelGrid>
+
+			<br />
+			<p:panelGrid columns="2" style="width:95%" id="checkboxesEvidence" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup styleClass="md-inputfield" style="width:95%" rendered="#{qualificationsCurriculumDevelopmentUI.selectedQualDevelopment.nationalDevelopmentPlanChecked eq true}">
+					<p:inputText id="entryOneId" required="true" disabled="true" style="width: 95%" value="#{qualificationsCurriculumDevelopmentUI.selectedQualDevelopment.nationalDevelopmentPlanCheckedEvidence}">
+						<p:ajax />
+					</p:inputText>
+					<p:outputLabel for="entryOneId" value="#{lang['qcd.economic.drivers.evidence.ndp']}" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield" style="width:95%" rendered="#{qualificationsCurriculumDevelopmentUI.selectedQualDevelopment.newGrowthPlanChecked eq true}">
+					<p:inputText id="entryTwoId" required="true" disabled="true" style="width: 95%" value="#{qualificationsCurriculumDevelopmentUI.selectedQualDevelopment.newGrowthPlanCheckedEvidence}">
+						<p:ajax />
+					</p:inputText>
+					<p:outputLabel for="entryTwoId" value="#{lang['qcd.economic.drivers.evidence.ngp']}" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield" style="width:95%" rendered="#{qualificationsCurriculumDevelopmentUI.selectedQualDevelopment.industrialPolicyActionPlanChecked eq true}">
+					<p:inputText id="entryThreeId" required="true" disabled="" style="width: 95%" value="#{qualificationsCurriculumDevelopmentUI.selectedQualDevelopment.industrialPolicyActionPlanCheckedEvidence}">
+						<p:ajax />
+					</p:inputText>
+					<p:outputLabel for="entryThreeId" value="#{lang['qcd.economic.drivers.evidence.ipap']}" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield" style="width:95%" rendered="#{qualificationsCurriculumDevelopmentUI.selectedQualDevelopment.economicDriversInStrategicInfrastructureProjectsChecked eq true}">
+					<p:inputText id="entryFourId" required="true" disabled="true" style="width: 95%" value="#{qualificationsCurriculumDevelopmentUI.selectedQualDevelopment.economicDriversInStrategicInfrastructureProjectsCheckedEvidence}">
+						<p:ajax />
+					</p:inputText>
+					<p:outputLabel for="entryFourId" value="#{lang['qcd.economic.drivers.evidence.edisip']}" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText id="qcdpurposeofqualification" required="true" disabled="true" value="#{qualificationsCurriculumDevelopmentUI.selectedQualDevelopment.purposeQualification}" style="width:95%;  opacity: 1 !important; color:black !important">
+						<p:ajax />
+					</p:inputText>
+					<p:outputLabel for="qcdpurposeofqualification" value="#{lang['qcd.purpose.of.the.qualification.question']}" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText id="roleOfTheQualification" required="true" disabled="true" value="#{qualificationsCurriculumDevelopmentUI.selectedQualDevelopment.roleQualification}" style="width:95%;  opacity: 1 !important; color:black !important">
+						<p:ajax />
+					</p:inputText>
+					<p:outputLabel for="roleOfTheQualification" value="#{lang['qcd.role.of.the.qualification.question']}" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText id="primaryServiceOccupation" required="true" disabled="true" value="#{qualificationsCurriculumDevelopmentUI.selectedQualDevelopment.primaryServiceForOccupation}" style="width:95%;  opacity: 1 !important; color:black !important">
+						<p:ajax />
+					</p:inputText>
+					<p:outputLabel for="primaryServiceOccupation" value="#{lang['qcd.primary.service.for.the.occupation.question']}" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText id="usersOfService" required="true" disabled="true" value="#{qualificationsCurriculumDevelopmentUI.selectedQualDevelopment.usersOfService}" style="width:95%;  opacity: 1 !important; color:black !important">
+						<p:ajax />
+					</p:inputText>
+					<p:outputLabel for="usersOfService" value="#{lang['qcd.users.of.the.service.question']}" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText id="demandQuestion" required="true" disabled="true" value="#{qualificationsCurriculumDevelopmentUI.selectedQualDevelopment.demand}" style="width:95%;  opacity: 1 !important; color:black !important">
+						<p:ajax />
+					</p:inputText>
+					<p:outputLabel for="demandQuestion" value="#{lang['qcd.demand.question']}" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText id="currentTraining" required="true" disabled="true" value="#{qualificationsCurriculumDevelopmentUI.selectedQualDevelopment.currentTraining}" style="width:95%;  opacity: 1 !important; color:black !important">
+						<p:ajax />
+					</p:inputText>
+					<p:outputLabel for="currentTraining" value="#{lang['qcd.current.training.question']}" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText id="keyStakeholders" required="true" disabled="true" value="#{qualificationsCurriculumDevelopmentUI.selectedQualDevelopment.keyStakeholders}" style="width:95%;  opacity: 1 !important; color:black !important">
+						<p:ajax />
+					</p:inputText>
+					<p:outputLabel for="keyStakeholders" value="#{lang['qcd.key.stakeholders.question']}" />
+				</h:panelGroup>
+			</p:panelGrid>
+		</div>
+	</div>
+
+	<style>
+.ui-selectlistbox-item.ui-corner-all {
+	border: 1pt solid #eee
+}
+</style>
+</ui:composition>

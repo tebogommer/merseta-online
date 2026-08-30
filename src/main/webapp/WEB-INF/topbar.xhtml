@@ -1,0 +1,191 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:f="http://java.sun.com/jsf/core" xmlns:h="http://java.sun.com/jsf/html" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:pu="http://primefaces.org/ultima" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+	<div class="topbar clearfix">
+		<div class="topbar-left">
+			<c:if test="#{sessionUI.hostingCompany.profileImageForView eq null}">
+				<div class="logo"></div>
+			</c:if>
+			<c:if test="#{sessionUI.hostingCompany.profileImageForView ne null}">
+				<p:graphicImage value="#{imageStreamer.image}" style="max-width: 230px !important; max-height: 65px !important;" rendered="#{sessionUI.hostingCompany.profileImage ne null}">
+					<f:param name="imageId" value="#{sessionUI.hostingCompany.profileImage.id}" />
+				</p:graphicImage>
+			</c:if>
+		</div>
+
+		<div class="topbar-right">
+			<a id="menu-button" href="#"> <i></i>
+			</a> <a id="topbar-menu-button" href="#"> <i class="material-icons">&#xE5D4;</i>
+			</a>
+			<c:if test="#{sessionUI.user ne null}">
+				<ul class="topbar-items fadeInDown animated">
+					<li><a href="#" class="rightpanel-btn"> <span class="topbar-badge animated rubberBand"> <h:form id="badgeForm">
+									<h:outputText value="#{countUI.outstandingTasks} " id="badge" />
+
+								</h:form>
+						</span> <i class="material-icons white ">&#xE5D2;</i>
+					</a></li>
+
+	                <li>
+
+                    <a href="#" style="display:none;" id="chatNotificationBadge">
+                          <i class="topbar-icon material-icons animated swing">&#xE0C9;</i>
+                          <span class="topbar-badge animated rubberBand"><p:spacer width="2"/>?<p:spacer width="2"/> </span>
+                          <span class="topbar-item-name">Messages</span>
+                    </a>
+
+                    <ul class="ultima-menu animated">
+                        <li role="menuitem">
+                            <a href="#{request.contextPath}/pages/chat/#{sessionUI.employee?'chatEmp.jsf':'chat.jsf'}?removeMsgInd=true" class="topbar-message">
+                                <i class="fa fa-paper-plane-o FontLight" aria-hidden="true"></i>
+                                <span>View your messages</span>
+                            </a>
+                        </li>
+                     </ul>
+
+                    </li>
+
+				</ul>
+			</c:if>
+
+
+
+			<ul class="topbar-items fadeInDown animated">
+				<ui:fragment rendered="#{guestPreferences.profileMode == 'overlay'||guestPreferences.menuLayout == 'menu-layout-static menu-layout-horizontal'}">
+					<li class="profile-item"><a href="#">
+							<div class="profile-image"></div> <span class="topbar-item-name">#{sessionUI.user.firstName} #{sessionUI.user.lastName}</span>
+					</a>
+
+						<ul class="ultima-menu animated">
+							<li role="menuitem"><a href="#"> <i class="material-icons">&#xE7FD;</i> <span>#{lang['profile']}</span>
+							</a></li>
+
+							<li role="menuitem"><a href="#"> <i class="material-icons">&#xE8AC;</i> <span>#{lang['logout']}</span>
+							</a></li>
+						</ul></li>
+				</ui:fragment>
+				<li>
+				  <h:form id="helpForm1">
+                    <p:commandLink href="#" oncomplete="PF('dlgGenHelp').show()" update=":genHelpForm" rendered="#{crtHelpUI.showHelp}">
+                        <i class="topbar-icon material-icons">info_outline</i>
+                        <span class="topbar-item-name"></span>
+                    </p:commandLink>
+                   </h:form>
+                </li>
+				<!--  <li>
+                    <a href="#">
+                        <i class="topbar-icon material-icons">&#xE8B8;</i>
+                        <span class="topbar-item-name">Settings</span>
+                    </a>
+                    <ul class="ultima-menu animated">
+                        <li role="menuitem">
+                            <a href="#">
+                                <i class="material-icons">&#xE40A;</i>
+                                <span>Change Theme</span>
+                            </a>
+                        </li>
+                        <li role="menuitem">
+                            <a href="#">
+                                <i class="material-icons">&#xE87E;</i>
+                                <span>Favorites</span>
+                            </a>
+                        </li>
+                        <li role="menuitem">
+                            <a href="#">
+                                <i class="material-icons">&#xE897;</i>
+                                <span>Lock Screen</span>
+                            </a>
+                        </li>
+                        <li role="menuitem">
+                            <a href="#">
+                                <i class="material-icons">&#xE1BC;</i>
+                                <span>Wallpaper</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="topbar-icon material-icons animated swing">&#xE0C9;</i>
+                        <span class="topbar-badge animated rubberBand">5</span>
+                        <span class="topbar-item-name">Messages</span>
+                    </a>
+                    <ul class="ultima-menu animated">
+                        <li role="menuitem">
+                            <a href="#" class="topbar-message">
+                                <p:graphicImage name="images/avatar1.png" library="ultima-layout" width="35"/>
+                                <span>Give me a call</span>
+                            </a>
+                        </li>
+                        <li role="menuitem">
+                            <a href="#" class="topbar-message">
+                                <p:graphicImage name="images/avatar2.png" library="ultima-layout" width="35"/>
+                                <span>Sales reports attached</span>
+                            </a>
+                        </li>
+                        <li role="menuitem">
+                            <a href="#" class="topbar-message">
+                                <p:graphicImage name="images/avatar3.png" library="ultima-layout" width="35"/>
+                                <span>About your invoice</span>
+                            </a>
+                        </li>
+                        <li role="menuitem">
+                            <a href="#" class="topbar-message">
+                                <p:graphicImage name="images/avatar2.png" library="ultima-layout" width="35"/>
+                                <span>Meeting today at 10pm</span>
+                            </a>
+                        </li>
+                        <li role="menuitem">
+                            <a href="#" class="topbar-message">
+                                <p:graphicImage name="images/avatar4.png" library="ultima-layout" width="35"/>
+                                <span>Out of office</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+               <li>
+                    <a href="#">
+                        <i class="topbar-icon material-icons">&#xE425;</i>
+                        <span class="topbar-badge animated rubberBand">4</span>
+                        <span class="topbar-item-name">Notifications</span>
+                    </a>
+                    <ul class="ultima-menu animated">
+                        <li role="menuitem">
+                            <a href="#">
+                                <i class="material-icons">&#xE868;</i>
+                                <span>Pending tasks</span>
+                            </a>
+                        </li>
+                        <li role="menuitem">
+                            <a href="#">
+                                <i class="material-icons">&#xE878;</i>
+                                <span>Meeting today at 3pm</span>
+                            </a>
+                        </li>
+                        <li role="menuitem">
+                            <a href="#">
+                                <i class="material-icons">&#xE2C4;</i>
+                                <span>Download documents</span>
+                            </a>
+                        </li>
+                        <li role="menuitem">
+                            <a href="#">
+                                <i class="material-icons">&#xE539;</i>
+                                <span>Book flight</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>  -->
+
+			<c:if test="false">
+				<li class="search-item"><h:form>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText disabled="false" onmouseover="this.style.cursor='pointer'" onmousedown="PF('chooseLanguage').show()" />
+							<label>#{languageUI.currentLang}</label>
+							<i class="topbar-icon material-icons" onmousedown="PF('chooseLanguage').show()" onmouseover="this.style.cursor='pointer'">language</i>
+						</h:panelGroup>
+					</h:form></li></c:if>
+			</ul>
+		</div>
+	</div>
+	<ui:include src="/pages/includes/chooselanguage.xhtml" />
+</ui:composition>

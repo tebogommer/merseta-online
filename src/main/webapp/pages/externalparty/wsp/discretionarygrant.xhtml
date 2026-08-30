@@ -1,0 +1,263 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<h:panelGroup id="discretionaryGrantGroup">
+		<h:form id="unemployedDiscretionaryGrantForm">
+			<p:fieldset legend="#{lang['unemployed.training']}" style="margin-top: 10px" rendered="#{initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.Draft}">
+				<p:panelGrid columns="2" style="width:100%" id="discretionaryGrantGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="#{lang['equity']}"></p:outputLabel>
+						</div>
+						<div>
+							<p:selectOneMenu style="width:100%" id="sipsa" required="true" requiredMessage="#{lang['select.equity']}" value="#{discretionarygrantUI.discretionaryGrantBean.equity}" converter="EquityConvertor">
+								<f:selectItem itemLabel="---Select One---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsEquity}" var="rv" itemLabel="#{rv.description}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="#{lang['gender']}"></p:outputLabel>
+						</div>
+						<div>
+							<p:selectOneMenu style="width:100%" id="sips" required="true" requiredMessage="#{lang['select.gender']}" value="#{discretionarygrantUI.discretionaryGrantBean.gender}" converter="GenderConvertor">
+								<f:selectItem itemLabel="---Select One---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsGender}" var="rv" itemLabel="#{rv.genderName}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="#{lang['age.group']}"></p:outputLabel>
+						</div>
+						<div>
+							<p:selectOneMenu style="width:100%" id="sipsas" required="true" requiredMessage="#{lang['select.age.group']}" value="#{discretionarygrantUI.discretionaryGrantBean.ageGroup}">
+								<f:selectItem itemLabel="---Select One---" noSelectionOption="true" />
+								<f:selectItems value="#{enumUI.ageGroupEnumDD}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="#{lang['pivotal.nonpivotal']}"></p:outputLabel>
+						</div>
+						<div>
+							<p:selectOneMenu style="width:100%" id="sipsaa" required="true" requiredMessage="#{lang['select.pivotal.nonpivotal']}" value="#{discretionarygrantUI.discretionaryGrantBean.pivotNonPivot}">
+								<f:selectItem itemLabel="---Select One---" noSelectionOption="true" />
+								<f:selectItems value="#{enumUI.pivotalNonPivotalDD}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="#{lang['disability']}"></p:outputLabel>
+						</div>
+						<div>
+							<p:selectOneMenu style="width:100%" id="sipsaaaa" required="true" requiredMessage="#{lang['select.disability']}" value="#{discretionarygrantUI.discretionaryGrantBean.disabilityStatus}" converter="DisabilityStatusConvertor">
+								<f:selectItem itemLabel="---Select One---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsDisability}" var="rv" itemLabel="#{rv.description}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputNumber value="#{discretionarygrantUI.discretionaryGrantBean.amount}" decimalPlaces="0" inputStyle="width: 95%" required="true" requiredMessage="#{lang['provide.quantity']}"></p:inputNumber>
+						<p:outputLabel value="#{lang['quantity']}"></p:outputLabel>
+					</h:panelGroup>
+
+				</p:panelGrid>
+				<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<p:commandButton styleClass="Fs14 FontLight" value="#{lang['submit']}" icon="ui-icon-save" update="@form" action="#{discretionarygrantUI.generateEmployeesUnemployed}" process="@form" />
+				</p:panelGrid>
+			</p:fieldset>
+			<br />
+			<br />
+			<h2>#{lang['unemployed.training']}</h2>
+			<p:dataTable var="rowVar" value="#{discretionarygrantUI.employeeList}" id="employeesimportList" rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}" paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+				rowsPerPageTemplate="10,15,20,25,50,100" reflow="true">
+				<p:column headerText="#{lang['expand.row']}" width="45">
+					<p:rowToggler></p:rowToggler>
+				</p:column>
+				<p:column headerText="#{lang['gender']}">
+					<p:outputLabel value="#{rowVar.gender.genderName}"></p:outputLabel>
+				</p:column>
+				<p:column headerText="#{lang['equity']}">
+					<p:outputLabel value="#{rowVar.equity.description}"></p:outputLabel>
+				</p:column>
+				<p:column headerText="#{lang['age.group']}">
+					<p:outputLabel value="#{rowVar.ageGroup.friendlyName}">
+					</p:outputLabel>
+				</p:column>
+				<p:column headerText="#{lang['disability']}">
+					<p:outputLabel value="#{rowVar.disability.description}" style="width:95%" />
+				</p:column>
+
+				<p:column width="40" rendered="#{initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.Draft}">
+
+					<p:commandButton icon="fa fa-graduation-cap" title="#{lang['update.pivotal']}" update=":tabView:unemployedTrainingForm" process="@this" oncomplete="PF('trainingDialogw').show()" action="#{discretionarygrantUI.prepareNewPivitol}" rendered="#{rowVar.pivotalTrainingPlanned.size() gt 0}">
+						<f:setPropertyActionListener value="#{rowVar}" target="#{discretionarygrantUI.employees}" />
+					</p:commandButton>
+					<p:spacer width="5" />
+
+					<p:commandButton icon="fa fa-graduation-cap" title="#{lang['update.non.pivotal']}" update=":tabView:unemployedTrainingForm" process="@this" oncomplete="PF('trainingDialogw').show()" action="#{discretionarygrantUI.prepareNewNonPivitol}" rendered="#{rowVar.nonpivotalTrainingPlanned.size() gt 0}">
+						<f:setPropertyActionListener value="#{rowVar}" target="#{discretionarygrantUI.employees}" />
+					</p:commandButton>
+
+				</p:column>
+				<p:rowExpansion>
+					<p:repeat var="rv" value="#{rowVar.pivotalTrainingPlanned}">
+						<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+
+							<h:panelGroup>
+								<p:outputLabel value="#{lang['etqa']}" styleClass="Fs12 FontLight" />
+								<br />
+								<p:outputLabel value="#{rv.etqa.description}" style="width:95%" />
+							</h:panelGroup>
+
+							<h:panelGroup>
+								<p:outputLabel value="#{lang['provider.name']}" styleClass="Fs12 FontLight" />
+								<br />
+								<p:outputLabel value="#{rv.providerName}" style="width:95%" />
+							</h:panelGroup>
+
+							<h:panelGroup>
+								<p:outputLabel value="#{lang['accreditation.number']}" styleClass="Fs12 FontLight" />
+								<br />
+								<p:outputLabel value="#{rv.accreditationNumber}" style="width:95%" />
+							</h:panelGroup>
+
+							<h:panelGroup>
+								<p:outputLabel value="#{lang['intervention.cost']}" styleClass="Fs12 FontLight" />
+								<br />
+								<p:outputLabel value="#{rv.interventionCost}" style="width:95%" />
+							</h:panelGroup>
+
+							<h:panelGroup>
+								<p:outputLabel value="#{lang['source.of.funding']}" styleClass="Fs12 FontLight" />
+								<br />
+								<p:outputLabel value="#{rv.sourceOfFunding.description}" style="width:95%" />
+							</h:panelGroup>
+
+						</p:panelGrid>
+					</p:repeat>
+					<p:repeat var="rv" value="#{rowVar.nonpivotalTrainingPlanned}">
+						<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+
+							<h:panelGroup>
+								<p:outputLabel value="#{lang['intervention.level']}" styleClass="Fs12 FontLight" />
+								<br />
+								<p:outputLabel value="#{rv.interventionLevel.description}" style="width:95%" />
+							</h:panelGroup>
+
+							<h:panelGroup>
+								<p:outputLabel value="#{lang['intervention.title']}" styleClass="Fs12 FontLight" />
+								<br />
+								<p:outputLabel value="#{rv.interventionTitle}" style="width:95%" />
+							</h:panelGroup>
+
+							<h:panelGroup>
+								<p:outputLabel value="#{lang['provider.name']}" styleClass="Fs12 FontLight" />
+								<br />
+								<p:outputLabel value="#{rv.providerName}" style="width:95%" />
+							</h:panelGroup>
+
+							<h:panelGroup>
+								<p:outputLabel value="#{lang['intervention.cost']}" styleClass="Fs12 FontLight" />
+								<br />
+								<p:outputLabel value="#{rv.interventionCost}" style="width:95%" />
+							</h:panelGroup>
+
+							<h:panelGroup>
+								<p:outputLabel value="#{lang['source.of.funding']}" styleClass="Fs12 FontLight" />
+								<br />
+								<p:outputLabel value="#{rv.sourceOfFunding.description}" style="width:95%" />
+							</h:panelGroup>
+
+						</p:panelGrid>
+					</p:repeat>
+				</p:rowExpansion>
+			</p:dataTable>
+		</h:form>
+	</h:panelGroup>
+
+	<p:dialog modal="true" appendTo="@(body)" fitViewport="true" width="95%" widgetVar="trainingDialogw" position="center" responsive="true">
+		<h:form id="unemployedTrainingForm">
+			<h2>#{discretionarygrantUI.employees.gender.genderName} #{discretionarygrantUI.employees.ageGroup.friendlyName}</h2>
+			<p:panelGrid layout="grid" columns="4">
+				<p:outputLabel value="#{lang['completed/planned.training']}:" styleClass="gray" />
+				<p:outputLabel value="#{lang[discretionarygrantUI.employeesTraining.completedPlanned.registrationName]}" styleClass="Fs18 FontBold" />
+				<p:outputLabel value="#{lang['pivotal/non.pivotal.training']}:" styleClass="gray" />
+				<p:outputLabel value="#{lang[discretionarygrantUI.employeesTraining.pivotNonPivot.registrationName]}" styleClass="Fs18 FontBold" />
+			</p:panelGrid>
+			<br />
+			<p:panelGrid layout="grid" columns="4" styleClass="ui-panelgrid-blank">
+
+
+				<p:outputLabel value="#{lang['intervention.level']}:" styleClass="gray" rendered="#{discretionarygrantUI.employeesTraining.pivotNonPivot eq PivotNonPivotEnum.NonPivotal}" />
+				<p:selectOneMenu id="idType" value="#{discretionarygrantUI.employeesTraining.interventionLevel}" converter="InterventionLevelConvertor" style="width:75%" requiredMessage="#{lang['select.intervention.level']}" required="true" rendered="#{discretionarygrantUI.employeesTraining.pivotNonPivot eq PivotNonPivotEnum.NonPivotal}">
+					<p:ajax></p:ajax>
+					<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+					<f:selectItems value="#{selectItemsUI.selectItemsInterventionLevel}" var="il" itemLabel="#{il.description}" />
+				</p:selectOneMenu>
+
+				<p:outputLabel value="#{lang['intervention.title']}:" styleClass="gray" rendered="#{discretionarygrantUI.employeesTraining.pivotNonPivot eq PivotNonPivotEnum.NonPivotal}" />
+				<p:inputText value="#{discretionarygrantUI.employeesTraining.interventionTitle}" style="width: 98%" rendered="#{discretionarygrantUI.employeesTraining.pivotNonPivot eq PivotNonPivotEnum.NonPivotal}">
+					<p:ajax />
+				</p:inputText>
+
+				<p:outputLabel value="#{lang['qualification']}" styleClass="gray" rendered="#{discretionarygrantUI.employeesTraining.pivotNonPivot eq PivotNonPivotEnum.Pivotal}" />
+
+				<p:autoComplete style="width: 100%" id="qualificationAuto" rendered="#{discretionarygrantUI.employeesTraining.pivotNonPivot eq PivotNonPivotEnum.Pivotal}" value="#{discretionarygrantUI.employeesTraining.qualification}" completeMethod="#{autoCompleteUI.completeQualification}" var="rv2" itemLabel="#{rv2.description}" itemValue="#{rv2}" forceSelection="true" converter="QualificationConvertor"
+					dropdown="true" minQueryLength="3" maxResults="10">
+					<p:ajax></p:ajax>
+					<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv2.code}</p:column>
+					<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv2.description}</p:column>
+					<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv2.nqflevelg2description}</p:column>
+
+				</p:autoComplete>
+
+				<p:outputLabel value="#{lang['provider.name']}" styleClass="gray" />
+				<p:inputText value="#{discretionarygrantUI.employeesTraining.providerName}" style="width: 98%">
+					<p:ajax />
+				</p:inputText>
+
+				<p:outputLabel value="#{lang['etqa']}:" styleClass="gray" rendered="#{discretionarygrantUI.employeesTraining.pivotNonPivot eq PivotNonPivotEnum.Pivotal}" />
+				<p:selectOneMenu id="etqa" value="#{discretionarygrantUI.employeesTraining.etqa}" converter="EtqaConvertor" style="width:75%" requiredMessage="#{lang['select.intervention.level']}" required="true" rendered="#{discretionarygrantUI.employeesTraining.pivotNonPivot eq PivotNonPivotEnum.Pivotal}">
+					<p:ajax></p:ajax>
+					<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+					<f:selectItems value="#{selectItemsUI.selectItemsEtqa}" var="il" itemLabel="#{il.description}" />
+				</p:selectOneMenu>
+
+
+				<p:outputLabel value="#{lang['accreditation.number']}:" styleClass="gray" rendered="#{discretionarygrantUI.employeesTraining.pivotNonPivot eq PivotNonPivotEnum.Pivotal}" />
+				<p:inputText value="#{discretionarygrantUI.employeesTraining.accreditationNumber}" style="width: 98%" rendered="#{discretionarygrantUI.employeesTraining.pivotNonPivot eq PivotNonPivotEnum.Pivotal}">
+					<p:ajax />
+				</p:inputText>
+
+				<p:outputLabel value="#{lang['intervention.cost']}" styleClass="gray" />
+				<p:inputText value="#{discretionarygrantUI.employeesTraining.interventionCost}" style="width: 98%">
+					<p:ajax />
+				</p:inputText>
+
+				<p:outputLabel value="#{lang['source.of.funding']}" styleClass="gray" />
+
+				<p:selectOneMenu id="funding" value="#{discretionarygrantUI.employeesTraining.sourceOfFunding}" converter="FundingConvertor" style="width:75%" requiredMessage="#{lang['select.intervention.level']}" required="true">
+					<p:ajax></p:ajax>
+					<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+					<f:selectItems value="#{selectItemsUI.selectItemsFundingWSP}" var="il" itemLabel="#{il.description}" />
+				</p:selectOneMenu>
+
+				<f:facet name="footer">
+					<div align="center">
+						<br />
+						<p:commandButton value="#{lang['update']}" icon="fa fa-database" title="#{lang['update']}" update="@form :tabView:unemployedDiscretionaryGrantForm" process="@form" actionListener="#{discretionarygrantUI.employeesTrainingUpdate}" oncomplete="PF('trainingDialogw').hide()" />
+					</div>
+				</f:facet>
+			</p:panelGrid>
+		</h:form>
+	</p:dialog>
+</ui:composition>

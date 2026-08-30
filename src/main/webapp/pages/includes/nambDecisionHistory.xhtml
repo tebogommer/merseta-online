@@ -1,0 +1,46 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+	<br />
+
+
+	<c:if test="false">
+		<!-- User Is User Object -->
+		<!--  
+	<ui:include src="/pages/includes/nambDecisionHistory.xhtml">
+		<ui:param name="dataModelNambDecisionHistory" value=" data Model - haj.com.entity.NambDecisionHistory " />
+		<ui:param name="Header" value=" String " />
+		<ui:param name="CALENDER_PATTERN" value=" Date Format Pattern " />
+	</ui:include> 
+	-->
+	</c:if>
+	<p:dataTable var="rvNambHist" value="#{dataModelNambDecisionHistory}" rowKey="#{rvNambHist.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+		rowsPerPageTemplate="5,10,20" reflow="true" lazy="true">
+		<f:facet name="header">#{Header}</f:facet>
+		<p:column headerText="Ref ID" sortBy="#{rvNambHist.id}">
+			<h:outputText value="#{rvNambHist.id}" />
+		</p:column>
+		<p:column headerText="Create User">
+			<h:outputText value="#{rvNambHist.createUser.firstName} #{rvNambHist.createUser.lastName}" />
+		</p:column>
+		<p:column headerText="Create Date" sortBy="#{rvNambHist.createDate}">
+			<h:outputText value="#{rvNambHist.createDate}">
+				<f:convertDateTime pattern="#{CALENDER_PATTERN}" />
+			</h:outputText>
+		</p:column>
+		<p:column headerText="Decision">
+			<h:outputText value="#{rvNambHist.status}">
+			</h:outputText>
+		</p:column>
+		<p:column headerText="Additional Information">
+			<h:outputText value="#{rvNambHist.additionalInformation}">
+			</h:outputText>
+		</p:column>
+		<p:column headerText="Rejection Reasons">
+			<h:outputText value="#{rvNambHist.rejectionReasonsListString}"  rendered="#{rvNambHist.rejectionReasonsList.size() gt 0}">
+			</h:outputText>
+			<h:outputText value="N/A" rendered="#{rvNambHist.rejectionReasonsList.size() eq 0}">
+			</h:outputText>
+		</p:column>
+	</p:dataTable>
+	<br />
+</ui:composition>

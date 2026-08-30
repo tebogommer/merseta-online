@@ -1,0 +1,241 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="head">
+		<script src="#{request.contextPath}/js/highcharts.js" />
+		<script src="#{request.contextPath}/js/highcharts-3d.js" />
+		<script src="#{request.contextPath}/js/exporting.js" />
+	</ui:define>
+
+	<ui:define name="content">
+		<p:growl showDetail="false" sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="uploadForm">
+						<h1>After levy import report showing companies joining and companies left</h1>
+
+						<p:panelGrid layout="grid" columns="5">
+							<p:outputLabel value="Select From Month :" styleClass="FontBold" />
+							<p:dataTable var="rv" value="#{afterLevyImportReportJoiningAndLeavingCompaniesUI.sarsFilesDataModel}" selectionMode="single" selection="#{afterLevyImportReportJoiningAndLeavingCompaniesUI.fromSarsFiles}" id="sarsfilesListFrom" rowKey="#{rowVar.id}" paginator="true" rows="6"
+								paginatorPosition="bottom" paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="6,12,24,36,48,60,120,180,360" reflow="true" lazy="true">
+								<p:ajax event="rowSelect" immediate="true" />
+								<p:column headerText="#{lang['for.month']}" sortBy="#{rv.forMonth}">
+									<h:outputText value="#{rv.forMonth}">
+										<f:convertDateTime pattern="MMMM yyyy" />
+									</h:outputText>
+								</p:column>
+							</p:dataTable>
+
+							<p:outputLabel value="Select To Month :" styleClass="FontBold" />
+							<p:dataTable var="rv" value="#{afterLevyImportReportJoiningAndLeavingCompaniesUI.sarsFilesDataModel}" selectionMode="single" selection="#{afterLevyImportReportJoiningAndLeavingCompaniesUI.toSarsFiles}" id="sarsfilesListTo" rowKey="#{rowVar.id}" paginator="true" rows="6"
+								paginatorPosition="bottom" paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="6,12,24,36,48,60,120,180,360" reflow="true" lazy="true">
+								<p:ajax event="rowSelect" immediate="true" />
+								<p:column headerText="#{lang['for.month']}" sortBy="#{rv.forMonth}">
+									<h:outputText value="#{rv.forMonth}">
+										<f:convertDateTime pattern="MMMM yyyy" />
+									</h:outputText>
+								</p:column>
+							</p:dataTable>
+							<p:commandButton icon="fa fa-plus" value="#{lang['submit']}" action="#{afterLevyImportReportJoiningAndLeavingCompaniesUI.populateBean}" update="detailsForm" onstart="uploadStart()" oncomplete="uploadDone()" />
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+		<div class="ui-g-12">
+			<div class="card card-w-title">
+				<h:form id="detailsForm">
+					<p:outputPanel rendered="#{afterLevyImportReportJoiningAndLeavingCompaniesUI.leavers ne null}">
+						<p:spacer height="5px" />
+						<h:panelGrid columns="4">
+							<h2>Companies that have left from</h2>
+							<h:outputText style="font-size: 18px;" value="#{afterLevyImportReportJoiningAndLeavingCompaniesUI.fromSarsFiles.forMonth}">
+								<f:convertDateTime pattern="MMMM yyyy" />
+							</h:outputText>
+							<h2>to</h2>
+							<h:outputText style="font-size: 18px;" value="#{afterLevyImportReportJoiningAndLeavingCompaniesUI.toSarsFiles.forMonth}">
+								<f:convertDateTime pattern="MMMM yyyy" />
+							</h:outputText>
+						</h:panelGrid>
+
+						<div align="right" style="margin-bottom: 10px">
+							<h:commandLink id="eExcel">
+								<i class="fa fa-file-excel-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+								<p:dataExporter type="xls" target="levyIncome" fileName="Companies That Have Left" />
+							</h:commandLink>
+							<h:commandLink title="#{lang['export.search.results.as.a.csv']}">
+								<i class="fa fa-file-text-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+								<p:dataExporter type="csv" target="levyIncome" fileName="Companies That Have Left" />
+							</h:commandLink>
+						</div>
+
+						<p:dataTable var="leaver" value="#{afterLevyImportReportJoiningAndLeavingCompaniesUI.leavers}" id="levyIncome" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="6,12,24,36,48,60,120,180,360" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['companyRegistrationNumber']}">
+								<h:outputText value="#{leaver.companyRegistrationNumber}" />
+							</p:column>
+							<p:column headerText="#{lang['levyNumber']}">
+								<h:outputText value="#{leaver.refNo}" />
+							</p:column>
+							<p:column headerText="Registration Name Of Entity">
+								<h:outputText value="#{leaver.registeredNameOfEntity}" />
+							</p:column>
+							<p:column headerText="#{lang['sic.code']}">
+								<h:outputText value="#{leaver.sicCode2}" />
+							</p:column>
+							<p:column headerText="Chamber">
+								<h:outputText value="#{leaver.chamberPassed}" />
+							</p:column>
+							<p:column headerText="#{lang['trading.name']}">
+								<h:outputText value="#{leaver.tradingName}" />
+							</p:column>
+							<p:column headerText="#{lang['trading.status']}">
+								<h:outputText value="#{leaver.tradingStatus}" />
+							</p:column>
+							<p:column headerText="Sars File" rendered="false">
+								<h:outputText value="#{leaver.sarsFiles}" />
+							</p:column>
+							<p:column headerText="Number Of Employees According To SARS">
+								<h:outputText value="#{leaver.noEmployesAccordingToSARS}" />
+							</p:column>
+
+
+						</p:dataTable>
+
+						<div class="EmptyBox10" />
+
+					</p:outputPanel>
+
+					<p:outputLabel rendered="#{afterLevyImportReportJoiningAndLeavingCompaniesUI.joiners ne null}">
+
+						<h:panelGrid columns="4">
+							<h2>Companies that have joined from</h2>
+							<h:outputText style="font-size: 18px;" value="#{afterLevyImportReportJoiningAndLeavingCompaniesUI.fromSarsFiles.forMonth}">
+								<f:convertDateTime pattern="MMMM yyyy" />
+							</h:outputText>
+							<h2>to</h2>
+							<h:outputText style="font-size: 18px;" value="#{afterLevyImportReportJoiningAndLeavingCompaniesUI.toSarsFiles.forMonth}">
+								<f:convertDateTime pattern="MMMM yyyy" />
+							</h:outputText>
+						</h:panelGrid>
+
+						<div align="right" style="margin-bottom: 10px">
+							<h:commandLink id="eExcel1">
+								<i class="fa fa-file-excel-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+								<p:dataExporter type="xls" target="levyIncome1" fileName="Companies That Have Joined" />
+							</h:commandLink>
+							<h:commandLink title="#{lang['export.search.results.as.a.csv']}">
+								<i class="fa fa-file-text-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+								<p:dataExporter type="csv" target="levyIncome1" fileName="Companies That Have Joined" />
+							</h:commandLink>
+						</div>
+
+						<p:dataTable var="joiner" id="levyIncome1" value="#{afterLevyImportReportJoiningAndLeavingCompaniesUI.joiners}" rowKey="#{joiner.id}" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="false">
+
+
+							<p:column headerText="#{lang['companyRegistrationNumber']}">
+								<h:outputText value="#{joiner.companyRegistrationNumber}" />
+							</p:column>
+							<p:column headerText="#{lang['levyNumber']}">
+								<h:outputText value="#{joiner.refNo}" />
+							</p:column>
+							<p:column headerText="Registration Name Of Entity">
+								<h:outputText value="#{joiner.registeredNameOfEntity}" />
+							</p:column>
+							<p:column headerText="#{lang['sic.code']}">
+								<h:outputText value="#{joiner.sicCode2}" />
+							</p:column>
+							<p:column headerText="Chamber">
+								<h:outputText value="#{joiner.chamberPassed}" />
+							</p:column>
+							<p:column headerText="#{lang['trading.name']}">
+								<h:outputText value="#{joiner.tradingName}" />
+							</p:column>
+							<p:column headerText="#{lang['trading.status']}">
+								<h:outputText value="#{joiner.tradingStatus}" />
+							</p:column>
+							<p:column headerText="sars File" rendered="false">
+								<h:outputText value="#{joiner.sarsFiles}" />
+							</p:column>
+							<p:column headerText="Number Of Employees According To SARS">
+								<h:outputText value="#{joiner.noEmployesAccordingToSARS}" />
+							</p:column>
+
+
+						</p:dataTable>
+					</p:outputLabel>
+				</h:form>
+			</div>
+		</div>
+
+		<h:form id="chartForm">
+
+
+
+
+
+			<script type="text/javascript">
+//<![CDATA[
+ 
+	function test() {
+		    alert('ready');
+	}
+	
+	function doChart () {
+
+		 Highcharts.setOptions({
+			    colors: ['#4D2600', '#999372', '#C5913E', '#C57901', '#F0C070', '#8B592E', '#1E4B88', '#767776', '#87C6E1']
+			});
+		
+		Highcharts.chart('container', {
+		    chart: {
+		        type: 'column'
+		    },
+		    title: {
+		        text: '#{sarsReportsUI.sarsEmployerDetail.registeredNameOfEntity}'
+		    },
+		    xAxis: {
+		        categories: ['Summary Totals']
+		    },
+		    credits: {
+		        enabled: false
+		    },
+		    series: [{
+		        name: 'Mandatory',
+		        data: [#{sarsReportsUI.totals.mandatoryLevy}]
+		    },
+		    {
+		        name: 'Discretionary',
+		        data: [#{sarsReportsUI.totals.discretionaryLevy}]
+		    },
+		    {
+		        name: 'Admin',
+		        data: [ #{sarsReportsUI.totals.adminLevy}]
+		    },
+		    {
+		        name: 'Interest',
+		        data: [#{sarsReportsUI.totals.interest}]
+		    },
+		    {
+		        name: 'Penalties',
+		        data: [  #{sarsReportsUI.totals.penalty}]
+		    }
+		    ]
+		});
+	 
+	 }; / end of $(function ()  /		 
+
+//]]>		  
+</script>
+
+
+
+		</h:form>
+	</ui:define>
+
+</ui:composition>

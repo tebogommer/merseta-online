@@ -1,0 +1,164 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+	<p:fieldset legend="Site Visit Information">
+		<p:panelGrid columns="2" style="width:100%" id="siteVisitGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+			<h:panelGroup styleClass="md-inputfield">
+				<p:calendar id="siteVIsitDate" value="#{tpDetailUI.trainingProviderApplication.siteVisitDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" inputStyle="width: 75%" style="width: 95%" required="true"  disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalEdit}">
+					<p:ajax event="dateSelect">
+					</p:ajax>
+				</p:calendar>
+				<p:outputLabel value="Site Visit Date" for="siteVIsitDate" />
+			</h:panelGroup>
+
+			<h:panelGroup styleClass="md-inputfield">
+				<p:calendar id="siteVIsitReportDate" value="#{tpDetailUI.trainingProviderApplication.siteVisitReportDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" inputStyle="width: 75%" style="width: 95%" required="true"  disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalEdit}">
+					<p:ajax event="dateSelect">
+					</p:ajax>
+				</p:calendar>
+				<p:outputLabel value="Date of Report" for="siteVIsitReportDate" />
+			</h:panelGroup>
+
+			<h:panelGroup styleClass="md-inputfield">
+				<p:inputText value="Assessment Only" rendered="#{tpDetailUI.trainingProviderApplication.assessmentOnly}" disabled="true" style="width: 95%; opacity: 1; color: black;" />
+				<p:inputText value="Training and Assessment" rendered="#{tpDetailUI.trainingProviderApplication.trainingAssessment}" disabled="true" style="width: 95%; opacity: 1; color: black;" />
+				<p:outputLabel value="Purpose of Visit" for="siteVIsitReportDate" />
+			</h:panelGroup>
+
+		</p:panelGrid>
+	</p:fieldset>
+
+	<p:fieldset legend="#{lang['qualifications']}">
+		<p:dataTable var="rowVar" value="#{tpDetailUI.companyQualifications}" rowKey="#{rowVar.id}" reflow="true" styleClass="borderless">
+			<p:column headerText="Qualification">
+				<p:outputLabel value="#{rowVar.qualification.description}" />
+			</p:column>
+			<p:column headerText="Approve" width="60">
+				<center>
+					<p:selectBooleanCheckbox value="#{rowVar.accept}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalEdit}">
+						<p:ajax></p:ajax>
+					</p:selectBooleanCheckbox>
+				</center>
+			</p:column>
+		</p:dataTable>
+	</p:fieldset>
+
+	<p:fieldset legend="#{lang['unit.standards']}">
+		<p:dataTable var="rowVar" value="#{tpDetailUI.unitStandards}" rowKey="#{rowVar.id}" reflow="true" styleClass="borderless">
+			<p:column headerText="Unit Standard">
+				<p:outputLabel value="#{rowVar.unitStandard.title}" />
+			</p:column>
+			<p:column headerText="Approve" width="60">
+				<center>
+					<p:selectBooleanCheckbox value="#{rowVar.accept}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalEdit}">
+						<p:ajax></p:ajax>
+					</p:selectBooleanCheckbox>
+				</center>
+			</p:column>
+		</p:dataTable>
+	</p:fieldset>
+	
+   <p:fieldset legend="Skills programme route">
+		<p:panelGrid columns="3" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+			<h:panelGroup>
+				<p:outputLabel  styleClass="FontBold Fs15" style="font-weight:bold" value="Skills programme route will be used for obtaining the unit standards?"  />
+			</h:panelGroup>
+			
+			<h:panelGroup>
+				<p:selectOneMenu disabled="true"  id="svUseSkillProgrammeRoute" value="#{tpDetailUI.trainingProviderApplication.useSkillProgrammeRoute}" style="width:100%" required="true" requiredMessage="#{lang['use.skill.programme.route.error.msg']}">
+					
+					<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+				</p:selectOneMenu>
+			</h:panelGroup>
+			
+			<h:panelGroup styleClass="md-inputfield" rendered="#{tpDetailUI.trainingProviderApplication.useSkillProgrammeRoute eq YesNoEnum.Yes}">
+				<p:autoComplete id="svSkillsSet"  value="#{tpDetailUI.trainingProviderApplication.skillsSet}" completeMethod="#{autoCompleteUI.completeSkillsSet}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SkillsSetConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 100%"
+					disabled="true">
+					<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+					<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+				</p:autoComplete>
+				<p:outputLabel  value="Skills Set" for="svSkillsSet" />
+			</h:panelGroup>
+		</p:panelGrid>
+	</p:fieldset>
+
+	<p:fieldset legend="Availability of Facilitators and Assessors">
+	
+		<p:outputPanel id="unitList" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalEdit}">
+			<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%">
+
+				<h:panelGroup>
+					<div>
+						<p:outputLabel value="SME Type" for="type" />
+					</div>
+					<div>
+						<p:selectOneMenu id="type" value="#{tpDetailUI.sitesSme.smeType}" style="width:75%" required="true">
+							<p:ajax />
+							<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+							<f:selectItems value="#{enumUI.smeTypeEnumDD}" />
+						</p:selectOneMenu>
+					</div>
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText style="width:95%; opacity:1 !important;" value="#{tpDetailUI.sitesSme.firstName}">
+						<p:ajax />
+					</p:inputText>
+					<p:outputLabel value="First Name" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText style="width:95%; opacity:1 !important;" value="#{tpDetailUI.sitesSme.lastName}">
+						<p:ajax />
+					</p:inputText>
+					<p:outputLabel value="Last Name" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText style="width:95%; opacity:1 !important;" value="#{tpDetailUI.sitesSme.identityNumber}" />
+					<p:outputLabel value="Identity Number" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield" columns="2">
+					<p:autoComplete id="qualificationIdselection" value="#{tpDetailUI.sitesSme.qualification}" completeMethod="#{autoCompleteUI.completeQualification}" var="rvqs" itemLabel="#{rvqs.codeString} #{rvqs.description}" itemValue="#{rvqs}" forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%">
+						<p:column headerText="Code" style="white-space: nowrap">#{rvqs.codeString}</p:column>
+						<p:column headerText="Description" style="white-space: nowrap">#{rvqs.description}</p:column>
+						<p:ajax event="itemSelect" />
+					</p:autoComplete>
+					<p:outputLabel value="Qualification" for="qualificationIdselection" />
+				</h:panelGroup>
+
+			</p:panelGrid>
+			<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%">
+				<p:commandButton update="unitList mainForm:trainingProviderTabView:usList" value="Add SME" icon="ui-icon-plus" styleClass="flat" action="#{tpDetailUI.smeInsert}" process="unitList" />
+			</p:panelGrid>
+		</p:outputPanel>
+		<p:dataTable var="rowVar2" value="#{tpDetailUI.sitesSmes}" id="usList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+			<p:column headerText="SME Type">
+				<p:outputLabel value="#{rowVar2.smeType.friendlyName}"></p:outputLabel>
+			</p:column>
+			<p:column headerText="First Name">
+				<p:outputLabel value="#{rowVar2.firstName}"></p:outputLabel>
+			</p:column>
+			<p:column headerText="Last Name">
+				<p:outputLabel value="#{rowVar2.lastName}"></p:outputLabel>
+			</p:column>
+			<p:column headerText="Identity Number">
+				<p:outputLabel value="#{rowVar2.identityNumber}"></p:outputLabel>
+			</p:column>
+			<p:column headerText="Qualification">
+				<p:outputLabel value="#{rowVar2.qualification.saqaQualification}"></p:outputLabel>
+			</p:column>
+			<p:column width="80" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalEdit}">
+				<p:commandButton icon="fa fa-database" title="#{lang['update']}" update="mainForm:trainingProviderTabView:unitList" process="@this">
+					<f:setPropertyActionListener value="#{rowVar2}" target="#{tpDetailUI.sitesSme}" />
+				</p:commandButton>
+				<p:spacer width="5" />
+				<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update="mainForm:trainingProviderTabView:unitList" action="#{tpDetailUI.smeDelete}" process="@this">
+					<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+					<f:setPropertyActionListener value="#{rowVar2}" target="#{tpDetailUI.sitesSme}" />
+				</p:commandButton>
+			</p:column>
+		</p:dataTable>
+	</p:fieldset>
+</ui:composition>

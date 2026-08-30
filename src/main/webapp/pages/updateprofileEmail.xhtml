@@ -1,0 +1,62 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml" xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:o="http://omnifaces.org/ui">
+
+	<ui:define name="content">
+
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<ui:include src="/pages/includes/taskdiagram.xhtml" />
+			</div>
+		</div>
+
+
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+						<H1>#{lang['details']}</H1>
+						<h:form>
+							<p:growl showDetail="false" sticky="false">
+								<p:autoUpdate />
+							</p:growl>
+							<p:panelGrid columns="2" style="width:100%" id="prof" layout="grid" styleClass="ui-panelgrid-blank">
+								<p:outputLabel value="#{lang['first.name']}" for="firstName" />
+								<p:outputLabel id="firstName" value="#{resetProfileUI.user.firstName}" />
+								<p:outputLabel value="#{lang['last.name']}:" for="lastName" />
+								<p:outputLabel id="lastName" value="#{resetProfileUI.user.lastName}" />
+								<p:outputLabel value="#{lang['mobile.number']}" for="cellNumber" />
+								<p:outputLabel id="cellNumber" value="#{resetProfileUI.user.cellNumber}" />
+								<p:outputLabel value="#{lang['tel.number']}:" for="telNumber" />
+								<p:outputLabel id="telNumber" value="#{resetProfileUI.user.telNumber}" />
+								<p:outputLabel value="#{lang['email']}:" for="email" />
+								<p:inputText id="email" value="#{resetProfileUI.user.email}" maxlength="#{profileUI.MAX_EMAIL_SIZE}" style="width: 90%" required="true" requiredMessage="Enter email address">
+									<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['user.email.length']}" />
+								</p:inputText>
+								<p:spacer />
+								<p:commandButton value="#{lang['update']}" action="#{resetProfileUI.updateProfile}" icon="fa fa-database" update="@form">
+									<p:confirm header="#{lang['confirmation']}" message="Is the email address correct?" icon="ui-icon-warning" />
+								</p:commandButton>
+							</p:panelGrid>
+							<c:if test="#{resetProfileUI.setmisValidiationException ne null and resetProfileUI.setmisValidiationException ne ''}">
+								<p:fieldset styleClass="error Fs12">
+									<h4>Validation Error(s):</h4>
+									<p:outputLabel value="#{resetProfileUI.setmisValidiationException}" escape="false"></p:outputLabel>
+								</p:fieldset>
+							</c:if>
+							<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="300">
+								<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+								<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+							</p:confirmDialog>
+						</h:form>
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+
+
+
+	</ui:define>
+
+</ui:composition>

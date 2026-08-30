@@ -1,0 +1,554 @@
+@page "/people/{id:int}"
+@page "/people/create"
+@inject IPersonService PersonService
+@inject LookupService LookupService
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@using Nsdms.Application.Common.Utilities
+@rendermode InteractiveServer
+
+<!-- Sticky Top Bar with Breadcrumbs and Action Buttons -->
+<div class="sticky-top bg-white pa-4 mb-4 border-bottom elevation-1 d-flex flex-wrap justify-space-between align-center gap-3">
+    <div class="d-flex align-center gap-3">
+        <MudButton Variant="Variant.Text"
+                   StartIcon="@Icons.Material.Filled.ArrowBack"
+                   Color="Color.Default"
+                   OnClick="BackToList">
+            Back to People
+        </MudButton>
+        <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-2" />
+        <div>
+            <MudBreadcrumbs Items="_breadcrumbItems" Separator=">" Class="pa-0 ma-0" />
+            <MudText Typo="Typo.h6" Class="font-weight-bold">
+                @(Id == 0 ? "New Person Registration" : $"{_person.Title} {_person.FirstName} {_person.LastName}".Trim())
+            </MudText>
+        </div>
+    </div>
+    <div class="d-flex align-center gap-2">
+        @if (Id > 0)
+        {
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Error"
+                       StartIcon="@Icons.Material.Filled.Delete"
+                       OnClick="DeletePerson">
+                Delete
+            </MudButton>
+        }
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Secondary"
+                   OnClick="BackToList">
+            Cancel
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Save"
+                   OnClick="SavePerson"
+                   Disabled="_isSaving">
+            @(_isSaving ? "Saving..." : "Save Person")
+        </MudButton>
+    </div>
+</div>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-0">
+    @if (_loading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-6" />
+    }
+    else
+    {
+        <MudForm @ref="_form" @bind-IsValid="_isValid">
+            <MudGrid Spacing="3">
+                <!-- Left Column: Master Identity & Demographics -->
+                <MudItem xs="12" lg="8">
+                    <!-- Identity & Demographics Card -->
+                    <MudCard Elevation="2" Class="mb-4">
+                        <MudCardHeader>
+                            <CardHeaderAvatar>
+                                <MudAvatar Color="Color.Primary" Variant="Variant.Filled">
+                                    <MudIcon Icon="@Icons.Material.Filled.Badge" />
+                                </MudAvatar>
+                            </CardHeaderAvatar>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h6">Identity & Personal Information</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Core legal identity and national demographics</MudText>
+                            </CardHeaderContent>
+                            <CardHeaderActions>
+                                <MudChip T="string" Color="@(_person.IsActive ? Color.Success : Color.Error)" Size="Size.Small" Variant="Variant.Filled">
+                                    @(_person.IsActive ? "Active Record" : "Inactive Record")
+                                </MudChip>
+                            </CardHeaderActions>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            <MudGrid>
+                                <!-- RSA ID with Real-Time Auto-Calculation -->
+                                <MudItem xs="12" md="6">
+                                    <MudTextField T="string"
+                                                  Label="South African ID Number (13 Digits)"
+                                                  Value="_person.RsaIdNumber"
+                                                  ValueChanged="OnRsaIdChanged"
+                                                  Placeholder="e.g. 8501015009087"
+                                                  Variant="Variant.Outlined"
+                                                  Adornment="Adornment.Start"
+                                                  AdornmentIcon="@Icons.Material.Filled.CreditCard"
+                                                  Immediate="true"
+                                                  HelperText="Auto-populates Date of Birth, Gender, and Citizenship" />
+                                </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudTextField T="string"
+                                                  Label="Passport Number (Foreign Nationals)"
+                                                  @bind-Value="_person.PassportNumber"
+                                                  Placeholder="e.g. A12345678"
+                                                  Variant="Variant.Outlined"
+                                                  Adornment="Adornment.Start"
+                                                  AdornmentIcon="@Icons.Material.Filled.Public" />
+                                </MudItem>
+
+                                <!-- Real-time Feedback for RSA ID Parsing -->
+                                @if (!string.IsNullOrWhiteSpace(_person.RsaIdNumber))
+                                {
+                                    <MudItem xs="12">
+                                        @if (_rsaValidation.IsValid)
+                                        {
+                                            <MudAlert Severity="Severity.Success" Variant="Variant.Outlined" Dense="true" Class="my-1">
+                                                <div class="d-flex align-center justify-space-between flex-wrap">
+                                                    <span><strong>Verified RSA ID:</strong> Born on <strong>@(_person.DateOfBirth?.ToString("dd MMMM yyyy"))</strong> &bull; Gender: <strong>@_person.Gender</strong> &bull; Status: <strong>@(_person.IsSouthAfricanCitizen == true ? "SA Citizen" : "Permanent Resident")</strong></span>
+                                                    <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Filled">Luhn Checksum Valid</MudChip>
+                                                </div>
+                                            </MudAlert>
+                                        }
+                                        else
+                                        {
+                                            <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined" Dense="true" Class="my-1">
+                                                <strong>RSA ID Incomplete or Invalid:</strong> @_rsaValidation.ErrorMessage
+                                            </MudAlert>
+                                        }
+                                    </MudItem>
+                                }
+
+                                <!-- Name Fields -->
+                                <MudItem xs="12" sm="3" md="2">
+                                    <MudSelect T="string" Label="Title" @bind-Value="_person.Title" Variant="Variant.Outlined">
+                                        <MudSelectItem Value="@("Mr")">Mr</MudSelectItem>
+                                        <MudSelectItem Value="@("Mrs")">Mrs</MudSelectItem>
+                                        <MudSelectItem Value="@("Ms")">Ms</MudSelectItem>
+                                        <MudSelectItem Value="@("Miss")">Miss</MudSelectItem>
+                                        <MudSelectItem Value="@("Dr")">Dr</MudSelectItem>
+                                        <MudSelectItem Value="@("Prof")">Prof</MudSelectItem>
+                                        <MudSelectItem Value="@("Adv")">Adv</MudSelectItem>
+                                        <MudSelectItem Value="@("Hon")">Hon</MudSelectItem>
+                                    </MudSelect>
+                                </MudItem>
+                                <MudItem xs="12" sm="9" md="4">
+                                    <MudTextField T="string"
+                                                  Label="First Name"
+                                                  @bind-Value="_person.FirstName"
+                                                  Required="true"
+                                                  RequiredError="First Name is required"
+                                                  Variant="Variant.Outlined" />
+                                </MudItem>
+                                <MudItem xs="12" sm="6" md="3">
+                                    <MudTextField T="string"
+                                                  Label="Middle Name"
+                                                  @bind-Value="_person.MiddleName"
+                                                  Variant="Variant.Outlined" />
+                                </MudItem>
+                                <MudItem xs="12" sm="6" md="3">
+                                    <MudTextField T="string"
+                                                  Label="Last Name"
+                                                  @bind-Value="_person.LastName"
+                                                  Required="true"
+                                                  RequiredError="Last Name is required"
+                                                  Variant="Variant.Outlined" />
+                                </MudItem>
+
+                                <!-- Date of Birth & Demographics -->
+                                <MudItem xs="12" md="4">
+                                    <MudDatePicker Label="Date of Birth"
+                                                   @bind-Date="_dateOfBirth"
+                                                   DateFormat="yyyy-MM-dd"
+                                                   Variant="Variant.Outlined"
+                                                   Editable="true" />
+                                </MudItem>
+                                <MudItem xs="12" md="4">
+                                    <MudSelect T="string"
+                                               Label="Gender"
+                                               @bind-Value="_person.GenderCode"
+                                               Variant="Variant.Outlined">
+                                        @foreach (var g in _genders)
+                                        {
+                                            <MudSelectItem Value="@g.Code">@g.Name (@g.Code)</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudItem>
+                                <MudItem xs="12" md="4">
+                                    <MudSelect T="string"
+                                               Label="Employment Equity"
+                                               @bind-Value="_person.EquityCode"
+                                               Variant="Variant.Outlined">
+                                        @foreach (var eq in _equityTypes)
+                                        {
+                                            <MudSelectItem Value="@eq.Code">@eq.Name</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudItem>
+
+                                <MudItem xs="12" md="4">
+                                    <MudSelect T="string"
+                                               Label="Disability Status"
+                                               @bind-Value="_person.DisabilityCode"
+                                               Variant="Variant.Outlined">
+                                        @foreach (var d in _disabilities)
+                                        {
+                                            <MudSelectItem Value="@d.Code">@d.Name</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudItem>
+                                <MudItem xs="12" md="4">
+                                    <MudSelect T="string"
+                                               Label="Nationality"
+                                               @bind-Value="_person.NationalityCode"
+                                               Variant="Variant.Outlined">
+                                        @foreach (var n in _nationalities)
+                                        {
+                                            <MudSelectItem Value="@n.Code">@n.Name</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudItem>
+                                <MudItem xs="12" md="4">
+                                    <MudSelect T="string"
+                                               Label="Home Language"
+                                               @bind-Value="_person.HomeLanguageCode"
+                                               Variant="Variant.Outlined">
+                                        @foreach (var hl in _languages)
+                                        {
+                                            <MudSelectItem Value="@hl.Code">@hl.Name</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudItem>
+                            </MudGrid>
+                        </MudCardContent>
+                    </MudCard>
+
+                    <!-- Addresses Card -->
+                    <MudCard Elevation="2" Class="mb-4">
+                        <MudCardHeader>
+                            <CardHeaderAvatar>
+                                <MudAvatar Color="Color.Info" Variant="Variant.Filled">
+                                    <MudIcon Icon="@Icons.Material.Filled.Home" />
+                                </MudAvatar>
+                            </CardHeaderAvatar>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h6">Residential & Postal Addresses</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Physical location and correspondence address</MudText>
+                            </CardHeaderContent>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            <MudGrid>
+                                <MudItem xs="12" md="6">
+                                    <MudTextField T="string"
+                                                  Label="Physical Address"
+                                                  @bind-Value="_person.PhysicalAddress"
+                                                  Lines="3"
+                                                  Variant="Variant.Outlined"
+                                                  Placeholder="Street address, building, suburb..." />
+                                </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudTextField T="string"
+                                                  Label="Postal Address"
+                                                  @bind-Value="_person.PostalAddress"
+                                                  Lines="3"
+                                                  Variant="Variant.Outlined"
+                                                  Placeholder="P.O. Box, Private Bag, postal code..." />
+                                </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudSelect T="string"
+                                               Label="Province"
+                                               @bind-Value="_person.ProvinceCode"
+                                               Variant="Variant.Outlined">
+                                        @foreach (var p in _provinces)
+                                        {
+                                            <MudSelectItem Value="@p.Code">@p.Name (@p.Code)</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudItem>
+                            </MudGrid>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+
+                <!-- Right Column: Contact Details, Status & System Audit -->
+                <MudItem xs="12" lg="4">
+                    <!-- Contact Channels Card -->
+                    <MudCard Elevation="2" Class="mb-4">
+                        <MudCardHeader>
+                            <CardHeaderAvatar>
+                                <MudAvatar Color="Color.Success" Variant="Variant.Filled">
+                                    <MudIcon Icon="@Icons.Material.Filled.ContactPhone" />
+                                </MudAvatar>
+                            </CardHeaderAvatar>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h6">Contact Channels</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Email, Mobile, and Telephone</MudText>
+                            </CardHeaderContent>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            <MudGrid>
+                                <MudItem xs="12">
+                                    <MudTextField T="string"
+                                                  Label="Email Address"
+                                                  @bind-Value="_person.Email"
+                                                  Variant="Variant.Outlined"
+                                                  Adornment="Adornment.Start"
+                                                  AdornmentIcon="@Icons.Material.Filled.Email"
+                                                  Placeholder="name@example.co.za" />
+                                </MudItem>
+                                <MudItem xs="12">
+                                    <MudTextField T="string"
+                                                  Label="Cell Number"
+                                                  @bind-Value="_person.CellNumber"
+                                                  Variant="Variant.Outlined"
+                                                  Adornment="Adornment.Start"
+                                                  AdornmentIcon="@Icons.Material.Filled.Smartphone"
+                                                  Placeholder="082 123 4567" />
+                                </MudItem>
+                                <MudItem xs="12">
+                                    <MudTextField T="string"
+                                                  Label="Landline / Telephone Number"
+                                                  @bind-Value="_person.PhoneNumber"
+                                                  Variant="Variant.Outlined"
+                                                  Adornment="Adornment.Start"
+                                                  AdornmentIcon="@Icons.Material.Filled.Phone"
+                                                  Placeholder="011 555 0100" />
+                                </MudItem>
+                            </MudGrid>
+                        </MudCardContent>
+                    </MudCard>
+
+                    <!-- Status & Record Governance Card -->
+                    <MudCard Elevation="2" Class="mb-4">
+                        <MudCardHeader>
+                            <CardHeaderAvatar>
+                                <MudAvatar Color="Color.Warning" Variant="Variant.Filled">
+                                    <MudIcon Icon="@Icons.Material.Filled.Shield" />
+                                </MudAvatar>
+                            </CardHeaderAvatar>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h6">Record Governance</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Lifecycle status and audit trail</MudText>
+                            </CardHeaderContent>
+                        </MudCardHeader>
+                        <MudCardContent>
+                            <MudSwitch T="bool"
+                                       @bind-Value="_person.IsActive"
+                                       Color="Color.Success"
+                                       Label="Record Active Status" />
+
+                            <MudDivider Class="my-3" />
+
+                            <div class="d-flex flex-column gap-2 text-muted">
+                                <div class="d-flex justify-space-between">
+                                    <MudText Typo="Typo.caption">Record ID:</MudText>
+                                    <MudText Typo="Typo.caption" Class="fw-bold">@(Id > 0 ? Id.ToString() : "Draft / Unsaved")</MudText>
+                                </div>
+                                <div class="d-flex justify-space-between">
+                                    <MudText Typo="Typo.caption">Created At:</MudText>
+                                    <MudText Typo="Typo.caption">@(_person.CreatedAt > DateTime.MinValue ? _person.CreatedAt.ToString("yyyy-MM-dd HH:mm") : "-")</MudText>
+                                </div>
+                                <div class="d-flex justify-space-between">
+                                    <MudText Typo="Typo.caption">Created By:</MudText>
+                                    <MudText Typo="Typo.caption">@(!string.IsNullOrWhiteSpace(_person.CreatedBy) ? _person.CreatedBy : "-")</MudText>
+                                </div>
+                                <div class="d-flex justify-space-between">
+                                    <MudText Typo="Typo.caption">Modified At:</MudText>
+                                    <MudText Typo="Typo.caption">@(_person.ModifiedAt.HasValue ? _person.ModifiedAt.Value.ToString("yyyy-MM-dd HH:mm") : "-")</MudText>
+                                </div>
+                                <div class="d-flex justify-space-between">
+                                    <MudText Typo="Typo.caption">Modified By:</MudText>
+                                    <MudText Typo="Typo.caption">@(!string.IsNullOrWhiteSpace(_person.ModifiedBy) ? _person.ModifiedBy : "-")</MudText>
+                                </div>
+                            </div>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    }
+</MudContainer>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private Person _person = new();
+    private MudForm? _form;
+    private bool _isValid;
+    private bool _loading = true;
+    private bool _isSaving = false;
+    private DateTime? _dateOfBirth;
+
+    private (bool IsValid, DateTime? DateOfBirth, string? Gender, bool? IsSouthAfricanCitizen, string? ErrorMessage) _rsaValidation;
+
+    private List<LookupItemDto> _genders = new();
+    private List<LookupItemDto> _equityTypes = new();
+    private List<LookupItemDto> _disabilities = new();
+    private List<LookupItemDto> _nationalities = new();
+    private List<LookupItemDto> _languages = new();
+    private List<LookupItemDto> _provinces = new();
+
+    private List<BreadcrumbItem> _breadcrumbItems = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+
+        SetupBreadcrumbs();
+
+        // Load lookups sequentially to avoid concurrent DbContext execution
+        _genders = await LookupService.GetLookupItemsAsync("GenderType");
+        _equityTypes = await LookupService.GetLookupItemsAsync("EquityType");
+        _disabilities = await LookupService.GetLookupItemsAsync("DisabilityType");
+        _nationalities = await LookupService.GetLookupItemsAsync("NationalityType");
+        _languages = await LookupService.GetLookupItemsAsync("HomeLanguageType");
+        _provinces = await LookupService.GetLookupItemsAsync("ProvinceType");
+
+        if (Id > 0)
+        {
+            var p = await PersonService.GetByIdAsync(Id);
+            if (p != null)
+            {
+                _person = p;
+                _dateOfBirth = _person.DateOfBirth;
+                if (!string.IsNullOrWhiteSpace(_person.RsaIdNumber))
+                {
+                    _rsaValidation = RsaIdValidator.Parse(_person.RsaIdNumber);
+                }
+            }
+            else
+            {
+                Snackbar.Add($"Person with ID {Id} not found.", Severity.Error);
+                NavManager.NavigateTo("/people");
+                return;
+            }
+        }
+        else
+        {
+            _person = new Person
+            {
+                IsActive = true,
+                NationalityCode = "ZA",
+                ProvinceCode = "GP"
+            };
+        }
+
+        _loading = false;
+    }
+
+    private void SetupBreadcrumbs()
+    {
+        _breadcrumbItems = new List<BreadcrumbItem>
+        {
+            new BreadcrumbItem("Home", href: "/"),
+            new BreadcrumbItem("People & Demographics", href: "/people"),
+            new BreadcrumbItem(Id == 0 ? "Create" : $"Person #{Id}", href: null, disabled: true)
+        };
+    }
+
+    private void OnRsaIdChanged(string newId)
+    {
+        _person.RsaIdNumber = newId;
+
+        if (string.IsNullOrWhiteSpace(newId))
+        {
+            _rsaValidation = (false, null, null, null, null);
+            return;
+        }
+
+        _rsaValidation = RsaIdValidator.Parse(newId);
+
+        if (_rsaValidation.IsValid)
+        {
+            if (_rsaValidation.DateOfBirth.HasValue)
+            {
+                _dateOfBirth = _rsaValidation.DateOfBirth.Value;
+                _person.DateOfBirth = _dateOfBirth;
+            }
+
+            if (!string.IsNullOrWhiteSpace(_rsaValidation.Gender))
+            {
+                _person.Gender = _rsaValidation.Gender;
+                _person.GenderCode = _rsaValidation.Gender.StartsWith("M", StringComparison.OrdinalIgnoreCase) ? "M" : "F";
+            }
+
+            if (_rsaValidation.IsSouthAfricanCitizen.HasValue)
+            {
+                _person.IsSouthAfricanCitizen = _rsaValidation.IsSouthAfricanCitizen.Value;
+                if (_person.IsSouthAfricanCitizen == true)
+                {
+                    _person.NationalityCode = "ZA";
+                }
+            }
+        }
+    }
+
+    private async Task SavePerson()
+    {
+        if (string.IsNullOrWhiteSpace(_person.FirstName) || string.IsNullOrWhiteSpace(_person.LastName))
+        {
+            Snackbar.Add("First Name and Last Name are required.", Severity.Warning);
+            return;
+        }
+
+        _isSaving = true;
+        _person.DateOfBirth = _dateOfBirth;
+
+        try
+        {
+            if (Id == 0)
+            {
+                var created = await PersonService.CreateAsync(_person, "Admin");
+                Snackbar.Add($"Person '{created.FirstName} {created.LastName}' created successfully with audit log.", Severity.Success);
+                NavManager.NavigateTo($"/people/{created.Id}");
+            }
+            else
+            {
+                var updated = await PersonService.UpdateAsync(_person, "Admin");
+                Snackbar.Add($"Person '{updated.FirstName} {updated.LastName}' updated successfully with audit log.", Severity.Success);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving person: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task DeletePerson()
+    {
+        if (Id <= 0) return;
+
+        try
+        {
+            var deleted = await PersonService.DeleteAsync(Id, "Admin");
+            if (deleted)
+            {
+                Snackbar.Add("Person record deleted successfully with audit confirmation.", Severity.Success);
+                NavManager.NavigateTo("/people");
+            }
+            else
+            {
+                Snackbar.Add("Could not delete record.", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error deleting record: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void BackToList()
+    {
+        NavManager.NavigateTo("/people");
+    }
+}

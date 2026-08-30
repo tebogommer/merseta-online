@@ -1,0 +1,275 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+		<h:form id="intersetaForm">
+			<p:importEnum type="haj.com.entity.enums.CompanyRegOrSDLEnum" var="regSDL" />
+			<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+			<div class="ui-g">
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+						<h1>#{intersetatransferdetailUI.interSetaTransfer.company.companyName} Inter-SETA Transfer request</h1>
+						<p:growl showDetail="false" sticky="false" escape="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:fieldset legend="#{lang['user.details'] }">
+
+							<p:panelGrid columns="2" style="width:100%" id="sdfInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="userName" value="#{intersetatransferdetailUI.interSetaTransfer.users.firstName}" style="width:95%; opacity: 1 !important;" required="true" disabled="true" requiredMessage="#{lang['enter.your.name']}" />
+									<p:outputLabel value="#{lang['first.name']}:" for="userName" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="userSurname" value="#{intersetatransferdetailUI.interSetaTransfer.users.lastName}" style="width:95%; opacity: 1 !important;" required="true" disabled="true" requiredMessage="#{lang['enter.your.last.name']}" />
+									<p:outputLabel value="#{lang['surname']}:" for="userSurname" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="userEmail" value="#{intersetatransferdetailUI.interSetaTransfer.users.email}" style="width:95%; opacity: 1 !important;" required="true" disabled="true" requiredMessage="#{lang['enter.your.email.address']}" />
+									<p:outputLabel value="#{lang['emails']}:" for="userEmail" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="telNumbera" value="#{intersetatransferdetailUI.interSetaTransfer.users.telNumber}" style="width:95%; opacity: 1 !important;" required="true" requiredMessage="#{lang['tel.number.error']}" disabled="true" />
+									<p:outputLabel value="#{lang['tel.number']}:" for="telNumbera" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="cellPhone" value="#{intersetatransferdetailUI.interSetaTransfer.users.cellNumber}" style="width:95%; opacity: 1 !important;" required="true" requiredMessage="#{lang['cell.number']}" disabled="true" />
+									<p:outputLabel value="#{lang['cell.number']}:" for="cellPhone" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="faxNumbera" value="#{intersetatransferdetailUI.interSetaTransfer.users.faxNumber}" style="width:95%; opacity: 1 !important;" required="false" requiredMessage="#{lang['fax.number']}" disabled="true" />
+									<p:outputLabel value="#{lang['fax.number']}:" for="faxNumbera" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield" rendered="#{intersetatransferdetailUI.interSetaTransfer.users.rsaIDNumber.length() gt 0}">
+									<p:inputText id="userIdNumber" value="#{intersetatransferdetailUI.interSetaTransfer.users.rsaIDNumber}" style="width:95%; opacity: 1 !important;" disabled="true" />
+									<p:outputLabel value="#{lang['rsa.id.number']}:" for="userIdNumber" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield" rendered="#{intersetatransferdetailUI.interSetaTransfer.users.passportNumber.length() gt 0}">
+									<p:inputText id="userPassport" value="#{intersetatransferdetailUI.interSetaTransfer.users.passportNumber}" style="width:95%; opacity: 1 !important;" disabled="true" />
+									<p:outputLabel value="#{lang['passport.number']}:" for="userPassport" />
+								</h:panelGroup>
+
+							</p:panelGrid>
+
+
+						</p:fieldset>
+						<br />
+						<p:fieldset legend="#{lang['user.documents']}" id="companyDocs" rendered="#{intersetatransferdetailUI.interSetaTransfer.users.docs.size() gt 0}">
+							<p:dataTable value="#{intersetatransferdetailUI.interSetaTransfer.users.docs}" var="rv1" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+								<p:column headerText="#{lang['type']}" width="20%">#{rv1.configDoc.name}</p:column>
+								<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+								<p:column headerText="#{lang['uploaded']}" width="15%">
+									<h:outputText value="#{rv1.createDate}">
+										<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="#{lang['version']}" width="15%">
+									<h:outputText value="#{rv1.versionNo}">
+									</h:outputText>
+								</p:column>
+
+								<p:column width="180">
+									<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}">
+										<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+
+									<p:spacer width="5" rendered="#{rv1.id ne null}" />
+									<p:commandButton icon="fa fa-bars " id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}">
+										<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="dhistUserDocs" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+
+									<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+										<p:spacer width="5" />
+										<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+									</h:panelGroup>
+
+									<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+										<p:spacer width="5" />
+										<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+									</h:panelGroup>
+
+								</p:column>
+							</p:dataTable>
+						</p:fieldset>
+
+						<br />
+						<p:fieldset legend="#{lang['company.main.heading']}">
+
+							<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" id="xxxG">
+
+								<h:panelGroup styleClass="md-inputfield" style="margin-top: 20px !important;">
+									<p:inputText id="companyName" value="#{intersetatransferdetailUI.interSetaTransfer.company.companyName}" style="width:95%; opacity: 1 !important;" required="true" requiredMessage="#{lang['enter.the.company.name']}" disabled="true" />
+									<p:outputLabel value="#{lang['companyName']}:" for="companyName" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield" style="margin-top: 20px !important;">
+									<p:inputText id="companyRegNumber" value="#{intersetatransferdetailUI.interSetaTransfer.company.companyRegistrationNumber}" style="width:95%; opacity: 1 !important;" required="true" requiredMessage="#{lang['enter.company.number']}" disabled="true" />
+									<p:outputLabel value="#{lang['companyRegistrationNumber']}:" for="companyRegNumber" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield" style="margin-top: 20px !important;">
+									<p:inputText id="companyLevyNumber" value="#{intersetatransferdetailUI.interSetaTransfer.company.levyNumber}" style="width:95%; opacity: 1 !important;" required="true" requiredMessage="#{lang['enter.levy.number']}" disabled="true" />
+									<p:outputLabel value="#{lang['levyNumber']}:" for="companyLevyNumber" />
+								</h:panelGroup>
+
+								<h:panelGroup>
+									<div>
+										<p:outputLabel value="#{lang['sicCode']}" for="sicCodeNew" styleClass="gray Fs12" style="margin-left:5px" />
+									</div>
+									<div>
+										<p:autoComplete id="sicCodeNew" value="#{intersetatransferdetailUI.interSetaTransfer.company.sicCode}" inputStyle="opacity: 1 !important;" style="width: 95%;" completeMethod="#{autoCompleteUI.completeSIC}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true"
+											disabled="true" converter="SICCodeConvertor" dropdown="true" minQueryLength="1" maxResults="10">
+											<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+											<p:column headerText="#{lang['description']}" style="white-space: nowrap">#{rv.description}</p:column>
+										</p:autoComplete>
+									</div>
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield" style="margin-top: 20px !important;">
+									<p:inputText id="telNumber" value="#{intersetatransferdetailUI.interSetaTransfer.company.telNumber}" style="width:95%; opacity: 1 !important;" required="true" requiredMessage="#{lang['enter.the.tel.number']}" disabled="true" />
+									<p:outputLabel value="#{lang['telNumber']}" for="telNumber" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield" style="margin-top: 20px !important;">
+									<p:inputText id="faxNumber" value="#{intersetatransferdetailUI.interSetaTransfer.company.faxNumber}" style="width:95%; opacity: 1 !important;" disabled="true" />
+									<p:outputLabel value="#{lang['faxNumber']}" for="faxNumber" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield" style="margin-top: 20px !important;">
+									<p:inputText id="email" value="#{intersetatransferdetailUI.interSetaTransfer.company.email}" style="width:95%; opacity: 1 !important;" required="true" requiredMessage="#{lang['enter.email.address']}" disabled="true" />
+									<p:outputLabel value="#{lang['email']}" for="email" />
+								</h:panelGroup>
+
+								<h:panelGroup>
+									<div>
+										<p:outputLabel value="#{lang['current.etqa']}:" styleClass="gray" />
+									</div>
+									<div>
+										<p:selectOneMenu id="etqa" value="#{intersetatransferdetailUI.interSetaTransfer.currentEtqa}" converter="EtqaConvertor" style="width:75%; opacity: 1 !important;" requiredMessage="#{lang['etqa']}" required="true" disabled="true">
+											<p:ajax></p:ajax>
+											<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+											<f:selectItems value="#{selectItemsUI.selectItemsEtqa}" var="il" itemLabel="#{il.description}" />
+										</p:selectOneMenu>
+									</div>
+								</h:panelGroup>
+
+								<h:panelGroup>
+									<div>
+										<p:outputLabel value="#{lang['transfer.to.etqa']}:" styleClass="gray" />
+									</div>
+									<div>
+										<p:selectOneMenu id="etqa2" value="#{intersetatransferdetailUI.interSetaTransfer.newEtqa}" converter="EtqaConvertor" style="width:75%; opacity: 1 !important;" requiredMessage="#{lang['etqa']}" required="true" disabled="true">
+											<p:ajax></p:ajax>
+											<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+											<f:selectItems value="#{selectItemsUI.selectItemsEtqa}" var="il" itemLabel="#{il.description}" />
+										</p:selectOneMenu>
+									</div>
+								</h:panelGroup>
+
+								<h:panelGroup>
+									<p:outputLabel value="The core business of the employer falls within the scope of the SETA" for="imsm" styleClass="gray" />
+									<p:spacer width="10" />
+									<p:selectBooleanCheckbox id="imsm" value="#{intersetatransferdetailUI.interSetaTransfer.scopedWithinSETA}" disabled="true" />
+								</h:panelGroup>
+
+								<h:panelGroup>
+									<p:outputLabel value="The core business of the company/enterprise has changed since the previous registration with SARS" for="imsm2" styleClass="gray" />
+									<p:spacer width="10" />
+									<p:selectBooleanCheckbox id="imsm2" value="#{intersetatransferdetailUI.interSetaTransfer.coreBusinessChanged}" disabled="true" />
+								</h:panelGroup>
+
+								<h:panelGroup>
+									<p:outputLabel value="The employer falls within the jurisdiction of more than one SETA" for="imsm3" styleClass="gray" />
+									<p:spacer width="10" />
+									<p:selectBooleanCheckbox id="imsm3" value="#{intersetatransferdetailUI.interSetaTransfer.moreThanOneSETA}" disabled="true" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield" style="">
+									<p:inputTextarea id="addComm" value="#{intersetatransferdetailUI.interSetaTransfer.additionalComment}" style="width:95%; opacity: 1 !important;" disabled="true">
+										<p:ajax></p:ajax>
+									</p:inputTextarea>
+									<p:outputLabel value="Additional Comment" for="addComm" />
+								</h:panelGroup>
+
+							</p:panelGrid>
+
+						</p:fieldset>
+						<br />
+						<p:fieldset legend="#{lang['company.documents']}" id="userDocs" rendered="#{intersetatransferdetailUI.interSetaTransfer.company.docs.size() gt 0}">
+							<p:dataTable value="#{intersetatransferdetailUI.interSetaTransfer.company.docs}" var="rv1" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv1.id}">
+								<p:column headerText="#{lang['type']}" width="20%">#{rv1.configDoc.name}</p:column>
+								<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+								<p:column headerText="#{lang['uploaded']}" width="15%">
+									<h:outputText value="#{rv1.createDate}">
+										<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="#{lang['version']}" width="15%">
+									<h:outputText value="#{rv1.versionNo}">
+									</h:outputText>
+								</p:column>
+
+								<p:column width="180">
+									<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlb" rendered="#{rv1.id ne null}">
+										<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="dlb" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+
+									<p:spacer width="5" rendered="#{rv1.id ne null}" />
+									<p:commandButton icon="fa fa-bars " id="dhist" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}">
+										<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="dhist" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+
+									<h:panelGroup id="panelGroupThree" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+										<p:spacer width="5" />
+										<p:commandButton icon="fa fa-comment-o " id="dnote" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="dnote" value="#{lang['view.note']}" position="left" />
+									</h:panelGroup>
+
+									<h:panelGroup id="panelGroupFour" rendered="#{rv1.extension.toLowerCase() eq 'pdf'}">
+										<p:spacer width="5" />
+										<p:commandButton icon="fa fa-eye " id="viewerButton" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="viewerButton" value="#{lang['view.document']} " position="left" />
+									</h:panelGroup>
+
+								</p:column>
+							</p:dataTable>
+						</p:fieldset>
+						<br />
+						<p:fieldset rendered="#{intersetatransferdetailUI.displayButtons}">
+							<p:commandButton value="#{lang['approve.task']}" update="intersetaForm" icon="ui-icon-done" styleClass="green-btn flat Fs18" style="height: 50px;" action="#{intersetatransferdetailUI.saveTransfer}">
+								<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure.you.want.to.approve.the.task']}" icon="ui-icon-warning" />
+							</p:commandButton>
+							<p:spacer width="10" />
+							<p:commandButton value="#{lang['reject.task']}" icon="ui-icon-close" styleClass="red-btn flat Fs18" style="height: 50px;" action="#{intersetatransferdetailUI.rejectTransfer}">
+								<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure.you.want.to.reject.the.task']}" icon="ui-icon-warning" />
+							</p:commandButton>
+						</p:fieldset>
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+					</div>
+				</div>
+			</div>
+		</h:form>
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+	</ui:define>
+</ui:composition>

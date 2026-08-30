@@ -1,0 +1,173 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="uploadForm">
+						<h1>#{lang['upload.levy.file']}</h1>
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:panelGrid layout="grid" styleClass="ui-panelgrid-blank" columns="3" style="width: 100%">
+							<p:outputLabel value="#{lang['levy.file.for.month']}" styleClass="FontBold" />
+							<p:calendar pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" showOn="button" readonlyInput="true" value="#{sarsfilesUI.forMonth}"  yearRange="c-30:c" maxdate="#{sarsfilesUI.maxDate}" navigator="true">
+								<p:ajax event="dateSelect" update="@form" />
+							</p:calendar>
+
+							<p:panel rendered="#{sarsfilesUI.latestFileOnDHET ne null}">
+								<p:outputLabel value="Latest levy file on DHET:" styleClass="FontLight" />
+								<p:spacer width="5" />
+								<p:outputLabel value="#{sarsfilesUI.latestFileOnDHET}" styleClass="FontBold">
+									<f:convertDateTime pattern="MMMM yyyy" />
+								</p:outputLabel>
+							</p:panel>
+						</p:panelGrid>
+						<br />
+						<p:fileUpload fileUploadListener="#{sarsfilesUI.handleFileUpload}" dragDropSupport="true" showButtons="false" label="#{lang['select.file.to.upload']}" fileLimitMessage="#{lang['file.too.big.to.upload']}" multiple="false" allowTypes="/(\.|\/)(zip|ZIP)$/" fileLimit="1" immediate="false"
+							auto="true" update="@form :mainForm" rendered="#{sarsfilesUI.forMonth ne null}" oncomplete="uploadDone()" onstart="uploadStart()" />
+					</h:form>
+				</div>
+			</div>
+
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+						<p:tooltip position="left" />
+						<h1>#{lang['SARS.levy.files']}</h1>
+
+						<h:panelGroup>
+							<div align="right">
+								<h:commandLink id="eExcel">
+									<i class="fa fa-file-excel-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+									<p:dataExporter type="xls" target="sarsfilesList" fileName="SarsLevies" pageOnly="false" />
+								</h:commandLink>
+
+
+								<p:tooltip for="eExcel" value="#{lang['export.search.results.to.excel']}" position="left" />
+
+							</div>
+						</h:panelGroup>
+						<br />
+						<p:dataTable var="rv" value="#{sarsfilesUI.dataModel}" filteredValue="#{sarsfilesUI.sarsFilesfilteredList}" id="sarsfilesList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="6,12,24,36,48,60,120,180,360" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['for.month']}" sortBy="#{rv.forMonth}">
+								<h:outputText value="#{rv.forMonth}">
+									<f:convertDateTime pattern="MMMM yyyy" />
+								</h:outputText>
+							</p:column>
+
+							<p:column headerText="#{lang['mandatory.levy']}">
+								<h:outputText value="#{rv.levySummary.mandatoryLevy}" styleClass="Fright">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['discretionary.levy']}">
+								<h:outputText value="#{rv.levySummary.discretionaryLevy}" styleClass="Fright">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['admin.levy']}">
+								<h:outputText value="#{rv.levySummary.adminLevy}" styleClass="Fright">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</h:outputText>
+							</p:column>
+
+							<p:column headerText="#{lang['interest']}">
+								<h:outputText value="#{rv.levySummary.interest}" styleClass="Fright">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</h:outputText>
+							</p:column>
+
+							<p:column headerText="#{lang['penalty']}">
+								<h:outputText value="#{rv.levySummary.penalty}" styleClass="Fright">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['total']}">
+								<h:outputText value="#{rv.levySummary.total}" styleClass="Fright">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['checkbook.amount']}">
+								<h:outputText value="#{rv.sarsLeviesPaid.checkbookAmount}" styleClass="Fright">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['discrepancy']}">
+								<h:outputText value="#{rv.discreptancy}" rendered="#{rv.discreptancy ne null}" styleClass="#{rv.discreptancy.doubleValue() eq 0.0?'green':'red'} Fright FontBold">
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="Process: MG Payments" width="80" exportable="false">
+								<center>
+									<p:selectBooleanCheckbox disabled="true" value="#{rv.canProcessMgPayments}" />
+								</center>
+							</p:column>
+							<p:column headerText="Process: MG Payments" style="display:none">
+								<p:outputLabel value="Yes" rendered="#{rv.canProcessMgPayments}" />
+								<p:outputLabel value="No" rendered="#{rv.canProcessMgPayments eq null or !rv.canProcessMgPayments}" />
+							</p:column>
+							<p:column width="80" exportable="false">
+								<p:commandButton icon="ui-icon-zoom-in" title="#{lang['view.employers']}" action="#{sarsfilesUI.showEmployers}">
+									<f:setPropertyActionListener value="#{rv}" target="#{sarsfilesUI.sarsfiles}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="ui-icon-library-books" title="GP Integration" oncomplete="PF('gpDialog').show()" update=":gpForm" style="#{rv.loadedToGP ? 'background-color: #1A9856 !important;':null}" action="#{sarsfilesUI.prepForPostGPData}">
+									<f:setPropertyActionListener value="#{rv}" target="#{sarsfilesUI.sarsfiles}" />
+								</p:commandButton>
+							</p:column>
+
+						</p:dataTable>
+
+
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+		<p:dialog closeOnEscape="true" header="GP Integration" widgetVar="gpDialog" hideEffect="clip" showEffect="clip" id="dialogNote" modal="true" responsive="true" width="40%">
+			<h:form id="gpForm">
+				<h3>
+					#{lang['for.month']}:
+					<h:outputText value="#{sarsfilesUI.sarsfiles.forMonth}">
+						<f:convertDateTime pattern="MMMM yyyy" />
+					</h:outputText>
+				</h3>
+				<p:panelGrid columns="2" rendered="#{sarsfilesUI.sarsfiles.loadedToGP}" styleClass="ui-panelgrid-blank">
+					<p:outputLabel value="Data loaded to GP" />
+					<p:selectBooleanCheckbox value="#{sarsfilesUI.sarsfiles.loadedToGP}" disabled="true" />
+
+					<p:outputLabel value="Data loaded to GP by" />
+					<p:outputLabel value="#{sarsfilesUI.sarsfiles.loadedToGpByUser.firstName} #{sarsfilesUI.sarsfiles.loadedToGpByUser.lastName}" />
+
+					<p:outputLabel value="Data loaded to GP on" />
+					<p:outputLabel value="#{sarsfilesUI.sarsfiles.loadGPDate}">
+						<f:convertDateTime pattern="dd MMM yyyy (HH:mm:ss)" />
+					</p:outputLabel>
+
+				</p:panelGrid>
+				<p:panelGrid columns="3" rendered="#{!sarsfilesUI.sarsfiles.loadedToGP}" styleClass="ui-panelgrid-blank" id="pnl">
+
+					<p:outputLabel value="#{lang['posting.date']}" for="glPostingDate" />
+					<p:calendar id="glPostingDate" value="#{sarsfilesUI.postDate}" showOn="button" mask="true" pattern="#{autoCompleteUI.CALENDER_PATTERN}" readonlyInput="true" />
+
+
+					<p:commandButton icon="ui-icon-insert-link" value="Load" action="#{sarsfilesUI.postGPData}" id="postBtn" update=":mainForm" oncomplete="PF('gpDialog').hide()">
+						<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+					</p:commandButton>
+				</p:panelGrid>
+				<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="350">
+					<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+					<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+				</p:confirmDialog>
+				<p:blockUI block="pnl" trigger="postBtn" />
+			</h:form>
+		</p:dialog>
+
+	</ui:define>
+
+</ui:composition>

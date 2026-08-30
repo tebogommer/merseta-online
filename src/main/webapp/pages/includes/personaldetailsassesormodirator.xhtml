@@ -1,0 +1,575 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui">
+
+	<p:importEnum type="haj.com.entity.enums.CompanyRegOrSDLEnum" var="regSDL"></p:importEnum>
+	<p:importEnum type="haj.com.entity.enums.ProviderNameRegisTrationNumberEnum" var="provNameNumber"></p:importEnum>
+	<p:importEnum type="haj.com.entity.enums.AssessorModeratorAppTypeEnum" var="AssessorModeratorAppTypeEnum"></p:importEnum>
+	<c:if test="#{!assesorModiratorUI.formUser.doneSearch}">
+		<div align="right">
+			<p:commandButton rendered="false" type="button" onclick="helpGuide()" icon="ui-icon-help-outline" id="hb" />
+			<p:tooltip rendered="false" for="hb" position="left" value="#{lang['help.guide']}" />
+		</div>
+		<ui:include src="/pages/includes/searchUserPassportOrID.xhtml" />
+
+		<br />
+		<p:fieldset rendered="#{assesorModiratorUI.assesorLegacyList.size()>0 or assesorModiratorUI.moderatorLegacyList.size()>0 }">
+			<br />
+			<p:commandButton id="legacyAssessorModReg" icon="ui-icon-fast-forward" iconPos="right" value="#{lang['legacy.assessor.moderator.registration']}" action="registerlegacyassesormod.jsf?faces-redirect=true" immediate="true" rendered="#{not sessionUI.hideETQA}" />
+			<p>There is historical accreditation details linked to this ID/Passport number. Please use the Legacy Assessor/Moderator Registration option to complete the system registration process</p>
+		</p:fieldset>
+
+	</c:if>
+
+	<h:panelGroup rendered="#{assesorModiratorUI.formUser.doneSearch}">
+		<div align="right">
+			<p:commandButton rendered="false" type="button" onclick="helpGuide()" icon="ui-icon-help-outline" id="hb1" />
+			<p:tooltip rendered="false" for="hb1" position="left" value="#{lang['help.guide']}" />
+		</div>
+		<p:spacer></p:spacer>
+		<p:fieldset id="fsAppType">
+			<br />
+			<p:panelGrid columns="2" style="width:100%" id="pdAppType" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup rendered="true">
+					<p:outputLabel value="#{lang['type.of.application']}" for="appType" />
+					<br />
+					<p:selectOneMenu required="true" id="appType" value="#{assesorModiratorUI.amApplication.applicationType}" requiredMessage="#{lang['select.type.of.application']}" style="width:100%">
+						<f:selectItem itemLabel="---#{lang['select.one']}---" itemValue="" noSelectionOption="true" />
+						<f:selectItems value="#{enumUI.assessorModeratorAppTypeEnumDD}" var="rv" itemLabel="#{amAppType}" itemValue="#{rv}" />
+						<p:ajax update="@form" listener="#{assesorModiratorUI.checkShowUserInfo}" />
+					</p:selectOneMenu>
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield"
+					rendered="#{assesorModiratorUI.amApplication.applicationType eq AssessorModeratorAppTypeEnum.ModeratorExtensionOfScope or 
+				assesorModiratorUI.amApplication.applicationType eq AssessorModeratorAppTypeEnum.AssessorExtensionOfScope or 
+				assesorModiratorUI.amApplication.applicationType eq AssessorModeratorAppTypeEnum.AssessorReRegistration or 
+				assesorModiratorUI.amApplication.applicationType eq AssessorModeratorAppTypeEnum.ModeratorReRegistration or assesorModiratorUI.amApplication.certificateNumber ne null}">
+					<br />
+					<p:inputText id="accreditation" style="width:100%" value="#{assesorModiratorUI.amApplication.certificateNumber}" required="true" requiredMessage="#{lang['enter.accreditation.number']}" />
+					<p:outputLabel value="#{lang['accreditation.number']}" for="accreditation" />
+					<br />
+					<br />
+					<p:commandButton value="#{lang['continue']}" update="@form" icon="ui-icon-fast-forward" iconPos="right" styleClass="flat" action="#{assesorModiratorUI.checkAccreditationNum}" />
+
+				</h:panelGroup>
+			</p:panelGrid>
+
+		</p:fieldset>
+		<br />
+		<p:fieldset rendered="#{assesorModiratorUI.showUserInfo}" toggleable="true" legend="#{!assesorModiratorUI.formUser.doneSearch ? 'Enter RSA ID number or Passport number' : lang['your.details'] }">
+			<p:panelGrid columns="2" style="width:100%" id="userInfoInsPG" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+				<h:panelGroup class="md-inputfield">
+
+					<p:autoComplete rendered="true" id="ofoCode" value="#{assesorModiratorUI.formUser.ofoCodes}" completeMethod="#{autoCompleteUI.completeOfoCodes}" var="rv" itemLabel="#{rv.ofoDescription}" itemValue="#{rv}" forceSelection="true" converter="OfoCodesConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 100%" style="width: 100%;margin-top:20px" required="true" requiredMessage="#{lang['select.ofo.code']}">
+						<p:column headerText="OfoCodes" style="white-space: nowrap">#{rv.ofoCodeParent}</p:column>
+						<p:column headerText="Description" style="white-space: nowrap">#{rv.description}</p:column>
+						<p:ajax event="itemSelect" />
+					</p:autoComplete>
+					<p:outputLabel value="#{lang['occupation.ofo.code']}" for="ofoCode" />
+
+				</h:panelGroup>
+
+				<h:panelGroup>
+
+					<p:outputLabel value="#{lang['title']}" for="title" style="width:100%;color:#977949" />
+					<p:selectOneMenu id="title" value="#{assesorModiratorUI.formUser.title}" converter="TitleConvertor" style="width:100%" required="true" requiredMessage="#{lang['select.title']}">
+						<p:ajax />
+						<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+						<f:selectItems value="#{selectItemsUI.selectItemsTitles}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+					</p:selectOneMenu>
+
+				</h:panelGroup>
+
+
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText id="userName" disabled="#{assesorModiratorUI.formUser.existingUser and assesorModiratorUI.formUser.firstName.length() gt 0}" value="#{assesorModiratorUI.formUser.firstName}" style="width:100%" required="true" requiredMessage="#{lang['enter.your.name']}">
+						<p:ajax />
+					</p:inputText>
+					<p:outputLabel value="#{lang['first.name']}" for="userName" />
+				</h:panelGroup>
+				
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText id="userMiddleName" value="#{assesorModiratorUI.formUser.middleName}" style="width:95%" disabled="#{assesorModiratorUI.formUser.existingUser and assesorModiratorUI.formUser.middleName.length() gt 0}" />
+					<p:outputLabel value="#{lang['middle.name']}" for="userMiddleName" />
+				</h:panelGroup>
+				
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText id="userSurname" disabled="#{assesorModiratorUI.formUser.existingUser and assesorModiratorUI.formUser.lastName.length() gt 0}" value="#{assesorModiratorUI.formUser.lastName}" style="width:100%" required="true" requiredMessage="#{lang['enter.your.last.name']}">
+						<p:ajax />
+					</p:inputText>
+					<p:outputLabel value="#{lang['surname']}" for="userSurname" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText id="userEmail" disabled="#{assesorModiratorUI.formUser.existingUser and assesorModiratorUI.formUser.email.length() gt 0}" value="#{assesorModiratorUI.formUser.email}" style="width:100%" required="true" requiredMessage="#{lang['enter.your.email.address']}">
+						<p:ajax />
+					</p:inputText>
+					<p:outputLabel value="#{lang['emails']}" for="userEmail" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputMask id="cellNumber" mask="#{profileUI.CELLPHONE_FORMAT}" value="#{assesorModiratorUI.formUser.cellNumber}" style="width: 100%" label="cellNumber" required="true" requiredMessage="Enter mobile number">
+						<o:validator validatorId="javax.faces.Length" minimum="0" maximum="20" message="#{lang['user.cellnumber.length']}" />
+						<p:ajax />
+					</p:inputMask>
+					<p:outputLabel value="#{lang['mobile.number']}" for="cellNumber" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputMask id="telNumber" mask="#{profileUI.TELPHONE_FORMAT}" value="#{assesorModiratorUI.formUser.telNumber}" style="width: 100%" label="telNumber" required="false" requiredMessage="Enter mobile number">
+						<o:validator validatorId="javax.faces.Length" minimum="0" maximum="20" message="#{lang['user.tellnumber.length']}" />
+						<p:ajax />
+					</p:inputMask>
+					<p:outputLabel value="#{lang['tel.number']}:" for="telNumber" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield" rendered="#{assesorModiratorUI.formUser.rsaIDNumber.length() gt 0}">
+					<p:inputText id="userIdNumber" value="#{assesorModiratorUI.formUser.rsaIDNumber}" style="width:100%" disabled="true">
+						<p:ajax />
+					</p:inputText>
+					<p:outputLabel value="#{lang['rsa.id.number']}" for="userIdNumber" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield" rendered="#{assesorModiratorUI.formUser.passportNumber.length() gt 0}">
+					<p:inputText id="userPassport" value="#{assesorModiratorUI.formUser.passportNumber}" style="width:100%" disabled="true">
+						<p:ajax />
+					</p:inputText>
+					<p:outputLabel value="#{lang['passport.number']}" for="userPassport" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:autoComplete style="width:100%" id="nationality" disabled="#{assesorModiratorUI.formUser.existingUser and assesorModiratorUI.formUser.nationality ne null}" value="#{assesorModiratorUI.formUser.nationality}" required="true" requiredMessage="#{lang['nationality.required']}" completeMethod="#{autoCompleteUI.completeNationality}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="NationalityConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+						<p:column headerText="#{lang['nationality']}" style="white-space: nowrap">#{rv.description}</p:column>
+						<p:ajax event="itemSelect" />
+					</p:autoComplete>
+					<p:outputLabel value="#{lang['nationality']}" for="nationality" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:calendar id="dob" required="true" showOn="button" requiredMessage="#{lang['select.date.of.birth']}" disabled="#{assesorModiratorUI.formUser.existingUser and assesorModiratorUI.formUser.dateOfBirth ne null}" value="#{assesorModiratorUI.formUser.dateOfBirth}" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" style="width:100%">
+						<p:ajax />
+					</p:calendar>
+					<p:outputLabel value="#{lang['date.of.birth']}" for="dob" style="width:100%" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:autoComplete id="gender" style="width:100%" disabled="#{assesorModiratorUI.formUser.existingUser and assesorModiratorUI.formUser.gender ne null}" value="#{assesorModiratorUI.formUser.gender}" completeMethod="#{autoCompleteUI.completeGender}" var="rv" itemLabel="#{rv.genderName}" itemValue="#{rv}" forceSelection="true" converter="GenderConvertor" dropdown="true" minQueryLength="3" maxResults="10" requiredMessage="#{lang['provide.gender']}" required="true">
+						<p:column headerText="Gender" style="white-space: nowrap">#{rv.genderName}</p:column>
+						<p:ajax event="itemSelect" />
+					</p:autoComplete>
+					<p:outputLabel value="#{lang['gender']}" for="gender" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:autoComplete id="equity" disabled="#{assesorModiratorUI.formUser.existingUser and assesorModiratorUI.formUser.equity ne null}" value="#{assesorModiratorUI.formUser.equity}" style="width:100%" completeMethod="#{autoCompleteUI.completeEquityExcludeOtherAndUnkown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="EquityConvertor" dropdown="true" minQueryLength="3" maxResults="10" requiredMessage="#{lang['provide.equity']}" required="true">
+						<p:column headerText="equity" style="white-space: nowrap">#{rv.description}</p:column>
+						<p:ajax event="itemSelect" />
+					</p:autoComplete>
+					<p:outputLabel value="#{lang['equity']}" for="equity" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:calendar id="monthlastSchoolYear" value="#{assesorModiratorUI.formUser.lastSchoolYear}" maxdate="#{workplaceapprovalUI.today}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" inputStyle="width:90%" disabled="#{disableFields}" required="true" requiredMessage="Select Last School Year Date">
+						<p:ajax event="dateSelect"></p:ajax>
+					</p:calendar>
+					<p:outputLabel value="Last School Year Date" for="monthlastSchoolYear" styleClass="gray" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:autoComplete id="lastSchoolAttended" value="#{assesorModiratorUI.formUser.previousSchools}" completeMethod="#{autoCompleteUI.completePreviousSchools}" var="rv" itemLabel="#{rv.officialInstitutionName}" itemValue="#{rv}" forceSelection="true" converter="PreviousSchoolsConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true" resultsMessage="Select Last School Attended">
+						<p:column headerText="EMIS Code" style="white-space: nowrap">#{rv.natEmis}</p:column>
+						<p:column headerText="Official Institution Name" style="white-space: nowrap">#{rv.officialInstitutionName}</p:column>
+						<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.townCity}</p:column>
+						<p:column headerText="#{lang['province']}" style="white-space: nowrap">#{rv.province}</p:column>
+						<p:ajax event="itemSelect" />
+					</p:autoComplete>
+					<p:outputLabel value="Last School Attended" for="lastSchoolAttended" styleClass="gray" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield" style="margin-top: 20px" rendered="false">
+					<p:autoComplete disabled="#{assesorModiratorUI.formUser.id ne null and assesorModiratorUI.formUser.disabilityStatus ne null and false}" id="disability" value="#{assesorModiratorUI.formUser.disabilityStatus}" style="width:95%" completeMethod="#{autoCompleteUI.completeDisabilityStatus}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="DisabilityStatusConvertor" dropdown="true" minQueryLength="3" maxResults="100" required="true"
+						requiredMessage="Please Select Disability">
+						<p:column headerText="Disability" style="white-space: nowrap">#{rv.description}</p:column>
+						<p:ajax event="itemSelect" update="pgDisRating" listener="#{assesorModiratorUI.clearDisabilityRating}" />
+					</p:autoComplete>
+					<p:outputLabel value="#{lang['disability']}" for="disability" />
+				</h:panelGroup>
+				<h:panelGroup id="pgDisRating" rendered="false">
+					<h:panelGroup rendered="#{assesorModiratorUI.formUser.disabilityStatus ne null and assesorModiratorUI.selectItemsDisabilityRating.size()>0}" style="margin-top: 0px">
+						<p:outputLabel value="#{lang['disability.rating']}" style="width:100%;color:#977949" for="diasbiltyRating" />
+						<br />
+						<p:selectOneMenu disabled="#{assesorModiratorUI.formUser.disabilityRating ne null and assesorModiratorUI.formUser.id ne null}" id="diasbiltyRating" value="#{assesorModiratorUI.formUser.disabilityRating}" converter="DisabilityRatingConvertor" style="width:95%" required="true" requiredMessage="Please Select Disability Rating">
+							<p:ajax />
+							<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+							<f:selectItems value="#{assesorModiratorUI.selectItemsDisabilityRating}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+						</p:selectOneMenu>
+					</h:panelGroup>
+				</h:panelGroup>
+
+				<h:panelGroup>
+					<div>
+						<p:outputLabel for="haveDisability" value="Do You Have A Disability?" styleClass="gray" />
+					</div>
+					<div>
+						<p:selectOneMenu id="haveDisability" value="#{assesorModiratorUI.formUser.disability}" style="width:95%" required="true" requiredMessage="Were you employed by your employer before concluding this agreement" disabled="#{disableFields}">
+							<p:ajax event="itemSelect" update="amInsForm" />
+							<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+							<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+						</p:selectOneMenu>
+					</div>
+				</h:panelGroup>
+
+				<h:panelGroup>
+					<p:outputLabel value="#{lang['employment.status']}" for="proc" style="color:#977949;margin-top:20px" />
+					<p:selectOneMenu id="proc" value="#{assesorModiratorUI.formUser.employmentStatus}" style="width:100%;" required="true" requiredMessage="#{lang['select.employment.status']}">
+						<p:ajax />
+						<f:selectItem itemLabel="---#{lang['select.one']}---" itemValue="" noSelectionOption="true" />
+						<f:selectItems value="#{enumUI.employedUnemployedOnly}" />
+					</p:selectOneMenu>
+				</h:panelGroup>
+
+
+
+				<p:spacer rendered="#{!assesorModiratorUI.formUser.regFieldsDone}" />
+			</p:panelGrid>
+
+			<p:fieldset collapsed="false" legend="#{lang['disability']}" rendered="#{assesorModiratorUI.formUser.disability eq YesNoEnum.Yes}">
+				<p:panelGrid columns="3" id="disabilityFormGridPanel2" style="width:100%" rendered="#{!disableFields}">
+
+					<h:panelGroup style="margin-top: 20px">
+						<div>
+							<p:outputLabel value="#{lang['disability']}" for="disability3" styleClass="FontLight gray" />
+						</div>
+						<div>
+							<p:autoComplete disabled="#{disableFields}" id="disability3" value="#{assesorModiratorUI.usersDisability.disabilityStatus}" style="width:95%" completeMethod="#{autoCompleteUI.completeDisabilityCanSelect}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="DisabilityStatusConvertor" dropdown="true" minQueryLength="3" maxResults="100" required="false" requiredMessage="Please Select Disability">
+								<p:column headerText="Disability" style="white-space: nowrap">#{rv.description}</p:column>
+								<p:ajax event="itemSelect" update="disabilityFormGridPanel2" listener="#{assesorModiratorUI.clearDisabilityRating}" />
+							</p:autoComplete>
+						</div>
+					</h:panelGroup>
+
+					<h:panelGroup style="margin-top: 20px">
+						<h:panelGroup rendered="#{assesorModiratorUI.selectItemsUsersDisabilityRating.size()>0}" style="margin-top: 0px">
+							<p:outputLabel value="#{lang['disability.rating']}" styleClass="FontLight gray" for="diasbiltyRating3" />
+							<br />
+							<p:selectOneMenu id="diasbiltyRating3" value="#{assesorModiratorUI.usersDisability.disabilityRating}" converter="DisabilityRatingConvertor" style="width:95%" required="true" requiredMessage="Please Select Disability Rating">
+								<p:ajax />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{assesorModiratorUI.selectItemsUsersDisabilityRating}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</h:panelGroup>
+					</h:panelGroup>
+
+					<h:panelGroup rendered="true">
+						<p:commandButton process="disabilityFormGridPanel2" update="disabilityTable" value="#{lang['add']}" id="addUsersDisability" styleClass="Fright" icon="ui-icon-plus" action="#{assesorModiratorUI.addUsersDisability()}" />
+					</h:panelGroup>
+				</p:panelGrid>
+				<p:spacer />
+				<p:dataTable id="disabilityTable" var="var" value="#{assesorModiratorUI.usersDisabilityList}">
+					<p:column headerText="#{lang['disability']}">
+						<h:outputText value="#{var.disabilityStatus.description}" />
+					</p:column>
+
+					<p:column headerText="#{lang['disability.rating']}">
+						<h:outputText value="#{var.disabilityRating.description}" />
+					</p:column>
+
+					<p:column width="70">
+						<p:commandButton icon="fa fa-database" title="#{lang['update']}" action="#{assesorModiratorUI.prepareUsersDisabilityUpdate()}" process="@this" update="@form" rendered="false" disabled="#{disableFields}">
+							<f:setPropertyActionListener value="#{var}" target="#{assesorModiratorUI.usersDisability}" />
+						</p:commandButton>
+
+						<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" action="#{assesorModiratorUI.removeUsersDisabilityFromList()}" process="@this" update="disabilityTable" disabled="#{disableFields}">
+							<f:setPropertyActionListener value="#{var}" target="#{assesorModiratorUI.usersDisability}" />
+						</p:commandButton>
+					</p:column>
+				</p:dataTable>
+			</p:fieldset>
+
+			<!-- User Address Info -->
+			<ui:include src="/pages/includes/amAddresses.xhtml" />
+
+			<!-- User Languages -->
+			<p:fieldset id="languagesFs" collapsed="false" legend="#{lang['languages']}">
+				<p:panelGrid columns="6" id="pgLanguages" style="width:100%">
+
+					<h:panelGroup styleClass="md-inputfield">
+						<br />
+						<p:outputLabel value="#{lang['language']}" for="language" />
+						<p:autoComplete value="#{assesorModiratorUI.usersLanguage.language}" style="width:100%" id="language" required="#{param['amInsForm:addLanguage'] !=null}" completeMethod="#{autoCompleteUI.completeLanguage}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="LanguageConvertor" dropdown="true" minQueryLength="3" maxResults="20">
+							<p:column headerText="#{lang['language']}" style="white-space: nowrap">#{rv.description}</p:column>
+							<p:ajax event="itemSelect" />
+						</p:autoComplete>
+
+					</h:panelGroup>
+
+					<h:panelGroup rendered="true">
+						<div>
+							<p:outputLabel value="Speak?" for="speak" styleClass="FontLight" />
+						</div>
+						<div>
+							<p:selectOneButton value="#{assesorModiratorUI.usersLanguage.speark}" style="width:100%" converter="YesNoLookupConvertor" id="speak" required="#{param['amInsForm:addLanguage'] !=null}">
+
+								<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+							</p:selectOneButton>
+						</div>
+					</h:panelGroup>
+
+					<h:panelGroup rendered="true">
+						<div>
+							<p:outputLabel value="Read?" for="read" styleClass="FontLight" />
+						</div>
+						<div>
+							<p:selectOneButton value="#{assesorModiratorUI.usersLanguage.read}" style="width:100%" converter="YesNoLookupConvertor" id="read" required="#{param['amInsForm:addLanguage'] !=null}">
+
+								<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+							</p:selectOneButton>
+						</div>
+					</h:panelGroup>
+
+					<h:panelGroup rendered="true">
+						<div>
+							<p:outputLabel value="Write?" for="write" styleClass="FontLight" />
+						</div>
+						<div>
+							<p:selectOneButton value="#{assesorModiratorUI.usersLanguage.write}" style="width:100%" converter="YesNoLookupConvertor" id="write" required="#{param['amInsForm:addLanguage'] !=null}">
+
+								<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+							</p:selectOneButton>
+						</div>
+					</h:panelGroup>
+
+					<h:panelGroup rendered="true">
+						<div>
+							<p:outputLabel value="Home Language?" for="homeL" styleClass="FontLight" />
+						</div>
+						<div>
+							<p:selectBooleanCheckbox disabled="#{assesorModiratorUI.homeLanguageSelected}" value="#{assesorModiratorUI.usersLanguage.homeLanguage}" id="homeL" />
+						</div>
+					</h:panelGroup>
+
+					<h:panelGroup rendered="true">
+						<p:commandButton process="pgLanguages" update="pgLanguages languageTable" value="#{lang['add']}" id="addLanguage" styleClass="Fright" icon="ui-icon-plus" action="#{assesorModiratorUI.addLanguage()}" />
+					</h:panelGroup>
+				</p:panelGrid>
+				<p:spacer />
+				<p:dataTable id="languageTable" var="var" value="#{assesorModiratorUI.usersLanguageList}">
+					<p:column headerText="#{lang['language']}">
+						<h:outputText value="#{var.language.description}" />
+					</p:column>
+
+					<p:column headerText="#{lang['speak']}">
+						<h:outputText value="#{var.speark.yesNoName}" />
+					</p:column>
+
+					<p:column headerText="#{lang['read']}">
+						<h:outputText value="#{var.read.yesNoName}" />
+					</p:column>
+
+					<p:column headerText="#{lang['write']}">
+						<h:outputText value="#{var.write.yesNoName}" />
+					</p:column>
+
+					<p:column headerText="#{lang['home.language']}">
+						<p:selectBooleanCheckbox disabled="true" value="#{var.homeLanguage}" />
+					</p:column>
+
+					<p:column width="70">
+						<p:commandButton icon="fa fa-database" title="#{lang['update']}" action="#{assesorModiratorUI.prepareLanguageUpdate()}" process="@this" update="@form">
+							<f:setPropertyActionListener value="#{var}" target="#{assesorModiratorUI.usersLanguage}" />
+						</p:commandButton>
+
+						<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" action="#{assesorModiratorUI.removeLanguageFromList()}" process="@this" update="@form">
+							<f:setPropertyActionListener value="#{var}" target="#{assesorModiratorUI.usersLanguage}" />
+						</p:commandButton>
+					</p:column>
+				</p:dataTable>
+			</p:fieldset>
+			<h:panelGroup id="docListUser" rendered="#{assesorModiratorUI.formUser.docs.size() gt 0}">
+				<br />
+				<span class="FontBold"> <i class="fa fa-exclamation-circle" aria-hidden="true"></i> #{lang['please.upload.the.following.compulsory.documents']}
+				</span>
+				<br />
+				<div class="ui-g dashboard">
+					<div class="ui-g-12">
+						<p:repeat var="rc" value="#{assesorModiratorUI.formUser.docs}" varStatus="x">
+							<div class="ui-g-12 ui-md-6 ui-lg-3">
+								<div class="ui-g card colorbox #{rc.originalFname eq null ? 'colorbox-5' : 'colorbox-1'}">
+									<div class="ui-g-4">
+										<i class="material-icons">#{rc.originalFname eq null ? 'cloud_upload' : 'check_circle'}</i>
+									</div>
+									<div class="ui-g-8">
+										<span class="colorbox-name">#{rc.configDoc.name}</span> <span class="colorbox-count"> <p:commandButton icon="fa fa-download" id="cbDownload1" rendered="#{rc.originalFname ne null}" action="#{assesorModiratorUI.download(rc)}" ajax="false" value="#{lang['download']}" immediate="true" process="@parent">
+												<p:ajax onevent="oneventFunction" />
+											</p:commandButton> <p:commandButton value="#{rc.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" styleClass="#{rc.originalFname eq null ? 'red-btn' : 'green-btn'} flat" process="@this" oncomplete="PF('dlgUploadUser').show()" update=":uploadFormUser">
+												<f:setPropertyActionListener value="#{rc}" target="#{assesorModiratorUI.doc}" />
+											</p:commandButton>
+										</span>
+									</div>
+								</div>
+							</div>
+						</p:repeat>
+					</div>
+				</div>
+			</h:panelGroup>
+
+			<p:outputPanel id="userErrors">
+				<p:fieldset rendered="#{assesorModiratorUI.userErrors(assesorModiratorUI.formUser) ne null}">
+					<p:outputLabel escape="false" value="#{assesorModiratorUI.userErrors(assesorModiratorUI.formUser)}" />
+				</p:fieldset>
+				<br />
+			</p:outputPanel>
+
+			<p:outputPanel id="addressErrors">
+				<p:fieldset rendered="#{assesorModiratorUI.addressErrors(assesorModiratorUI.userResidentialAddress) ne null}">
+					<p:outputLabel escape="false" value="#{assesorModiratorUI.addressErrors(assesorModiratorUI.userResidentialAddress)}" />
+				</p:fieldset>
+				<br />
+			</p:outputPanel>
+
+			<p:outputPanel id="postalAddressErrors">
+				<p:fieldset rendered="#{assesorModiratorUI.postalAddressErrors(assesorModiratorUI.userPostalAddress) ne null}">
+					<p:outputLabel escape="false" value="#{assesorModiratorUI.postalAddressErrors(assesorModiratorUI.userPostalAddress)}" />
+				</p:fieldset>
+				<br />
+			</p:outputPanel>
+
+			<p:panelGrid columns="1" style="width:100%" id="actionGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<p:commandButton value="#{lang['continue']}" update="userInfoInsPG plQualAndUS userErrors addressErrors postalAddressErrors"  icon="ui-icon-fast-forward" iconPos="right" styleClass="flat" action="#{assesorModiratorUI.doneUserBit}" />
+			</p:panelGrid>
+		</p:fieldset>
+		<br />
+		<br />
+		<h:panelGroup id="plQualAndUS">
+
+			<c:if test="false">
+				<!-- COMPANY DETAILS NOT RENDERED -->
+				<ui:include src="/pages/includes/amCompanyDetails.xhtml" />
+			</c:if>
+
+			<c:if test="#{assesorModiratorUI.amApplication.applicationType ne AssessorModeratorAppTypeEnum.NewAssessorAndNewModerator and assesorModiratorUI.showUserInfo}">
+				<ui:include src="/pages/includes/amQualificationUnitStandars.xhtml" />
+			</c:if>
+
+			<c:if test="#{assesorModiratorUI.amApplication.applicationType eq AssessorModeratorAppTypeEnum.NewAssessorAndNewModerator and assesorModiratorUI.showUserInfo}">
+				<ui:include src="/pages/includes/amQualificationUnitStandarsDoubleApp.xhtml" />
+			</c:if>
+
+			<br />
+			<br />
+			<h:panelGroup id="signoffGroup" rendered="#{assesorModiratorUI.continueReg and assesorModiratorUI.showUserInfo}">
+
+				<p:panelGrid columns="1" style="width:100%">
+
+					<h:outputText value="CODE OF CONDUCT FOR ASSESSORS / MODERATORS" styleClass="FontBold Fs15" />
+
+					<p>All assessors / moderators registered by the merSETA will be expected to adhere to a Code of Conduct. This Code of Conduct is built on the basic principles of good assessment / moderation practice and around ensuring that all learners have a fair, valid and reliable assessment experience.</p>
+
+
+					<p>
+						<b>The purpose of the Code of Conduct is to:</b>
+					</p>
+					<ul>
+						<li>Define accepted and acceptable assessment / moderation behaviours;</li>
+						<li>Promote high standards of assessment / moderation practice;</li>
+						<li>Provide a benchmark for assessors / moderators to use for evaluating their own practices and behaviours; and</li>
+						<li>Establish a framework for professional assessment / moderation behaviour and responsibilities.</li>
+					</ul>
+
+					<p>
+						<b>The purpose of the Code of Conduct is to:</b>
+					</p>
+					<ol>
+						<li>Conduct assessment / moderation within the accreditation requirements of an accredited provider;</li>
+						<li>Comply with all criteria for registration as assessors / moderators with the merSETA;</li>
+						<li>Comply with and carry out all assessment / moderation responsibilities in accordance with the assessment / moderation criteria and guidelines set for the qualifications and/or unit standards they are registered by the merSETA to assess / moderate;</li>
+						<li>Use plain language during the assessment / moderation and in all reports, excepting where technical language or terms are required;</li>
+						<li>Treat all those they assess / moderate with dignity and respect;</li>
+						<li>Behave in a supportive and encouraging manner towards all assessment / moderation candidates;</li>
+						<li>Behave towards candidates in ways that are not intimidating;</li>
+						<li>Be honest in all their dealings with assessment / moderation;</li>
+						<li>Maintain the confidentiality of assessments / moderation and respect the right to privacy;</li>
+						<li>Record the outcomes of assessments / moderation in the appropriate format during or immediately after the assessment / moderation; and</li>
+						<li>Report the outcomes of each assessment / moderation together with recommendations for further development as soon after the assessment / moderation as possible.</li>
+					</ol>
+
+					<div class="EmptyBox20"></div>
+
+					<p:panel header="#{lang['accept.code.of.conduct']}" style="text-align:center">
+						<p:panelGrid columns="6" id="pgAccept" style="width:100%">
+
+							<h:outputText value="#{lang['name']}:" styleClass="FontBold Fs15" />
+							<h:outputText value="#{assesorModiratorUI.formUser.firstName} #{assesorModiratorUI.formUser.lastName}" />
+							<h:outputText value="#{lang['accept']}:" styleClass="FontBold Fs15" />
+							<p:selectBooleanCheckbox required="true" requiredMessage="#{lang['accept.code.of.conduct']}" style="width:100%" id="cbAccept" value="#{assesorModiratorUI.amApplication.codeOfConductAccepted}">
+								<p:ajax event="change" update="pgAccept" />
+							</p:selectBooleanCheckbox>
+
+						</p:panelGrid>
+					</p:panel>
+				</p:panelGrid>
+
+			</h:panelGroup>
+		</h:panelGroup>
+	</h:panelGroup>
+
+	<h:panelGroup id="idPassportHelp" rendered="#{!assesorModiratorUI.formUser.doneSearch}">
+		<script type="text/javascript">
+
+        var intro = introJs();
+          intro.setOptions({
+            steps: [
+              
+              {
+                element: document.querySelector('#amInsForm\\:searchRsaIdOrPassportPnl'),
+                intro: "#{lang['select.if.you.want.to.supply.your.id.number.or.passport.as.a.method.of.identification']}"
+              }
+            ]
+          });
+
+          var intro2 = introJs();
+          intro2.setOptions({
+            steps: [
+              {
+                element: document.querySelector('#amInsForm\\:rsaIDInput'),
+                intro: "#{lang['enter.you.valid.RSA.ID.number']}"
+              },
+              {
+                  element: document.querySelector('#amInsForm\\:idPassBtn'),
+                  intro: "#{lang['the.click.find.to.validate.your.id.number']}"
+                }
+            ]
+          });
+          var intro3 = introJs();
+          intro3.setOptions({
+            steps: [
+              {
+                element: document.querySelector('#amInsForm\\:passportNumInput'),
+                intro: "#{lang['enter.your.passport.number']}"
+              },
+              {
+                  element: document.querySelector('#amInsForm\\:idPassBtn'),
+                  intro: "#{lang['the.click.find.to.validate.your.id.number']}"
+                }
+            ]
+          });
+          
+          function helpGuide() {    
+            <c:if test="#{(searchUserPassportOrIdUI.idpassport ne idPassportEnum.RsaId) and (searchUserPassportOrIdUI.idpassport ne idPassportEnum.Passport) }">
+                 intro.start();
+            </c:if>   
+            <c:if test="#{searchUserPassportOrIdUI.idpassport eq idPassportEnum.RsaId}">
+             if ($('#amInsForm\\:rsaIdCriteria').val().length == 0) {
+                  intro2.start();
+             } 
+            </c:if>   
+            <c:if test="#{searchUserPassportOrIdUI.idpassport eq idPassportEnum.Passport}">
+            if ($('#amInsForm\\:passportNumCriteria').val().length == 0) {
+                 intro3.start();
+            } 
+           </c:if>                
+          }
+      
+    </script>
+	</h:panelGroup>
+
+</ui:composition>

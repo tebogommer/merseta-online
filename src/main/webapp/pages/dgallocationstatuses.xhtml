@@ -1,0 +1,161 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<p:growl sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>DG Allocation Status</h1>
+					<h:form id="mainForm">
+
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="Filter By: Financial Year / DG Year" for="selectedFinYear" style="width:100%; color:#977949" />
+							</div>
+							<div>
+								<p:selectOneMenu id="selectedFinYear" value="#{dgAllocationStatusReportUI.selectedYear}" style="width:95%">
+									<p:ajax event="itemSelect" />
+									<f:selectItems value="#{dgAllocationStatusReportUI.financialYears}" />
+								</p:selectOneMenu>
+							</div>
+							<div class="EmptyBox10" />
+						</h:panelGroup>
+						<h:panelGroup>
+							<p:commandButton icon="fa fa-database" action="#{dgAllocationStatusReportUI.generateResults}" value="Generate Report" update="@form" onstart="uploadStart()" oncomplete="uploadDone()" />
+						</h:panelGroup>
+
+						<c:if test="#{dgAllocationStatusReportUI.displayReport}">
+							<div class="EmptyBox10" />
+							<h3>DG Allocation Status For Financial Year / DG Year: #{dgAllocationStatusReportUI.selectedYear}</h3>
+							<ui:include src="/pages/includes/download_lazy.xhtml">
+								<ui:param name="file_name" value="DG_Allocation" />
+								<ui:param name="target" value="dgArrayList" />
+							</ui:include>
+							<ui:include src="/pages/includes/filterGuide.xhtml" />
+							<p:dataTable var="rowVarA" value="#{dgAllocationStatusReportUI.resultsList}" id="dgArrayList" paginator="true" rows="5" paginatorPosition="bottom"
+								paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" >
+								<p:column headerText="Entity ID" exportable="true" >
+									<p:outputLabel value="#{rowVarA.entityId}" />
+								</p:column>
+								<p:column headerText="Name of Company" exportable="true" >
+									<p:outputLabel value="#{rowVarA.companyName}" />
+								</p:column>
+								<p:column headerText="Trading Name" exportable="true">
+									<p:outputLabel value="#{rowVarA.tradingName}" />
+								</p:column>
+								<p:column headerText="DG Year" exportable="true">
+									<p:outputLabel value="#{rowVarA.grantYear}" />
+								</p:column>
+								<p:column headerText="Number Of Employees" exportable="true">
+									<p:outputLabel value="#{rowVarA.numberOfEmployees}" />
+								</p:column>
+								<p:column headerText="Categorisation" exportable="true">
+									<p:outputLabel value="#{rowVarA.categorization}" />
+								</p:column>
+								<p:column headerText="Organisation Type" exportable="true">
+									<p:outputLabel value="#{rowVarA.organisationType}" />
+								</p:column>
+								<p:column headerText="Town" exportable="true">
+									<p:outputLabel value="#{rowVarA.town}" />
+								</p:column>
+								<p:column headerText="Municipality" exportable="true">
+									<p:outputLabel value="#{rowVarA.municipality}" />
+								</p:column>
+								<p:column headerText="Province" exportable="true">
+									<p:outputLabel value="#{rowVarA.province}" />
+								</p:column>
+								<p:column headerText="Chamber" exportable="true">
+									<p:outputLabel value="#{rowVarA.chamber}" />
+								</p:column>
+								<p:column headerText="Region" exportable="true">
+									<p:outputLabel value="#{rowVarA.region}" />
+								</p:column>
+								<p:column headerText="CLO Name and Surname" exportable="true">
+									<p:outputLabel value="#{rowVarA.cloUser}" />
+								</p:column>
+								<p:column headerText="MOA Value" exportable="true">
+									<p:outputLabel value="#{rowVarA.contractValue}" >
+										<f:convertNumber type="currency" pattern="R###,###,###,###,##0.00" />
+									</p:outputLabel>
+								</p:column>
+								<p:column headerText="Allocation Response Status" exportable="true">
+									<p:outputLabel value="#{rowVarA.statusAssigned}" />
+								</p:column>
+								<p:column headerText="Reasons" exportable="true">
+									<p:outputLabel value="#{rowVarA.reason}" />
+								</p:column>
+							</p:dataTable>
+						</c:if>
+
+
+						<c:if test="#{dgAllocationStatusReportUI.selectedYear ne null and false}">
+							<div class="EmptyBox10" />
+							<ui:include src="/pages/includes/download_lazy.xhtml">
+								<ui:param name="file_name" value="DG_Allocation" />
+								<ui:param name="target" value="dgList" />
+							</ui:include>
+							<ui:include src="/pages/includes/filterGuide.xhtml" />
+							<p:dataTable var="rowVar" value="#{dgAllocationStatusReportUI.dataModel}" id="dgList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+								paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+								<p:column headerText="Entity ID" exportable="true" filterBy="#{rowVar.wsp.company.levyNumber}" sortBy="#{rowVar.wsp.company.levyNumber}">
+									<p:outputLabel value="#{rowVar.wsp.company.levyNumber}" />
+								</p:column>
+								<p:column headerText="Name of Company" exportable="true" filterBy="#{rowVar.wsp.company.companyName}" sortBy="#{rowVar.wsp.company.companyName}">
+									<p:outputLabel value="#{rowVar.wsp.company.companyName}" />
+								</p:column>
+								<p:column headerText="Trading Name" exportable="true">
+									<p:outputLabel value="#{rowVar.wsp.company.tradingName}" />
+								</p:column>
+								<p:column headerText="DG Year" exportable="true">
+									<p:outputLabel value="#{rowVar.wsp.finYear}" />
+								</p:column>
+								<p:column headerText="Number Of Employees" exportable="true">
+									<p:outputLabel value="#{rowVar.wsp.company.numberOfEmployees}" />
+								</p:column>
+								<p:column headerText="Categorisation" exportable="true">
+									<p:outputLabel value="#{rowVar.wsp.company.categorizationLookUp.friendlyName}" />
+								</p:column>
+								<p:column headerText="Organisation Type" exportable="true">
+									<p:outputLabel value="#{rowVar.wsp.company.organisationType.description}" />
+								</p:column>
+								<p:column headerText="Town" exportable="true">
+									<p:outputLabel value="#{rowVar.wsp.company.regionTown.town.description}" />
+								</p:column>
+								<p:column headerText="Municipality" exportable="true">
+									<p:outputLabel value="#{rowVar.wsp.company.residentialAddress.municipality.municipalityDesc}" />
+								</p:column>
+								<p:column headerText="Province" exportable="true">
+									<p:outputLabel value="#{rowVar.wsp.company.residentialAddress.municipality.province.provinceDesc}" />
+								</p:column>
+								<p:column headerText="Chamber" exportable="true">
+									<p:outputLabel value="#{rowVar.wsp.company.sicCode.chamber.description}" />
+								</p:column>
+								<p:column headerText="Region" exportable="true">
+									<p:outputLabel value="#{rowVar.region.description}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="CLO Name and Surname" exportable="true">
+									<p:outputLabel value="#{rowVar.cloUser.firstName} #{rowVar.cloUser.lastName}" />
+								</p:column>
+								<p:column headerText="MOA Value" exportable="true">
+									<p:outputLabel value="#{rowVar.contractValue}">
+										<f:convertNumber type="currency" pattern="R###,###,###,###,##0.00" />
+									</p:outputLabel>
+								</p:column>
+								<p:column headerText="Allocation Response Status" exportable="true">
+									<p:outputLabel value="#{rowVar.stringStatus}" />
+								</p:column>
+								<p:column headerText="Reasons" exportable="true">
+									<p:outputLabel value="#{rowVar.reason}" />
+								</p:column>
+							</p:dataTable>
+						</c:if>
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+	</ui:define>
+
+</ui:composition>

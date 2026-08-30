@@ -1,0 +1,947 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:o="http://omnifaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui"
+	template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+		<p:growl showDetail="false" sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+		<h:form id="learnerRegUserForm">
+			<p:importEnum type="haj.com.entity.enums.CompanyRegOrSDLEnum" var="regSDL"></p:importEnum>
+			<p:importEnum type="haj.com.entity.enums.YesNoEnum"></p:importEnum>
+			<p:importEnum type="haj.com.entity.enums.PivotNonPivotEnum" />
+			<p:importEnum type="haj.com.entity.enums.IdPassportEnum"></p:importEnum>
+			<p:importEnum type="haj.com.entity.enums.EmploymentStatusEnum"></p:importEnum>
+			<div class="ui-g ">
+				<div class="ui-g-12 card">
+					<h2>#{lang['learner.registration.form.section.a']} - #{learnerRegistrationFormUI.trainingProvider.companyName} [#{learnerRegistrationFormUI.trainingProvider.companyRegistrationNumber}]</h2>
+					<c:if test="#{learnerRegistrationFormUI.user eq null}">
+						<div class="ui-g-12">
+							
+							<p:fieldset legend="#{lang['intervention.type']}" style="margin-top: 20px">
+									<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+									<h:panelGroup>
+										<div>
+											<p:outputLabel value="#{lang['intervention.type']}" for="intType1" styleClass="gray"/>
+										</div>
+										<div>
+											<p:selectOneMenu id="intType1" value="#{learnerRegistrationFormUI.interventionType}" style="width:95%" required="true" requiredMessage="#{lang['select.planned']}" converter="InterventionTypeConvertor">
+												<p:ajax event="itemSelect" listener="#{learnerRegistrationFormUI.applyInterventionData}" update="@form" />
+												<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+												<f:selectItems value="#{selectItemsUI.selectItemsInterventionType}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+											</p:selectOneMenu>
+										</div>
+									</h:panelGroup>
+									
+									<h:panelGroup styleClass="md-inputfield"  style="margin-top: 19px">
+										<p:autoComplete id="highestQualTitle1" value="#{learnerRegistrationFormUI.selectedQualification}" completeMethod="#{autoCompleteUI.completeQualification}" 
+											var="rv" itemLabel="#{rv.saqaQualification}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor" required="true" requiredMessage="Please Select Qualification"
+											dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+											<p:ajax event="itemSelect"  update="@this" />
+											<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+											<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+											<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+										</p:autoComplete>
+										<p:outputLabel value="#{lang['saqa.id']}" for="highestQualTitle1" styleClass="gray"/>
+									</h:panelGroup>
+									
+									
+									</p:panelGrid>
+								<br /><br />
+								<p:commandButton value="Continue" action="#{learnerRegistrationFormUI.continueRegistration}" update="learnerRegUserForm" />
+							</p:fieldset>							
+						</div>
+					</c:if>
+					
+					<c:if test="#{learnerRegistrationFormUI.user eq null and learnerRegistrationFormUI.showInfo}">
+						<div class="ui-g-12">
+							<ui:include src="/pages/includes/searchUserPassportOrID.xhtml" />
+						</div>
+					</c:if>
+					
+				</div>
+				<c:if test="#{learnerRegistrationFormUI.user ne null}">
+					
+					<div class="ui-g-12 card">
+						<div class="ui-g-12 ">		
+						<h2>Aplication for #{learnerRegistrationFormUI.interventionType.description}, Qualification (#{learnerRegistrationFormUI.selectedQualification.code}) #{learnerRegistrationFormUI.selectedQualification.description}</h2>				
+							<p:fieldset legend="#{lang['learner.details']}" style="margin-top: 20px">
+								<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+									<h:panelGroup>
+										<div>
+											<p:outputLabel value="#{lang['title']}" for="title" styleClass="gray" />
+										</div>
+										<div>
+											<p:selectOneMenu id="title" value="#{learnerRegistrationFormUI.user.title}" converter="TitleConvertor" style="opacity: 1 !important; color: black; width:95%" required="true" requiredMessage="#{lang['select.title']}">
+												<p:ajax />
+												<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+												<f:selectItems value="#{selectItemsUI.selectItemsTitles}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+											</p:selectOneMenu>
+										</div>
+									</h:panelGroup>
+									
+									<h:panelGroup styleClass="md-inputfield">
+										<br />
+										<p:inputText id="firstName" disabled="#{learnerRegistrationFormUI.user.firstName.length() gt 0}" value="#{learnerRegistrationFormUI.user.firstName}" style="width:95%;  opacity: 1 !important; color:black !important" required="true" requiredMessage="#{lang['provide.first.name']}" ><p:ajax /></p:inputText>
+										<br />
+										<p:outputLabel value="#{lang['first.name']}:" for="firstName" styleClass="gray"/>
+									</h:panelGroup>
+									
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText id="lastName" disabled="#{learnerRegistrationFormUI.user.lastName.length() gt 0}" value="#{learnerRegistrationFormUI.user.lastName}" style="width:95%;  opacity: 1 !important; color:black !important" required="true" requiredMessage="#{lang['provide.last.name']}" ><p:ajax /></p:inputText>
+										<p:outputLabel value="#{lang['last.name']}:" for="lastName" styleClass="gray"/>
+									</h:panelGroup>
+									
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText id="middleName" disabled="#{learnerRegistrationFormUI.user.middleName.length() gt 0}" value="#{learnerRegistrationFormUI.user.middleName}" style="width:95%;  opacity: 1 !important; color:black !important"><p:ajax /></p:inputText>
+										<p:outputLabel value="#{lang['middle.name']}" for="middleName" styleClass="gray"/>
+									</h:panelGroup>
+									
+									<h:panelGroup styleClass="md-inputfield" rendered="#{learnerRegistrationFormUI.user.rsaIDNumber.length() gt 0}">
+										<p:inputText id="rsaId" disabled="#{learnerRegistrationFormUI.user.rsaIDNumber.length() gt 0}" value="#{learnerRegistrationFormUI.user.rsaIDNumber}" style="width:95%;  opacity: 1 !important; color:black !important" required="true" requiredMessage="#{lang['rsa.id.number']}" />
+										<p:outputLabel value="#{lang['rsa.id.number']}" for="rsaId" styleClass="gray"/>
+									</h:panelGroup>
+									
+									<h:panelGroup styleClass="md-inputfield" rendered="#{learnerRegistrationFormUI.user.passportNumber.length() gt 0}">
+									<br />
+										<p:inputText id="passPort" disabled="#{learnerRegistrationFormUI.user.passportNumber.length() gt 0}" value="#{learnerRegistrationFormUI.user.passportNumber}" style="width:95%;  opacity: 1 !important; color:black !important" required="true" requiredMessage="#{lang['passport.number']}" />
+										<p:outputLabel value="#{lang['passport.number']}" for="passPort" styleClass="gray"/>
+									</h:panelGroup>									
+									
+									<h:panelGroup styleClass="md-inputfield">
+										<p:calendar id="glPostingDate" value="#{learnerRegistrationFormUI.user.dateOfBirth}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" inputStyle="width:93%" >
+											<p:ajax event="dateSelect" listener="#{learnerRegistrationFormUI.checkRequireGaurdian}" update="learnerRegUserForm:parentGaurdian" execute="" />
+										</p:calendar>
+										<p:outputLabel value="Date Of Birth" for="glPostingDate" styleClass="gray"/>
+									</h:panelGroup>						
+									
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText id="email1" disabled="#{learnerRegistrationFormUI.user.email.length() gt 0}" value="#{learnerRegistrationFormUI.user.email}" type="email" style="width:95%;  opacity: 1 !important; color:black !important" required="true" requiredMessage="#{lang['provide.email']}" ><p:ajax /></p:inputText>
+										<p:outputLabel value="#{lang['email']}" for="email1" styleClass="gray"/>
+									</h:panelGroup>									
+									
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputMask id="telNumber1" disabled="#{learnerRegistrationFormUI.user.workContactNumber.length() gt 0}" value="#{learnerRegistrationFormUI.user.telNumber}" mask="099 999 9999" style="width:95%;  opacity: 1 !important; color:black !important" required="true" requiredMessage="#{lang['tel.number.error']}" ><p:ajax /></p:inputMask>
+										<p:outputLabel value="#{lang['tel.number']}" for="telNumber1" styleClass="gray"/>
+									</h:panelGroup>
+									
+									<h:panelGroup styleClass="md-inputfield">
+									<br />
+										<p:inputMask id="cellPhone1" disabled="#{learnerRegistrationFormUI.user.cellNumber.length() gt 0}" value="#{learnerRegistrationFormUI.user.cellNumber}" mask="099 999 9999" style="width:95%;  opacity: 1 !important; color:black !important" required="true" requiredMessage="#{lang['cell.number']}" ><p:ajax /></p:inputMask>
+										<p:outputLabel value="#{lang['cell.number']}" for="cellPhone1" styleClass="gray"/>
+									</h:panelGroup>
+									
+									<h:panelGroup>
+										<div>
+											<p:outputLabel value="#{lang['gender']}"  styleClass="gray"/>
+										</div>
+										<div>
+											<p:selectOneMenu id="gender" value="#{learnerRegistrationFormUI.user.gender}" converter="GenderConvertor" style="width:95%" required="true" requiredMessage="#{lang['provide.gender']}">
+												<p:ajax />
+												<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+												<f:selectItems value="#{selectItemsUI.selectItemsGender}" var="rv" itemLabel="#{rv.genderName}" itemValue="#{rv}" />
+											</p:selectOneMenu>
+										</div>
+									</h:panelGroup>
+									
+									<h:panelGroup>
+										<div>
+											<p:outputLabel value="Home Language" styleClass="gray" />
+										</div>
+										<div>
+											<p:selectOneMenu id="gomelanguage" value="#{learnerRegistrationFormUI.user.homeLanguage}" converter="LanguageConvertor" style="width:95%" required="true" requiredMessage="#{lang['select.language']}">
+												<p:ajax />
+												<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+												<f:selectItems value="#{selectItemsUI.language}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+											</p:selectOneMenu>
+										</div>
+									</h:panelGroup>
+									
+									<h:panelGroup >
+										<div>
+											<p:outputLabel value="#{lang['equity']}" for="equity" styleClass="gray"/>
+										</div>
+										<div>
+											<p:autoComplete id="equity" value="#{learnerRegistrationFormUI.user.equity}" style="width:95%" completeMethod="#{autoCompleteUI.completeEquityExcludeOtherAndUnkown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="EquityConvertor" dropdown="true" minQueryLength="3"
+												maxResults="10" requiredMessage="#{lang['provide.equity']}" required="true">
+												<p:column headerText="equity" style="white-space: nowrap">#{rv.description}</p:column>
+											</p:autoComplete>
+										</div>
+									</h:panelGroup>
+									
+									<h:panelGroup >
+										<div>
+											<p:outputLabel value="#{lang['nationality']}" for="nationality" styleClass="gray"/>
+										</div>
+										<div>
+											<p:autoComplete id="nationality" value="#{learnerRegistrationFormUI.user.nationality}" required="true" requiredMessage="#{lang['nationality.required']}" completeMethod="#{autoCompleteUI.completeNationality}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true"
+												style="width:95%"  converter="NationalityConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+												<p:column headerText="#{lang['nationality']}" style="white-space: nowrap">#{rv.description}</p:column>
+											</p:autoComplete>
+										</div>
+									</h:panelGroup>
+									
+									<h:panelGroup>
+										<div>
+											<p:outputLabel value="Disability" styleClass="gray" />
+										</div>
+										<div>
+											<p:selectOneMenu id="disability" value="#{learnerRegistrationFormUI.user.disabilityStatus}" converter="DisabilityStatusConvertor" style="width:95%" required="true" requiredMessage="#{lang['select.disability']}">
+												<p:ajax />
+												<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+												<f:selectItems value="#{selectItemsUI.selectItemsDisability}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+											</p:selectOneMenu>
+										</div>
+									</h:panelGroup>
+									
+									<h:panelGroup>
+										<div>
+											<p:outputLabel value="Urban/Rural Area" for="urbanRural" styleClass="gray"/>
+										</div>
+										<div>
+											<p:selectOneMenu id="urbanRural" value="#{learnerRegistrationFormUI.user.urbanRuralEnum}" style="width:95%" required="true" requiredMessage="Urban/Rural Area Required">
+												<p:ajax />
+												<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+												<f:selectItems value="#{enumUI.urbanRuralEnumDD}" />
+											</p:selectOneMenu>
+										</div>
+									</h:panelGroup>
+								</p:panelGrid>
+							</p:fieldset>
+							<p:outputPanel id="empPanel">
+							<p:fieldset legend="Employment and Qualifications" style="margin-top: 20px">
+								<p:panelGrid columns="2" style="width : 95%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+									<h:panelGroup>
+										<div>
+											<p:outputLabel value="#{lang['highest.qual.title']}" styleClass="gray" />
+										</div>
+										<div>
+											<p:autoComplete style="width:95%"  id="highestQual" value="#{learnerRegistrationFormUI.user.qualification}" 
+															completeMethod="#{autoCompleteUI.completeQualification}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" 
+															forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10">												
+												<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+												<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+												<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+												<p:ajax event="itemSelect"/>
+											</p:autoComplete>
+										</div>
+									</h:panelGroup>
+									
+									<h:panelGroup>
+										<div>
+											<p:outputLabel value="Have you previously undertaken a SETA or QCTO registered learning program?" styleClass="gray" />
+										</div>
+										<div>
+											<p:selectOneMenu id="gguage" value="#{learnerRegistrationFormUI.companylearners.undertakenLearningProgramBefore}" style="width:95%" required="true" requiredMessage="Have you previously undertaken a SETA or QCTO registered learning program required">
+												<p:ajax update="empPanel"/>
+												<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+												<f:selectItems value="#{enumUI.yesNoEnumDD}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+											</p:selectOneMenu>
+										</div>
+									</h:panelGroup>
+									
+									<h:panelGroup styleClass="md-inputfield" rendered="#{learnerRegistrationFormUI.companylearners.undertakenLearningProgramBefore.friendlyName eq 'Yes'}">
+										<br />
+										<p:inputText id="preTitle"  value="#{learnerRegistrationFormUI.companylearners.qualificationTitle}" style="width:95%;  opacity: 1 !important; color:black !important" required="true" requiredMessage="Specify title" >
+											<p:ajax />
+										</p:inputText>
+										<br />
+										<p:outputLabel value="Specify title:" for="preTitle" styleClass="gray"/>
+									</h:panelGroup>
+									
+									<h:panelGroup styleClass="md-inputfield" rendered="#{learnerRegistrationFormUI.companylearners.undertakenLearningProgramBefore.friendlyName eq 'Yes'}">
+										<br />
+										<p:inputText id="preRegNo" value="#{learnerRegistrationFormUI.companylearners.registrationNumber}" sstyle="width:95%;  opacity: 1 !important; color:black !important" required="true" requiredMessage="Specify registration number"  >
+											<p:ajax />
+										</p:inputText>
+										<br />
+										<p:outputLabel value="Specify registration number:" for="preRegNo" styleClass="gray"/>
+									</h:panelGroup>
+									
+									<h:panelGroup styleClass="md-inputfield" rendered="#{learnerRegistrationFormUI.companylearners.undertakenLearningProgramBefore.friendlyName eq 'Yes'}">
+										<br />
+										<p:inputText id="preCredits" value="#{learnerRegistrationFormUI.companylearners.credits}" style="width:95%;  opacity: 1 !important; color:black !important" required="true" requiredMessage="Specify how many credits you have achieved"  >
+											<p:ajax />
+										</p:inputText>
+										<br />
+										<p:outputLabel value="Specify how many credits you have achieved:" for="preCredits" styleClass="gray"/>
+									</h:panelGroup>
+									
+									<h:panelGroup>
+										<div>
+											<p:outputLabel value="Were you party to a Workplace-based learning programme agreement at any time in the past before concluding this agreement?" styleClass="gray" />
+										</div>
+										<div>
+											<p:selectOneMenu id="gguage111" value="#{learnerRegistrationFormUI.companylearners.workplaceBasedBefore}" style="width:95%" required="true" requiredMessage="Were you party to a Workplace-based learning programme agreement before">
+												<p:ajax update="empPanel"/>
+												<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+												<f:selectItems value="#{enumUI.yesNoEnumDD}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+											</p:selectOneMenu>
+										</div>
+									</h:panelGroup>
+									
+									<h:panelGroup>
+										<div>
+											<p:outputLabel value="#{lang['employment.status']}" for="proc" styleClass="gray" />
+										</div>
+										<div>
+											<p:selectOneMenu  id="proc" value="#{learnerRegistrationFormUI.user.employmentStatus}" style="width:95%" required="true" requiredMessage="#{lang['select.employment.status']}">
+												<p:ajax update="empPanel" />
+												<f:selectItem itemLabel="---#{lang['select.one']}---" itemValue="" noSelectionOption="true" />
+												<f:selectItems value="#{enumUI.employmentStatusFilteredEnumDD}" />
+											</p:selectOneMenu>
+										</div>
+									</h:panelGroup>
+									
+									<h:panelGroup styleClass="md-inputfield" rendered="#{learnerRegistrationFormUI.user.employmentStatus eq EmploymentStatusEnum.Employed}">
+										
+										<p:calendar id="glStartDate" value="#{learnerRegistrationFormUI.user.employmentStartDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" inputStyle="width:90%" >
+											<p:ajax event="dateSelect"></p:ajax>
+										</p:calendar>
+										<p:outputLabel value="Employment Start Date" for="glStartDate" styleClass="gray"/>
+									</h:panelGroup>	
+									
+									<h:panelGroup styleClass="md-inputfield" rendered="#{learnerRegistrationFormUI.user.employmentStatus eq EmploymentStatusEnum.Employed}">
+										<br />
+										<p:inputMask id="workPhone" disabled="#{learnerRegistrationFormUI.user.workContactNumber.length() gt 0}" value="#{learnerRegistrationFormUI.user.workContactNumber}" mask="099 999 9999" style="width:95%;  opacity: 1 !important; color:black !important" required="true" requiredMessage="#{lang['work.number']}"  >
+											<p:ajax />
+										</p:inputMask>
+										<br />
+										<p:outputLabel value="Work Number" for="workPhone" styleClass="gray"/>
+									</h:panelGroup>
+									
+									<h:panelGroup id="unionPanel" rendered="#{learnerRegistrationFormUI.user.employmentStatus eq EmploymentStatusEnum.Employed}">
+										<div>
+											<p:outputLabel value="Part or union" for="partOfUnion" styleClass="gray"/>
+										</div>
+										<div>
+											<p:selectOneMenu id="partOfUnion" value="#{learnerRegistrationFormUI.user.partOfUnion}" style="width:95%"  required="true" requiredMessage="Part of union required">
+												<p:ajax update="empPanel" />
+												<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+												<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+											</p:selectOneMenu>
+										</div>
+									</h:panelGroup>
+									
+									<h:panelGroup id="unionMembershipPanel" rendered="#{learnerRegistrationFormUI.user.partOfUnion eq YesNoEnum.Yes}">
+										<div>
+											<p:outputLabel value="Union Membership" for="unionMembership" styleClass="gray"/>
+										</div>
+										<div>
+											<p:selectOneMenu id="unionMembership" value="#{learnerRegistrationFormUI.user.organisedLabourUnion}" converter="OrganisedLabourUnionConvertor" style="width:95%"  required="true" requiredMessage="Union Membership Required">
+												<p:ajax></p:ajax>
+												<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+												<f:selectItems value="#{selectItemsUI.selectItemsOrganisedLabourUnion}" var="il" itemLabel="#{il.description}" />
+											</p:selectOneMenu>
+										</div>
+									</h:panelGroup>
+									
+								</p:panelGrid>
+							</p:fieldset>
+							</p:outputPanel>
+						</div>
+						<div class="ui-g-12 ui-md-6">
+							<p:fieldset legend="#{lang['residentialAddress']}" style="margin-top: 20px">
+								<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank" id="addrPcode1">
+									<h:panelGroup id="addressLine1Input" styleClass="md-inputfield">
+										<p:inputText id="addressLine1" disabled="#{learnerRegistrationFormUI.residentialAddress.addressLine1.length() gt 0}" value="#{learnerRegistrationFormUI.residentialAddress.addressLine1}" style="width:95%;  opacity: 1 !important; color:black !important" required="true" maxlength="30" requiredMessage="#{lang['address.line.1.required']}"/>
+										<p:outputLabel value="#{lang['address.line.1']}" for="addressLine1" styleClass="gray"/>
+									</h:panelGroup>
+									<h:panelGroup id="addressLine2Input" styleClass="md-inputfield">
+										<p:inputText id="addressLine2" disabled="#{learnerRegistrationFormUI.residentialAddress.addressLine2.length() gt 0}" value="#{learnerRegistrationFormUI.residentialAddress.addressLine2}" style="width:95%;  opacity: 1 !important; color:black !important" required="true" maxlength="30" requiredMessage="#{lang['address.line.2.required']}"/>
+										<p:outputLabel value="#{lang['address.line.2']}" for="addressLine2" styleClass="gray"/>
+									</h:panelGroup>
+									<h:panelGroup id="addressLine3Input" styleClass="md-inputfield">
+										<p:inputText id="addressLine3" disabled="#{learnerRegistrationFormUI.residentialAddress.addressLine3.length() gt 0}" value="#{learnerRegistrationFormUI.residentialAddress.addressLine3}" style="width:95%;  opacity: 1 !important; color:black !important" required="true" maxlength="30" requiredMessage="#{lang['address.line.2.required']}"/>
+										<p:outputLabel value="#{lang['address.line.3']}" for="addressLine3" styleClass="gray"/>
+									</h:panelGroup>
+
+									<h:panelGroup>
+										<div>
+											<p:outputLabel value="#{lang['town']}" for="theTown" styleClass="gray"/>
+										</div>
+										<div>
+											<p:autoComplete id="theTown" value="#{learnerRegistrationFormUI.residentialAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3"
+												maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true" requiredMessage="#{lang['please.select.a.town']}">
+												<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+											</p:autoComplete>
+										</div>
+									</h:panelGroup>
+
+
+									<h:panelGroup id="pcodeInput" styleClass="md-inputfield">
+										<p:inputText id="pcode1" disabled="#{learnerRegistrationFormUI.residentialAddress.postcode.length() gt 0}" value="#{learnerRegistrationFormUI.residentialAddress.postcode}" style="width:95%;  opacity: 1 !important; color:black !important" required="true" maxlength="30" requiredMessage="#{lang['post.code.error']}"/>
+										<p:outputLabel value="#{lang['post.code']}" for="pcode1" styleClass="gray"/>
+									</h:panelGroup>
+
+									<h:panelGroup>
+										<div>
+											<p:outputLabel value="#{lang['municipality']}" for="theTown2" styleClass="gray"/>
+										</div>
+										<div>
+											<p:autoComplete id="residentialAddressMunicipalityID" placeholder="#{lang['municipality']}" value="#{learnerRegistrationFormUI.residentialAddress.municipality}" completeMethod="#{autoCompleteUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityProvince}" itemValue="#{rv}"
+												forceSelection="true" converter="MunicipalityConvertor" dropdown="true" minQueryLength="3" maxResults="10" required="true" requiredMessage="#{lang['select.municipality']}">
+												<p:column headerText="#{lang['province']}" style="white-space: nowrap">
+													<p:outputLabel value="#{rv.province.provinceDesc}" />
+												</p:column>
+												<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">
+													<p:outputLabel value="#{rv.municipalityDesc}" />
+												</p:column>
+											</p:autoComplete>
+										</div>
+									</h:panelGroup>
+									<h:panelGroup>
+										<div class="EmptyBox40"></div>
+									</h:panelGroup>
+								</p:panelGrid>
+							</p:fieldset>
+						</div>
+						<div class="ui-g-12 ui-md-6 ">
+							<p:fieldset legend="#{lang['postalAddress']}" style="margin-top: 20px">
+								<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank" id="postalAddress1">
+
+									<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank">
+										<p:selectBooleanCheckbox value="#{learnerRegistrationFormUI.copyAddress}" disabled="false">
+											<p:ajax update="learnerRegUserForm:postalAddress1" listener="#{learnerRegistrationFormUI.clearPostal}" />
+										</p:selectBooleanCheckbox>
+										<p:outputLabel value="#{lang['same.as.my.address']}" styleClass="gray" />
+									</p:panelGrid>
+									<h:panelGroup id="postalAddressLine1Input" styleClass="md-inputfield" rendered="#{!learnerRegistrationFormUI.copyAddress}">
+										<p:inputText id="postalAddressLine1" disabled="#{learnerRegistrationFormUI.postalAddress.addressLine1.length() gt 0}" value="#{learnerRegistrationFormUI.postalAddress.addressLine1}" style="width:95%;  opacity: 1 !important; color:black !important" required="true" maxlength="30" requiredMessage="#{lang['address.line.1.required']}"/>
+										<p:outputLabel value="#{lang['address.line.1']}" for="postalAddressLine1" styleClass="gray"/>
+									</h:panelGroup>
+									<h:panelGroup id="postalAddressLine2Input" styleClass="md-inputfield" rendered="#{!learnerRegistrationFormUI.copyAddress}">
+										<p:inputText id="postalAddressLine2" disabled="#{learnerRegistrationFormUI.postalAddress.addressLine2.length() gt 0}" value="#{learnerRegistrationFormUI.postalAddress.addressLine2}" style="width:95%;  opacity: 1 !important; color:black !important" required="true" maxlength="30" requiredMessage="#{lang['address.line.2.required']}"/>
+										<p:outputLabel value="#{lang['address.line.2']}" for="postalAddressLine2" styleClass="gray"/>
+									</h:panelGroup>
+									<h:panelGroup id="postalAddressLine3Input" styleClass="md-inputfield" rendered="#{!learnerRegistrationFormUI.copyAddress}">
+										<p:inputText id="postalAddressLine3" disabled="#{learnerRegistrationFormUI.postalAddress.addressLine3.length() gt 0}" value="#{learnerRegistrationFormUI.postalAddress.addressLine3}" style="width:95%;  opacity: 1 !important; color:black !important" required="true" maxlength="30" requiredMessage="#{lang['address.line.3.required']}"/>
+										<p:outputLabel value="#{lang['address.line.3']}" for="postalAddressLine3" styleClass="gray"/>
+									</h:panelGroup>
+
+									<h:panelGroup rendered="#{!learnerRegistrationFormUI.copyAddress}">
+										<div>
+											<p:outputLabel value="#{lang['town']}" for="theTown2" styleClass="gray"/>
+										</div>
+										<div>
+											<p:autoComplete id="theTown2" value="#{learnerRegistrationFormUI.postalAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3" maxResults="10"
+												inputStyle="width: 95%" style="width: 95%" required="true" requiredMessage="#{lang['please.select.a.town']}">
+												<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+											</p:autoComplete>
+										</div>
+									</h:panelGroup>
+
+
+									<h:panelGroup id="postalPcodeInput" styleClass="md-inputfield" rendered="#{!learnerRegistrationFormUI.copyAddress}">
+										<p:inputText id="postalPcode" disabled="#{learnerRegistrationFormUI.postalAddress.postcode.length() gt 0}" value="#{learnerRegistrationFormUI.postalAddress.postcode}" style="width:95%;  opacity: 1 !important; color:black !important" required="true" maxlength="30" requiredMessage="#{lang['post.code.error']}"/>
+										<p:outputLabel value="#{lang['post.code']}" for="postalPcode" styleClass="gray"/>
+									</h:panelGroup>
+									<h:panelGroup rendered="#{!learnerRegistrationFormUI.copyAddress}">
+										<div>
+											<p:outputLabel value="#{lang['municipality']}" for="theTown2" styleClass="gray"/>
+										</div>
+										<div>
+											<p:autoComplete id="postalAddressMunicipalityID1" placeholder="#{lang['municipality']}" rendered="#{!learnerRegistrationFormUI.copyAddress}" value="#{learnerRegistrationFormUI.postalAddress.municipality}" completeMethod="#{autoCompleteUI.completeMunicipality}" var="rv"
+												itemLabel="#{rv.municipalityProvince}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true" minQueryLength="3" maxResults="10" required="true" requiredMessage="#{lang['select.municipality']}">
+												<p:column headerText="#{lang['province']}" style="white-space: nowrap">
+													<p:outputLabel value="#{rv.province.provinceDesc}" />
+												</p:column>
+												<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">
+													<p:outputLabel value="#{rv.municipalityDesc}" styleClass="gray"/>
+												</p:column>
+											</p:autoComplete>
+										</div>
+									</h:panelGroup>
+
+								</p:panelGrid>
+							</p:fieldset>
+						</div>
+					</div>
+					<div class=" ui-g-12 card">
+						<div class="ui-g-12">
+							<p:fieldset id="qualificationFieldSet" legend="Training Details" style="margin-top: 20px">
+
+								<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank" layout="grid" id="trainingGrid">
+
+									<h:panelGroup>
+										<div>
+											<p:outputLabel value="Is the learner merSETA funded" for="mersetaFunded" styleClass="gray"/>
+										</div>
+										<div>
+											<p:selectOneMenu id="mersetaFunded" value="#{learnerRegistrationFormUI.companylearners.mersetaFunded}" style="width:95%" required="true" requiredMessage="Select if merSETA funded">
+												<p:ajax update="trainingGrid" />
+												<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+												<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+											</p:selectOneMenu>
+										</div>
+									</h:panelGroup>
+
+									<h:panelGroup rendered="#{learnerRegistrationFormUI.companylearners.mersetaFunded eq YesNoEnum.Yes}">
+										<div>
+											<p:outputLabel value="Select DG Tag" for="dgtag" styleClass="gray"/>
+										</div>
+										<div>
+											<p:selectOneMenu id="dgtag" value="#{learnerRegistrationFormUI.companylearners.dgYearTag}" style="width:95%" required="true" requiredMessage="#{lang['select.dg']}" converter="DGYearConvertor">
+												<p:ajax event="itemSelect" listener="#{learnerRegistrationFormUI.applyDGYearData}" update="trainingGrid" />
+												<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+												<f:selectItems value="#{selectItemsUI.selectItemsDGYear}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+											</p:selectOneMenu>
+										</div>
+									</h:panelGroup>
+
+									<h:panelGroup rendered="#{learnerRegistrationFormUI.companylearners.mersetaFunded eq YesNoEnum.Yes}">
+										<div>
+											<p:outputLabel value="Select Project Type" for="projectstag" styleClass="gray"/>
+										</div>
+										<div>
+											<p:selectOneMenu id="projectstag" value="#{learnerRegistrationFormUI.companylearners.projectType}" style="width:95%" required="true" requiredMessage="Select Project Type" converter="ProjectTypeConvertor">
+												<p:ajax event="itemSelect" listener="#{learnerRegistrationFormUI.applyDGYearData}" update="trainingGrid" />
+												<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+												<f:selectItems value="#{selectItemsUI.selectItemsProjectType}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+											</p:selectOneMenu>
+										</div>
+									</h:panelGroup>
+
+								
+								
+								
+
+									<h:panelGroup>
+										<div>
+											<p:outputLabel value="#{lang['intervention.type']}" for="intType" styleClass="gray"/>
+										</div>
+										<div>
+											<p:selectOneMenu disabled="#{learnerRegistrationFormUI.companylearners.interventionType ne null}" id="intType" value="#{learnerRegistrationFormUI.companylearners.interventionType}" style="width:95%" required="true" requiredMessage="#{lang['select.planned']}" converter="InterventionTypeConvertor">
+												<p:ajax event="itemSelect" listener="#{learnerRegistrationFormUI.applyInterventionData}" update="trainingGrid completionDate learnerRegUploadForm" />
+												<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+												<f:selectItems value="#{selectItemsUI.selectItemsInterventionType}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+											</p:selectOneMenu>
+										</div>
+									</h:panelGroup>
+																
+									
+									<h:panelGroup styleClass="md-inputfield"  style="margin-top: 19px" rendered="#{learnerRegistrationFormUI.show eq true}">
+										<p:autoComplete id="designatedTrade" value="#{learnerRegistrationFormUI.companylearners.designatedTrade}" completeMethod="#{autoCompleteUI.completeDesignatedTrade}" required="true"
+														var="rv" itemLabel="#{rv.designatedTradeType.friendlyName} #{rv.description}" itemValue="#{rv}" forceSelection="true" converter="DesignatedTradeConvertor"
+											dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+											<p:ajax event="itemSelect"  update="@form" />
+											<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>											
+										</p:autoComplete>
+										<p:outputLabel value="Designated Trade" for="designatedTrade" styleClass="gray"/>
+									</h:panelGroup>
+									
+									<h:panelGroup id="designatedTrade1" rendered="#{learnerRegistrationFormUI.companylearners.designatedTrade.code eq '3'}">
+										<div>
+											<p:outputLabel value="Motor CBMT Type" for="cmbtType" styleClass="gray"/>
+										</div>
+										<div>
+											<p:selectOneMenu id="cmbtType" value="#{learnerRegistrationFormUI.designatedTradeType}" style="width:95%" required="true" 
+															requiredMessage="#{lang['select.planned']}" converter="DesignatedTradeTypeConvertor">
+												
+												<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+												<f:selectItems value="#{selectItemsUI.selectedDesignatedTradeType}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+												<p:ajax event="itemSelect" update="@form" listener="#{learnerRegistrationFormUI.selectTradeLevel()}"/>
+											</p:selectOneMenu>
+										</div>
+									</h:panelGroup>
+									
+									<h:panelGroup id="designatedTrade2" rendered="#{learnerRegistrationFormUI.designatedTradeType ne null}">
+										<div>
+											<p:outputLabel value="Level Trade" for="cmbtType11" styleClass="gray"/>
+										</div>
+										<div>
+											<p:selectOneMenu id="cmbtType11" value="#{learnerRegistrationFormUI.companylearners.designatedTradeLevel}" style="width:95%" required="true" 
+															requiredMessage="#{lang['select.planned']}" converter="DesignatedTradeLevelConvertor">
+												<p:ajax event="itemSelect" update="@this" />
+												<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+												<f:selectItems value="#{learnerRegistrationFormUI.selectedDesignatedTradeLevel}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+											</p:selectOneMenu>
+										</div>
+									</h:panelGroup>
+									
+									<h:panelGroup styleClass="md-inputfield" >									
+										<p:calendar id="commDate" value="#{learnerRegistrationFormUI.companylearners.commencementDate}" 
+													showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" inputStyle="width:93%" requiredMessage="Select Commencement Date">
+											<p:ajax event="dateSelect" listener="#{learnerRegistrationFormUI.startDateFilterData}" update="pcompletionDate" />
+											<p:ajax event="change" listener="#{learnerRegistrationFormUI.startDateFilterData}" update="pcompletionDate" />
+
+										</p:calendar>
+										<p:outputLabel value="Commencement Date" for="commDate" styleClass="gray"/>
+									</h:panelGroup>
+
+									<h:panelGroup id="pcompletionDate" styleClass="md-inputfield">
+										<br />
+										<p:calendar  disabled="true" id="completionDate" value="#{learnerRegistrationFormUI.companylearners.completionDate}" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true"  required="true" inputStyle="width:95%" requiredMessage="Select Completion Date">
+										</p:calendar>
+										<p:outputLabel value="Completion Date" for="completionDate" styleClass="gray"/>
+									</h:panelGroup>
+
+									<h:panelGroup id="pgPivotalNonPivotal">
+										<div>
+											<p:outputLabel value="#{lang['pivotal.non.pivotal.trainig']}" styleClass="gray" />
+										</div>
+										<div>
+											<p:selectOneMenu value="#{learnerRegistrationFormUI.companylearners.pivotNonPivot}" style="width:95%" disabled="true">
+												<p:ajax update="@form" />
+												<f:selectItem itemLabel="--- #{lang['select.one']} ---" itemValue="" styleClass="FontLight gray" noSelectionOption="true" />
+												<f:selectItems value="#{enumUI.pivotalNonPivotalDD}" />
+											</p:selectOneMenu>
+										</div>
+									</h:panelGroup>
+
+									<h:panelGroup rendered="#{learnerRegistrationFormUI.companylearners.pivotNonPivot eq PivotNonPivotEnum.Pivotal}">
+										<div>
+											<p:outputLabel value="#{lang['nqf.aligned']}" for="nqf" styleClass="gray"/>
+										</div>
+										<div>
+											<p:selectOneMenu id="nqf" value="#{learnerRegistrationFormUI.companylearners.nqfAligned}" style="width:95%" required="true" requiredMessage="#{lang['select.planned']}" converter="YesNoLookupConvertor" disabled="true">
+												<p:ajax />
+												<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+												<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="rv" itemLabel="#{rv.yesNoName}" itemValue="#{rv}" />
+											</p:selectOneMenu>
+										</div>
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield"  rendered="#{learnerRegistrationFormUI.companylearners.pivotNonPivot eq PivotNonPivotEnum.Pivotal and not learnerRegistrationFormUI.skillsSet and not learnerRegistrationFormUI.skillsProgram and not learnerRegistrationFormUI.shortCreditBearing}"
+										style="margin-top: 19px">
+										<p:autoComplete disabled="#{learnerRegistrationFormUI.companylearners.qualification ne null}" id="highestQualTitle" value="#{learnerRegistrationFormUI.companylearners.qualification}" completeMethod="#{autoCompleteUI.completeQualification}" var="rv" itemLabel="#{rv.saqaQualification}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor"
+											dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+											<p:ajax event="itemSelect" listener="#{learnerRegistrationFormUI.applySaqaData}" update="@this" />
+											<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+											<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+											<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+										</p:autoComplete>
+										<p:outputLabel value="#{lang['saqa.id']}" for="highestQualTitle" styleClass="gray"/>
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield" rendered="#{learnerRegistrationFormUI.companylearners.pivotNonPivot eq PivotNonPivotEnum.Pivotal and learnerRegistrationFormUI.skillsProgram}" style="margin-top: 19px">
+										<p:autoComplete id="skillsProgram" value="#{learnerRegistrationFormUI.companylearners.skillsProgram}" completeMethod="#{autoCompleteUI.completeSkillsProgram}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SkillsProgramConvertor" dropdown="true"
+											minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+											<p:ajax event="itemSelect" listener="#{learnerRegistrationFormUI.applySaqaData}" update="@this" />
+											<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+											<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+										</p:autoComplete>
+										<p:outputLabel value="Skills Program" for="skillsProgram" styleClass="gray"/>
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield" rendered="#{learnerRegistrationFormUI.companylearners.pivotNonPivot eq PivotNonPivotEnum.Pivotal and learnerRegistrationFormUI.shortCreditBearing}" style="margin-top: 19px">
+										<p:autoComplete id="unitStandard" value="#{learnerRegistrationFormUI.companylearners.unitStandard}" completeMethod="#{autoCompleteUI.completeUnitStandards}" var="rv" itemLabel="#{rv.title}" itemValue="#{rv}" forceSelection="true" converter="UnitStandardsConvertor" dropdown="true"
+											minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+											<p:ajax event="itemSelect" listener="#{learnerRegistrationFormUI.applySaqaData}" update="@this" />
+											<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+											<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.title}</p:column>
+										</p:autoComplete>
+										<p:outputLabel value="#{lang['unit.standard']}" for="unitStandard" styleClass="gray"/>
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield" rendered="#{learnerRegistrationFormUI.companylearners.pivotNonPivot eq PivotNonPivotEnum.Pivotal and learnerRegistrationFormUI.skillsSet}" 
+												style="margin-top: 19px">
+										<p:autoComplete id="skillsSet" value="#{learnerRegistrationFormUI.companylearners.skillsSet}" completeMethod="#{autoCompleteUI.completeSkillsSet}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SkillsSetConvertor" dropdown="true"
+											minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+											<p:ajax event="itemSelect" listener="#{learnerRegistrationFormUI.applySaqaData}" update="@this" />
+											<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+											<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+										</p:autoComplete>
+										<p:outputLabel value="Skills Set" for="skillsSet" styleClass="gray"/>
+									</h:panelGroup>
+								</p:panelGrid>
+							</p:fieldset>
+							<br /> <br />
+							<p:outputPanel id="learnerRegUploadForm" style="width: 100%">
+								<h:panelGroup id="docList">
+									<p:fieldset legend="#{lang['documents']}" id="userDocs" rendered="#{learnerRegistrationFormUI.companylearners.docs.size() gt 0}">
+										<p:dataTable value="#{learnerRegistrationFormUI.companylearners.docs}" var="rv1" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+											<p:column headerText="#{lang['type']}" width="20%">#{rv1.configDoc.name}</p:column>
+											<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+											<p:column headerText="#{lang['uploaded']}" width="15%">
+												<h:outputText value="#{rv1.createDate}">
+													<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+												</h:outputText>
+											</p:column>
+											<p:column headerText="#{lang['version']}" width="15%">
+												<h:outputText value="#{rv1.versionNo}">
+												</h:outputText>
+											</p:column>
+											<p:column width="180" headerText="#{lang['view.edit']}">
+
+												<p:outputPanel rendered="#{rv1.configDoc.reqImmediate}">
+													<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}" process="@this">
+														<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+													</p:commandButton>
+													<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+													<p:spacer width="5" rendered="#{rv1.id ne null}" />
+													<p:commandButton icon="fa fa-bars " id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}" process="@this">
+														<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+													</p:commandButton>
+													<p:tooltip for="dhistUserDocs" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+													<!-- only with permission to upload can upload a new version -->
+													<p:commandButton icon="fa fa-upload" id="uploadUserDocs" styleClass="#{rv1.originalFname eq null ? 'red-btn' : ''} flat" actionListener="#{sdfDetailUI.prepUploadCloseCompanyInformationForUser}" process="@this" oncomplete="PF('dlgUpload').show()" update=":uploadForm">
+														<f:setPropertyActionListener value="#{rv1}" target="#{learnerRegistrationFormUI.doc}" />
+													</p:commandButton>
+													<p:tooltip for="uploadUserDocs" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+													<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+														<p:spacer width="5" />
+														<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel" process="@this">
+															<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+														</p:commandButton>
+														<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+													</h:panelGroup>
+													<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+														<p:spacer width="5" />
+														<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}" process="@this">
+															<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+														</p:commandButton>
+														<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+													</h:panelGroup>
+												</p:outputPanel>
+											</p:column>
+										</p:dataTable>
+									</p:fieldset>
+								</h:panelGroup>
+							</p:outputPanel>
+						</div>
+					</div>
+					<div class=" ui-g-12 card">
+						<div class=" ui-g-12 ">
+							<p:outputPanel id="parentGaurdian" style="width: 100%">
+								<c:if test="#{learnerRegistrationFormUI.requireGaurdian}">
+									<div class="ui-g-12">
+										<p:fieldset legend="Parent or Guardian Details" style="margin-top: 20px">
+											<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank" layout="grid">
+											
+												<h:panelGroup>
+													<div>
+														<p:outputLabel value="#{lang['title']}" for="title" styleClass="gray" />
+													</div>
+													<div>
+													<p:selectOneMenu id="parentTitle" value="#{learnerRegistrationFormUI.user.legalGaurdian.title}" converter="TitleConvertor" style="opacity: 1 !important; color: black; width:95%" required="true" requiredMessage="#{lang['select.title']}">
+														<p:ajax />
+														<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+														<f:selectItems value="#{selectItemsUI.selectItemsTitles}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+													</p:selectOneMenu>
+													</div>
+												</h:panelGroup>
+												<h:panelGroup styleClass="md-inputfield">
+													<br />
+													<p:inputText id="firstNameg" value="#{learnerRegistrationFormUI.user.legalGaurdian.firstName}" style="width:95%" required="true" requiredMessage="#{lang['provide.first.name']}" />
+													<br />
+													<p:outputLabel value="#{lang['first.name']}:" for="firstNameg" styleClass="gray"/>
+												</h:panelGroup>
+												<h:panelGroup styleClass="md-inputfield">
+													<p:inputText id="lastNameg" value="#{learnerRegistrationFormUI.user.legalGaurdian.lastName}" style="width:95%" required="true" requiredMessage="#{lang['provide.last.name']}" />
+													<p:outputLabel value="#{lang['last.name']}:" for="lastNameg" />
+												</h:panelGroup>
+												<h:panelGroup styleClass="md-inputfield">
+													<p:inputText id="middleName2" value="#{learnerRegistrationFormUI.user.legalGaurdian.middleName}" style="width:95%" />
+													<p:outputLabel value="#{lang['middle.name']}:" for="middleName2" styleClass="gray"/>
+												</h:panelGroup>
+												<h:panelGroup >
+													<p:outputLabel value="#{lang['id.type']}:" for="passNumID" styleClass="gray"/>
+													<p:selectOneRadio id="passNumID" value="#{learnerRegistrationFormUI.user.legalGaurdian.idType}" columns="2" layout="responsive">
+														<p:ajax update="rsaIdGroup" />
+														<f:selectItems value="#{enumUI.idPassportEnumDD}" var="idpassEnum" itemLabel="#{idpassEnum}" itemValue="#{idpassEnum}" />
+													</p:selectOneRadio>
+												</h:panelGroup>
+												<h:panelGroup styleClass="md-inputfield" id="rsaIdGroup" style="margin-top:19px">
+													<p:inputText id="rsaIdg" value="#{learnerRegistrationFormUI.user.legalGaurdian.rsaIDNumber}" style="width:95%" required="true" requiredMessage="#{lang['rsa.id.number']}" rendered="#{learnerRegistrationFormUI.user.legalGaurdian.idType eq IdPassportEnum.RsaId}" />
+													<p:outputLabel value="#{lang['rsa.id.number']}:" for="rsaIdg" rendered="#{learnerRegistrationFormUI.user.legalGaurdian.idType eq IdPassportEnum.RsaId}" />
+													<p:inputText id="passportG" value="#{learnerRegistrationFormUI.user.legalGaurdian.passportNumber}" style="width:95%" required="true" requiredMessage="#{lang['enter.RSA.ID.number.or.passport.number']}" rendered="#{learnerRegistrationFormUI.user.legalGaurdian.idType eq IdPassportEnum.Passport}" maxlength="#{searchUserPassportOrIdUI.MAX_PASSPORT_NUMBER}"/>
+													<p:outputLabel value="#{lang['passport.number']}:" for="passportG" rendered="#{learnerRegistrationFormUI.user.legalGaurdian.idType eq IdPassportEnum.Passport}" styleClass="gray"/>
+												</h:panelGroup>
+												<h:panelGroup styleClass="md-inputfield" style="margin-top:10px">
+													<p:inputText id="emailg" value="#{learnerRegistrationFormUI.user.legalGaurdian.email}" type="email" style="width:95%" required="true" requiredMessage="#{lang['provide.email']}" />
+													<p:outputLabel value="#{lang['email']}:" for="emailg" styleClass="gray"/>
+												</h:panelGroup>
+												<h:panelGroup styleClass="md-inputfield" style="margin-top:10px">
+													<p:inputMask id="workPhoneg" value="#{learnerRegistrationFormUI.user.legalGaurdian.workContactNumber}" mask="099 999 9999" style="width:95%" required="true" requiredMessage="#{lang['cell.number']}" />
+													<p:outputLabel value="Work Number" for="workPhoneg" styleClass="gray"/>
+												</h:panelGroup>
+												<h:panelGroup styleClass="md-inputfield">
+													<p:inputMask id="telNumberg" value="#{learnerRegistrationFormUI.user.legalGaurdian.telNumber}" mask="099 999 9999" style="width:95%" required="true" requiredMessage="#{lang['tel.number.error']}" />
+													<p:outputLabel value="#{lang['tel.number']}:" for="telNumberg" styleClass="gray"/>
+												</h:panelGroup>
+												<h:panelGroup styleClass="md-inputfield">
+													<p:inputMask id="cellPhoneg" value="#{learnerRegistrationFormUI.user.legalGaurdian.cellNumber}" mask="099 999 9999" style="width:95%" required="true" requiredMessage="#{lang['cell.number']}" />
+													<p:outputLabel value="#{lang['cell.number']}:" for="cellPhoneg" styleClass="gray"/>
+												</h:panelGroup>
+											</p:panelGrid>
+										</p:fieldset>
+									</div>
+								</c:if>
+							</p:outputPanel>
+						</div>
+					</div>
+					<div class=" ui-g-12 card">
+						<div class=" ui-g-12 ">
+							<p:outputPanel id="companyDetails" style="width: 100%">
+								<p:fieldset legend="#{lang['company.main.heading']}" id="companyHeading">
+									<p:panelGrid rendered="#{!learnerRegistrationFormUI.company.doneSearch}">
+										<h:panelGroup id="searchNGO">
+										
+											<p:outputLabel id="levyPaying" value="#{lang['levy.paying.entity']}" styleClass="gray" />
+											<p:spacer width="20"></p:spacer>
+											<p:selectBooleanCheckbox id="levyPaying1" value="#{searchCompanyUI.searchLevyPaying}">
+												<p:ajax update="companyDetails " event="change" listener="#{searchCompanyUI.clearCheckboxForLevyPaying}"></p:ajax>
+											</p:selectBooleanCheckbox>
+											<br />
+											<p:outputLabel id="nonLevyPaying" value="#{lang['non.levy.paying']}" styleClass="gray" />
+											<p:spacer width="20"></p:spacer>
+											<p:selectBooleanCheckbox id="nonLevyPaying1" value="#{searchCompanyUI.searchNonLevyPaying}">
+												<p:ajax update="companyDetails" event="change" listener="#{searchCompanyUI.clearCheckboxForNonLevyPaying}"></p:ajax>
+											</p:selectBooleanCheckbox>
+											
+											<br />
+											<p:outputLabel id="nonSetaProviders" value="#{lang['non.seta.entity']}" styleClass="gray" />
+											<p:spacer width="20"></p:spacer>
+											<p:selectBooleanCheckbox id="nonSetaProviders1" value="#{searchCompanyUI.searchNonSeta}">
+												<p:ajax update="companyDetails" event="change" listener="#{searchCompanyUI.clearCheckboxForNonSeta}"></p:ajax>
+											</p:selectBooleanCheckbox>
+											
+											
+										</h:panelGroup>
+									</p:panelGrid>
+									
+									<p:panelGrid id="searchCompanyPnl" style="width:50%" columns="3" styleClass="ui-panelgrid-blank form-group" rendered="#{!learnerRegistrationFormUI.company.doneSearch and searchCompanyUI.searchLevyPaying}" layout="grid">
+
+										<p:selectOneRadio value="#{searchCompanyUI.companyRegOrSDLEnum}" columns="1" layout="responsive" rendered="#{!searchCompanyUI.searchNGO}">
+											<p:ajax update="searchCompanyPnl " />
+											<f:selectItems value="#{enumUI.SDLEnumDD}" var="idpassEnum" itemLabel="#{idpassEnum}" itemValue="#{idpassEnum}" />
+										</p:selectOneRadio>
+
+										<h:panelGroup id="regNumInput" styleClass="md-inputfield" rendered="#{searchCompanyUI.companyRegOrSDLEnum eq regSDL.REG}">
+											<p:inputMask id="regNumCriteria" mask="#{searchCompanyUI.companyRegistrationNumberFormat}" value="#{searchCompanyUI.criteria}" style="width:95%" requiredMessage="#{lang['enter.reg.number']}" required="true" />
+											<p:outputLabel value="#{lang['registration.number']}" for="regNumCriteria" styleClass="gray"/>
+										</h:panelGroup>
+
+										<h:panelGroup id="sdlNumInput" styleClass="md-inputfield" rendered="#{searchCompanyUI.companyRegOrSDLEnum eq regSDL.SDLNumber and !searchCompanyUI.searchNGO}">
+											<p:inputMask id="sdlNumCriteria" mask="#{searchCompanyUI.companyLevyNumberFormat}" value="#{searchCompanyUI.criteria}" style="width:95%" requiredMessage="#{lang['enter.sdl.number']}" required="true" />
+											<p:outputLabel value="#{lang['sdl.number']}" for="sdlNumCriteria" styleClass="gray"/>
+										</h:panelGroup>
+
+										<p:commandButton id="idSearch" icon="fa fa-search" value="Submit" process="searchCompanyPnl" actionListener="#{searchCompanyUI.find}" update="companyDetails" rendered="#{searchCompanyUI.companyRegOrSDLEnum eq regSDL.REG or searchCompanyUI.searchNGO}" />
+										<p:commandButton id="idSearch2" icon="fa fa-search" value="Submit" process="searchCompanyPnl" actionListener="#{searchCompanyUI.findBySDL}" update="companyDetails" rendered="#{searchCompanyUI.companyRegOrSDLEnum eq regSDL.SDLNumber and !searchCompanyUI.searchNGO}" />
+									</p:panelGrid>
+									
+									<p:panelGrid id="searchNonLevyCompanyPnl" style="width:50%" columns="3" styleClass="ui-panelgrid-blank form-group" rendered="#{!learnerRegistrationFormUI.company.doneSearch and searchCompanyUI.searchNonLevyPaying}" layout="grid">
+
+										<p:selectOneRadio value="#{searchCompanyUI.companyRegOrSDLEnum}" columns="1" layout="responsive" rendered="#{!searchCompanyUI.searchNGO}">
+											<p:ajax update="searchNonLevyCompanyPnl " />
+											<f:selectItems value="#{enumUI.SDLEnumDD}" var="idpassEnum" itemLabel="#{idpassEnum}" itemValue="#{idpassEnum}" />
+										</p:selectOneRadio>
+
+										<h:panelGroup id="regNumInput11" styleClass="md-inputfield" rendered="#{searchCompanyUI.companyRegOrSDLEnum eq regSDL.REG}">
+											<p:inputMask id="regNumCriteria11" mask="#{searchCompanyUI.companyRegistrationNumberFormat}" value="#{searchCompanyUI.criteria}" style="width:95%" requiredMessage="#{lang['enter.reg.number']}" required="true" />
+											<p:outputLabel value="#{lang['registration.number']}" for="regNumCriteria11" styleClass="gray"/>
+										</h:panelGroup>
+
+										<h:panelGroup id="sdlNumInput11" styleClass="md-inputfield" rendered="#{searchCompanyUI.companyRegOrSDLEnum eq regSDL.SDLNumber and !searchCompanyUI.searchNGO}">
+											<p:inputMask id="sdlNumCriteria11" mask="#{searchCompanyUI.companyNNumberFormat}" value="#{searchCompanyUI.criteria}" style="width:95%" requiredMessage="#{lang['enter.sdl.number']}" required="true" />
+											<p:outputLabel value="#{lang['sdl.number']}" for="sdlNumCriteria11" styleClass="gray"/>
+										</h:panelGroup>
+
+										<p:commandButton id="idSearch11" icon="fa fa-search" value="Submit" process="searchNonLevyCompanyPnl" actionListener="#{searchCompanyUI.find}" update="companyDetails" rendered="#{searchCompanyUI.companyRegOrSDLEnum eq regSDL.REG or searchCompanyUI.searchNGO}" />
+										<p:commandButton id="idSearch211" icon="fa fa-search" value="Submit" process="searchNonLevyCompanyPnl" actionListener="#{searchCompanyUI.findBySDL}" update="companyDetails" rendered="#{searchCompanyUI.companyRegOrSDLEnum eq regSDL.SDLNumber and !searchCompanyUI.searchNGO}" />
+									</p:panelGrid>
+									
+									<p:panelGrid id="searchNonSetaCompanyPnl" style="width:50%" columns="3" styleClass="ui-panelgrid-blank form-group" rendered="#{!learnerRegistrationFormUI.company.doneSearch and searchCompanyUI.searchNonSeta}" layout="grid">
+										<br /><br />
+										<h:panelGroup styleClass="md-inputfield">
+												<p:inputText id="companyRegistrationNumber1" value="#{learnerRegistrationFormUI.regNumber}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.company.name']}" />
+												<p:outputLabel value="#{lang['companyName']}:" for="companyRegistrationNumber1" styleClass="gray"/>
+										</h:panelGroup>
+										
+										<p:commandButton id="searchNonSetaByregNumber" icon="fa fa-search" value="Submit" process="searchNonSetaCompanyPnl" actionListener="#{learnerRegistrationFormUI.findNonSetaCompany}" update="companyDetails" />
+										
+									</p:panelGrid>
+
+									<h:panelGroup id="companyGrid">
+										<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" id="xxxG" rendered="#{learnerRegistrationFormUI.company.doneSearch and not learnerRegistrationFormUI.company.nonLevyPaying and learnerRegistrationFormUI.company.id ne null}">
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText id="companyName1" value="#{learnerRegistrationFormUI.company.companyName}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.company.name']}" disabled="#{learnerRegistrationFormUI.company.companyName.length() gt 0}" />
+												<p:outputLabel value="#{lang['companyName']}:" for="companyName1" styleClass="gray"/>
+											</h:panelGroup>
+
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputMask id="companyRegNumber1" value="#{learnerRegistrationFormUI.company.companyRegistrationNumber}" mask="#{searchCompanyUI.companyRegistrationNumberFormat}" style="width:95%" required="true" requiredMessage="#{lang['enter.company.number']}" disabled="#{learnerRegistrationFormUI.company.companyRegistrationNumber.length() gt 0}"/>
+												<p:outputLabel value="#{lang['companyRegistrationNumber']}:" for="companyRegNumber1" styleClass="gray"/>
+											</h:panelGroup>
+
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText id="companyLevyNumber1" value="#{learnerRegistrationFormUI.company.levyNumber}" style="width:95%" required="true" requiredMessage="#{lang['enter.levy.number']}" disabled="#{learnerRegistrationFormUI.company.levyNumber.length() gt 0}" />
+												<p:outputLabel value="#{lang['levyNumber']}:" for="companyLevyNumber1" styleClass="gray"/>
+											</h:panelGroup>
+
+										</p:panelGrid>
+										
+										<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" id="xxxxG" rendered="#{learnerRegistrationFormUI.company.doneSearch and not learnerRegistrationFormUI.company.nonLevyPaying and learnerRegistrationFormUI.company.id eq null}">
+											<ui:include src="/pages/tp/includes/companydetails.xhtml" />
+										</p:panelGrid>
+										
+										<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" id="xxxGgg" rendered="#{learnerRegistrationFormUI.nonSetaCompany.id ne null}">
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText id="companyName12" value="#{learnerRegistrationFormUI.nonSetaCompany.companyName}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.company.name']}" disabled="#{learnerRegistrationFormUI.nonSetaCompany.companyName.length() gt 0}" />
+												<p:outputLabel value="#{lang['companyName']}:" for="companyName12" styleClass="gray"/>
+											</h:panelGroup>
+
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputMask id="companyRegNumber12" value="#{learnerRegistrationFormUI.nonSetaCompany.companyRegistrationNumber}" mask="#{searchCompanyUI.companyRegistrationNumberFormat}" style="width:95%" required="true" requiredMessage="#{lang['enter.company.number']}" disabled="#{learnerRegistrationFormUI.nonSetaCompany.companyRegistrationNumber.length() gt 0}"/>
+												<p:outputLabel value="#{lang['companyRegistrationNumber']}:" for="companyRegNumber12" styleClass="gray"/>
+											</h:panelGroup>
+											
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputMask id="companyRegNumber13" value="#{learnerRegistrationFormUI.nonSetaCompany.email}" style="width:95%" required="true" requiredMessage="#{lang['email']}" disabled="#{learnerRegistrationFormUI.nonSetaCompany.email.length() gt 0}"/>
+												<p:outputLabel value="#{lang['email']}:" for="companyRegNumber13" styleClass="gray"/>
+											</h:panelGroup>
+											
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputMask id="companyRegNumber14" value="#{learnerRegistrationFormUI.nonSetaCompany.accreditationNumber}" style="width:95%" required="true" requiredMessage="#{lang['email']}" disabled="#{learnerRegistrationFormUI.nonSetaCompany.accreditationNumber.length() gt 0}"/>
+												<p:outputLabel value="#{lang['email']}:" for="companyRegNumber14" styleClass="gray"/>
+											</h:panelGroup>
+										</p:panelGrid>
+									</h:panelGroup>
+								</p:fieldset>
+
+							</p:outputPanel>
+						</div>
+					</div>
+					<div class="ui-g-12 card">
+					<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+						<p:commandButton value="#{lang['submit']}" icon="fa fa-check" styleClass="flat green-btn Fs18" style="height: 50px;" actionListener="#{learnerRegistrationFormUI.submitLearnerRegistration}" update="@form" />
+						
+						<p:commandButton value="#{lang['clear']}" icon="fa fa-recycle" styleClass="flat red-btn Fs18" style="height: 50px;" actionListener="#{learnerRegistrationFormUI.clearCurrentLearner}" process="@this" update="@form" />
+					</p:panelGrid>
+					</div>
+				</c:if>
+			</div>
+		</h:form>
+
+
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true" dynamic="true">
+			<h:form id="uploadForm">
+				<h:panelGroup id="uploadGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{learnerRegistrationFormUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{learnerRegistrationFormUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{learnerRegistrationFormUI.storeFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}"
+										update="learnerRegUserForm:learnerRegUploadForm" multiple="false" fileLimit="1" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+	</ui:define>
+</ui:composition>

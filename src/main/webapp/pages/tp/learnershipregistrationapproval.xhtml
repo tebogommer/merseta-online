@@ -1,0 +1,320 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<p:importEnum type="haj.com.entity.enums.PivotNonPivotEnum" />
+			<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+			<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+			<p:importEnum type="haj.com.entity.enums.NewExistingLearnershipEnum" />
+			<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+			<div class="ui-g-12">
+				<div class="ui-g">
+						<div class="ui-g-12">
+							<ui:include src="/pages/includes/taskdiagram.xhtml" />
+						</div>
+					</div>
+				<h:form id="mainForm">
+					<p:growl showDetail="false" sticky="false">
+						<p:autoUpdate />
+					</p:growl>
+					
+					<c:if test="#{learnershipDevelopementUI.learnershipDevelopmentRegistration ne null }">
+						<div class="ui-g">
+							<div class="ui-g-12">
+								<div class="card card-w-title">
+									<ui:include src="/pages/includes/learnerdevelopmentregistration.xhtml" />
+									<h:panelGroup id="docListUser" rendered="#{sessionUI.task.processRole.rolePermission eq null }">
+											<br />
+											<span class="FontBold">
+												<i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+												#{lang['please.upload.the.following.compulsory.documents']}
+											</span>
+											<br />
+											<div class="ui-g dashboard">
+												<div class="ui-g-12">
+													<p:repeat var="rc" value="#{learnershipDevelopementUI.learnershipDevelopmentRegistration.docs}" varStatus="x">
+														<div class="ui-g-12 ui-md-6 ui-lg-3">
+															<div class="ui-g card colorbox #{rc.originalFname eq null ? 'colorbox-5' : 'colorbox-1'}">
+																<div class="ui-g-4">
+																	<i class="material-icons">#{rc.originalFname eq null ? 'cloud_upload' : 'check_circle'}</i>
+																</div>
+																<div class="ui-g-8">
+																	<span class="colorbox-name">#{rc.configDoc.name}</span>
+																	<span class="colorbox-count">
+							
+																		<p:commandButton icon="fa fa-download" id="cbDownload1" rendered="#{rc.originalFname ne null}" action="#{learnershipDevelopementUI.download(rc)}" ajax="false" value="#{lang['download']}" immediate="true" process="@parent">
+																			<p:ajax onevent="oneventFunction" />
+																		</p:commandButton>
+							
+																		<p:commandButton value="#{rc.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" styleClass="#{rc.originalFname eq null ? 'red-btn' : 'green-btn'} flat" process="@this" oncomplete="PF('dlgUpload').show()" update="mainForm">
+																			<f:setPropertyActionListener value="#{rc}" target="#{learnershipDevelopementUI.doc}" />
+																		</p:commandButton>
+																	</span>
+																</div>
+															</div>
+														</div>
+													</p:repeat>
+												</div>
+											</div>
+										</h:panelGroup>
+									<div class="EmptyBox10" />
+									<c:if test="#{learnershipDevelopementUI.learnershipDevelopmentRegistration.approvalEnum.friendlyName ne 'Rejected' and learnershipDevelopementUI.rejectReason.size() gt 0}">
+										<h3> #{learnershipDevelopementUI.learnershipDevelopmentRegistration.approvalEnum.friendlyName}</h3>
+									</c:if>									
+									<c:if test="#{learnershipDevelopementUI.rejectReason.size() gt 0}">
+										<p:dataTable var="rowVar" value="#{learnershipDevelopementUI.rejectReason}" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+											<p:column headerText="Date">
+												<p:outputLabel value="#{learnershipDevelopementUI.learnershipDevelopmentRegistration.approvalDate}">
+													<f:convertDateTime pattern="dd MMMM yyyy" />
+												</p:outputLabel>
+											</p:column>
+											<p:column headerText="Reason for Rejection">
+												<p:outputLabel value="#{rowVar.description}"></p:outputLabel>
+											</p:column>	
+										</p:dataTable>
+									</c:if>
+									
+									<c:if test="#{learnershipDevelopementUI.rejectReasonHistory.size() gt 0}">
+										<h3>Previous Reject Reason(s)</h3>
+										<p:dataTable var="rowVar" value="#{learnershipDevelopementUI.rejectReasonHistory}" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+											<p:column headerText="Date">
+												<p:outputLabel value="#{rowVar.createDate}">
+													<f:convertDateTime pattern="dd MMMM yyyy" />
+												</p:outputLabel>
+											</p:column>
+											<p:column headerText="Reason for Rejection">
+												<p:outputLabel value="#{rowVar.description}"></p:outputLabel>
+											</p:column>	
+										</p:dataTable>
+									</c:if>
+									
+									<c:if test="#{learnershipDevelopementUI.dheRerectdoc.size() gt 0}">
+										<h3> #{learnershipDevelopementUI.learnershipDevelopmentRegistration.approvalEnum.friendlyName} by DHET</h3>
+									
+										<p:dataTable value="#{learnershipDevelopementUI.dheRerectdoc}" var="rv1" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv1.id}" rendered="#{learnershipDevelopementUI.dheRerectdoc ne null}">
+
+											<p:column headerText="#{lang['uploaded']}" width="30%">
+												<h:outputText value="#{rv1.createDate}">
+													<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+												</h:outputText>
+											</p:column>
+							
+											<p:column headerText="#{lang['version']}" width="30%">
+												<h:outputText value="#{rv1.versionNo}">
+												</h:outputText>
+											</p:column>
+											
+											<p:column headerText="Note" width="35%">
+												<h:outputText value="#{rv1.note}">
+												</h:outputText>
+											</p:column>
+											
+											<p:column width="30">
+												<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}">
+													<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+												</p:commandButton>
+											</p:column>
+											
+										</p:dataTable>
+									</c:if>
+									
+									<div class="EmptyBox10" />
+									<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group"  rendered="#{sessionUI.task.processRole.rolePermission eq null}">
+										<p:commandButton styleClass="flat green-btn Fs18" style="height: 50px;" icon="ui-icon-save" action="#{learnershipDevelopementUI.createAndSubmitLearnership}" value="Submit" update="@form" />
+										<p:commandButton styleClass="flat Fs18" style="height: 50px;" immediate="true" icon="fa fa-times" action="#{learnershipDevelopementUI.redirect}" value="Cancel" update="@form" />
+									</p:panelGrid>
+									<p:panelGrid columns="3" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve}">
+										<p:commandButton value="#{lang['approve.task']}" icon="ui-icon-save" update="@form" action="#{learnershipDevelopementUI.approveLearnership}" styleClass="flat green-btn Fs18" style="height: 50px;">
+										</p:commandButton>										
+										
+										<p:commandButton value="#{lang['reject.task']}" icon="ui-icon-circle-close" update="@form" oncomplete="PF('rejectTaskReasonsDlg').show()" rendered="#{learnershipDevelopementUI.learnershipDevelopmentRegistration.approvalEnum.friendlyName ne 'Rejected'}" process="@this" styleClass="flat red-btn Fs18" style="height: 50px;">											
+										</p:commandButton>
+										
+										<p:commandButton value="#{lang['final.application.reject']}" icon="ui-icon-circle-close" update="@form" oncomplete="PF('rejectReasonsDlg').show()" process="@this" styleClass="flat red-btn Fs18" style="height: 50px;">											
+										</p:commandButton>
+									</p:panelGrid>
+									
+									<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload}">
+										<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" update="@form" action="#{learnershipDevelopementUI.completeRegistration}" styleClass="flat green-btn Fs18" style="height: 50px;">
+										</p:commandButton>										
+									</p:panelGrid>
+									
+									<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.UploadApprove}">
+										<p:commandButton value="#{lang['approve.task']}" icon="ui-icon-save" update="@form" action="#{learnershipDevelopementUI.finalApproveLearnership}" styleClass="flat green-btn Fs18" style="height: 50px;">
+										</p:commandButton>										
+										<p:commandButton value="#{lang['reject.task']}" icon="ui-icon-circle-close" update="@form" oncomplete="PF('rejectReasonsDlg').show()" process="@this" styleClass="flat red-btn Fs18" style="height: 50px;">											
+										</p:commandButton>
+									</p:panelGrid>
+									
+									<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload}">
+										<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" update="@form" action="#{learnershipDevelopementUI.completeRegistration}" styleClass="flat green-btn Fs18" style="height: 50px;">
+										</p:commandButton>	
+										
+										<p:commandButton value="DHET Rejection " icon="ui-icon-circle-close" update="@form" oncomplete="PF('dlgDelContactPersonCR').show()" process="@this" styleClass="flat red-btn Fs18" style="height: 50px;">											
+										</p:commandButton>									
+									</p:panelGrid>									
+									
+									<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval}">
+										<p:commandButton value="#{lang['final.approve']}" icon="ui-icon-save" update="@form" action="#{learnershipDevelopementUI.completeLearnershipTask}" styleClass="flat green-btn Fs18" style="height: 50px;">
+										</p:commandButton>	
+										
+										<p:commandButton value="#{lang['reject.task']}" icon="ui-icon-circle-close" update="@form" oncomplete="PF('rejectReasonsDlg').show()" process="@this" styleClass="flat red-btn Fs18" style="height: 50px;">											
+										</p:commandButton>									
+									</p:panelGrid>
+								</div>
+							</div>
+						</div>
+					</c:if>
+				</h:form>
+			</div>
+
+			<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true">
+				<h:form id="uploadForm">
+					<h:panelGroup id="uploadGroup">
+						<div class="ui-g">
+							<div class="ui-g-12">
+								<div class="card">
+									<h1 style="font-weight: bold; font-size: 25px;">#{learnershipDevelopementUI.doc.configDoc.name}</h1>
+									<p:panel>
+										<h:panelGrid columns="2" style="width: 100%">
+											<p:outputLabel value="#{lang['notes']}:" for="note" />
+											<p:inputTextarea id="note" value="#{learnershipDevelopementUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+												<p:ajax />
+											</p:inputTextarea>
+										</h:panelGrid>
+
+										<div class="TexAlCenter">
+											<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+										</div>
+										<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{learnershipDevelopementUI.storeNewFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update=":mainForm"
+											multiple="false" fileLimit="1" allowTypes="/(\.|\/)(gif|jpe?g|png|pdf|docx|txt|doc)$/" immediate="false" auto="true" />
+									</p:panel>
+									<div class="EmptyBox10" />
+								</div>
+							</div>
+						</div>
+					</h:panelGroup>
+				</h:form>
+			</p:dialog>
+			
+			<p:dialog header="Reject Reasons" widgetVar="rejectReasonsDlg" hideEffect="clip" showEffect="clip" id="dialogRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+				<h:form id="rejectReasonForm">
+					<!-- Final Reject Reasons -->
+					<div class="ui-fluid">
+						<div class="ui-g">
+							<div class="ui-g-12">
+								<p:selectManyMenu value="#{learnershipDevelopementUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+									<f:selectItems value="#{learnershipDevelopementUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+									<p:column>
+										<h:outputText value="#{t.description}" />
+										<br />
+										<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+									</p:column>
+								</p:selectManyMenu>
+							</div>
+						</div>
+						<p:commandButton value="Reject Learnership" action="#{learnershipDevelopementUI.rejectLearnership}" update="@form" />
+					</div>
+				</h:form>
+			</p:dialog>
+			
+			<p:dialog header="Reject Task Reasons" widgetVar="rejectTaskReasonsDlg" hideEffect="clip" showEffect="clip" id="dialogTaskRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+				<h:form id="rejectTaskReasonForm">
+					<!-- Final Reject Reasons -->
+					<div class="ui-fluid">
+						<div class="ui-g">
+							<div class="ui-g-12">
+								<p:selectManyMenu value="#{learnershipDevelopementUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+									<f:selectItems value="#{learnershipDevelopementUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+									<p:column>
+										<h:outputText value="#{t.description}" />
+										<br />
+										<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+									</p:column>
+								</p:selectManyMenu>
+							</div>
+						</div>
+						<p:commandButton value="Reject Learnership" action="#{learnershipDevelopementUI.rejectLearnershipTask}" update="@form" />
+					</div>
+				</h:form>
+			</p:dialog>
+			
+			<p:dialog header="Reject Reasons" widgetVar="finalRejectReasonsDlg" hideEffect="clip" showEffect="clip" id="dialogFinalRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+				<h:form id="finalRejectReasonForm">
+					<!-- Final Reject Reasons -->
+					<div class="ui-fluid">
+						<div class="ui-g">
+							<div class="ui-g-12">
+								<p:selectManyMenu value="#{learnershipDevelopementUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+									<f:selectItems value="#{learnershipDevelopementUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+									<p:column>
+										<h:outputText value="#{t.description}" />
+										<br />
+										<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+									</p:column>
+								</p:selectManyMenu>
+							</div>
+						</div>
+						<p:commandButton value="Final Reject" action="#{learnershipDevelopementUI.finalRejectLearnership}" update="@form" />
+					</div>
+				</h:form>
+			</p:dialog>
+			
+			<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOA" width="80%" responsive="true" modal="true"  rendered="#{sessionUI.task.processRole.rolePermission eq null}">
+				<h:form id="uploaForm">
+					<h:panelGroup id="uploaGroup">
+						<div class="ui-g">
+							<div class="ui-g-12">
+								<div class="card">
+									<h1 style="font-weight: bold; font-size: 25px;">#{learnershipDevelopementUI.doc.configDoc.name}</h1>
+									<p:panel>
+										<h:panelGrid columns="2" style="width: 100%">
+											<p:outputLabel value="#{lang['notes']}:" for="note" />
+											<p:inputTextarea id="note" value="#{learnershipDevelopementUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+												<p:ajax />
+											</p:inputTextarea>
+										</h:panelGrid>
+										<div class="TexAlCenter">
+											<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+										</div>
+										<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{learnershipDevelopementUI.storeNewFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update=":mainForm"
+											multiple="false" fileLimit="1" allowTypes="/(\.|\/)(gif|jpe?g|png|pdf|docx|txt|doc)$/" immediate="false" auto="true" />
+									</p:panel>
+									<div class="EmptyBox10" />
+								</div>
+							</div>
+						</div>
+					</h:panelGroup>
+				</h:form>
+			</p:dialog>
+			
+			<p:dialog closeOnEscape="true" header="#{lang['change.reason']}" widgetVar="dlgDelContactPersonCR" resizable="false" hideEffect="clip" showEffect="clip" width="60%" height="45vh" responsive="true" modal="true" position="center">
+				<h:form id="delContactChangeReasonForm">
+					<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank">
+						<p:panel>
+							<h:panelGrid columns="2" style="width: 100%">
+								<p:outputLabel value="#{lang['notes']}:" for="note" />
+								<p:inputTextarea id="note" value="#{learnershipDevelopementUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+									<p:ajax />
+								</p:inputTextarea>
+							</h:panelGrid>
+	
+							<div class="TexAlCenter">
+								<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span>
+								<br />
+							</div>
+							<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone(),  createDeleteCompanyUserTask()" fileUploadListener="#{learnershipDevelopementUI.storeChangeNewFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update="@form mainForm" multiple="false" fileLimit="1" sizeLimit="#{sdfUI.maxFileSize}"
+								allowTypes="/(\.|\/)(gif|jpe?g|png|pdf|docx|txt)$/" immediate="false" auto="true" />
+						</p:panel>
+					</p:panelGrid>
+					<p:remoteCommand update="mainForm" name="createDeleteCompanyUserTask" action="#{learnershipDevelopementUI.createDhetRejectTask}" oncomplete="PF('dlgDelContactPersonCR').hide()"></p:remoteCommand>
+	
+				</h:form>
+			<p:ajax immediate="true" event="close" update="mainForm" />
+			<p:ajax event="open" listener="#{learnershipDevelopementUI.prepChangeDoc}" update="delContactChangeReasonForm" />
+			<p:ajax immediate="true" event="close" update="mainForm" listener="#{learnershipDevelopementUI.companyUsersInfo}" />
+		</p:dialog>
+		</div>
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+	</ui:define>
+</ui:composition>

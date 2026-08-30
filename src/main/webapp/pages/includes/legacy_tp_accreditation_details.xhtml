@@ -1,0 +1,117 @@
+<ui:composition  xmlns:o="http://omnifaces.org/ui" xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+<p:outputPanel>
+	<h3>Accreditation Detail</h3>
+	<p:fieldset>
+		<p:panelGrid columns="2" style="width:95%" id="appDetailsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+			<h:panelGroup id="typeofApp">
+				<p:outputLabel value="Type of Application" style="width:100%;color:#977949"  for="sipsas"></p:outputLabel><br/>
+				<p:selectOneMenu disabled="#{trainingproviderUI.trainingProviderApplication.accreditationApplicationTypeEnum ne null}" style="width:95%" id="sipsas" required="true" value="#{trainingproviderUI.trainingProviderApplication.accreditationApplicationTypeEnum}">
+					<f:selectItem itemLabel="---Select One---" noSelectionOption="true" />
+					<p:ajax event="itemSelect" update="companyGrid1" 
+					listener="#{trainingproviderUI.onLegacyApplicationTypeChange}"></p:ajax>
+					<f:selectItems value="#{enumUI.accreditationApplicationTypeRegEnumDD}" />
+				</p:selectOneMenu>
+			</h:panelGroup>
+			
+			<h:panelGroup>
+				<p:outputLabel value="#{lang['provider.type']}" style="width:100%;color:#977949" for="provType" /><br/>
+				<p:selectOneMenu id="provType" disabled="#{trainingproviderUI.trainingProviderApplication.providerType ne null}" value="#{trainingproviderUI.trainingProviderApplication.providerType}" style="width:95%" required="true" requiredMessage="Select Provider Type" converter="ProviderTypeConvertor">
+					<p:ajax />
+					<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+					<f:selectItems value="#{selectItemsUI.selectItemsProviderTypeForProviderRegistration}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+				</p:selectOneMenu>
+			</h:panelGroup>
+			
+			<p:outputPanel id="traingingAndAssesmentPanel">
+				<h:panelGroup>
+					<p:outputLabel value="Training and Assessment" for="activeCheck" />
+					<p:spacer width="10"></p:spacer>
+					<p:selectBooleanCheckbox id="activeCheck" value="#{trainingproviderUI.trainingProviderApplication.trainingAssessment}">
+						<p:ajax update="traingingAndAssesmentPanel assessmentOnlyPanel" listener="#{trainingproviderUI.switchValuesTrainingAssessment}" />
+					</p:selectBooleanCheckbox>
+				</h:panelGroup>
+			</p:outputPanel>
+			
+			<p:outputPanel id="assessmentOnlyPanel">
+				<h:panelGroup>
+					<p:outputLabel value="Assessment Only" for="financeCheck" />
+					<p:spacer width="10"></p:spacer>
+					<p:selectBooleanCheckbox id="financeCheck"  value="#{trainingproviderUI.trainingProviderApplication.assessmentOnly}">
+						<p:ajax update="traingingAndAssesmentPanel assessmentOnlyPanel" listener="#{trainingproviderUI.switchValuesAssessmentOnly}" />
+					</p:selectBooleanCheckbox>
+				</h:panelGroup>
+			</p:outputPanel>
+			
+			<h:panelGroup>
+				<p:outputLabel value="Provider Class" style="width:100%;color:#977949"  for="provclass" /><br/>
+				<p:selectOneMenu id="provclass" disabled="#{trainingproviderUI.trainingProviderApplication.providerClass ne null}" value="#{trainingproviderUI.trainingProviderApplication.providerClass}" style="width:95%" required="true" converter="ProviderClassConvertor" >
+					<p:ajax />
+					<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+					<f:selectItems value="#{selectItemsUI.selectItemsProviderClassExUnknownAndInterrim}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+				</p:selectOneMenu>
+			</h:panelGroup>
+		</p:panelGrid>
+	</p:fieldset>
+</p:outputPanel>
+<br/>
+<p:outputPanel id="accDetailPanel">
+	<c:if test="#{trainingproviderUI.trainingProviderApplication.accreditationApplicationTypeEnum ne null and 
+	(trainingproviderUI.trainingProviderApplication.accreditationApplicationTypeEnum eq AccreditationApplicationTypeEnum.EXTENSIONOFSCOPE or 
+	trainingproviderUI.trainingProviderApplication.accreditationApplicationTypeEnum eq AccreditationApplicationTypeEnum.NON_PRIMARY_FOCUS_ACCREDITATION_APPROVAL or 
+	trainingproviderUI.trainingProviderApplication.accreditationApplicationTypeEnum eq AccreditationApplicationTypeEnum.QCTOSkillsDevelopmentProvider or 
+	trainingproviderUI.trainingProviderApplication.accreditationApplicationTypeEnum eq AccreditationApplicationTypeEnum.Non_MerSETA_Focused_Provider or 
+	trainingproviderUI.trainingProviderApplication.accreditationApplicationTypeEnum eq AccreditationApplicationTypeEnum.QCTOTradeTestCentre)}">
+		<p:fieldset>
+			<p:panelGrid columns="2" style="width:95%" id="accreditGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup>
+					<p:outputLabel value="Primary ETQA" style="width:100%;color:#977949" /><br/>
+					<p:selectOneMenu  disabled="#{trainingproviderUI.trainingProviderApplication.etqa ne null}"  rendered="#{trainingproviderUI.trainingProviderApplication.accreditationApplicationTypeEnum  ne AccreditationApplicationTypeEnum.QCTOSkillsDevelopmentProvider and 
+					trainingproviderUI.trainingProviderApplication.accreditationApplicationTypeEnum  ne AccreditationApplicationTypeEnum.QCTOTradeTestCentre}" 
+				    id="etqa" value="#{trainingproviderUI.trainingProviderApplication.etqa}" converter="EtqaConvertor" style="width:95%" required="true">
+						<p:ajax></p:ajax>
+						<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+						<f:selectItems value="#{selectItemsUI.selectItemsEtqaRemoveMerSeta}" var="il" itemLabel="#{il.description}" />
+					</p:selectOneMenu>
+					
+					<p:selectOneMenu  disabled="#{trainingproviderUI.trainingProviderApplication.etqa ne null}"  rendered="#{trainingproviderUI.trainingProviderApplication.accreditationApplicationTypeEnum  eq AccreditationApplicationTypeEnum.QCTOSkillsDevelopmentProvider or 
+					trainingproviderUI.trainingProviderApplication.accreditationApplicationTypeEnum  eq AccreditationApplicationTypeEnum.QCTOTradeTestCentre}" 
+					id="etqa2" value="#{trainingproviderUI.trainingProviderApplication.etqa}" converter="EtqaConvertor" style="width:95%" required="true">
+						<p:ajax></p:ajax>
+						<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+						<f:selectItems value="#{selectItemsUI.selectItemsQctoEtqa}" var="il" itemLabel="#{il.description}" />
+					</p:selectOneMenu>
+				</h:panelGroup>
+				<h:panelGroup>
+					<p:outputLabel value="Accreditation Status" style="width:100%;color:#977949" for="accreditationStatus" /><br/>
+					<p:selectOneMenu disabled="#{trainingproviderUI.trainingProviderApplication.accreditationStatus ne null}" id="accreditationStatus" value="#{trainingproviderUI.trainingProviderApplication.accreditationStatus}" converter="AccreditationStatusConvertor" style="width:95%" required="true">
+						<p:ajax></p:ajax>
+						<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+						<f:selectItems value="#{selectItemsUI.accreditationStatus}" var="il" itemLabel="#{il.description}" />
+					</p:selectOneMenu>
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield" style="margin-top:20px">
+					<p:inputText id="accreditationNumber" disabled="#{trainingproviderUI.trainingProviderApplication.accreditationNumber ne null}"  value="#{trainingproviderUI.trainingProviderApplication.accreditationNumber}" style="width:95%" required="true" requiredMessage="Enter Accreditation Number">
+						<p:ajax></p:ajax>
+					</p:inputText>
+					<p:outputLabel value="Accreditation Number" for="accreditationNumber" />
+				</h:panelGroup>
+				<p:panelGrid columns="2" style="width:95%">
+					<h:panelGroup styleClass="md-inputfield" style="width:100%">
+						<p:calendar id="AccreditationPeriod"  disabled="#{trainingproviderUI.trainingProviderApplication.startDate ne null}" inputStyle="width:80%" required="true" requiredMessage="Provide: Accreditation Start Date" value="#{trainingproviderUI.trainingProviderApplication.startDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true"  navigator="true">
+							<p:ajax event="dateSelect"></p:ajax>
+						</p:calendar>
+						<p:outputLabel value="Accreditation Start Date" for="AccreditationPeriod" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield" style="width:100%">
+						<p:calendar id="ExpiryDate" required="true"  disabled="#{trainingproviderUI.trainingProviderApplication.expiriyDate ne null}" inputStyle="width:80%" requiredMessage="Provide: Accreditation End Datee" value="#{trainingproviderUI.trainingProviderApplication.expiriyDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" navigator="true">
+							<p:ajax event="dateSelect"></p:ajax>
+						</p:calendar>
+						<p:outputLabel value="Accreditation End Date" for="ExpiryDate" />
+					</h:panelGroup>
+				</p:panelGrid>
+			</p:panelGrid>
+		</p:fieldset>
+	</c:if>
+</p:outputPanel>
+
+</ui:composition>

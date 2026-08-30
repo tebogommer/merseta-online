@@ -1,0 +1,89 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>#{lang['company.qualifications']}</h1>
+					<h:form id="companyqualificationsInsForm">
+						<p:growl autoUpdate="true" sticky="false" />
+						<p:panelGrid columns="1" style="width:100%" id="companyqualificationsInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="note" value="#{companyqualificationsUI.companyqualifications.note}" style="width:95%" />
+								<p:outputLabel value="#{lang['note']}" for="note" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="qualification" value="#{companyqualificationsUI.companyqualifications.qualification}" style="width:95%" />
+								<p:outputLabel value="#{lang['qualification']}" for="qualification" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="company" value="#{companyqualificationsUI.companyqualifications.company}" style="width:95%" />
+								<p:outputLabel value="#{lang['company']}" for="company" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="softDelete" value="#{companyqualificationsUI.companyqualifications.softDelete}" style="width:95%" />
+								<p:outputLabel value="#{lang['soft.delete']}" for="softDelete" />
+							</h:panelGroup>
+
+
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:companyqualificationsList :companyqualificationsInsForm:companyqualificationsInsGrid" action="#{companyqualificationsUI.companyqualificationsInsert}" />
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="companyqualificationsInsGrid" process="@this" action="#{companyqualificationsUI.prepareNew}">
+									<p:resetInput target="companyqualificationsInsGrid" />
+								</p:commandButton>
+							</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{companyqualificationsUI.dataModel}" filteredValue="#{companyqualificationsUI.companyQualificationsfilteredList}" id="companyqualificationsList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['createDate']}">
+								<h:outputText value="#{rowVar.createDate}">
+									<f:convertDateTime pattern="dd-MM-yyyy" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['note']}">
+								<h:outputText value="#{rowVar.note}" />
+							</p:column>
+							<p:column headerText="#{lang['qualification']}">
+								<h:outputText value="#{rowVar.qualification}" />
+							</p:column>
+							<p:column headerText="#{lang['company']}">
+								<h:outputText value="#{rowVar.company}" />
+							</p:column>
+							<p:column headerText="#{lang['soft.delete']}">
+								<h:outputText value="#{rowVar.softDelete}" />
+							</p:column>
+
+
+							<p:column width="80">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":companyqualificationsInsForm:companyqualificationsInsGrid">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{companyqualificationsUI.companyqualifications}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:companyqualificationsList" action="#{companyqualificationsUI.companyqualificationsDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{companyqualificationsUI.companyqualifications}" />
+								</p:commandButton>
+							</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+
+</ui:composition>

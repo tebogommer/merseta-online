@@ -487,4 +487,34 @@ The agent may only declare testing phase complete when:
 
 ---
 
+## 🚀 .NET 10 Blazor & SQL Server Express Protocol
+1. **Target Solution**: `.NET 10` solution file `Nsdms.slnx` located in project root.
+2. **Project Directory**: All C# projects live under `dotnet/` (`Nsdms.Domain`, `Nsdms.Application`, `Nsdms.Infrastructure`, `Nsdms.Web`, `Nsdms.Tests`).
+3. **Database Credentials**: SQL Server Express on `localhost`, Database: `NSDMS-NET`, User: `NSDMS-NET`, Password: `NSDMS-NET`.
+4. **Database Naming Conventions**:
+   - Table names: Singular PascalCase (`GrantMoa`, `SetmisSubmissionBatch`, `MandatoryGrantDisbursement`, `Organisation`, `WspSubmission`).
+   - Primary key: Auto-generated integer `id`.
+   - Audit columns: `CreatedAt`, `CreatedBy`, `ModifiedAt`, `ModifiedBy`.
+   - Lookups: `*Type` suffix with unique `Code`, indexed `Name`, `Description`, `Active`.
+5. **Employer Visit Requirement**: When building features that schedule or execute ANY type of "Visit" activity against an Employer, ALWAYS enforce selection of a specific Contact Person (`contact_person_id` / `ContactPersonId`).
+6. **UI Pattern**: MudBlazor Stacked Master-Detail layout (`/employers` table -> `/employers/{id}` full-page view with sticky top bar, breadcrumb back button, and confirmation toasts).
+
+---
+
+### 📘 Phase Documentation & Database Governance Standard
+1. **Database Schema Standard**:
+   - Table names must always use singular PascalCase (`GrantMoa`, `SetmisSubmissionBatch`, `MandatoryGrantDisbursement`).
+   - Every table must have an auto-generated integer primary key `id` and audit columns (`CreatedAt`, `CreatedBy`, `ModifiedAt`, `ModifiedBy`).
+   - All foreign keys, status fields, and search terms must have explicit indexes in Fluent API.
+   - Idempotent T-SQL DDL migrators must accompany every new module under `dotnet/Nsdms.Infrastructure/Data/`.
+2. **Clean Architecture Service Contracts**:
+   - Every service mutation must perform a double-write into `audit_logs` with a structured `MetadataJson` snapshot.
+   - Services must use `INsdmsDbContextFactory` to ensure thread-safety in Blazor Server interactive circuits.
+3. **Executable Living Documentation**:
+   - Add unit tests in `Nsdms.Tests` for every new business rule and calculation.
+   - Maintain and update `test_all_pages_playwright.py` with every new route created to guarantee 100% test coverage.
+
+---
+
 # END OF POLICY — NON-NEGOTIABLE
+

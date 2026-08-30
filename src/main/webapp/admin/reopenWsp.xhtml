@@ -1,0 +1,464 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum"></p:importEnum>
+					<p:importEnum type="haj.com.entity.enums.UsersStatusEnum" />
+					<p:growl showDetail="false" sticky="false" id="msg">
+						<p:autoUpdate />
+					</p:growl>
+					<h1>Reopen Wsp</h1>
+					<h:form id="mainForm">
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+						<p:dataTable var="rowVar" value="#{adminReopenWspUI.dataModelComapny}" id="companyList" rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,20,40" reflow="true" lazy="true" selectionMode="single" selection="#{searchCompanyUI.company}">
+
+							<p:column headerText="#{lang['company.name']}" filterBy="#{rowVar.companyName}" sortBy="#{rowVar.companyName}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.companyName}" />
+							</p:column>
+							<p:column headerText="#{lang['tradingName']}" filterBy="#{rowVar.tradingName}" sortBy="#{rowVar.tradingName}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.tradingName}" />
+							</p:column>
+							<p:column headerText="#{lang['entity.id']}" filterBy="#{rowVar.levyNumber}" sortBy="#{rowVar.levyNumber}" filterStyle="width: 95%" width="10%">
+								<h:outputText value="#{rowVar.levyNumber}" />
+							</p:column>
+							<p:column headerText="#{lang['status']}" sortBy="#{rowVar.companyStatus}" width="10%">
+								<h:outputText value="#{lang[rowVar.companyStatus.registrationName]}" />
+							</p:column>
+							<p:column width="500">
+								<div align="center">
+									<p:commandButton style="margin:2px;" value="View Company WSP" icon="fa fa-tasks" title="View Company WSP" action="#{adminReopenWspUI.selectCompany}" update="@form">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{adminReopenWspUI.selectedCompany}" />
+									</p:commandButton>
+									<p:commandButton style="margin:2px;" value="Run Company Level Validiation" icon="fa fa-tasks" title="Run Can Initiate Validiation" action="#{adminReopenWspUI.prepareWspForCompanyVersionTwo}" update="@form">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{adminReopenWspUI.selectedCompany}" />
+									</p:commandButton>
+								</div>
+							</p:column>
+						</p:dataTable>
+						
+						<div class="EmptyBox10" />
+						<div class="EmptyBox10" />
+
+						<p:fieldset id="validiationResults" rendered="#{adminReopenWspUI.displayValidiationCheck}">
+							<h4>Validation Check Results #{adminReopenWspUI.selectedCompany.levyNumber}</h4>
+							<p:outputLabel value="#{adminReopenWspUI.results}" escape="false" />
+							<c:if test="#{adminReopenWspUI.primarySDFObject ne null}">
+								<div class="EmptyBox10" />
+								<p:outputLabel value="Primary SDF [ID: #{adminReopenWspUI.primarySDFObject.id} PSDF]: (UserID: #{adminReopenWspUI.primarySDFObject.sdf.id}) #{adminReopenWspUI.primarySDFObject.sdf.firstName} #{adminReopenWspUI.primarySDFObject.sdf.lastName} (#{adminReopenWspUI.primarySDFObject.sdf.email})" />
+							</c:if>
+						</p:fieldset>
+
+						<div class="EmptyBox10" />
+						<div class="EmptyBox10" />
+
+						<p:commandButton icon="fa fa-plus" value="New WSP By Fin Year" update="@form newWspForm" action="#{adminReopenWspUI.prepareWSP}" rendered="#{adminReopenWspUI.selectedCompany ne null and !adminReopenWspUI.displayValidiationCheck}" />
+						<div class="EmptyBox10" />
+						<div class="EmptyBox10" />
+ 
+						<p:commandButton icon="fa fa-plus" value="New Inter-SETA Mandatory Grant WSP By Fin Year" update="@form newIntersetaWspForm" action="#{adminReopenWspUI.prepareInterSetaManWSP}" rendered="#{adminReopenWspUI.selectedCompany ne null and !adminReopenWspUI.displayValidiationCheck}" />
+						<div class="EmptyBox10" />
+						<div class="EmptyBox10" />
+
+						<p:outputPanel id="errorsOutpanel">
+							<c:if test="#{adminReopenWspUI.errors ne null}">
+								<p:fieldset styleClass="error Fs12" id="exceptions">
+									<h4>Validation Failed: #{lang['action.required.message']}</h4>
+									<p:outputLabel value="#{adminReopenWspUI.errors}" escape="false"></p:outputLabel>
+								</p:fieldset>
+								<div class="EmptyBox10" />
+								<div class="EmptyBox10" />
+							</c:if>
+						</p:outputPanel>
+						<p:dataTable id="wspDT" var="rowVar" rendered="#{adminReopenWspUI.companyWspList ne null and adminReopenWspUI.companyWspList.size() ne 0  and !adminReopenWspUI.displayValidiationCheck}" value="#{adminReopenWspUI.companyWspList}" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+							emptyMessage="#{lang['no.records.found']}" paginatorTemplate="#{lang['page']} {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" >
+							<f:facet name="header">Company WSPs </f:facet>
+							<p:column headerText="#{lang['id']}" width="8%">
+								<p:outputLabel value="#{rowVar.id}"></p:outputLabel>
+							</p:column>
+							<p:column headerText="#{lang['from.date']}" rendered="false">
+								<p:outputLabel value="#{rowVar.fromDatePeriod}">
+									<f:convertDateTime pattern="dd-MMM-yyyy" />
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="#{lang['to.date']}" rendered="false">
+								<p:outputLabel value="#{rowVar.toDatePeriod}">
+									<f:convertDateTime pattern="dd-MMM-yyyy" />
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="#{lang['fin.year']}" rendered="true">
+								<p:outputLabel value="#{rowVar.finYear}">
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="Wsp Type" rendered="true">
+								<p:outputLabel value="#{rowVar.wspType.friendlyName}">
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="#{lang['status']}" rendered="true">
+								<p:outputLabel value="#{rowVar.wspStatusEnum.friendlyName}">
+								</p:outputLabel>
+								<p:outputLabel rendered="#{rowVar.wspStatusEnum.friendlyName eq 'Rejected'}" value=" - #{rowVar.rejectionReasons}">
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="#{lang['decision.date']}">
+								<p:outputLabel value="#{rowVar.approvedDate}" rendered="#{rowVar.wspStatusEnum.friendlyName eq 'Rejected' or rowVar.wspStatusEnum.friendlyName eq 'Approved'}">
+									<f:convertDateTime pattern="dd MMMM yyyy" />
+								</p:outputLabel>
+								<p:outputLabel value="N/A" rendered="#{rowVar.wspStatusEnum.friendlyName ne 'Rejected' and rowVar.wspStatusEnum.friendlyName ne 'Approved'}" />
+							</p:column>
+							<p:column headerText="Barcode" width="400" rendered="false">
+								<p:barcode value="#{rowVar.wspGuid}" type="code39" />
+							</p:column>
+							<p:column headerText="Applied for extension" style="text-align:center">
+								<p:outputPanel rendered="#{rowVar.extensionRequests.size() eq 0}">
+									<i class="fa fa-times fa-3x red" aria-hidden="true"></i>
+								</p:outputPanel>
+								<p:outputPanel rendered="#{rowVar.extensionRequests.size() gt 0}">
+									<i class="fa fa-check fa-3x green" aria-hidden="true"></i>
+								</p:outputPanel>
+							</p:column>
+							<p:column headerText="DG Verification Status" rendered="true" exportable="false">
+								<p:outputLabel value="#{rowVar.dgVerificationStatus.friendlyName}" rendered="#{rowVar.dgVerificationStatus ne null}"></p:outputLabel>
+								<p:outputLabel rendered="#{rowVar.dgVerification.status.friendlyName eq 'Rejected'}" value=" - #{rowVar.dgVerification.dgVerificationRejectionReasons}">
+								</p:outputLabel>
+								<p:outputLabel value="N/A" rendered="#{rowVar.dgVerificationStatus eq null}">
+								</p:outputLabel>
+							</p:column>
+
+							<p:column width="500" headerText="View/Edit">
+								<div align="center">
+									<p:commandButton value="Create Extension Request" update="@form extensionrequestCreate" action="#{adminReopenWspUI.prepExtensionRequest}" style="margin:2px;">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{adminReopenWspUI.selectedWsp}" />
+									</p:commandButton>
+									<p:commandButton value="Reopen Wsp" update="@form reopenWspForm" oncomplete="PF('dlgReopenWsp').show()" style="margin:2px;">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{adminReopenWspUI.selectedWsp}" />
+									</p:commandButton>
+									<p:commandButton value="Run Validiation Check" update="@form" action="#{adminReopenWspUI.runWspValidiationCheck}" style="margin:2px;">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{adminReopenWspUI.selectedWsp}" />
+									</p:commandButton>
+									<p:commandButton icon="fa fa-envelope-o" style="margin:2px;" value="Resend Notification" action="#{adminReopenWspUI.prepNotificationEmail}" update="sendWspEmailForm" title="Resend Process Notification" process="wspDT">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{adminReopenWspUI.selectedWsp}" />
+									</p:commandButton>
+									<p:commandButton icon="fa fa-download" style="margin:2px;" value="Download Grant Application" action="#{adminReopenWspUI.downloadGrantApplication}" ajax="false" title="Download Grant Application" immediate="true">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{adminReopenWspUI.selectedWsp}" />
+									</p:commandButton>
+								</div>
+							</p:column>
+						</p:dataTable>
+
+						<p:dataTable var="rowVarER" rendered="#{adminReopenWspUI.extensionRequestsByCompany ne null and adminReopenWspUI.extensionRequestsByCompany.size() ne 0  and !adminReopenWspUI.displayValidiationCheck}" value="#{adminReopenWspUI.extensionRequestsByCompany}" id="extensionForGrantTable"
+							rowKey="#{rowVarER.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}" paginatorTemplate="#{lang['page']} {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+							rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+							<f:facet name="header"> Company Extension Requests </f:facet>
+							<p:column headerText="#{lang['id']}" width="8%">
+								<p:outputLabel value="#{rowVarER.id}"></p:outputLabel>
+							</p:column>
+							<p:column headerText="Create Date">
+								<p:outputLabel value="#{rowVarER.createDate}">
+									<f:convertDateTime pattern="dd MMMM yyyy - HH:mm" />
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="New Submission Date">
+								<p:outputLabel value="#{rowVarER.newSubmissionDate}">
+									<f:convertDateTime pattern="dd MMMM yyyy" />
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="Status">
+								<p:outputLabel value="#{rowVarER.status.friendlyName}" rendered="#{rowVarER.status ne null}" />
+								<p:outputLabel value="N/A" rendered="#{rowVarER.status eq null}" />
+							</p:column>
+							<p:column headerText="Grant Year" rendered="true">
+								<p:outputLabel value="#{rowVarER.wsp.finYear}" />
+							</p:column>
+							<p:column headerText="User" rendered="false">
+								<p:outputLabel value="#{rowVarER.user.firstName} #{rowVarER.user.lastName}" />
+							</p:column>
+							<p:column exportable="false" width="5%">
+
+							</p:column>
+						</p:dataTable>
+					</h:form>
+
+				</div>
+				<p:outputPanel id="extensionrequestCreate">
+					<c:if test="#{adminReopenWspUI.createExtensionRequest}">
+						<div class="card card-w-title">
+							<h:form id="extensionRequestForm">
+								<p:panelGrid columns="1" style="width:100%" id="extensionrequestInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:autoComplete readonly="true" disabled="true" id="company" value="#{adminReopenWspUI.extensionRequest.company}" completeMethod="#{autoCompleteUI.completeCompany}" var="rv" itemLabel="#{rv.companyNameDisplay}" itemValue="#{rv}" forceSelection="true" converter="CompanyConvertor"
+											dropdown="true" minQueryLength="3" maxResults="10">
+											<p:ajax />
+											<p:column headerText="#{lang['companyName']}" style="white-space: nowrap">#{rv.companyName}</p:column>
+											<p:column headerText="#{lang['entity.id']}" style="white-space: nowrap">#{rv.levyNumber}</p:column>
+											<p:ajax event="itemSelect" listener="#{extensionrequestUI.findWSPforCompany}" update="@form"></p:ajax>
+										</p:autoComplete>
+										<p:outputLabel value="#{lang['company']}" for="company" />
+									</h:panelGroup>
+
+									<h:panelGroup rendered="#{extensionrequestUI.wsps.size() gt 0}">
+										<div>
+											<p:outputLabel value="#{lang['grant.application']}" for="reasonForExtension" />
+										</div>
+										<div>
+											<p:selectOneMenu readonly="true" disabled="true" id="mailCode" value="#{adminReopenWspUI.extensionRequest.wsp}" style="width:95%" required="true" requiredMessage="Select WSP" converter="WspConvertor">
+												<p:ajax />
+												<f:selectItem itemLabel="---Select Code--" noSelectionOption="true" />
+												<f:selectItems value="#{extensionrequestUI.wsps}" itemValue="#{rv}" var="rv" itemLabel="#{rv.finYear}" />
+											</p:selectOneMenu>
+										</div>
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield" rendered="#{adminReopenWspUI.extensionRequest.company ne null}">
+										<p:inputText id="reasonForExtension" value="#{adminReopenWspUI.extensionRequest.reasonForExtension}" style="width:95%" required="true">
+											<p:ajax />
+										</p:inputText>
+										<p:outputLabel value="#{lang['reasonForExtension']}" for="reasonForExtension" />
+									</h:panelGroup>
+
+									<h:panelGroup rendered="#{adminReopenWspUI.extensionRequest.company ne null}">
+										<div>
+											<p:outputLabel for="newSubmissionDate" value="#{lang['submission.date']}:" />
+										</div>
+										<div>
+											<p:calendar id="newSubmissionDate" value="#{adminReopenWspUI.extensionRequest.newSubmissionDate}" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" showOn="button">
+												<p:ajax event="dateSelect" />
+											</p:calendar>
+										</div>
+									</h:panelGroup>
+									
+									<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" id="docTable" rendered="#{adminReopenWspUI.extensionRequest.company ne null}">
+										<p:dataTable value="#{adminReopenWspUI.extensionRequest.docs}" var="rv1" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv1.id}">
+											<p:column headerText="#{lang['type']}" width="18%">#{rv1.configDoc.name}</p:column>
+											<p:column headerText="#{lang['original.file.name']}" priority="4">
+												<p:outputLabel value="#{rv1.originalFname}" styleClass="Fs12"></p:outputLabel>
+											</p:column>
+											<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+											<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+												<h:outputText value="#{rv1.createDate}">
+													<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+												</h:outputText>
+											</p:column>
+											<p:column headerText="#{lang['version']}" width="10%" priority="4">
+												<h:outputText value="#{rv1.versionNo}">
+												</h:outputText>
+											</p:column>
+											<p:column headerText="#{lang['original.required']}">
+												<center>
+													<h:panelGroup rendered="#{rv1.configDoc.originalRequired}" styleClass="green">
+														<i class="fa fa-files-o fa-3x" aria-hidden="true"></i>
+													</h:panelGroup>
+													<h:panelGroup rendered="#{not rv1.configDoc.originalRequired}" styleClass="red">
+														<i class="fa fa-times fa-3x" aria-hidden="true"></i>
+													</h:panelGroup>
+												</center>
+											</p:column>
+											<p:column width="180">
+												<p:commandButton icon="fa fa-upload" id="upload" styleClass="flat" process="@this" oncomplete="PF('dlgUpload').show()" update=":uploadForm">
+													<f:setPropertyActionListener value="#{rv1}" target="#{adminReopenWspUI.doc}" />
+												</p:commandButton>
+												<p:tooltip for="upload" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+
+												<p:spacer width="5" />
+
+												<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlb" rendered="#{rv1.id ne null}" immediate="true">
+													<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+												</p:commandButton>
+												<p:tooltip for="dlb" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+
+
+												<p:spacer width="5" rendered="#{rv1.id ne null}" />
+												<p:commandButton icon="fa fa-bars " id="dhist" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}" process="@this">
+													<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+												</p:commandButton>
+
+												<p:tooltip for="dhist" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+												<h:panelGroup id="panelGroupThree" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+													<p:spacer width="5" />
+													<p:commandButton icon="fa fa-comment-o" id="dnote" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel" process="@this">
+														<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+													</p:commandButton>
+													<p:tooltip for="dnote" value="#{lang['view.note']}" position="left" />
+												</h:panelGroup>
+												<h:panelGroup id="panelGroupFour" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+													<p:spacer width="5" />
+													<p:commandButton icon="fa fa-eye " id="viewerButton" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}" process="@this">
+														<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+													</p:commandButton>
+													<p:tooltip for="viewerButton" value="#{lang['view.document']} " position="left" />
+												</h:panelGroup>
+											</p:column>
+										</p:dataTable>
+									</p:panelGrid>
+									<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" rendered="#{adminReopenWspUI.extensionRequest.company ne null}">
+										<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update="extensionrequestCreate mainForm" action="#{adminReopenWspUI.createExtensionAndLog}" process="extensionrequestInsGrid" />
+										<p:commandButton value="Cancel" icon="ui-icon-clear-all" update="extensionrequestCreate mainForm" process="@this" action="#{adminReopenWspUI.cancelExtenionRequest}">
+										</p:commandButton>
+									</p:panelGrid>
+								</p:panelGrid>
+							</h:form>
+						</div>
+					</c:if>
+				</p:outputPanel>
+			</div>
+		</div>
+
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true">
+			<h:form id="uploadForm">
+				<h:panelGroup id="uploadGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{adminReopenWspUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{adminReopenWspUI.storeNewFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update="extensionrequestCreate"
+										multiple="false" fileLimit="1" allowTypes="/(\.|\/)(gif|jpe?g|png|pdf|docx|txt)$/" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="Re-open Wsp" widgetVar="dlgReopenWsp" resizable="false" hideEffect="clip" showEffect="clip" id="reopenWSP" width="80%" responsive="true" modal="true">
+			<h:form id="reopenWspForm">
+				<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<p:outputLabel value="1 --- Send To SDF" />
+					<p:outputLabel value="2 --- Document Upload By SDF" />
+					<p:outputLabel value="3 --- Send To MerSETA First Step" />
+					<p:outputLabel value="4 --- Send To Company For Sign Off" />
+				</p:panelGrid>
+				<p:panelGrid columns="1" style="width:100%" id="aqpInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{adminReopenWspUI.selectedWsp ne null}">
+					<p:selectOneMenu value="#{adminReopenWspUI.selectedNumber}">
+						<p:ajax />
+						<f:selectItems value="#{adminReopenWspUI.intList}" />
+					</p:selectOneMenu>
+				</p:panelGrid>
+				<p:panelGrid columns="1" style="width:100%" id="aqpInsGridTwo" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<p:commandButton process="reopenWspForm" value="Reopen" update="@form extensionrequestCreate mainForm" action="#{adminReopenWspUI.reopenWspBySelection}">
+						<p:confirm header="Confirmation" message="Are you sure?" icon="pi pi-exclamation-triangle" />
+					</p:commandButton>
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog id="dialogRangeWsp" widgetVar="dialogRangeWsp" header="#{lang['wsp.and.atr.application']} for #{initiatewspUI.selectedCompany.company.companyName}" modal="true" width="50%" dynamic="true">
+			<h:form id="newWspForm">
+				<p:panelGrid rendered="#{not adminReopenWspUI.selectedCompany.nonLevyPaying}" columns="1" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="Are you a merSETA entity exempt from paying Skills Development Levies (annual payroll of R500 000 and below)?" />
+							<p:spacer width="20"></p:spacer>
+							<p:selectBooleanCheckbox value="#{adminReopenWspUI.belowThreshold}">
+								<p:ajax update="yearGrid"></p:ajax>
+							</p:selectBooleanCheckbox>
+						</div>
+					</h:panelGroup>
+				</p:panelGrid>
+				<p:panelGrid rendered="true" columns="2" layout="grid" id="yearGrid">
+					<p:outputLabel value="#{lang['financial.year']}" />
+					<p:selectOneMenu value="#{adminReopenWspUI.newWsp.finYear}">
+						<f:selectItems value="#{adminReopenWspUI.prepareFinYear}" />
+					</p:selectOneMenu>
+					<p:outputLabel value="#{lang['wsp.application.type']}"></p:outputLabel>
+					<p:selectOneMenu value="#{adminReopenWspUI.newWsp.wspType}">
+						<f:selectItems value="#{adminReopenWspUI.wspTypeEnumDD}" />
+					</p:selectOneMenu>
+				</p:panelGrid>
+
+				<div class="EmptyBox10" />
+				<p:commandButton value="#{lang['create']}" action="#{adminReopenWspUI.initiateWSP}" oncomplete="PF('dialogRangeWsp').hide()" update="@form"></p:commandButton>
+				<p:spacer width="5" />
+				<p:commandButton value="#{lang['close']}" oncomplete="PF('dialogRangeWsp').hide()"></p:commandButton>
+			</h:form>
+		</p:dialog>
+		
+		<p:dialog id="dialogIntersetaRangeWsp" widgetVar="dialogIntersetaRangeWsp" header="#{lang['wsp.and.atr.application']} for #{initiatewspUI.selectedCompany.company.companyName}" modal="true" width="50%" dynamic="true">
+			<h:form id="newIntersetaWspForm">
+				<p:panelGrid rendered="true" columns="2" layout="grid" id="yearGrid">
+					<p:outputLabel value="#{lang['financial.year']}" />
+					<p:selectOneMenu value="#{adminReopenWspUI.newWsp.finYear}">
+						<f:selectItems value="#{adminReopenWspUI.prepareFinYear}" />
+					</p:selectOneMenu>
+					<p:outputLabel value="#{lang['wsp.application.type']}"></p:outputLabel>
+					<p:selectOneMenu value="#{adminReopenWspUI.newWsp.wspType}" style="width:95%">
+						<f:selectItems value="#{adminReopenWspUI.wspIntersetaTypeEnumDD}" />
+					</p:selectOneMenu>
+				</p:panelGrid>
+				<div class="EmptyBox10" />
+				<p:commandButton value="#{lang['create']}" action="#{adminReopenWspUI.initiateWSP}" oncomplete="PF('dialogRangeWsp').hide()" update="@form"></p:commandButton>
+				<p:spacer width="5" />
+				<p:commandButton value="#{lang['close']}" oncomplete="PF('dialogRangeWsp').hide()"></p:commandButton>
+			</h:form>
+		</p:dialog>
+		
+		<p:dialog position="top" header="Send Wsp Notification" widgetVar="dlgWspNotification" resizable="false" hideEffect="clip" showEffect="clip" id="dialogWspNotification" width="80%" responsive="true" modal="true">
+			<h:form id="sendWspEmailForm">
+				<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<p:outputLabel value="1 --- Sends approval notification (None applicable for the appeal). Grant is approved when sent. " />
+					<p:outputLabel value="2 --- Sends approved Notification after SDF has appealed grant. Grant is approved when sent." />
+					<p:outputLabel value="3 --- Sends rejection notification to inform SDF to either accept the grant rejection or appeal the grant rejection. Grant is still pending approval when sent. (Rejection Reasons Required)" />
+					<p:outputLabel value="4 --- Sends final rejection notice after the grant is rejected after the SDF has appealed the notification. Grant is rejected when sent. (Rejection Reasons Required)" />
+				</p:panelGrid>
+				<p:panelGrid columns="1" style="width:100%" id="aqpInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{adminReopenWspUI.selectedWsp ne null}">
+					<p:selectOneMenu value="#{adminReopenWspUI.selectedNumber}" required="true" immediate="true">
+						<f:selectItems value="#{adminReopenWspUI.intList}" />
+						<p:ajax update="sendWspEmailForm" event="itemSelect" />
+					</p:selectOneMenu>
+				</p:panelGrid>
+				
+				<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<p:outputLabel value="Send To SDFs"/>
+					<p:selectBooleanCheckbox value="#{adminReopenWspUI.sendToSdf}">
+						<p:ajax update="sendWspEmailForm"/>
+					</p:selectBooleanCheckbox>
+				</p:panelGrid>
+				
+				<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{!adminReopenWspUI.sendToSdf and (adminReopenWspUI.selectedNumber eq 3 or adminReopenWspUI.selectedNumber eq 4)}">
+					<p:selectManyMenu value="#{adminReopenWspUI.selectedRejectionReasons}" converter="RejectReasonsConvertor" scrollHeight="100" style="width:95%" required="true" var="tdoc" requiredMessage="Please select a reject reason" showCheckbox="true">
+						<f:selectItems value="#{adminReopenWspUI.rejectReasons}" var="rvdoc" itemValue="#{rvdoc}" />
+						<p:column>
+							<h:outputText value="#{tdoc.description}" />
+							<br />
+							<h:outputText styleClass="Fs12 gray" value="#{tdoc.howTo}" />
+						</p:column>
+					</p:selectManyMenu>
+				</p:panelGrid>
+				
+				<h:panelGroup styleClass="md-inputfield" rendered="#{!adminReopenWspUI.sendToSdf}">
+					<p:inputText id="emailLogin" value="#{adminReopenWspUI.email}" required="true" requiredMessage="#{lang['enter.your.email']}" />
+					<label>#{lang['email']}</label>
+				</h:panelGroup>
+				
+				<p:panelGrid columns="1" style="width:100%" id="aqpInsGridThree" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{adminReopenWspUI.selectedWsp ne null}">
+					<p:commandButton process="sendWspEmailForm" value="Send Notification" update="@form extensionrequestCreate mainForm" action="#{adminReopenWspUI.sendNotification}">
+						<p:confirm header="Confirmation" message="Are you sure?" icon="pi pi-exclamation-triangle" />
+					</p:commandButton>
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+		
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+			<h:form>
+				<p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="pi pi-check" />
+				<p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="pi pi-times" />
+			</h:form>
+		</p:confirmDialog>
+
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+	</ui:define>
+</ui:composition>

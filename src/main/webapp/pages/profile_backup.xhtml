@@ -1,0 +1,205 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml" xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:o="http://omnifaces.org/ui">
+
+	<ui:define name="content">
+
+		<h:form id="profileStyleForm">
+			<style>
+.ui-fileupload-content {
+	height: 150px !important;
+	background-image:
+		url("#{request.contextPath}/resources/hls/images/upload.png")
+		!important;
+	background-repeat: no-repeat;
+	background-position: center;
+}
+
+.hsProfile {
+	width: 200px;
+	height: 200px;
+	border-radius: 100px;
+	-webkit-border-radius: 100px;
+	-moz-border-radius: 100px;
+	box-shadow: 0 0 4px rgba(0, 0, 0, .8);
+	-webkit-box-shadow: 0 0 4px rgba(0, 0, 0, .8);
+	-moz-box-shadow: 0 0 4px rgba(0, 0, 0, .8);
+	background-size: 200px 200px;
+}
+</style>
+		</h:form>
+
+		<p:growl showDetail="false" sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="ui-g-6">
+					<div class="card card-w-title">
+						<H1>#{lang['details']}</H1>
+						<h:form>
+
+							<ui:include src="/pages/includes/tabinfo.xhtml">
+								<ui:param name="showInfoCircle" value="false" />
+								<ui:param name="cssClass" value="secondaryText Fs15" />
+								<ui:param name="helpTxt" value="Please ensure that names are in order as they appear in RSA ID/Passport" />
+							</ui:include>
+
+							<p:panelGrid columns="2" style="width:100%" id="prof" layout="grid" styleClass="ui-panelgrid-blank">
+								<p:outputLabel value="#{lang['first.name']}" for="firstName" />
+								<p:inputText id="firstName" value="#{profileUI.user.firstName}" maxlength="#{profileUI.MAX_FIRST_NAME_SIZE}" style="width: 90%" required="true" requiredMessage="Enter first name" disabled="#{sessionUI.externalParty and sessionUI.activeUser.approvedDate ne null}">
+									<o:validator validatorId="javax.faces.Length" minimum="0" maximum="26" message="#{lang['user.name.length']}" />
+								</p:inputText>
+								<p:outputLabel value="#{lang['last.name']}:" for="lastName" />
+								<p:inputText id="lastName" value="#{profileUI.user.lastName}" maxlength="#{profileUI.MAX_LAST_NAME_SIZE}" style="width: 90%" required="true" requiredMessage="Enter last name" disabled="#{sessionUI.externalParty and sessionUI.activeUser.approvedDate ne null}">
+									<o:validator validatorId="javax.faces.Length" minimum="0" maximum="45" message="#{lang['user.lastname.length']}" />
+								</p:inputText>
+								<p:outputLabel value="#{lang['middle.name']}" for="middleName" />
+								<p:inputText id="middleName" value="#{profileUI.user.middleName}" maxlength="#{profileUI.MAX_FIRST_NAME_SIZE}" style="width: 90%" disabled="#{sessionUI.externalParty and sessionUI.activeUser.approvedDate ne null}">
+									<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['user.name.length']}" />
+								</p:inputText>
+
+								<p:outputLabel value="#{lang['rsa.id.number']}" for="rsaIdCriteria" rendered="#{profileUI.user.rsaIDNumber ne null and profileUI.user.rsaIDNumber.length() gt 0}" />
+								<p:inputText id="rsaIdCriteria" maxlength="#{profileUI.MAX_RSA_ID_NUMBER}" value="#{profileUI.user.rsaIDNumber}" style="width:95%" rendered="#{profileUI.user.rsaIDNumber ne null and  profileUI.user.rsaIDNumber.length() gt 0}"
+									disabled="#{sessionUI.externalParty and sessionUI.activeUser.approvedDate ne null}" requiredMessage="#{lang['rsa.id.number']} " required="true">
+								</p:inputText>
+
+								<p:outputLabel value="#{lang['passport.number']}" for="passportCriteria" rendered="#{profileUI.user.passportNumber ne null and  profileUI.user.passportNumber.length() gt 0}" />
+								<p:inputText id="passportCriteria" value="#{profileUI.user.passportNumber}" style="width:95%" rendered="#{profileUI.user.passportNumber ne null and  profileUI.user.passportNumber.length() gt 0}" disabled="#{sessionUI.externalParty and sessionUI.activeUser.approvedDate ne null}"
+									requiredMessage="Please enter your passport number" required="true">
+								</p:inputText>
+
+								<p:outputLabel value="#{lang['email']}:" for="email" />
+								<p:inputText id="email" value="#{profileUI.user.email}" maxlength="#{profileUI.MAX_EMAIL_SIZE}" style="width: 90%" required="true" requiredMessage="Enter email address">
+									<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['user.email.length']}" />
+								</p:inputText>
+								<p:outputLabel value="#{lang['mobile.number']}" for="cellNumber" />
+								<p:inputMask id="cellNumber" mask="#{profileUI.CELLPHONE_FORMAT}" value="#{profileUI.user.cellNumber}" style="width: 90%" label="cellNumber" required="true" requiredMessage="Enter mobile number">
+									<o:validator validatorId="javax.faces.Length" minimum="0" maximum="20" message="#{lang['user.cellnumber.length']}" />
+								</p:inputMask>
+								<p:outputLabel value="#{lang['tel.number']}:" for="telNumber" />
+								<p:inputMask id="telNumber" mask="#{profileUI.TELPHONE_FORMAT}" value="#{profileUI.user.telNumber}" style="width: 90%" label="telNumber" required="false" requiredMessage="Enter mobile number">
+									<o:validator validatorId="javax.faces.Length" minimum="0" maximum="20" message="#{lang['user.tellnumber.length']}" />
+								</p:inputMask>
+
+								<p:spacer />
+								<p:commandButton value="#{lang['update']}" action="#{profileUI.usersUpdate}" icon="fa fa-database" update="@form" />
+							</p:panelGrid>
+						</h:form>
+					</div>
+				</div>
+				<div class="ui-g-6">
+					<h:form id="profilePicForm">
+						<div class="ui-g-12">
+							<div class="card card-w-title">
+								<h1>#{lang['profile.picture']}</h1>
+
+								<p:panelGrid columns="2" style="width:100%" id="ppic" layout="grid" styleClass="ui-panelgrid-blank">
+									<p:fileUpload fileUploadListener="#{profileUI.saveImage}" mode="advanced" dragDropSupport="true" showButtons="false" sizeLimit="1048576" label="#{lang['select.a.profile.picture']}" fileLimitMessage="#{lang['image.too.big.to.upload']}" allowTypes="/(\.|\/)(gif|jpe?g|png)$/" multiple="false"
+										fileLimit="1" immediate="false" auto="true" update="@form :menuform :profileStyleForm" />
+									<h:panelGroup rendered="#{sessionUI.user.profileImageForView ne null}">
+										<div align="center">
+											<p:graphicImage value="#{imageStreamer.image}" styleClass="hsProfile" rendered="#{sessionUI.user.profileImage ne null}">
+												<f:param name="imageId" value="#{sessionUI.user.profileImage.id}" />
+											</p:graphicImage>
+										</div>
+									</h:panelGroup>
+								</p:panelGrid>
+
+							</div>
+						</div>
+
+					</h:form>
+				</div>
+				<div class="EmptyBox10"></div>
+
+				<div class="ui-g-6">
+					<div class="card card-w-title">
+
+						<h1 class="BigTopic">Other Information</h1>
+						<h:form>
+							<p:panelGrid columns="2" style="width:100%" id="prof" layout="grid" styleClass="ui-panelgrid-blank">
+								<p:outputLabel value="#{lang['gender']}" for="gender" />
+								<p:autoComplete id="gender" value="#{profileUI.user.gender}" completeMethod="#{autoCompleteUI.completeGender}" var="rv" itemLabel="#{rv.genderName}" itemValue="#{rv}" forceSelection="true" converter="GenderConvertor" dropdown="true" minQueryLength="3" maxResults="10"
+									requiredMessage="#{lang['provide.gender']}" required="true">
+									<p:column headerText="Gender" style="white-space: nowrap">#{rv.genderName}</p:column>
+								</p:autoComplete>
+
+								<p:outputLabel value="#{lang['equity']}" for="equity" />
+								<p:autoComplete id="equity" value="#{profileUI.user.equity}" completeMethod="#{autoCompleteUI.completeEquity}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="EquityConvertor" dropdown="true" minQueryLength="3" maxResults="10"
+									requiredMessage="#{lang['provide.equity']}" required="true">
+									<p:column headerText="equity" style="white-space: nowrap">#{rv.description}</p:column>
+								</p:autoComplete>
+
+								<p:outputLabel value="#{lang['nationality']}" for="nationality" />
+								<p:autoComplete id="nationality" value="#{profileUI.user.nationality}" required="true" requiredMessage="#{lang['nationality.required']}" completeMethod="#{autoCompleteUI.completeNationality}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true"
+									converter="NationalityConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+									<p:column headerText="#{lang['nationality']}" style="white-space: nowrap">#{rv.description}</p:column>
+								</p:autoComplete>
+
+								<p:outputLabel value="#{lang['disability']}" for="disability" />
+								<p:autoComplete id="disability" value="#{profileUI.user.disabilityStatus}" completeMethod="#{autoCompleteUI.completeDisabilityStatus}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="DisabilityStatusConvertor" dropdown="true" minQueryLength="3"
+									maxResults="10" required="true" requiredMessage="Please Select Disability">
+									<p:column headerText="Disability" style="white-space: nowrap">#{rv.description}</p:column>
+								</p:autoComplete>
+								<p:spacer />
+								<p:commandButton value="#{lang['update']}" action="#{profileUI.usersUpdate}" icon="fa fa-database" update="@form" />
+							</p:panelGrid>
+						</h:form>
+					</div>
+				</div>
+
+				<div class="ui-g-6">
+					<div class="card card-w-title">
+						<h1 class="BigTopic">#{lang['change.your.password']}</h1>
+						<h:form id="usersUpdPwdForm">
+							<ui:include src="/pages/includes/tabinfo.xhtml">
+								<ui:param name="showInfoCircle" value="false" />
+								<ui:param name="cssClass" value="red Fs15" />
+								<ui:param name="helpTxt" value="#{lang['Password.must.be.minimum.of.8']}" />
+							</ui:include>
+							<br />
+							<br />
+							<p:panelGrid columns="2" style="width:100%" id="pwd" layout="grid" styleClass="ui-panelgrid-blank">
+								<p:outputLabel for="pwd1" value="#{lang['existing.password']}" />
+								<p:password style="width: 90%" id="pwd1" value="#{profileUI.password}" required="true" requiredMessage="Please enter existing Password" />
+								<p:outputLabel for="pwd2" value="#{lang['new.password']}" />
+								<p:password style="width: 90%" id="pwd2" value="#{profileUI.newPassword}" match="pwd3" required="true" requiredMessage="Please enter new Password" validatorMessage="Passwords do not match" />
+								<p:outputLabel for="pwd3" value="#{lang['confirm.password']}" />
+								<p:password style="width: 90%" id="pwd3" value="#{profileUI.newPassword}" required="true" requiredMessage="Please enter confirm Password" />
+								<p:spacer />
+								<p:commandButton value="#{lang['change.password']}" icon="fa fa-key" action="#{profileUI.usersChgOwnPwdUpdate}" update="@form" />
+							</p:panelGrid>
+						</h:form>
+					</div>
+				</div>
+
+			</div>
+
+			<c:if test="#{!sessionUI.externalParty}">
+				<div class="ui-g-6">
+					<h:form id="profilePrefForm">
+						<div class="ui-g-12">
+							<div class="card card-w-title">
+								<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+									<p:outputLabel value="Recieve email notification for tasks" />
+									<p:selectBooleanCheckbox value="#{profileUI.user.recieveEmailTaskNotification}" />
+									<p:spacer />
+									<p:commandButton value="Update" icon="fa fa-database" action="#{profileUI.updateProfile}" update="@form" />
+								</p:panelGrid>
+							</div>
+						</div>
+					</h:form>
+				</div>
+			</c:if>
+		</div>
+
+
+
+
+
+
+
+
+	</ui:define>
+
+</ui:composition>

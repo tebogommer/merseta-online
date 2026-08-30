@@ -1,0 +1,107 @@
+﻿@page "/admin/lookups"
+@inject LookupService LookupService
+@inject NavigationManager NavManager
+@rendermode InteractiveServer
+
+<div class="d-flex justify-space-between align-center mb-4">
+    <div>
+        <MudText Typo="Typo.h5" Class="fw-bold">Lookups & Enums Administration Hub</MudText>
+        <MudText Typo="Typo.body2" Class="text-muted">Manage all statutory NSDMS and DHET SETMIS reference tables in the <code>lookup</code> schema</MudText>
+    </div>
+    <MudChip T="string" Color="Color.Primary" Variant="Variant.Filled">
+        @(_lookups.Count) Active System Lookups
+    </MudChip>
+</div>
+
+<MudPaper Class="pa-4 mb-4" Elevation="1">
+    <MudGrid>
+        <MudItem xs="12" md="6">
+            <MudTextField @bind-Value="_searchString" Placeholder="Search lookups by table name, title or description..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true" OnKeyUp="FilterLookups" Clearable="true" OnClearButtonClick="FilterLookups" />
+        </MudItem>
+        <MudItem xs="12" md="6" Class="d-flex align-center gap-2 flex-wrap">
+            <MudChip T="string" Color="@(_selectedCategory == "All" ? Color.Primary : Color.Default)" Variant="Variant.Filled" OnClick="@(() => SetCategory("All"))">All</MudChip>
+            <MudChip T="string" Color="@(_selectedCategory == "Core & Demographics" ? Color.Primary : Color.Default)" Variant="Variant.Filled" OnClick="@(() => SetCategory("Core & Demographics"))">Demographics</MudChip>
+            <MudChip T="string" Color="@(_selectedCategory == "Organisations & Sector" ? Color.Primary : Color.Default)" Variant="Variant.Filled" OnClick="@(() => SetCategory("Organisations & Sector"))">Organisations</MudChip>
+            <MudChip T="string" Color="@(_selectedCategory == "Learning & ETQA" ? Color.Primary : Color.Default)" Variant="Variant.Filled" OnClick="@(() => SetCategory("Learning & ETQA"))">ETQA</MudChip>
+            <MudChip T="string" Color="@(_selectedCategory == "Grants & Finance" ? Color.Primary : Color.Default)" Variant="Variant.Filled" OnClick="@(() => SetCategory("Grants & Finance"))">Grants</MudChip>
+            <MudChip T="string" Color="@(_selectedCategory == "Visits & Governance" ? Color.Primary : Color.Default)" Variant="Variant.Filled" OnClick="@(() => SetCategory("Visits & Governance"))">Visits</MudChip>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+}
+else
+{
+    <MudGrid>
+        @foreach (var lookup in _filteredLookups)
+        {
+            <MudItem xs="12" sm="6" md="4">
+                <MudCard Outlined="true" Class="h-100 d-flex flex-column justify-space-between hover-elevation-2">
+                    <MudCardContent>
+                        <div class="d-flex justify-space-between align-start mb-2">
+                            <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Text">@lookup.Category</MudChip>
+                            <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Outlined">@lookup.ItemCount items</MudChip>
+                        </div>
+                        <MudText Typo="Typo.h6" Class="fw-bold">@lookup.DisplayName</MudText>
+                        <MudText Typo="Typo.caption" Class="text-muted font-monospace mb-2 d-block">lookup.@lookup.TableName</MudText>
+                        <MudText Typo="Typo.body2" Class="text-secondary">@lookup.Description</MudText>
+                    </MudCardContent>
+                    <MudCardActions Class="pa-4 pt-0">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" EndIcon="@Icons.Material.Filled.ArrowForward" OnClick="@(() => ManageLookup(lookup.TableName))">
+                            Manage Items
+                        </MudButton>
+                    </MudCardActions>
+                </MudCard>
+            </MudItem>
+        }
+    </MudGrid>
+}
+
+@code {
+    private List<LookupCategoryMetadata> _lookups = new();
+    private List<LookupCategoryMetadata> _filteredLookups = new();
+    private string _searchString = string.Empty;
+    private string _selectedCategory = "All";
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+        _lookups = await LookupService.GetAllLookupMetadataAsync();
+        _filteredLookups = _lookups;
+        _loading = false;
+    }
+
+    private void SetCategory(string category)
+    {
+        _selectedCategory = category;
+        FilterLookups();
+    }
+
+    private void FilterLookups()
+    {
+        var query = _lookups.AsEnumerable();
+
+        if (_selectedCategory != "All")
+        {
+            query = query.Where(x => x.Category.Equals(_selectedCategory, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.IsNullOrWhiteSpace(_searchString))
+        {
+            query = query.Where(x => x.DisplayName.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+                                     x.TableName.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+                                     x.Description.Contains(_searchString, StringComparison.OrdinalIgnoreCase));
+        }
+
+        _filteredLookups = query.ToList();
+    }
+
+    private void ManageLookup(string tableName)
+    {
+        NavManager.NavigateTo($"/admin/lookups/{tableName}");
+    }
+}

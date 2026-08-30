@@ -1,0 +1,48 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<h:form id="mainForm">
+			<h2>Jasper Prac</h2>
+			<p:panelGrid layout="grid" columns="1">
+				<p:selectOneRadio value="#{jasperPracUI.pivotNonPivotEnum}" columns="2" layout="grid" required="true">
+					<p:ajax />
+					<f:selectItems value="#{enumUI.pivotalNonPivotalDD}" />
+				</p:selectOneRadio>
+				<p:separator></p:separator>
+				<p:selectOneRadio value="#{jasperPracUI.completedPlannedEnum}" columns="2" layout="grid" required="true">
+					<p:ajax />
+					<f:selectItems value="#{enumUI.completedPlannedlDD}" />
+				</p:selectOneRadio>
+				<p:separator></p:separator>
+				<p:selectOneRadio value="#{jasperPracUI.employedUnEmployedEnum}" columns="2" layout="grid" required="true">
+					<p:ajax />
+					<f:selectItems value="#{enumUI.employedUnEmployedEnumDD}" />
+				</p:selectOneRadio>
+				<p:separator></p:separator>
+				<p:inputNumber placeholder="From Age" value="#{jasperPracUI.fromAge}" decimalPlaces="0" required="#{param['mainForm:genderEq']==null}" />
+				<p:inputNumber placeholder="To Age" value="#{jasperPracUI.toAge}" decimalPlaces="0" required="#{param['mainForm:genderEq']==null}" />
+				<p:inputNumber placeholder="WSP ID" value="#{jasperPracUI.wspId}" decimalPlaces="0" required="true" />
+				<h:panelGroup styleClass="md-inputfield">
+					<p:autoComplete id="gender" value="#{jasperPracUI.gender}" completeMethod="#{autoCompleteUI.completeGender}" var="rv" itemLabel="#{rv.genderName}" itemValue="#{rv}" forceSelection="true" converter="GenderConvertor" dropdown="true" minQueryLength="3" maxResults="10"
+						requiredMessage="#{lang['provide.gender']}" required="#{param['mainForm:age']==null}">
+						<p:column headerText="Gender" style="white-space: nowrap">#{rv.genderName}</p:column>
+					</p:autoComplete>
+					<p:outputLabel value="#{lang['gender']}" for="gender" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield">
+					<p:autoComplete id="equity" value="#{jasperPracUI.equity}" completeMethod="#{autoCompleteUI.completeEquity}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="EquityConvertor" dropdown="true" minQueryLength="3" maxResults="10"
+						requiredMessage="#{lang['provide.equity']}" required="#{param['mainForm:age']==null}">
+						<p:column headerText="equity" style="white-space: nowrap">#{rv.description}</p:column>
+					</p:autoComplete>
+					<p:outputLabel value="#{lang['equity']}" for="equity" />
+				</h:panelGroup>
+				<p:outputLabel value="Total of: #{jasperPracUI.numberOf}"></p:outputLabel>
+				<h:panelGroup>
+					<p:commandButton id="age" value="count age range" update="@form" action="#{jasperPracUI.doMeBirthAgeCount}" />
+					<p:spacer width="5" />
+					<p:commandButton id="genderEq" value="count Gender Equity" update="@form" action="#{jasperPracUI.doMeGenderEquityCount}" />
+				</h:panelGroup>
+			</p:panelGrid>
+		</h:form>
+	</ui:define>
+</ui:composition>

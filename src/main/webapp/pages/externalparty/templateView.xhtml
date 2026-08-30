@@ -1,0 +1,105 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>#{lang['template.view.download']}</h1>
+					<h:form id="mainForm">
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank">
+							<h:panelGroup>
+								<p:outputLabel value="#{lang['expand.all']}" />
+								<p:spacer width="10" />
+								<p:selectBooleanCheckbox id="selectBooleanCheckboxOne" value="#{templateViewUI.expand}">
+									<p:ajax update="mainForm docForm" listener="#{templateViewUI.expandSelect}" />
+								</p:selectBooleanCheckbox>
+							</h:panelGroup>
+							<div>
+								<span class="Mdrop Fleft Fs14 gray"><i class="fa fa-info-circle"></i> #{lang['select.document.to.view.uploaded.document']}</span> <br />
+							</div>
+							<p:tree value="#{templateViewUI.leftRoot}" var="doc" selectionMode="single" selection="#{templateViewUI.selectedNode}" animate="true" id="docs" draggable="false" droppable="false" style="width: 100%">
+								<p:ajax event="select" listener="#{templateViewUI.onNodeSelect}" update="docForm" />
+								<p:ajax event="dragdrop" listener="#{templateViewUI.dragDrop}" update="mainForm" />
+								<p:treeNode id="treeNodeOne" expandedIcon="ui-icon-folder-open" collapsedIcon="ui-icon-folder-collapsed">
+									<h:outputText styleClass="breakWord" value="#{doc.title}" />
+								</p:treeNode>
+								<p:treeNode id="treeNodeTwo" type="document" icon="ui-icon-document">
+									<h:outputText styleClass="breakWord" value="#{doc.title}" />
+								</p:treeNode>
+							</p:tree>
+						</p:panelGrid>
+					</h:form>
+				</div>
+
+				<h:form id="docForm">
+					<c:if test="#{templateViewUI.showDocForm}">
+						<div class="ui-g">
+							<div class="ui-g-12">
+								<div class="card card-w-title ">
+									<c:if test="#{templateViewUI.documentList.size() eq 0}">
+										<h3>#{lang['there.are.currently.no.documents.uploaded.for']}: #{templateViewUI.selectedTemplate.title}.</h3>
+										<!-- <span class="Fs20 gray"><i class="fa fa-info-circle"></i> There are currently no documents uploaded for: #{templateViewUI.selectedTemplate.title}</span> -->
+									</c:if>
+									<c:if test="#{templateViewUI.documentList.size() gt 0}">
+										<h3>#{lang['selected']}: #{templateViewUI.selectedTemplate.title}.</h3>
+										<!-- <span class="Fs20 gray"><i class="fa fa-info-circle"></i> Selected: #{templateViewUI.selectedTemplate.title}.</span> -->
+										<div class="EmptyBox10" />
+										<p:dataTable var="rv" value="#{templateViewUI.documentList}" id="resultTable" rowKey="#{rv.id}" paginator="true" rows="1" paginatorPosition="bottom" paginatorTemplate=" {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+											rowsPerPageTemplate="1,5,10,15,20,25" reflow="true" style="width 100%">
+
+											<f:facet name="header">#{templateViewUI.selectedTemplate.title}'s #{lang['documents']}</f:facet>
+
+											<p:column headerText="#{lang['date.added']}" rendered="false">
+												<h:outputText value="#{rv.createDate}">
+													<f:convertDateTime pattern="dd MMMM yyyy (HH:mm:ss)" />
+												</h:outputText>
+											</p:column>
+
+											<p:column headerText="#{lang['original.file.name']}" style="width:50%">
+												<h:outputText value="#{rv.originalFname}" />
+											</p:column>
+
+											<p:column headerText="#{lang['version']}" style="width:15%">
+												<h:outputText value="#{rv.versionNo}" />
+											</p:column>
+
+											<p:column headerText="#{lang['extension']}" style="width:15%">
+												<h:outputText value="#{rv.extension}" />
+											</p:column>
+
+											<p:column id="columnTwo" width="9%" exportable="false">
+												<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlb">
+													<f:setPropertyActionListener value="#{rv}" target="#{uploadDocUI.doc}" />
+													<p:tooltip for="dlb" value="#{lang['download.the.file']}" position="" />
+												</p:commandButton>
+												<h:panelGroup id="panelGroupFour" rendered="#{rv.note ne null}">
+													<p:spacer width="5" />
+													<p:commandButton icon="fa fa-comment-o " id="dnote" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+														<f:setPropertyActionListener value="#{rv}" target="#{uploadDocUI.doc}" />
+														<p:tooltip for="dnote" value="#{lang['view.note']}" position="" />
+													</p:commandButton>
+												</h:panelGroup>
+												<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv.extension.toLowerCase() eq 'pdf' or rv.extension.toLowerCase() eq 'png' or rv.extension.toLowerCase() eq 'jpg' or rv.extension.toLowerCase() eq 'jpeg' or rv.extension.toLowerCase() eq 'gif'}">
+													<p:spacer width="5" />
+													<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+														<f:setPropertyActionListener value="#{rv}" target="#{uploadDocUI.doc}" />
+														<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+													</p:commandButton>
+												</h:panelGroup>
+											</p:column>
+										</p:dataTable>
+									</c:if>
+								</div>
+							</div>
+						</div>
+					</c:if>
+				</h:form>
+				<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+			</div>
+
+		</div>
+	</ui:define>
+</ui:composition>

@@ -1,0 +1,1090 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>#{lang['BURSARY.APPLICATION.FOR.FULL-TIME.STUDY.AT.HIGHER.EDUCATION.INSTIUTION']}</h1>
+					<p:fieldset legend="#{lang['THIS.APPLICATION.WILL.NOT.BE.CONSIDERED.UNLESS.FULLY.COMPLETED']}">
+
+						<p:panelGrid style="width:100%" columns="1" styleClass="ui-panelgrid-blank form-group" layout="grid">
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="surname" value="#{entityUI.learners.lastName}" style="width:95%" required="true" requiredMessage="" />
+
+								<p:outputLabel value="#{lang['surname']}" for="surname" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="firstNameS" value="#{entityUI.learners.firstName}" style="width:95%" required="true" requiredMessage="" />
+
+								<p:outputLabel value="#{lang['first.name']}" for="firstNameS" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="proposedCourseOfStudy" value="#{entityUI.learners.proposedCourseOfStudy}" style="width:95%" required="true" requiredMessage="" />
+
+								<p:outputLabel value="#{lang['Proposed.course.of.study']}" for="proposedCourseOfStudy" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="nameUniversityWhichWillTaken" value="#{entityUI.learners.nameUniversityWhichWillTaken}" style="width:95%" required="true" requiredMessage="" />
+
+								<p:outputLabel value="#{lang['Name.of.university.at.which.studies.will.be.taken']}" for="nameUniversityWhichWillTaken" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputTextarea id="whyChooseThisCourse" value="#{entityUI.learners.whyChooseThisCourse}" style="width:95%" required="true" requiredMessage="" />
+
+								<p:outputLabel value="#{lang['Why.did.you.choose.this.course?']}" for="whyChooseThisCourse" />
+							</h:panelGroup>
+						</p:panelGrid>
+
+
+					</p:fieldset>
+					<p:fieldset legend="#{lang['PERSONAL.PARTICULARS']}">
+						<p:panelGrid style="width:100%" columns="1" styleClass="ui-panelgrid-blank form-group" layout="grid">
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="presentPostalAddress1"
+									value="#{sdfDetailUI.companysdf.company.residentialAddress.addressLine1}" style="width:95%" required="true" requiredMessage="#{lang['enter.residential.address']}">
+								</p:inputText>
+								<p:outputLabel value="#{lang['address.line.1']}" for="presentPostalAddress1" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="presentPostalAddress2" style="width:95%"
+									value="#{sdfDetailUI.companysdf.company.residentialAddress.addressLine2}">
+								</p:inputText>
+								<p:outputLabel value="#{lang['address.line.2']}" for="presentPostalAddress2" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="presentPostalAddress3" style="width:95%"
+									value="#{sdfDetailUI.companysdf.company.residentialAddress.addressLine3}">
+								</p:inputText>
+								<p:outputLabel value="#{lang['address.line.3']}" for="presentPostalAddress3" />
+							</h:panelGroup>
+
+							<h:panelGroup>
+								<div>
+									<h:outputLabel value="#{lang['town']}" for="presentPostalAddress4" />
+								</div>
+								<div>
+									<p:autoComplete id="presentPostalAddress4" value="#{sdfDetailUI.companysdf.company.residentialAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true"
+										minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true" requiredMessage="#{lang['please.select.a.town']}"
+										disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}">
+										<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+									</p:autoComplete>
+								</div>
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_CODE_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="presentPostalAddress5" style="width:95%"
+									value="#{sdfDetailUI.companysdf.company.residentialAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}">
+								</p:inputText>
+								<p:outputLabel value="#{lang['post.code']}" for="presentPostalAddress5" />
+							</h:panelGroup>
+
+							<h:panelGroup>
+								<div>
+									<h:outputLabel value="#{lang['municipality']}" for="presentPostalAddress6" />
+								</div>
+								<div>
+									<p:autoComplete disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="presentPostalAddress6" value="#{sdfDetailUI.companysdf.company.residentialAddress.municipality}"
+										required="true" completeMethod="#{sdfDetailUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityProvince}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%"
+										requiredMessage="#{lang['select.municipality']}">
+										<p:column headerText="#{lang['province']}" style="white-space: nowrap">
+								#{rv.province.provinceDesc}
+							</p:column>
+										<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">
+								#{rv.municipalityDesc}
+							</p:column>
+									</p:autoComplete>
+								</div>
+							</h:panelGroup>
+
+
+							<div />
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="doLiveTheInstitutionResidence" value="#{entityUI.learners.doLiveTheInstitutionResidence}" style="width:95%" required="true" requiredMessage="" />
+
+								<p:outputLabel value="#{lang['do.you.live.at.the.institution.residence?']}" for="doLiveTheInstitutionResidence" />
+							</h:panelGroup>
+
+							<p:panelGrid style="width:100%" columns="2" styleClass="ui-panelgrid-blank form-group" layout="grid">
+
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="tel" value="#{entityUI.learners.telNumber}" style="width:95%" required="true" requiredMessage="" />
+									<p:outputLabel value="#{lang['Telephone.numbers']}" for="tel" />
+								</h:panelGroup>
+
+								<div />
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="home" value="#{entityUI.learners.completedLearnerHome}" style="width:95%" required="true" requiredMessage="" />
+
+									<p:outputLabel value="#{lang['home']}" for="home" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="work" value="#{entityUI.learners.completedLearnerWork}" style="width:95%" required="true" requiredMessage="" />
+
+									<p:outputLabel value="#{lang['work']}" for="work" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="cell" value="#{entityUI.learners.completedLearnerCell}" style="width:95%" required="true" requiredMessage="" />
+
+									<p:outputLabel value="#{lang['mobile.number']}" for="cell" />
+								</h:panelGroup>
+							</p:panelGrid>
+							<p:panelGrid style="width:100%" columns="2" styleClass="ui-panelgrid-blank form-group" layout="grid">
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="email" value="#{entityUI.learners.completedLearnerEmailAddress}" style="width:95%" required="true" requiredMessage="" />
+
+									<p:outputLabel value="#{lang['email']}" for="email" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="dateOfBirth" value="#{entityUI.learners.dateOfBirth}" style="width:95%" required="true" requiredMessage="" />
+
+									<p:outputLabel value="#{lang['date.of.birth']}" for="dateOfBirth" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield">
+
+									<p:inputText id="identityNumber" value="#{entityUI.learners.rsaIDNumber}" style="width:95%" required="true" requiredMessage="" />
+
+									<p:outputLabel value="#{lang['identity.number']}" for="identityNumber" />
+								</h:panelGroup>
+
+
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="genderTickWhichever" value="#{entityUI.learners.genderTickWhichever}" style="width:95%" required="true" requiredMessage="" />
+
+									<p:outputLabel value="#{lang['Gender.(Tick.whichever.applicable)']}" for="genderTickWhichever" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="raceTickWhichever" value="#{entityUI.learners.raceTickWhichever}" style="width:95%" required="true" requiredMessage="" />
+
+									<p:outputLabel value="#{lang['Race.(Tick.whichever.applicable)']}" for="raceTickWhichever" />
+								</h:panelGroup>
+							</p:panelGrid>
+							<p:panelGrid style="width:100%" columns="2" styleClass="ui-panelgrid-blank form-group" layout="grid">
+
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="fullNameFather" value="#{entityUI.learners.parentGuardianFullNames}" style="width:95%" required="true" requiredMessage="" />
+
+									<p:outputLabel value="#{lang['Full.name.of.father/mother/guardian']}" for="fullNameFather" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="occupationFather" value="#{entityUI.learners.parentGuardianWork}" style="width:95%" required="true" requiredMessage="" />
+
+									<p:outputLabel value="#{lang['Occupation.of.father/mother/guardian']}" for="occupationFather" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="nameCompanyWhereEmployed" value="#{entityUI.learners.nameCompanyWhereEmployed}" style="width:95%" required="true" requiredMessage="" />
+
+									<p:outputLabel value="#{lang['Name.of.company.where.father/mother/guardian.is.employed']}" for="nameCompanyWhereEmployed" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="telephoneNumberGuardian" value="#{entityUI.learners.telGardianNumber}" style="width:95%" required="true" requiredMessage="" />
+
+									<p:outputLabel value="#{lang['tel.number']}" for="telephoneNumberGuardian" />
+								</h:panelGroup>
+
+
+								<p:panelGrid style="width:100%" columns="1" styleClass="ui-panelgrid-blank form-group" layout="grid">
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="addressAboveCompany1"
+											value="#{sdfDetailUI.companysdf.company.residentialAddress.addressLine1}" style="width:95%" required="true" requiredMessage="#{lang['enter.residential.address']}">
+										</p:inputText>
+										<p:outputLabel value="#{lang['address.line.1']}" for="addressAboveCompany1" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="addressAboveCompany2" style="width:95%"
+											value="#{sdfDetailUI.companysdf.company.residentialAddress.addressLine2}">
+										</p:inputText>
+										<p:outputLabel value="#{lang['address.line.2']}" for="addressAboveCompany2" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="addressAboveCompany3" style="width:95%"
+											value="#{sdfDetailUI.companysdf.company.residentialAddress.addressLine3}">
+										</p:inputText>
+										<p:outputLabel value="#{lang['address.line.3']}" for="addressAboveCompany3" />
+									</h:panelGroup>
+
+									<h:panelGroup>
+										<div>
+											<h:outputLabel value="#{lang['town']}" for="addressAboveCompany4" />
+										</div>
+										<div>
+											<p:autoComplete id="addressAboveCompany4" value="#{sdfDetailUI.companysdf.company.residentialAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true"
+												minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true" requiredMessage="#{lang['please.select.a.town']}"
+												disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}">
+												<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+											</p:autoComplete>
+										</div>
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_CODE_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="addressAboveCompany5" style="width:95%"
+											value="#{sdfDetailUI.companysdf.company.residentialAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}">
+										</p:inputText>
+										<p:outputLabel value="#{lang['post.code']}" for="addressAboveCompany5" />
+									</h:panelGroup>
+
+									<h:panelGroup>
+										<div>
+											<h:outputLabel value="#{lang['municipality']}" for="addressAboveCompany6" />
+										</div>
+										<div>
+											<p:autoComplete disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="addressAboveCompany6" value="#{sdfDetailUI.companysdf.company.residentialAddress.municipality}"
+												required="true" completeMethod="#{sdfDetailUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityProvince}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%"
+												requiredMessage="#{lang['select.municipality']}">
+												<p:column headerText="#{lang['province']}" style="white-space: nowrap">
+								#{rv.province.provinceDesc}
+							</p:column>
+												<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">
+								#{rv.municipalityDesc}
+							</p:column>
+											</p:autoComplete>
+										</div>
+									</h:panelGroup>
+								</p:panelGrid>
+
+
+
+
+
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputTextarea id="numberSistersCompletingFinancially" value="#{entityUI.learners.numberSistersCompletingFinancially}" style="width:95%" required="true" requiredMessage="" />
+
+									<p:outputLabel value="#{lang['Number.of.brothers.and.sisters.who.are.still.completing.their.education.and.are.financially.supported.by.father/mother/guardian.']}" for="numberSistersCompletingFinancially" />
+								</h:panelGroup>
+							</p:panelGrid>
+
+						</p:panelGrid>
+					</p:fieldset>
+					<p:fieldset legend="#{lang['EDUCATION.PARTICULARS.OF.SECONDARY.SCHOOL.(S).ATTENDED.BY.APPLICANT']}">
+
+						<p:panelGrid style="width:100%" styleClass="ui-panelgrid-blank form-group">
+							<f:facet name="header">
+								<p:row>
+									<p:column colspan="2">#{lang['NAME.OF.SCHOOL']}</p:column>
+									<p:column colspan="2">#{lang['YEARS.OF.ATTENDANCE']}</p:column>
+
+								</p:row>
+								<p:row>
+									<p:column colspan="2" styleClass="ui-widget-header">
+										<p:spacer height="0" />
+									</p:column>
+									<p:column colspan="1">#{lang['FROM']}</p:column>
+									<p:column colspan="1">#{lang['TO']}</p:column>
+
+								</p:row>
+							</f:facet>
+							<p:row>
+								<p:column colspan="2">
+									<p:inputText id="nameOfSchool1" value="#{entityUI.learners.nameOfSchool1}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+								<p:column colspan="1">
+									<p:calendar id="yearsFrom1" value="#{entityUI.learners.yearsFrom1}" style="width:95%" required="true" requiredMessage="" showOn="button" />
+								</p:column>
+								<p:column colspan="1">
+									<p:calendar id="yearsTo1" value="#{entityUI.learners.yearsTo1}" style="width:95%" required="true" requiredMessage="" showOn="button" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column colspan="2">
+									<p:inputText id="nameOfSchool2" value="#{entityUI.learners.nameOfSchool2}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+								<p:column colspan="1">
+									<p:calendar id="yearsFrom2" value="#{entityUI.learners.yearsFrom2}" style="width:95%" required="true" requiredMessage="" showOn="button" />
+								</p:column>
+								<p:column colspan="1">
+									<p:calendar id="yearsTo2" value="#{entityUI.learners.yearsTo2}" style="width:95%" required="true" requiredMessage="" showOn="button" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column colspan="2">
+									<p:inputText id="nameOfSchool3" value="#{entityUI.learners.nameOfSchool3}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+								<p:column colspan="1">
+									<p:calendar id="yearsFrom3" value="#{entityUI.learners.yearsFrom3}" style="width:95%" required="true" requiredMessage="" showOn="button" />
+								</p:column>
+								<p:column colspan="1">
+									<p:calendar id="yearsTo3" value="#{entityUI.learners.yearsTo3}" style="width:95%" required="true" requiredMessage="" showOn="button" />
+								</p:column>
+							</p:row>
+
+
+
+						</p:panelGrid>
+						<p:panelGrid style="width:100%" styleClass="ui-panelgrid-blank form-group">
+							<f:facet name="header">
+								<p:row>
+									<p:column colspan="2">#{lang['SCHOOL.RECORD']}</p:column>
+
+
+								</p:row>
+							</f:facet>
+							<p:row>
+								<p:column colspan="2">
+									#{lang['Certificate.obtained.at.Grade.12.or.equivalent.level.']}
+								</p:column>
+							</p:row>
+
+							<p:row>
+								<p:column colspan="1">
+									#{lang['Name.of.Certificate']}
+								</p:column>
+
+								<p:column colspan="1">
+									<p:inputText id="nameOfCertificate" value="#{entityUI.learners.nameOfCertificate}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column colspan="1">
+									#{lang['Month.and.year.obtained']}
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="monthAndYearObtained" value="#{entityUI.learners.monthAndYearObtained}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+
+							</p:row>
+
+							<p:row>
+								<p:column colspan="1">
+									#{lang['If.still.at.school,attach.a.copy.of.latest.school.report.']}
+								</p:column>
+							</p:row>
+
+
+						</p:panelGrid>
+						<p:panelGrid style="width:100%" styleClass="ui-panelgrid-blank form-group">
+							<f:facet name="header">
+								<p:row>
+									<p:column colspan="2">#{lang['Subjects.written.in.Grade.12.or.equivalent.examination.Please.attached.transcripts']}</p:column>
+
+
+								</p:row>
+								<p:row>
+									<p:column colspan="1">#{lang['SUBJECT']}</p:column>
+									<p:column colspan="1">#{lang['RESULT']}</p:column>
+								</p:row>
+
+							</f:facet>
+							<p:row>
+								<p:column colspan="1">
+									#{lang['Mathematics.(Indicate.pure.or.literacy)']}
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="subjectMathematics" value="#{entityUI.learners.subjectMathematics}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+
+							</p:row>
+
+							<p:row>
+								<p:column colspan="1">
+								#{lang['Physical.science']}
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="subjectPhysicalScience" value="#{entityUI.learners.subjectPhysicalScience}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+
+							</p:row>
+							<p:row>
+								<p:column colspan="1">
+									#{lang['English']}
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="subjectEnglish" value="#{entityUI.learners.subjectEnglish}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+
+							</p:row>
+							<p:row>
+								<p:column colspan="1">
+									#{lang['Afrikaans']}
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="subjectAfrikaans" value="#{entityUI.learners.subjectAfrikaans}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+
+							</p:row>
+							<p:row>
+								<p:column colspan="1">
+									<p:inputText id="subjectOwn1" value="#{entityUI.learners.subjectOwn1}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="subjectResult1" value="#{entityUI.learners.subjectResult1}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+
+							</p:row>
+							<p:row>
+								<p:column colspan="1">
+									<p:inputText id="subjectOwn2" value="#{entityUI.learners.subjectOwn2}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="subjectResult2" value="#{entityUI.learners.subjectResult2}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+
+							</p:row>
+							<p:row>
+								<p:column colspan="1">
+									<p:inputText id="subjectOwn3" value="#{entityUI.learners.subjectOwn3}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="subjectResult3" value="#{entityUI.learners.subjectResult3}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+
+							</p:row>
+							<p:row>
+								<p:column colspan="1">
+									<p:inputText id="subjectOwn4" value="#{entityUI.learners.subjectOwn4}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="subjectResult4" value="#{entityUI.learners.subjectResult4}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+
+							</p:row>
+
+
+						</p:panelGrid>
+						<p:panelGrid style="width:100%" styleClass="ui-panelgrid-blank form-group">
+							<f:facet name="header">
+								<p:row>
+									<p:column colspan="1">#{lang['SCHOOL.ACTIVITIES(Sport,Prefectship,etc.)']}</p:column>
+								</p:row>
+							</f:facet>
+							<p:row>
+								<p:column colspan="1">
+									<p:inputText id="schoolActivities1" value="#{entityUI.learners.schoolActivities1}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column colspan="1">
+									<p:inputText id="schoolActivities2" value="#{entityUI.learners.schoolActivities2}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column colspan="1">
+									<p:inputText id="schoolActivities3" value="#{entityUI.learners.schoolActivities3}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+							</p:row>
+						</p:panelGrid>
+						<p:panelGrid style="width:100%" styleClass="ui-panelgrid-blank form-group">
+							<f:facet name="header">
+								<p:row>
+									<p:column colspan="2">#{lang['UNIVERSITY.COURSE']}</p:column>
+								</p:row>
+								<p:row>
+									<p:column colspan="2">#{lang['Intended.or.present.course']}</p:column>
+								</p:row>
+							</f:facet>
+							<p:row>
+								<p:column colspan="1">
+									#{lang['Name.of.university']}
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="NameOfUniversity" value="#{entityUI.learners.nameOfUniversity}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column colspan="1">
+									#{lang['Faculty.and.course']}
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="facultyAndCourse" value="#{entityUI.learners.facultyAndCourse}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column colspan="1">
+									#{lang['Year.of.course.of.current.studies']}
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="YearOfCourseOfCurrentStudies" value="#{entityUI.learners.yearOfCourseOfCurrentStudies}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+							</p:row>
+						</p:panelGrid>
+						<p:panelGrid style="width:100%" styleClass="ui-panelgrid-blank form-group">
+							<f:facet name="header">
+								<p:row>
+									<p:column colspan="4">#{lang['Examinations.passed']}</p:column>
+								</p:row>
+								<p:row>
+									<p:column colspan="1">#{lang['DATE']}</p:column>
+									<p:column colspan="1">#{lang['YEAR.OF.COURSE']}</p:column>
+									<p:column colspan="1">#{lang['SUBJECTS']}</p:column>
+									<p:column colspan="1">#{lang['RESULTS']}</p:column>
+								</p:row>
+							</f:facet>
+							<p:row>
+								<p:column colspan="1">
+									<p:calendar id="date1" value="#{entityUI.learners.date1}" style="width:95%" required="true" requiredMessage="" showOn="button" />
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="yearOfCourse1" value="#{entityUI.learners.yearOfCourse1}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="subjectsTaken1" value="#{entityUI.learners.subjectsTaken1}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="results1" value="#{entityUI.learners.results1}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column colspan="1">
+									<p:calendar id="date2" value="#{entityUI.learners.date2}" style="width:95%" required="true" requiredMessage="" showOn="button" />
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="yearOfCourse2" value="#{entityUI.learners.yearOfCourse2}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="subjectsTaken2" value="#{entityUI.learners.subjectsTaken2}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="results2" value="#{entityUI.learners.results2}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column colspan="1">
+									<p:calendar id="date3" value="#{entityUI.learners.date3}" style="width:95%" required="true" requiredMessage="" showOn="button" />
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="yearOfCourse3" value="#{entityUI.learners.yearOfCourse3}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="subjectsTaken3" value="#{entityUI.learners.subjectsTaken3}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="results3" value="#{entityUI.learners.results3}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column colspan="1">
+									<p:calendar id="date4" value="#{entityUI.learners.date4}" style="width:95%" required="true" requiredMessage="" showOn="button" />
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="yearOfCourse4" value="#{entityUI.learners.yearOfCourse4}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="subjectsTaken4" value="#{entityUI.learners.subjectsTaken4}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="results4" value="#{entityUI.learners.results4}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column colspan="1">
+									<p:calendar id="date5" value="#{entityUI.learners.date5}" style="width:95%" required="true" requiredMessage="" showOn="button" />
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="yearOfCourse5" value="#{entityUI.learners.yearOfCourse5}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="subjectsTaken5" value="#{entityUI.learners.subjectsTaken5}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="results5" value="#{entityUI.learners.results5}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+							</p:row>
+
+
+						</p:panelGrid>
+						<p:panelGrid style="width:100%" styleClass="ui-panelgrid-blank form-group">
+							<f:facet name="header">
+								<p:row>
+									<p:column colspan="5">#{lang['OTHER.ACTIVITIES']}</p:column>
+								</p:row>
+								<p:row>
+									<p:column colspan="3">#{lang['Have.you.been.employed.by.any.company?(Tick.the.appropriate.block)']}</p:column>
+									<p:column colspan="1">
+										<h:outputLabel for="appropriateYes" value="#{lang['yes']}" />
+										<p:spacer width="10" />
+										<p:selectBooleanCheckbox id="appropriateYes" value="#{entityUI.learners.appropriateYes}" required="true" requiredMessage="" />
+
+									</p:column>
+									<p:column colspan="1">
+										<h:outputLabel for="appropriateNo" value="#{lang['no']}" />
+										<p:spacer width="10" />
+										<p:selectBooleanCheckbox id="appropriateNo" value="#{entityUI.learners.appropriateNo}" required="true" requiredMessage="" />
+
+
+									</p:column>
+
+
+								</p:row>
+								<p:row>
+									<p:column colspan="5">#{lang['If.yes.please.complete']}</p:column>
+								</p:row>
+								<p:row>
+									<p:column colspan="2">#{lang['YEARS']}</p:column>
+									<p:column colspan="1">#{lang['NAME.OF.COMPANY']}</p:column>
+									<p:column colspan="1">#{lang['TYPE.OF.WORK']}</p:column>
+									<p:column colspan="1">#{lang['POSITION.HELD']}</p:column>
+								</p:row>
+								<p:row>
+									<p:column colspan="1">#{lang['FROM']}</p:column>
+									<p:column colspan="1">#{lang['TO']}</p:column>
+									<p:column colspan="3" styleClass="ui-widget-header">
+										<p:spacer height="0" />
+									</p:column>
+								</p:row>
+							</f:facet>
+							<p:row>
+
+								<p:column colspan="1">
+									<p:calendar id="yearsFroma1" value="#{entityUI.learners.yearsFroma1}" style="width:95%" required="true" requiredMessage="" showOn="button" />
+								</p:column>
+								<p:column colspan="1">
+									<p:calendar id="yearsToa1" value="#{entityUI.learners.yearsToa1}" style="width:95%" required="true" requiredMessage="" showOn="button" />
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="nameOfCompanya1" value="#{entityUI.learners.nameOfCompanya1}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="typeOfWorka1" value="#{entityUI.learners.typeOfWorka1}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="positionHelda1" value="#{entityUI.learners.positionHelda1}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column colspan="1">
+									<p:calendar id="yearsFroma2" value="#{entityUI.learners.yearsFroma2}" style="width:95%" required="true" requiredMessage="" showOn="button" />
+								</p:column>
+								<p:column colspan="1">
+									<p:calendar id="yearsToa2" value="#{entityUI.learners.yearsToa2}" style="width:95%" required="true" requiredMessage="" showOn="button" />
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="nameOfCompanya2" value="#{entityUI.learners.nameOfCompanya2}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="typeOfWorka2" value="#{entityUI.learners.typeOfWorka2}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="positionHelda2" value="#{entityUI.learners.positionHelda2}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column colspan="1">
+									<p:calendar id="yearsFroma3" value="#{entityUI.learners.yearsFroma3}" style="width:95%" required="true" requiredMessage="" showOn="button" />
+								</p:column>
+								<p:column colspan="1">
+									<p:calendar id="yearsToa3" value="#{entityUI.learners.yearsToa3}" style="width:95%" required="true" requiredMessage="" showOn="button" />
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="nameOfCompanya3" value="#{entityUI.learners.nameOfCompanya3}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="typeOfWorka3" value="#{entityUI.learners.typeOfWorka3}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="positionHelda3" value="#{entityUI.learners.positionHelda3}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column colspan="3">
+									#{lang['Are.you.employed.now?(Tick.the.appropriate.block)']}
+								</p:column>
+								<p:column colspan="1">
+									<h:outputLabel for="employedYes" value="#{lang['yes']}" />
+									<p:spacer width="10" />
+									<p:selectBooleanCheckbox id="employedYes" value="#{entityUI.learners.employedYes}" required="true" requiredMessage="" />
+
+								</p:column>
+								<p:column colspan="1">
+									<h:outputLabel for="employedNo" value="#{lang['no']}" />
+									<p:spacer width="10" />
+									<p:selectBooleanCheckbox id="employedNo" value="#{entityUI.learners.employedNo}" required="true" requiredMessage="" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column colspan="5">
+									#{lang['If.yes.please.complete']}
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column colspan="3">
+									#{lang['By.which.company']}
+								</p:column>
+								<p:column colspan="2">
+									<p:inputText id="byWhichCompany" value="#{entityUI.learners.byWhichCompany}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column colspan="2">
+									#{lang['adddress']}
+									
+									<p:panelGrid style="width:100%" columns="1" styleClass="ui-panelgrid-blank form-group" layout="grid">
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="companyAddress1"
+											value="#{sdfDetailUI.companysdf.company.residentialAddress.addressLine1}" style="width:95%" required="true" requiredMessage="#{lang['enter.residential.address']}">
+										</p:inputText>
+										<p:outputLabel value="#{lang['address.line.1']}" for="companyAddress1" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="companyAddress2" style="width:95%"
+											value="#{sdfDetailUI.companysdf.company.residentialAddress.addressLine2}">
+										</p:inputText>
+										<p:outputLabel value="#{lang['address.line.2']}" for="companyAddress2" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="companyAddress3" style="width:95%"
+											value="#{sdfDetailUI.companysdf.company.residentialAddress.addressLine3}">
+										</p:inputText>
+										<p:outputLabel value="#{lang['address.line.3']}" for="companyAddress3" />
+									</h:panelGroup>
+
+									<h:panelGroup>
+										<div>
+											<h:outputLabel value="#{lang['town']}" for="companyAddress4" />
+										</div>
+										<div>
+											<p:autoComplete id="companyAddress4" value="#{sdfDetailUI.companysdf.company.residentialAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true"
+												minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true" requiredMessage="#{lang['please.select.a.town']}"
+												disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}">
+												<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+											</p:autoComplete>
+										</div>
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_CODE_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="companyAddress5" style="width:95%"
+											value="#{sdfDetailUI.companysdf.company.residentialAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}">
+										</p:inputText>
+										<p:outputLabel value="#{lang['post.code']}" for="companyAddress5" />
+									</h:panelGroup>
+
+									<h:panelGroup>
+										<div>
+											<h:outputLabel value="#{lang['municipality']}" for="companyAddress6" />
+										</div>
+										<div>
+											<p:autoComplete disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="companyAddress6" value="#{sdfDetailUI.companysdf.company.residentialAddress.municipality}" required="true"
+												completeMethod="#{sdfDetailUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityProvince}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%"
+												requiredMessage="#{lang['select.municipality']}">
+												<p:column headerText="#{lang['province']}" style="white-space: nowrap">
+								#{rv.province.provinceDesc}
+							</p:column>
+												<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">
+								#{rv.municipalityDesc}
+							</p:column>
+											</p:autoComplete>
+										</div>
+									</h:panelGroup>
+								</p:panelGrid>
+									
+									
+								</p:column>
+
+								
+							</p:row>
+							<p:row>
+								<p:column colspan="3">
+									#{lang['Have.you.attended.any.other.higher.education.institution.previously?']}
+								</p:column>
+								<p:column colspan="1">
+									<h:outputLabel for="institutionPreviouslyYes" value="#{lang['yes']}" />
+									<p:spacer width="10" />
+									<p:selectBooleanCheckbox id="institutionPreviouslyYes" value="#{entityUI.learners.institutionPreviouslyYes}" required="true" requiredMessage="" />
+								</p:column>
+								<p:column colspan="1">
+									<h:outputLabel for="institutionPreviouslyNo" value="#{lang['no']}" />
+									<p:spacer width="10" />
+									<p:selectBooleanCheckbox id="institutionPreviouslyNo" value="#{entityUI.learners.institutionPreviouslyNo}" required="true" requiredMessage="" />
+								</p:column>
+							</p:row>
+						</p:panelGrid>
+
+
+
+
+
+
+						<p:panelGrid style="width:100%" styleClass="ui-panelgrid-blank form-group">
+							<f:facet name="header">
+								<p:row>
+									<p:column colspan="5">#{lang['If.yes.please.complete']}</p:column>
+								</p:row>
+								<p:row>
+									<p:column colspan="1">#{lang['Name.of.university']}</p:column>
+									<p:column colspan="2">#{lang['Years']}</p:column>
+									<p:column colspan="1">#{lang['Name.of.course']}</p:column>
+									<p:column colspan="1">#{lang['results']}</p:column>
+
+								</p:row>
+								<p:row>
+									<p:column colspan="1" styleClass="ui-widget-header">
+										<p:spacer height="0" />
+									</p:column>
+									<p:column colspan="1">#{lang['FROM']}</p:column>
+									<p:column colspan="1">#{lang['TO']}</p:column>
+									<p:column colspan="2" styleClass="ui-widget-header">
+										<p:spacer height="0" />
+									</p:column>
+
+								</p:row>
+							</f:facet>
+							
+
+							<p:row>
+
+								<p:column colspan="1">
+									<p:inputText id="higherNameOfUniversity1" value="#{entityUI.learners.higherNameOfUniversity1}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+								<p:column colspan="1">
+									<p:calendar id="higherYearsFrom1" value="#{entityUI.learners.higherYearsFrom1}" style="width:95%" required="true" requiredMessage="" showOn="button" />
+								</p:column>
+								<p:column colspan="1">
+									<p:calendar id="higherYearsTo1" value="#{entityUI.learners.higherYearsTo1}" style="width:95%" required="true" requiredMessage="" showOn="button" />
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="higherNameOfCourse1" value="#{entityUI.learners.higherNameOfCourse1}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="higherResults1" value="#{entityUI.learners.higherResults1}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+
+							</p:row>
+							<p:row>
+
+								<p:column colspan="1">
+									<p:inputText id="higherNameOfUniversity2" value="#{entityUI.learners.higherNameOfUniversity2}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+								<p:column colspan="1">
+									<p:calendar id="higherYearsFrom2" value="#{entityUI.learners.higherYearsFrom2}" style="width:95%" required="true" requiredMessage="" showOn="button" />
+								</p:column>
+								<p:column colspan="1">
+									<p:calendar id="higherYearsTo2" value="#{entityUI.learners.higherYearsTo2}" style="width:95%" required="true" requiredMessage="" showOn="button" />
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="higherNameOfCourse2" value="#{entityUI.learners.higherNameOfCourse2}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="higherResults2" value="#{entityUI.learners.higherResults2}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+
+							</p:row>
+							<p:row>
+
+								<p:column colspan="1">
+									<p:inputText id="higherNameOfUniversity3" value="#{entityUI.learners.higherNameOfUniversity3}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+								<p:column colspan="1">
+									<p:calendar id="higherYearsFrom3" value="#{entityUI.learners.higherYearsFrom3}" style="width:95%" required="true" requiredMessage="" showOn="button" />
+								</p:column>
+								<p:column colspan="1">
+									<p:calendar id="higherYearsTo3" value="#{entityUI.learners.higherYearsTo3}" style="width:95%" required="true" requiredMessage="" showOn="button" />
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="higherNameOfCourse3" value="#{entityUI.learners.higherNameOfCourse3}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="higherResults3" value="#{entityUI.learners.higherResults3}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+
+							</p:row>
+							<p:row>
+
+								<p:column colspan="1">
+									<p:inputText id="higherNameOfUniversity4" value="#{entityUI.learners.higherNameOfUniversity4}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+								<p:column colspan="1">
+									<p:calendar id="higherYearsFrom4" value="#{entityUI.learners.higherYearsFrom4}" style="width:95%" required="true" requiredMessage="" showOn="button" />
+								</p:column>
+								<p:column colspan="1">
+									<p:calendar id="higherYearsTo4" value="#{entityUI.learners.higherYearsTo4}" style="width:95%" required="true" requiredMessage="" showOn="button" />
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="higherNameOfCourse4" value="#{entityUI.learners.higherNameOfCourse4}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+								<p:column colspan="1">
+									<p:inputText id="higherResults4" value="#{entityUI.learners.higherResults4}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+
+							</p:row>
+						</p:panelGrid>
+
+
+
+
+					</p:fieldset>
+					<p:fieldset legend="#{lang['PLEASE.ATTACH.COPIES.OF.ALL.RESULTS']}">
+						<p:panelGrid style="width:100%" styleClass="ui-panelgrid-blank form-group">
+							<f:facet name="header">
+								<p:row>
+									<p:column colspan="4">#{lang['LOANS.GRANTS.BURSARIES']}</p:column>
+								</p:row>
+							</f:facet>
+							<p:row>
+								<p:column colspan="2">
+									#{lang['Are.you.in.receipt.of.a.grant.loan.bursary.or.any.other.financial.assistance']}
+
+								</p:column>
+								<p:column colspan="1">
+									<h:outputLabel for="loansGrantsBursariesYes" value="#{lang['yes']}" />	<p:spacer width="10" />
+									<p:selectBooleanCheckbox id="loansGrantsBursariesYes" value="#{entityUI.learners.loansGrantsBursariesYes}" required="true" requiredMessage="" />
+								</p:column>
+								<p:column colspan="1">
+									<h:outputLabel for="loansGrantsBursariesNo" value="#{lang['no']}" /><p:spacer width="10" />
+									<p:selectBooleanCheckbox id="loansGrantsBursariesNo" value="#{entityUI.learners.loansGrantsBursariesNo}" required="true" requiredMessage="" />
+								</p:column>
+							</p:row>
+
+						</p:panelGrid>
+						<p:panelGrid style="width:100%" styleClass="ui-panelgrid-blank form-group">
+							<f:facet name="header">
+								<p:row>
+									<p:column colspan="5">#{lang['If.yes.please.complete']}</p:column>
+								</p:row>
+								<p:row>
+									<p:column colspan="3">#{lang['name.of.award']}</p:column>
+									<p:column colspan="2">#{lang['Amount']}</p:column>
+								</p:row>
+
+							</f:facet>
+							<p:row>
+								<p:column colspan="3">
+									<p:inputText id="nameOfAward1" value="#{entityUI.learners.nameOfAward1}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+								<p:column colspan="2">
+									<p:inputText id="awardAmount1" value="#{entityUI.learners.awardAmount1}" style="width:95%" required="true" requiredMessage="" />
+
+								</p:column>
+
+							</p:row>
+							<p:row>
+								<p:column colspan="3">
+									<p:inputText id="nameOfAward2" value="#{entityUI.learners.nameOfAward2}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+								<p:column colspan="2">
+									<p:inputText id="awardAmount2" value="#{entityUI.learners.awardAmount2}" style="width:95%" required="true" requiredMessage="" />
+
+								</p:column>
+
+							</p:row>
+							<p:row>
+								<p:column colspan="3">
+									#{lang['Have.you.applied.for.any.other.loan,grant.or.bursary?']}
+								</p:column>
+								<p:column colspan="1">
+									<h:outputLabel for="anyOtherLoanGrantYes" value="#{lang['yes']}" />
+									<p:spacer width="10" />
+									<p:selectBooleanCheckbox id="anyOtherLoanGrantYes" value="#{entityUI.learners.anyOtherLoanGrantYes}" required="true" requiredMessage="" />
+								</p:column>
+								<p:column colspan="1">
+									<h:outputLabel for="anyOtherLoanGrantNo" value="#{lang['no']}" />
+									<p:spacer width="10" />
+									<p:selectBooleanCheckbox id="anyOtherLoanGrantNo" value="#{entityUI.learners.anyOtherLoanGrantNo}" required="true" requiredMessage="" />
+								</p:column>
+
+							</p:row>
+							<p:row>
+								<p:column colspan="5">
+									#{lang['details']}:
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column colspan="5">
+									<p:inputTextarea id="anyOtherLoanGrantDetails" value="#{entityUI.learners.anyOtherLoanGrantDetails}" style="width:95%" required="true" requiredMessage="" />
+								</p:column>
+							</p:row>
+						</p:panelGrid>
+						<p:panelGrid style="width:100%" styleClass="ui-panelgrid-blank form-group">
+							<f:facet name="header">
+								<p:row>
+									<p:column colspan="1">#{lang['ATTACHMENTS.TO.THIS.APPLICATION']}</p:column>
+								</p:row>
+								<p:row>
+									<p:column colspan="1">#{lang['The.following.information.must.be.attached.to.your.application']}:</p:column>
+								</p:row>
+							</f:facet>
+							<p:row>
+								<p:column colspan="1">
+									#{lang['A.certified.copy.of.your.identity.document']}
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column colspan="1">
+									#{lang['Photostat.copies.of.the.latest.examination.or.test.results.obtained.from.the.educational.institution']}
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column colspan="1">
+									#{lang['Any.additional.information.proof.of.awards.etc']}
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column colspan="1">
+									<b>#{lang['NB.']}</b>  #{lang['No.faxed.documents.will.be.accepted']}
+								</p:column>
+							</p:row>
+						</p:panelGrid>
+					</p:fieldset>
+					<p:fieldset legend="#{lang['DETAILS.OF.EMPLOYER']}">
+						<h4>
+							<u>#{lang['TERMS.AND.CONDITIONS.GOVERNING.THE.AWARD']}</u>
+						</h4>
+
+						<ul>
+							<li type="1">#{lang['The.merSETA.offers.a.limited.number.of.bursaries.to.students.of.outstanding.academic.caliber.']}</li>
+							<br />
+							<br />
+							<li type="1">#{lang['The.merSETA.bursaries.for.students.taking.full-time']}</li>
+							<br />
+							<br />
+							<li type="1">#{lang['If.the.bursary.exceeds.the.cost.of.the.bursars.fees']}</li>
+							<br />
+							<br />
+							<li type="1">#{lang['The.bursary.is.renewable.annually.at.merSETA.sole.discretion']}</li>
+							<br />
+							<br />
+							<li type="1">#{lang['Bursary.holders.must.apply.annually.before.30.September']}</li>
+							<br />
+							<br />
+							<li type="1">#{lang['Bursaries.are.not.awarded.for.correspondence.courses']}</li>
+							<br />
+							<br />
+							<li type="1">#{lang['Bursaries.awarded.have.to.be.taken.up']}</li>
+							<br />
+							<br />
+							<li type="1">#{lang['A.merSETA.bursary.holder.must.submit.proof.of.registration']}</li>
+							<br />
+							<br />
+							<li type="1">#{lang['The.bursary.holder.is.responsible.for.obtaining.progress.reports']}</li>
+							<br />
+							<br />
+							<li type="1">#{lang['The.financial.aid.office.must.be.notified.immediately']}</li>
+							<br />
+							<br />
+							<li type="1">#{lang['The.bursary.holder.may.not.change.the.course']}</li>
+							<br />
+							<br />
+							<li type="1">#{lang['There.are.no.formal.service.obligations.attached.to.the.bursary']}</li>
+							<br />
+							<br />
+							<li type="1">#{lang['Bursaries.are.awarded']} <b><u>#{lang['only']}</u></b> #{lang['to.students.who.are.South.African.citizens']}
+							</li>
+							<br />
+							<br />
+							<li type="1">#{lang['If.proof.of.registration.at.university']}</li>
+							<br />
+							<br />
+							<li type="1">#{lang['All.admissions.and.applications.go.through']}</li>
+							<br />
+							<br />
+							<li type="1">#{lang['If.students.are.having.difficulty']}</li>
+
+
+						</ul>
+
+					</p:fieldset>
+
+				</div>
+			</div>
+		</div>
+
+
+
+	</ui:define>
+
+</ui:composition>

@@ -1,0 +1,302 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Designated Trade Level</h1>
+					<h:form id="designatedtradelevelInsForm">
+						<p:growl sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:panelGrid columns="1" style="width:100%" id="designatedtradelevelInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+							<h:panelGroup rendered="true">
+								<div>
+									<p:outputLabel value="Designated Trade" for="designatedTradeSelection" />
+								</div>
+								<div>
+									<p:selectOneMenu id="designatedTradeSelection" value="#{designatedtradelevelUI.designatedtradelevel.designatedTrade}" style="width:95%" required="true" converter="DesignatedTradeConvertor">
+										<p:ajax />
+										<f:selectItems value="#{designatedtradelevelUI.designatedTradeList}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+									</p:selectOneMenu>
+								</div>
+							</h:panelGroup>
+
+							<h:panelGroup class="md-inputfield" style="margin-top:19px;">
+								<p:autoComplete id="Qualification" value="#{designatedtradelevelUI.designatedtradelevel.qualification}" completeMethod="#{autoCompleteUI.completeQualification}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor" dropdown="true"
+									minQueryLength="3" maxResults="10" inputStyle="opacity: 1 !important; color: black; width: 95%" style="opacity: 1 !important; color: black; width: 95%" required="true">
+									<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+									<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+									<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+									<p:ajax event="itemSelect" />
+								</p:autoComplete>
+								<p:outputLabel value="Qualification" for="Qualification" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="description" value="#{designatedtradelevelUI.designatedtradelevel.description}" style="width:95%" />
+								<p:outputLabel value="#{lang['description']}" for="description" />
+							</h:panelGroup>
+
+							<h:panelGroup>
+								<p:outputLabel value="No Completion Order" for="order" />
+								<p:spacer width="10"></p:spacer>
+								<p:selectBooleanCheckbox id="order" value="#{designatedtradelevelUI.designatedtradelevel.noOrder}">
+									<p:ajax></p:ajax>
+								</p:selectBooleanCheckbox>
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="levelIndicator" value="#{designatedtradelevelUI.designatedtradelevel.level}" style="width:95%" required="true" requiredMessage="Provide Level Indicator">
+									<f:convertNumber pattern="##" />
+								</p:inputText>
+								<p:outputLabel value="Completion Order Number" for="levelIndicator" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="minweeks" required="true" value="#{designatedtradelevelUI.designatedtradelevel.minweeks}" style="width:95%" />
+								<p:outputLabel value="Minimum Weeks" for="minweeks" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="maxweeks" required="true" value="#{designatedtradelevelUI.designatedtradelevel.maxweeks}" style="width:95%" />
+								<p:outputLabel value="Maximum Weeks" for="maxweeks" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputNumber inputStyle="width:95%" minValue="1" decimalPlaces="0" id="maxAttempts" required="true" value="#{designatedtradelevelUI.designatedtradelevel.maxAttemptsAmount}" style="width:95%" />
+								<p:outputLabel value="Max Attempts Number" for="maxAttempts" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:calendar navigator="true" inputStyle="width:95%" id="legacyAttDate" value="#{designatedtradelevelUI.designatedtradelevel.dateLegacyAttempts}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" readonlyInput="true" />
+								<p:outputLabel value="Legacy Attempt Date" for="legacyAttDate" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputNumber inputStyle="width:95%" decimalPlaces="0" minValue="1" id="legMaxAttempts" value="#{designatedtradelevelUI.designatedtradelevel.legacyMaxAttemptsAmount}" style="width:95%" />
+								<p:outputLabel value="Legacy Max Attempts Number" for="legMaxAttempts" />
+							</h:panelGroup>
+
+							<h:panelGroup>
+								<p:outputLabel value="Extension Level" for="extention" />
+								<p:spacer width="10"></p:spacer>
+								<p:selectBooleanCheckbox id="extention" value="#{designatedtradelevelUI.designatedtradelevel.extension}">
+									<p:ajax></p:ajax>
+								</p:selectBooleanCheckbox>
+							</h:panelGroup>
+							
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="reportDisplayName" value="#{designatedtradelevelUI.designatedtradelevel.reportDisplayName}" style="width:95%" />
+								<p:outputLabel value="Report: Button Display Name" for="reportDisplayName" />
+							</h:panelGroup>
+							
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="documentNumber" value="#{designatedtradelevelUI.designatedtradelevel.documentNumber}" style="width:95%" />
+								<p:outputLabel value="Report: File Document Number" for="documentNumber" />
+							</h:panelGroup>
+							
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="documentTitle" value="#{designatedtradelevelUI.designatedtradelevel.documentTitle}" style="width:95%" />
+								<p:outputLabel value="Report: File Document Title" for="documentTitle" />
+							</h:panelGroup>
+							
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="reportDownloadName" value="#{designatedtradelevelUI.designatedtradelevel.reportDownloadName}" style="width:95%" />
+								<p:outputLabel value="Report: File Download Name (Exculde .pdf)" for="reportDownloadName" />
+							</h:panelGroup>
+
+							<h:panelGroup rendered="false">
+								<div>
+									<p:outputLabel value="Designated Trade Type" for="designatedTradeTypeSelection" />
+								</div>
+								<div>
+									<p:selectOneMenu id="designatedTradeTypeSelection" value="#{designatedtradelevelUI.designatedtradelevel.designatedTradeType}" style="width:95%" required="true" converter="DesignatedTradeTypeConvertor">
+										<p:ajax />
+										<f:selectItems value="#{designatedtradelevelUI.designatedTradeTypeList}" var="rvs" itemLabel="#{rvs.description}" itemValue="#{rvs}" />
+									</p:selectOneMenu>
+								</div>
+							</h:panelGroup>
+
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:designatedtradelevelList :designatedtradelevelInsForm:designatedtradelevelInsGrid" action="#{designatedtradelevelUI.designatedtradelevelInsert}" />
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="designatedtradelevelInsGrid" process="@this" action="#{designatedtradelevelUI.prepareNew}">
+									<p:resetInput target="designatedtradelevelInsGrid" />
+								</p:commandButton>
+							</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+						<p:dataTable var="rowVar" value="#{designatedtradelevelUI.dataModel}" filteredValue="#{designatedtradelevelUI.designatedTradeLevelfilteredList}" id="designatedtradelevelList" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+							<p:column headerText="#{lang['expand.row']}" width="45">
+								<p:rowToggler rendered="#{rowVar.designatedTradeLevelItemsList.size() gt 0}"></p:rowToggler>
+							</p:column>
+							<p:column headerText="Designated Trade" rendered="true">
+								<h:outputText value="#{rowVar.designatedTrade.description}" />
+							</p:column>
+							<p:column headerText="#{lang['qualification']}">
+								<h:outputText value="#{rowVar.qualification.saqaQualification}" />
+							</p:column>
+							<p:column headerText="#{lang['description']}">
+								<h:outputText value="#{rowVar.description}" />
+							</p:column>
+							<p:column headerText="No Completion Order">
+								<center>
+									<p:selectBooleanCheckbox disabled="true" value="#{rowVar.noOrder}" />
+								</center>
+							</p:column>
+							<p:column headerText="Completion Order Number">
+								<h:outputText value="#{rowVar.level}" />
+							</p:column>
+							<p:column headerText="Min Weeks">
+								<h:outputText value="#{rowVar.minweeks}" />
+							</p:column>
+							<p:column headerText="Max Weeks">
+								<h:outputText value="#{rowVar.maxweeks}" />
+							</p:column>
+							<p:column headerText="Extension Level">
+								<center>
+									<p:selectBooleanCheckbox disabled="true" value="#{rowVar.extension}" />
+								</center>
+							</p:column>
+							<p:column headerText="Max Attempts">
+								<h:outputText value="#{rowVar.maxAttemptsAmount}" />
+							</p:column>
+							<p:column headerText="Legacy Date">
+								<h:outputText value="#{rowVar.dateLegacyAttempts}">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="Legacy Max Attempts">
+								<h:outputText value="#{rowVar.legacyMaxAttemptsAmount}" />
+							</p:column>
+							<p:column headerText="Designated Trade Type" rendered="false">
+								<h:outputText value="#{rowVar.designatedTradeType.description}" />
+							</p:column>
+							<p:column width="80">
+								<p:commandButton icon="fa fa-plus" title="Add Item" update="addItemForm" action="#{designatedtradelevelUI.prepNewItem}" oncomplete="PF('addItemDlg').show()">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{designatedtradelevelUI.designatedtradelevelForItems}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":designatedtradelevelInsForm:designatedtradelevelInsGrid">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{designatedtradelevelUI.designatedtradelevel}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:designatedtradelevelList" action="#{designatedtradelevelUI.designatedtradelevelDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{designatedtradelevelUI.designatedtradelevel}" />
+								</p:commandButton>
+							</p:column>
+
+							<p:rowExpansion>
+								<p:dataTable value="#{rowVar.designatedTradeLevelItemsList}" var="rv1" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+									<p:column headerText="#{lang['code']}">
+										<h:outputText value="#{rv1.code}" />
+									</p:column>
+									<p:column headerText="#{lang['description']}">
+										<h:outputText value="#{rv1.description}" />
+									</p:column>
+									<p:column width="80">
+										<p:commandButton icon="fa fa-database" title="#{lang['update']}" update="addItemForm" oncomplete="PF('addItemDlg').show()">
+											<f:setPropertyActionListener value="#{rv1}" target="#{designatedtradelevelUI.designatedTradeLevelItems}" />
+										</p:commandButton>
+										<p:spacer width="5" />
+										<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update="@form" action="#{designatedtradelevelUI.deleteItem}">
+											<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+											<f:setPropertyActionListener value="#{rv1}" target="#{designatedtradelevelUI.designatedTradeLevelItems}" />
+										</p:commandButton>
+									</p:column>
+								</p:dataTable>
+							</p:rowExpansion>
+						</p:dataTable>
+
+					</h:form>
+
+					<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+						<h:form>
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</h:form>
+					</p:confirmDialog>
+
+
+					<p:dialog header="Designated Trade Level Item" position="top" widgetVar="addItemDlg" hideEffect="clip" showEffect="clip" id="dialogAddItem" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+						<h:form id="addItemForm">
+							<div class="ui-fluid">
+								<div class="ui-g">
+									<div class="ui-g-12">
+										<h4>Designated Trade Level</h4>
+										<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText value="#{designatedtradelevelUI.designatedTradeLevelItems.designatedTradeLevel.designatedTrade.description}" style="width:95%" disabled="true" />
+												<p:outputLabel value="Designated Trade" />
+											</h:panelGroup>
+
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText value="(#{designatedtradelevelUI.designatedTradeLevelItems.designatedTradeLevel.qualification.code}) #{designatedtradelevelUI.designatedTradeLevelItems.designatedTradeLevel.qualification.description}" style="width:95%" disabled="true" />
+												<p:outputLabel value="Qualification" />
+											</h:panelGroup>
+
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText value="#{designatedtradelevelUI.designatedTradeLevelItems.designatedTradeLevel.description}" style="width:95%" disabled="true" />
+												<p:outputLabel value="#{lang['description']}" />
+											</h:panelGroup>
+
+
+											<h:panelGroup>
+												<p:outputLabel value="No Completion Order" />
+												<p:spacer width="10"></p:spacer>
+												<p:selectBooleanCheckbox  value="#{designatedtradelevelUI.designatedTradeLevelItems.designatedTradeLevel.noOrder}" disabled="true">
+													<p:ajax></p:ajax>
+												</p:selectBooleanCheckbox>
+											</h:panelGroup>
+
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText value="#{designatedtradelevelUI.designatedTradeLevelItems.designatedTradeLevel.level}" style="width:95%" disabled="true" />
+												<p:outputLabel value="Completion Order Number" />
+											</h:panelGroup>
+										</p:panelGrid>
+
+										<c:if test="#{designatedtradelevelUI.designatedTradeLevelItems.id eq null}">
+											<h4>Create Designated Trade Level Item</h4>
+										</c:if>
+										<c:if test="#{designatedtradelevelUI.designatedTradeLevelItems.id ne null}">
+											<h4>Update Designated Trade Level Item</h4>
+										</c:if>
+
+										<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText id="code" value="#{designatedtradelevelUI.designatedTradeLevelItems.code}" style="width:95%" />
+												<p:outputLabel value="#{lang['code']}" for="code" />
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText id="description" value="#{designatedtradelevelUI.designatedTradeLevelItems.description}" style="width:95%" required="true" />
+												<p:outputLabel value="#{lang['description']}" for="description" />
+											</h:panelGroup>
+										</p:panelGrid>
+
+										<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+											<p:commandButton value="Submit" icon="fa fa-database" action="#{designatedtradelevelUI.createUpdateItem}" process="@form" update="@form :designatedtradelevelInsForm :mainForm" onstart="uploadStart()" oncomplete="uploadDone()" />
+											<p:commandButton value="Cancel" icon="fa fa-times" action="#{designatedtradelevelUI.closeItemView}" process="@this" update="@form :designatedtradelevelInsForm :mainForm" onstart="uploadStart()" oncomplete="uploadDone()" />
+										</p:panelGrid>
+									</div>
+								</div>
+							</div>
+						</h:form>
+					</p:dialog>
+
+
+
+				</div>
+			</div>
+		</div>
+	</ui:define>
+
+
+</ui:composition>

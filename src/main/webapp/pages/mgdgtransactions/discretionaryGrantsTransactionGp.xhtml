@@ -1,0 +1,282 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Discretionary Grants Transactions</h1>
+					<p:growl sticky="false">
+						<p:autoUpdate />
+					</p:growl>
+					<h:form id="mainForm">
+						<p:panelGrid columns="1" style="width:100%" id="dateSelectionGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<p:panelGrid layout="grid" columns="4" style="width:100%" rendered="false">
+								<p:outputLabel value="#{lang['from.date']}" styleClass="FontBold" />
+								<p:calendar value="#{discretionaryGrantsTransactionGpUI.fromDate}" pattern="#{autoCompleteUI.CALENDER_PATTERN}" readonlyInput="true" navigator="true" mask="true" yearRange="c-30:c">
+									<p:ajax event="dateSelect" update="dateSelectionGrid" />
+								</p:calendar>
+								<p:outputLabel value="#{lang['to.date']}" styleClass="FontBold" />
+								<p:calendar value="#{discretionaryGrantsTransactionGpUI.toDate}" pattern="#{autoCompleteUI.CALENDER_PATTERN}" readonlyInput="true" navigator="true" mask="true" yearRange="c-30:c">
+								</p:calendar>
+							</p:panelGrid>
+							<p:commandButton value="Search Available Transactions" icon="ui-icon-save" update="@form" action="#{discretionaryGrantsTransactionGpUI.generateResultsByDate}" />
+						</p:panelGrid>
+
+						<p:panelGrid columns="1" style="width:100%" id="resultsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{discretionaryGrantsTransactionGpUI.activeContractDetailList.size() ne 0}">
+							<p:commandButton value="Generate" icon="fa fa-plus" action="#{discretionaryGrantsTransactionGpUI.generateNewBatch}" rendered="#{discretionaryGrantsTransactionGpUI.activeContractDetailList.size() ne 0}" update="mainForm resultsForm">
+								<p:confirm header="Confirmation" message="Are you sure?" icon="pi pi-exclamation-triangle" />
+							</p:commandButton>
+							<div class="EmptyBox10" />
+							<p:dataTable var="rv" value="#{discretionaryGrantsTransactionGpUI.activeContractDetailList}" id="resultsDb" rowKey="#{rv.id}" reflow="true" paginator="true" rows="10" paginatorPosition="bottom"
+								paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20,40">
+								<p:column headerText="Levy Number" >
+									<h:outputText value="#{rv.activeContracts.dgAllocationParent.wsp.company.levyNumber}" rendered="#{rv.activeContracts.dgAllocationParent ne null}">
+									</h:outputText>
+									<h:outputText value="#{rv.activeContracts.company.levyNumber}" rendered="#{rv.activeContracts.dgAllocationParent eq null}">
+									</h:outputText>
+								</p:column>
+								
+								<p:column headerText="MOA Type" >
+									<h:outputText value="#{rv.activeContracts.refnoAuto}">
+									</h:outputText>
+								</p:column>
+								
+								<p:column headerText="Tranch Payment" >
+									<h:outputText value="#{rv.trancheEnum.friendlyName}">
+									</h:outputText>
+								</p:column>
+								
+								<p:column headerText="Payment Month" >
+									<h:outputText value="#{rv.paymentMonth}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</h:outputText>
+								</p:column>
+
+								<p:column headerText="Payments">
+									<h:outputText value="#{rv.payments}" styleClass="Fright">
+										<f:convertNumber pattern="###,###,###,##0.00" />
+									</h:outputText>
+								</p:column>
+							</p:dataTable>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Discretionary Grants Transactions Generated</h1>
+					<h:form id="resultsForm">
+						<p:dataTable var="rowVar" value="#{discretionaryGrantsTransactionGpUI.dataModelGpGrantBatchList}" id="batchList" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20,40" reflow="true" lazy="true">
+							<p:column headerText="Batch Number" sortBy="#{rowVar.batchNumber}">
+								<h:outputText value="DISC GRANTS #{rowVar.batchNumber}" />
+							</p:column>
+							<p:column headerText="Batch Description" filterBy="#{rowVar.batchNumber}">
+								<h:outputText value="#{rowVar.batchDescription}" />
+							</p:column>
+							<p:column headerText="Status" sortBy="#{rowVar.approvalEnum}">
+								<h:outputText value="#{rowVar.approvalEnum.friendlyName}" />
+							</p:column>
+							<p:column headerText="From Date Selected" sortBy="#{rowVar.fromDatePeriod}" rendered="false">
+								<h:outputText value="#{rowVar.fromDatePeriod}">
+									<f:convertDateTime pattern="dd MMMM yyyy" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="To Date Selected" sortBy="#{rowVar.toDatePeriod}" rendered="false">
+								<h:outputText value="#{rowVar.toDatePeriod}">
+									<f:convertDateTime pattern="dd MMMM yyyy" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="GP Transaction Complete" exportable="false">
+								<center>
+									<p:selectBooleanCheckbox value="#{rowVar.completedGpTransation}" disabled="true">
+									</p:selectBooleanCheckbox>
+								</center>
+							</p:column>
+							<p:column headerText="GP Transaction Complete" style="display:none">
+								<h:outputText value="Completed" rendered="#{rowVar.completedGpTransation}"/>
+								<h:outputText value="N/A" rendered="#{!rowVar.completedGpTransation}"/>
+							</p:column>
+							<p:column headerText="GP Transaction Time">
+								<h:outputText value="#{rowVar.dateCompletedGpTransation}" rendered="#{rowVar.dateCompletedGpTransation ne null}">
+									<f:convertDateTime pattern="dd MMMM yyyy" />
+								</h:outputText>
+								<h:outputText value="N/A" rendered="#{rowVar.dateCompletedGpTransation eq null}">
+								</h:outputText>
+							</p:column>
+							<p:column width="30">
+								<p:commandButton icon="ui-icon-play-for-work" title="View Entries" action="#{discretionaryGrantsTransactionGpUI.selectBatchListToView}" update="resultsForm">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{discretionaryGrantsTransactionGpUI.gpGrantBatchList}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-list" update="tasksViewForm" title="View Tasks Assigned" action="#{discretionaryGrantsTransactionGpUI.viewActiveContractsTasks}">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{discretionaryGrantsTransactionGpUI.gpGrantBatchListTaskView}" />
+								</p:commandButton>
+								<p:commandButton value="TEST GP" action="#{discretionaryGrantsTransactionGpUI.testBatchSendGP}" update="@form" rendered="false">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{discretionaryGrantsTransactionGpUI.gpGrantBatchList}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+						<div class="EmptyBox10" />
+						<p:panelGrid layout="grid" columns="1" style="width:100%" rendered="#{discretionaryGrantsTransactionGpUI.gpGrantBatchList ne null}">
+							<div class="EmptyBox10" />
+							<ui:include src="/pages/includes/download_lazy.xhtml">
+								<ui:param name="file_name" value="Entries_To_Be_Processed_From_Batch" />
+								<ui:param name="target" value="batchEntryList" />
+							</ui:include>
+							<div class="EmptyBox20" />
+							<p:dataTable var="rowVarE" value="#{discretionaryGrantsTransactionGpUI.dataModelGpGrantBatchEntry}" id="batchEntryList" rowKey="#{rowVarE.id}" paginator="true" rows="10" paginatorPosition="bottom"
+								paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20,40" reflow="true" lazy="true">
+								<p:column headerText="Creditor ID" sortBy="#{rowVarE.levyNumber}" filterBy="#{rowVarE.levyNumber}">
+									<p:outputLabel value="#{rowVarE.levyNumber}" />
+								</p:column>
+								<p:column headerText="On SARS Employer File" exportable="false">
+									<center>
+										<p:selectBooleanCheckbox disabled="true" value="#{rowVarE.onSarsEmployerRecord}">
+										</p:selectBooleanCheckbox>
+									</center>
+								</p:column>
+								<p:column headerText="On SARS Employer File" style="display:none">
+									<h:outputText value="Yes" rendered="#{rowVarE.onSarsEmployerRecord}"/>
+									<h:outputText value="No" rendered="#{!rowVarE.onSarsEmployerRecord}"/>
+								</p:column>
+								<p:column headerText="Status On SARS Employer File">
+									<h:outputText value="#{rowVarE.employerRecordsStatus}">
+									</h:outputText>
+								</p:column>
+								<p:column headerText="On NSDMS Employer File" exportable="false">
+									<center>
+										<p:selectBooleanCheckbox disabled="true" value="#{rowVarE.onNsdmsDatabase}">
+										</p:selectBooleanCheckbox>
+									</center>
+								</p:column>
+								<p:column headerText="On NSDMS Employer File" style="display:none">
+									<h:outputText value="Yes" rendered="#{rowVarE.onNsdmsDatabase}"/>
+									<h:outputText value="No" rendered="#{!rowVarE.onNsdmsDatabase}"/>
+								</p:column>
+								<p:column headerText="Status On NSDMS Employer File">
+									<h:outputText value="#{rowVarE.nsdmdStatus}">
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Description">
+									<h:outputText value="#{rowVarE.description}">
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Batch Number">
+									<h:outputText value="DISC GRANTS #{rowVarE.gpGrantBatchList.batchNumber}">
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Scheme Year" rendered="false">
+									<h:outputText value="#{rowVarE.schemeYear}">
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Document Type">
+									<h:outputText value="#{rowVarE.documentTypeDiscretionary.friendlyName}">
+									</h:outputText>
+								</p:column>
+								<p:column headerText="SARS Date Received" sortBy="#{rowVarE.arrivalDateFromSars}" rendered="false">
+									<h:outputText value="#{rowVarE.arrivalDateFromSars}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Document Number">
+									<p:outputLabel value="#{rowVarE.documentNumber}" />
+								</p:column>
+								<p:column headerText="Intervention Type" rendered="true">
+									<p:outputLabel value="#{rowVarE.activeContractDetail.projectImplementationPlan.interventionTypeDescription}"  rendered="#{rowVarE.activeContractDetail ne null and rowVarE.activeContractDetail.projectImplementationPlan ne null}">
+									</p:outputLabel>
+									<p:outputLabel value="N/A"  rendered="#{rowVarE.activeContractDetail eq null or rowVarE.activeContractDetail.projectImplementationPlan eq null}">
+									</p:outputLabel>
+								</p:column>
+								<p:column headerText="Total Contract Value As Per PIP" rendered="true">
+									<p:outputLabel value="#{rowVarE.activeContractDetail.projectImplementationPlan.totalAwardAmount}" styleClass="Fright" >
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</p:outputLabel>
+									<p:outputLabel value="N/A"  rendered="#{rowVarE.activeContractDetail eq null or rowVarE.activeContractDetail.projectImplementationPlan eq null}">
+									</p:outputLabel>
+								</p:column>
+								<p:column headerText="Payments">
+									<p:outputLabel value="#{rowVarE.discretionaryLevy}" styleClass="Fright">
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</p:outputLabel>
+								</p:column>
+								
+								<p:column headerText="Balance Remaining" rendered="true">
+									<p:outputLabel value="#{rowVarE.activeContractDetail.openingbalance}" styleClass="Fright" rendered="#{rowVarE.activeContractDetail ne null and rowVarE.activeContractDetail.openingbalance ne null}" >
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</p:outputLabel>
+									<p:outputLabel value="N/A"  rendered="#{rowVarE.activeContractDetail eq null or rowVarE.activeContractDetail.openingbalance eq null}">
+									</p:outputLabel>
+								</p:column>
+								
+								
+								<p:column headerText="Levy (100%)" rendered="false">
+									<p:outputLabel value="#{rowVarE.fullLevyAmount}" styleClass="Fright">
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</p:outputLabel>
+								</p:column>
+								
+								
+								<p:column headerText="Levy (80%)" rendered="false">
+									<p:outputLabel value="#{rowVarE.total}" styleClass="Fright">
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</p:outputLabel>
+								</p:column>
+								<p:column headerText="Percentage" rendered="false">
+									<p:outputLabel value="#{rowVarE.fullPercentageCalculation}" styleClass="Fright">
+										<f:convertNumber maxFractionDigits="2" />
+									</p:outputLabel>
+								</p:column>
+								<p:column headerText="Loaded On To GP" sortBy="#{rowVarE.loadedToGp}" exportable="false">
+									<center>
+										<p:selectBooleanCheckbox disabled="true" value="#{rowVarE.loadedToGp}" />
+									</center>
+								</p:column>
+								<p:column headerText="Loaded On To GP" style="display:none">
+									<h:outputText value="Yes" rendered="#{rowVarE.loadedToGp}"/>
+									<h:outputText value="No" rendered="#{!rowVarE.loadedToGp}"/>
+								</p:column>
+								<p:column headerText="Error Entry" sortBy="#{rowVarE.errorEntry}" exportable="false">
+									<center>
+										<p:selectBooleanCheckbox disabled="true" value="#{rowVarE.errorEntry}" />
+									</center>
+								</p:column>
+								<p:column headerText="Error Entry" style="display:none">
+									<h:outputText value="Yes" rendered="#{rowVarE.errorEntry}"/>
+									<h:outputText value="No" rendered="#{!rowVarE.errorEntry}"/>
+								</p:column>
+								<p:column headerText="Error Message" filterBy="#{rowVarE.errorMessage}">
+									<h:outputText value="Yes" rendered="#{rowVarE.errorMessage}"/>
+								</p:column>
+								<p:column headerText="Test GP" rendered="false">
+									<p:commandButton value="TEST GP" action="#{discretionaryGrantsTransactionGpUI.testGpSend}" update="@form">
+										<f:setPropertyActionListener value="#{rowVarE}" target="#{discretionaryGrantsTransactionGpUI.gpGrantBatchEntry}" />
+									</p:commandButton>
+								</p:column>
+							</p:dataTable>
+							<div class="EmptyBox10" />
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+		</div>
+		
+		<p:dialog position="top" header="Tasks View" widgetVar="tasksDlg" resizable="false" hideEffect="clip" showEffect="clip" id="tasksDialog" appendTo="@(body)" modal="true" width="70%" height="80vh" responsive="true" dynamic="true">
+			<h:form id="tasksViewForm">
+				<ui:include src="/pages/includes/taskInformationInclude.xhtml">
+					<ui:param name="TaskList" value="#{discretionaryGrantsTransactionGpUI.tasksDataModel}" />
+					<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+				</ui:include>
+				<div class="EmptyBox10" />
+				<p:commandButton value="Close View" icon="fa fa-times" process="@this" update="@form :mainForm" action="#{dgAllocationRegisterUI.closeTaskView}" />
+			</h:form>
+		</p:dialog>
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+			<h:form>
+				<p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="pi pi-check" />
+				<p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="pi pi-times" />
+			</h:form>
+		</p:confirmDialog>
+	</ui:define>
+</ui:composition>

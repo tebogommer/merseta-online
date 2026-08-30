@@ -1,0 +1,117 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>#{lang['extension.request']}</h1>
+					<h:form id="extensionrequestInsForm">
+						<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+
+						<p:panelGrid columns="1" style="width:100%" id="extensionrequestInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup>
+								<div>
+									<h2>#{lang['resason.for.extension']}</h2>
+								</div>
+
+								<div>
+									<p:panel>
+										<p:outputLabel escape="false" id="bugReport" value="#{extensionrequestUI.extensionrequest.reasonForExtension}" />
+									</p:panel>
+								</div>
+							</h:panelGroup>
+						</p:panelGrid>
+						<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h2>Documents</h2>
+							<p:dataTable value="#{extensionrequestUI.extensionrequest.docs}" var="rv1" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv1.id}">
+								<p:column headerText="#{lang['type']}" width="18%">#{rv1.configDoc.name}</p:column>
+								<p:column headerText="#{lang['original.file.name']}" priority="4">
+									<p:outputLabel value="#{rv1.originalFname}" styleClass="Fs12"></p:outputLabel>
+								</p:column>
+								<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+								<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+									<h:outputText value="#{rv1.createDate}">
+										<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="#{lang['version']}" width="10%" priority="4">
+									<h:outputText value="#{rv1.versionNo}">
+									</h:outputText>
+								</p:column>
+								<p:column headerText="#{lang['original.required']}">
+									<center>
+										<h:panelGroup rendered="#{rv1.configDoc.originalRequired}" styleClass="green">
+											<i class="fa fa-files-o fa-3x" aria-hidden="true"></i>
+										</h:panelGroup>
+										<h:panelGroup rendered="#{not rv1.configDoc.originalRequired}" styleClass="red">
+											<i class="fa fa-times fa-3x" aria-hidden="true"></i>
+										</h:panelGroup>
+									</center>
+								</p:column>
+								<p:column width="180">
+									<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlb" rendered="#{rv1.id ne null}">
+										<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="dlb" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+
+
+									<p:spacer width="5" rendered="#{rv1.id ne null}" />
+									<p:commandButton icon="fa fa-bars " id="dhist" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}">
+										<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+
+									<p:tooltip for="dhist" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+									<h:panelGroup id="panelGroupThree" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+										<p:spacer width="5" />
+										<p:commandButton icon="fa fa-comment-o" id="dnote" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="dnote" value="#{lang['view.note']}" position="left" />
+									</h:panelGroup>
+									<h:panelGroup id="panelGroupFour" rendered="#{rv1.extension.toLowerCase() eq 'pdf' and rv1.id ne null}">
+										<p:spacer width="5" />
+										<p:commandButton icon="fa fa-eye " id="viewerButton" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="viewerButton" value="#{lang['view.document']} " position="left" />
+									</h:panelGroup>
+
+								</p:column>
+							</p:dataTable>
+						</p:panelGrid>
+
+						<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+
+							<p:commandButton value="#{lang['complete.task']}" rendered="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Approve and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalApproval}" icon="ui-icon-save" update=":extensionrequestInsForm"
+								action="#{extensionrequestUI.completeTask}" styleClass="flat green-btn Fs18" style="height: 50px;"></p:commandButton>
+
+							<p:commandButton value="#{lang['approve.task']}" icon="ui-icon-save" update=":extensionrequestInsForm" action="#{extensionrequestUI.approveTask}" styleClass="flat green-btn Fs18" style="height: 50px;"
+								rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval}"></p:commandButton>
+
+							<p:commandButton value="#{lang['reject.task']}" icon="ui-icon-clear-all" update=":extensionrequestInsForm" process="@this" action="#{extensionrequestUI.rejectTask}" styleClass="flat red-btn Fs18" style="height: 50px;" rendered="#{sessionUI.task.targetKey ne sessionUI.activeUser.id}"></p:commandButton>
+
+						</p:panelGrid>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+	</ui:define>
+	<!-- 
+createDate = createDate
+company = company
+status = status
+reasonForExtension = reasonForExtension
+user = user
+
+-->
+</ui:composition>

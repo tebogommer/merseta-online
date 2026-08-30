@@ -1,0 +1,189 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				
+				<h:form id="mainForm">
+					<p:tooltip position="left"></p:tooltip>
+					<c:if test="#{companyLearnersUnderReviewUI.dataModel ne null}">
+						<div class="card card-w-title">
+						<H1>Learner Under Review</H1>
+							<ui:include src="/pages/includes/download_lazy.xhtml">
+								<ui:param name="file_name" value="learnersList" />
+								<ui:param name="target" value="learnersList" />
+							</ui:include>
+							<ui:include src="/pages/includes/filterGuide.xhtml" />
+							<p:dataTable var="rowVar" value="#{companyLearnersUnderReviewUI.dataModel}" filteredValue="#{companyLearnersUnderReviewUI.learnersfilteredList}" id="learnersList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25"
+								reflow="true" lazy="true">
+
+								<p:column headerText="#{lang['first.name']}" filterBy="#{rowVar.user.firstName}" sortBy="#{rowVar.user.firstName}">
+									<h:outputText value="#{rowVar.user.firstName}" />
+								</p:column>
+								<p:column headerText="#{lang['last.name']}" filterBy="#{rowVar.user.lastName}" sortBy="#{rowVar.user.lastName}">
+									<h:outputText value="#{rowVar.user.lastName}" />
+								</p:column>
+								<p:column headerText="Identity Number" filterBy="#{rowVar.user.rsaIDNumber}" sortBy="#{rowVar.user.rsaIDNumber}">
+									<h:outputText value="#{rowVar.user.rsaIDNumber}" />
+									<h:outputText rendered="#{rowVar.user.rsaIDNumber.length() lt 1}" value="N/A" />
+								</p:column>
+								<p:column headerText="Passport Number" filterBy="#{rowVar.user.rsaIDNumber}" sortBy="#{rowVar.user.rsaIDNumber}">
+									<h:outputText rendered="#{rowVar.user.passportNumber.length() lt 1}" value="N/A" />
+									<h:outputText value="#{rowVar.user.passportNumber}" />
+								</p:column>
+								<p:column headerText="Employment Status" >
+									<h:outputText value="#{rowVar.employmentStatus.friendlyName}" />
+								</p:column>
+								<p:column headerText="Status">
+									<h:outputText value="#{rowVar.learnerStatus.friendlyName}" />
+								</p:column>
+								<p:column headerText="Intervention Type" filterBy="#{rowVar.interventionType.description}" sortBy="#{rowVar.interventionType.description}">
+									<h:outputText value="#{rowVar.interventionType.description}" />
+								</p:column>
+								<p:column headerText="Course / Qualification ">
+									<h:outputText value="(#{rowVar.learnership.learnershipCode})" rendered="#{rowVar.learnership ne null}"/>
+									<h:outputText value="(#{rowVar.qualification.code})" rendered="#{rowVar.qualification ne null}"/>
+									<h:outputText value="#{rowVar.qualification.description}" rendered="#{rowVar.qualification ne null}"/>
+									<h:outputText value="(#{rowVar.qualification.nqflevelg2description})" rendered="#{rowVar.qualification ne null}"/>
+									<h:outputText value="#{rowVar.skillsSet.description}" rendered="#{rowVar.skillsSet ne null}" />
+									<h:outputText value="#{rowVar.skillsProgram.description}" rendered="#{rowVar.skillsProgram ne null}" />
+									<h:outputText value="#{rowVar.unitStandard.title}" rendered="#{rowVar.unitStandard ne null}" />
+									<h:outputText value="#{rowVar.nonCredidBearingDescription}" rendered="#{rowVar.nonCredidBearingDescription ne null}" />
+								</p:column>
+								
+								<p:column headerText="Registration Status Date">
+									<h:outputText value="#{rowVar.registeredDate}" rendered="#{rowVar.legacyRegistrationDate eq null}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</h:outputText>
+									<h:outputText value="#{rowVar.legacyRegistrationDate}" rendered="#{rowVar.legacyRegistrationDate ne null}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</h:outputText>
+								</p:column>
+								
+								<p:column headerText="Agreement End Date">
+									<h:outputText value="#{rowVar.completionDate}" rendered="#{rowVar.completionDate ne null}">
+									<f:convertDateTime pattern="dd MMMM yyyy" />
+									</h:outputText>
+								</p:column>
+								
+								<p:column headerText="Employer" filterBy="#{rowVar.employer.companyName}" sortBy="#{rowVar.employer.companyName}">
+									<h:outputText value="#{rowVar.employer.companyName}" rendered="#{rowVar.employer ne null}">
+									</h:outputText>
+								</p:column>
+								
+								<p:column headerText="Entity ID" filterBy="#{rowVar.employer.levyNumber}" sortBy="#{rowVar.employer.levyNumber}">
+									<h:outputText value="#{rowVar.employer.levyNumber}">
+									</h:outputText>
+								</p:column>
+
+								<p:column headerText="Provider" filterBy="#{rowVar.company.companyName}" sortBy="#{rowVar.company.companyName}">
+									<h:outputText value="#{rowVar.company.companyName}" rendered="#{rowVar.company ne null}">
+									</h:outputText>
+								</p:column>
+								
+								<p:column headerText="Accreditation Number" filterBy="#{rowVar.company.accreditationNumber}" sortBy="#{rowVar.company.accreditationNumber}">
+									<h:outputText value="#{rowVar.company.accreditationNumber}">
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Chamber">
+									<h:outputText value="#{rowVar.company.sicCode.chamber.description}">
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Region">
+									<h:outputText value="#{rowVar.company.region.description}">
+									</h:outputText>
+								</p:column>
+								
+								<p:column headerText="Push To SLA">
+									<p:commandButton icon="fa fa-clock-o" title="Push To SLA" update="lostTimeForm" action="#{companyLearnersUnderReviewUI.prepTasks}" oncomplete="PF('dlgLostTime').show()" process="@this">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{companyLearnersUnderReviewUI.companyLearners}" />
+									</p:commandButton>
+								</p:column>
+								
+							</p:dataTable>
+							<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+								<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+								<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+							</p:confirmDialog>
+						</div>
+					</c:if>
+					
+					<p:panel rendered="#{companyLearnersUnderReviewUI.validationError ne null}">
+						<!-- If error accrued or information not provided -->
+						<p:fieldset rendered="#{tpDetailLegacyUI.exceptions ne null}" styleClass="error Fs12">
+							<h4>#{lang['action.required.message']}:</h4>
+							<p:outputLabel value="#{tpDetailLegacyUI.exceptions}" escape="false"></p:outputLabel>
+						</p:fieldset>
+					</p:panel>
+				</h:form>
+			</div>
+		</div>
+
+		<p:dialog header="Push task to SLA" widgetVar="dlgLostTime" resizable="false" hideEffect="clip" showEffect="clip" id="LostTime" width="30%" height="400" responsive="true" modal="true" dynamic="true">
+			<h:form id="lostTimeForm">				
+				<br />
+				<p:fieldset legend="Current Learner Detailes">
+					<p:panelGrid columns="4" style="width:100%">
+						<h:panelGroup>
+							<b>Name:</b> #{companyLearnersUnderReviewUI.companyLearners.user.firstName}
+						</h:panelGroup>
+						<h:panelGroup>
+							<b>Surname:</b> #{companyLearnersUnderReviewUI.companyLearners.user.lastName}
+						</h:panelGroup>
+					</p:panelGrid>
+				</p:fieldset>
+				<p:fieldset rendered="#{companyLearnersUnderReviewUI.companyLearners.qualification ne null}" legend="Current Qualification">
+					<p:panelGrid columns="4" style="width:100%">
+						<h:panelGroup>
+							<b>Qualification Code:</b> #{companyLearnersUnderReviewUI.companyLearners.qualification.code}
+						</h:panelGroup>
+						<h:panelGroup>
+							<b>Qualification Title:</b> #{companyLearnersUnderReviewUI.companyLearners.qualification.description}
+						</h:panelGroup>
+					</p:panelGrid>
+				</p:fieldset>
+				<p:fieldset rendered="#{companyLearnersUnderReviewUI.companyLearners.nonCredidBearingDescription ne null}" legend="Non Credit Bearing Description">
+					<p:panelGrid columns="1" style="width:100%">
+						<h:panelGroup>
+								#{companyLearnersUnderReviewUI.companyLearners.nonCredidBearingDescription}
+							</h:panelGroup>
+					</p:panelGrid>
+				</p:fieldset>
+				<p:fieldset rendered="#{companyLearnersUnderReviewUI.companyLearners.skillsProgram ne null}" legend="Current Skills Program">
+					<p:panelGrid columns="4" style="width:100%">
+						<h:panelGroup>
+							<b>Programme ID:</b> #{companyLearnersUnderReviewUI.companyLearners.skillsProgram.programmeID}
+						</h:panelGroup>
+						<h:panelGroup>
+							<b>Skills Program Title:</b> #{companyLearnersUnderReviewUI.companyLearners.skillsProgram.description}
+						</h:panelGroup>
+					</p:panelGrid>
+				</p:fieldset>
+				<p:fieldset rendered="#{companyLearnersUnderReviewUI.companyLearners.unitStandard ne null}" legend="Current Unit Standard">
+					<p:panelGrid columns="4" style="width:100%">
+						<h:panelGroup>
+							<b>Unit Standard Code:</b> #{companyLearnersUnderReviewUI.companyLearners.unitStandard.code}
+						</h:panelGroup>
+						<h:panelGroup>
+							<b>Unit Standard Title:</b> #{companyLearnersUnderReviewUI.companyLearners.unitStandard.title}
+						</h:panelGroup>
+					</p:panelGrid>
+				</p:fieldset>
+				<p:fieldset rendered="#{companyLearnersUnderReviewUI.companyLearners.skillsSet ne null}" legend="Current Skills Set">
+					<p:panelGrid columns="4" style="width:100%">
+						<h:panelGroup>
+							<b>Programme ID:</b> #{companyLearnersUnderReviewUI.companyLearners.skillsSet.programmeID}
+						</h:panelGroup>
+						<h:panelGroup>
+							<b>Skills Set Title:</b> #{companyLearnersUnderReviewUI.companyLearners.skillsSet.description}
+						</h:panelGroup>
+					</p:panelGrid>
+				</p:fieldset>
+				<br />
+				<p:commandButton value="#{lang['submit']}" icon="fa fa-check" styleClass="flat" action="#{companyLearnersUnderReviewUI.submitTasks}" update="mainForm" onstart="uploadStart()" />
+			</h:form>
+		</p:dialog>
+
+	</ui:define>
+
+</ui:composition>

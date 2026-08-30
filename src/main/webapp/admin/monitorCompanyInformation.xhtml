@@ -1,0 +1,393 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui"
+	template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+
+					<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+					<p:importEnum type="haj.com.entity.enums.UsersStatusEnum" />
+					<p:growl showDetail="false" sticky="false" id="msg">
+						<p:autoUpdate />
+					</p:growl>
+
+					<h1>Monitor Company Information</h1>
+
+					<h:form id="mainForm">
+
+						<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="companyIDNumber" value="#{monitorCompanyInformationUI.companyID}" style="width:95%" />
+								<p:outputLabel value="Company ID Number" for="companyIDNumber" />
+							</h:panelGroup>
+						</p:panelGrid>
+
+						<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+							<p:commandButton value="Apply Company ID FIlter" update="@form" action="#{monitorCompanyInformationUI.applyFilter}" />
+							<p:commandButton value="Clear Company ID FIlter" update="@form" action="#{monitorCompanyInformationUI.clearFilter}" />
+						</p:panelGrid>
+
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+						<p:dataTable var="rowVar" value="#{monitorCompanyInformationUI.dataModelComapny}" id="companyList" rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,20,40" reflow="true" lazy="true" selectionMode="single" selection="#{searchCompanyUI.company}">
+							<p:column headerText="ID" sortBy="#{rowVar.id}" width="50">
+								<h:outputText value="#{rowVar.id}" />
+							</p:column>
+							<p:column headerText="#{lang['company.name']}" filterBy="#{rowVar.companyName}" sortBy="#{rowVar.companyName}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.companyName}" />
+							</p:column>
+							<p:column headerText="#{lang['tradingName']}" filterBy="#{rowVar.tradingName}" sortBy="#{rowVar.tradingName}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.tradingName}" />
+							</p:column>
+							<p:column headerText="#{lang['entity.id']}" filterBy="#{rowVar.levyNumber}" sortBy="#{rowVar.levyNumber}" filterStyle="width: 95%" width="10%">
+								<h:outputText value="#{rowVar.levyNumber}" />
+							</p:column>
+							<p:column headerText="#{lang['status']}" sortBy="#{rowVar.companyStatus}" width="10%">
+								<h:outputText value="#{lang[rowVar.companyStatus.registrationName]}" />
+							</p:column>
+							<p:column headerText="Use Trading Name SETMIS" sortBy="#{rowVar.useTradingNameSetmis}" width="10%">
+								<p:selectBooleanCheckbox disabled="true" value="#{rowVar.useTradingNameSetmis}" />
+							</p:column>
+							<p:column width="30">
+								<p:commandButton icon="fa fa-tasks" title="View Company Information" process="@this" action="#{monitorCompanyInformationUI.selectCompany}" immediate="true" update="@form">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{monitorCompanyInformationUI.selectedCompany}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+
+						<div class="EmptyBox20" />
+						<div class="EmptyBox20" />
+
+						<p:outputPanel rendered="#{monitorCompanyInformationUI.selectedCompany ne null and monitorCompanyInformationUI.selectedCompany.id ne null}" id="compInfoPanel">
+
+							<h2>Company: #{monitorCompanyInformationUI.selectedCompany.companyName} Selected</h2>
+							<p:commandButton immediate="true" update="@form" value="Clear" action="#{monitorCompanyInformationUI.deselectComapny}" />
+							<div class="EmptyBox20" />
+
+							<c:if test="#{sessionUI.validationErrors ne ''}">
+								<h3>#{monitorCompanyInformationUI.selectedCompany.companyName} (#{monitorCompanyInformationUI.selectedCompany.levyNumber}) -- Validation Errors:</h3>
+								<p:outputLabel value="#{sessionUI.validationErrors}" escape="false" />
+							</c:if>
+							<div class="EmptyBox20" />
+							<p:commandButton immediate="true" value="Run Validiation (NOTE THIS WILL NOT LOOK AT ALTERED INFORMATION BELOW)" action="#{monitorCompanyInformationUI.runValidiationChecks}" update="compInfoPanel" />
+							<div class="EmptyBox20" />
+
+
+							<!-- Company Information here -->
+							<p:fieldset legend="Company Information" id="companyInfoFieldSet">
+								<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" id="pgnonSetaComps">
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText id="companyName1" value="#{monitorCompanyInformationUI.selectedCompany.companyName}" style="width:95%" required="true" requiredMessage="#{lang['enter.your.company.name']}">
+											<p:ajax></p:ajax>
+										</p:inputText>
+										<p:outputLabel value="#{lang['companyName']}" for="companyName1" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText id="tradingName" value="#{monitorCompanyInformationUI.selectedCompany.tradingName}" style="width:95%" required="false" requiredMessage="#{lang['enter.the.trading.name']}">
+										</p:inputText>
+										<p:outputLabel value="#{lang['tradingName']}" for="tradingName" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputMask mask="#{searchCompanyUI.companyRegistrationNumberFormat}" disabled="true" id="companyRegNumber1" value="#{monitorCompanyInformationUI.selectedCompany.companyRegistrationNumber}" style="width:95%" requiredMessage="#{lang['enter.reg.number']}" required="true">
+											<p:ajax></p:ajax>
+										</p:inputMask>
+										<p:outputLabel value="#{lang['registration.number']}" for="companyRegNumber1" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield" rendered="#{monitorCompanyInformationUI.selectedCompany.levyNumber ne null and monitorCompanyInformationUI.selectedCompany.levyNumber ne ''}">
+										<p:inputText id="levyNumberNSC" value="#{monitorCompanyInformationUI.selectedCompany.levyNumber}" style="width:95%" required="false" requiredMessage="Enter SDL Number">
+											<p:ajax />
+										</p:inputText>
+										<p:outputLabel value="SDL Number" for="levyNumberNSC" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield" rendered="#{monitorCompanyInformationUI.selectedCompany.email ne null and monitorCompanyInformationUI.selectedCompany.email ne ''}">
+										<p:inputText id="compEmail1" value="#{monitorCompanyInformationUI.selectedCompany.email}" style="width:95%" required="true" requiredMessage="#{lang['enter.email.address']}">
+											<p:ajax></p:ajax>
+										</p:inputText>
+										<p:outputLabel value="#{lang['email.address']}" for="compEmail1" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield" rendered="#{monitorCompanyInformationUI.selectedCompany.telNumber ne null and monitorCompanyInformationUI.selectedCompany.telNumber ne ''}">
+										<p:inputMask id="nonSetaTelNumber" mask="#{profileUI.TELPHONE_FORMAT}" value="#{monitorCompanyInformationUI.selectedCompany.telNumber}" style="width: 95%" label="telNumber" required="true" requiredMessage="Enter tel number">
+											<p:ajax />
+											<o:validator validatorId="javax.faces.Length" minimum="0" maximum="20" message="#{lang['user.tellnumber.length']}" />
+										</p:inputMask>
+										<p:outputLabel value="#{lang['tel.number']}:" for="nonSetaTelNumber" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield" rendered="#{monitorCompanyInformationUI.selectedCompany.faxNumber ne null and monitorCompanyInformationUI.selectedCompany.faxNumber ne ''}">
+										<p:inputMask id="nonStaFax" mask="#{profileUI.CELLPHONE_FORMAT}" value="#{monitorCompanyInformationUI.selectedCompany.faxNumber}" style="width: 95%" label="cellNumber" required="false" requiredMessage="Enter fax number">
+											<p:ajax />
+										</p:inputMask>
+										<p:outputLabel value="#{lang['fax.number']}" for="nonStaFax" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield" rendered="#{monitorCompanyInformationUI.selectedCompany.companyWebsite ne null and monitorCompanyInformationUI.selectedCompany.companyWebsite ne ''}">
+										<p:inputText maxlength="70" id="companyWebsite" value="#{monitorCompanyInformationUI.selectedCompany.companyWebsite}" style="width:95%" required="false" requiredMessage="#{lang['company.website.required']}">
+										</p:inputText>
+										<p:outputLabel value="#{lang['company.website']}" for="companyWebsite" />
+									</h:panelGroup>
+									
+									<h:panelGroup>
+										<div style="margin-top: -20px !important;">
+											<p:outputLabel value="Organisation Type" styleClass="gray Fs12" style="margin-left:5px" />
+										</div>
+										<div>
+											<p:selectOneMenu value="#{monitorCompanyInformationUI.selectedCompany.organisationType}" converter="OrganisationTypeConvertor" style="width:95%" requiredMessage="Select: Organisation Type">
+												<f:selectItem itemLabel="-- #{lang['select.one']} --" />
+												<f:selectItems value="#{selectItemsUI.organisationType}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+												<p:ajax />
+											</p:selectOneMenu>
+										</div>
+									</h:panelGroup>
+									
+									<h:panelGroup>
+										<div style="margin-top: -20px !important;">
+											<p:outputLabel value="ETQA Selection" styleClass="gray Fs12" style="margin-left:5px" />
+										</div>
+										<div>
+											<p:selectOneMenu value="#{monitorCompanyInformationUI.selectedCompany.etqa}" converter="EtqaConvertor" style="width:95%" requiredMessage="Select: ETQA">
+												<f:selectItem itemLabel="-- #{lang['select.one']} --" />
+												<f:selectItems value="#{selectItemsUI.selectItemsEtqa}" var="rve" itemLabel="#{rve.description}" itemValue="#{rve}" />
+												<p:ajax />
+											</p:selectOneMenu>
+										</div>
+									</h:panelGroup>
+									
+									<h:panelGroup>
+										<div style="margin-top: -20px !important;">
+											<p:outputLabel value="SETA Selection" styleClass="gray Fs12" style="margin-left:5px" />
+										</div>
+										<div>
+											<p:selectOneMenu value="#{monitorCompanyInformationUI.selectedCompany.seta}" converter="SetaConvertor" style="width:95%" requiredMessage="Select: SETA">
+												<f:selectItem itemLabel="-- #{lang['select.one']} --" />
+												<f:selectItems value="#{selectItemsUI.seta}" var="rvs" itemLabel="#{rvs.description}" itemValue="#{rvs}" />
+												<p:ajax />
+											</p:selectOneMenu>
+										</div>
+									</h:panelGroup>
+									
+									<h:panelGroup>
+										<p:selectBooleanCheckbox id="tNameSetmis" value="#{monitorCompanyInformationUI.selectedCompany.useTradingNameSetmis}">
+											<p:ajax />
+										</p:selectBooleanCheckbox>
+										<p:spacer width="5" />
+										<p:outputLabel value="Use Trading Name For SETMIS" for="tNameSetmis" />
+									</h:panelGroup>
+
+								</p:panelGrid>
+
+								<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" id="addressInfoGrid">
+									<p:fieldset legend="#{lang['residentialAddress']}" style="margin-top: 20px" rendered="#{monitorCompanyInformationUI.selectedCompany.residentialAddress ne null and monitorCompanyInformationUI.selectedCompany.residentialAddress.id ne null}">
+										<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank">
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText disabled="true" value="#{monitorCompanyInformationUI.selectedCompany.residentialAddress.id}" style="opacity: 1 !important; color: black; width:100%">
+												</p:inputText>
+												<p:outputLabel value="Address ID" />
+											</h:panelGroup>
+
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText id="addr11" value="#{monitorCompanyInformationUI.selectedCompany.residentialAddress.addressLine1}" style="opacity: 1 !important; color: black; width:100%" required="true" requiredMessage="#{lang['enter.residential.address']}">
+													<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['residentialAddress.lineone.length.error']}" />
+													<p:ajax></p:ajax>
+												</p:inputText>
+												<p:outputLabel value="#{lang['address.line.1']}" for="addr11" />
+											</h:panelGroup>
+
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText id="addr22" style="opacity: 1 !important; color: black; width:100%" value="#{monitorCompanyInformationUI.selectedCompany.residentialAddress.addressLine2}" required="true" requiredMessage="Provide Address Line 2">
+													<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['residentialAddress.linetwo.length.error']}" />
+													<p:ajax></p:ajax>
+												</p:inputText>
+												<p:outputLabel value="#{lang['address.line.2']}" for="addr22" />
+											</h:panelGroup>
+
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText id="addr33" style="opacity: 1 !important; color: black; width:100%" value="#{monitorCompanyInformationUI.selectedCompany.residentialAddress.addressLine3}">
+													<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['residentialAddress.linethree.length.error']}" />
+													<p:ajax></p:ajax>
+												</p:inputText>
+												<p:outputLabel value="#{lang['address.line.3']}" for="addr33" />
+											</h:panelGroup>
+
+											<h:panelGroup styleClass="md-inputfield">
+												<p:autoComplete id="town1" value="#{monitorCompanyInformationUI.selectedCompany.residentialAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true"
+													minQueryLength="3" maxResults="10" inputStyle="width: 100%" style="width: 100%" required="true" requiredMessage="#{lang['please.select.a.town']}">
+													<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+													<p:ajax event="itemSelect" />
+												</p:autoComplete>
+												<p:outputLabel value="#{lang['town']}" for="town1" />
+											</h:panelGroup>
+
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText id="pcode1" style="opacity: 1 !important; color: black; width:100%" value="#{monitorCompanyInformationUI.selectedCompany.residentialAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}">
+													<o:validator validatorId="javax.faces.Length" minimum="0" maximum="4" message="#{lang['residentialAddress.code.length.error']}" />
+													<p:ajax></p:ajax>
+												</p:inputText>
+												<p:outputLabel value="#{lang['post.code']}" for="pcode1" />
+											</h:panelGroup>
+
+											<h:panelGroup styleClass="md-inputfield" id="pgMun1">
+												<p:autoComplete id="MunicipalityID1" value="#{monitorCompanyInformationUI.selectedCompany.residentialAddress.municipality}" completeMethod="#{sdfDetailUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityDesc}" itemValue="#{rv}" forceSelection="true"
+													converter="MunicipalityConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputstyle="opacity: 1 !important; color: black; width: 100%" style="opacity: 1 !important; color: black; width: 100%" required="true" requiredMessage="#{lang['select.municipality']}">
+													<p:column headerText="#{lang['province']}" style="white-space: nowrap">#{rv.province.provinceDesc}</p:column>
+													<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">#{rv.municipalityDesc}</p:column>
+													<p:ajax event="change" update="resProvincePG1"></p:ajax>
+													<p:ajax event="itemSelect" update="resProvincePG1 pgMun1"></p:ajax>
+												</p:autoComplete>
+												<p:outputLabel value="#{lang['municipality']}" for="MunicipalityID1" />
+											</h:panelGroup>
+
+											<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank" id="resProvincePG1">
+												<h:panelGroup styleClass="md-inputfield" rendered="#{monitorCompanyInformationUI.selectedCompany.residentialAddress.municipality.province ne null}">
+													<p:inputText disabled="true" id="resProvince1" value="#{monitorCompanyInformationUI.selectedCompany.residentialAddress.municipality.province.provinceDesc}" style="opacity: 1 !important; color: black; width:100%">
+														<p:ajax></p:ajax>
+													</p:inputText>
+													<p:outputLabel value="#{lang['province']}" for="resProvince1" />
+												</h:panelGroup>
+											</p:panelGrid>
+										</p:panelGrid>
+
+										<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank" rendered="#{monitorCompanyInformationUI.trainingProvider}">
+											<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank">
+												<h:panelGroup styleClass="md-inputfield">
+													<p:inputText type="number" rendered="true" id="longitudeDegrees" style="opacity: 1 !important; color: black; width:100%" value="#{monitorCompanyInformationUI.selectedCompany.residentialAddress.longitudeDegrees}" required="true" requiredMessage="Enter #{lang['longitude']}: Degrees">
+														<p:ajax></p:ajax>
+													</p:inputText>
+													<p:outputLabel value="#{lang['longitude']}: Degrees" for="longitudeDegrees" />
+												</h:panelGroup>
+
+												<h:panelGroup styleClass="md-inputfield">
+													<p:inputText type="number" id="longitudeMinutes" value="#{monitorCompanyInformationUI.selectedCompany.residentialAddress.longitudeMinutes}" style="opacity: 1 !important; color: black; width:100%" required="true" requiredMessage="Enter #{lang['longitude']}: Minutes">
+														<p:ajax></p:ajax>
+													</p:inputText>
+													<p:outputLabel value="#{lang['longitude']}: Minutes" for="longitudeMinutes" />
+												</h:panelGroup>
+
+												<h:panelGroup styleClass="md-inputfield">
+													<p:inputText type="number" id="longitudeSeconds" value="#{monitorCompanyInformationUI.selectedCompany.residentialAddress.longitudeSeconds}" style="opacity: 1 !important; color: black; width:100%" required="true" requiredMessage="Enter #{lang['longitude']}: Seconds">
+														<p:ajax></p:ajax>
+													</p:inputText>
+													<p:outputLabel value="#{lang['longitude']}: Seconds" for="longitudeSeconds" />
+												</h:panelGroup>
+											</p:panelGrid>
+											<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank">
+												<h:panelGroup styleClass="md-inputfield">
+													<p:inputText type="number" rendered="true" id="latitudeDegrees" style="opacity: 1 !important; color: black; width:100%" value="#{monitorCompanyInformationUI.selectedCompany.residentialAddress.latitudeDegrees}" required="true" requiredMessage="Enter #{lang['latitude']}: Degrees">
+														<p:ajax></p:ajax>
+													</p:inputText>
+													<p:outputLabel value="#{lang['latitude']}: Degrees" for="latitudeDegrees" />
+												</h:panelGroup>
+												<h:panelGroup styleClass="md-inputfield">
+													<p:inputText type="number" id="latitudeMinutes" value="#{monitorCompanyInformationUI.selectedCompany.residentialAddress.latitudeMinutes}" style="opacity: 1 !important; color: black; width:100%" required="true" requiredMessage="Enter #{lang['latitude']}: Minutes">
+														<p:ajax></p:ajax>
+													</p:inputText>
+													<p:outputLabel value="#{lang['latitude']}: Minutes" for="latitudeMinutes" />
+												</h:panelGroup>
+
+												<h:panelGroup styleClass="md-inputfield">
+													<p:inputText type="number" id="latitudeSeconds" value="#{monitorCompanyInformationUI.selectedCompany.residentialAddress.latitudeSeconds}" style="opacity: 1 !important; color: black; width:100%" required="true" requiredMessage="Enter #{lang['latitude']}: Seconds">
+														<p:ajax></p:ajax>
+													</p:inputText>
+													<p:outputLabel value="#{lang['latitude']}: Seconds" for="latitudeSeconds" />
+												</h:panelGroup>
+											</p:panelGrid>
+											<h:panelGroup styleClass="md-inputfield" rendered="true">
+												<!-- <a href="https://getlatlong.net" target="_blank">Check GPS Coordinate</a> -->
+												<a href="https://www.gps-coordinates.net" target="_blank">Check GPS Coordinate</a>
+											</h:panelGroup>
+										</p:panelGrid>
+									</p:fieldset>
+									<p:fieldset id="postalAddressFS1" legend="#{lang['postalAddress']}" style="margin-top: 20px" rendered="#{monitorCompanyInformationUI.selectedCompany.postalAddress ne null and monitorCompanyInformationUI.selectedCompany.postalAddress.id ne null}">
+										<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank" id="postalAddress1">
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText disabled="true" value="#{monitorCompanyInformationUI.selectedCompany.postalAddress.id}" style="opacity: 1 !important; color: black; width:100%">
+												</p:inputText>
+												<p:outputLabel value="Address ID" />
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText id="postalAddressaddr11" value="#{monitorCompanyInformationUI.selectedCompany.postalAddress.addressLine1}" style="opacity: 1 !important; color: black; width:100%" required="true" requiredMessage="#{lang['enter.postal.address']}">
+													<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['postalAddress.lineone.length.error']}" />
+													<p:ajax></p:ajax>
+												</p:inputText>
+												<p:outputLabel value="#{lang['address.line.1']}" for="postalAddressaddr11" />
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield" rendered="#{not trainingproviderUI.copyAddress}">
+												<p:inputText id="postalAddressaddr22" style="opacity: 1 !important; color: black; width:100%" value="#{monitorCompanyInformationUI.selectedCompany.postalAddress.addressLine2}" required="true" requiredMessage="Provide Address Line 2">
+													<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['postalAddress.linetwo.length.error']}" />
+													<p:ajax></p:ajax>
+												</p:inputText>
+												<p:outputLabel value="#{lang['address.line.2']}" for="postalAddressaddr22" />
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield" rendered="#{not trainingproviderUI.copyAddress}">
+												<p:inputText id="postalAddressaddr33" style="opacity: 1 !important; color: black; width:100%" value="#{monitorCompanyInformationUI.selectedCompany.postalAddress.addressLine3}">
+													<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['postalAddress.linethree.length.error']}" />
+													<p:ajax></p:ajax>
+												</p:inputText>
+												<p:outputLabel value="#{lang['address.line.3']}" for="postalAddressaddr33" />
+											</h:panelGroup>
+											<h:panelGroup rendered="#{not trainingproviderUI.copyAddress}" styleClass="md-inputfield">
+												<p:autoComplete id="townPostal1" value="#{monitorCompanyInformationUI.selectedCompany.postalAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true"
+													minQueryLength="3" maxResults="10" inputStyle="width: 100%" style="width: 100%" required="true" requiredMessage="#{lang['please.select.a.town']}">
+													<p:column headerText="#{lang['town']}" style="white-space: nowrap">
+				                  						#{rv.description}
+				         							</p:column>
+													<p:ajax event="itemSelect" />
+												</p:autoComplete>
+												<p:outputLabel value="#{lang['town']}" for="townPostal1" />
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield" rendered="#{not trainingproviderUI.copyAddress}">
+												<p:inputText id="postalAddressPcode1" style="opacity: 1 !important; color: black; width:100%" value="#{monitorCompanyInformationUI.selectedCompany.postalAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}">
+													<o:validator validatorId="javax.faces.Length" minimum="0" maximum="4" message="#{lang['postalAddress.code.length.error']}" />
+													<p:ajax></p:ajax>
+												</p:inputText>
+												<p:outputLabel value="#{lang['post.code']}" for="postalAddressPcode1" />
+											</h:panelGroup>
+											<h:panelGroup rendered="#{not trainingproviderUI.copyAddress}" styleClass="md-inputfield">
+												<p:autoComplete id="postalAddressMunicipalityID1" value="#{monitorCompanyInformationUI.selectedCompany.postalAddress.municipality}" completeMethod="#{sdfDetailUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityProvince}" itemValue="#{rv}" forceSelection="true"
+													converter="MunicipalityConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputstyle="opacity: 1 !important; color: black; width: 100%" style="opacity: 1 !important; color: black; width: 100%" required="true" requiredMessage="#{lang['select.municipality']}">
+													<p:column headerText="#{lang['province']}" style="white-space: nowrap">#{rv.province.provinceDesc}</p:column>
+													<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">#{rv.municipalityDesc}</p:column>
+													<p:ajax event="change" update="postProvincePG1"></p:ajax>
+													<p:ajax event="itemSelect" update="postProvincePG1"></p:ajax>
+												</p:autoComplete>
+												<p:outputLabel value="#{lang['municipality']}" for="postalAddressMunicipalityID1" />
+											</h:panelGroup>
+
+											<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank" id="postProvincePG1">
+												<h:panelGroup styleClass="md-inputfield" rendered="#{not trainingproviderUI.copyAddress and monitorCompanyInformationUI.selectedCompany.postalAddress.municipality.province ne null}">
+													<p:inputText disabled="true" id="postProvince1" value="#{monitorCompanyInformationUI.selectedCompany.postalAddress.municipality.province.provinceDesc}" style="opacity: 1 !important; color: black; width:100%">
+														<p:ajax></p:ajax>
+													</p:inputText>
+													<p:outputLabel value="#{lang['province']}" for="postProvince1" />
+												</h:panelGroup>
+											</p:panelGrid>
+										</p:panelGrid>
+									</p:fieldset>
+								</p:panelGrid>
+
+								<p:outputPanel id="companyInsPanel">
+									<p:commandButton icon="fa fa-database" process="companyInfoFieldSet" value="Update Company" update="@form" action="#{monitorCompanyInformationUI.updateCompanyInformation}" />
+								</p:outputPanel>
+
+							</p:fieldset>
+							<div class="EmptyBox20" />
+						</p:outputPanel>
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+			<h:form>
+				<p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="pi pi-check" />
+				<p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="pi pi-times" />
+			</h:form>
+		</p:confirmDialog>
+
+	</ui:define>
+</ui:composition>

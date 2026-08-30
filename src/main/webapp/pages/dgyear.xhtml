@@ -1,0 +1,350 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+		<p:importEnum type="haj.com.entity.enums.DGWindowTypeEnum"></p:importEnum>
+        <div class="ui-g">
+			<c:if test="#{sessionUI.activeUser.fundingWindow}">
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+						<h1>DG Year</h1>
+						<h:form id="dgYearInsForm">
+							<p:growl showDetail="false" sticky="false">
+								<p:autoUpdate />
+							</p:growl>
+							<p:panelGrid columns="2" style="width:100%" id="dgYearInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="description" value="#{dgYearUI.dgYear.description}" style="width:95%" required="true" requiredMessage="Please enter description">
+										<p:ajax />
+									</p:inputText>
+									<p:outputLabel value="#{lang['description']}" for="description" />
+								</h:panelGroup>
+								<h:panelGroup>
+									<div>
+										<p:selectOneMenu id="DGWindowTypeEnumDD" value="#{dgYearUI.dgYear.dgWindowType}" style="width:100%" required="true">
+											<p:ajax update="@form" />
+											<f:selectItems value="#{enumUI.DGWindowTypeEnumDD}" />
+										</p:selectOneMenu>
+									</div>
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="finYear" value="#{dgYearUI.dgYear.finYear}" style="width:95%" required="true" requiredMessage="Please enter fin year" decimalPlaces="9999999" />
+									<p:outputLabel value="Fin Year" for="finYear" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputNumber id="allocationAmount" value="#{dgYearUI.dgYear.allocationAmount}" inputStyle="width:95%" style="width:95%" required="true" decimalPlaces="2" thousandSeparator="," requiredMessage="Please enter allocation amount" />
+									<p:outputLabel value="Allocation Amount" for="allocationAmount" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield" rendered="#{dgYearUI.dgYear.dgWindowType ne DGWindowTypeEnum.Standard}">
+									<p:calendar inputStyle="width:90%" navigator="true" id="startDate" value="#{dgYearUI.dgYear.startDate}" size="19" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" yearRange="c-100:c" required="false" mindate="#{dgYearUI.now}" />
+									<p:outputLabel value="Start Date" for="startDate" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield" rendered="#{dgYearUI.dgYear.dgWindowType ne DGWindowTypeEnum.Standard}">
+									<p:calendar inputStyle="width:90%" navigator="true" id="endDate" value="#{dgYearUI.dgYear.endDate}" size="19" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" mindate="#{dgYearUI.now}" maxdate="#{dgYearUI.maxDate}" />
+									<p:outputLabel value="End Date" for="endDate" />
+								</h:panelGroup>
+							</p:panelGrid>
+							<div class="EmptyBox10" />
+							<div class="EmptyBox10" />
+							<p:dataTable id="learningProgramsDataTable" widgetVar="learningProgramsDataTableWidget" var="learningProgram" rowKey="#{learningProgram.id}" value="#{dgyearlearningprogramsUI.DGYearLearningProgramsList}" paginator="true" rows="3" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true" editable="true" selection="1">
+								<f:facet name="header">
+									<p:outputLabel value="Learning Programs" />
+									<div class="EmptyBox10" />
+									<p:commandButton icon="fa fa-plus" process="@this"  rendered="#{dgYearUI.dgYear.dgWindowType ne DGWindowTypeEnum.Standard}" title="Add Learning Program" update="learningProgramsDataTable" action="#{dgyearlearningprogramsUI.addLearningProgram}" oncomplete="editFirstDatatableRow()">
+										<f:setPropertyActionListener value="#{dgYearUI.dgYear}" target="#{dgyearlearningprogramsUI.dgYear}" />
+									</p:commandButton>
+								</f:facet>
+								<p:column headerText="Intervention">
+									<c:choose>
+										<c:when test="#{dgYearUI.dgYear.dgWindowType eq DGWindowTypeEnum.Pivitol}">
+											<p:cellEditor>
+
+												<f:facet name="output"><h:outputText value="#{learningProgram.interventionType.description}"/></f:facet>
+												<f:facet name="input">
+													<h:selectOneMenu value="#{dgyearlearningprogramsUI.dgyearlearningprograms.interventionType}" converter="InterventionTypeConvertor" style="width:100%">
+														<p:ajax event="valueChange" listener="#{dgyearlearningprogramsUI.calcAllocationAmount}" update="learningProgramAllocationAmount" />
+														<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+														<f:selectItems value="#{selectItemsUI.selectItemsInterventionTypePivotal}" var="interventionType" itemLabel="#{interventionType.description}" itemValue="#{interventionType}"/>
+													</h:selectOneMenu>
+												</f:facet>
+											</p:cellEditor>
+									</c:when>
+										<c:otherwise>
+											<p:cellEditor>
+												<f:facet name="output"><h:outputText value="#{learningProgram.interventionType.description}"/></f:facet>
+												<f:facet name="input">
+													<h:selectOneMenu value="#{dgyearlearningprogramsUI.dgyearlearningprograms.interventionType}" converter="InterventionTypeConvertor" style="width:100%">
+														<p:ajax event="valueChange" listener="#{dgyearlearningprogramsUI.calcAllocationAmount}" update="learningProgramAllocationAmount" />
+														<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+														<f:selectItems value="#{selectItemsUI.selectItemsInterventionTypeNonPivotal}" var="interventionType" itemLabel="#{interventionType.description}" itemValue="#{interventionType}"/>
+													</h:selectOneMenu>
+												</f:facet>
+											</p:cellEditor>
+										</c:otherwise>
+
+									</c:choose>
+								</p:column>
+								<p:column headerText="#{lang['numberOfEmployedLearners']}">
+									<p:cellEditor>
+										<f:facet name="output"><h:outputText value="#{learningProgram.numberOfEmployedLearners}"/></f:facet>
+										<f:facet name="input">
+											<p:inputNumber id="learningProgramNumberOfEmployedLearners" value="#{learningProgram.numberOfEmployedLearners}" style="width:100%" decimalPlaces="0" thousandSeparator=",">
+												<p:ajax event="valueChange" listener="#{dgyearlearningprogramsUI.calcAllocationAmount}" update="learningProgramAllocationAmount" />
+											</p:inputNumber>
+										</f:facet>
+									</p:cellEditor>
+								</p:column>
+								<p:column headerText="#{lang['numberOfUnemployedLearners']}">
+									<p:cellEditor>
+										<f:facet name="output"><h:outputText value="#{learningProgram.numberOfUnemployedLearners}"/></f:facet>
+										<f:facet name="input">
+											<p:inputNumber id="learningProgramNumberOfUnemployedLearners" value="#{learningProgram.numberOfUnemployedLearners}" style="width:100%" decimalPlaces="0" thousandSeparator=",">
+												<p:ajax event="valueChange" listener="#{dgyearlearningprogramsUI.calcAllocationAmount}" update="learningProgramAllocationAmount" />
+											</p:inputNumber>
+										</f:facet>
+									</p:cellEditor>
+								</p:column>
+								<p:column headerText="#{lang['allocationAmount']}">
+									<p:cellEditor>
+										<f:facet name="output"><h:outputText value="#{learningProgram.allocationAmount}">
+											<f:convertNumber type="currency" currencySymbol="R"/>
+										</h:outputText></f:facet>
+										<f:facet name="input"><p:inputNumber id="learningProgramAllocationAmount" value="#{learningProgram.allocationAmount}" style="width:100%" decimalPlaces="2" readonly="true" thousandSeparator="," /></f:facet>
+									</p:cellEditor>
+								</p:column>
+								<p:column style="width:6rem">
+									<p:rowEditor id="editLPRow"/>
+								</p:column>
+							</p:dataTable>
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:dgYearList :dgYearInsForm:dgYearInsGrid :dgYearInsForm:learningProgramsDataTable" >
+									<f:actionListener binding="#{dgYearUI.dgYearInsert()}"/>
+									<f:actionListener binding="#{dgyearlearningprogramsUI.saveLearningPrograms()}"/>
+								</p:commandButton>
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="dgYearInsGrid learningProgramsDataTable" process="@this" action="#{dgYearUI.prepareNew}">
+									<f:actionListener binding="#{dgyearlearningprogramsUI.prepareNew()}"/>
+									<p:resetInput target="dgYearInsGrid" />
+								</p:commandButton>
+							</p:panelGrid>
+						</h:form>
+					</div>
+				</div>
+			</c:if>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+						<p:dataTable var="rowVar" value="#{dgYearUI.dataModel}" filteredValue="#{dgYearUI.dgYearfilteredList}" id="dgYearList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true"
+							lazy="true">
+							<p:column headerText="#{lang['expand.row']}" width="45">
+								<p:rowToggler rendered="#{rowVar.docs.size() gt 0}"></p:rowToggler>
+							</p:column>
+							<p:column headerText="#{lang['description']}">
+								<h:outputText value="#{rowVar.description}" />
+							</p:column>
+							<p:column headerText="Allocation Amount">
+								<h:outputText value="#{rowVar.allocationAmount}">
+									<f:convertNumber pattern="###,###,###,###,###,###,##0.00" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="Financial Year">
+								<h:outputText value="#{rowVar.finYear}" />
+							</p:column>
+							<p:column headerText="Start Date">
+								<h:outputText value="#{rowVar.startDate}">
+									<f:convertDateTime pattern="yyyy-MM-dd HH:MM:SS"></f:convertDateTime>
+								</h:outputText>
+							</p:column>
+							<p:column headerText="End Date">
+								<h:outputText value="#{rowVar.endDate}">
+									<f:convertDateTime pattern="yyyy-MM-dd HH:MM:SS"></f:convertDateTime>
+								<!--f:convertDateTime pattern="dd MMMM yyyy"></f:convertDateTime-->
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['createDate']}">
+								<h:outputText value="#{rowVar.createDate}">
+									<f:convertDateTime pattern="yyyy-MM-dd HH:MM:SS"></f:convertDateTime>
+								</h:outputText>
+							</p:column>
+							<p:column width="180" rendered="#{sessionUI.activeUser.fundingWindow}">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":dgYearInsForm:dgYearInsGrid :dgYearInsForm:learningProgramsDataTable">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{dgyearlearningprogramsUI.dgYear}" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{dgYearUI.dgYear}" />
+									<f:actionListener binding="#{dgyearlearningprogramsUI.loadListFromDataModel()}"/>
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:dgYearList" action="#{dgYearUI.dgYearDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{dgYearUI.dgYear}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-plus" rendered="#{rowVar.dgWindowType ne DGWindowTypeEnum.Standard}" title="Add Learning Program" update="learningProgramForm" action="#{dgyearlearningprogramsUI.prepareNew}" oncomplete="PF('learningProgram').show()">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{dgyearlearningprogramsUI.dgYear}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-upload" id="uploadUserDocs" styleClass="flat" process="@this" action="#{dgYearUI.prepDoc}" oncomplete="PF('dlgUpload').show()" update=":uploadForm">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{dgYearUI.dgYear}" />
+								</p:commandButton>
+							</p:column>
+							<p:rowExpansion>
+								<p:dataTable value="#{rowVar.docs}" var="rv1" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+									<p:column headerText="Filename">
+										<h:outputText value="#{rv1.originalFname}">
+										</h:outputText>
+									</p:column>
+									<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+									<p:column headerText="#{lang['uploaded']}">
+										<h:outputText value="#{rv1.createDate}">
+											<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+										</h:outputText>
+									</p:column>
+									<p:column headerText="#{lang['version']}">
+										<h:outputText value="#{rv1.versionNo}">
+										</h:outputText>
+									</p:column>
+									<p:column headerText="Upload Evidence" width="180">
+										<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+										<p:spacer width="5" rendered="#{rv1.id ne null}" />
+										<p:commandButton icon="fa fa-bars " id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="dhistUserDocs" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+										<!-- only with permission to upload can upload a new version -->
+										<p:commandButton rendered="#{sessionUI.activeUser.fundingWindow}" icon="fa fa-upload" id="uploadUserDocs" styleClass="#{rv1.originalFname eq null ? 'red-btn' : ''} flat" process="@this" oncomplete="PF('dlgUpload').show()" update=":uploadForm">
+											<f:setPropertyActionListener value="#{rv1}" target="#{dgYearUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="uploadUserDocs" rendered="#{sessionUI.activeUser.fundingWindow}" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+										<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+											<p:spacer width="5" />
+											<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+												<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+											</p:commandButton>
+											<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+										</h:panelGroup>
+										<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+											<p:spacer width="5" />
+											<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+												<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+											</p:commandButton>
+											<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+										</h:panelGroup>
+									</p:column>
+								</p:dataTable>
+							</p:rowExpansion>
+						</p:dataTable>
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+					</h:form>
+				</div>
+			</div>
+		</div>
+		<p:dialog header="Learning Programs" widgetVar="learningProgram" resizable="false" hideEffect="clip" showEffect="clip" id="dlglearningProgram" width="70%" responsive="true" modal="true" dynamic="true">
+			<h:form id="learningProgramForm">
+				<p:panelGrid columns="1" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<h:panelGroup rendered="#{dgyearlearningprogramsUI.dgYear.dgWindowType eq DGWindowTypeEnum.Pivitol}">
+						<div>
+							<p:outputLabel value="Intervention" for="interventionType" />
+						</div>
+						<div>
+							<p:selectOneMenu id="interventionType" value="#{dgyearlearningprogramsUI.dgyearlearningprograms.interventionType}" converter="InterventionTypeConvertor" style="width:95%" required="true">
+								<p:ajax event="itemSelect" listener="#{dgyearlearningprogramsUI.calcAllocationAmount}" update="allocationAmount" />
+								<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsInterventionTypePivotal}" var="il" itemLabel="#{il.description}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup rendered="#{dgyearlearningprogramsUI.dgYear.dgWindowType eq DGWindowTypeEnum.Project}">
+						<div>
+							<p:outputLabel value="Intervention" for="projectInterventionType" />
+						</div>
+						<div>
+							<p:selectOneMenu id="projectInterventionType" value="#{dgyearlearningprogramsUI.dgyearlearningprograms.interventionType}" converter="InterventionTypeConvertor" style="width:95%" required="true">
+								<p:ajax event="itemSelect" listener="#{dgyearlearningprogramsUI.calcAllocationAmount}" update="allocationAmount" />
+								<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsInterventionTypeNonPivotal}" var="il" itemLabel="#{il.description}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputNumber id="numberOfEmployedLearners" value="#{dgyearlearningprogramsUI.dgyearlearningprograms.numberOfEmployedLearners}" decimalPlaces="0" inputStyle="width:95%" style="width:95%">
+							<p:ajax event="valueChange" listener="#{dgyearlearningprogramsUI.calcAllocationAmount}" update="allocationAmount" />
+						</p:inputNumber>
+						<p:outputLabel value="#{lang['numberOfEmployedLearners']}" for="numberOfEmployedLearners" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputNumber id="numberOfUnemployedLearners" value="#{dgyearlearningprogramsUI.dgyearlearningprograms.numberOfUnemployedLearners}" decimalPlaces="0" inputStyle="width:95%" style="width:95%">
+							<p:ajax event="valueChange" listener="#{dgyearlearningprogramsUI.calcAllocationAmount}" update="allocationAmount" />
+						</p:inputNumber>
+						<p:outputLabel value="#{lang['numberOfUnemployedLearners']}" for="numberOfUnemployedLearners" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputNumber id="allocationAmount" value="#{dgyearlearningprogramsUI.dgyearlearningprograms.allocationAmount}" readonly="true" inputStyle="width:95%" />
+						<p:outputLabel value="#{lang['allocationAmount']}" for="allocationAmount" />
+					</h:panelGroup>
+				</p:panelGrid>
+				<p:panelGrid columns="1" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<h:panelGroup>
+						<p:commandButton value="#{lang['submit']}" icon="fa fa-check" styleClass="flat" action="#{dgyearlearningprogramsUI.dgyearlearningprogramsInsert}" update="mainForm learningProgramForm" process="learningProgramForm" style="margin: 5px" />
+						<p:commandButton value="#{lang['clear']}" icon="fa fa-times" styleClass="flat" action="#{dgyearlearningprogramsUI.prepareNew}" update=":learningProgramForm" process="@this" style="margin: 5px" />
+					</h:panelGroup>
+				</p:panelGrid>
+				<div class="EmptyBox10" />
+				<p:dataTable var="rowVar" value="#{dgyearlearningprogramsUI.dataModel}" id="dgyearlearningprogramsList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+					<p:column headerText="Intervention Type">
+						<h:outputText value="#{rowVar.interventionType.description}" />
+					</p:column>
+					<p:column headerText="#{lang['allocationAmount']}">
+						<h:outputText value="#{rowVar.allocationAmount}" />
+					</p:column>
+					<p:column headerText="#{lang['numberOfEmployedLearners']}">
+						<h:outputText value="#{rowVar.numberOfEmployedLearners}" />
+					</p:column>
+					<p:column headerText="#{lang['numberOfUnemployedLearners']}">
+						<h:outputText value="#{rowVar.numberOfUnemployedLearners}" />
+					</p:column>
+					<p:column width="80">
+						<p:commandButton icon="fa fa-database" title="#{lang['update']}" update="learningProgramForm" process="@this">
+							<f:setPropertyActionListener value="#{rowVar}" target="#{dgyearlearningprogramsUI.dgyearlearningprograms}" />
+						</p:commandButton>
+						<p:spacer width="5" />
+						<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update="learningProgramForm" action="#{dgyearlearningprogramsUI.dgyearlearningprogramsDelete}" process="@this">
+							<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+							<f:setPropertyActionListener value="#{rowVar}" target="#{dgyearlearningprogramsUI.dgyearlearningprograms}" />
+						</p:commandButton>
+					</p:column>
+				</p:dataTable>
+			</h:form>
+		</p:dialog>
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true" dynamic="true">
+			<h:form id="uploadForm">
+				<div class="ui-g">
+					<div class="ui-g-12">
+						<div class="card">
+							<h1 style="font-weight: bold; font-size: 25px;">#{activecontractdetailUI.doc.configDoc.name}</h1>
+							<p:panel>
+								<div class="TexAlCenter">
+									<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span>
+									<br />
+								</div>
+								<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{dgYearUI.storeFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update="mainForm" multiple="false" fileLimit="1" immediate="false" auto="true" />
+							</p:panel>
+							<div class="EmptyBox10" />
+						</div>
+					</div>
+				</div>
+			</h:form>
+		</p:dialog>
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+		<script type="text/javascript">
+
+			// Make the first row editable in a dataTable
+			function editFirstDatatableRow() {
+				jQuery('.ui-datatable-data tr').first().find('span.ui-icon-pencil').each((count,link)=>{
+					jQuery(link).click();
+				});
+			}
+		</script>
+	</ui:define>
+</ui:composition>

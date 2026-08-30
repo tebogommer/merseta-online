@@ -1,0 +1,172 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Sars Levy Details</h1>
+					<h:form id="sarslevydetailsInsForm">
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:panelGrid columns="1" style="width:100%" id="sarslevydetailsInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="setaCode" value="#{sarslevydetailsUI.sarslevydetails.setaCode}" style="width:95%" />
+								<p:outputLabel value="#{lang['setaCode']}" for="setaCode" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="refNo" value="#{sarslevydetailsUI.sarslevydetails.refNo}" style="width:95%" />
+								<p:outputLabel value="#{lang['refNo']}" for="refNo" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="total" value="#{sarslevydetailsUI.sarslevydetails.total}" style="width:95%" />
+								<p:outputLabel value="#{lang['total']}" for="total" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="discretionaryLevy" value="#{sarslevydetailsUI.sarslevydetails.discretionaryLevy}" style="width:95%" />
+								<p:outputLabel value="#{lang['discretionaryLevy']}" for="discretionaryLevy" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="adminLevy" value="#{sarslevydetailsUI.sarslevydetails.adminLevy}" style="width:95%" />
+								<p:outputLabel value="#{lang['adminLevy']}" for="adminLevy" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="interest" value="#{sarslevydetailsUI.sarslevydetails.interest}" style="width:95%" />
+								<p:outputLabel value="#{lang['interest']}" for="interest" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="penalty" value="#{sarslevydetailsUI.sarslevydetails.penalty}" style="width:95%" />
+								<p:outputLabel value="#{lang['penalty']}" for="penalty" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="sarsControlDigit1" value="#{sarslevydetailsUI.sarslevydetails.sarsControlDigit1}" style="width:95%" />
+								<p:outputLabel value="#{lang['sarsControlDigit1']}" for="sarsControlDigit1" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="sarsControlDigit2" value="#{sarslevydetailsUI.sarslevydetails.sarsControlDigit2}" style="width:95%" />
+								<p:outputLabel value="#{lang['sarsControlDigit2']}" for="sarsControlDigit2" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="schemeYear" value="#{sarslevydetailsUI.sarslevydetails.schemeYear}" style="width:95%" />
+								<p:outputLabel value="#{lang['schemeYear']}" for="schemeYear" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="arrivalDate2" value="#{sarslevydetailsUI.sarslevydetails.arrivalDate2}" style="width:95%" />
+								<p:outputLabel value="#{lang['arrivalDate2']}" for="arrivalDate2" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="mandatoryLevy" value="#{sarslevydetailsUI.sarslevydetails.mandatoryLevy}" style="width:95%" />
+								<p:outputLabel value="#{lang['mandatoryLevy']}" for="mandatoryLevy" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="arrivalDate1" value="#{sarslevydetailsUI.sarslevydetails.arrivalDate1}" style="width:95%" />
+								<p:outputLabel value="#{lang['arrivalDate1']}" for="arrivalDate1" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="sarsEmployerDetail" value="#{sarslevydetailsUI.sarslevydetails.sarsEmployerDetail}" style="width:95%" />
+								<p:outputLabel value="#{lang['sarsEmployerDetail']}" for="sarsEmployerDetail" />
+							</h:panelGroup>
+
+
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:sarslevydetailsList :sarslevydetailsInsForm:sarslevydetailsInsGrid" action="#{sarslevydetailsUI.sarslevydetailsInsert}" />
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="sarslevydetailsInsGrid" process="@this" action="#{sarslevydetailsUI.prepareNew}">
+									<p:resetInput target="sarslevydetailsInsGrid" />
+								</p:commandButton>
+							</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:dataTable var="rv" value="#{sarslevydetailsUI.dataModel}" filteredValue="#{sarslevydetailsUI.sarsLevyDetailsfilteredList}" id="sarslevydetailsList" rowKey="#{rv.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['setaCode']}">
+								<h:outputText value="#{rv.setaCode}" />
+							</p:column>
+							<p:column headerText="#{lang['refNo']}">
+								<h:outputText value="#{rv.refNo}" />
+							</p:column>
+							<p:column headerText="#{lang['total']}">
+								<h:outputText value="#{rv.total}" />
+							</p:column>
+							<p:column headerText="#{lang['discretionaryLevy']}">
+								<h:outputText value="#{rv.discretionaryLevy}" />
+							</p:column>
+							<p:column headerText="#{lang['adminLevy']}">
+								<h:outputText value="#{rv.adminLevy}" />
+							</p:column>
+							<p:column headerText="#{lang['interest']}">
+								<h:outputText value="#{rv.interest}" />
+							</p:column>
+							<p:column headerText="#{lang['penalty']}">
+								<h:outputText value="#{rv.penalty}" />
+							</p:column>
+							<p:column headerText="#{lang['sarsControlDigit1']}">
+								<h:outputText value="#{rv.sarsControlDigit1}" />
+							</p:column>
+							<p:column headerText="#{lang['sarsControlDigit2']}">
+								<h:outputText value="#{rv.sarsControlDigit2}" />
+							</p:column>
+							<p:column headerText="#{lang['schemeYear']}">
+								<h:outputText value="#{rv.schemeYear}" />
+							</p:column>
+							<p:column headerText="#{lang['arrivalDate2']}">
+								<h:outputText value="#{rv.arrivalDate2}" />
+							</p:column>
+							<p:column headerText="#{lang['mandatoryLevy']}">
+								<h:outputText value="#{rv.mandatoryLevy}" />
+							</p:column>
+							<p:column headerText="#{lang['arrivalDate1']}">
+								<h:outputText value="#{rv.arrivalDate1}" />
+							</p:column>
+							<p:column headerText="#{lang['sarsEmployerDetail']}">
+								<h:outputText value="#{rv.sarsEmployerDetail}" />
+							</p:column>
+
+
+							<p:column width="80">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":sarslevydetailsInsForm:sarslevydetailsInsGrid">
+									<f:setPropertyActionListener value="#{rv}" target="#{sarslevydetailsUI.sarslevydetails}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:sarslevydetailsList" action="#{sarslevydetailsUI.sarslevydetailsDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rv}" target="#{sarslevydetailsUI.sarslevydetails}" />
+								</p:commandButton>
+							</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+	<!-- 
+setaCode = setaCode
+refNo = refNo
+total = total
+discretionaryLevy = discretionaryLevy
+adminLevy = adminLevy
+interest = interest
+penalty = penalty
+sarsControlDigit1 = sarsControlDigit1
+sarsControlDigit2 = sarsControlDigit2
+schemeYear = schemeYear
+arrivalDate2 = arrivalDate2
+mandatoryLevy = mandatoryLevy
+arrivalDate1 = arrivalDate1
+sarsEmployerDetail = sarsEmployerDetail
+
+-->
+</ui:composition>

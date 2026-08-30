@@ -1,0 +1,1115 @@
+<ui:composition xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml">
+
+
+	<ui:define name="content">
+		<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum"></p:importEnum>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card">
+					<h:form id="hostingcompanydepartmentsInsForm">
+						<p:growl showDetail="false" sticky="false" id="msg">
+							<p:autoUpdate />
+						</p:growl>
+						<p:tooltip position="left" />
+						<h1>Company Region</h1>
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+						<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+						<p:importEnum type="haj.com.entity.enums.UsersStatusEnum" />
+
+						<p:dataTable var="rowVar" value="#{companyRegionUI.companyDataModel}" id="siccodeList" rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,20,40" reflow="true" lazy="true" selectionMode="single"
+							selection="#{companyRegionUI.company}">
+							<p:ajax event="rowSelect" update=":conpanyInfoForm " listener="#{companyRegionUI.prepareCompayInfo}" />
+
+							<p:column headerText="#{lang['company.name']}" filterBy="#{rowVar.companyName}" sortBy="#{rowVar.companyName}" width="13%">
+								<h:outputText value="#{rowVar.companyName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['tradingName']}" filterBy="#{rowVar.tradingName}" sortBy="#{rowVar.tradingName}" width="13%">
+								<h:outputText value="#{rowVar.tradingName}" />
+							</p:column>
+							<p:column headerText="#{lang['entity.id']}" filterBy="#{rowVar.levyNumber}" sortBy="#{rowVar.levyNumber}" width="7%">
+								<h:outputText value="#{rowVar.levyNumber}" />
+							</p:column>
+
+							<p:column headerText="#{lang['region']}" width="10%">
+								<h:outputText value="#{rowVar.regionTown.region.description}" />
+							</p:column>
+
+							<p:column headerText="#{lang['town']}" width="10%">
+								<h:outputText value="#{rowVar.regionTown.town.description}" />
+							</p:column>
+
+							<p:column headerText="Grant Status" width="6%" rendered="true">
+								<h:outputText value="#{rowVar.lastestGrantStatus}" />
+							</p:column>
+
+							<p:column headerText="DG Verification Status" width="6%" rendered="true">
+								<h:outputText value="#{rowVar.lastestDgVerificationStatus}" />
+							</p:column>
+
+							<p:column headerText="MG Verification Status" width="6%">
+								<h:outputText value="#{rowVar.lastestMgVerificationStatus}" rendered="#{rowVar.lastestMgVerificationStatus ne null}" />
+								<h:outputText value="N/A" rendered="#{rowVar.lastestMgVerificationStatus eq null}" />
+							</p:column>
+
+							<p:column headerText="#{lang['status']}" sortBy="#{rowVar.companyStatus}" width="6%">
+								<h:outputText value="#{lang[rowVar.companyStatus.registrationName]}" />
+							</p:column>
+
+							<p:column width="4%">
+								<p:commandButton icon="fa fa-building" title="View companies tasks" action="#{companyRegionUI.requesteWorkflowWorkplacemonitoring}" rendered="#{rowVar.companyStatus ne CompanyStatusEnum.Pending}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{companyRegionUI.company}" />
+								</p:commandButton>
+
+								<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+									<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+									<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+								</p:confirmDialog>
+								<p:commandButton icon="ui-icon-play-for-work" title="View companies tasks" action="#{taskTreeUI.taskForCompany}" oncomplete="PF('tasksForDialog').show()" update="tasksForForm" rendered="#{rowVar.companyStatus ne CompanyStatusEnum.Pending}">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{taskTreeUI.company}" />
+								</p:commandButton>
+							</p:column>
+
+						</p:dataTable>
+					</h:form>
+					<br />
+					<h:form id="conpanyInfoForm">
+						<p:tabView rendered="#{companyRegionUI.company.id != null}">
+							<!-- Company Info Tab -->
+							<p:tab title="#{lang['company.details']}">
+								<h:panelGroup rendered="#{companyRegionUI.company.companyName != null}">
+									<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" var="companyStatusEnum" />
+									<p:fieldset legend="#{lang['company.details']}">
+
+										<h:graphicImage value="/resources/hls/images/green.svg" rendered="#{companyRegionUI.company.companyStatus eq CompanyStatusEnum.Approved or companyRegionUI.company.companyStatus eq CompanyStatusEnum.Active}" width="40" />
+										<h:graphicImage value="/resources/hls/images/red.svg" rendered="#{companyRegionUI.company.companyStatus eq CompanyStatusEnum.Rejected or companyRegionUI.company.companyStatus eq CompanyStatusEnum.InActive}" width="40" styleClass="animated pulse infinite" />
+										<h:graphicImage value="/resources/hls/images/orange.svg" rendered="#{companyRegionUI.company.companyStatus eq CompanyStatusEnum.Pending}" width="40" styleClass="animated pulse infinite" />
+										<h:graphicImage value="/resources/hls/images/amber.svg" rendered="#{companyRegionUI.company.companyStatus eq CompanyStatusEnum.PendingChangeApproval}" width="40" styleClass="animated pulse infinite" />
+
+										<br />
+										<label>Status : #{lang[companyRegionUI.company.companyStatus.registrationName]}</label>
+										<hr />
+
+										<p:panelGrid columns="3" style="width : 100%" styleClass="ui-panelgrid-blank" layout="grid" id="companyInfo">
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['company.name']}" for="companyName" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="companyName" value="#{companyRegionUI.company.companyName}" style="width:95%" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['tradingName']}" for="tradingName" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="tradingName" value="#{companyRegionUI.company.tradingName}" style="width:95%" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['reg.number']}" for="regNumber" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="regNumber" value="#{companyRegionUI.company.companyRegistrationNumber}" style="width:95%" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['levy.number']}" for="levyNum" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="levyNum" value="#{companyRegionUI.company.levyNumber}" style="width:95%" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['tel.number']}" for="tel" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="tel" value="#{companyRegionUI.company.telNumber}" style="width:95%" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['fax.number']}" for="fax" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="fax" value="#{companyRegionUI.company.faxNumber}" rendered="#{companyRegionUI.company.faxNumber ne null and companyRegionUI.company.faxNumber ne ''}" style="width:95%" />
+												<p:outputLabel value="#{lang['n.a']}" rendered="#{companyRegionUI.company.faxNumber eq null or companyRegionUI.company.faxNumber eq ''}" style="width:95%" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['email.address']}" for="email" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="email" value="#{companyRegionUI.company.email}" style="width:95%" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['sic.code']}" for="sicCode" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="sicCode" value="#{companyRegionUI.company.sicCode.description}" style="width:95%" rendered="#{companyRegionUI.company.sicCode ne null}" />
+												<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{companyRegionUI.company.sicCode eq null}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['chamber']}" for="chamberDisplay" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{companyRegionUI.company.sicCode eq null or companyRegionUI.company.sicCode.chamber eq null}" />
+												<p:outputLabel id="chamberDisplay" value="#{companyRegionUI.company.sicCode.chamber.description}" style="width:95%" rendered="#{companyRegionUI.company.sicCode ne null and companyRegionUI.company.sicCode.chamber ne null}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['organisation.type']}" for="orgType" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel value="#{lang['n.a']}" rendered="#{companyRegionUI.company.organisationType eq null}" />
+												<p:outputLabel id="orgType" value="#{companyRegionUI.company.organisationType.description}" style="width:95%" rendered="#{companyRegionUI.company.organisationType ne null}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['numberOfEmployees']}" for="orgTypea" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel id="orgTypea" value="#{companyRegionUI.company.numberOfEmployees}" style="width:95%" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['recognition.agreement']}" for="recAgr" styleClass="Fs12 FontLight" />
+												<br />
+												<p:outputLabel value="#{lang['n.a']}" rendered="#{companyRegionUI.company.recognitionAgreement eq null}" style="width:95%" />
+												<p:outputLabel id="recAgr" value="#{companyRegionUI.company.recognitionAgreement.yesNoName}" style="width:95%" rendered="#{companyRegionUI.company.recognitionAgreement ne null}" />
+											</h:panelGroup>
+											<p:spacer />
+											<p:spacer />
+											<p:commandButton icon="ui-icon-email" value="View email log" rendered="#{companyRegionUI.company.companyStatus ne companyStatusEnum.Pending}" action="#{companyRegionUI.findMailLog}" update="@form :mailForm" oncomplete="PF('mailLogDlg').show()" />
+										</p:panelGrid>
+									</p:fieldset>
+
+									<!--  Address info -->
+									<h:panelGroup>
+										<p:fieldset legend="#{lang['address']}">
+											<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+												<p:fieldset legend="#{lang['residentialAddress']}">
+													<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank" id="residentialAddress">
+														<h:panelGroup>
+															<p:outputLabel value="#{lang['address.line.1']}" for="address1" styleClass="Fs12 FontLight" />
+															<br />
+															<p:outputLabel id="address1" value="#{companyRegionUI.company.residentialAddress.addressLine1}" style="width:95%" />
+															<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{companyRegionUI.company.residentialAddress.addressLine1 eq null or companyRegionUI.company.residentialAddress.addressLine1.length() eq 0}" />
+														</h:panelGroup>
+														<h:panelGroup>
+															<p:outputLabel value="#{lang['address.line.2']}" for="address2" styleClass="Fs12 FontLight" />
+															<br />
+															<p:outputLabel id="address2" value="#{companyRegionUI.company.residentialAddress.addressLine2}" style="width:95%" />
+															<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{companyRegionUI.company.residentialAddress.addressLine2 eq null or companyRegionUI.company.residentialAddress.addressLine2.length() eq 0}" />
+														</h:panelGroup>
+														<h:panelGroup>
+															<p:outputLabel value="#{lang['address.line.3']}" for="address4" styleClass="Fs12 FontLight" />
+															<br />
+															<p:outputLabel id="address4" value="#{companyRegionUI.company.residentialAddress.addressLine4}" style="width:95%" />
+															<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{companyRegionUI.company.residentialAddress.addressLine4 eq null or companyRegionUI.company.residentialAddress.addressLine4.length() eq 0}" />
+														</h:panelGroup>
+														<h:panelGroup>
+															<p:outputLabel value="#{lang['address.line.4']}" for="address3" styleClass="Fs12 FontLight" />
+															<br />
+															<p:outputLabel id="address3" value="#{companyRegionUI.company.residentialAddress.addressLine3}" style="width:95%" />
+															<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{companyRegionUI.company.residentialAddress.addressLine3 eq null or companyRegionUI.company.residentialAddress.addressLine3.length() eq 0}" />
+														</h:panelGroup>
+														<h:panelGroup>
+															<p:outputLabel value="#{lang['post.code']}" for="addressPcode" styleClass="Fs12 FontLight" />
+															<br />
+															<p:outputLabel id="addressPcode" style="width:95%" value="#{companyRegionUI.company.residentialAddress.postcode}" rendered="#{companyRegionUI.company.residentialAddress.postcode ne null and companyRegionUI.company.residentialAddress.postcode.length() gt 0}" />
+															<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{companyRegionUI.company.residentialAddress.postcode eq null or companyRegionUI.company.residentialAddress.postcode.length() eq 0}" />
+														</h:panelGroup>
+														<h:panelGroup>
+															<p:outputLabel value="#{lang['town.area']}" for="addressTown" styleClass="Fs12 FontLight" />
+															<br />
+															<p:outputLabel value="#{lang['n.a']}" rendered="#{companyRegionUI.company.residentialAddress.town eq null and false}" />
+															<p:outputLabel id="addressTown" value="#{companyRegionUI.company.residentialAddress.town.description}" style="width:95%" rendered="#{companyRegionUI.company.residentialAddress.town ne null}" />
+														</h:panelGroup>
+														<h:panelGroup>
+															<p:outputLabel value="#{lang['municipality']}" for="addressMunicipality" styleClass="Fs12 FontLight" />
+															<br />
+															<p:outputLabel value="#{lang['n.a']}" rendered="#{companyRegionUI.company.residentialAddress.municipality eq null and false}" />
+															<p:outputLabel id="addressMunicipality" value="#{companyRegionUI.company.residentialAddress.municipality.municipalityDesc}" style="width:95%" rendered="#{companyRegionUI.company.residentialAddress.municipality ne null}" />
+														</h:panelGroup>
+														<h:panelGroup>
+															<h:outputLabel value="#{lang['province.name']}" for="addressProvince" styleClass="Fs12 FontLight" />
+															<br />
+															<p:outputLabel id="addressProvince" style="width:95%" value="#{companyRegionUI.company.residentialAddress.municipality.province.provinceDesc}" />
+														</h:panelGroup>
+														<h:panelGroup>
+															<div class="EmptyBox40"></div>
+														</h:panelGroup>
+													</p:panelGrid>
+												</p:fieldset>
+												<p:fieldset legend="#{lang['postalAddress']}">
+													<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank" id="postalAddress">
+														<h:panelGroup>
+															<p:outputLabel value="#{lang['address.line.1']}" for="postalAddress1" styleClass="Fs12 FontLight" />
+															<br />
+															<p:outputLabel id="postalAddress1" value="#{companyRegionUI.company.postalAddress.addressLine1}" style="width:95%" />
+														</h:panelGroup>
+														<h:panelGroup>
+															<p:outputLabel value="#{lang['address.line.2']}" for="postalAddress2" styleClass="Fs12 FontLight" />
+															<br />
+															<p:outputLabel id="postalAddress2" value="#{companyRegionUI.company.postalAddress.addressLine2}" style="width:95%" />
+															<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{companyRegionUI.company.postalAddress.addressLine2 eq null or companyRegionUI.company.postalAddress.addressLine2.length() eq 0}" />
+														</h:panelGroup>
+														<h:panelGroup>
+															<p:outputLabel value="#{lang['address.line.3']}" for="postalAddress4" styleClass="Fs12 FontLight" />
+															<br />
+															<p:outputLabel id="postalAddress4" value="#{companyRegionUI.company.postalAddress.addressLine4}" style="width:95%" />
+															<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{companyRegionUI.company.postalAddress.addressLine4 eq null or companyRegionUI.company.postalAddress.addressLine4.length() eq 0}" />
+														</h:panelGroup>
+														<h:panelGroup>
+															<p:outputLabel value="#{lang['address.line.4']}" for="postalAddress3" styleClass="Fs12 FontLight" />
+															<br />
+															<p:outputLabel id="postalAddress3" value="#{companyRegionUI.company.postalAddress.addressLine3}" style="width:95%" />
+															<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{companyRegionUI.company.postalAddress.addressLine3 eq null or companyRegionUI.company.postalAddress.addressLine3.length() eq 0}" />
+														</h:panelGroup>
+														<h:panelGroup>
+															<p:outputLabel value="#{lang['post.code']}" for="postalAddressPcode" styleClass="Fs12 FontLight" />
+															<br />
+															<p:outputLabel id="postalAddressPcode" style="width:95%" value="#{companyRegionUI.company.postalAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}" />
+															<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{companyRegionUI.company.postalAddress.postcode eq null or companyRegionUI.company.postalAddress.postcode.length() eq 0}" />
+														</h:panelGroup>
+														<h:panelGroup>
+															<p:outputLabel value="#{lang['town.area']}" for="postalAddressTown" styleClass="Fs12 FontLight" />
+															<br />
+															<p:outputLabel value="#{lang['n.a']}" rendered="#{companyRegionUI.company.postalAddress.town eq null and false}" />
+															<p:outputLabel id="postalAddressTown" value="#{companyRegionUI.company.postalAddress.town.description}" style="width:95%" rendered="#{companyRegionUI.company.postalAddress.town ne null}" />
+														</h:panelGroup>
+														<h:panelGroup>
+															<p:outputLabel value="#{lang['municipality']}" for="postalAddressMunicipality" styleClass="Fs12 FontLight" />
+															<br />
+															<p:outputLabel value="#{lang['n.a']}" rendered="#{companyRegionUI.company.postalAddress.municipality eq null and false}" />
+															<p:outputLabel id="postalAddressMunicipality" value="#{companyRegionUI.company.postalAddress.municipality.municipalityDesc}" style="width:95%" rendered="#{companyRegionUI.company.postalAddress.municipality ne null}" />
+														</h:panelGroup>
+														<h:panelGroup>
+															<h:outputLabel value="#{lang['province.name']}" for="postalAddressProvince" styleClass="Fs12 FontLight" />
+															<br />
+															<p:outputLabel id="postalAddressProvince" style="width:95%" value="#{companyRegionUI.company.postalAddress.municipality.province.provinceDesc}" />
+														</h:panelGroup>
+														<h:panelGroup>
+															<div>
+																<p:outputLabel value="#{lang['same.as.my.address']}" styleClass="Fs12 FontLight" />
+															</div>
+															<div>
+																<p:selectBooleanCheckbox value="#{companyRegionUI.company.postalAddress.sameAddress}" disabled="true">
+																</p:selectBooleanCheckbox>
+															</div>
+														</h:panelGroup>
+													</p:panelGrid>
+												</p:fieldset>
+											</p:panelGrid>
+										</p:fieldset>
+									</h:panelGroup>
+								</h:panelGroup>
+							</p:tab>
+
+							<!-- Contact Person Tab -->
+							<p:tab title="#{lang['contact.person']}">
+								<p:dataTable id="contactPersonTable" var="rowVar" value="#{companyRegionUI.companyUsers}" rowKey="#{rowVar.id}" paginator="true" rows="5" emptyMessage="#{lang['no.records.found']}" paginatorPosition="bottom" paginatorTemplate="#{lang['page']} {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+									rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+									<p:column headerText="#{lang['expand.row']}" width="45">
+										<p:rowToggler></p:rowToggler>
+									</p:column>
+									<p:column headerText="#{lang['contact.person']}">
+										<p:outputLabel value="#{rowVar.user.firstName} #{rowVar.user.lastName}"></p:outputLabel>
+									</p:column>
+									<p:column headerText="#{lang['rsapassport.number']}">
+										<p:outputLabel value="#{rowVar.user.rsaIDNumber}" rendered="#{rowVar.user.rsaIDNumber.length() > 0}" />
+										<p:outputLabel value="#{rowVar.user.passportNumber}" rendered="#{rowVar.user.passportNumber.length() > 0}" />
+									</p:column>
+									<p:column headerText="#{lang['email']}">
+										<p:outputLabel value="#{rowVar.user.email}"></p:outputLabel>
+									</p:column>
+									<p:column headerText="#{lang['contact.person.type']}">
+										<p:outputLabel value="#{lang[rowVar.companyUserType.type]}" rendered="#{rowVar.companyUserType ne null}"></p:outputLabel>
+										<p:outputLabel value="#{rowVar.position.description}" rendered="#{rowVar.position ne null}"></p:outputLabel>
+									</p:column>
+
+									<p:column headerText="Confirmation Status" width="110" style="text-align:center">
+										<p:outputPanel rendered="#{rowVar.user.emailConfirmDate eq null}">
+											<i class="fa fa-times fa-3x red" aria-hidden="true"></i>
+										</p:outputPanel>
+										<p:outputPanel rendered="#{rowVar.user.emailConfirmDate ne null}">
+											<i class="fa fa-check fa-3x green" aria-hidden="true"></i>
+										</p:outputPanel>
+									</p:column>
+
+									<p:column headerText="#{lang['user.responsibility']}">
+										<ul>
+											<p:repeat var="rv1" value="#{rowVar.selectedResponsibilities}">
+												<li>#{rv1.userResponsibility.description}</li>
+											</p:repeat>
+										</ul>
+									</p:column>
+									<p:rowExpansion>
+										<p:panelGrid columns="3" style="width:100%" id="s" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+											<h:panelGroup>
+												<h:outputText value="#{lang['contact.person']}" styleClass="Fs12 FontLight" />
+												<br />
+												<h:outputText value="#{rowVar.user.firstName} #{rowVar.user.lastName}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<h:outputText value="#{lang['email']}" styleClass="Fs12 FontLight" />
+												<br />
+												<h:outputText value="#{rowVar.user.email}" />
+											</h:panelGroup>
+
+											<h:panelGroup>
+												<h:outputText value="#{lang['tel.number']}" styleClass="Fs12 FontLight" />
+												<br />
+												<h:outputText value="#{rowVar.user.telNumber}" />
+
+											</h:panelGroup>
+											<h:panelGroup>
+												<h:outputText value="#{lang['cell.number']}" styleClass="Fs12 FontLight" />
+												<br />
+												<h:outputText value="#{rowVar.user.cellNumber}" />
+											</h:panelGroup>
+
+											<h:panelGroup>
+												<h:outputText value="#{lang['fax.number']}" styleClass="Fs12 FontLight" />
+												<br />
+												<h:outputText value="#{rowVar.user.faxNumber}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<h:outputText value="#{lang['work.contact.number']}" styleClass="Fs12 FontLight" />
+												<br />
+												<h:outputText value="#{rowVar.user.workContactNumber}" />
+											</h:panelGroup>
+										</p:panelGrid>
+										<p:panelGrid columns="2" style="width:100%" id="sa" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="false">
+											<p:fieldset legend="#{lang['residentialAddress']}">
+												<p:panelGrid columns="2" style="width : 95%" styleClass="ui-panelgrid-blank" id="addrPcode">
+													<h:panelGroup>
+														<p:outputLabel value="#{lang['address.line.1']}" for="addr1" styleClass="Fs12 FontLight" />
+														<br />
+														<p:outputLabel id="addr1" value="#{rowVar.user.residentialAddress.addressLine1}" style="width:95%; opacity:1 !important" required="true" requiredMessage="#{lang['enter.residential.address']}" />
+														<br />
+														<p:outputLabel value="#{lang['address.line.2']}" for="addr2" styleClass="Fs12 FontLight" />
+														<br />
+														<p:outputLabel value="#{lang['n.a']}" style="width:95%; opacity:1 !important" rendered="#{rowVar.user.residentialAddress.addressLine2 eq null or rowVar.user.residentialAddress.addressLine2.length() eq 0}" />
+														<p:outputLabel id="addr2" style="width:95%; opacity:1 !important" value="#{rowVar.user.residentialAddress.addressLine2}" rendered="#{rowVar.user.residentialAddress.addressLine2 ne null and rowVar.user.residentialAddress.addressLine2.length() gt 0}" />
+													</h:panelGroup>
+													<h:panelGroup>
+														<p:outputLabel value="#{lang['address.line.3']}" for="addr3" styleClass="Fs12 FontLight" />
+														<br />
+														<p:outputLabel id="addr3" style="width:95%; opacity:1 !important" value="#{rowVar.user.residentialAddress.addressLine3}" rendered="#{rowVar.user.residentialAddress.addressLine3 ne null and rowVar.user.residentialAddress.addressLine3.length() gt 0}" />
+														<p:outputLabel value="#{lang['n.a']}" style="width:95%; opacity:1 !important" rendered="#{rowVar.user.residentialAddress.addressLine3 eq null or rowVar.user.residentialAddress.addressLine3.length() eq 0}" />
+														<br />
+														<p:outputLabel value="#{lang['address.line.4']}" for="addr4" styleClass="Fs12 FontLight" />
+														<br />
+														<p:outputLabel id="addr4" style="width:95%; opacity:1 !important" value="#{rowVar.user.residentialAddress.addressLine4}" rendered="#{rowVar.user.residentialAddress.addressLine4 ne null and rowVar.user.residentialAddress.addressLine4.length() gt 0}" />
+														<p:outputLabel value="#{lang['n.a']}" style="width:95%; opacity:1 !important" rendered="#{rowVar.user.residentialAddress.addressLine4 eq null or rowVar.user.residentialAddress.addressLine4.length() eq 0}" />
+													</h:panelGroup>
+													<h:panelGroup>
+														<p:outputLabel value="#{lang['post.code']}" for="pcode" styleClass="Fs12 FontLight" />
+														<br />
+														<p:outputLabel id="pcode" style="width:95%; opacity:1 !important" value="#{rowVar.user.residentialAddress.postcode}" rendered="#{rowVar.user.residentialAddress.postcode ne null and rowVar.user.residentialAddress.postcode.length() gt 0}" />
+														<p:outputLabel value="#{lang['n.a']}" style="width:95%; opacity:1 !important" rendered="#{rowVar.user.residentialAddress.postcode eq null or rowVar.user.residentialAddress.postcode.length() eq 0}" />
+														<br />
+														<h:outputLabel value="#{lang['municipality']}" for="MunicipalityID" styleClass="Fs12 FontLight" />
+														<br />
+														<p:outputLabel id="MunicipalityID" style="width:95%; opacity:1 !important" value="#{rowVar.user.residentialAddress.municipality.municipalityDesc}" />
+													</h:panelGroup>
+
+													<h:panelGroup>
+														<div class="EmptyBox40"></div>
+													</h:panelGroup>
+												</p:panelGrid>
+											</p:fieldset>
+
+											<p:fieldset legend="#{lang['postalAddress']}">
+												<p:panelGrid columns="2" style="width : 95%" styleClass="ui-panelgrid-blank" id="postalAddress">
+													<h:panelGroup>
+														<p:outputLabel value="#{lang['address.line.1']}" for="postalAddressaddr1" styleClass="Fs12 FontLight" />
+														<br />
+														<p:outputLabel id="postalAddressaddr1" value="#{rowVar.user.postalAddress.addressLine1}" style="width:95%; opacity:1 !important" required="true" requiredMessage="#{lang['enter.postal.address']}" />
+														<br />
+														<p:outputLabel value="#{lang['address.line.2']}" for="postalAddressaddr2" styleClass="Fs12 FontLight" />
+														<br />
+														<p:outputLabel id="postalAddressaddr2" style="width:95%; opacity:1 !important" value="#{rowVar.user.postalAddress.addressLine2}" />
+														<p:outputLabel value="#{lang['n.a']}" style="width:95%; opacity:1 !important" rendered="#{rowVar.user.postalAddress.addressLine2 eq null or rowVar.user.postalAddress.addressLine2.length() eq 0}" />
+													</h:panelGroup>
+													<h:panelGroup>
+														<p:outputLabel value="#{lang['address.line.3']}" for="postalAddressaddr3" styleClass="Fs12 FontLight" />
+														<br />
+														<p:outputLabel id="postalAddressaddr3" style="width:95%; opacity:1 !important" value="#{rowVar.user.postalAddress.addressLine3}" />
+														<p:outputLabel value="#{lang['n.a']}" style="width:95%; opacity:1 !important" rendered="#{rowVar.user.postalAddress.addressLine3 eq null or rowVar.user.postalAddress.addressLine3.length() eq 0}" />
+														<br />
+														<p:outputLabel value="#{lang['address.line.4']}" for="postalAddressaddr4" styleClass="Fs12 FontLight" />
+														<br />
+														<p:outputLabel id="postalAddressaddr4" style="width:95%; opacity:1 !important" value="#{rowVar.user.postalAddress.addressLine4}" />
+														<p:outputLabel value="#{lang['n.a']}" style="width:95%; opacity:1 !important" rendered="#{rowVar.user.postalAddress.addressLine4 eq null or rowVar.user.postalAddress.addressLine4.length() eq 0}" />
+													</h:panelGroup>
+													<h:panelGroup>
+														<p:outputLabel value="#{lang['post.code']}" for="postalAddressPcode" styleClass="Fs12 FontLight" />
+														<br />
+														<p:outputLabel id="postalAddressPcode" style="width:95%; opacity:1 !important" value="#{rowVar.user.postalAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}" />
+														<p:outputLabel value="#{lang['n.a']}" style="width:95%; opacity:1 !important" rendered="#{rowVar.user.postalAddress.postcode eq null or rowVar.user.postalAddress.postcode.length() eq 0}" />
+														<br />
+														<h:outputLabel value="#{lang['municipality']}" for="postalAddressMunicipalityID" styleClass="Fs12 FontLight" />
+														<br />
+														<p:outputLabel id="postalAddressMunicipalityID" style="width:95%; opacity:1 !important" value="#{rowVar.user.postalAddress.municipality.municipalityDesc}" />
+													</h:panelGroup>
+
+													<h:panelGroup>
+														<div>
+															<p:outputLabel value="#{lang['same.as.my.address']}" styleClass="Fs12 FontLight" />
+														</div>
+														<div>
+															<p:selectBooleanCheckbox value="#{rowVar.user.postalAddress.sameAddress}" disabled="true">
+															</p:selectBooleanCheckbox>
+														</div>
+													</h:panelGroup>
+												</p:panelGrid>
+											</p:fieldset>
+										</p:panelGrid>
+									</p:rowExpansion>
+								</p:dataTable>
+							</p:tab>
+							<!--  Employees Tab -->
+							<p:tab title="#{lang['employees']}">
+								<p:dataTable var="rowVar" value="#{companyRegionUI.empDataModel}" id="aemployeesList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}" paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+									rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+									<p:column headerText="#{lang['expand.row']}" width="45">
+										<p:rowToggler />
+									</p:column>
+									<p:column headerText="#{lang['id.type']}" rendered="false">
+										<h:outputText value="#{rowVar.idType.friendlyName}" />
+									</p:column>
+
+									<p:column headerText="#{lang['employee.id']}" rendered="false">
+										<h:outputText value="#{rowVar.rsaIDNumber}" />
+										<h:outputText value="#{rowVar.passportNumber}" />
+									</p:column>
+
+									<p:column headerText="#{lang['first.name']}">
+										<h:outputText value="#{rowVar.firstName}" />
+									</p:column>
+
+									<p:column headerText="#{lang['last.name']}" filterBy="#{rowVar.lastName}" filterStyle="width: 98%" sortBy="#{rowVar.lastName}">
+										<h:outputText value="#{rowVar.lastName}" />
+									</p:column>
+
+									<p:column headerText="#{lang['date.of.birth']}">
+										<h:outputText value="#{rowVar.dateOfBirth}">
+											<f:convertDateTime pattern="yyyy-MM-dd" />
+										</h:outputText>
+									</p:column>
+
+									<p:column headerText="#{lang['gender']}">
+										<h:outputText value="#{rowVar.gender.genderName}" />
+									</p:column>
+
+									<p:column headerText="#{lang['equity']}">
+										<h:outputText value="#{rowVar.equity.description}" />
+									</p:column>
+
+									<p:column headerText="#{lang['nationality']}">
+										<h:outputText value="#{rowVar.nationality.description}" />
+									</p:column>
+
+
+									<p:rowExpansion>
+										<p:panelGrid columns="4" layout="grid">
+
+											<p:outputLabel styleClass="FontBold" value="#{lang['municipality']}" />
+											<h:outputText value="#{rowVar.municipality.municipalityDesc}" />
+
+
+											<p:outputLabel styleClass="FontBold" value="#{lang['disability']}" />
+											<h:outputText value="#{rowVar.disability.description}" />
+
+
+											<p:outputLabel styleClass="FontBold" value="#{lang['employment.type']}" />
+											<h:outputText value="#{rowVar.employmentType.description}" />
+
+
+											<p:outputLabel styleClass="FontBold" value="#{lang['employment.status']}" />
+											<h:outputText value="#{rowVar.employmentStatus}" />
+
+
+											<p:outputLabel styleClass="FontBold" value="#{lang['ofo.code']}" />
+											<h:outputText value="#{rowVar.ofoCode.description}" />
+
+
+											<p:outputLabel styleClass="FontBold" value="#{lang['job.title']}" />
+											<h:outputText value="#{rowVar.jobTitle}" />
+
+
+											<p:outputLabel styleClass="FontBold" value="#{lang['occupation.category']}" />
+											<h:outputText value="#{rowVar.occupationCategory.description}" />
+
+
+											<p:outputLabel styleClass="FontBold" value="#{lang['highest.qual.title']}" />
+											<h:outputText value="#{rowVar.highestQualTitle.description}" />
+
+										</p:panelGrid>
+									</p:rowExpansion>
+								</p:dataTable>
+							</p:tab>
+
+							<!--  SDF Tab -->
+							<p:tab title="#{lang['sdf.management']}">
+								<p:dataTable var="rowVar" value="#{companyRegionUI.sdfDataModel}" id="userList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}" paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25"
+									reflow="true" lazy="true">
+									<p:column headerText="#{lang['first.name']}">
+										<h:outputText value="#{rowVar.sdf.firstName}" />
+									</p:column>
+									<p:column headerText="#{lang['surname']}">
+										<h:outputText value="#{rowVar.sdf.lastName}" />
+									</p:column>
+									<p:column headerText="#{lang['rsapassport.number']}">
+										<p:outputLabel value="#{rowVar.sdf.rsaIDNumber}" rendered="#{rowVar.sdf.rsaIDNumber.length() > 0}" />
+										<p:outputLabel value="#{rowVar.sdf.passportNumber}" rendered="#{rowVar.sdf.passportNumber.length() > 0}" />
+									</p:column>
+									<p:column headerText="#{lang['email']}">
+										<h:outputText value="#{rowVar.sdf.email}" />
+									</p:column>
+									<p:column headerText="#{lang['sdf.type']}">
+										<h:outputText value="#{rowVar.sdfType.description}" />
+									</p:column>
+									<p:column headerText="Confirmation Status" width="110" style="text-align:center">
+										<p:outputPanel rendered="#{rowVar.sdf.status ne UsersStatusEnum.Active}">
+											<i class="fa fa-times fa-3x red" aria-hidden="true"></i>
+										</p:outputPanel>
+										<p:outputPanel rendered="#{rowVar.sdf.status eq UsersStatusEnum.Active}">
+											<i class="fa fa-check fa-3x green" aria-hidden="true"></i>
+										</p:outputPanel>
+										<p:outputPanel rendered="#{rowVar.sdf.emailConfirmDate eq null} and false">
+											<i class="fa fa-times fa-3x red" aria-hidden="true"></i>
+										</p:outputPanel>
+										<p:outputPanel rendered="#{rowVar.sdf.emailConfirmDate ne null} and false">
+											<i class="fa fa-check fa-3x green" aria-hidden="true"></i>
+										</p:outputPanel>
+									</p:column>
+
+									<p:column headerText="Confirmation Date" width="110">
+										<p:outputLabel value="#{rowVar.sdf.emailConfirmDate}">
+											<f:convertDateTime pattern="yyyy-MM-dd" />
+										</p:outputLabel>
+									</p:column>
+
+									<p:column headerText="Profile Status" width="110">
+										<p:outputLabel value="#{rowVar.sdf.status.friendlyName}" />
+									</p:column>
+									<p:column width="7%">
+										<p:commandButton title="View Documents Against SDF" action="#{companyRegionUI.viewSdfDocumnets}" icon="fa fa-cloud-upload">
+											<f:setPropertyActionListener value="#{rowVar}" target="#{companyRegionUI.selectedSdfCompany}" />
+										</p:commandButton>
+									</p:column>
+								</p:dataTable>
+
+								<p:panelGrid columns="3" style="width : 100%" styleClass="ui-panelgrid-blank" layout="grid">
+									<p:commandButton icon="fa fa-bars" value="View Company SDF History" action="#{companyRegionUI.sdfCompanyHistortInfo}" rendered="true" update="@form" />
+								</p:panelGrid>
+
+								<p:dataTable rendered="#{companyRegionUI.sdfHistory eq true}" value="#{companyRegionUI.sdfCompanyHistory}" var="rv" rowKey="#{rv.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="2,5" reflow="true">
+									<p:column headerText="#{lang['first.name']}">
+										<h:outputText value="#{rv.sdf.firstName}" />
+									</p:column>
+									<p:column headerText="#{lang['last.name']}">
+										<h:outputText value="#{rv.sdf.lastName}" />
+									</p:column>
+									<p:column headerText="#{lang['rsapassport.number']}">
+										<p:outputLabel value="#{rv.sdf.rsaIDNumber}" rendered="#{rv.sdf.rsaIDNumber.length() > 0}" />
+										<p:outputLabel value="#{rv.sdf.passportNumber}" rendered="#{rv.sdf.passportNumber.length() > 0}" />
+									</p:column>
+									<p:column headerText="#{lang['email']}">
+										<h:outputText value="#{rv.sdf.email}" />
+									</p:column>
+									<p:column headerText="#{lang['sdf.type']}">
+										<h:outputText value="#{rv.sdfType.description}" />
+									</p:column>
+									<p:column headerText="Confirmation Status" width="110" style="text-align:center">
+										<p:outputPanel rendered="#{rv.sdf.status ne UsersStatusEnum.Active}">
+											<i class="fa fa-times fa-3x red" aria-hidden="true"></i>
+										</p:outputPanel>
+										<p:outputPanel rendered="#{rv.sdf.status eq UsersStatusEnum.Active}">
+											<i class="fa fa-check fa-3x green" aria-hidden="true"></i>
+										</p:outputPanel>
+										<p:outputPanel rendered="#{rv.sdf.emailConfirmDate eq null} and false">
+											<i class="fa fa-times fa-3x red" aria-hidden="true"></i>
+										</p:outputPanel>
+										<p:outputPanel rendered="#{rv.sdf.emailConfirmDate ne null} and false">
+											<i class="fa fa-check fa-3x green" aria-hidden="true"></i>
+										</p:outputPanel>
+									</p:column>
+									<p:column headerText="Confirmation Date" width="110">
+										<p:outputLabel value="#{rv.createDate}">
+											<f:convertDateTime pattern="yyyy-MM-dd" />
+										</p:outputLabel>
+									</p:column>
+									<p:column headerText="Profile Status" width="110">
+										<p:outputLabel value="#{rv.sdf.status.friendlyName}" />
+									</p:column>
+								</p:dataTable>
+							</p:tab>
+
+							<!--  Banking Details Tab -->
+							<p:tab title="#{lang['banking.details']}">
+								<!-- Latest Banking details -->
+								<p:fieldset legend="#{bankingdetailsUI.company.companyName} #{lang['latest.banking.details']}" rendered="#{companyRegionUI.bankingDetails ne null}">
+
+									<p:panelGrid columns="4" style="width : 95%" styleClass="ui-panelgrid-blank" id="bankingDetailsInfo">
+
+										<h:panelGroup>
+											<p:outputLabel value="#{lang['bank']}" for="bank" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="bank" value="#{companyRegionUI.bankingDetails.bank.description}" style="width:95%" />
+										</h:panelGroup>
+
+										<h:panelGroup>
+											<p:outputLabel value="#{lang['createDate']}" for="dateCreatedID" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="dateCreatedID" value="#{companyRegionUI.bankingDetails.createDate}" style="width:95%">
+												<f:convertDateTime pattern="dd MMMM yyyy (HH:mm:ss)" />
+											</p:outputLabel>
+										</h:panelGroup>
+
+
+										<h:panelGroup>
+											<p:outputLabel value="#{lang['bankAccNumber']}" for="bankAccNumberID" styleClass="#{companyRegionUI.vendor eq null or companyRegionUI.vendor.taxRegistrationNumber eq '' ? 'FontBold Fs20 orange' : companyRegionUI.bankingDetails.bankAccNumber ne companyRegionUI.vendor.taxRegistrationNumber ? 'FontBold Fs20 red': 'FontBold Fs20 green'}" />
+											<br />
+											<p:outputLabel id="bankAccNumberID" value="#{companyRegionUI.bankingDetails.maskedBankAccNumber}" style="width:95%" styleClass="#{companyRegionUI.vendor eq null or companyRegionUI.vendor.taxRegistrationNumber eq '' ? 'FontBold Fs20 orange' : companyRegionUI.bankingDetails.bankAccNumber ne companyRegionUI.vendor.taxRegistrationNumber ?'FontBold Fs20 red':'FontBold Fs20 green'}" />
+										</h:panelGroup>
+
+										<h:panelGroup>
+											<p:outputLabel value="GP #{lang['bankAccNumber']}" for="gpbankAccNumberID" styleClass="#{companyRegionUI.vendor eq null or companyRegionUI.vendor.taxRegistrationNumber eq '' ? 'FontBold Fs20 orange' : companyRegionUI.bankingDetails.bankAccNumber ne companyRegionUI.vendor.taxRegistrationNumber ? 'FontBold Fs20 red': 'FontBold Fs20 green'}" />
+											<br />
+											<p:outputLabel id="gpbankAccNumberID" value="#{companyRegionUI.vendor.maskedBankAccNumber}" style="width:95%" styleClass="#{companyRegionUI.bankingDetails.bankAccNumber ne companyRegionUI.vendor.taxRegistrationNumber ?'FontBold Fs20 red': 'FontBold Fs20 green'}" />
+											<p:outputLabel id="gpbankAccNumberID2" value="N/A" style="width:95%" styleClass="FontBold Fs20 orange" rendered="#{companyRegionUI.vendor eq null or companyRegionUI.vendor.taxRegistrationNumber eq ''}" />
+										</h:panelGroup>
+
+										<h:panelGroup>
+											<p:outputLabel value="#{lang['branchCode']}" for="branchCodeID" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="branchCodeID" value="#{companyRegionUI.bankingDetails.branchCode}" style="width:95%" />
+										</h:panelGroup>
+
+										<h:panelGroup>
+											<p:outputLabel value="GP Branch Code" for="gpbankID" />
+											<br />
+											<p:outputLabel id="gpbankID" value="#{companyRegionUI.vendor.taxIdentificationNumber}" style="width:95%" rendered="#{companyRegionUI.vendor ne null}" />
+											<p:outputLabel id="gpbankID2" value="N/A" style="width:95%" rendered="#{companyRegionUI.vendor eq null or companyRegionUI.vendor.taxRegistrationNumber eq ''}" />
+										</h:panelGroup>
+
+										<h:panelGroup>
+											<p:outputLabel value="#{lang['bankHolder']}" for="bankHolderID" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="bankHolderID" value="#{companyRegionUI.bankingDetails.bankHolder}" style="width:95%" />
+										</h:panelGroup>
+
+										<h:panelGroup>
+											<p:outputLabel value="#{lang['status']}" for="statusID" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="statusID" value="#{companyRegionUI.bankingDetails.status.friendlyName}" style="width:95%" />
+										</h:panelGroup>
+									</p:panelGrid>
+
+									<div class="EmptyBox10" />
+
+									<p:panelGrid columns="4" style="width : 95%" styleClass="ui-panelgrid-blank" id="bankingDetailsDocs">
+										<p:dataTable value="#{companyRegionUI.bankingDetails.docs}" var="rv1" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv1.id}">
+											<f:facet name="header">Documents</f:facet>
+											<p:column headerText="#{lang['type']}" width="18%">#{rv1.configDoc.name}</p:column>
+											<p:column headerText="#{lang['original.file.name']}" priority="4">
+												<p:outputLabel value="#{rv1.originalFname}" styleClass="Fs12"></p:outputLabel>
+											</p:column>
+											<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+											<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+												<h:outputText value="#{rv1.createDate}">
+													<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+												</h:outputText>
+											</p:column>
+											<p:column headerText="#{lang['version']}" width="10%" priority="4">
+												<h:outputText value="#{rv1.versionNo}">
+												</h:outputText>
+											</p:column>
+											<p:column headerText="#{lang['original.required']}">
+												<center>
+													<h:panelGroup rendered="#{rv1.configDoc.originalRequired}" styleClass="green">
+														<i class="fa fa-files-o fa-3x" aria-hidden="true"></i>
+													</h:panelGroup>
+													<h:panelGroup rendered="#{not rv1.configDoc.originalRequired}" styleClass="red">
+														<i class="fa fa-times fa-3x" aria-hidden="true"></i>
+													</h:panelGroup>
+												</center>
+											</p:column>
+											<p:column width="180">
+												<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlb" rendered="#{rv1.id ne null}">
+													<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+													<p:tooltip for="dlb" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+												</p:commandButton>
+												<p:spacer width="5" rendered="#{rv1.id ne null}" />
+											</p:column>
+										</p:dataTable>
+									</p:panelGrid>
+								</p:fieldset>
+								<br />
+								<p:dataTable var="rowVar" value="#{companyRegionUI.bankingDetailsList}" rendered="#{companyRegionUI.bankingDetailsList.size() gt 0}" id="bankingdetailsList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+									paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+									<f:facet name="header">#{lang['previous.banking.details']}</f:facet>
+									<p:column headerText="#{lang['bank']}">
+										<h:outputText value="#{rowVar.bank.description}" />
+									</p:column>
+									<p:column headerText="#{lang['createDate']}">
+										<h:outputText value="#{rowVar.createDate}">
+											<f:convertDateTime pattern="dd MMMM yyyy (HH:mm:ss)" />
+										</h:outputText>
+									</p:column>
+									<p:column headerText="#{lang['bankAccNumber']}">
+										<h:outputText value="#{rowVar.maskedBankAccNumber}" />
+									</p:column>
+									<p:column headerText="#{lang['branchCode']}">
+										<h:outputText value="#{rowVar.branchCode}" />
+									</p:column>
+									<p:column headerText="#{lang['bankHolder']}">
+										<h:outputText value="#{rowVar.bankHolder}" />
+									</p:column>
+									<p:column headerText="#{lang['status']}">
+										<p:outputLabel value="#{rowVar.status.friendlyName}"></p:outputLabel>
+									</p:column>
+								</p:dataTable>
+							</p:tab>
+
+							<!--  Documents Tab -->
+							<p:tab id="documents" title="#{lang['documents']}">
+								<p:dataTable value="#{companyRegionUI.company.docs}" var="rvcd" emptyMessage="#{lang['no.records.found']}" rowKey="#{rvcd.id}">
+									<p:column headerText="#{lang['type']}" width="18%">#{rvcd.configDoc.name}</p:column>
+									<p:column headerText="#{lang['original.file.name']}" priority="4">
+										<p:outputLabel value="#{rvcd.originalFname}" styleClass="Fs12"></p:outputLabel>
+									</p:column>
+									<p:column headerText="#{lang['uploaded.by']}">#{rvcd.users.firstName} #{rvcd.users.lastName}</p:column>
+									<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+										<h:outputText value="#{rvcd.createDate}">
+											<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+										</h:outputText>
+									</p:column>
+									<p:column headerText="#{lang['version']}" width="10%" priority="4">
+										<h:outputText value="#{rvcd.versionNo}">
+										</h:outputText>
+									</p:column>
+									<p:column headerText="#{lang['approval.status']}" width="10%" priority="4">
+										<h:outputText value="#{rvcd.approvalStatus.friendlyName}">
+										</h:outputText>
+									</p:column>
+									<p:column width="180">
+										<p:commandButton immediate="true" process="@this" ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlb" rendered="#{rvcd.id ne null}">
+											<f:setPropertyActionListener value="#{rvcd}" target="#{uploadDocUI.doc}" />
+											<p:tooltip for="dlb" value="#{lang['download.the.file']}" position="left" rendered="#{rvcd.id ne null}" />
+										</p:commandButton>
+										<p:spacer width="5" />
+									</p:column>
+								</p:dataTable>
+							</p:tab>
+
+							<!--  Linked Companies Tab -->
+							<p:tab title="#{lang['linked.companies']}">
+
+
+								<p:dataTable var="rowVar" id="companyList" rowKey="#{rowVar.id}" value="#{companyRegionUI.linkedCompanies}" emptyMessage="#{lang['no.records.found']}" reflow="true" rendered="#{companyRegionUI.linkedCompanies.size() gt 0}">
+
+									<p:column headerText="#{lang['companyName']}">
+										<h:outputText value="#{rowVar.companyName}" />
+									</p:column>
+									<p:column headerText="#{lang['sdl.number']}">
+										<h:outputText value="#{rowVar.levyNumber}" />
+									</p:column>
+									<p:column headerText="#{lang['telNumber']}">
+										<h:outputText value="#{rowVar.telNumber}" />
+									</p:column>
+									<p:column headerText="#{lang['company.status']}">
+										<h:outputText value="#{lang[rowVar.companyStatus.registrationName]}" />
+									</p:column>
+
+								</p:dataTable>
+
+								<c:if test="#{companyRegionUI.linkedCompanies.size() eq 0}">
+									<h4>#{lang['no.other.companies.have.been.linked.to.the.company']}</h4>
+								</c:if>
+
+							</p:tab>
+
+							<!--  Training Committee Tab -->
+							<p:tab title="#{lang['training.comittee']}">
+
+								<p:dataTable var="rowVar" value="#{companyRegionUI.trainingComittees}" rendered="#{companyRegionUI.trainingComittees.size() gt 0}" id="trainingcomitteeList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+									paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+									<p:column headerText="#{lang['expand.row']}" width="45">
+										<p:rowToggler></p:rowToggler>
+									</p:column>
+									<p:column headerText="#{lang['first.name']}">
+										<h:outputText value="#{rowVar.firstName}" />
+									</p:column>
+									<p:column headerText="#{lang['last.name']}">
+										<h:outputText value="#{rowVar.lastName}" />
+									</p:column>
+									<p:column headerText="#{lang['rsa.id.number']}">
+										<h:outputText value="#{rowVar.rsaIDNumber}" />
+									</p:column>
+									<p:column headerText="#{lang['passport.number']}">
+										<h:outputText value="#{rowVar.passportNumber}" />
+									</p:column>
+									<p:column headerText="#{lang['email']}">
+										<h:outputText value="#{rowVar.email}" />
+									</p:column>
+									<p:column headerText="#{lang['union.name']}">
+										<h:outputText value="#{rowVar.unionName}" />
+									</p:column>
+
+									<p:rowExpansion>
+										<p:panelGrid columns="3" style="width:100%" id="s" layout="grid" styleClass="ui-panelgrid-blank form-group">
+											<h:panelGroup>
+												<h:outputText value="#{lang['title']}" styleClass="Fs12 FontLight" />
+												<br />
+												<h:outputText value="#{rowVar.title.description}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<h:outputText value="#{lang['gender']}" styleClass="Fs12 FontLight" />
+												<br />
+												<h:outputText value="#{rowVar.gender.genderName}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<h:outputText value="#{lang['equity']}" styleClass="Fs12 FontLight" />
+												<br />
+												<h:outputText value="#{rowVar.equity.description}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<h:outputText value="#{lang['tel.number']}" styleClass="Fs12 FontLight" />
+												<br />
+												<h:outputText value="#{rowVar.telNumber}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<h:outputText value="#{lang['cell.number']}" styleClass="Fs12 FontLight" />
+												<br />
+												<h:outputText value="#{rowVar.cellNumber}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<h:outputText value="#{lang['fax.number']}" styleClass="Fs12 FontLight" />
+												<br />
+												<h:outputText value="#{rowVar.faxNumber}" />
+											</h:panelGroup>
+										</p:panelGrid>
+									</p:rowExpansion>
+								</p:dataTable>
+								<c:if test="#{companyRegionUI.trainingComittees.size() eq 0}">
+									<h4>#{lang['no.training.committee.captured.for.company']}</h4>
+								</c:if>
+
+
+							</p:tab>
+
+							<!--  Sites Tab -->
+							<p:tab title="#{lang['sites']}">
+
+								<p:dataTable value="#{companyRegionUI.sites}" rendered="#{companyRegionUI.sites.size() gt 0}" var="rv4" rowKey="#{rv4.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+
+									<p:column headerText="#{lang['site.name']}">
+										<h:outputText value="#{rv4.companyName}" />
+									</p:column>
+									<p:column headerText="#{lang['numberOfEmployees']}">
+										<h:outputText value="#{rv4.numberOfEmployees}" />
+									</p:column>
+									<p:column headerText="#{lang['telNumber']}">
+										<h:outputText value="#{rv4.telNumber}" />
+									</p:column>
+									<p:column headerText="#{lang['faxNumber']}">
+										<h:outputText value="#{rv4.faxNumber}" />
+									</p:column>
+									<p:column headerText="#{lang['status']}">
+										<h:outputText value="#{rv4.siteStatus.friendlyName}" />
+									</p:column>
+
+								</p:dataTable>
+								<c:if test="#{companyRegionUI.sites.size() eq 0}">
+									<h4>#{lang['no.sites.captured.for.company']}</h4>
+								</c:if>
+
+							</p:tab>
+							<!-- Sites SMEs -->
+							<p:tab id="siteSme" title="#{lang['site.sme']}">
+								<p:dataTable var="rowVarSme" value="#{companyRegionUI.allSmeDataModel}" rowKey="#{rowVarSme.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+									<p:column style="width:7%" headerText="#{lang['expand.row']}">
+										<p:rowToggler />
+									</p:column>
+									<p:column headerText="Date Added" sortBy="#{rowVarSme.createDate}">
+										<p:outputLabel value="#{rowVarSme.createDate}">
+											<f:convertDateTime pattern="dd MMMM yyyy" />
+										</p:outputLabel>
+									</p:column>
+									<p:column headerText="Site Name" sortBy="#{rowVarSme.sites}">
+										<p:outputLabel value="#{rowVarSme.sites.companyName}" rendered="#{rowVarSme.sites ne null}" />
+										<p:outputLabel value="#{rowVarSme.company.companyName}" rendered="#{rowVarSme.sites eq null}" />
+									</p:column>
+									<p:column headerText="Address">
+										<p:outputLabel value="#{rowVarSme.sites.registeredAddress.addressLine1}" rendered="#{rowVarSme.sites ne null}" />
+										<p:outputLabel value="#{rowVarSme.residentialAddress.addressLine1}" rendered="#{rowVarSme.residentialAddress ne null}" />
+										<br />
+										<p:outputLabel value="#{rowVarSme.sites.registeredAddress.addressLine2}" rendered="#{rowVarSme.sites ne null}" />
+										<p:outputLabel value="#{rowVarSme.residentialAddress.addressLine2}" rendered="#{rowVarSme.residentialAddress ne null}" />
+										<br />
+										<p:outputLabel value="#{rowVarSme.sites.registeredAddress.addressLine3}" rendered="#{rowVarSme.sites ne null}" />
+										<p:outputLabel value="#{rowVarSme.residentialAddress.addressLine3}" rendered="#{rowVarSme.residentialAddress ne null}" />
+										<br />
+										<p:outputLabel value="#{rowVarSme.sites.registeredAddress.town.description}" rendered="#{rowVarSme.sites ne null}" />
+										<p:outputLabel value="#{rowVarSme.residentialAddress.town.description}" rendered="#{rowVarSme.residentialAddress ne null}" />
+										<br />
+									</p:column>
+									<p:column headerText="First Name" filterBy="#{rowVarSme.firstName}">
+										<p:outputLabel style="width:95%; opacity:1 !important;" value="#{rowVarSme.firstName}" />
+									</p:column>
+									<p:column headerText="Last Name" filterBy="#{rowVarSme.lastName}">
+										<p:outputLabel style="width:95%; opacity:1 !important;" value="#{rowVarSme.lastName}" />
+									</p:column>
+									<p:column headerText="Identity/Passport Number">
+										<p:outputLabel style="width:95%; opacity:1 !important;" value="#{rowVarSme.identityNumber}" />
+										<p:outputLabel style="width:95%; opacity:1 !important;" value="#{rowVarSme.passportNumber}" />
+									</p:column>
+									<p:column headerText="Active" sortBy="#{rowVarSme.active}" rendered="false">
+										<p:selectBooleanCheckbox value="#{rowVarSme.active}" disabled="true" />
+									</p:column>
+									<p:column headerText="Status" sortBy="{rowVarSme.status}">
+										<p:outputLabel value="#{rowVarSme.status.friendlyName}" />
+									</p:column>
+									<p:rowExpansion>
+										<p:outputPanel>
+											<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+												<p:dataTable id="smeQualificationDt" value="#{rowVarSme.smeQualificationsList}" var="rvql" rowKey="#{rvql.id}" paginator="true" paginatorPosition="bottom" rows="5" reflow="true">
+													<p:column headerText="SAQA ID" style="width:8%">
+														<p:outputLabel value="#{rvql.qualification.code}" />
+													</p:column>
+													<p:column headerText="Qualification">
+														<p:outputLabel value="#{rvql.qualification.description}" />
+													</p:column>
+												</p:dataTable>
+											</p:panelGrid>
+										</p:outputPanel>
+									</p:rowExpansion>
+								</p:dataTable>
+							</p:tab>
+							<!-- Workplace approval data -->
+							<p:tab id="workplaceApprovalTab" title="Workplace Approval Data">
+								<p:dataTable var="rvwpa" value="#{companyRegionUI.allWorkPlaceApprovalDataModel}" rowKey="#{rvwpa.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+									<p:column headerText="Status" sortBy="#{rvwpa.approvalEnum}">
+										<p:outputLabel value="#{rvwpa.approvalEnum.friendlyName}" />
+									</p:column>
+									<p:column headerText="Site" sortBy="#{rvwpa.sites}">
+										<p:outputLabel value="#{rvwpa.sites.companyName}" rendered="#{rvwpa.sites ne null}" />
+										<p:outputLabel value="#{rvwpa.company.companyName}" rendered="#{rvwpa.sites eq null}" />
+									</p:column>
+									<p:column headerText="Address">
+										<p:outputLabel value="#{rvwpa.sites.registeredAddress.addressLine1}" rendered="#{rvwpa.sites ne null}" />
+										<p:outputLabel value="#{rvwpa.company.residentialAddress.addressLine1}" rendered="#{rvwpa.company.residentialAddress ne null}" />
+										<br />
+										<p:outputLabel value="#{rvwpa.sites.registeredAddress.addressLine2}" rendered="#{rvwpa.sites ne null}" />
+										<p:outputLabel value="#{rvwpa.company.residentialAddress.addressLine2}" rendered="#{rvwpa.company.residentialAddress ne null}" />
+										<br />
+										<p:outputLabel value="#{rvwpa.sites.registeredAddress.addressLine3}" rendered="#{rvwpa.sites ne null}" />
+										<p:outputLabel value="#{rvwpa.company.residentialAddress.addressLine3}" rendered="#{rvwpa.company.residentialAddress ne null}" />
+										<br />
+										<p:outputLabel value="#{rvwpa.sites.registeredAddress.town.description}" rendered="#{rvwpa.sites ne null}" />
+										<p:outputLabel value="#{rvwpa.company.residentialAddress.town.description}" rendered="#{rvwpa.company.residentialAddress ne null}" />
+										<br />
+									</p:column>
+									<p:column headerText="Qualification">
+										<p:outputLabel value="(#{rvwpa.qualification.code}) - #{rvwpa.qualification.description}" rendered="#{rvwpa.qualification ne null}" />
+									</p:column>
+									<p:column headerText="Trade">
+										<p:outputLabel value="(#{rvwpa.ofoCodes.ofoCodeParent}) - (#{rvwpa.ofoCodes.description})" rendered="#{rvwpa.ofoCodes ne null}" />
+									</p:column>
+								</p:dataTable>
+							</p:tab>
+						</p:tabView>
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+		<p:dialog id="sdfdocsDialog" widgetVar="sdfdocsDlg" modal="true" width="98%" responsive="true" header="SDF Registration Documents" showEffect="clip" height="clip" fitViewport="true" position="top">
+			<h:form id="sdfDocForm">
+				<p:dataTable value="#{companyRegionUI.sdf.docs}" rendered="#{companyRegionUI.displaySdfRegDocs}" var="rvsd" emptyMessage="#{lang['no.records.found']}" paginator="true" rows="2" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="2" reflow="true"
+					rowKey="#{rvsd.id}">
+					<f:facet name="header">Registration Documents</f:facet>
+					<p:column headerText="#{lang['type']}" width="18%">#{rvsd.configDoc.name}</p:column>
+					<p:column headerText="#{lang['original.file.name']}" priority="4">
+						<p:outputLabel value="#{rvsd.originalFname}" styleClass="Fs12"></p:outputLabel>
+					</p:column>
+					<p:column headerText="#{lang['uploaded.by']}">#{rvsd.users.firstName} #{rvsd.users.lastName}</p:column>
+					<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+						<h:outputText value="#{rvsd.createDate}">
+							<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+						</h:outputText>
+					</p:column>
+					<p:column headerText="#{lang['version']}" width="10%" priority="4">
+						<h:outputText value="#{rvsd.versionNo}">
+						</h:outputText>
+					</p:column>
+					<p:column headerText="#{lang['original.required']}">
+						<center>
+							<h:panelGroup rendered="#{rvsd.configDoc.originalRequired}" styleClass="green">
+								<i class="fa fa-files-o fa-3x" aria-hidden="true"></i>
+							</h:panelGroup>
+							<h:panelGroup rendered="#{not rvsd.configDoc.originalRequired}" styleClass="red">
+								<i class="fa fa-times fa-3x" aria-hidden="true"></i>
+							</h:panelGroup>
+						</center>
+					</p:column>
+					<p:column width="180">
+						<p:commandButton ajax="false" icon="fa fa-download" update="@form" action="#{uploadDocUI.download}" id="dlb" rendered="#{rvsd.id ne null}">
+							<f:setPropertyActionListener value="#{rvsd}" target="#{uploadDocUI.doc}" />
+							<p:tooltip for="dlb" value="#{lang['download.the.file']}" position="left" rendered="#{rvsd.id ne null}" />
+						</p:commandButton>
+						<p:spacer width="5" rendered="#{rvsd.id ne null}" />
+					</p:column>
+				</p:dataTable>
+
+				<div class="EmptyBox5" />
+				<br />
+				<p:dataTable value="#{companyRegionUI.changeReasonDocs}" rendered="#{companyRegionUI.displayChangeDocs}" var="rvcd" emptyMessage="#{lang['no.records.found']}" paginator="true" rows="2" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="2" reflow="true"
+					rowKey="#{rvcd.id}">
+					<f:facet name="header">Change Reason Document</f:facet>
+					<p:column headerText="#{lang['type']}" width="18%">Change Reason</p:column>
+					<p:column headerText="#{lang['original.file.name']}" priority="4">
+						<p:outputLabel value="#{rvcd.originalFname}" styleClass="Fs12"></p:outputLabel>
+					</p:column>
+					<p:column headerText="#{lang['uploaded.by']}">#{rvcd.users.firstName} #{rvcd.users.lastName}</p:column>
+					<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+						<h:outputText value="#{rvcd.createDate}">
+							<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+						</h:outputText>
+					</p:column>
+					<p:column headerText="#{lang['version']}" width="10%" priority="4">
+						<h:outputText value="#{rvcd.versionNo}">
+						</h:outputText>
+					</p:column>
+					<p:column width="180">
+						<p:commandButton ajax="false" icon="fa fa-download" update="@form" action="#{uploadDocUI.download}" id="dlb" rendered="#{rvcd.id ne null}">
+							<f:setPropertyActionListener value="#{rvcd}" target="#{uploadDocUI.doc}" />
+							<p:tooltip for="dlb" value="#{lang['download.the.file']}" position="left" rendered="#{rvcd.id ne null}" />
+						</p:commandButton>
+						<p:spacer width="5" rendered="#{rvcd.id ne null}" />
+					</p:column>
+				</p:dataTable>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog widgetVar="mailLogDlg" modal="true" width="98%" responsive="true" header="Mail log" showEffect="clip" height="clip" fitViewport="true" position="top">
+			<h:form id="mailForm">
+				<p:dataTable value="#{companyRegionUI.mailLogs}" var="rv" rowKey="#{rv.id}" paginator="true" rows="2" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="2,5" reflow="true">
+					<p:column headerText="Send to" width="20%">
+						<h:outputText value="#{rv.user.firstName} #{rv.user.lastName}" />#{rv.id}
+         			</p:column>
+
+					<p:column headerText="#{lang['email']}">
+						<div style="overflow-y: scroll; height: 150px;">
+							<h:outputText value="#{rv.subject}" styleClass="FontBold" />
+							<br />
+							<h:outputText value="#{rv.body}" escape="false" />
+						</div>
+					</p:column>
+					<p:column headerText="Send date" sortBy="#{rv.createDate}" width="10%">
+						<h:outputText value="#{rv.createDate}">
+							<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+						</h:outputText>
+					</p:column>
+					<p:column width="30" headerText="#{lang['view.edit']}">
+						<p:commandButton rendered="#{rv.doc ne null}" icon="ui-icon-cloud-download" id="dlAt" action="#{uploadDocUI.download}" ajax="false">
+							<f:setPropertyActionListener value="#{rv.doc}" target="#{uploadDocUI.doc}" />
+						</p:commandButton>
+
+						<p:tooltip for="dlAt" value="Download email attachment" position="left" />
+					</p:column>
+				</p:dataTable>
+			</h:form>
+		</p:dialog>
+
+		<ui:include src="/pages/includes/tasksFor.xhtml" />
+	</ui:define>
+
+
+</ui:composition>

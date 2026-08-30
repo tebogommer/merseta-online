@@ -1,0 +1,116 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:c="http://java.sun.com/jsp/jstl/core"
+                template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>DgContractingBulkItems</h1>
+					<h:form id="dgcontractingbulkitemsInsForm">
+						<p:growl sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						
+						<p:panelGrid columns="1" style="width:100%" id="dgcontractingbulkitemsInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+       						         							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="approvalDate" value="#{dgcontractingbulkitemsUI.dgcontractingbulkitems.approvalDate}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['approvalDate']}" for="approvalDate"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="approvalUser" value="#{dgcontractingbulkitemsUI.dgcontractingbulkitems.approvalUser}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['approvalUser']}" for="approvalUser"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="createDate" value="#{dgcontractingbulkitemsUI.dgcontractingbulkitems.createDate}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['createDate']}" for="createDate"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="createUser" value="#{dgcontractingbulkitemsUI.dgcontractingbulkitems.createUser}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['createUser']}" for="createUser"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="batchNumber" value="#{dgcontractingbulkitemsUI.dgcontractingbulkitems.batchNumber}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['batchNumber']}" for="batchNumber"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="activeContracts" value="#{dgcontractingbulkitemsUI.dgcontractingbulkitems.activeContracts}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['activeContracts']}" for="activeContracts"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="statusAssigned" value="#{dgcontractingbulkitemsUI.dgcontractingbulkitems.statusAssigned}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['statusAssigned']}" for="statusAssigned"/>
+     							</h:panelGroup>  
+
+
+        					    <p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+									<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:dgcontractingbulkitemsList :dgcontractingbulkitemsInsForm:dgcontractingbulkitemsInsGrid" action="#{dgcontractingbulkitemsUI.dgcontractingbulkitemsInsert}" />
+									<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="dgcontractingbulkitemsInsGrid" process="@this" action="#{dgcontractingbulkitemsUI.prepareNew}">
+										<p:resetInput target="dgcontractingbulkitemsInsGrid" />
+									</p:commandButton>									
+								</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{dgcontractingbulkitemsUI.dataModel}" filteredValue="#{dgcontractingbulkitemsUI.dgContractingBulkItemsfilteredList}" id="dgcontractingbulkitemsList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+           						              					<p:column headerText="#{lang['approvalDate']}">  
+                        			<h:outputText value="#{rowVar.approvalDate}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['approvalUser']}">  
+                        			<h:outputText value="#{rowVar.approvalUser}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['createDate']}">  
+                        			<h:outputText value="#{rowVar.createDate}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['createUser']}">  
+                        			<h:outputText value="#{rowVar.createUser}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['batchNumber']}">  
+                        			<h:outputText value="#{rowVar.batchNumber}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['activeContracts']}">  
+                        			<h:outputText value="#{rowVar.activeContracts}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['statusAssigned']}">  
+                        			<h:outputText value="#{rowVar.statusAssigned}" />  
+            					</p:column>      
+
+
+           						<p:column width="80">
+									<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":dgcontractingbulkitemsInsForm:dgcontractingbulkitemsInsGrid">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{dgcontractingbulkitemsUI.dgcontractingbulkitems}" />
+									</p:commandButton>
+									<p:spacer width="5" />
+									<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:dgcontractingbulkitemsList" action="#{dgcontractingbulkitemsUI.dgcontractingbulkitemsDelete}">
+										<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+										<f:setPropertyActionListener value="#{rowVar}" target="#{dgcontractingbulkitemsUI.dgcontractingbulkitems}" />
+									</p:commandButton>
+								</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+<!-- 
+_lang_
+-->
+</ui:composition>

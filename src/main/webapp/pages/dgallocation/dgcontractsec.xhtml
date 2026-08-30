@@ -1,0 +1,624 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<ui:include src="/pages/includes/taskdiagram.xhtml" />
+				<br />
+			</div>
+		</div>
+		<h:form id="activecontractsInsForm">
+			<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+			<div class="ui-g">
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+						<h1>New Contracts</h1>
+						<p:growl sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<ui:include src="/pages/tp/includes/company.xhtml">
+							<ui:param name="title" value="Company Details" />
+							<ui:param name="company" value="#{activecontractsUI.activecontracts.dgAllocationParent.wsp.company}" />
+						</ui:include>
+					</div>
+					<c:if test="#{sessionUI.task.processRole.companyUserType eq null}">
+						<div class="card card-w-title">
+							<p:panelGrid columns="2" style="width:100%" id="activecontractsInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="refno" value="#{activecontractsUI.activecontracts.refnoAuto}" required="true" style="width:95%; opacity: 1; color : black;" disabled="true" />
+									<p:outputLabel value="#{lang['refno']}" for="refno" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:calendar mask="true" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" id="startdate" value="#{activecontractsUI.activecontracts.startdate}" required="true" inputStyle="width:95%"
+										disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalEdit}" />
+									<p:outputLabel value="Company #{lang['signdate']}" for="startdate" pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:calendar mask="true" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" id="signdate" value="#{activecontractsUI.activecontracts.signdate}" required="true" inputStyle="width:95%"
+										disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalEdit}" />
+									<p:outputLabel value="merSETA #{lang['signdate']}" for="signdate" pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:calendar mask="true" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" id="originalenddate" value="#{activecontractsUI.activecontracts.endDateAuto}" required="true" inputStyle="width:95%; opacity: 1; color : black;" disabled="true" />
+									<p:outputLabel value="#{lang['end.date']}" for="originalenddate" pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield" rendered="false">
+									<p:calendar mask="true" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" id="amendmentenddate" value="#{activecontractsUI.activecontracts.amendmentenddate}" inputStyle="width:95%"
+										disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalEdit}" />
+									<p:outputLabel value="#{lang['amendmentenddate']}" for="amendmentenddate" pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield" rendered="false">
+									<p:calendar mask="true" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" id="reviseddate" value="#{activecontractsUI.activecontracts.reviseddate}" inputStyle="width:95%"
+										disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalEdit}" />
+									<p:outputLabel value="#{lang['reviseddate']}" for="reviseddate" pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</h:panelGroup>
+							</p:panelGrid>
+						</div>
+					</c:if>
+					<c:if test="#{activecontractsUI.signOffMoaList ne null and activecontractsUI.signOffMoaList.size() gt 0}">
+						<div class="card card-w-title">
+							<h1>MOA Sign Off</h1>
+							<p:commandButton icon="fa fa-download" value="Download MOA Agreement" immediate="true" ajax="false" action="#{activecontractsUI.downloadMoaVersionTwo}" update="@form" />
+							<div class="EmptyBox10" />
+							<p:outputPanel id="moaSignOffOP">
+								<p:dataTable var="rvso" value="#{activecontractsUI.signOffMoaList}" id="signoffList" reflow="true">
+									<p:column headerText="#{lang['signed.off.by']}">
+										<p:outputLabel value="#{rvso.user.firstName} #{rvso.user.lastName}" rendered="#{rvso.user ne null}" />
+										<p:outputLabel value="Awaiting Assignment" rendered="#{rvso.user eq null}" />
+									</p:column>
+									<p:column headerText="#{lang['date']}">
+										<p:outputLabel value="Pending Sign Off" rendered="#{rvso.signOffDate eq null}" />
+										<p:outputLabel value="#{rvso.signOffDate}" rendered="#{rvso.signOffDate ne null}">
+											<f:convertDateTime pattern="dd/MM/yyyy HH:MM" />
+										</p:outputLabel>
+									</p:column>
+									<p:column headerText="#{lang['acknowledge']}">
+										<div>
+											<p:selectBooleanCheckbox value="#{rvso.accept}" disabled="true">
+											</p:selectBooleanCheckbox>
+										</div>
+										<div>
+											<p:outputLabel value="#{lang['i.acknowledge.read.understand.terms.and.conditions']}"></p:outputLabel>
+										</div>
+									</p:column>
+									<p:column style="width:10%" headerText="Actions">
+										<p:commandButton rendered="#{sessionUI.task.firstInProcess}" title="Change Sign-off User" icon="fa fa-user-circle-o" process="signoffList" action="#{activecontractsUI.prepChangeSignOffUser}" update=":activecontractsInsForm:signoffList :changeUserForm">
+											<f:setPropertyActionListener value="#{rvso}" target="#{activecontractsUI.signOffSelected}" />
+											<p:confirm header="Confirmation" message="Are You Sure You Wish To Change Sign Off User? " icon="fa fa-exclamation-triangle" />
+										</p:commandButton>
+										<p:commandButton rendered="#{!sessionUI.task.firstInProcess and rvso.user.id eq sessionUI.activeUser.id}" title="Re-send OTP" icon="fa fa-envelope" action="#{activecontractsUI.resendSignOffPin}" update=":activecontractsInsForm:signoffList" process="signoffList">
+											<f:setPropertyActionListener value="#{rvso}" target="#{activecontractsUI.signOffSelected}" />
+											<p:confirm header="Confirmation" message="Are You Sure? A New OTP Will Be Generated." icon="fa fa-exclamation-triangle" />
+										</p:commandButton>
+										<p:spacer width="5" rendered="#{!sessionUI.task.firstInProcess}" />
+										<p:commandButton rendered="#{!sessionUI.task.firstInProcess and rvso.user.id eq sessionUI.activeUser.id}" title="Sign Off" icon="fa fa-pencil" action="#{activecontractsUI.prepPinValidiation}" update=":activecontractsInsForm:signoffList :signOffForm" process="signoffList">
+											<f:setPropertyActionListener value="#{rvso}" target="#{activecontractsUI.signOffSelected}" />
+										</p:commandButton>
+									</p:column>
+								</p:dataTable>
+							</p:outputPanel>
+						</div>
+					</c:if>
+					<div class="card card-w-title">
+						<h1>Project Implementation Plan</h1>
+						<p style="color: red; font-weight: bold">All details must be provided for each intervention</p>
+						<p:dataTable var="rowVar" value="#{activecontractsUI.projectimplementationplanList}" id="projectimplementationplanList" rowKey="#{rowVar.id}" reflow="true">
+							<p:column>
+								<f:facet name="header">
+									<label style="text-align: top; position: relative;">#{lang['recommendedIntervention']}</label>
+								</f:facet>
+								<h:outputText value="#{rowVar.interventionTypeDescription}" />
+							</p:column>
+							<p:column>
+								<f:facet name="header">
+									<label style="text-align: top; position: relative;">#{lang['awarded.learners']}</label>
+								</f:facet>
+								<h:outputText value="#{rowVar.fullyFundedLearnerAwarded + rowVar.coFundingLearnersAwarded}" />
+							</p:column>
+							<p:column>
+								<f:facet name="header">
+									<label style="text-align: top; position: relative;">#{lang['projectedRecruitmentDate1']}</label>
+									<p style="color: orange; text-align: top;">Before Projected Registration Date</p>
+								</f:facet>
+								<div>
+									<p:calendar id="german" value="#{rowVar.projectedRecruitmentDate}" locale="de" navigator="true" required="true" requiredMessage="#{lang['projectedRecruitmentDate']}"
+										disabled="#{not sessionUI.externalParty or (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalEdit)}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true"
+										mindate="#{activecontractsUI.projectedRecruitmentMinDate}" maxdate="#{activecontractsUI.projectedRecruitmentMaxDate}">
+										<p:ajax event="dateSelect" />
+									</p:calendar>
+								</div>
+							</p:column>
+							<p:column>
+								<f:facet name="header">
+									<label style="text-align: top; position: relative;">#{lang['projectedInductionDate1']}</label>
+									<p style="color: orange; text-align: top;">Before Projected Registration Date</p>
+								</f:facet>
+								<div>
+									<p:calendar id="german1" value="#{rowVar.projectedInductionDate}" locale="de" navigator="true" required="true" requiredMessage="#{lang['projectedInductionDate']}"
+										disabled="#{not sessionUI.externalParty or (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalEdit)}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true"
+										mindate="#{activecontractsUI.requitmentInductionMinDate}" maxdate="#{activecontractsUI.requitmentInductionMaxDate}">
+										<p:ajax event="dateSelect" />
+									</p:calendar>
+								</div>
+							</p:column>
+							<p:column>
+								<f:facet name="header">
+									<label style="text-align: top; position: relative;">#{lang['projectedRegistrationDate1']}</label>
+									<p style="color: orange; text-align: top;">#{activecontractsUI.projectedRegistrationDisplayDate}</p>
+								</f:facet>
+								<div>
+									<p:calendar id="german2" value="#{rowVar.projectedRegistrationDate}" locale="de" navigator="true" required="true" requiredMessage="#{lang['projectedRegistrationDate']}"
+										disabled="#{not sessionUI.externalParty or (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalEdit)}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true"
+										mindate="#{activecontractsUI.minProjectedRecruitmentDate}" maxdate="#{activecontractsUI.maxProjectedRecruitmentDate}">
+										<p:ajax event="dateSelect" />
+									</p:calendar>
+								</div>
+							</p:column>
+							<p:column>
+								<f:facet name="header">
+									<label style="text-align: top; position: relative;">#{lang['estimatedProgressDate1']}</label>
+									<p style="color: orange; text-align: top;">Within MOA period</p>
+								</f:facet>
+								<div>
+									<p:outputLabel value="#{rowVar.estimatedProgressDate}" rendered="false" disabled="#{not sessionUI.externalParty or (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalEdit)}">
+										<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+									</p:outputLabel>
+									<p:calendar id="german3" value="#{rowVar.estimatedProgressDate}" locale="de" navigator="true" required="true" requiredMessage="#{lang['estimatedProgressDate']}"
+										disabled="#{not sessionUI.externalParty or (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalEdit)}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true"
+										mindate="#{activecontractsUI.minEstimatedCompletionDate}" maxdate="#{activecontractsUI.maxEstimatedCompletionDate}">
+										<p:ajax event="dateSelect" />
+									</p:calendar>
+								</div>
+							</p:column>
+							<p:column headerText="">
+								<f:facet name="header">
+									<label style="text-align: top; position: relative;">#{lang['estimatedCompletionDate1']}</label>
+									<p style="color: orange; text-align: top;">Within MOA period</p>
+								</f:facet>
+								<div>
+									<p:outputLabel value="#{rowVar.estimatedCompletionDate}" rendered="false" disabled="#{not sessionUI.externalParty or (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalEdit)}">
+										<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+									</p:outputLabel>
+									<p:calendar id="german4" value="#{rowVar.estimatedCompletionDate}" locale="de" navigator="true" required="true" requiredMessage="#{lang['estimatedCompletionDate']}"
+										disabled="#{not sessionUI.externalParty or (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalEdit)}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true"
+										mindate="#{activecontractsUI.minEstimatedCompletionDate}" maxdate="#{activecontractsUI.maxEstimatedCompletionDate}">
+										<p:ajax event="dateSelect" />
+									</p:calendar>
+								</div>
+							</p:column>
+							<p:column>
+								<f:facet name="header">
+									<label style="text-align: top; position: relative;">#{lang['logisticalAspectsAddressed']}</label>
+								</f:facet>
+								<p:selectOneMenu required="true" requiredMessage="#{lang['logisticalAspectsAddressed']}" id="a" value="#{rowVar.logisticalAspectsAddressed}"
+									disabled="#{not sessionUI.externalParty or (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalEdit)}" style="width:75%">
+									<p:ajax />
+									<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+									<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+								</p:selectOneMenu>
+							</p:column>
+							<p:column>
+								<f:facet name="header">
+									<label style="text-align: top; position: relative;">#{lang['accreditedProviderIdentified']}</label>
+								</f:facet>
+								<p:selectOneMenu required="true" requiredMessage="#{lang['accreditedProviderIdentified']}" id="b" value="#{rowVar.accreditedProviderIdentified}"
+									disabled="#{not sessionUI.externalParty or (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalEdit)}" style="width:75%">
+									<p:ajax />
+									<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+									<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+								</p:selectOneMenu>
+							</p:column>
+						</p:dataTable>
+					</div>
+					<c:if test="#{activecontractsUI.activecontracts.docs.size() gt 0}">
+						<div class="card card-w-title">
+							<p:fieldset legend="#{lang['documents']}" id="userDocs">
+								<p:dataTable value="#{activecontractsUI.activecontracts.docs}" var="rv1" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+									<p:column headerText="#{lang['type']}" width="20%">#{rv1.configDoc.name}</p:column>
+									<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+									<p:column headerText="#{lang['uploaded']}" width="15%">
+										<h:outputText value="#{rv1.createDate}">
+											<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+										</h:outputText>
+									</p:column>
+									<p:column headerText="#{lang['version']}" width="15%">
+										<h:outputText value="#{rv1.versionNo}">
+										</h:outputText>
+									</p:column>
+									<p:column width="180" headerText="#{lang['view.edit']}">
+										<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+										<p:spacer width="5" rendered="#{rv1.id ne null}" />
+										<p:commandButton icon="fa fa-bars " id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="dhistUserDocs" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+										<!-- only with permission to upload can upload a new version -->
+										<p:commandButton rendered="#{(rv1.users eq null or sessionUI.activeUser eq rv1.users) and (sessionUI.task.processRole eq null or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload)}" icon="fa fa-upload" id="uploadUserDocs" styleClass="#{rv1.originalFname eq null ? 'red-btn' : ''} flat"
+											process="@this" oncomplete="PF('dlgUpload').show()" update=":uploadForm">
+											<f:setPropertyActionListener value="#{rv1}" target="#{activecontractsUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="uploadUserDocs" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+										<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+											<p:spacer width="5" />
+											<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+												<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+											</p:commandButton>
+											<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+										</h:panelGroup>
+										<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+											<p:spacer width="5" />
+											<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+												<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+												<f:setPropertyActionListener value="#{sessionUI.activeUser}" target="#{uploadDocUI.viewUser}" />
+											</p:commandButton>
+											<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+										</h:panelGroup>
+									</p:column>
+								</p:dataTable>
+							</p:fieldset>
+						</div>
+					</c:if>
+					<c:if test="#{activecontractsUI.rejectReasonsList.size() ne 0}">
+						<div class="card card-w-title">
+							<h1>Rejection Reasons:</h1>
+							<p:repeat var="rowVarRR" value="#{activecontractsUI.rejectReasonsList}">
+								<p:outputLabel value="#{rowVarRR.description}" style="font-weight:bold; font-size: 20px; color: red;" />
+								<br />
+								<p:outputLabel value="#{rowVarRR.howTo}" style="color: grey;" />
+								<br />
+								<br />
+							</p:repeat>
+							<br />
+						</div>
+					</c:if>
+					<div class="card card-w-title">
+						<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve}">
+							<p:commandButton value="#{lang['approve']}" icon="ui-icon-save" update="@form" action="#{activecontractsUI.approveWorkflow}" styleClass="flat green-btn Fs18" style="height: 50px;" />
+							<p:commandButton value="#{lang['reject.task']}" icon="ui-icon-save" update="@form" oncomplete="PF('rejectReasonsDlg').show()" styleClass="flat red-btn Fs18" style="height: 50px;" process="@this" />
+						</p:panelGrid>
+						<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval}">
+							<p:commandButton value="#{lang['approve']}" icon="ui-icon-save" update="@form" action="#{activecontractsUI.finalApproveWorkflow}" styleClass="flat green-btn Fs18" style="height: 50px;" />
+							<p:commandButton value="#{lang['reject.task']}" icon="ui-icon-save" update="@form" oncomplete="PF('rejectReasonsDlg').show()" styleClass="flat red-btn Fs18" style="height: 50px;" process="@this" />
+						</p:panelGrid>
+						<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Approve and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalApproval}">
+							<p:commandButton value="Complete MOA Sign Off" icon="ui-icon-save" update="@form" action="#{activecontractsUI.completeSignOffTask}" styleClass="flat green-btn Fs18" style="height: 50px;" rendered="#{activecontractsUI.activecontracts.signOffState}">
+								<p:confirm header="Confirmation" message="Are You Sure You Wish To Proceed? " icon="fa fa-exclamation-triangle" />
+							</p:commandButton>
+							<p:commandButton value="Not Duly Authorised For Sign Off" icon="fa fa-times" update="notForSignOffForm" styleClass="flat red-btn Fs18" oncomplete="PF('notForSignOffDlg').show()" style="height: 50px;" rendered="#{activecontractsUI.activecontracts.signOffState}">
+							</p:commandButton>
+							<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" update="@form" action="#{activecontractsUI.completeWorkflow}" styleClass="flat green-btn Fs18" style="height: 50px;" rendered="#{activecontractsUI.activecontracts.signOffState eq null or !activecontractsUI.activecontracts.signOffState}" />
+							<p:commandButton immediate="true" value="Request Extension" icon="fa fa-user-times" oncomplete="PF('dlgRequestExtensionRequest').show()" update="@form extensionRequestForm" styleClass="Fs18 green-btn flat" style="height: 50px;" action="#{activecontractsUI.prepExtensionRequest}"
+								rendered="#{not sessionUI.hideETQA and activecontractsUI.activecontracts.extensionTerminationWorkflowActive ne null and !activecontractsUI.activecontracts.extensionTerminationWorkflowActive and false}" />
+							<p:commandButton immediate="true" value="Request Termination" icon="fa fa-user-times" oncomplete="PF('dlgRequestTerminationRequest').show()" update="@form terminationRequestForm" styleClass="Fs18 green-btn flat" style="height: 50px;" action="#{activecontractsUI.prepExtensionRequest}"
+								rendered="#{not sessionUI.hideETQA and sessionUI.employee and activecontractsUI.activecontracts.extensionTerminationWorkflowActive ne null and !activecontractsUI.activecontracts.extensionTerminationWorkflowActive and false}" />
+							<p:commandButton immediate="true" value="Withdraw Application" icon="fa fa-user-times" oncomplete="PF('dlgSelectReasonWithdrawal').show()" update="@form selectReasonWithdrawalForm" styleClass="Fs18 red-btn flat" style="height: 50px;" action="#{activecontractsUI.prepWithdrawOfApplication}" />
+							<p:commandButton value="Reject" icon="ui-icon-save" update="@form" oncomplete="PF('rejectReasonsDlg').show()" process="@this" styleClass="flat red-btn Fs18" style="height: 50px;" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.View}" />
+						</p:panelGrid>
+					</div>
+				</div>
+			</div>
+		</h:form>
+		<p:dialog header="Withdraw Application" position="top" widgetVar="dlgSelectReasonWithdrawal" resizable="false" hideEffect="clip" showEffect="clip" id="selectReasonWithdrawal" width="60%" responsive="true" modal="true" dynamic="true">
+			<h:form id="selectReasonWithdrawalForm">
+				<h:panelGroup>
+					<h:panelGroup id="typeofApp">
+						<div>
+							<p:outputLabel value="Reason for withdrawal"></p:outputLabel>
+						</div>
+						<div>
+							<p:selectOneMenu requiredMessage="Provide: Reason for withdrawal" style="width:100%" required="true" value="#{activecontractsUI.withdrawalAppealEnum}">
+								<p:ajax />
+								<f:selectItem itemLabel="---Select One---" noSelectionOption="true" />
+								<f:selectItems value="#{enumUI.discretionalWithdrawalEnumDD}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+				</h:panelGroup>
+				<br />
+				<div class="ui-g dashboard">
+					<div class="ui-g-12">
+						<div class="ui-g-12 ui-md-12 ui-lg-6">
+							<div class="ui-g card colorbox #{activecontractsUI.doc.originalFname eq null ? 'colorbox-5' : 'colorbox-1'}">
+								<div class="ui-g-4">
+									<i class="material-icons">#{activecontractsUI.doc.originalFname eq null ? 'cloud_upload' : 'check_circle'}</i>
+								</div>
+								<div class="ui-g-8">
+									<span class="colorbox-name">Reason Of Withdraw</span>
+									<span class="colorbox-count">
+										<p:commandButton icon="fa fa-download" id="cbDownload" rendered="#{activecontractsUI.doc.originalFname ne null}" action="#{activecontractsUI.download(activecontractsUI.doc)}" ajax="false" value="#{lang['download']}" immediate="true" process="@parent">
+											<p:ajax onevent="oneventFunction" />
+										</p:commandButton>
+										<p:spacer width="5" rendered="#{activecontractsUI.doc.originalFname ne null}"></p:spacer>
+										<p:tooltip for="cbDownload" value="#{lang['download']} #{activecontractsUI.doc.originalFname}" position="left" rendered="#{activecontractsUI.doc.originalFname ne null}" />
+										<p:commandButton id="uploadCID" value="#{activecontractsUI.doc.originalFname eq null ? lang['click.to.upload'] :  lang['re.upload'] }" styleClass="#{activecontractsUI.doc.originalFname eq null ? 'red-btn' : 'green-btn'} flat" process="@this" oncomplete="PF('dlgUploadMemory').show()" update=":uploadMemoryForm">
+										</p:commandButton>
+									</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<br />
+				<p:commandButton value="Withdraw Application" icon="fa fa-user-times" action="#{activecontractsUI.withdrawActiveContractsCompanyContact}" update="@form">
+					<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+				</p:commandButton>
+			</h:form>
+		</p:dialog>
+		<p:dialog header="Request Extension" position="top" widgetVar="dlgRequestExtensionRequest" resizable="false" hideEffect="clip" showEffect="clip" id="dialogExtensionRequest" width="60%" responsive="true" modal="true" dynamic="true">
+			<h:form id="extensionRequestForm">
+				<div class="ui-g dashboard">
+					<div class="ui-g-12">
+						<div class="ui-g-12 ui-md-12 ui-lg-6">
+							<div class="ui-g card colorbox #{activecontractsUI.doc.originalFname eq null ? 'colorbox-5' : 'colorbox-1'}">
+								<div class="ui-g-4">
+									<i class="material-icons">#{activecontractsUI.doc.originalFname eq null ? 'cloud_upload' : 'check_circle'}</i>
+								</div>
+								<div class="ui-g-8">
+									<span class="colorbox-name">Reason For Extension Request</span>
+									<span class="colorbox-count">
+										<p:commandButton icon="fa fa-download" id="cbDownloadER" rendered="#{activecontractsUI.doc.originalFname ne null}" action="#{activecontractsUI.download(activecontractsUI.doc)}" ajax="false" value="#{lang['download']}" immediate="true" process="@parent">
+											<p:ajax onevent="oneventFunction" />
+										</p:commandButton>
+										<p:spacer width="5" rendered="#{activecontractsUI.doc.originalFname ne null}"></p:spacer>
+										<p:tooltip for="cbDownloadER" value="#{lang['download']} #{activecontractsUI.doc.originalFname}" position="left" rendered="#{activecontractsUI.doc.originalFname ne null}" />
+										<p:commandButton id="uploadCIDEr" value="#{activecontractsUI.doc.originalFname eq null ? lang['click.to.upload'] :  lang['re.upload'] }" styleClass="#{activecontractsUI.doc.originalFname eq null ? 'red-btn' : 'green-btn'} flat" process="@this" oncomplete="PF('dlgUploadMemory').show()" update=":uploadMemoryForm">
+										</p:commandButton>
+									</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<br />
+				<p:commandButton value="Request Extension" icon="fa fa-user-times" action="#{activecontractsUI.requestExtensionOnActiveContract}" update="@form">
+					<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+				</p:commandButton>
+			</h:form>
+		</p:dialog>
+		<p:dialog header="Request Termination" position="top" widgetVar="dlgRequestTerminationRequest" resizable="false" hideEffect="clip" showEffect="clip" id="dialogTerminationRequest" width="60%" responsive="true" modal="true" dynamic="true">
+			<h:form id="terminationRequestForm">
+				<div class="ui-g dashboard">
+					<div class="ui-g-12">
+						<div class="ui-g-12 ui-md-12 ui-lg-6">
+							<div class="ui-g card colorbox #{activecontractsUI.doc.originalFname eq null ? 'colorbox-5' : 'colorbox-1'}">
+								<div class="ui-g-4">
+									<i class="material-icons">#{activecontractsUI.doc.originalFname eq null ? 'cloud_upload' : 'check_circle'}</i>
+								</div>
+								<div class="ui-g-8">
+									<span class="colorbox-name">Reason For Termination Request</span>
+									<span class="colorbox-count">
+										<p:commandButton icon="fa fa-download" id="cbDownloadTer" rendered="#{activecontractsUI.doc.originalFname ne null}" action="#{activecontractsUI.download(activecontractsUI.doc)}" ajax="false" value="#{lang['download']}" immediate="true" process="@parent">
+											<p:ajax onevent="oneventFunction" />
+										</p:commandButton>
+										<p:spacer width="5" rendered="#{activecontractsUI.doc.originalFname ne null}"></p:spacer>
+										<p:tooltip for="cbDownloadTer" value="#{lang['download']} #{activecontractsUI.doc.originalFname}" position="left" rendered="#{activecontractsUI.doc.originalFname ne null}" />
+										<p:commandButton id="uploadCIDTer" value="#{activecontractsUI.doc.originalFname eq null ? lang['click.to.upload'] :  lang['re.upload'] }" styleClass="#{activecontractsUI.doc.originalFname eq null ? 'red-btn' : 'green-btn'} flat" process="@this" oncomplete="PF('dlgUploadMemory').show()" update=":uploadMemoryForm">
+										</p:commandButton>
+									</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<br />
+				<p:commandButton value="Request Termination" icon="fa fa-user-times" action="#{activecontractsUI.requestTerminationOnActiveContract}" update="@form">
+					<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+				</p:commandButton>
+			</h:form>
+		</p:dialog>
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+			<h:form>
+				<p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="fa fa-check" />
+				<p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="fa fa-times" />
+			</h:form>
+		</p:confirmDialog>
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+		<p:dialog header="Reject Reasons" widgetVar="finalRejectReasonsDlg" hideEffect="clip" showEffect="clip" id="dialogFinalRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="finalRejectReasonForm">
+				<!-- Final Reject Reasons -->
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{activecontractsUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{activecontractsUI.rejectReasonsSeniorManager}" var="rv" itemValue="#{rv}" />
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+							</p:selectManyMenu>
+						</div>
+					</div>
+					<p:commandButton value="Final Reject" action="#{activecontractsUI.finalRejectWorkflowAndTask}" update="@form" />
+				</div>
+			</h:form>
+		</p:dialog>
+		<p:dialog header="Reject Reasons" widgetVar="rejectReasonsDlg" hideEffect="clip" showEffect="clip" id="dialogRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonForm">
+				<!-- Final Reject Reasons -->
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{activecontractsUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{activecontractsUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+							</p:selectManyMenu>
+						</div>
+					</div>
+					<p:commandButton value="Reject" action="#{activecontractsUI.rejectWorkflow}" update="@form" />
+				</div>
+			</h:form>
+		</p:dialog>
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true" dynamic="true">
+			<h:form id="uploadForm">
+				<h:panelGroup id="uploadGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{activecontractsUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{activecontractsUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span>
+										<br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{activecontractsUI.storeFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update="activecontractsInsForm:userDocs" multiple="false" fileLimit="1" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUploadMemory" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOADMemory" width="80%" responsive="true" modal="true" dynamic="true">
+			<h:form id="uploadMemoryForm">
+				<h:panelGroup id="uploadMemoryGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">Upload Evidence</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{activecontractsUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span>
+										<br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{activecontractsUI.storeFileMemory}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update="@form :selectReasonWithdrawalForm :extensionRequestForm :terminationRequestForm" multiple="false" fileLimit="1"
+										immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+		<p:dialog position="top" header="Sign Off" widgetVar="signOffDlg" resizable="false" hideEffect="clip" showEffect="clip" id="signOffDialog" width="80%" responsive="true" modal="true" dynamic="true">
+			<h:form id="signOffForm">
+				<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+					<p:outputLabel style="color:red; font-weight: bold;" value="You are advised that, if it is established that you are not duly authorised to sign the MOA, the said action may constitute fraud and be subject to the full penalty of the law." />
+				</p:panelGrid>
+				<br />
+				<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{!activecontractsUI.displaySignOff}">
+					<h:panelGroup styleClass="md-inputfield" style="margin-top:19px;">
+						<p:inputMask id="pinEntry" value="#{activecontractsUI.password}" mask="9999" required="true" style="opacity:1 !important;" requiredMessage="Provide One Time Pin" />
+						<p:outputLabel value="One Time Pin" for="pinEntry" />
+					</h:panelGroup>
+					<p:commandButton icon="fa fa-check-square-o" value="Validate Pin" update="signOffForm" action="#{activecontractsUI.validiatePin}" process="signOffForm" />
+				</p:panelGrid>
+				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{activecontractsUI.displaySignOff}">
+					<h:panelGroup styleClass="md-inputfield" style="margin-top:19px;">
+						<p:inputText value="#{activecontractsUI.signOffSelected.user.firstName} #{activecontractsUI.signOffSelected.user.lastName}" readonly="true" />
+						<p:outputLabel value="Sign Off User" />
+					</h:panelGroup>
+					<h:panelGroup>
+						<div>
+							<p:selectBooleanCheckbox value="#{activecontractsUI.signOffSelected.accept}" disabled="false">
+							</p:selectBooleanCheckbox>
+						</div>
+						<div>
+							<p:outputLabel value="#{lang['i.acknowledge.read.understand.terms.and.conditions']}"></p:outputLabel>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup>
+						<p:commandButton title="Sign Off" icon="fa fa-pencil" value="Sign Off" action="#{activecontractsUI.signOff}" update=":activecontractsInsForm :signOffForm" process="signOffForm">
+							<p:confirm header="Confirmation" message="Are You Sure?" icon="fa fa-exclamation-triangle" />
+						</p:commandButton>
+					</h:panelGroup>
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+		<p:dialog position="top" header="Change MOA Signoff User" widgetVar="changeSignOffUserDlg" hideEffect="clip" showEffect="clip" id="changeSignOffUserDialog" modal="true" closable="true" width="50%" responsive="true">
+			<h:form id="changeUserForm">
+				<h:panelGroup>
+					<p:outputLabel style="color:red; font-weight: bold;" value="You are advised that, if it is established that the selected user is not duly authorised to sign the MOA, the said action may constitute fraud and be subject to the full penalty of the law." />
+					<br />
+				</h:panelGroup>
+				<h:panelGroup>
+					<br />
+					<p:outputLabel style="color:red; font-weight: bold;" value="Please note that if the duly authorised person is not on this list, please go to Company Contacts and add." />
+				</h:panelGroup>
+				<h:panelGroup>
+					<h4>Current User Assigned For MOA Sign Off</h4>
+				</h:panelGroup>
+				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+					<h:panelGroup styleClass="md-inputfield" rendered="#{activecontractsUI.currentSignOffUser eq null}">
+						<p:inputText id="noUserAssignedDisplay" value="No User Assigned" style="width:95%" disabled="true" />
+						<p:outputLabel value="Current User:" for="noUserAssignedDisplay" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield" rendered="#{activecontractsUI.currentSignOffUser ne null}">
+						<p:inputText id="userName" value="#{activecontractsUI.currentSignOffUser.firstName}" style="width:95%" disabled="true" />
+						<p:outputLabel value="#{lang['first.name']}:" for="userName" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield" rendered="#{activecontractsUI.currentSignOffUser ne null}">
+						<p:inputText id="userSurname" value="#{activecontractsUI.currentSignOffUser.lastName}" style="width:95%" disabled="true" />
+						<p:outputLabel value="#{lang['surname']}:" for="userSurname" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield" rendered="#{activecontractsUI.currentSignOffUser ne null}">
+						<p:inputText id="userEmail" value="#{activecontractsUI.currentSignOffUser.email}" style="width:95%" disabled="true" />
+						<p:outputLabel value="#{lang['emails']}:" for="userEmail" />
+					</h:panelGroup>
+				</p:panelGrid>
+				<h4>Select New User For MOA Sign Off</h4>
+				<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="User Responsible For MOA Sign off" for="userSignOffSelection" />
+						</div>
+						<div>
+							<p:selectOneMenu id="userSignOffSelection" value="#{activecontractsUI.userSelectionForMoaSignOff}" converter="UsersConvertor" style="width:95%" required="true" requiredMessage="#{lang['provide.type.of.id']}">
+								<f:selectItems value="#{activecontractsUI.userSelectionList}" var="rvu" itemValue="#{rvu}" itemLabel="#{rvu.firstName} #{rvu.lastName} (#{rvu.email} - Status: #{rvu.status.friendlyName})" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+				</p:panelGrid>
+				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+					<h:panelGroup>
+						<p:commandButton title="Change Sign Off User" icon="fa fa-user-circle-o" value="Change Sign Off User" action="#{activecontractsUI.changeSignOffUser}" update=":activecontractsInsForm :activecontractsInsForm:signoffList :changeUserForm" process="changeUserForm">
+							<p:confirm header="Confirmation" message="Are You Sure?" icon="fa fa-exclamation-triangle" />
+						</p:commandButton>
+					</h:panelGroup>
+					<h:panelGroup>
+						<p:commandButton title="Go To Company Contacts" icon="fa fa-users" value="Go To Company Contacts" immediate="true" action="#{activecontractsUI.goToCompanyManagment}" update=":activecontractsInsForm :activecontractsInsForm:signoffList :changeUserForm" process="changeUserForm">
+							<p:confirm header="Confirmation" message="Are You Sure?" icon="fa fa-exclamation-triangle" />
+						</p:commandButton>
+					</h:panelGroup>
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+		<p:dialog position="top" header="Not Duly Authorized" widgetVar="notForSignOffDlg" hideEffect="clip" showEffect="clip" id="notForSignOffDialog" modal="true" closable="true" width="50%" responsive="true">
+			<h:form id="notForSignOffForm">
+				<h:panelGroup>
+					<h4>Not duly authorized to sign the MOA</h4>
+				</h:panelGroup>
+				<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+					<p:outputLabel value="Not Authorised For Sign Off, send back to primary SDF" />
+				</p:panelGrid>
+				<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+					<h:panelGroup>
+						<p:commandButton title="Submit" icon="fa fa-user-circle-o" value="Submit Not Duly Authorised" action="#{activecontractsUI.sendBackToSDF}" update=":activecontractsInsForm :notForSignOffForm" process="notForSignOffForm">
+							<p:confirm header="Confirmation" message="Are You Sure?" icon="fa fa-exclamation-triangle" />
+						</p:commandButton>
+					</h:panelGroup>
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+	</ui:define>
+</ui:composition>

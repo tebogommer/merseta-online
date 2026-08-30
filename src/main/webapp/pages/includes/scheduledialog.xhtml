@@ -1,0 +1,46 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:pt="http://xmlns.jcp.org/jsf/passthrough" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<p:dialog header="Event Details" widgetVar="eventDialog" hideEffect="clip" showEffect="clip" id="eventDialog"  modal="true" closable="true" height="50%" width="35%" responsive="true">
+		<p:fieldset>
+			<br/>
+			<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{scheduledEvenViewtUI.scheduledEvent.title}"/>
+					
+					<p:outputLabel value="#{lang['title']}" />
+				</h:panelGroup>
+			</p:panelGrid>
+			<br/>
+			<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+				<h:panelGroup styleClass="md-inputfield" rendered="#{scheduledEvenViewtUI.scheduledEvent.fromDateTime ne null}">
+					<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{scheduledEvenViewtUI.scheduledEvent.fromDateTime}">
+						<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME}" />
+					</p:inputText>
+					<p:outputLabel value="#{lang['from.date']}" />
+				</h:panelGroup>
+			
+				<h:panelGroup styleClass="md-inputfield" rendered="#{scheduledEvenViewtUI.scheduledEvent.toDateTime ne null}">
+					<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{scheduledEvenViewtUI.scheduledEvent.toDateTime}">
+						<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME}" />
+					</p:inputText>
+					<p:outputLabel value="#{lang['to.date']}" />
+				</h:panelGroup>
+				
+				<h:panelGroup styleClass="md-inputfield" rendered="#{scheduledEvenViewtUI.scheduledEvent.fromDateTime eq null}">
+					<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{scheduledEvenViewtUI.scheduledEvent.reviewCommitteeMeeting.fromDateTime}">
+						<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME}" />
+					</p:inputText>
+					<p:outputLabel value="#{lang['from.date']}" />
+				</h:panelGroup>
+			
+				<h:panelGroup styleClass="md-inputfield" rendered="#{scheduledEvenViewtUI.scheduledEvent.toDateTime eq null}">
+					<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{scheduledEvenViewtUI.scheduledEvent.reviewCommitteeMeeting.toDateTime}">
+						<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME}" />
+					</p:inputText>
+					<p:outputLabel value="#{lang['to.date']}" />
+				</h:panelGroup>
+			</p:panelGrid>
+		</p:fieldset>
+		<br/>	
+	 	<p:ajax event="close"/>	
+    </p:dialog>   	    
+</ui:composition>

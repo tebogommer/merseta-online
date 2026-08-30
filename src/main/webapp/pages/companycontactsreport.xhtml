@@ -1,0 +1,54 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Company Contact Report</h1>
+					<h:form id="mainForm">
+						<ui:include src="/pages/includes/download_lazy.xhtml">
+							<ui:param name="file_name" value="Company_Contacts" />
+							<ui:param name="target" value="dgList" />
+						</ui:include>
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+						<p:dataTable var="rowVar" value="#{companyContactsUI.dataModel}" filteredValue="#{companyContactsUI.companyUsersList}" 
+									id="dgList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" 
+									paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+									rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+								<p:column headerText="Entity ID"  exportable="true" filterBy="#{rowVar.company.levyNumber}" sortBy="#{rowVar.company.levyNumber}">
+									<p:outputLabel value="#{rowVar.company.levyNumber}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="Name of Company" exportable="true" filterBy="#{rowVar.company.companyName}" sortBy="#{rowVar.company.companyName}">
+									<p:outputLabel value="#{rowVar.company.companyName}"></p:outputLabel>
+								</p:column>								
+								<p:column headerText="Trading Name"  exportable="true">
+									<p:outputLabel value="#{rowVar.company.tradingName}"></p:outputLabel>
+								</p:column>	
+								
+								<p:column headerText="First Name"  exportable="true">
+									<p:outputLabel value="#{rowVar.user.firstName}"></p:outputLabel>
+								</p:column>		
+								
+								<p:column headerText="Surname"  exportable="true">
+									<p:outputLabel value="#{rowVar.user.lastName}"></p:outputLabel>
+								</p:column>		
+								
+								<p:column headerText="Email"  exportable="true">
+									<p:outputLabel value="#{rowVar.user.email}"></p:outputLabel>
+								</p:column>	
+								
+								<p:column headerText="Contact Number"  exportable="true">
+									<p:outputLabel value="#{rowVar.user.cellNumber}"></p:outputLabel>
+								</p:column>	
+								
+								<p:column headerText="Position"  exportable="true" filterBy="#{rowVar.position.description}" sortBy="#{rowVar.position.description}">
+									<p:outputLabel value="#{rowVar.position.description}"></p:outputLabel>
+								</p:column>						
+						</p:dataTable>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+</ui:composition>

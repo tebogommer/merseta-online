@@ -1,0 +1,132 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<h:form id="pipUpdateForm">
+			<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+			<div class="ui-g">
+				<h:form id="pipUpdateForm">
+					<div class="ui-g-12">
+						<div class="card card-w-title">
+							<h1>Project Implementation Plan Change</h1>
+							<div class="EmptyBox20" />
+							<h3>Documents</h3>
+							<p:commandButton title="#{lang['pip.update.plan.upload']}" value="Upload" update="@form"  process="@this" oncomplete="PF('dlgPIPUpdate').show()" />
+							<div class="EmptyBox20" />
+							<div class="EmptyBox20" />
+							<p:dataTable value="#{pipupdateUI.projectImplementationPlan.docs}" var="rv1" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv1.id}">
+	
+								<p:column headerText="#{lang['type']}" width="18%">#{rv1.configDoc.name}</p:column>
+								<p:column headerText="#{lang['original.file.name']}" priority="4">
+									<p:outputLabel value="#{rv1.originalFname}" styleClass="Fs12"></p:outputLabel>
+								</p:column>
+								<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+								<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+									<h:outputText value="#{rv1.createDate}">
+										<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="#{lang['version']}" width="10%" priority="4">
+									<h:outputText value="#{rv1.versionNo}">
+									</h:outputText>
+								</p:column>
+								<p:column headerText="#{lang['original.required']}" rendered="false">
+									<center>
+										<h:panelGroup rendered="#{rv1.configDoc.originalRequired}" styleClass="green">
+											<i class="fa fa-files-o fa-3x" aria-hidden="true"></i>
+										</h:panelGroup>
+										<h:panelGroup rendered="#{not rv1.configDoc.originalRequired}" styleClass="red">
+											<i class="fa fa-times fa-3x" aria-hidden="true"></i>
+										</h:panelGroup>
+									</center>
+								</p:column>
+								<p:column width="180" headerText="#{lang['view.edit']}">
+									<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}">
+										<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+									<p:spacer width="5" rendered="#{rv1.id ne null}" />
+									<p:commandButton icon="fa fa-bars " id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}">
+										<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="dhistUserDocs" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+									<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+										<p:spacer width="5" />
+										<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+									</h:panelGroup>
+									<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+										<p:spacer width="5" />
+										<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+									</h:panelGroup>
+								</p:column>
+							</p:dataTable>
+						</div>
+					</div>
+					<div class="ui-g-12">
+						<div class="card">
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve}">
+								<p:commandButton value="#{lang['approve']}" icon="ui-icon-save" update="@form" action="#{pipupdateUI.approveWorkflow}" styleClass="flat green-btn Fs18" style="height: 50px;">
+								</p:commandButton>
+								<p:commandButton value="#{lang['reject.task']}" icon="ui-icon-save" update="@form" action="#{pipupdateUI.rejectWorkflow}" styleClass="flat red-btn Fs18" style="height: 50px;" process="@this">
+								</p:commandButton>
+							</p:panelGrid>
+	
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval}">
+								<p:commandButton value="#{lang['approve']}" icon="ui-icon-save" update="@form" action="#{pipupdateUI.finalApproveWorkflow}" styleClass="flat green-btn Fs18" style="height: 50px;">
+								</p:commandButton>
+								<p:commandButton value="#{lang['reject.task']}" icon="ui-icon-save" update="@form" action="#{pipupdateUI.finalRejectWorkflow}" styleClass="flat red-btn Fs18" style="height: 50px;" process="@this">
+								</p:commandButton>
+							</p:panelGrid>
+	
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Approve and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalApproval}">
+								<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" update="@form" action="#{pipupdateUI.completeWorkflow}" styleClass="flat green-btn Fs18" style="height: 50px;"></p:commandButton>
+								<p:commandButton value="Reject" icon="ui-icon-save" update="@form" action="#{pipupdateUI.rejectWorkflow}" styleClass="flat red-btn Fs18" style="height: 50px;" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.View}">
+								</p:commandButton>
+							</p:panelGrid>
+						</div>
+					</div>
+				</h:form>
+			</div>
+			
+			<p:dialog header="#{lang['pip.update']}" widgetVar="dlgPIPUpdate" resizable="false" hideEffect="clip" showEffect="clip" id="pipChange" width="80%" responsive="true" modal="true" dynamic="true">
+			<h:form id="pipUpdateDailogFormForm">
+				<h:panelGroup id="pipUpdateGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{pipupdateUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{pipupdateUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span>
+										<br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{pipupdateUI.storeNewFilePIP}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update="pipUpdateForm" multiple="false" fileLimit="1" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+			</p:dialog>
+			
+		</h:form>
+	</ui:define>
+	<!-- 
+createDate = createDate
+note = note
+
+-->
+</ui:composition>

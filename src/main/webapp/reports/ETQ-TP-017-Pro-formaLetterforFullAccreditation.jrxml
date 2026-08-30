@@ -1,0 +1,423 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.20.0.final using JasperReports Library version 6.20.0-2bc7ab61c56f459e8176eb05c7705e145cd400ad  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="ETQ-TP-017-Pro-formaLetterforFullAccreditation" pageWidth="595" pageHeight="842" columnWidth="515" leftMargin="40" rightMargin="40" topMargin="20" bottomMargin="20" uuid="ee556205-51af-4cdb-8e09-5df93bb14bf1">
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="One Empty Record"/>
+	<property name="com.jaspersoft.studio.property.dataset.dialog.DatasetDialog.sash.w1" value="733"/>
+	<property name="com.jaspersoft.studio.property.dataset.dialog.DatasetDialog.sash.w2" value="257"/>
+	<parameter name="logo" class="java.awt.Image"/>
+	<parameter name="backround_image" class="java.awt.Image"/>
+	<parameter name="company_id" class="java.lang.Long"/>
+	<parameter name="user_id" class="java.lang.Long"/>
+	<parameter name="accreditation_number" class="java.lang.String"/>
+	<parameter name="date_of_rc" class="java.lang.String"/>
+	<parameter name="call_centre" class="java.lang.String"/>
+	<parameter name="certificate_signature" class="java.awt.Image"/>
+	<queryString language="SQL">
+		<![CDATA[SELECT  user.first_name,user.last_name,title.description AS title,
+company.company_name,company.levy_number,postalAddress.address_line_1,
+postalAddress.address_line_2,postalAddress.address_line_3,postalAddress.address_line_4,postalAddress.postcode,
+company.company_guid AS guid,town.description AS postal_add_town
+
+FROM merseta.users AS user
+
+LEFT JOIN merseta.company AS company
+ON company.id=$P{company_id}
+
+LEFT JOIN merseta.title AS title
+ON title.id=user.title_id
+
+LEFT JOIN merseta.address AS postalAddress
+ON postalAddress.id=company.postal_address_id
+
+LEFT JOIN merseta.towns AS town
+ON town.id=postalAddress.town_id
+
+WHERE user.id=$P{user_id}]]>
+	</queryString>
+	<field name="first_name" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="first_name"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="users"/>
+	</field>
+	<field name="last_name" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="last_name"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="users"/>
+	</field>
+	<field name="title" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="title"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="title"/>
+	</field>
+	<field name="company_name" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="company_name"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="company"/>
+	</field>
+	<field name="levy_number" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="levy_number"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="company"/>
+	</field>
+	<field name="address_line_1" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="address_line_1"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="address_line_2" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="address_line_2"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="address_line_3" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="address_line_3"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="address_line_4" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="address_line_4"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="postcode" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="postcode"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="guid" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="guid"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="company"/>
+	</field>
+	<field name="postal_add_town" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="postal_add_town"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="towns"/>
+	</field>
+	<group name="Group1">
+		<groupHeader>
+			<band height="401">
+				<textField>
+					<reportElement x="0" y="122" width="516" height="20" uuid="133e9816-5f11-45ce-90d5-2604e390bc15"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Dear "+$F{title}+" "+$F{first_name}+" "+$F{last_name}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="0" y="142" width="516" height="12" uuid="5cbba224-6977-4642-b696-6a8790a0259c"/>
+					<text><![CDATA[]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="0" y="110" width="516" height="12" uuid="9d44344a-655b-4b3c-bd31-8c6d9e73b743"/>
+					<text><![CDATA[]]></text>
+				</staticText>
+				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+					<reportElement x="1" y="221" width="516" height="169" uuid="393f7afc-9fb5-4292-ae8e-b7cc8d29db36"/>
+					<textElement textAlignment="Justified">
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA["It is our pleasure to inform you that the merSETA review committee approved "+$F{company_name}+"’s application for full accreditation as a provider on "+$P{date_of_rc}+" for the qualification/s and/or trade/s and/or unit standards listed on your statement of qualifications and unit standards.\n\n"+
+
+"Please note that if your accreditation was for an area of specialisation within a qualification, this accreditation is for that area of specialisation only.  The provider is therefore required to deliver strictly according to the registered NQF qualification with specific reference to the “Qualification rules”. \n\n"+
+
+"merSETA will continue to monitor the standard of your training through regular auditing of the implementation of your quality management system. You will be contacted in this regard.\n\n"+
+
+"Congratulations on your achievement and thank you for your high level of commitment and professionalism."]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="-1" y="202" width="517" height="12" uuid="b63cf246-ba65-44f8-90b4-56f4856807b9"/>
+					<text><![CDATA[]]></text>
+				</staticText>
+				<textField>
+					<reportElement x="1" y="30" width="280" height="13" uuid="10cd889b-acb9-4663-af05-942f0569d33e"/>
+					<textElement verticalAlignment="Bottom">
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{company_name}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="1" y="44" width="280" height="13" uuid="c4cfb9db-e176-407a-bd91-4b8924bb62cd"/>
+					<textElement verticalAlignment="Bottom">
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{address_line_1}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="1" y="57" width="280" height="13" uuid="709d0435-bee1-475c-987f-5ee0aced8ec6"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{address_line_2}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="1" y="70" width="280" height="13" uuid="f550570d-ed73-443e-97ff-a0388e838c95"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{address_line_3}]]></textFieldExpression>
+				</textField>
+				<textField pattern="dd  MMMMM  yyyy">
+					<reportElement x="1" y="3" width="280" height="13" uuid="d952b86d-54e1-4827-a9e3-bb22b25eec7f"/>
+					<textElement verticalAlignment="Bottom">
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="1" y="18" width="515" height="12" uuid="6344e62f-8a12-4f40-b637-d6275f75879a"/>
+					<text><![CDATA[]]></text>
+				</staticText>
+				<textField>
+					<reportElement x="1" y="83" width="280" height="13" uuid="182af4c4-8b90-4dd6-9c4b-654b1025f381"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{postal_add_town}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="1" y="96" width="280" height="13" uuid="1a832d3f-7b5e-4e90-9c31-1a0cc27a6609"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{postcode}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="2" y="154" width="514" height="20" uuid="def0f861-51b3-4f13-8494-a89cb89971eb"/>
+					<textElement verticalAlignment="Middle" markup="html">
+						<font fontName="Arial" size="11" isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression><![CDATA["FULL ACCREDITATION –"+$F{company_name}.toUpperCase()]]></textFieldExpression>
+				</textField>
+				<textField textAdjust="StretchHeight" isBlankWhenNull="true">
+					<reportElement x="2" y="176" width="511" height="20" uuid="11d19c71-e59f-4f29-87c9-a0ff7982824d"/>
+					<textElement verticalAlignment="Middle" markup="html">
+						<font fontName="Arial" size="11" isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression><![CDATA["ACCREDITATION NO:  "+$P{accreditation_number}.toUpperCase()]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupHeader>
+		<groupFooter>
+			<band height="90">
+				<textField>
+					<reportElement x="0" y="5" width="515" height="20" uuid="efc84a97-f4bb-4634-88d0-01fba93c40ab"/>
+					<textElement>
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Yours sincerely,"]]></textFieldExpression>
+				</textField>
+				<image hAlign="Left" vAlign="Middle">
+					<reportElement x="0" y="20" width="229" height="50" uuid="8bcfeb2a-50da-4829-a4db-b45cf26c11eb"/>
+					<box>
+						<bottomPen lineWidth="1.0"/>
+					</box>
+					<imageExpression><![CDATA[$P{certificate_signature}]]></imageExpression>
+				</image>
+				<textField>
+					<reportElement x="0" y="70" width="515" height="20" uuid="6192bb39-6709-4948-ac54-888c49f9eed8"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement>
+						<font fontName="Arial" size="11" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression><![CDATA["SENIOR MANAGER: QUALITY ASSURANCE & PARTNERSHIPS"]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupFooter>
+	</group>
+	<group name="Group2"/>
+	<background>
+		<band height="802" splitType="Stretch">
+			<image>
+				<reportElement x="247" y="183" width="270" height="450" uuid="2ddcdeb6-398e-46bd-bf23-f3a5b1173424"/>
+				<imageExpression><![CDATA[$P{backround_image}]]></imageExpression>
+			</image>
+		</band>
+	</background>
+	<title>
+		<band height="181" splitType="Stretch">
+			<image scaleImage="RetainShape">
+				<reportElement stretchType="ElementGroupHeight" x="180" y="0" width="160" height="160" uuid="5e634197-bb82-40ad-a65f-15b6ad9d496b"/>
+				<graphicElement fill="Solid"/>
+				<imageExpression><![CDATA[$P{logo}]]></imageExpression>
+			</image>
+		</band>
+	</title>
+	<pageFooter>
+		<band height="93" splitType="Stretch">
+			<staticText>
+				<reportElement x="46" y="42" width="117" height="15" forecolor="#404040" uuid="72fcc937-a44f-4416-a64d-a1cfbdce4311"/>
+				<box>
+					<topPen lineWidth="0.5" lineColor="#505050"/>
+					<leftPen lineWidth="0.5" lineColor="#505050"/>
+					<bottomPen lineWidth="0.5" lineColor="#505050"/>
+					<rightPen lineWidth="0.5" lineColor="#505050"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[Document Title]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="46" y="57" width="117" height="15" forecolor="#404040" uuid="3576634d-348e-4d7f-99cb-4c797ab6b947"/>
+				<box>
+					<topPen lineWidth="0.5" lineColor="#505050"/>
+					<leftPen lineWidth="0.5" lineColor="#505050"/>
+					<bottomPen lineWidth="0.5" lineColor="#505050"/>
+					<rightPen lineWidth="0.5" lineColor="#505050"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[Page Number]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="280" y="57" width="117" height="15" forecolor="#404040" uuid="8a599ac6-6b3d-4293-8a91-a53502244aac"/>
+				<box>
+					<topPen lineWidth="0.5" lineColor="#505050"/>
+					<leftPen lineWidth="0.5" lineColor="#505050"/>
+					<bottomPen lineWidth="0.5" lineColor="#505050"/>
+					<rightPen lineWidth="0.5" lineColor="#505050"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[Date & Time Generated]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="46" y="72" width="117" height="16" forecolor="#404040" uuid="bb9379fb-d325-404b-9465-da56bc2a5082"/>
+				<box>
+					<topPen lineWidth="0.5" lineColor="#505050"/>
+					<leftPen lineWidth="0.5" lineColor="#505050"/>
+					<bottomPen lineWidth="0.5" lineColor="#505050"/>
+					<rightPen lineWidth="0.5" lineColor="#505050"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[Document Number]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="280" y="72" width="117" height="16" forecolor="#404040" uuid="d23eaa41-ac66-40da-9321-897847c0de32"/>
+				<box>
+					<topPen lineWidth="0.5" lineColor="#505050"/>
+					<leftPen lineWidth="0.5" lineColor="#505050"/>
+					<bottomPen lineWidth="0.5" lineColor="#505050"/>
+					<rightPen lineWidth="0.5" lineColor="#505050"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[Access]]></text>
+			</staticText>
+			<textField pattern="dd MMMMM yyyy H:mm:ss" isBlankWhenNull="true">
+				<reportElement x="397" y="57" width="117" height="15" forecolor="#404040" uuid="e3d24b72-a25c-49a9-a229-2dcdc1ab95fe">
+					<property name="com.jaspersoft.studio.unit.leftIndent" value="px"/>
+				</reportElement>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement>
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="0" leftIndent="6" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new SimpleDateFormat("dd/MM/yyyy HH:mm").format(new java.util.Date())]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="163" y="42" width="351" height="15" forecolor="#404040" uuid="e67fa1ea-cb1f-41b5-a919-f1ac14911738"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle" markup="html">
+					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[<b>Pro-forma Letter for Full  Accreditation</b>]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="163" y="72" width="117" height="16" forecolor="#404040" uuid="12a70627-b276-4c2f-ba1d-b4db721677af"/>
+				<box>
+					<topPen lineWidth="0.5" lineColor="#505050"/>
+					<leftPen lineWidth="0.5" lineColor="#505050"/>
+					<bottomPen lineWidth="0.5" lineColor="#505050"/>
+					<rightPen lineWidth="0.5" lineColor="#505050"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA["ETQ–TP–017"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="397" y="72" width="117" height="16" forecolor="#404040" uuid="11fab386-fcc7-451f-98fe-2996649c5cc8"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Controlled"]]></textFieldExpression>
+			</textField>
+			<frame>
+				<reportElement x="0" y="42" width="46" height="46" uuid="23bae6ee-3e0e-4dd1-8e36-4e410033e73d"/>
+				<box>
+					<pen lineColor="#404040"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<componentElement>
+					<reportElement x="1" y="1" width="44" height="44" uuid="f54f31c3-6a8f-4f36-ab7a-1e4063e14e90"/>
+					<jr:QRCode xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
+						<jr:codeExpression><![CDATA[$F{guid}]]></jr:codeExpression>
+					</jr:QRCode>
+				</componentElement>
+			</frame>
+			<textField>
+				<reportElement x="60" y="7" width="400" height="33" uuid="30b81a5b-4138-46fa-8df2-5bbd961643fd"/>
+				<textElement textAlignment="Center" markup="html">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA["8 Hillside Road, Metropolitan Park, Block C Parktown, 2193 "+"<br/>"+"Telephone No: 0861 637 738 Website: <u>www.merseta.org.za</u>"]]></textFieldExpression>
+			</textField>
+			<textField evaluationTime="Report">
+				<reportElement x="216" y="58" width="64" height="12" forecolor="#404040" uuid="9b6b8241-fd67-4adf-be6c-4dfec436110e"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="163" y="58" width="53" height="12" forecolor="#404040" uuid="05e5c976-ea62-4cda-9eeb-023a6055a081">
+					<property name="com.jaspersoft.studio.unit.leftIndent" value="px"/>
+				</reportElement>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph leftIndent="6"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Page "+$V{PAGE_NUMBER}+" of "]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+</jasperReport>

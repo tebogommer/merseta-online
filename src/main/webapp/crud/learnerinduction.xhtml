@@ -1,0 +1,104 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:c="http://java.sun.com/jsp/jstl/core"
+                template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>LearnerInduction</h1>
+					<h:form id="learnerinductionInsForm">
+						<p:growl autoUpdate="true" sticky="false" />
+						<p:panelGrid columns="1" style="width:100%" id="learnerinductionInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+       						         							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="docs" value="#{learnerinductionUI.learnerinduction.docs}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['docs']}" for="docs"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="createDate" value="#{learnerinductionUI.learnerinduction.createDate}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['createDate']}" for="createDate"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="company" value="#{learnerinductionUI.learnerinduction.company}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['company']}" for="company"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="qualification" value="#{learnerinductionUI.learnerinduction.qualification}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['qualification']}" for="qualification"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="numberofAttendees" value="#{learnerinductionUI.learnerinduction.numberofAttendees}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['numberofAttendees']}" for="numberofAttendees"/>
+     							</h:panelGroup>  
+
+
+        					    <p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+									<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:learnerinductionList :learnerinductionInsForm:learnerinductionInsGrid" action="#{learnerinductionUI.learnerinductionInsert}" />
+									<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="learnerinductionInsGrid" process="@this" action="#{learnerinductionUI.prepareNew}">
+										<p:resetInput target="learnerinductionInsGrid" />
+									</p:commandButton>									
+								</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{learnerinductionUI.dataModel}" filteredValue="#{learnerinductionUI.learnerInductionfilteredList}" id="learnerinductionList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+           						              					<p:column headerText="#{lang['docs']}">  
+                        			<h:outputText value="#{rowVar.docs}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['createDate']}">  
+                        			<h:outputText value="#{rowVar.createDate}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['company']}">  
+                        			<h:outputText value="#{rowVar.company}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['qualification']}">  
+                        			<h:outputText value="#{rowVar.qualification}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['numberofAttendees']}">  
+                        			<h:outputText value="#{rowVar.numberofAttendees}" />  
+            					</p:column>      
+
+
+           						<p:column width="80">
+									<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":learnerinductionInsForm:learnerinductionInsGrid">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{learnerinductionUI.learnerinduction}" />
+									</p:commandButton>
+									<p:spacer width="5" />
+									<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:learnerinductionList" action="#{learnerinductionUI.learnerinductionDelete}">
+										<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+										<f:setPropertyActionListener value="#{rowVar}" target="#{learnerinductionUI.learnerinduction}" />
+									</p:commandButton>
+								</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+<!-- 
+docs = docs
+createDate = createDate
+company = company
+qualification = qualification
+numberofAttendees = numberofAttendees
+
+-->
+</ui:composition>

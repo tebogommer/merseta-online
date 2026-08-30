@@ -1,0 +1,600 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<h:form id="learnersInsForm">
+			<div class="ui-g">
+				<div class="ui-g-12">
+					<ui:include src="/pages/includes/taskdiagram.xhtml" />
+				</div>
+				<div class="ui-g-12">
+					
+					
+					<div class="card card-w-title">
+						<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+						<p:importEnum type="haj.com.entity.enums.LearnerTransferTypeEnum" />
+						<p:importEnum type="haj.com.entity.enums.YesNoEnum" />
+						<p:importEnum type="haj.com.entity.enums.TradeTestProgressEnum" />
+						<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+							<p:importEnum type="haj.com.entity.enums.CollectionEnum" />
+						<h1>Trade Test Application</h1>
+						<p:fieldset legend="#{lang['rejection.reason']}" collapsed="false" toggleable="true" rendered="#{companylearnerstradetestUI.rejectReason.size() gt 0 and companylearnerstradetestUI.companylearnerstradetest.status eq ApprovalEnum.Rejected}">
+							<c:if test="#{companylearnerstradetestUI.rejectReason.size() gt 0}">
+								<h4>Status: #{companylearnerstradetestUI.companylearnerstradetest.status.friendlyName}</h4>
+							</c:if>									
+							<c:if test="#{companylearnerstradetestUI.rejectReason.size() gt 0}">
+								<p:dataTable var="rowVar" value="#{companylearnerstradetestUI.rejectReason}" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+									<p:column headerText="Create Date">
+										<p:outputLabel value="#{rowVar.createDate}">
+											<f:convertDateTime pattern="dd MMMM yyyy" />
+										</p:outputLabel>
+									</p:column>
+									<p:column headerText="Reason for Rejection">
+										<p:outputLabel value="#{rowVar.description}"></p:outputLabel>
+									</p:column>	
+									<p:column headerText="How to fix">
+										<p:outputLabel value="#{rowVar.howTo}"></p:outputLabel>
+									</p:column>
+								</p:dataTable>
+							</c:if>
+						</p:fieldset>
+						<p:growl>
+							<p:autoUpdate></p:autoUpdate>
+						</p:growl>
+						<p:fieldset legend="#{lang['learner.details']}" style="margin-top: 20px">
+							<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="firstName" value="#{companylearnerstradetestUI.companylearnerstradetest.companyLearners.user.firstName}" style="width:95%" required="true" requiredMessage="#{lang['provide.first.name']}" disabled="true" />
+									<p:outputLabel value="#{lang['first.name']}:" for="firstName" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="lastName" value="#{companylearnerstradetestUI.companylearnerstradetest.companyLearners.user.lastName}" style="width:95%" required="true" requiredMessage="#{lang['provide.last.name']}" disabled="true" />
+									<p:outputLabel value="#{lang['last.name']}:" for="lastName" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="middleName" value="#{companylearnerstradetestUI.companylearnerstradetest.companyLearners.user.middleName}" style="width:95%" required="true" requiredMessage="Provide Middle Name" disabled="true" />
+									<p:outputLabel value="#{lang['middle.name']}" for="middleName" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield" rendered="#{companylearnerstradetestUI.companylearnerstradetest.companyLearners.user.rsaIDNumber.length() gt 0}">
+									<p:inputText id="rsaId" value="#{companylearnerstradetestUI.companylearnerstradetest.companyLearners.user.rsaIDNumber}" style="width:95%" required="true" requiredMessage="#{lang['rsa.id.number']}" disabled="true" />
+									<p:outputLabel value="#{lang['rsa.id.number']}" for="rsaId" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:autoComplete id="company" style="width:95%" value="#{companylearnerstradetestUI.companylearnerstradetest.preferredTrainingCenter}" completeMethod="#{autoCompleteUI.completeCompany}" var="rv" itemLabel="#{rv.companyNameDisplay}" itemValue="#{rv}" forceSelection="true" converter="CompanyConvertor" dropdown="true" minQueryLength="3" maxResults="10" disabled="true">
+										<p:column headerText="#{lang['companyName']}" style="white-space: nowrap">#{rv.companyName}</p:column>
+										<p:column headerText="#{lang['entity.id']}" style="white-space: nowrap">#{rv.levyNumber}</p:column>
+									</p:autoComplete>
+									<p:outputLabel value="Preferred Trade Test Centre" for="company" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:calendar id="lrd" inputStyle="width:90%" value="#{companylearnerstradetestUI.companylearnerstradetest.learnerReadinessDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" readonlyInput="true"
+										disabled="#{(sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload) or not sessionUI.task.firstInProcess}" />
+									<p:outputLabel value="Learner Readiness Date" for="lrd" />
+								</h:panelGroup>
+								<h:panelGroup>
+									<div>
+										<p:outputLabel value="Foundational Learning Competence" styleClass="gray" for="gguage" />
+									</div>
+									<div>
+										<p:selectOneMenu id="gguage" value="#{companylearnerstradetestUI.companylearnerstradetest.flc}" style="width:95%" disabled="#{(sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload) or not sessionUI.task.firstInProcess}">
+											<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+											<f:selectItems value="#{enumUI.yesNoEnumDD}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+										</p:selectOneMenu>
+									</div>
+								</h:panelGroup>
+								<h:panelGroup>
+									<div>
+										<p:outputLabel value="Have you attempted a trade test previously?" styleClass="gray" for="attemptTradeTest" />
+									</div>
+									<div>
+										<p:selectOneMenu id="attemptTradeTest" value="#{companylearnerstradetestUI.companylearnerstradetest.attemptedTradeTest}" style="width:95%" disabled="#{(sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload) or not sessionUI.task.firstInProcess}">
+											<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+											<f:selectItems value="#{enumUI.yesNoEnumDD}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+										</p:selectOneMenu>
+									</div>
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield" rendered="#{companylearnerstradetestUI.companylearnerstradetest.attemptedTradeTest eq YesNoEnum.Yes}">
+									<p:calendar inputStyle="width:90%" id="preAttDate" value="#{companylearnerstradetestUI.companylearnerstradetest.previousAttemptDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" readonlyInput="true"
+										disabled="#{(sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload) or not sessionUI.task.firstInProcess}" />
+									<p:outputLabel value="Previous Attempt Date" for="preAttDate" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield" rendered="#{companylearnerstradetestUI.companylearnerstradetest.attemptedTradeTest eq YesNoEnum.Yes}">
+									<p:autoComplete style="width:95%" id="preTestCenter" value="#{companylearnerstradetestUI.companylearnerstradetest.previousTrainingCenter}" completeMethod="#{autoCompleteUI.completeCompany}" var="rv" itemLabel="#{rv.companyNameDisplay}" itemValue="#{rv}" forceSelection="true" converter="CompanyConvertor" dropdown="true" minQueryLength="3" maxResults="10"
+										disabled="#{(sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload) or not sessionUI.task.firstInProcess}">
+										<p:column headerText="#{lang['companyName']}" style="white-space: nowrap">#{rv.companyName}</p:column>
+										<p:column headerText="#{lang['entity.id']}" style="white-space: nowrap">#{rv.levyNumber}</p:column>
+									</p:autoComplete>
+									<p:outputLabel value="Previous Test Center" for="preTestCenter" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield" rendered="#{companylearnerstradetestUI.companylearnerstradetest.attemptedTradeTest eq YesNoEnum.Yes}">
+									<p:inputNumber value="#{companylearnerstradetestUI.companylearnerstradetest.attemptNumber}" decimalPlaces="0" inputStyle="width:95%" disabled="#{(sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload) or not sessionUI.task.firstInProcess}"></p:inputNumber>
+									<p:outputLabel value="Number of Attempts" for="preAttDate" />
+								</h:panelGroup>
+								<h:panelGroup rendered="false">
+									<div style="margin-top: -20px !important;">
+										<p:outputLabel value="Learner Competence" for="competenceEnumNR" styleClass="gray" />
+									</div>
+									<div>
+										<p:selectOneMenu id="competenceEnumNR" value="#{companylearnerstradetestUI.companylearnerstradetest.competenceEnum}" style="width:95%" required="true" disabled="#{(sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload) or not sessionUI.task.firstInProcess}">
+											<p:ajax />
+											<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+											<f:selectItems value="#{enumUI.competenceEnumDD}" />
+										</p:selectOneMenu>
+									</div>
+								</h:panelGroup>
+								
+
+								<h:panelGroup styleClass="md-inputfield" rendered="false">
+									<p:calendar id="nsd" inputStyle="width:90%" value="#{companylearnerstradetestUI.companylearnerstradetest.nambSubmissionDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" readonlyInput="true" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalApproval}" />
+									<p:outputLabel value="NAMB Submission Date" for="nsd" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="specialisation" value="#{companylearnerstradetestUI.companylearnerstradetest.specialisation}" style="width:95%" required="true" disabled="#{sessionUI.activeUser eq companylearnerstradetestUI.companylearnerstradetest.companyLearners.user}" />
+									<p:outputLabel value="Specialisation" for="specialisation" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="detailsOfExperience" value="#{companylearnerstradetestUI.companylearnerstradetest.detailsOfExperience}" style="width:95%" required="true" disabled="#{sessionUI.activeUser eq companylearnerstradetestUI.companylearnerstradetest.companyLearners.user}" />
+									<p:outputLabel value="Details of Experience" for="detailsOfExperience" />
+								</h:panelGroup>
+								
+								<h:panelGroup styleClass="md-inputfield" rendered="#{companylearnerstradetestUI.companylearnerstradetest.qualification ne null}">
+									<p:inputText id="qualificationLabel" value="(#{companylearnerstradetestUI.companylearnerstradetest.qualification.code}) #{companylearnerstradetestUI.companylearnerstradetest.qualification.description}" style="width:95%" required="true" requiredMessage="#{lang['provide.first.name']}" disabled="true" />
+									<p:outputLabel value="Qualification" for="qualificationLabel" />
+								</h:panelGroup>
+								
+								<h:panelGroup styleClass="md-inputfield" rendered="#{companylearnerstradetestUI.companylearnerstradetest.designatedTradeLevel ne null}">
+									<p:inputText id="designatedTrade" value="#{companylearnerstradetestUI.companylearnerstradetest.designatedTradeLevel.designatedTradeType.description}" style="width:95%" required="true" requiredMessage="#{lang['provide.first.name']}" disabled="true" />
+									<p:outputLabel value="Designated Trade" for="designatedTrade" />
+								</h:panelGroup>
+								
+								<h:panelGroup styleClass="md-inputfield" rendered="#{companylearnerstradetestUI.companylearnerstradetest.designatedTradeLevel ne null}">
+									<p:inputText id="designatedTradeLevel" value="#{companylearnerstradetestUI.companylearnerstradetest.designatedTradeLevel.description}" style="width:95%" required="true" requiredMessage="#{lang['provide.first.name']}" disabled="true" />
+									<p:outputLabel value="Designated Trade Level" for="designatedTradeLevel" />
+								</h:panelGroup>
+								
+								<h:panelGroup rendered="#{companylearnerstradetestUI.companylearnerstradetest.designatedTradeLevel ne null}" >
+									
+										<p:outputLabel value="Final level For Designated Trade" styleClass="gray" />
+										<p:spacer width="10"/>
+									
+										<p:selectBooleanCheckbox value="#{companylearnerstradetestUI.companylearnerstradetest.finalCbmtQualification}" disabled="true"/>
+								</h:panelGroup>
+							</p:panelGrid>
+						</p:fieldset>
+						
+						<p:fieldset id="fsCollection"  legend="Certificate Collection Details" style="margin-top: 20px" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalEdit}">
+							<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+								<h:panelGroup rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalEdit}">
+									<div style="margin-top: -20px !important;">
+										<p:outputLabel value="Certificate Collection" for="collection" styleClass="gray" />
+									</div>
+									<div>
+										<p:selectOneMenu id="collection" value="#{companylearnerstradetestUI.companylearnerstradetest.collectionEnum}" style="width:95%" required="true" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalEdit}">
+											<p:ajax update="fsCollection"/>
+											<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+											<f:selectItems value="#{enumUI.collectionEnumDD}" />
+										</p:selectOneMenu>
+									</div>
+								</h:panelGroup>
+							</p:panelGrid>
+							
+							<p:fieldset  legend="Courier package Details" rendered="#{companylearnerstradetestUI.companylearnerstradetest.collectionEnum eq CollectionEnum.Courier}">
+								<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText id="waybillNumber" value="#{companylearnerstradetestUI.collectDetail.waybillNumber}" style="width:95%" required="true" requiredMessage="Waybill Number"/>
+										<p:outputLabel value="Waybill Number" for="waybillNumber" />
+									</h:panelGroup>
+									
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText id="compName" value="#{companylearnerstradetestUI.collectDetail.companyName}" style="width:95%" required="true" requiredMessage="Company Name"/>
+										<p:outputLabel value="Company Name" for="compName" />
+									</h:panelGroup>
+									
+								</p:panelGrid>
+							</p:fieldset>
+							
+							<p:fieldset  legend="Details of Person " rendered="#{companylearnerstradetestUI.companylearnerstradetest.collectionEnum eq CollectionEnum.PersonalCollection}">
+								<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText id="idNum" value="#{companylearnerstradetestUI.collectDetail.idNumber}" style="width:95%" required="true" requiredMessage="ID Number"/>
+										<p:outputLabel value="ID Number" for="idNum" />
+									</h:panelGroup>
+									
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText id="cName" value="#{companylearnerstradetestUI.collectDetail.firstName}" style="width:95%" required="true" requiredMessage="First Name"/>
+										<p:outputLabel value="First Name" for="cName" />
+									</h:panelGroup>
+									
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText id="cLastName" value="#{companylearnerstradetestUI.collectDetail.lastName}" style="width:95%" required="true" requiredMessage="Last Name"/>
+										<p:outputLabel value="Last Name" for="cLastName" />
+									</h:panelGroup>
+									
+									<h:panelGroup styleClass="md-inputfield" style="margin-top:5px">
+										<p:calendar requiredMessage="Provide collection date" inputStyle="width:90%" id="colDate" value="#{companylearnerstradetestUI.collectDetail.collectionDate}" showOn="button"
+											pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" readonlyInput="true" />
+										<p:outputLabel value="Collection  Date" for="colDate" />
+									</h:panelGroup>
+									
+								</p:panelGrid>
+							</p:fieldset>
+							
+							<p:fieldset  legend="Registered Mail Details" rendered="#{companylearnerstradetestUI.companylearnerstradetest.collectionEnum eq CollectionEnum.RegisteredMail}">
+								<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText id="rNum" value="#{companylearnerstradetestUI.collectDetail.registeredMailNumber}" style="width:95%" required="true" requiredMessage="Registered Mail Number"/>
+										<p:outputLabel value="Registered Mail Number" for="rNum" />
+									</h:panelGroup>
+								</p:panelGrid>
+							</p:fieldset>
+							
+						</p:fieldset>
+					</div>
+				</div>
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+						<ui:include src="/pages/tp/includes/company.xhtml">
+							<ui:param name="title" value="Provider Information" />
+							<ui:param name="company" value="#{companylearnerstradetestUI.companylearnerstradetest.companyLearners.company}" />
+						</ui:include>
+					</div>
+				</div>
+				<div class="ui-g-12">
+					<c:if test="#{companylearnerstradetestUI.displayTestInformation}">
+						<div class="card card-w-title">
+						  <p:fieldset legend="Trade Test Information">
+								<br/>
+								<p:outputPanel id="testInfoPanel" style="width: 100%">
+									<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+										<h:panelGroup styleClass="md-inputfield" style="margin-top:5px" rendered="#{sessionUI.task.processRole.roleOrder eq 3 or companylearnerstradetestUI.companylearnerstradetest.dateOfTest !=null}">
+											<p:calendar disabled="#{!companylearnerstradetestUI.alterTestInformation}"  requiredMessage="Provide: Date Of Assesment" inputStyle="width:90%" id="dateAssement" value="#{companylearnerstradetestUI.companylearnerstradetest.dateOfTest}" showOn="button"
+												pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" readonlyInput="true" />
+											<p:outputLabel value="Date Of Assesment" for="dateAssement" />
+										</h:panelGroup>
+										<h:panelGroup rendered="#{sessionUI.task.processRole.roleOrder eq 5}">
+											<div>
+												<p:outputLabel value="Learner Competence" for="competenceEnum" styleClass="gray" />
+											</div>
+											<div>
+												<p:selectOneMenu disabled="#{sessionUI.task.processRole.roleOrder ne 5}" rendered="true" requiredMessage="Provide: Learner Competence" id="competenceEnum" value="#{companylearnerstradetestUI.companylearnerstradetest.competenceEnum}" style="width:95%" required="true">
+													<p:ajax />
+													<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+													<f:selectItems value="#{enumUI.competenceEnumDD}" />
+												</p:selectOneMenu>
+											</div>
+										</h:panelGroup>
+									</p:panelGrid>
+									<p:fieldset legend="Assessment Tasks">
+										<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+											<p:commandButton style="margin-bottom:0px" rendered="#{companylearnerstradetestUI.alterTestInformation and sessionUI.task.processRole.roleOrder eq 4}" icon="fa fa-plus" value="Add New Entry" immediate="true" action="#{companylearnerstradetestUI.prepNewTradeTestTaskResult}" update="assTaskPanel" />
+											<p:outputPanel id="assTaskPanel">
+												<p:fieldset legend="New Entry: Assessment Tasks" style="margin-top: 20px" rendered="#{companylearnerstradetestUI.tradeTestTaskResult ne null and companylearnerstradetestUI.tradeTestTaskResult.id eq null}">
+													<p:panelGrid columns="1" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group">
+														<h:panelGroup styleClass="md-inputfield">
+															<p:inputText id="taskEntry" required="true" requiredMessage="Provide: Task" value="#{companylearnerstradetestUI.tradeTestTaskResult.task}" style="width:95%">
+															</p:inputText>
+															<p:outputLabel value="Task" for="taskEntry" />
+														</h:panelGroup>
+														<h:panelGroup>
+															<div>
+																<p:outputLabel value="Result" for="resultSelectionEnum" styleClass="gray" />
+															</div>
+															<div>
+																<p:selectOneMenu rendered="true" requiredMessage="Provide: Result" id="resultSelectionEnum" value="#{companylearnerstradetestUI.tradeTestTaskResult.competence}" style="width:95%" required="true">
+																	<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+																	<f:selectItems value="#{enumUI.competenceEnumDD}" />
+																</p:selectOneMenu>
+															</div>
+														</h:panelGroup>
+													</p:panelGrid>
+													<p:panelGrid columns="2" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group">
+														<p:commandButton process="assTaskPanel" update="assTaskPanel assInfo" action="#{companylearnerstradetestUI.createNewTradeTestTaskResult}" value="Submit" icon="fa fa-save" />
+														<p:commandButton immediate="true" update="assTaskPanel" action="#{companylearnerstradetestUI.cancelNewTradeTestTaskResult}" value="Cancel" icon="fa fa-recycle" />
+													</p:panelGrid>
+												</p:fieldset>
+											</p:outputPanel>
+											<p:dataTable var="rvb" id="assInfo" value="#{companylearnerstradetestUI.dataModelTradeTestTaskResult}" rowKey="#{rvt.id}" paginator="true" rows="5" paginatorPosition="bottom"
+												paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20" reflow="true" lazy="true">
+												<p:column headerText="Task">
+													<h:outputText value="#{rvb.task}" />
+												</p:column>
+												<p:column headerText="Result">
+													<h:outputText value="#{rvb.competence.friendlyName}">
+													</h:outputText>
+												</p:column>
+												<p:column width="45" rendered="#{companylearnerstradetestUI.alterTestInformation}">
+													<p:commandButton immediate="true" update="assInfo" icon="fa fa-trash" action="#{companylearnerstradetestUI.deleteTradeTestTaskResult}">
+														<p:confirm header="Confirmation" message="Are you sure?" icon="pi pi-exclamation-triangle" />
+														<f:setPropertyActionListener value="#{rvb}" target="#{companylearnerstradetestUI.tradeTestTaskResult}" />
+													</p:commandButton>
+												</p:column>
+											</p:dataTable>
+										</p:panelGrid>
+									</p:fieldset>
+								</p:outputPanel>
+							</p:fieldset>
+						</div>
+					</c:if>
+				</div>
+				<div class="ui-g-12">
+					<c:if test="#{companylearnerstradetestUI.displayNambInfo}">
+						<div class="card card-w-title">
+							<p:outputPanel id="nambInfoPanel" style="width: 100%">
+								<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+									<h2>NAMB Information</h2>
+								</p:panelGrid>
+								<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+									<h:panelGroup styleClass="md-inputfield">
+										<p:calendar disabled="#{!companylearnerstradetestUI.editNambInfo}" required="true" requiredMessage="Provide: NAMB Submission Date" inputStyle="width:90%" id="datenambSubmission" value="#{companylearnerstradetestUI.companylearnerstradetest.nambSubmissionDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" readonlyInput="true" />
+										<p:outputLabel value="NAMB Submission Date" for="datenambSubmission" />
+									</h:panelGroup>
+								</p:panelGrid>
+							</p:outputPanel>
+						</div>
+					</c:if>
+				</div>
+				<div class="ui-g-12">
+					<c:if test="#{companylearnerstradetestUI.displayCollection and false}">
+						<div class="card card-w-title">
+							<p:outputPanel id="collectionInfoPanel" style="width: 100%">
+								<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+									<h2>Collection Information</h2>
+								</p:panelGrid>
+
+								<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+									<h:panelGroup>
+										<div style="margin-top: -20px !important;">
+											<p:outputLabel value="Certificate Collection" for="collectionEnum" styleClass="gray" />
+										</div>
+										<div>
+											<p:selectOneMenu requiredMessage="Provide: Certificate Collection" id="collectionEnum" value="#{companylearnerstradetestUI.companylearnerstradetest.collectionEnum}" style="width:100%" required="true" disabled="#{!companylearnerstradetestUI.editCollectionInfo}">
+												<p:ajax update="collectionInfoPanel" />
+												<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+												<f:selectItems value="#{enumUI.collectionEnumDD}" />
+											</p:selectOneMenu>
+										</div>
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield" rendered="#{companylearnerstradetestUI.companylearnerstradetest.collectionEnum ne null}">
+										<p:inputText id="infoCollection" required="true" requiredMessage="Provide: Information on collection" value="#{companylearnerstradetestUI.companylearnerstradetest.collectionInformation}" style="width:95%">
+										</p:inputText>
+										<p:outputLabel value="Information on collection" for="infoCollection" />
+									</h:panelGroup>
+								</p:panelGrid>
+							</p:outputPanel>
+						</div>
+					</c:if>
+				</div>
+				<div class="ui-g-12">
+					<c:if test="#{companylearnerstradetestUI.companylearnerstradetest.docs.size() gt 0}">
+						<div class="card card-w-title">
+
+							<p:outputPanel id="learnerRegUploadForm" style="width: 100%">
+								<h:panelGroup id="docList">
+	
+									<div class="ui-g dashboard">
+										<div class="ui-g-12">
+											<p:fieldset legend="#{lang['documents']}" id="userDocs" >
+												<p:dataTable value="#{companylearnerstradetestUI.companylearnerstradetest.docs}" var="rv1" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+	
+													<p:column headerText="#{lang['type']}" width="20%">#{rv1.configDoc.name}</p:column>
+	
+													<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+	
+													<p:column headerText="#{lang['uploaded']}" width="15%">
+														<h:outputText value="#{rv1.createDate}">
+															<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+														</h:outputText>
+													</p:column>
+	
+													<p:column headerText="#{lang['version']}" width="15%">
+														<h:outputText value="#{rv1.versionNo}">
+														</h:outputText>
+													</p:column>
+	
+													<p:column width="180" headerText="#{lang['view.edit']}">
+	
+														<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}">
+															<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+														</p:commandButton>
+														<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+	
+														<p:spacer width="5" rendered="#{rv1.id ne null}" />
+														<p:commandButton icon="fa fa-bars " id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}">
+															<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+														</p:commandButton>
+														<p:tooltip for="dhistUserDocs" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+	
+														<!-- only with permission to upload can upload a new version -->
+														<p:commandButton rendered="#{(sessionUI.task.processRole eq null or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload)}" icon="fa fa-upload" id="uploadUserDocs" styleClass="#{rv1.originalFname eq null ? 'red-btn' : ''} flat"
+															process="@this" oncomplete="PF('dlgUpload').show()" update=":uploadForm">
+															<f:setPropertyActionListener value="#{rv1}" target="#{companylearnerstradetestUI.doc}" />
+														</p:commandButton>
+														<p:tooltip for="uploadUserDocs" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+	
+														<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+															<p:spacer width="5" />
+															<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+																<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+															</p:commandButton>
+															<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+														</h:panelGroup>
+	
+														<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+															<p:spacer width="5" />
+															<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+																<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+															</p:commandButton>
+															<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+														</h:panelGroup>
+	
+													</p:column>
+	
+												</p:dataTable>
+											</p:fieldset>
+										</div>
+									</div>
+	
+								</h:panelGroup>
+							</p:outputPanel>
+	
+						</div>
+					</c:if>
+				</div>
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+						<c:if test="#{companylearnerstradetestUI.companylearnerstradetest.tradeTestProgress eq TradeTestProgressEnum.WithInitiator}">
+							<!-- With Initiator first time-->
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+								<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" update="@form" styleClass="flat green-btn Fs18" action="#{companylearnerstradetestUI.completeWorkflowWithInitiatorOne}" style="height: 50px;">
+								</p:commandButton>
+							</p:panelGrid>
+							
+						</c:if>
+						
+						<c:if test="#{companylearnerstradetestUI.companylearnerstradetest.tradeTestProgress eq TradeTestProgressEnum.WithMersetaOne}">
+							<!-- With MerSETA First time-->
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+								<p:commandButton value="#{lang['approve']}" icon="ui-icon-save" update="@form" styleClass="flat green-btn Fs18" action="#{companylearnerstradetestUI.completeWorkflowWithWithMersetaOne}" style="height: 50px;">
+								</p:commandButton>
+								<p:commandButton value="Reject Task" icon="fa fa-times" update="@form rejectReasonForm" oncomplete="PF('rejectReasonsDlg').show()" action="#{companylearnerstradetestUI.prepRejectionWithWithMersetaOne}" styleClass="red-btn flat Fs18" style="height: 50px;" process="@this">
+								</p:commandButton>
+							</p:panelGrid>
+						</c:if>
+						
+						<c:if test="#{companylearnerstradetestUI.companylearnerstradetest.tradeTestProgress eq TradeTestProgressEnum.WithTestCenter}">
+							<!-- With Test Center -->
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+								<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" update="@form" styleClass="flat green-btn Fs18" action="#{companylearnerstradetestUI.completeWorkflowWithTestCenter}" style="height: 50px;">
+								</p:commandButton>
+							</p:panelGrid>
+						</c:if>
+						
+						<c:if test="#{companylearnerstradetestUI.companylearnerstradetest.tradeTestProgress eq TradeTestProgressEnum.WithMersetaTwo}">
+							<!-- With MerSETA Second time-->
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+								<p:commandButton value="Approve Application" icon="ui-icon-save" update="@form" action="#{companylearnerstradetestUI.approveApplicationWithWithMersetaTwo}" styleClass="flat green-btn Fs18" style="height: 50px;">
+									<p:confirm header="Confirmation" message="Are you sure?" icon="pi pi-exclamation-triangle" />
+								</p:commandButton>
+								<p:commandButton value="Reject Application" icon="fa fa-times" update="@form rejectReasonForm" oncomplete="PF('rejectReasonsDlg').show()" action="#{companylearnerstradetestUI.prepRejectionWithWithMersetaTwo}" styleClass="red-btn flat Fs18" style="height: 50px;" process="@this">
+									<p:confirm header="Confirmation" message="Are you sure?" icon="pi pi-exclamation-triangle" />
+								</p:commandButton>
+							</p:panelGrid>
+						</c:if>
+						
+						<c:if test="#{companylearnerstradetestUI.companylearnerstradetest.tradeTestProgress eq TradeTestProgressEnum.WithInitiatorTwo}">
+							<!-- With Initiator first time-->
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+								<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" update="@form" styleClass="flat green-btn Fs18" action="#{companylearnerstradetestUI.completeCollectCertificates}" style="height: 50px;">
+								</p:commandButton>
+							</p:panelGrid>
+						</c:if>
+
+
+						<c:if test="false">
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve}">
+								<p:commandButton  value="#{lang['approve']}" icon="ui-icon-save" update="@form" action="#{companylearnerstradetestUI.approveWorkflow}" styleClass="flat green-btn Fs18" style="height: 50px;">
+								</p:commandButton>
+								<p:commandButton value="#{lang['reject.task']}" icon="fa fa-times" update="@form" oncomplete="PF('rejectReasonsDlg').show()"  styleClass="flat red-btn Fs18" style="height: 50px;" process="@this">
+								</p:commandButton>
+							</p:panelGrid>
+	
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval}">
+								<p:commandButton value="#{lang['approve']}" icon="ui-icon-save" update="@form" action="#{companylearnerstradetestUI.finalApproveWorkflow}" styleClass="flat green-btn Fs18" style="height: 50px;">
+								</p:commandButton>
+								<p:commandButton value="#{lang['reject.task']}" icon="fa fa-times" update="@form" oncomplete="PF('rejectReasonsDlg').show()"  styleClass="flat Fs18" style="height: 50px;" process="@this">
+								</p:commandButton>
+							</p:panelGrid>
+	
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalEdit}">
+								<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" update="@form" action="#{companylearnerstradetestUI.completeWorkflow}" styleClass="flat green-btn Fs18" style="height: 50px;">
+								</p:commandButton>
+							</p:panelGrid>
+	
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.View}">
+								<p:commandButton value="Recommend Trade Test" icon="ui-icon-save" update="@form" action="#{companylearnerstradetestUI.recommendWorkflow}" styleClass="flat green-btn Fs18" style="height: 50px;">
+								</p:commandButton>
+								<p:commandButton value="#{lang['reject.task']}" icon="fa fa-times" oncomplete="PF('rejectReasonsDlg').show()"  update="@form"  styleClass="flat Fs18" style="height: 50px;" process="@this">
+								</p:commandButton>
+							</p:panelGrid>
+						</c:if>
+
+					</div>
+				</div>
+
+			</div>
+		</h:form>
+		
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+			<h:form>
+				<p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="pi pi-check" />
+				<p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="pi pi-times" />
+			</h:form>
+		</p:confirmDialog>
+
+		<p:dialog header="Reject Reasons" widgetVar="rejectReasonsDlg" hideEffect="clip" showEffect="clip" id="dialogRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonForm">
+				<div class="ui-fluid">
+
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{companylearnerstradetestUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:100%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<p:ajax />
+								<f:selectItems value="#{companylearnerstradetestUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+							</p:selectManyMenu>
+						</div>
+					</div>
+
+					<p:commandButton onstart="uploadStart()" rendered="#{companylearnerstradetestUI.rejectionIndicator eq 1}" value="Reject 1" action="#{companylearnerstradetestUI.rejectWorkflowWithWithMersetaOne}" update="@form" />
+					<p:commandButton onstart="uploadStart()" rendered="#{companylearnerstradetestUI.rejectionIndicator eq 2}" value="Reject Application 2" action="#{companylearnerstradetestUI.rejectApplicationWithWithMersetaTwo}" update="@form" />
+					<p:commandButton onstart="uploadStart()" rendered="#{companylearnerstradetestUI.rejectionIndicator eq 3}" value="Reject 3" action="#{companylearnerstradetestUI.rejectWorkflowWithMersetaThree}" update="@form" />
+					<p:commandButton onstart="uploadStart()" rendered="#{companylearnerstradetestUI.rejectionIndicator eq 4}" value="Reject 4" action="#{companylearnerstradetestUI.rejectWorkflowWithMersetaFour}" update="@form" />
+					<p:commandButton onstart="uploadStart()" rendered="#{companylearnerstradetestUI.rejectionIndicator eq 5}" value="Reject Application 5" action="#{companylearnerstradetestUI.rejectApplicationWorkflowWithMersetaFour}" update="@form" />
+
+				</div>
+			</h:form>
+		</p:dialog>
+
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true" dynamic="true">
+
+			<h:form id="uploadForm">
+
+				<h:panelGroup id="uploadGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{companylearnerstradetestUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{companylearnerstradetestUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span>
+										<br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{companylearnerstradetestUI.storeFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update="learnersInsForm:learnerRegUploadForm" multiple="false" fileLimit="1" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+
+			</h:form>
+
+		</p:dialog>
+
+	</ui:define>
+
+</ui:composition>

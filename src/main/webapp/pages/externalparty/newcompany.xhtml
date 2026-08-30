@@ -1,0 +1,354 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="companyInsForm">
+						<p:growl showDetail="false" sticky="false" escape="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:importEnum type="haj.com.entity.enums.CompanyRegOrSDLEnum" var="regSDL"></p:importEnum>
+						<h1>Company Registration</h1>
+						<ui:include src="/pages/includes/tabinfo.xhtml">
+							<ui:param name="showInfoCircle" value="true" />
+							<ui:param name="cssClass" value="secondaryText Fs15" />
+							<ui:param name="helpTxt" value="#{lang['The.system.will.auto-fill.based.selections']}" />
+						</ui:include>
+						<c:if test="#{sdfUI.previousCompany ne null}">
+							<ui:include src="/pages/includes/tabinfo.xhtml">
+								<ui:param name="showInfoCircle" value="false" />
+								<ui:param name="cssClass" value="red Fs15 FontBold" />
+								<ui:param name="helpTxt" value="Please note you are about to deregister entity #{sdfUI.previousCompany.company.companyNameDisplay}" />
+							</ui:include>
+						</c:if>
+						<h:panelGroup id="companyDetails">
+							<p:fieldset legend="#{lang['company.main.heading']}" id="companyHeading">
+								<p:panelGrid rendered="#{!sdfUI.company.doneSearch}">
+									<h:panelGroup id="searchNGO">
+										<p:outputLabel value="#{lang['non.levy.paying']}" styleClass="gray" />
+										<p:spacer width="20"></p:spacer>
+										<p:selectBooleanCheckbox value="#{searchCompanyUI.searchNGO}">
+											<p:ajax update="companyDetails" event="change" listener="#{searchCompanyUI.returnNonLevyPaying}"></p:ajax>
+										</p:selectBooleanCheckbox>
+										<br />
+										<p:outputLabel id="existingNonLevyPaying" value="Exitsing #{lang['non.levy.paying']}" styleClass="gray" />
+										<p:spacer width="20"></p:spacer>
+										<p:selectBooleanCheckbox id="existingNonLevyPayingSelection" value="#{searchCompanyUI.searchExistingNonLevyPaying}">
+											<p:ajax update="companyInsForm" event="change" listener="#{searchCompanyUI.clearCheckboxForExistingNonLevyPaying}"></p:ajax>
+										</p:selectBooleanCheckbox>
+										<br />
+										<p:outputLabel value="#{lang['levy.paying.entity']}" styleClass="gray" />
+										<p:spacer width="20"></p:spacer>
+										<p:selectBooleanCheckbox value="#{searchCompanyUI.searchLevyPaying}">
+											<p:ajax update="companyInsForm" event="change" listener="#{searchCompanyUI.clearCheckboxForLevyPaying}"></p:ajax>
+										</p:selectBooleanCheckbox>
+									</h:panelGroup>
+								</p:panelGrid>
+								<p:panelGrid id="searchCompanyPnl" style="width:50%" columns="3" styleClass="ui-panelgrid-blank form-group" rendered="#{!sdfUI.company.doneSearch and (searchCompanyUI.searchLevyPaying or searchCompanyUI.searchExistingNonLevyPaying)}" layout="grid">
+									<p:selectOneRadio value="#{searchCompanyUI.companyRegOrSDLEnum}" columns="1" layout="responsive" rendered="#{!searchCompanyUI.searchNGO and searchCompanyUI.searchLevyPaying}">
+										<p:ajax update="searchCompanyPnl " />
+										<f:selectItems value="#{enumUI.SDLEnumDD}" var="idpassEnum" itemLabel="#{idpassEnum}" itemValue="#{idpassEnum}" />
+									</p:selectOneRadio>
+
+									<p:selectOneRadio value="#{searchCompanyUI.companyRegOrSDLEnum}" columns="1" layout="responsive" rendered="#{!searchCompanyUI.searchNGO and searchCompanyUI.searchExistingNonLevyPaying}">
+										<p:ajax update="searchCompanyPnl " />
+										<f:selectItems value="#{enumUI.entityIdEnumDD}" var="idpassEnumEI" itemLabel="#{idpassEnumEI}" itemValue="#{idpassEnumEI}" />
+									</p:selectOneRadio>
+
+									<h:panelGroup id="regNumInput" styleClass="md-inputfield" rendered="#{searchCompanyUI.companyRegOrSDLEnum eq regSDL.REG or searchCompanyUI.searchNGO}">
+										<p:inputMask id="regNumCriteria" mask="#{searchCompanyUI.companyRegistrationNumberFormat}" value="#{searchCompanyUI.criteria}" style="width:95%" requiredMessage="#{lang['enter.reg.number']}" required="true" />
+										<p:outputLabel value="#{lang['registration.number']}" for="regNumCriteria" />
+									</h:panelGroup>
+
+									<h:panelGroup id="sdlNumInput" styleClass="md-inputfield" rendered="#{searchCompanyUI.companyRegOrSDLEnum eq regSDL.SDLNumber and !searchCompanyUI.searchNGO and !searchCompanyUI.searchExistingNonLevyPaying}">
+										<p:inputMask id="sdlNumCriteria" mask="#{searchCompanyUI.companyLevyNumberFormat}" value="#{searchCompanyUI.criteria}" style="width:95%" requiredMessage="#{lang['enter.sdl.number']}" required="true" />
+										<p:outputLabel value="#{lang['sdl.number']}" for="sdlNumCriteria" />
+									</h:panelGroup>
+
+									<h:panelGroup id="sdlNNumberNumInput" styleClass="md-inputfield" rendered="#{searchCompanyUI.companyRegOrSDLEnum eq regSDL.SDLNumber and !searchCompanyUI.searchNGO and searchCompanyUI.searchExistingNonLevyPaying}">
+										<p:inputMask id="sdlNumCriteriaNonLevy" mask="#{searchCompanyUI.companyNNumberFormat}" value="#{searchCompanyUI.criteria}" style="width:95%" requiredMessage="#{lang['enter.sdl.number']}" required="true" />
+										<p:outputLabel value="#{lang['sdl.number']}" for="sdlNumCriteriaNonLevy" />
+									</h:panelGroup>
+
+									<p:commandButton id="idSearch" icon="fa fa-search" process="searchCompanyPnl" actionListener="#{searchCompanyUI.find}" update="companyInsForm" rendered="#{searchCompanyUI.companyRegOrSDLEnum eq regSDL.REG or searchCompanyUI.searchNGO}" />
+									<p:commandButton id="idSearch2" icon="fa fa-search" process="searchCompanyPnl" actionListener="#{searchCompanyUI.findBySDL}" update="companyInsForm" rendered="#{searchCompanyUI.companyRegOrSDLEnum eq regSDL.SDLNumber and !searchCompanyUI.searchNGO}" />
+								</p:panelGrid>
+								<h:panelGroup id="companyGrid">
+									<div align="right">
+										<p:commandButton immediate="true" icon="fa fa-remove" action="#{sdfUI.prepareNewCompany}" id="close" update="companyDetails" rendered="#{sdfUI.company.docs.size() gt 0}" />
+										<p:tooltip for="close" position="left" value="#{lang['close']}" />
+									</div>
+									<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" id="xxxG" rendered="#{sdfUI.company.doneSearch and not sdfUI.company.nonLevyPaying}">
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText id="companyName" value="#{sdfUI.company.companyName}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.company.name']}" disabled="#{sdfUI.company.companyName.length() gt 0}" />
+											<p:outputLabel value="#{lang['companyName']}:" for="companyName" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputMask id="companyRegNumber" value="#{sdfUI.company.companyRegistrationNumber}" mask="#{sdfUI.companyRegistrationNumberFormat}" style="width:95%" required="true" requiredMessage="#{lang['enter.company.number']}" />
+											<p:outputLabel value="#{lang['companyRegistrationNumber']}:" for="companyRegNumber" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText id="companyLevyNumber" value="#{sdfUI.company.levyNumber}" style="width:95%" required="false" requiredMessage="#{lang['enter.levy.number']}" disabled="#{sdfUI.company.levyNumber.length() gt 0}" />
+											<p:outputLabel value="#{lang['levyNumber']}:" for="companyLevyNumber" />
+										</h:panelGroup>
+										<h:panelGroup>
+											<div style="margin-top: -20px !important;">
+												<p:outputLabel value="Organisation Type" for="organisationTypeLevy" styleClass="gray Fs12" style="margin-left:5px" />
+											</div>
+											<div>
+												<p:selectOneMenu id="organisationTypeLevy" value="#{sdfUI.company.organisationType}" converter="OrganisationTypeConvertor" style="width:95%" required="true" requiredMessage="Select: Organisation Type">
+													<f:selectItem itemLabel="-- #{lang['select.one']} --" noSelectionOption="true" />
+													<f:selectItems value="#{sdfDetailUI.organisationTypeList}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+													<p:ajax listener="#{sdfUI.onOrganisationTypeSelection}" update="docList" />
+												</p:selectOneMenu>
+											</div>
+										</h:panelGroup>
+										<h:panelGroup rendered="#{sdfUI.company.nonLevyPaying}">
+											<h:panelGroup styleClass="md-inputfield" rendered="true">
+												<p:inputMask id="levyNumberNSCLevy" mask="#{searchCompanyUI.companyLevyNumberFormat}" value="#{sdfUI.company.payeSDLNumber}" style="width:95%" requiredMessage="Provide SDL Number" required="false">
+													<p:ajax></p:ajax>
+												</p:inputMask>
+												<p:outputLabel value="SDL Number" for="levyNumberNSCLevy" />
+											</h:panelGroup>
+										</h:panelGroup>
+
+										<h:panelGroup rendered="#{sdfUI.company.nonLevyPaying}">
+											<div style="margin-top: -20px !important;">
+												<p:outputLabel value="Primary SETA " for="setaSelectionLevy" styleClass="gray Fs12" style="margin-left:5px">
+												</p:outputLabel>
+											</div>
+											<div>
+												<p:selectOneMenu id="setaSelectionLevy" value="#{sdfUI.company.etqa}" style="width: 95%" converter="EtqaConvertor" required="true" requiredMessage="Provide: Primary SETA">
+													<f:selectItem itemLabel="-- #{lang['select.one']} --" noSelectionOption="true" />
+													<f:selectItems value="#{selectItemsUI.selectItemsEtqa}" var="rcseta" itemLabel="#{rcseta.description} (#{rcseta.code})" />
+													<p:ajax update="infoGridForNonLevySetaSelectionLevy" event="itemSelect" />
+												</p:selectOneMenu>
+											</div>
+										</h:panelGroup>
+
+										<p:outputPanel id="infoGridForNonLevySetaSelectionLevy">
+											<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{sdfUI.company.nonLevyPaying}">
+												<p:outputLabel value="If upon verification, it should come to merSETA's attention that an entity has indicated that they belong to merSETA but that the entity belongs to another SETA, the matter will be submitted for legal review." style="color:red;font-size:20px;font-weight: bold;" rendered="#{sdfUI.company.etqa ne null and sdfUI.company.etqa.code eq '599'}" />
+											</p:panelGrid>
+										</p:outputPanel>
+									</p:panelGrid>
+									<c:if test="#{sdfUI.company.nonLevyPaying}">
+										<h1>Non-Levy Paying companies</h1>
+									</c:if>
+									<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" id="xxxGg" rendered="#{sdfUI.company.doneSearch and sdfUI.company.nonLevyPaying}">
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText id="companyName2" value="#{sdfUI.company.companyName}" maxlength="#{sdfUI.MAX_COMPANY_NAME_SIZE}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.company.name']}" />
+											<p:outputLabel value="#{lang['companyName']}:" for="companyName2" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputMask id="companyRegNumber2" value="#{sdfUI.company.companyRegistrationNumber}" style="width:95%" required="true" requiredMessage="#{lang['enter.company.number']}" />
+											<p:outputLabel value="#{lang['companyRegistrationNumber']}:" for="companyRegNumber2" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText id="companyEmail" value="#{sdfUI.company.email}" maxlength="#{sdfUI.MAX_EMAIL_SIZE}" style="width:95%" required="true" requiredMessage="#{lang['email.error']}" />
+											<p:outputLabel value="#{lang['email']}:" for="companyLevyNumber" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputMask id="companyTelNumber" value="#{sdfUI.company.telNumber}" mask="#{sdfUI.TELPHONE_FORMAT}" style="width:95%" required="true" requiredMessage="#{lang['tel.number.error']}" />
+											<p:outputLabel value="#{lang['tel.number']}:" for="companyLevyNumber" />
+										</h:panelGroup>
+										<h:panelGroup>
+											<div style="margin-top: -20px !important;">
+												<p:outputLabel value="#{lang['sicCode']}" for="sicCodeNew" styleClass="gray Fs12" style="margin-left:5px">
+												</p:outputLabel>
+											</div>
+											<div>
+												<p:autoComplete id="sicCodeNew" value="#{sdfUI.company.sicCode}" style="width: 95%" completeMethod="#{autoCompleteUI.completeSIC}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SICCodeConvertor" dropdown="true" minQueryLength="1" maxResults="10" disabled="false" required="true" requiredMessage="#{lang['sic.code.error']}">
+													<p:ajax update="chambers" event="itemSelect"></p:ajax>
+													<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+													<p:column headerText="#{lang['description']}" style="white-space: nowrap">#{rv.description}</p:column>
+												</p:autoComplete>
+											</div>
+										</h:panelGroup>
+										<h:panelGroup id="chambers">
+											<div style="margin-top: -20px !important;">
+												<p:outputLabel value="#{lang['chamber']}" for="chamber" styleClass="gray Fs12" style="margin-left:5px" />
+											</div>
+											<div>
+												<p:selectOneMenu disabled="true" id="chamber" value="#{sdfUI.company.sicCode.chamber}" converter="ChamberConvertor" style="width:95%; opacity: 1;" required="true" requiredMessage="#{lang['select.a.chamber']}">
+													<f:selectItem itemLabel="#{lang['select.sic_code']}" noSelectionOption="true" />
+													<f:selectItems value="#{sdfDetailUI.chambers}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+												</p:selectOneMenu>
+											</div>
+										</h:panelGroup>
+										<h:panelGroup>
+											<div style="margin-top: -20px !important;">
+												<p:outputLabel value="Organisation Type" for="organisationType" styleClass="gray Fs12" style="margin-left:5px" />
+											</div>
+											<div>
+												<p:selectOneMenu id="organisationType" value="#{sdfUI.company.organisationType}" converter="OrganisationTypeConvertor" style="width:95%" required="true" requiredMessage="Select: Organisation Type">
+													<f:selectItem itemLabel="-- #{lang['select.one']} --" noSelectionOption="true" />
+													<f:selectItems value="#{sdfDetailUI.organisationTypeList}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+													<p:ajax listener="#{sdfUI.onOrganisationTypeSelection}" update="docList" />
+												</p:selectOneMenu>
+											</div>
+										</h:panelGroup>
+										<h:panelGroup rendered="#{sdfUI.company.nonLevyPaying}">
+											<h:panelGroup styleClass="md-inputfield" rendered="true">
+												<p:inputMask id="levyNumberNSC" mask="#{searchCompanyUI.companyLevyNumberFormat}" value="#{sdfUI.company.payeSDLNumber}" style="width:95%" requiredMessage="Provide SDL Number" >
+													<p:ajax></p:ajax>
+												</p:inputMask>
+												<p:outputLabel value="SDL Number" for="levyNumberNSC" />
+											</h:panelGroup>
+										</h:panelGroup>
+
+										<h:panelGroup rendered="#{sdfUI.company.nonLevyPaying}">
+											<div style="margin-top: -20px !important;">
+												<p:outputLabel value="Primary SETA " for="setaSelection" styleClass="gray Fs12" style="margin-left:5px">
+												</p:outputLabel>
+											</div>
+											<div>
+												<p:selectOneMenu id="setaSelection" value="#{sdfUI.company.etqa}" style="width: 95%" converter="EtqaConvertor" required="true" requiredMessage="Provide: Primary SETA">
+													<f:selectItem itemLabel="-- #{lang['select.one']} --" noSelectionOption="true" />
+													<f:selectItems value="#{selectItemsUI.selectItemsEtqa}" var="rcseta" itemLabel="#{rcseta.description} (#{rcseta.code})" />
+													<p:ajax update="infoGridForNonLevySetaSelection" event="itemSelect" />
+												</p:selectOneMenu>
+											</div>
+										</h:panelGroup>
+
+										<p:outputPanel id="infoGridForNonLevySetaSelection">
+											<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{sdfUI.company.nonLevyPaying}">
+												<p:outputLabel value="If upon verification, it should come to merSETA's attention that an entity has indicated that they belong to merSETA but that the entity belongs to another SETA, the matter will be submitted for legal review." style="color:red;font-size:20px;font-weight: bold;" rendered="#{sdfUI.company.etqa ne null and sdfUI.company.etqa.code eq '599'}" />
+											</p:panelGrid>
+										</p:outputPanel>
+									</p:panelGrid>
+
+									<br />
+									<p:outputPanel rendered="#{sdfUI.company.docs.size() gt 0}">
+										<span class="FontBold"> <i class="fa fa-exclamation-circle" aria-hidden="true"></i> #{lang['please.upload.the.following.compulsory.documents']}
+										</span>
+									</p:outputPanel>
+									<br />
+									<p:panelGrid id="docGrid">
+										<h:panelGroup id="docListUser" rendered="#{sdfUI.company.docs.size() gt 0}">
+											<br />
+											<div class="ui-g dashboard">
+												<div class="ui-g-12">
+													<p:repeat var="rc" value="#{sdfUI.formUser.docs}" varStatus="x">
+														<div class="ui-g-12 ui-md-6 ui-lg-3">
+															<div class="ui-g card colorbox #{rc.originalFname eq null ? 'colorbox-5' : 'colorbox-1'}">
+																<div class="ui-g-4">
+																	<i class="material-icons">#{rc.originalFname eq null ? 'cloud_upload' : 'check_circle'}</i>
+																</div>
+																<div class="ui-g-8">
+																	<span class="colorbox-name">#{rc.configDoc.name}</span> <span class="colorbox-count"> <p:commandButton icon="fa fa-download" id="cbDownload" rendered="#{rc.originalFname ne null}" action="#{sdfUI.download(rc)}" ajax="false" value="#{lang['download']}" immediate="true" process="@parent">
+																			<p:ajax onevent="oneventFunction" />
+																		</p:commandButton> <p:spacer width="5" rendered="#{rc.originalFname ne null}"></p:spacer> <p:tooltip for="cbDownload" value="#{lang['download']} #{rc.originalFname}" position="left" rendered="#{rc.originalFname ne null}" /> <p:commandButton id="uploadCID" value="#{rc.originalFname eq null ? lang['click.to.upload'] :  lang['re.upload'] }" styleClass="#{rc.originalFname eq null ? 'red-btn' : 'green-btn'} flat" process="@this" oncomplete="PF('dlgUploadUser').show()" update="uploadFormUser">
+																			<f:setPropertyActionListener value="#{rc}" target="#{sdfUI.doc}" />
+																		</p:commandButton>
+																	</span>
+																</div>
+															</div>
+														</div>
+													</p:repeat>
+												</div>
+											</div>
+										</h:panelGroup>
+									</p:panelGrid>
+
+									<p:panelGrid id="docList" layout="grid" columns="1" styleClass="ui-panelgrid-blank form-group" rendered="#{sdfUI.company.docs.size() gt 0}">
+										<h:panelGroup>
+											<div class="ui-g dashboard">
+												<div class="ui-g-12">
+													<p:repeat var="rc" value="#{sdfUI.company.docs}" varStatus="x">
+														<div class="ui-g-12 ui-md-6 ui-lg-3">
+															<div class="ui-g card colorbox #{rc.originalFname eq null ? 'colorbox-5' : 'colorbox-1'}">
+																<div class="ui-g-4">
+																	<i class="material-icons">#{rc.originalFname eq null ? 'cloud_upload' : 'check_circle'}</i>
+																</div>
+
+																<div class="ui-g-8">
+																	<span class="colorbox-name">#{rc.configDoc.name}</span> <span class="colorbox-count"> <p:commandButton icon="fa fa-download" id="cbDownload" rendered="#{rc.originalFname ne null}" action="#{sdfUI.download(rc)}" ajax="false" immediate="true" process="@parent">
+																			<p:ajax onevent="oneventFunction" />
+																		</p:commandButton> <p:tooltip for="cbDownload" value="#{lang['download']} #{rc.originalFname}" position="left" rendered="#{rc.originalFname ne null}" /> <p:commandButton value="#{rc.originalFname eq null ? lang['click.to.upload'] : lang['re.upload'] }" styleClass="#{rc.originalFname eq null ? 'red-btn' : 'green-btn'} flat" process="@this" oncomplete="PF('dlgUpload').show()" update=":uploadForm">
+																			<f:setPropertyActionListener value="#{rc}" target="#{sdfUI.doc}" />
+																		</p:commandButton>
+																	</span>
+																</div>
+															</div>
+														</div>
+													</p:repeat>
+												</div>
+											</div>
+										</h:panelGroup>
+									</p:panelGrid>
+									
+									<p:outputPanel id="companyErrors">
+										<p:fieldset rendered="#{sdfUI.companyErrors(sdfUI.company) ne null}">
+											<p:outputLabel escape="false" value="#{sdfUI.companyErrors(sdfUI.company)}" />
+										</p:fieldset>
+									</p:outputPanel>
+
+									<p:panelGrid columns="2" layout="grid" styleClass="ui-panelgrid-blank form-group" id="xxxGs" rendered="#{sdfUI.company.docs.size() gt 0}">
+										<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":companyInsForm companyErrors" action="#{sdfUI.createCompany}" />
+									</p:panelGrid>
+								</h:panelGroup>
+							</p:fieldset>
+						</h:panelGroup>
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true">
+			<h:form id="uploadForm">
+				<h:panelGroup id="uploadGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{sdfUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{sdfUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{sdfUI.storeFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update=":companyInsForm:docList" multiple="false" fileLimit="1" sizeLimit="#{sdfUI.maxFileSize}" allowTypes="/(\.|\/)(gif|jpe?g|png|pdf|docx|txt)$/" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUploadUser" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOADUser" width="80%" responsive="true" modal="true">
+			<h:form id="uploadFormUser">
+				<h:panelGroup id="uploadGroupUser">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{sdfUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="noteUser" />
+										<p:inputTextarea id="noteUser" value="#{sdfUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+									</div>
+									<p:fileUpload id="uploadDoc" onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{sdfUI.storeFileUser}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update=":companyInsForm:docListUser" multiple="false" fileLimit="1" sizeLimit="#{sdfUI.maxFileSize}" allowTypes="/(\.|\/)(gif|jpe?g|png|pdf|docx|txt)$/" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+	</ui:define>
+</ui:composition>

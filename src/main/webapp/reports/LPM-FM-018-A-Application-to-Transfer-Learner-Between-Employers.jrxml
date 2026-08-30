@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.4.3.final using JasperReports Library version 6.4.3  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="LPM-FM-018-A-Application-to-Transfer-Learner-Between-Employers" pageWidth="595" pageHeight="842" columnWidth="515" leftMargin="40" rightMargin="40" topMargin="20" bottomMargin="20" uuid="ee556205-51af-4cdb-8e09-5df93bb14bf1">
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="src\main\webapp\reports\DataAdapter.xml"/>
+	<property name="com.jaspersoft.studio.property.dataset.dialog.DatasetDialog.sash.w1" value="454"/>
+	<property name="com.jaspersoft.studio.property.dataset.dialog.DatasetDialog.sash.w2" value="536"/>
+	<subDataset name="Dataset1" uuid="428da169-f144-47be-a56a-664b17616e5c">
+		<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+		<property name="com.jaspersoft.studio.data.defaultdataadapter" value="src\main\webapp\reports\DataAdapter.xml"/>
+		<queryString language="SQL">
+			<![CDATA[SELECT merseta.saqa_qualification.fielddescription 
+FROM merseta.saqa_qualification
+WHERE merseta.saqa_qualification.id <5]]>
+		</queryString>
+		<field name="fielddescription" class="java.lang.String">
+			<property name="com.jaspersoft.studio.field.label" value="fielddescription"/>
+			<property name="com.jaspersoft.studio.field.tree.path" value="saqa_qualification"/>
+		</field>
+		<group name="fielddescription">
+			<groupExpression><![CDATA[$F{fielddescription}]]></groupExpression>
+		</group>
+	</subDataset>
+	<parameter name="logo" class="java.awt.Image"/>
+	<parameter name="backround_image" class="java.awt.Image"/>
+	<parameter name="company_id" class="java.lang.Long"/>
+	<parameter name="user_id" class="java.lang.Long"/>
+	<queryString language="SQL">
+		<![CDATA[SELECT  user.first_name,user.last_name,title.description AS title,
+company.company_name,company.levy_number,postalAddress.address_line_1,
+postalAddress.address_line_2,postalAddress.address_line_3,postalAddress.address_line_4,postalAddress.postcode,
+company.company_guid AS guid,town.description AS postal_add_town,saqa_qualification.qualificationtitle
+
+FROM merseta.users AS user
+
+LEFT JOIN merseta.company AS company
+ON company.id=$P{company_id}
+
+LEFT JOIN merseta.title AS title
+ON title.id=user.title_id
+
+LEFT JOIN merseta.address AS postalAddress
+ON postalAddress.id=company.postal_address_id
+
+LEFT JOIN merseta.towns AS town
+ON town.id=postalAddress.town_id
+
+LEFT JOIN merseta.user_qualifications AS userQual
+ON userQual.user_id=$P{user_id}
+
+LEFT JOIN merseta.saqa_qualification AS saqa_qualification
+ON saqa_qualification.id=userQual.qualification_id
+
+
+
+WHERE user.id=$P{user_id}]]>
+	</queryString>
+	<field name="first_name" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="first_name"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="users"/>
+	</field>
+	<field name="last_name" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="last_name"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="users"/>
+	</field>
+	<field name="title" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="title"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="title"/>
+	</field>
+	<field name="company_name" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="company_name"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="company"/>
+	</field>
+	<field name="levy_number" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="levy_number"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="company"/>
+	</field>
+	<field name="address_line_1" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="address_line_1"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="address_line_2" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="address_line_2"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="address_line_3" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="address_line_3"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="address_line_4" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="address_line_4"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="postcode" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="postcode"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="guid" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="guid"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="company"/>
+	</field>
+	<field name="postal_add_town" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="postal_add_town"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="towns"/>
+	</field>
+	<field name="qualificationtitle" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="qualificationtitle"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="saqa_qualification"/>
+	</field>
+	<group name="Group1">
+		<groupHeader>
+			<band height="196"/>
+			<band height="144"/>
+		</groupHeader>
+	</group>
+	<group name="Group2"/>
+	<background>
+		<band height="802" splitType="Stretch">
+			<image>
+				<reportElement x="247" y="183" width="270" height="450" uuid="2ddcdeb6-398e-46bd-bf23-f3a5b1173424"/>
+				<imageExpression><![CDATA[$P{backround_image}]]></imageExpression>
+			</image>
+		</band>
+	</background>
+	<title>
+		<band height="181" splitType="Stretch">
+			<image scaleImage="RetainShape">
+				<reportElement stretchType="ElementGroupHeight" x="180" y="0" width="160" height="160" uuid="5e634197-bb82-40ad-a65f-15b6ad9d496b"/>
+				<graphicElement fill="Solid"/>
+				<imageExpression><![CDATA[$P{logo}]]></imageExpression>
+			</image>
+		</band>
+	</title>
+	<pageFooter>
+		<band height="70" splitType="Stretch">
+			<staticText>
+				<reportElement x="47" y="18" width="117" height="15" forecolor="#404040" uuid="307aded6-832d-49f8-9338-b19f8381218e"/>
+				<box>
+					<topPen lineWidth="0.5" lineColor="#505050"/>
+					<leftPen lineWidth="0.5" lineColor="#505050"/>
+					<bottomPen lineWidth="0.5" lineColor="#505050"/>
+					<rightPen lineWidth="0.5" lineColor="#505050"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[Document Title]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="47" y="33" width="117" height="15" forecolor="#404040" uuid="ffcaf344-dfea-4b6b-9a96-dfb72e258a8e"/>
+				<box>
+					<topPen lineWidth="0.5" lineColor="#505050"/>
+					<leftPen lineWidth="0.5" lineColor="#505050"/>
+					<bottomPen lineWidth="0.5" lineColor="#505050"/>
+					<rightPen lineWidth="0.5" lineColor="#505050"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[Page Number]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="281" y="33" width="117" height="15" forecolor="#404040" uuid="1deb1c66-abf8-4642-9e09-86ffdf0d1cc0"/>
+				<box>
+					<topPen lineWidth="0.5" lineColor="#505050"/>
+					<leftPen lineWidth="0.5" lineColor="#505050"/>
+					<bottomPen lineWidth="0.5" lineColor="#505050"/>
+					<rightPen lineWidth="0.5" lineColor="#505050"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[Submission Date & Time]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="47" y="48" width="117" height="16" forecolor="#404040" uuid="ddfb3799-f081-4557-9765-d2f94c81528a"/>
+				<box>
+					<topPen lineWidth="0.5" lineColor="#505050"/>
+					<leftPen lineWidth="0.5" lineColor="#505050"/>
+					<bottomPen lineWidth="0.5" lineColor="#505050"/>
+					<rightPen lineWidth="0.5" lineColor="#505050"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[Document Number]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="281" y="48" width="117" height="16" forecolor="#404040" uuid="7c89df8d-30b1-49c3-b562-c6f1106b9bc8"/>
+				<box>
+					<topPen lineWidth="0.5" lineColor="#505050"/>
+					<leftPen lineWidth="0.5" lineColor="#505050"/>
+					<bottomPen lineWidth="0.5" lineColor="#505050"/>
+					<rightPen lineWidth="0.5" lineColor="#505050"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[Access]]></text>
+			</staticText>
+			<textField>
+				<reportElement mode="Opaque" x="164" y="33" width="117" height="15" forecolor="#404040" uuid="5ae9b104-d4ff-4c1c-abea-35c4d30936be"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Page " + $V{PAGE_NUMBER}+ " of  1"]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd MMMMM yyyy H:mm:ss">
+				<reportElement x="398" y="33" width="117" height="15" forecolor="#404040" uuid="d813ec36-8372-46c7-b44a-a638a0c9eac7"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement>
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="0" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="164" y="18" width="351" height="15" forecolor="#404040" uuid="a3f6d064-de84-4837-9e8d-4b39a70dff09"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle" markup="html">
+					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[<b>Application Form to Transfer a Learner Between Employers</b>]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="164" y="48" width="117" height="16" forecolor="#404040" uuid="9409d653-1778-4b3f-9d59-1754db72a936"/>
+				<box>
+					<topPen lineWidth="0.5" lineColor="#505050"/>
+					<leftPen lineWidth="0.5" lineColor="#505050"/>
+					<bottomPen lineWidth="0.5" lineColor="#505050"/>
+					<rightPen lineWidth="0.5" lineColor="#505050"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA["LPM–FM–018(A)"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="398" y="48" width="117" height="16" forecolor="#404040" uuid="4981833e-b944-4c0f-9d1d-05b8531edaa2"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Controlled"]]></textFieldExpression>
+			</textField>
+			<frame>
+				<reportElement x="1" y="18" width="46" height="46" uuid="561f24b2-8db6-40cf-8c91-8be5875bb252"/>
+				<box>
+					<pen lineColor="#404040"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<componentElement>
+					<reportElement x="3" y="2" width="42" height="42" uuid="017a0d0b-5598-463e-9fb0-5cfa72439a0e"/>
+					<jr:QRCode xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
+						<jr:codeExpression><![CDATA[$F{guid}]]></jr:codeExpression>
+					</jr:QRCode>
+				</componentElement>
+			</frame>
+		</band>
+	</pageFooter>
+</jasperReport>

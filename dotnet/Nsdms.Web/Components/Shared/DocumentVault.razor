@@ -1,0 +1,226 @@
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@inject IStorageService StorageService
+@inject ISnackbar Snackbar
+
+<div class="document-vault pa-4 rounded-lg elevation-1" style="background-color: #ffffff; border: 1px solid #e2e8f0;">
+    <div class="d-flex align-center justify-space-between mb-3">
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.FolderZip" Style="color: #1e40af;" Size="Size.Small" />
+            <h4 style="font-weight: 700; color: #0f172a; margin: 0; font-size: 1rem;">Document &amp; Evidence Vault</h4>
+        </div>
+        <MudButton Variant="Variant.Outlined" 
+                   Color="Color.Primary" 
+                   Size="Size.Small" 
+                   StartIcon="@Icons.Material.Filled.CloudUpload"
+                   OnClick="() => _showUploadModal = true">
+            Upload Document
+        </MudButton>
+    </div>
+
+    @if (_loading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-2" />
+    }
+    else if (!_documents.Any())
+    {
+        <div class="pa-4 text-center rounded" style="background-color: #f8fafc; border: 1px dashed #cbd5e1;">
+            <MudIcon Icon="@Icons.Material.Filled.UploadFile" Size="Size.Large" Style="color: #94a3b8;" />
+            <p style="color: #64748b; font-size: 0.875rem; margin: 4px 0 0 0;">No compliance evidence documents uploaded yet.</p>
+        </div>
+    }
+    else
+    {
+        <MudTable Items="@_documents" Dense="true" Hover="true" Elevation="0" Outlined="true">
+            <HeaderContent>
+                <MudTh>Document Type</MudTh>
+                <MudTh>File Name</MudTh>
+                <MudTh>Size</MudTh>
+                <MudTh>Uploaded By</MudTh>
+                <MudTh>Upload Date</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh Style="text-align: right;">Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Document Type">
+                    <span style="font-weight: 600; color: #1e293b;">@context.DocumentTypeName</span>
+                    <br />
+                    <span style="font-size: 0.75rem; color: #64748b; font-family: monospace;">@context.DocumentTypeCode</span>
+                </MudTd>
+                <MudTd DataLabel="File Name">
+                    <div class="d-flex align-center gap-1">
+                        <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Small" Style="color: #dc2626;" />
+                        <span style="font-size: 0.875rem; color: #0f172a;">@context.FileName</span>
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="Size">
+                    <span style="font-size: 0.8125rem; color: #475569;">@FormatFileSize(context.FileSizeBytes)</span>
+                </MudTd>
+                <MudTd DataLabel="Uploaded By">
+                    <span style="font-size: 0.8125rem; color: #475569;">@(context.UploadedByUserName ?? "System User")</span>
+                </MudTd>
+                <MudTd DataLabel="Upload Date">
+                    <span style="font-size: 0.8125rem; color: #475569;">@context.UploadDate.ToLocalTime().ToString("dd MMM yyyy")</span>
+                </MudTd>
+                <MudTd DataLabel="Status">
+                    @if (context.IsVerified)
+                    {
+                        <span class="px-2 py-0.5 rounded" style="background-color: #d1fae5; color: #065f46; font-size: 0.75rem; font-weight: 700;">
+                            Verified
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="px-2 py-0.5 rounded" style="background-color: #fef3c7; color: #92400e; font-size: 0.75rem; font-weight: 700;">
+                            Pending Check
+                        </span>
+                    }
+                </MudTd>
+                <MudTd DataLabel="Actions" Style="text-align: right;">
+                    <div class="d-flex justify-end gap-1">
+                        @if (!context.IsVerified)
+                        {
+                            <MudIconButton Icon="@Icons.Material.Filled.CheckCircle" 
+                                           Color="Color.Success" 
+                                           Size="Size.Small" 
+                                           aria-label="Verify document"
+                                           OnClick="() => VerifyDocAsync(context.Id)" />
+                        }
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" 
+                                       Color="Color.Error" 
+                                       Size="Size.Small" 
+                                       aria-label="Delete document"
+                                       OnClick="() => DeleteDocAsync(context.Id)" />
+                    </div>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+
+    <!-- Upload Modal -->
+    @if (_showUploadModal)
+    {
+        <div class="upload-modal pa-4 mt-3 rounded-lg elevation-2" style="background-color: #f8fafc; border: 1px solid #cbd5e1;">
+            <p style="font-weight: 700; color: #0f172a; margin: 0 0 12px 0; font-size: 0.95rem;">
+                Upload Compliance Evidence
+            </p>
+            <MudGrid Spacing="2">
+                <MudItem xs="12" md="6">
+                    <MudSelect T="string" @bind-Value="_selectedDocType" Label="Document Requirement Type" Variant="Variant.Outlined" Dense="true">
+                        <MudSelectItem Value="@("RSA_ID")">Certified RSA ID Document</MudSelectItem>
+                        <MudSelectItem Value="@("BANK_CONFIRM")">Proof of Banking Details</MudSelectItem>
+                        <MudSelectItem Value="@("ACCREDIT_CERT")">Accreditation Certificate</MudSelectItem>
+                        <MudSelectItem Value="@("TOOL_EVIDENCE")">Tool &amp; Workshop Checklist</MudSelectItem>
+                        <MudSelectItem Value="@("WSP_SIGNOFF")">WSP Management Signoff Sheet</MudSelectItem>
+                        <MudSelectItem Value="@("TRADE_RESULT")">Trade Test Assessment Report</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_inputFileName" Label="File Name" Variant="Variant.Outlined" Dense="true" Placeholder="e.g. proof_of_banking_2026.pdf" />
+                </MudItem>
+            </MudGrid>
+            <div class="d-flex justify-end gap-2 mt-3">
+                <MudButton Variant="Variant.Text" OnClick="() => _showUploadModal = false">Cancel</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CloudUpload" OnClick="UploadSampleDocAsync">
+                    Upload to Vault
+                </MudButton>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string TargetEntityName { get; set; } = string.Empty;
+    [Parameter] public int TargetEntityId { get; set; }
+
+    private List<DocumentMetadata> _documents = new();
+    private bool _loading = true;
+    private bool _showUploadModal = false;
+    private string _selectedDocType = "RSA_ID";
+    private string _inputFileName = "compliance_document_2026.pdf";
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadDocumentsAsync();
+    }
+
+    public async Task RefreshAsync()
+    {
+        await LoadDocumentsAsync();
+        StateHasChanged();
+    }
+
+    private async Task LoadDocumentsAsync()
+    {
+        if (string.IsNullOrEmpty(TargetEntityName) || TargetEntityId <= 0)
+        {
+            _loading = false;
+            return;
+        }
+
+        _loading = true;
+        try
+        {
+            _documents = await StorageService.GetDocumentsForEntityAsync(TargetEntityName, TargetEntityId);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task UploadSampleDocAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_inputFileName)) return;
+
+        var sampleBytes = System.Text.Encoding.UTF8.GetBytes($"Sample document content for {TargetEntityName} #{TargetEntityId}");
+        using var stream = new MemoryStream(sampleBytes);
+
+        var docName = _selectedDocType switch
+        {
+            "RSA_ID" => "Certified RSA ID Document",
+            "BANK_CONFIRM" => "Proof of Banking Details",
+            "ACCREDIT_CERT" => "Accreditation Certificate",
+            "TOOL_EVIDENCE" => "Tool & Workshop Checklist",
+            "WSP_SIGNOFF" => "WSP Management Signoff Sheet",
+            "TRADE_RESULT" => "Trade Test Assessment Report",
+            _ => "Compliance Document"
+        };
+
+        await StorageService.UploadDocumentAsync(
+            TargetEntityName,
+            TargetEntityId,
+            _selectedDocType,
+            docName,
+            _inputFileName,
+            stream,
+            "application/pdf",
+            "admin@merseta.org.za",
+            "Administrator");
+
+        _showUploadModal = false;
+        Snackbar.Add($"Document '{_inputFileName}' vaulted successfully.", Severity.Success);
+        await LoadDocumentsAsync();
+    }
+
+    private async Task VerifyDocAsync(int documentId)
+    {
+        await StorageService.VerifyDocumentAsync(documentId, "admin@merseta.org.za", "Verified by Administrator");
+        Snackbar.Add("Document marked as verified.", Severity.Success);
+        await LoadDocumentsAsync();
+    }
+
+    private async Task DeleteDocAsync(int documentId)
+    {
+        await StorageService.DeleteDocumentAsync(documentId);
+        Snackbar.Add("Document removed from vault.", Severity.Info);
+        await LoadDocumentsAsync();
+    }
+
+    private static string FormatFileSize(long bytes)
+    {
+        if (bytes < 1024) return $"{bytes} B";
+        if (bytes < 1024 * 1024) return $"{bytes / 1024.0:F1} KB";
+        return $"{bytes / (1024.0 * 1024.0):F2} MB";
+    }
+}

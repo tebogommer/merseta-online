@@ -1,0 +1,147 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui">
+	<p:fieldset id="employersFs" collapsed="false" legend="Employer Details">
+		<p:outputPanel styleClass="card" id="companyHeadingPat">
+		
+			<p:panelGrid columns="3" styleClass="ui-panelgrid-blank" layout="grid" rendered="#{!learnerRegistrationFormSignoffUI.company.doneSearch}" id="searchNGOPat">	
+	
+				<p:outputLabel id="levyPayingPat" value="#{lang['levy.paying.employer']}" styleClass="gray" />	
+				<p:selectBooleanCheckbox id="levyPaying1Pat" value="#{searchCompanyUI.searchLevyPaying}">
+					<p:ajax update="companyHeadingPat " event="change" listener="#{searchCompanyUI.clearCheckboxForLevyPaying}"></p:ajax>
+				</p:selectBooleanCheckbox>
+				
+				<p:spacer />
+				<p:outputLabel id="nonLevyPayingPat" value="#{lang['non.levy.paying']}" styleClass="gray" />	
+				<p:selectBooleanCheckbox id="nonLevyPaying1Pat" value="#{searchCompanyUI.searchNonLevyPaying}">
+					<p:ajax update="companyHeadingPat" event="change" listener="#{searchCompanyUI.clearCheckboxForNonLevyPaying}"></p:ajax>
+				</p:selectBooleanCheckbox>
+			</p:panelGrid>
+			<br />
+			<p:panelGrid id="searchCompanyPnlPat" columns="3" styleClass="ui-panelgrid-blank form-group" rendered="#{!learnerRegistrationFormSignoffUI.company.doneSearch and searchCompanyUI.searchLevyPaying}" layout="grid">
+	
+				<p:selectOneRadio value="#{searchCompanyUI.companyRegOrSDLEnum}" columns="1" layout="responsive" rendered="false">
+					<p:ajax update="searchCompanyPnlPat" />
+					<f:selectItems value="#{enumUI.SDLEnumDD}" var="idpassEnum" itemLabel="#{idpassEnum}" itemValue="#{idpassEnum}" />
+				</p:selectOneRadio>
+	
+				<h:panelGroup id="regNumInputPat" styleClass="md-inputfield" rendered="#{searchCompanyUI.companyRegOrSDLEnum eq regSDL.REG}">
+					<p:inputMask id="regNumCriteriaPat" mask="#{searchCompanyUI.companyRegistrationNumberFormat}" value="#{searchCompanyUI.criteria}" style="width:95%" requiredMessage="#{lang['enter.reg.number']}" required="true" />
+					<p:outputLabel value="#{lang['registration.number']}" for="regNumCriteriaPat" styleClass="gray" />
+				</h:panelGroup>
+	
+				<h:panelGroup id="sdlNumInputPat" styleClass="md-inputfield" rendered="#{!searchCompanyUI.searchNGO}">
+					<p:inputMask id="sdlNumCriteriaPat" mask="#{searchCompanyUI.companyLevyNumberFormat}" value="#{searchCompanyUI.criteria}" style="width:95%" requiredMessage="#{lang['enter.sdl.number']}" required="true" />
+					<p:outputLabel value="SDL Number" for="sdlNumCriteriaPat" styleClass="gray" />
+				</h:panelGroup>
+	
+				<p:commandButton id="idSearchPat" icon="fa fa-search" value="Submit" process="searchCompanyPnlPat" actionListener="#{searchCompanyUI.find}" update="learnerRegUserForm" rendered="#{searchCompanyUI.companyRegOrSDLEnum eq regSDL.REG or searchCompanyUI.searchNGO}" />
+				<p:commandButton id="idSearch2Pat" icon="fa fa-search" value="Submit" process="searchCompanyPnlPat" actionListener="#{searchCompanyUI.findBySDL}" update="learnerRegUserForm" rendered="#{!searchCompanyUI.searchNGO}" />
+			</p:panelGrid>
+	
+			<p:panelGrid id="searchNonLevyCompanyPnlPat" columns="3" styleClass="ui-panelgrid-blank form-group" rendered="#{!learnerRegistrationFormSignoffUI.company.doneSearch and searchCompanyUI.searchNonLevyPaying}" layout="grid">
+	
+				<p:selectOneRadio value="#{searchCompanyUI.companyRegOrSDLEnum}" columns="1" layout="responsive" rendered="false">
+					<p:ajax update="searchNonLevyCompanyPnlPat" />
+					<f:selectItems value="#{enumUI.SDLEnumDD}" var="idpassEnum" itemLabel="#{idpassEnum}" itemValue="#{idpassEnum}" />
+				</p:selectOneRadio>
+	
+				<h:panelGroup id="regNumInput11Pat" styleClass="md-inputfield" rendered="#{searchCompanyUI.companyRegOrSDLEnum eq regSDL.REG}">
+					<p:inputMask id="regNumCriteria11Pat" mask="#{searchCompanyUI.companyRegistrationNumberFormat}" value="#{searchCompanyUI.criteria}" style="width:95%" requiredMessage="#{lang['enter.reg.number']}" required="true" />
+					<p:outputLabel value="#{lang['registration.number']}" for="regNumCriteria11Pat" styleClass="gray" />
+				</h:panelGroup>
+	
+				<h:panelGroup id="sdlNumInput11Pat" styleClass="md-inputfield" rendered="#{!searchCompanyUI.searchNGO}">
+					<p:inputMask id="sdlNumCriteria11Pat" mask="#{searchCompanyUI.companyNNumberFormat}" value="#{searchCompanyUI.criteria}" style="width:95%" requiredMessage="#{lang['enter.sdl.number']}" required="true" />
+					<p:outputLabel value="Entity ID" for="sdlNumCriteria11Pat" styleClass="gray" />
+				</h:panelGroup>
+	
+				<p:commandButton id="idSearch11Pat" icon="fa fa-search" value="Submit" process="searchNonLevyCompanyPnlPat" actionListener="#{searchCompanyUI.find}" update="learnerRegUserForm" rendered="#{searchCompanyUI.companyRegOrSDLEnum eq regSDL.REG or searchCompanyUI.searchNGO}" />
+				<p:commandButton id="idSearch211Pat" icon="fa fa-search" value="Submit" process="searchNonLevyCompanyPnlPat" actionListener="#{searchCompanyUI.findBySDL}" update="learnerRegUserForm" rendered="#{!searchCompanyUI.searchNGO}" />
+			</p:panelGrid>
+	
+			<p:panelGrid id="searchNonMerSETACompanyPnlPat" columns="3" styleClass="ui-panelgrid-blank form-group" rendered="#{!learnerRegistrationFormSignoffUI.company.doneSearch and searchCompanyUI.searchNonSeta}" layout="grid">
+				<h:panelGroup id="regNumInputNonMerSETAPat" styleClass="md-inputfield" rendered="#{!learnerRegistrationFormSignoffUI.company.doneSearch and searchCompanyUI.searchNonSeta}">
+					<p:inputMask id="regNumCriteriaNonMerSETA2Pat" mask="#{searchCompanyUI.companyRegistrationNumberFormat}" value="#{searchCompanyUI.criteria}" style="width:95%" requiredMessage="#{lang['enter.reg.number']}" required="true" />
+					<p:outputLabel value="#{lang['registration.number']}" for="regNumCriteriaNonMerSETA2Pat" styleClass="gray" />
+				</h:panelGroup>
+	
+				<p:commandButton id="idSearchNonMerSETAPat" icon="fa fa-search" value="Submit" process="searchNonMerSETACompanyPnlPat" actionListener="#{searchCompanyUI.findNonSeta}" update="companyHeadingPat" rendered="#{!learnerRegistrationFormSignoffUI.company.doneSearch and searchCompanyUI.searchNonSeta}" />
+			</p:panelGrid>
+	
+			<h:panelGroup id="companyGridPat">
+				<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" id="xxxG" rendered="#{learnerRegistrationFormSignoffUI.company.doneSearch and not learnerRegistrationFormSignoffUI.company.nonLevyPaying}">
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="companyNamePat" value="#{learnerRegistrationFormSignoffUI.company.companyName}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.company.name']}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Upload or (learnerRegistrationFormSignoffUI.company.companyName ne null) or true}" />
+						<p:outputLabel value="Legal Name Of Employer" for="companyNamePat" styleClass="gray" />
+					</h:panelGroup>
+	
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="companyTraidingNamePat" value="#{learnerRegistrationFormSignoffUI.company.tradingName}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.company.name']}" disabled="true" />
+						<p:outputLabel value="Trading Name Of Employer" for="companyTraidingNamePat" styleClass="gray" />
+					</h:panelGroup>
+	
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputMask id="companyRegNumberPat" value="#{learnerRegistrationFormSignoffUI.company.companyRegistrationNumber}" disabled="true" mask="#{searchCompanyUI.companyRegistrationNumberFormat}" style="width:95%" required="true" requiredMessage="#{lang['enter.company.number']}" />
+						<p:outputLabel value="Employer Registration Number" for="companyRegNumberPat" styleClass="gray" />
+					</h:panelGroup>
+	
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="companyLevyNumberPat" value="#{learnerRegistrationFormSignoffUI.company.levyNumber}" style="width:95%" required="true" requiredMessage="#{lang['enter.levy.number']}" disabled="true" />
+						<p:outputLabel value="Employer #{lang['levyNumber']}" for="companyLevyNumberPat" styleClass="gray" />
+					</h:panelGroup>
+	
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="companySicCodePat" value="#{learnerRegistrationFormSignoffUI.company.sicCode.description}" style="width:95%" required="true" requiredMessage="#{lang['enter.levy.number']}" disabled="true" />
+						<p:outputLabel value="What is the Standard Industrial Classification (SIC) code that applies to your core business" for="companySicCodePat" styleClass="gray" />
+					</h:panelGroup>
+	
+					<h:panelGroup styleClass="md-inputfield" rendered="false">
+						<p:inputText id="companyAccreditationCouncilPat" value="learnerRegistrationFormSignoffUI.company.setaRegisteredAt" style="width:95%" required="true" requiredMessage="#{lang['enter.levy.number']}" disabled="true" />
+						<p:outputLabel value="Name Of SETA Registered At" for="companyAccreditationCouncilPat" styleClass="gray" />
+					</h:panelGroup>
+	
+					<h:panelGroup styleClass="md-inputfield" rendered="false">
+						<p:inputText id="companyAccreditationNumberPat" value="#{learnerRegistrationFormSignoffUI.company.trainingProviderApplication.certificateNumber}" style="width:95%" required="true" requiredMessage="#{lang['enter.levy.number']}" disabled="true" />
+						<p:outputLabel value="Accreditaion Council Number" for="companyAccreditationNumberPat" styleClass="gray" />
+					</h:panelGroup>
+	
+					<h:panelGroup styleClass="md-inputfield" rendered="false">
+						<p:inputText id="companyReviewDatePat" value="#{learnerRegistrationFormSignoffUI.company.trainingProviderApplication.reviewCommitteeMeeting.fromDateTime}" style="width:95%" disabled="true">
+							<f:convertDateTime pattern="dd MMM yyyy" />
+						</p:inputText>
+						<p:outputLabel value="Review Date" for="companyReviewDatePat" styleClass="gray" />
+					</h:panelGroup>
+	
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="companyContactPat" value="#{learnerRegistrationFormSignoffUI.company.contactPerson.firstName} #{learnerRegistrationFormSignoffUI.company.contactPerson.lastName}" style="width:95%" disabled="true">
+						</p:inputText>
+						<p:outputLabel value="Name Of Contact Person" for="companyContactPat" styleClass="gray" />
+					</h:panelGroup>
+	
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="companytelPat" value="#{learnerRegistrationFormSignoffUI.company.contactPerson.telNumber}" style="width:95%" disabled="true">
+						</p:inputText>
+						<p:outputLabel value="Tel Number" for="companytelPat" styleClass="gray" />
+					</h:panelGroup>
+	
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="companyfaxPat" value="#{learnerRegistrationFormSignoffUI.company.contactPerson.faxNumber}" style="width:95%" disabled="true">
+						</p:inputText>
+						<p:outputLabel value="Fax Number" for="companyfaxPat" styleClass="gray" />
+					</h:panelGroup>
+	
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="companycellPat" value="#{learnerRegistrationFormSignoffUI.company.contactPerson.cellNumber}" style="width:95%" disabled="true">
+						</p:inputText>
+						<p:outputLabel value="Cell Number" for="companycellPat" styleClass="gray" />
+					</h:panelGroup>
+	
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="companyemailPat" value="#{learnerRegistrationFormSignoffUI.company.contactPerson.email}" style="width:95%" disabled="true">
+						</p:inputText>
+						<p:outputLabel value="Email Address" for="companyemailPat" styleClass="gray" />
+					</h:panelGroup>
+				</p:panelGrid>
+			</h:panelGroup>	
+		</p:outputPanel>
+	</p:fieldset>
+</ui:composition>

@@ -1,0 +1,984 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.5.1.final using JasperReports Library version 6.5.1  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="LPM-FM-004-RescissionOfContracts 24B" pageWidth="595" pageHeight="842" whenNoDataType="AllSectionsNoDetail" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="71eca19e-b819-4397-8ebc-4eab37764292">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="MersetaDataAdapter.xml"/>
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<style name="Table_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Table_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Table_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<subDataset name="TradeTasksDataset" uuid="8b103b1b-b9fd-4064-9a08-7538f7ee9643">
+		<property name="com.jaspersoft.studio.data.defaultdataadapter" value="One Empty Record"/>
+		<queryString>
+			<![CDATA[]]>
+		</queryString>
+	</subDataset>
+	<subDataset name="RecognitionTestTableDataset" uuid="952236e9-3d71-4b5d-8a82-81abeb527faf">
+		<property name="com.jaspersoft.studio.data.defaultdataadapter" value="MersetaDataAdapter.xml"/>
+		<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+		<queryString>
+			<![CDATA[Select 1 as dummy]]>
+		</queryString>
+	</subDataset>
+	<parameter name="logo" class="java.awt.Image"/>
+	<parameter name="backround_image" class="java.awt.Image"/>
+	<parameter name="learner_id" class="java.lang.Long"/>
+	<parameter name="company_id" class="java.lang.Long"/>
+	<parameter name="hearOffoceAddress" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["8 Hillside Road, Metropolitan Park, Block C Parktown, 2193 "+"<br/>"+"Telephone No: 0861 637 738 Website: <u>www.merseta.org.za</u>"]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT learner.first_name AS learner_name,
+   learner.last_name AS learner_surname,
+   learner.passport_number AS learner_passport_num,
+   learner.cell_number AS learner_cell, 
+   learner.rsa_id_number AS learner_id_num,
+   company.company_guid AS guid, company.company_name  AS company_name,
+   company.levy_number ,company.tel_number  AS company_tel,company.fax_number AS company_fax,
+   company.email AS company_email,
+   
+   address.address_line_1 address_line_one,
+   address.address_line_2 address_line_two,
+   address.address_line_3 address_line_three,
+   address.address_line_4 address_line_four,
+   towns.description AS townDesc,
+   address.postcode As postal_code,
+   
+   learner_address.address_line_1 AS learner_address_line_one,
+   learner_address.address_line_2 AS learner_address_line_two,
+   learner_address.address_line_3 AS learner_address_line_three,
+   learner_address.address_line_4 AS learner_address_line_four,
+   learner_towns.description AS learner_townDesc,
+   learner_address.postcode As learner_postal_code
+
+FROM merseta.learners AS learner
+
+
+LEFT JOIN merseta.company AS company
+ON company.id=$P{company_id}
+
+LEFT JOIN merseta.address address
+ON company.postal_address_id = address.id
+
+LEFT JOIN merseta.address learner_address
+ON learner.postal_address_id = learner_address.id
+
+LEFT JOIN merseta.towns AS towns
+ON  address.town_id=towns.id
+
+LEFT JOIN merseta.towns AS learner_towns
+ON learner_address.town_id=learner_towns.id
+
+WHERE learner.id=$P{learner_id}]]>
+	</queryString>
+	<field name="learner_name" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="learner_name"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="learners"/>
+	</field>
+	<field name="learner_surname" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="learner_surname"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="learners"/>
+	</field>
+	<field name="learner_passport_num" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="learner_passport_num"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="learners"/>
+	</field>
+	<field name="learner_cell" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="learner_cell"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="learners"/>
+	</field>
+	<field name="learner_id_num" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="learner_id_num"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="learners"/>
+	</field>
+	<field name="guid" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="guid"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="company"/>
+	</field>
+	<field name="company_name" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="company_name"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="company"/>
+	</field>
+	<field name="levy_number" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="levy_number"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="company"/>
+	</field>
+	<field name="company_tel" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="company_tel"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="company"/>
+	</field>
+	<field name="company_fax" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="company_fax"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="company"/>
+	</field>
+	<field name="company_email" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="company_email"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="company"/>
+	</field>
+	<field name="address_line_one" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="address_line_one"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="address_line_two" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="address_line_two"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="address_line_three" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="address_line_three"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="address_line_four" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="address_line_four"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="townDesc" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="townDesc"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="towns"/>
+	</field>
+	<field name="postal_code" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="postal_code"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="learner_address_line_one" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="learner_address_line_one"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="learner_address_line_two" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="learner_address_line_two"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="learner_address_line_three" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="learner_address_line_three"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="learner_address_line_four" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="learner_address_line_four"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="learner_townDesc" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="learner_townDesc"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="towns"/>
+	</field>
+	<field name="learner_postal_code" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="learner_postal_code"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<group name="Content1Group" footerPosition="ForceAtBottom">
+		<groupHeader>
+			<band height="313">
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+					<reportElement x="0" y="182" width="555" height="20" uuid="319a53bb-6efc-46ee-b48a-2e2f09db3cc4"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle" markup="html">
+						<font fontName="Arial" size="11" isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression><![CDATA["RESCISSION OF APPRENTICESHIP CONTRACT"]]></textFieldExpression>
+				</textField>
+				<image scaleImage="RetainShape">
+					<reportElement stretchType="ElementGroupHeight" x="199" y="-1" width="160" height="160" uuid="f9bccd0f-e6cf-48b7-8f3a-b06d948287ed"/>
+					<graphicElement fill="Solid"/>
+					<imageExpression><![CDATA[$P{logo}]]></imageExpression>
+				</image>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+					<reportElement x="0" y="211" width="555" height="20" uuid="62e6e755-6b35-41a3-8bb8-79bde129f16c"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle" markup="html">
+						<font fontName="Arial" size="11" isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression><![CDATA["SECTION 24 (B)"]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" isBlankWhenNull="true">
+					<reportElement x="0" y="231" width="555" height="20" uuid="2b918933-1599-45c9-bfd9-cd7293896f3b"/>
+					<textElement textAlignment="Center" verticalAlignment="Middle" markup="html">
+						<font fontName="Arial" size="11" isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression><![CDATA["ONE-SIDED APPLICATION"]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="0" y="251" width="556" height="57" uuid="3ea4eead-2420-4438-847c-e6b6cdde0261"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Justified" verticalAlignment="Middle">
+						<font fontName="Arial" size="11"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA["A contract of apprenticeship shall not be rescinded unless the Merseta agrees that the contract should be rescinded.\n\n"+
+
+"The signatories hereto apply for rescission of the abovementioned contract."]]></textFieldExpression>
+				</textField>
+			</band>
+			<band height="355">
+				<staticText>
+					<reportElement x="1" y="0" width="552" height="12" uuid="512dff10-4826-4fa9-ab58-fcbee0a03b28"/>
+					<text><![CDATA[]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Opaque" x="1" y="14" width="198" height="20" backcolor="#DCDCDC" uuid="1d9c8a94-28d1-46a0-9ca3-d62230d8c5ed"/>
+					<box>
+						<pen lineWidth="0.5"/>
+						<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Arial" size="11" isBold="true"/>
+						<paragraph lineSpacing="1_1_2" firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<text><![CDATA[NAME OF EMPLOYER]]></text>
+				</staticText>
+				<textField isBlankWhenNull="true">
+					<reportElement x="199" y="14" width="356" height="20" uuid="906910a0-dbee-4174-aa94-029fcb8f5f13"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="11"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{company_name}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement mode="Opaque" x="1" y="34" width="198" height="100" backcolor="#DCDCDC" uuid="e60947ea-9ea5-4271-931f-008e2b04f073"/>
+					<box>
+						<pen lineWidth="0.5"/>
+						<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Arial" size="11" isBold="true"/>
+						<paragraph firstLineIndent="0" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<text><![CDATA[POSTAL ADDRESS]]></text>
+				</staticText>
+				<textField isBlankWhenNull="true">
+					<reportElement x="199" y="34" width="356" height="20" uuid="a5426dd2-c750-4b2e-919e-b47f0e0bde14"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="10"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{address_line_one}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="199" y="54" width="356" height="20" uuid="7217e9be-a268-49ca-8100-688766933f3c"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="10"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{address_line_two}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="199" y="74" width="356" height="20" uuid="95c9eb5a-d55e-406d-a9d0-1aa1466dc555"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="10"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{address_line_three}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="199" y="94" width="356" height="20" uuid="687927ab-43b5-44b0-a6f6-41d1433de507"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="10"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{townDesc}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="199" y="114" width="356" height="20" uuid="407b0f2b-15bc-4f9e-bb9b-778ee156fcf8"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="10"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{postal_code}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="100" y="134" width="170" height="20" uuid="a1f997b0-d3ff-436f-bbaf-1107f781b561"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="11"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+				</textField>
+				<staticText>
+					<reportElement mode="Opaque" x="1" y="134" width="99" height="20" backcolor="#DCDCDC" uuid="fe69ff41-5bca-498c-812e-6a0f1c5ed5d7"/>
+					<box>
+						<pen lineWidth="0.5"/>
+						<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Arial" size="11" isBold="true"/>
+						<paragraph lineSpacing="1_1_2" firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<text><![CDATA[DATE]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Opaque" x="270" y="134" width="99" height="20" backcolor="#DCDCDC" uuid="d8f3b96a-6952-4c3d-94b5-4335311eb953"/>
+					<box>
+						<pen lineWidth="0.5"/>
+						<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Arial" size="11" isBold="true"/>
+						<paragraph lineSpacing="1_1_2" firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<text><![CDATA[SIGNATURE]]></text>
+				</staticText>
+				<textField isBlankWhenNull="true">
+					<reportElement x="369" y="134" width="186" height="20" uuid="a6cb07fd-e1e7-467c-a0ac-3bf6a256066d"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="11"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+				</textField>
+				<staticText>
+					<reportElement mode="Opaque" x="1" y="170" width="198" height="20" backcolor="#DCDCDC" uuid="5f9192d3-4c37-4664-8dac-6ed556946584"/>
+					<box>
+						<pen lineWidth="0.5"/>
+						<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Arial" size="11" isBold="true"/>
+						<paragraph lineSpacing="1_1_2" firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<text><![CDATA[FULL NAME OF APPRENTICE]]></text>
+				</staticText>
+				<textField isBlankWhenNull="true">
+					<reportElement x="199" y="170" width="356" height="20" uuid="e58f5f29-3092-46a2-8399-c6d6db541186"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="11"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{learner_name}+" "+$F{learner_surname}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement mode="Opaque" x="1" y="190" width="198" height="20" backcolor="#DCDCDC" uuid="f2bb50af-1fd9-4926-8a93-fb89637fd71d"/>
+					<box>
+						<pen lineWidth="0.5"/>
+						<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Arial" size="11" isBold="true"/>
+						<paragraph lineSpacing="1_1_2" firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<text><![CDATA[CONTRACT NUMBER]]></text>
+				</staticText>
+				<textField isBlankWhenNull="true">
+					<reportElement x="199" y="190" width="356" height="20" uuid="16671951-61c5-468b-b6b6-292e59f42186"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="11"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{learner_cell}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement mode="Opaque" x="1" y="210" width="198" height="100" backcolor="#DCDCDC" uuid="6ae78d80-985f-4fe6-8108-518de07747fc"/>
+					<box>
+						<pen lineWidth="0.5"/>
+						<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Arial" size="11" isBold="true"/>
+						<paragraph firstLineIndent="0" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<text><![CDATA[POSTAL ADDRESS]]></text>
+				</staticText>
+				<textField isBlankWhenNull="true">
+					<reportElement x="199" y="210" width="356" height="20" uuid="d3a274ae-dd0f-4a04-af99-e471addea15d"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="10"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{learner_address_line_one}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="199" y="230" width="356" height="20" uuid="6928e273-33a1-454d-a667-a3f6ce088324"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="10"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{learner_address_line_two}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="199" y="250" width="356" height="20" uuid="84fd146c-0b26-403b-843e-da20d5699c08"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="10"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{learner_address_line_three}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="199" y="270" width="356" height="20" uuid="a364532c-61c0-4618-b855-9883d4abd61f"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="10"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{learner_townDesc}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="199" y="290" width="356" height="20" uuid="3e2ea193-b8f3-4575-b104-2d6cc63b1ffb"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="10"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{learner_postal_code}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement mode="Opaque" x="1" y="310" width="99" height="20" backcolor="#DCDCDC" uuid="5e7ef4cf-eb3f-434c-90c4-37d7ea0dd507"/>
+					<box>
+						<pen lineWidth="0.5"/>
+						<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Arial" size="11" isBold="true"/>
+						<paragraph lineSpacing="1_1_2" firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<text><![CDATA[DATE]]></text>
+				</staticText>
+				<textField isBlankWhenNull="true">
+					<reportElement x="100" y="310" width="170" height="20" uuid="72bbbf99-112a-4c11-88c5-07ba7271b98f"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="11"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+				</textField>
+				<staticText>
+					<reportElement mode="Opaque" x="270" y="310" width="99" height="20" backcolor="#DCDCDC" uuid="5b8237df-092b-492c-9531-501508a8539a"/>
+					<box>
+						<pen lineWidth="0.5"/>
+						<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Arial" size="11" isBold="true"/>
+						<paragraph lineSpacing="1_1_2" firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<text><![CDATA[SIGNATURE]]></text>
+				</staticText>
+				<textField isBlankWhenNull="true">
+					<reportElement x="369" y="310" width="186" height="20" uuid="2cb29fec-0384-4c79-8806-b2e27c043a13"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="11"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+				</textField>
+			</band>
+			<band height="291">
+				<staticText>
+					<reportElement mode="Transparent" x="0" y="199" width="30" height="20" backcolor="#FFFFFF" uuid="437bc239-f76f-4d06-8c97-1274597fa9db"/>
+					<box>
+						<pen lineWidth="0.5"/>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Bottom">
+						<font fontName="Arial" size="10" isBold="true"/>
+						<paragraph firstLineIndent="0" leftIndent="0" rightIndent="0"/>
+					</textElement>
+					<text><![CDATA[This]]></text>
+				</staticText>
+				<textField isBlankWhenNull="true">
+					<reportElement x="30" y="199" width="100" height="20" uuid="e5e45203-bc9e-475b-8967-e1a66d757356"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="11"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+				</textField>
+				<staticText>
+					<reportElement mode="Transparent" x="130" y="199" width="46" height="20" backcolor="#FFFFFF" uuid="76d099d2-0498-486d-8a0e-00236bbad7e5"/>
+					<box>
+						<pen lineWidth="0.5"/>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Bottom">
+						<font fontName="Arial" size="10" isBold="true"/>
+						<paragraph firstLineIndent="0" leftIndent="0" rightIndent="0"/>
+					</textElement>
+					<text><![CDATA[day of]]></text>
+				</staticText>
+				<textField isBlankWhenNull="true">
+					<reportElement x="176" y="199" width="180" height="20" uuid="3ca16b28-bff7-48f8-bb1f-a7b4c78bdabc"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="11"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+				</textField>
+				<staticText>
+					<reportElement mode="Transparent" x="356" y="199" width="23" height="20" backcolor="#FFFFFF" uuid="f142afdb-68f1-4b0a-8308-03ad3ae60e0e"/>
+					<box>
+						<pen lineWidth="0.5"/>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Bottom">
+						<font fontName="Arial" size="10" isBold="true"/>
+						<paragraph firstLineIndent="0" leftIndent="0" rightIndent="0"/>
+					</textElement>
+					<text><![CDATA[20]]></text>
+				</staticText>
+				<textField isBlankWhenNull="true">
+					<reportElement x="380" y="199" width="175" height="20" uuid="41ae1289-426e-4fde-a039-5b8cd79f7d4c"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="11"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="240" y="265" width="314" height="20" uuid="4f8f3fbc-19c7-41cb-b437-db364d6b1876"/>
+					<box>
+						<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font fontName="Arial" size="11" pdfFontName="Helvetica-Bold"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA["LEARNING PROGRAMMES MANAGER"]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="-1" y="167" width="556" height="19" uuid="29eec952-71ac-47ec-a7a6-2398f8339b1a"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Justified" verticalAlignment="Middle">
+						<font fontName="Arial" size="11"/>
+						<paragraph firstLineIndent="0" leftIndent="0" rightIndent="0"/>
+					</textElement>
+					<textFieldExpression><![CDATA["AGREED to and ACCEPTED on the"]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="300" y="11" width="255" height="20" uuid="bf7a8fc9-6965-41f0-a37e-149b895e1788"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="11"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{learner_name}+" "+$F{learner_surname}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="-1" y="12" width="301" height="19" uuid="912ace3d-fb34-4292-a1e7-265b43e85c86"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Arial" size="11"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA["NAME OF APPLICANT"]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="0" y="88" width="554" height="59" uuid="d74a593e-fdc8-4a52-95e2-718731650062"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Arial" size="11" pdfFontName="Helvetica-Bold"/>
+						<paragraph firstLineIndent="0" leftIndent="0" rightIndent="0"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Attach reasons for application for rescission to this document together with original contract and substantiating documents.\n\n"+
+
+"This application form should be submitted to the merSETA within seven days after a decision has been made."]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="-1" y="50" width="301" height="19" uuid="f4b52340-014f-4a57-a733-dbe9e6e3500a"/>
+					<box>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font fontName="Arial" size="11"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA["LAST WORKING DAY OF APPRENTICE (If applicable)"]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="300" y="49" width="255" height="20" uuid="942d63b1-1e3d-4d21-8da3-83444098a619"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="11"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+				</textField>
+			</band>
+		</groupHeader>
+	</group>
+	<background>
+		<band height="802" splitType="Stretch">
+			<image>
+				<reportElement x="284" y="183" width="270" height="450" uuid="369bde2a-8a6b-488b-a6d1-47334d3f39f1"/>
+				<imageExpression><![CDATA[$P{backround_image}]]></imageExpression>
+			</image>
+		</band>
+	</background>
+	<pageFooter>
+		<band height="83">
+			<staticText>
+				<reportElement x="47" y="33" width="116" height="15" forecolor="#404040" uuid="bbdab07e-790f-45a2-ba46-c6980f19497a"/>
+				<box>
+					<topPen lineWidth="0.5" lineColor="#505050"/>
+					<leftPen lineWidth="0.5" lineColor="#505050"/>
+					<bottomPen lineWidth="0.5" lineColor="#505050"/>
+					<rightPen lineWidth="0.5" lineColor="#505050"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[Document Title]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="47" y="48" width="116" height="15" forecolor="#404040" uuid="44985052-c001-4977-b2d6-4db7e89826df"/>
+				<box>
+					<topPen lineWidth="0.5" lineColor="#505050"/>
+					<leftPen lineWidth="0.5" lineColor="#505050"/>
+					<bottomPen lineWidth="0.5" lineColor="#505050"/>
+					<rightPen lineWidth="0.5" lineColor="#505050"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[Page Number]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="300" y="48" width="117" height="15" forecolor="#404040" uuid="d4c9886a-ec18-456e-82a9-032bbc96215f"/>
+				<box>
+					<topPen lineWidth="0.5" lineColor="#505050"/>
+					<leftPen lineWidth="0.5" lineColor="#505050"/>
+					<bottomPen lineWidth="0.5" lineColor="#505050"/>
+					<rightPen lineWidth="0.5" lineColor="#505050"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[Submission Date & Time]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="47" y="63" width="116" height="16" forecolor="#404040" uuid="e1ef4374-0bdf-43fe-99fe-71647cddf6ac"/>
+				<box>
+					<topPen lineWidth="0.5" lineColor="#505050"/>
+					<leftPen lineWidth="0.5" lineColor="#505050"/>
+					<bottomPen lineWidth="0.5" lineColor="#505050"/>
+					<rightPen lineWidth="0.5" lineColor="#505050"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[Document Number]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="300" y="63" width="117" height="16" forecolor="#404040" uuid="deb62393-3c56-4b80-9f95-76eeeee37779"/>
+				<box>
+					<topPen lineWidth="0.5" lineColor="#505050"/>
+					<leftPen lineWidth="0.5" lineColor="#505050"/>
+					<bottomPen lineWidth="0.5" lineColor="#505050"/>
+					<rightPen lineWidth="0.5" lineColor="#505050"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[Access]]></text>
+			</staticText>
+			<textField pattern="dd MMMMM yyyy H:mm:ss">
+				<reportElement x="417" y="48" width="138" height="15" forecolor="#404040" uuid="e16f5466-3f32-44c5-8b27-b685148512e5"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement>
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="0" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="163" y="33" width="392" height="15" forecolor="#404040" uuid="27cfc58b-44e0-4d68-9044-d7ca14c9d1f7"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle" markup="html">
+					<font fontName="Arial" size="8" isBold="true" pdfFontName="Helvetica-Bold"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[Rescission of Apprenticeship Contract Section 24(B)]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="163" y="63" width="137" height="16" forecolor="#404040" uuid="ba34ea96-e22e-4a52-9527-bd1fb2188bcc"/>
+				<box>
+					<topPen lineWidth="0.5" lineColor="#505050"/>
+					<leftPen lineWidth="0.5" lineColor="#505050"/>
+					<bottomPen lineWidth="0.5" lineColor="#505050"/>
+					<rightPen lineWidth="0.5" lineColor="#505050"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA["LPM–FM–004"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="417" y="63" width="138" height="16" forecolor="#404040" uuid="b4a1c5c9-4112-4f21-8405-b5fd719c81c5"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Controlled"]]></textFieldExpression>
+			</textField>
+			<frame>
+				<reportElement x="1" y="33" width="46" height="46" uuid="e783a52e-7612-44bf-a9c2-d5b99947b242"/>
+				<box>
+					<pen lineColor="#404040"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<componentElement>
+					<reportElement x="1" y="2" width="44" height="44" uuid="e3ee3ee3-d288-4dd0-bbdc-1e4a4d903a83"/>
+					<jr:QRCode xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
+						<jr:codeExpression><![CDATA[$F{guid}]]></jr:codeExpression>
+					</jr:QRCode>
+				</componentElement>
+			</frame>
+			<textField evaluationTime="Report">
+				<reportElement x="216" y="49" width="85" height="15" forecolor="#404040" uuid="2aa6c880-a32f-4f35-a1f9-bc95a6370260"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="163" y="49" width="52" height="15" forecolor="#404040" uuid="835a4d13-42ad-4ec5-849a-e69b51bcaeb6"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph leftIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Page "+$V{PAGE_NUMBER}+" of "]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="79" y="0" width="400" height="33" uuid="f4c1197f-0d0a-43e6-ab54-de27b59d49b4"/>
+				<textElement textAlignment="Center" verticalAlignment="Middle" markup="html">
+					<font fontName="Arial" size="9"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$P{hearOffoceAddress}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+</jasperReport>

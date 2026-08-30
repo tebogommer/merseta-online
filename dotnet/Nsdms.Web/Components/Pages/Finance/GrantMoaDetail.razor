@@ -1,0 +1,412 @@
+@page "/finance/grants/{id:int}"
+@inject IFinanceService FinanceService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-4">
+    <!-- Sticky Top Bar / Action Bridge -->
+    <MudPaper Class="pa-4 mb-4 sticky-top bg-surface" Elevation="2" Style="top: 0; z-index: 10;">
+        <div class="d-flex flex-wrap justify-space-between align-center gap-4">
+            <div class="d-flex align-center gap-3">
+                <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Default" OnClick="BackToList" aria-label="Back to List" />
+                <div>
+                    <div class="d-flex align-center gap-2">
+                        <MudText Typo="Typo.h5" Class="fw-bold">@(_moa.MoaNumber)</MudText>
+                        <MudChip T="string" Color="@GetStatusColor(_moa.MoaStatusCode)" Size="Size.Small" Variant="Variant.Filled">
+                            @_moa.MoaStatusCode
+                        </MudChip>
+                    </div>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        Employer: <strong>@(_moa.GrantApplication?.Organisation?.CompanyName ?? "Organisation")</strong> | 
+                        SDL: <strong>@(_moa.GrantApplication?.Organisation?.SdlNumber ?? "N/A")</strong> |
+                        Project: <strong>@(_moa.GrantApplication?.ProjectTitle ?? "Discretionary Grant Project")</strong>
+                    </MudText>
+                </div>
+            </div>
+
+            <div class="d-flex align-center gap-2">
+                @if (_moa.MoaStatusCode == "Pending Signature")
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Draw" OnClick="SignoffMoa">
+                        Execute Seta Signoff
+                    </MudButton>
+                }
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveMoa">
+                    Save Changes
+                </MudButton>
+            </div>
+        </div>
+    </MudPaper>
+
+    @if (_loading)
+    {
+        <div class="d-flex justify-center pa-12">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+        </div>
+    }
+    else
+    {
+        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Color="Color.Primary">
+            <!-- TAB 1: Contract Details -->
+            <MudTabPanel Text="Contract Terms" Icon="@Icons.Material.Filled.Gavel">
+                <MudCard Elevation="0" Class="pa-4">
+                    <MudGrid Spacing="3">
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="_moa.MoaNumber" Label="MOA Contract Number" Variant="Variant.Outlined" ReadOnly="true" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudTextField Value="@_moa.TotalContractValue.ToString("C")" Label="Total Committed Value" Variant="Variant.Outlined" ReadOnly="true" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudDatePicker @bind-Date="_contractStartDate" Label="Contract Start Date" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudDatePicker @bind-Date="_contractEndDate" Label="Contract End Date" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudDatePicker @bind-Date="_employerSignoffDate" Label="Employer Signoff Date" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudDatePicker @bind-Date="_setaSignoffDate" Label="MerSETA Executive Signoff Date" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="_moa.SpecialConditions" Label="Special Governance Conditions & Compliance Clauses" Variant="Variant.Outlined" Lines="4" />
+                        </MudItem>
+                    </MudGrid>
+                </MudCard>
+            </MudTabPanel>
+
+            <!-- TAB 2: Milestones & Tranches -->
+            <MudTabPanel Text="Tranche Milestones" Icon="@Icons.Material.Filled.FormatListNumbered">
+                <div class="pa-4">
+                    <div class="d-flex justify-space-between align-center mb-3">
+                        <MudText Typo="Typo.h6">Delivery Milestones & Tranche Allocation</MudText>
+                    </div>
+
+                    <MudTable Items="_moa.Milestones" Hover="true" Elevation="0" Outlined="true">
+                        <HeaderContent>
+                            <MudTh>Milestone #</MudTh>
+                            <MudTh>Title & Deliverables</MudTh>
+                            <MudTh>Tranche %</MudTh>
+                            <MudTh>Tranche Amount</MudTh>
+                            <MudTh>Target Date</MudTh>
+                            <MudTh>Status</MudTh>
+                            <MudTh Style="text-align: right;">Actions</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Milestone #">
+                                <MudAvatar Color="Color.Primary" Variant="Variant.Outlined" Size="Size.Small">
+                                    @context.MilestoneNumber
+                                </MudAvatar>
+                            </MudTd>
+                            <MudTd DataLabel="Title">
+                                <div>
+                                    <div class="fw-bold">@context.MilestoneTitle</div>
+                                    <div class="text-muted small">@context.DeliverableRequirement</div>
+                                    @if (!string.IsNullOrWhiteSpace(context.VerificationComments))
+                                    {
+                                        <div class="text-success small mt-1">
+                                            <MudIcon Icon="@Icons.Material.Filled.Verified" Size="Size.Small" /> @context.VerificationComments
+                                        </div>
+                                    }
+                                </div>
+                            </MudTd>
+                            <MudTd DataLabel="Tranche %">
+                                <span class="fw-semibold">@context.TranchePercentage%</span>
+                            </MudTd>
+                            <MudTd DataLabel="Amount">
+                                <span class="fw-bold text-success">@context.TrancheAmount.ToString("C")</span>
+                            </MudTd>
+                            <MudTd DataLabel="Target Date">
+                                @context.TargetDueDate.ToString("yyyy-MM-dd")
+                            </MudTd>
+                            <MudTd DataLabel="Status">
+                                <MudChip T="string" Color="@GetMilestoneColor(context.MilestoneStatusCode)" Size="Size.Small" Variant="Variant.Filled">
+                                    @context.MilestoneStatusCode
+                                </MudChip>
+                            </MudTd>
+                            <MudTd DataLabel="Actions" Style="text-align: right;">
+                                @if (context.MilestoneStatusCode != "Verified" && context.MilestoneStatusCode != "Paid")
+                                {
+                                    <MudButton Variant="Variant.Filled" Color="Color.Secondary" Size="Size.Small" StartIcon="@Icons.Material.Filled.CheckCircle" OnClick="@(() => OpenVerifyModal(context))">
+                                        Verify Milestone
+                                    </MudButton>
+                                }
+                                else if (context.MilestoneStatusCode == "Verified")
+                                {
+                                    <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Filled.Receipt" OnClick="@(() => OpenInvoiceModal(context))">
+                                        Submit Invoice
+                                    </MudButton>
+                                }
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                </div>
+            </MudTabPanel>
+
+            <!-- TAB 3: Invoicing & Payment Requisitions -->
+            <MudTabPanel Text="Invoices & Payments" Icon="@Icons.Material.Filled.ReceiptLong">
+                <div class="pa-4">
+                    <div class="d-flex justify-space-between align-center mb-3">
+                        <div>
+                            <MudText Typo="Typo.h6">Tranche Payment Requisitions</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Invoices, financial batch scheduling, and EFT release records</MudText>
+                        </div>
+                    </div>
+
+                    <MudTable Items="_payments" Hover="true" Elevation="0" Outlined="true">
+                        <HeaderContent>
+                            <MudTh>Payment Ref</MudTh>
+                            <MudTh>Invoice #</MudTh>
+                            <MudTh>Invoice Date</MudTh>
+                            <MudTh>Claimed Amount</MudTh>
+                            <MudTh>Approved Amount</MudTh>
+                            <MudTh>Batch Number</MudTh>
+                            <MudTh>Status</MudTh>
+                            <MudTh Style="text-align: right;">Actions</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Payment Ref">
+                                <span class="font-monospace fw-bold">@context.PaymentReferenceNumber</span>
+                            </MudTd>
+                            <MudTd DataLabel="Invoice #">@context.InvoiceNumber</MudTd>
+                            <MudTd DataLabel="Invoice Date">@context.InvoiceDate.ToString("yyyy-MM-dd")</MudTd>
+                            <MudTd DataLabel="Claimed">@context.ClaimedAmount.ToString("C")</MudTd>
+                            <MudTd DataLabel="Approved">
+                                <span class="fw-bold text-success">@context.ApprovedPaymentAmount.ToString("C")</span>
+                            </MudTd>
+                            <MudTd DataLabel="Batch">@(context.BatchNumber ?? "—")</MudTd>
+                            <MudTd DataLabel="Status">
+                                <MudChip T="string" Color="@GetPaymentColor(context.PaymentStatusCode)" Size="Size.Small" Variant="Variant.Filled">
+                                    @context.PaymentStatusCode
+                                </MudChip>
+                            </MudTd>
+                            <MudTd DataLabel="Actions" Style="text-align: right;">
+                                @if (context.PaymentStatusCode == "Submitted")
+                                {
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.ThumbUp" OnClick="@(() => ApprovePayment(context.Id))">
+                                        Finance Approve
+                                    </MudButton>
+                                }
+                                else if (context.PaymentStatusCode == "Finance Approved")
+                                {
+                                    <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Filled.Payment" OnClick="@(() => PayoutTranche(context.Id))">
+                                        Release Payout
+                                    </MudButton>
+                                }
+                            </MudTd>
+                        </RowTemplate>
+                        <NoRecordsContent>
+                            <div class="pa-4 text-center text-muted">No tranche payment requisitions submitted yet.</div>
+                        </NoRecordsContent>
+                    </MudTable>
+                </div>
+            </MudTabPanel>
+
+            <!-- TAB 4: Evidence Vault -->
+            <MudTabPanel Text="Evidence Vault" Icon="@Icons.Material.Filled.FolderZip">
+                <Nsdms.Web.Components.Shared.DocumentVault TargetEntityName="GrantMoa" TargetEntityId="@Id" />
+            </MudTabPanel>
+        </MudTabs>
+    }
+</MudContainer>
+
+<!-- Verify Milestone Dialog -->
+<MudDialog @bind-Visible="_showVerifyDialog" Options="_dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.VerifiedUser" Class="mr-2" /> Verify Milestone Deliverables
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mb-3">
+            Milestone #@(_selectedMilestone?.MilestoneNumber): <strong>@(_selectedMilestone?.MilestoneTitle)</strong>
+        </MudText>
+        <MudTextField @bind-Value="_verificationNotes" Label="Auditor / CLO Verification Comments & Site Confirmation" Variant="Variant.Outlined" Lines="3" Required="true" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showVerifyDialog = false)">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="SubmitMilestoneVerification">Confirm Verification</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<!-- Submit Invoice Dialog -->
+<MudDialog @bind-Visible="_showInvoiceDialog" Options="_dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.Receipt" Class="mr-2" /> Submit Tranche Invoice
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mb-2">
+            Submitting claim for Tranche #@(_selectedMilestone?.MilestoneNumber) (Amount: <strong>@(_selectedMilestone?.TrancheAmount.ToString("C"))</strong>)
+        </MudText>
+        <MudTextField @bind-Value="_newInvoiceNumber" Label="Tax Invoice Number" Variant="Variant.Outlined" Required="true" Class="mb-3" />
+        <MudDatePicker @bind-Date="_newInvoiceDate" Label="Invoice Date" Variant="Variant.Outlined" Class="mb-3" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showInvoiceDialog = false)">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="SubmitTrancheInvoice">Submit Requisition</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private GrantMoa _moa = new();
+    private List<GrantTranchePayment> _payments = new();
+    private bool _loading = true;
+
+    private DateTime? _contractStartDate;
+    private DateTime? _contractEndDate;
+    private DateTime? _employerSignoffDate;
+    private DateTime? _setaSignoffDate;
+
+    // Dialog state
+    private bool _showVerifyDialog = false;
+    private bool _showInvoiceDialog = false;
+    private GrantMoaMilestone? _selectedMilestone;
+    private string _verificationNotes = "Site inspection & attendance records confirmed in full compliance.";
+    private string _newInvoiceNumber = $"INV-{DateTime.Now:yyyyMMdd}-{new Random().Next(100, 999)}";
+    private DateTime? _newInvoiceDate = DateTime.Today;
+
+    private readonly DialogOptions _dialogOptions = new() { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _loading = true;
+        var m = await FinanceService.GetGrantMoaByIdAsync(Id);
+        if (m != null)
+        {
+            _moa = m;
+            _contractStartDate = m.ContractStartDate;
+            _contractEndDate = m.ContractEndDate;
+            _employerSignoffDate = m.SignoffDateEmployer;
+            _setaSignoffDate = m.SignoffDateSeta;
+            _payments = await FinanceService.GetTranchePaymentsAsync(Id);
+        }
+        else
+        {
+            Snackbar.Add($"Grant MOA #{Id} not found.", Severity.Error);
+            Navigation.NavigateTo("/finance/grants");
+        }
+        _loading = false;
+    }
+
+    private async Task SaveMoa()
+    {
+        _moa.ContractStartDate = _contractStartDate ?? _moa.ContractStartDate;
+        _moa.ContractEndDate = _contractEndDate ?? _moa.ContractEndDate;
+        _moa.SignoffDateEmployer = _employerSignoffDate;
+        _moa.SignoffDateSeta = _setaSignoffDate;
+
+        await FinanceService.UpdateGrantMoaAsync(_moa, "Admin");
+        Snackbar.Add("Grant MOA contract terms saved successfully with audit trail.", Severity.Success);
+        await LoadData();
+    }
+
+    private async Task SignoffMoa()
+    {
+        _moa.SignoffDateSeta = DateTime.UtcNow;
+        _moa.MoaStatusCode = "Active";
+        await FinanceService.UpdateGrantMoaAsync(_moa, "Executive / CEO");
+        Snackbar.Add("MerSETA Executive signoff executed. Contract is now ACTIVE.", Severity.Success);
+        await LoadData();
+    }
+
+    private void OpenVerifyModal(GrantMoaMilestone ms)
+    {
+        _selectedMilestone = ms;
+        _showVerifyDialog = true;
+    }
+
+    private async Task SubmitMilestoneVerification()
+    {
+        if (_selectedMilestone == null) return;
+
+        await FinanceService.VerifyMilestoneAsync(_selectedMilestone.Id, "clo@merseta.org.za", _verificationNotes);
+        Snackbar.Add($"Milestone #{_selectedMilestone.MilestoneNumber} verified successfully.", Severity.Success);
+        _showVerifyDialog = false;
+        await LoadData();
+    }
+
+    private void OpenInvoiceModal(GrantMoaMilestone ms)
+    {
+        _selectedMilestone = ms;
+        _newInvoiceNumber = $"INV-{_moa.MoaNumber}-{ms.MilestoneNumber}";
+        _newInvoiceDate = DateTime.Today;
+        _showInvoiceDialog = true;
+    }
+
+    private async Task SubmitTrancheInvoice()
+    {
+        if (_selectedMilestone == null) return;
+
+        var payment = new GrantTranchePayment
+        {
+            GrantMoaMilestoneId = _selectedMilestone.Id,
+            GrantApplicationId = _moa.GrantApplicationId,
+            InvoiceNumber = _newInvoiceNumber,
+            InvoiceDate = _newInvoiceDate ?? DateTime.Today,
+            ClaimedAmount = _selectedMilestone.TrancheAmount,
+            ApprovedPaymentAmount = _selectedMilestone.TrancheAmount
+        };
+
+        await FinanceService.SubmitTranchePaymentAsync(payment, "Admin");
+        Snackbar.Add("Tranche invoice payment requisition submitted to Finance.", Severity.Success);
+        _showInvoiceDialog = false;
+        await LoadData();
+    }
+
+    private async Task ApprovePayment(int paymentId)
+    {
+        var batch = $"FIN-BATCH-{DateTime.UtcNow:yyyyMMdd}-{paymentId}";
+        await FinanceService.ApproveTranchePaymentAsync(paymentId, "cfo@merseta.org.za", batch, "Approved for EFT disbursement.");
+        Snackbar.Add($"Payment approved and assigned to batch '{batch}'.", Severity.Success);
+        await LoadData();
+    }
+
+    private async Task PayoutTranche(int paymentId)
+    {
+        var bankRef = $"MERSETA-DG-{Guid.NewGuid().ToString()[..8].ToUpperInvariant()}";
+        await FinanceService.ProcessTranchePayoutAsync(paymentId, "finance@merseta.org.za", bankRef);
+        Snackbar.Add($"Tranche EFT payment released. Bank Ref: {bankRef}.", Severity.Success);
+        await LoadData();
+    }
+
+    private void BackToList()
+    {
+        Navigation.NavigateTo("/finance/grants");
+    }
+
+    private Color GetStatusColor(string status) => status switch
+    {
+        "Active" => Color.Success,
+        "Pending Signature" => Color.Warning,
+        "Completed" => Color.Info,
+        "Terminated" => Color.Error,
+        _ => Color.Default
+    };
+
+    private Color GetMilestoneColor(string status) => status switch
+    {
+        "Paid" => Color.Success,
+        "Verified" => Color.Info,
+        "Submitted" => Color.Warning,
+        _ => Color.Default
+    };
+
+    private Color GetPaymentColor(string status) => status switch
+    {
+        "Paid" => Color.Success,
+        "Finance Approved" => Color.Info,
+        "Submitted" => Color.Warning,
+        _ => Color.Default
+    };
+}

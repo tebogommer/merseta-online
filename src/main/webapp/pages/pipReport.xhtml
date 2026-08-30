@@ -1,0 +1,155 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>PIP Report</h1>
+					<h:form id="mainForm">
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="Filter By: Financial Year / Grant Year" for="selectedFinYear" style="width:100%; color:#977949" />
+							</div>
+							<div>
+								<p:selectOneMenu id="selectedFinYear" value="#{pipReportUI.selectedYear}" style="width:95%">
+									<p:ajax event="itemSelect" update="@form" />
+									<f:selectItems value="#{pipReportUI.financialYears}" />
+								</p:selectOneMenu>
+							</div>
+							<div class="EmptyBox10" />
+							<p:commandButton icon="fa fa-database" update="@form" value="Generate Report" action="#{pipReportUI.generateReport}" onstart="uploadStart()" oncomplete="uploadDone()" />
+						</h:panelGroup>
+
+						<c:if test="#{pipReportUI.displayReport}">
+
+							<p:panelGrid columns="1" style="width:100%" id="filterdownloadGrid" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{sessionUI.employee or sessionUI.activeUser.admin}">
+								<p:commandButton icon="fa fa-download" value="Download Report" ajax="false" action="#{pipReportUI.downloadPipReport}" />
+							</p:panelGrid>
+
+							<ui:include src="/pages/includes/download_lazy_with_page.xhtml">
+								<ui:param name="file_name" value="PIPReport" />
+								<ui:param name="target" value="activecontractsList" />
+							</ui:include>
+							<ui:include src="/pages/includes/filterGuide.xhtml" />
+							<p:dataTable var="rowVar" value="#{pipReportUI.dataModel}" expandableRowGroups="true" id="activecontractsList" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+								paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" reflow="true" lazy="true">
+
+								<p:column headerText="#{lang['entity.id']}" filterBy="#{rowVar.company.levyNumber}" groupRow="true">
+									<h:outputText value="#{rowVar.wsp.company.levyNumber}" />
+								</p:column>
+
+								<p:column headerText="#{lang['company.name']}" filterBy="#{rowVar.company.companyName}" groupRow="true">
+									<h:outputText value="#{rowVar.wsp.company.companyName}" />
+								</p:column>
+								<p:column headerText="Chamber" exportable="true">
+									<p:outputLabel value="#{rowVar.wsp.company.sicCode.chamber.description}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="Region">
+									<h:outputText value="#{rowVar.dgAllocationParent.wsp.company.regionTown.region.description}" />
+								</p:column>
+								<p:column headerText="Reference Number">
+									<h:outputText value="#{rowVar.activeContracts.refnoAuto}">
+									</h:outputText>
+								</p:column>
+
+								<p:column headerText="MOA Type">
+									<h:outputText value="#{rowVar.activeContracts.moaType.friendlyName}">
+									</h:outputText>
+								</p:column>
+
+								<p:column headerText="Category">
+									<h:outputText value="#{rowVar.interventionTypeDescription}">
+									</h:outputText>
+								</p:column>
+
+								<p:column headerText="Learners">
+									<h:outputText value="#{rowVar.fullyFundedLearnerAwarded}">
+									</h:outputText>
+								</p:column>
+
+								<p:column headerText="Projected Recruitment Date" rendered="true">
+									<h:outputText rendered="#{rowVar.projectedRecruitmentDate ne null}" value="#{rowVar.projectedRecruitmentDate}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</h:outputText>
+									<h:outputText rendered="#{rowVar.projectedRecruitmentDate eq null}" value="N/A" />
+								</p:column>
+
+								<p:column headerText="Projected Induction Date" rendered="true">
+									<h:outputText rendered="#{rowVar.projectedInductionDate ne null}" value="#{rowVar.projectedInductionDate}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</h:outputText>
+									<h:outputText rendered="#{rowVar.projectedInductionDate eq null}" value="N/A" />
+								</p:column>
+
+								<p:column headerText="Projected Date of Registration" rendered="true">
+									<h:outputText rendered="#{rowVar.projectedRegistrationDate ne null}" value="#{rowVar.projectedRegistrationDate}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</h:outputText>
+									<h:outputText rendered="#{rowVar.projectedRegistrationDate eq null}" value="N/A" />
+								</p:column>
+
+								<p:column headerText="Estimated 50% Progress Date" rendered="true">
+									<h:outputText rendered="#{rowVar.estimatedProgressDate ne null}" value="#{rowVar.estimatedProgressDate}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</h:outputText>
+									<h:outputText rendered="#{rowVar.estimatedProgressDate eq null}" value="N/A" />
+								</p:column>
+
+								<p:column headerText="Estimated Complete Date" rendered="true">
+									<h:outputText rendered="#{rowVar.estimatedCompletionDate ne null}" value="#{rowVar.estimatedCompletionDate}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</h:outputText>
+									<h:outputText rendered="#{rowVar.estimatedCompletionDate eq null}" value="N/A" />
+								</p:column>
+
+								<p:column headerText="Accredited Provider Identified">
+									<h:outputText value="#{rowVar.accreditedProviderIdentified.friendlyName}">
+									</h:outputText>
+									<h:outputText rendered="#{rowVar.accreditedProviderIdentified.friendlyName eq null}" value="N/A" />
+								</p:column>
+
+								<p:column headerText="Logistical Aspects Addressed">
+									<h:outputText value="#{rowVar.logisticalAspectsAddressed.friendlyName}">
+									</h:outputText>
+									<h:outputText rendered="#{rowVar.logisticalAspectsAddressed.friendlyName eq null}" value="N/A" />
+								</p:column>
+
+								<p:column headerText="CLO Name and Surname">
+									<h:outputText value="#{rowVar.cloUser.firstName} #{rowVar.cloUser.lastName}" />
+								</p:column>
+
+								<p:column headerText="Primary SDF Name and Surname">
+									<h:outputText value="#{rowVar.sdfCompany.sdf.firstName} #{rowVar.sdfCompany.sdf.lastName}" />
+								</p:column>
+
+								<p:column headerText="Primary SDF Email">
+									<h:outputText value="#{rowVar.sdfCompany.sdf.email}" />
+								</p:column>
+
+								<p:column headerText="Primary SDF Contact Number">
+									<h:outputText value="#{rowVar.sdfCompany.sdf.cellNumber}" />
+								</p:column>
+
+								<p:column headerText="Secondary SDF Name and Surname">
+									<h:outputText value="#{rowVar.secondarySdfCompany.sdf.firstName} #{rowVar.secondarySdfCompany.sdf.lastName}" rendered="#{rowVar.secondarySdfCompany.sdf.firstName ne null}" />
+									<h:outputText rendered="#{rowVar.secondarySdfCompany.sdf.firstName eq null}" value="N/A" />
+								</p:column>
+
+								<p:column headerText="Secondary SDF Name Email">
+									<h:outputText value="#{rowVar.secondarySdfCompany.sdf.email}" rendered="#{rowVar.secondarySdfCompany.sdf.email ne null}" />
+									<h:outputText rendered="#{rowVar.secondarySdfCompany.sdf.email eq null}" value="N/A" />
+								</p:column>
+
+								<p:column headerText="Secondary SDF Contact Number">
+									<h:outputText value="#{rowVar.secondarySdfCompany.sdf.cellNumber}" rendered="#{rowVar.secondarySdfCompany.sdf.cellNumber ne null}" />
+									<h:outputText rendered="#{rowVar.secondarySdfCompany.sdf.cellNumber eq null}" value="N/A" />
+								</p:column>
+							</p:dataTable>
+						</c:if>
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+	</ui:define>
+
+</ui:composition>

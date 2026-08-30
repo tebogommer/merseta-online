@@ -1,0 +1,283 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+
+		<p:growl showDetail="false" sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+		<h:panelGroup id="discgrantGroup">
+			<div class="ui-g">
+				<div class="ui-g-12">
+					<ui:include src="/pages/includes/taskdiagram.xhtml" />
+					<br />
+					<ui:include src="/pages/includes/tabinfo.xhtml">
+						<ui:param name="showInfoCircle" value="true" />
+						<ui:param name="cssClass" value="secondaryText Fs15" />
+						<ui:param name="helpTxt" value="#{lang['The.system.will.auto-fill.based.selections']}" />
+					</ui:include>
+				</div>
+			</div>
+			<h:form id="wspDocUploadForm">
+				<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+				<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+				<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+				<div class="card">
+					<h2>#{wspDocumentReUploadUI.company.companyName} Grant Document Re-upload</h2>
+					<p:tabView id="tabView">
+						<p:tab title="Organisation info">
+							<p:panelGrid columns="3" style="width:100%" id="companyInsGrid" layout="grid" styleClass="ui-panelgrid-blank">
+								<h:panelGroup>
+									<p:outputLabel value="#{lang['companyName']}" for="companyName" styleClass="Fs12 FontLight" />
+									<br />
+									<p:outputLabel id="companyName" value="#{wspDocumentReUploadUI.company.companyName}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.company.name']}" />
+								</h:panelGroup>
+								<h:panelGroup>
+									<p:outputLabel value="#{lang['tradingName']}" for="tradingName" styleClass="Fs12 FontLight" />
+									<br />
+									<p:outputLabel id="tradingName" value="#{wspDocumentReUploadUI.company.tradingName}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.trading.name']}" />
+								</h:panelGroup>
+
+								<h:panelGroup>
+									<p:outputLabel value="#{lang['telNumber']}" for="telNumberComp" styleClass="Fs12 FontLight" />
+									<br />
+									<p:outputLabel id="telNumberComp" value="#{wspDocumentReUploadUI.company.telNumber}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.tel.number']}" />
+								</h:panelGroup>
+								<h:panelGroup>
+									<p:outputLabel value="#{lang['faxNumber']}" for="faxNumberComp" styleClass="Fs12 FontLight" />
+									<br />
+									<p:outputLabel id="faxNumberComp" value="#{wspDocumentReUploadUI.company.faxNumber}" style="width:95%" rendered="#{wspDocumentReUploadUI.company.faxNumber ne null and wspDocumentReUploadUI.company.faxNumber.length() gt 0}" />
+									<p:outputLabel id="faxNumberComp2" value="#{lang['n.a']}" style="width:95%" rendered="#{wspDocumentReUploadUI.company.faxNumber eq null or wspDocumentReUploadUI.company.faxNumber.length() eq 0}" />
+								</h:panelGroup>
+								<h:panelGroup>
+									<p:outputLabel value="#{lang['companyRegistrationNumber']}" for="companyRegistrationNumber" styleClass="Fs12 FontLight" />
+									<br />
+									<p:outputLabel id="companyRegistrationNumber" value="#{wspDocumentReUploadUI.company.companyRegistrationNumber}" style="width:95%" />
+								</h:panelGroup>
+								<h:panelGroup>
+									<p:outputLabel value="#{lang['email']}" for="emailComp" styleClass="Fs12 FontLight" />
+									<br />
+									<p:outputLabel id="emailComp" value="#{wspDocumentReUploadUI.company.email}" style="width:95%" />
+								</h:panelGroup>
+								<h:panelGroup>
+									<p:outputLabel value="#{lang['levyNumber']}" for="levyNumber" styleClass="Fs12 FontLight" />
+									<br />
+									<p:outputLabel id="levyNumber" value="#{wspDocumentReUploadUI.company.levyNumber}" style="width:95%" />
+								</h:panelGroup>
+								<h:panelGroup>
+									<p:outputLabel value="#{lang['numberOfEmployees']}" for="numberOfEmployees" styleClass="Fs12 FontLight" />
+									<br />
+									<p:outputLabel id="numberOfEmployees" value="#{wspDocumentReUploadUI.company.numberOfEmployees}" style="width:95%" />
+								</h:panelGroup>
+								<h:panelGroup>
+									<p:outputLabel value="#{lang['sicCode']}" for="sicCode" styleClass="Fs12 FontLight" />
+									<br />
+									<p:outputLabel id="sicCode" value="#{wspDocumentReUploadUI.company.sicCode.description}" style="width:95%" required="true" requiredMessage="#{lang['enter.sic.code']}" />
+								</h:panelGroup>
+								<h:panelGroup>
+									<p:outputLabel value="#{lang['organisation.type']}" for="organisationType" styleClass="Fs12 FontLight" />
+									<br />
+									<p:outputLabel value="#{lang['n.a']}" rendered="#{wspDocumentReUploadUI.company.organisationType eq null}" />
+									<p:outputLabel id="organisationType" value="#{wspDocumentReUploadUI.company.organisationType.description}" style="width:95%" rendered="#{wspDocumentReUploadUI.company.organisationType ne null}" />
+								</h:panelGroup>
+							</p:panelGrid>
+							<p:panelGrid columns="2" style="width:100%" id="companyInsGrida" layout="grid" styleClass="ui-panelgrid-blank">
+								<p:fieldset legend="#{lang['residentialAddress']}">
+									<p:panelGrid columns="2" style="width : 95%" styleClass="ui-panelgrid-blank" id="addrPcode">
+										<h:panelGroup>
+											<p:outputLabel value="#{lang['address.line.1']}" for="addr1" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="addr1" value="#{wspDocumentReUploadUI.company.residentialAddress.addressLine1}" style="width:95%" required="true" requiredMessage="#{lang['enter.residential.address']}" />
+											<br />
+											<p:outputLabel value="#{lang['address.line.2']}" for="addr2" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{wspDocumentReUploadUI.company.residentialAddress.addressLine2 eq null or wspDocumentReUploadUI.company.residentialAddress.addressLine2.length() eq 0}" />
+											<p:outputLabel id="addr2" style="width:95%" value="#{wspDocumentReUploadUI.company.residentialAddress.addressLine2}" rendered="#{wspDocumentReUploadUI.company.residentialAddress.addressLine2 ne null and wspDocumentReUploadUI.company.residentialAddress.addressLine2.length() gt 0}" />
+										</h:panelGroup>
+										<h:panelGroup>
+											<p:outputLabel value="#{lang['address.line.3']}" for="addr3" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="addr3" style="width:95%" value="#{wspDocumentReUploadUI.company.residentialAddress.addressLine3}" rendered="#{wspDocumentReUploadUI.company.residentialAddress.addressLine3 ne null and wspDocumentReUploadUI.company.residentialAddress.addressLine3.length() gt 0}" />
+											<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{wspDocumentReUploadUI.company.residentialAddress.addressLine3 eq null or wspDocumentReUploadUI.company.residentialAddress.addressLine3.length() eq 0}" />
+											<br />
+											<p:outputLabel value="#{lang['address.line.4']}" for="addr4" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="addr4" style="width:95%" value="#{wspDocumentReUploadUI.company.residentialAddress.addressLine4}" rendered="#{wspDocumentReUploadUI.company.residentialAddress.addressLine4 ne null and wspDocumentReUploadUI.company.residentialAddress.addressLine4.length() gt 0}" />
+											<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{wspDocumentReUploadUI.company.residentialAddress.addressLine4 eq null or wspDocumentReUploadUI.company.residentialAddress.addressLine4.length() eq 0}" />
+										</h:panelGroup>
+										<h:panelGroup>
+											<p:outputLabel value="#{lang['post.code']}" for="pcode" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="pcode" style="width:95%" value="#{wspDocumentReUploadUI.company.residentialAddress.postcode}" rendered="#{wspDocumentReUploadUI.company.residentialAddress.postcode ne null and wspDocumentReUploadUI.company.residentialAddress.postcode.length() gt 0}" />
+											<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{wspDocumentReUploadUI.company.residentialAddress.postcode eq null or wspDocumentReUploadUI.company.residentialAddress.postcode.length() eq 0}" />
+											<br />
+											<h:outputLabel value="#{lang['municipality']}" for="MunicipalityID" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="MunicipalityID" style="width:95%" value="#{wspDocumentReUploadUI.company.residentialAddress.municipality.municipalityDesc}" />
+										</h:panelGroup>
+
+										<h:panelGroup>
+											<div class="EmptyBox40" />
+										</h:panelGroup>
+									</p:panelGrid>
+								</p:fieldset>
+								<p:fieldset legend="#{lang['postalAddress']}">
+									<p:panelGrid columns="2" style="width : 95%" styleClass="ui-panelgrid-blank" id="postalAddress">
+										<h:panelGroup>
+											<p:outputLabel value="#{lang['address.line.1']}" for="postalAddressaddr1" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="postalAddressaddr1" value="#{wspDocumentReUploadUI.company.postalAddress.addressLine1}" style="width:95%" required="true" requiredMessage="#{lang['enter.postal.address']}" />
+											<br />
+											<p:outputLabel value="#{lang['address.line.2']}" for="postalAddressaddr2" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="postalAddressaddr2" style="width:95%" value="#{wspDocumentReUploadUI.company.postalAddress.addressLine2}" />
+											<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{wspDocumentReUploadUI.company.postalAddress.addressLine2 eq null or wspDocumentReUploadUI.company.postalAddress.addressLine2.length() eq 0}" />
+										</h:panelGroup>
+										<h:panelGroup>
+											<p:outputLabel value="#{lang['address.line.3']}" for="postalAddressaddr3" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="postalAddressaddr3" style="width:95%" value="#{wspDocumentReUploadUI.company.postalAddress.addressLine3}" />
+											<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{wspDocumentReUploadUI.company.postalAddress.addressLine3 eq null or wspDocumentReUploadUI.company.postalAddress.addressLine3.length() eq 0}" />
+											<br />
+											<p:outputLabel value="#{lang['address.line.4']}" for="postalAddressaddr4" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="postalAddressaddr4" style="width:95%" value="#{wspDocumentReUploadUI.company.postalAddress.addressLine4}" />
+											<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{wspDocumentReUploadUI.company.postalAddress.addressLine4 eq null or wspDocumentReUploadUI.company.postalAddress.addressLine4.length() eq 0}" />
+										</h:panelGroup>
+										<h:panelGroup>
+											<p:outputLabel value="#{lang['post.code']}" for="postalAddressPcode" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="postalAddressPcode" style="width:95%" value="#{wspDocumentReUploadUI.company.postalAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}" />
+											<p:outputLabel value="#{lang['n.a']}" style="width:95%" rendered="#{wspDocumentReUploadUI.company.postalAddress.postcode eq null or wspDocumentReUploadUI.company.postalAddress.postcode.length() eq 0}" />
+											<br />
+											<h:outputLabel value="#{lang['municipality']}" for="postalAddressMunicipalityID" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="postalAddressMunicipalityID" style="width:95%" value="#{wspDocumentReUploadUI.company.postalAddress.municipality.municipalityDesc}" />
+										</h:panelGroup>
+
+										<h:panelGroup>
+											<div>
+												<p:outputLabel value="#{lang['same.as.my.address']}" styleClass="Fs12 FontLight" />
+											</div>
+											<div>
+												<p:selectBooleanCheckbox value="#{wspDocumentReUploadUI.company.postalAddress.sameAddress}" disabled="true">
+												</p:selectBooleanCheckbox>
+											</div>
+										</h:panelGroup>
+									</p:panelGrid>
+								</p:fieldset>
+							</p:panelGrid>
+						</p:tab>
+						<p:tab title="Document Upload">
+							<p:outputPanel id="docOutputPanel">
+								<c:if test="#{sessionUI.task ne null}">
+									<h1>Rejection Reasons:</h1>
+									<p:repeat var="rwrr" value="#{wspDocumentReUploadUI.employeeRejectionReasons}">
+										<p:outputLabel value="#{rwrr.description}" style="font-weight:bold; font-size: 20px; color: red;" />
+										<br />
+										<p:outputLabel value="#{rwrr.howTo}" style="color: grey;"/>
+										<br />
+										<br />
+									</p:repeat>
+									<br />
+								</c:if>
+								<p:dataTable value="#{wspDocumentReUploadUI.wsp.docs}" var="rv1" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv1.id}">
+									<p:column headerText="#{lang['type']}" width="18%">#{rv1.configDoc.name}</p:column>
+									<p:column headerText="#{lang['original.file.name']}" priority="4">
+										<p:outputLabel value="#{rv1.originalFname}" styleClass="Fs12"></p:outputLabel>
+									</p:column>
+									<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+									<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+										<h:outputText value="#{rv1.createDate}">
+											<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+										</h:outputText>
+									</p:column>
+									<p:column headerText="#{lang['version']}" width="10%" priority="4">
+										<h:outputText value="#{rv1.versionNo}">
+										</h:outputText>
+									</p:column>
+									<p:column headerText="#{lang['original.required']}">
+										<center>
+											<h:panelGroup rendered="#{rv1.configDoc.originalRequired}" styleClass="green">
+												<i class="fa fa-files-o fa-3x" aria-hidden="true"></i>
+											</h:panelGroup>
+											<h:panelGroup rendered="#{not rv1.configDoc.originalRequired}" styleClass="red">
+												<i class="fa fa-times fa-3x" aria-hidden="true"></i>
+											</h:panelGroup>
+										</center>
+									</p:column>
+									<p:column width="180" rendered="#{sessionUI.task ne null}">
+										<p:commandButton icon="fa fa-upload" id="upload" styleClass="flat" process="@this" oncomplete="PF('dlgUpload').show()" update=":uploadForm" rendered="#{sessionUI.task.processRole ne null and sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload}">
+											<f:setPropertyActionListener value="#{rv1}" target="#{wspDocumentReUploadUI.doc}" />
+											<p:tooltip for="upload" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+										</p:commandButton>
+
+										<p:spacer width="5" rendered="#{sessionUI.task.processRole ne null and sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload}" />
+										<p:commandButton ajax="false" icon="fa fa-download" action="#{uploadDocUI.download}" id="dlb" rendered="#{rv1.id ne null}" immediate="true">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="dlb" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+
+										<p:spacer width="5" rendered="#{rv1.id ne null and false}" />
+										<p:commandButton icon="fa fa-bars " id="dhist" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null and false}" process="@this">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+
+										<p:tooltip for="dhist" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+										<h:panelGroup id="panelGroupThree" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+											<p:spacer width="5" />
+											<p:commandButton icon="fa fa-comment-o" id="dnote" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel" process="@this">
+												<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+											</p:commandButton>
+											<p:tooltip for="dnote" value="#{lang['view.note']}" position="left" />
+										</h:panelGroup>
+
+										<h:panelGroup id="panelGroupFour" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+											<p:spacer width="5" />
+											<p:commandButton icon="fa fa-eye " id="viewerButton" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}" process="@this">
+												<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+											</p:commandButton>
+											<p:tooltip for="viewerButton" value="#{lang['view.document']} " position="left" />
+										</h:panelGroup>
+									</p:column>
+								</p:dataTable>
+
+								<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload and sessionUI.task ne null}">
+									<p:commandButton id="completeTask" value="Complete Task" icon="fa fa-check" action="#{wspDocumentReUploadUI.sdfSubmission}" update="@form" styleClass="Fs18 flat green-btn" style="height: 50px" />
+								</p:panelGrid>
+							</p:outputPanel>
+						</p:tab>
+					</p:tabView>
+				</div>
+			</h:form>
+		</h:panelGroup>
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true">
+			<h:form id="uploadForm">
+				<h:panelGroup id="uploadGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{wspDocumentReUploadUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{wspDocumentReUploadUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{wspDocumentReUploadUI.storeNewFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}"
+										update="@form :wspDocUploadForm:tabView:docOutputPanel" multiple="false" fileLimit="1" allowTypes="/(\.|\/)(gif|jpe?g|png|pdf|docx|txt)$/" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+
+
+	</ui:define>
+</ui:composition>

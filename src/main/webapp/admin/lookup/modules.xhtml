@@ -1,0 +1,270 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Modules</h1>
+					<h:form id="modulesInsForm">
+						<p:tooltip position="left"></p:tooltip>
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:panelGrid columns="1" style="width:100%" id="modulesInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="moduleRef" value="#{modulesUI.modules.moduleRef}" style="width:95%" />
+								<p:outputLabel value="Module Ref" for="moduleRef" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="moduleTitle" value="#{modulesUI.modules.moduleTitle}" style="width:95%" />
+								<p:outputLabel value="Module Title" for="moduleTitle" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="moduleTopic" value="#{modulesUI.modules.moduleTopic}" style="width:95%" />
+								<p:outputLabel value="Module Topic" for="moduleTopic" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="description" value="#{modulesUI.modules.description}" style="width:95%" />
+								<p:outputLabel value="Description" for="description" />
+							</h:panelGroup>
+
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="Category" for="proc" styleClass="gray" />
+								</div>
+								<div>
+
+									<p:selectOneMenu id="proc" value="#{modulesUI.modules.modulesCategory}" style="width:75%" required="true" requiredMessage="#{lang['please.select.a.role']}" converter="ModulesCategoryConvertor" var="r">
+										<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+										<f:selectItems value="#{selectItemsUI.modulesCategory}" var="rv" itemLabel="#{rv.description}" />
+										<p:column headerText="First Description">
+											<h:outputText value="#{r.description}" />
+										</p:column>
+										<p:column headerText="Second Description">
+											<h:outputText value="#{r.secondDescription}" />
+										</p:column>
+										<p:column headerText="Third Description">
+											<h:outputText value="#{r.thirdDescription}" />
+										</p:column>
+										<p:column headerText="Fourth Description">
+											<h:outputText value="#{r.fourthDescription}" />
+										</p:column>
+									</p:selectOneMenu>
+								</div>
+							</h:panelGroup>
+
+							<h:panelGroup id="unitList">
+								<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+									<h:panelGroup>
+										<div>
+											<p:outputLabel value="#{lang['unit.standard']}" for="unitStandardAuto"></p:outputLabel>
+										</div>
+										<div>
+											<p:autoComplete style="width:100%" inputStyle="width:50%" id="unitStandardAuto" value="#{modulesUI.unitStandard}" completeMethod="#{autoCompleteUI.completeUnitStandards}" var="rv" itemLabel="#{rv.title}" itemValue="#{rv}" forceSelection="true" converter="UnitStandardsConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+											</p:autoComplete>
+										</div>
+									</h:panelGroup>
+									<p:commandButton title="#{lang['add.unit.standard']}" update="unitList" icon="ui-icon-plus" iconPos="right" styleClass="flat" action="#{modulesUI.addUnitStandardToList}" process="unitList" />
+								</p:panelGrid>
+
+								<div>
+									<br />
+									<p:dataTable var="t" value="#{modulesUI.unitStandards}" id="usList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+										<p:column headerText="Code">
+											<h:outputText value="#{t.code}" />
+										</p:column>
+										<p:column headerText="Title">
+											<h:outputText value="#{t.title}" />
+										</p:column>
+										<p:column width="40">
+											<p:commandButton title="Delete" update="usList" icon="fa fa-trash" iconPos="right" styleClass="flat" action="#{modulesUI.removeUnitStandardFromList}" process="@this">
+												<f:setPropertyActionListener value="#{t}" target="#{modulesUI.unitStandard}" />
+											</p:commandButton>
+										</p:column>
+									</p:dataTable>
+								</div>
+							</h:panelGroup>
+
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:modulesList :modulesInsForm:modulesInsGrid" action="#{modulesUI.modulesInsert}" />
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="modulesInsGrid" process="@this" action="#{modulesUI.prepareNew}">
+									<p:resetInput target="modulesInsGrid" />
+								</p:commandButton>
+							</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{modulesUI.dataModel}" filteredValue="#{modulesUI.modulesfilteredList}" id="modulesList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true"
+							lazy="true">
+							<p:column headerText="#{lang['expand.row']}" width="45">
+								<p:rowToggler />
+							</p:column>
+							<p:column headerText="Module Ref">
+								<h:outputText value="#{rowVar.moduleRef}" />
+							</p:column>
+							<p:column headerText="Module Title">
+								<h:outputText value="#{rowVar.moduleTitle}" />
+							</p:column>
+							<p:column headerText="Module Topic">
+								<h:outputText value="#{rowVar.moduleTopic}" />
+							</p:column>
+
+							<p:column headerText="Unit Standards">
+								<ul>
+									<p:repeat var="rv2" value="#{rowVar.modulesUnitStandards}">
+										<li>#{rv2.unitStandards.code}</li>
+									</p:repeat>
+								</ul>
+							</p:column>
+
+							<p:column width="80">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":modulesInsForm:modulesInsGrid" action="#{modulesUI.prepModules}">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{modulesUI.modules}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:modulesList" action="#{modulesUI.modulesDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{modulesUI.modules}" />
+								</p:commandButton>
+							</p:column>
+
+							<p:rowExpansion>
+
+								<p:panelGrid columns="1" style="width:100%" id="modulesInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{rowVar.docs.size() lt 5}">
+
+									<p:commandButton icon="fa fa-upload" value="#{lang['click.to.upload']}" id="uploadUserDocs" styleClass="#{rv1.originalFname eq null ? 'red-btn' : ''} flat" action="#{modulesUI.prepDoc}" process="@this" oncomplete="PF('dlgUpload').show()" update=":uploadForm">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{modulesUI.modules}" />
+									</p:commandButton>
+									<p:tooltip for="uploadUserDocs" position="left" />
+								</p:panelGrid>
+
+								<p:dataTable value="#{rowVar.docs}" var="rv1" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true" rendered="#{rowVar.docs.size() gt 0}">
+									<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+									<p:column headerText="Document Name">#{rv1.originalFname}</p:column>
+									<p:column headerText="Document Title">#{rv1.modulesTitle.description}</p:column>
+									<p:column headerText="#{lang['uploaded']}" width="15%">
+										<h:outputText value="#{rv1.createDate}">
+											<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+										</h:outputText>
+									</p:column>
+									<p:column headerText="#{lang['version']}" width="15%">
+										<h:outputText value="#{rv1.versionNo}">
+										</h:outputText>
+									</p:column>
+
+									<p:column width="180" headerText="#{lang['view.edit']}">
+										<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+
+										<p:spacer width="5" rendered="#{rv1.id ne null}" />
+										<p:commandButton icon="fa fa-bars " id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="dhistUserDocs" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+
+										<!-- only with permission to upload can upload a new version -->
+										<p:commandButton icon="fa fa-upload" id="uploadUserDocs" styleClass="#{rv1.originalFname eq null ? 'red-btn' : ''} flat" process="@this" oncomplete="PF('dlgUpload').show()" update=":uploadForm">
+											<f:setPropertyActionListener value="#{rv1}" target="#{modulesUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="uploadUserDocs" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+
+										<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+											<p:spacer width="5" />
+											<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+												<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+											</p:commandButton>
+											<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+										</h:panelGroup>
+
+										<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+											<p:spacer width="5" />
+											<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+												<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+											</p:commandButton>
+											<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+										</h:panelGroup>
+
+									</p:column>
+								</p:dataTable>
+							</p:rowExpansion>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+
+		<p:dialog closeOnEscape="true" header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true" dynamic="true">
+			<h:form id="uploadForm">
+				<h:panelGroup id="uploadGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{modulesUI.doc.configDoc.name}</h1>
+								<p:panel>
+
+									<h:panelGroup>
+										<div>
+											<p:outputLabel value="Category" for="proc" styleClass="gray" />
+										</div>
+										<div>
+
+											<p:selectOneMenu id="proc" value="#{modulesUI.doc.modulesTitle}" style="width:75%" required="true" requiredMessage="#{lang['please.select.a.role']}" converter="ModulesTitleConvertor" var="r">
+												<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+												<f:selectItems value="#{selectItemsUI.modulesTitle}" var="rv" itemLabel="#{rv.description}" />
+												<p:ajax></p:ajax>
+												<p:column headerText="Description">
+													<h:outputText value="#{r.description}" />
+												</p:column>
+											</p:selectOneMenu>
+										</div>
+									</h:panelGroup>
+
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{modulesUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span>
+										<br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{modulesUI.storeFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" multiple="false" fileLimit="1" immediate="false" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+	</ui:define>
+	<!-- 
+moduleRef = moduleRef
+moduleTitle = moduleTitle
+moduleTopic = moduleTopic
+code = code
+createDate = createDate
+setmisCode = setmisCode
+qctoCode = qctoCode
+nlrdCode = nlrdCode
+
+-->
+</ui:composition>

@@ -1,0 +1,158 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+
+
+
+
+		<h:form id="chatForm">
+		  <p:growl><p:autoUpdate/> </p:growl>
+			<div class="ui-g dashboard">
+
+			<div class="ui-g-12">
+			<h:panelGroup rendered="#{chatUI.availableDepartments.size() eq 0}">
+			  <div class="card">
+			    <span class="Fs25 FontLight">Coming Soon..........</span>
+			  </div>
+			</h:panelGroup>
+
+				<p:repeat var="rv" value="#{chatUI.availableDepartments}">
+				 <p:commandLink action="#{chatUI.findExistingChats}" update="@form"  style="width: 100% !important" process="@this" oncomplete="scrollToBottom()">
+					<f:setPropertyActionListener value="#{rv}" target="#{chatUI.hostingCompanyDepartments}" />
+					<div class="ui-g-12 ui-md-6 ui-lg-6">
+						<div class="ui-g card colorbox colorbox-1">
+							<div class="ui-g-4">
+								<i class="material-icons">business</i>
+							</div>
+							<div class="ui-g-8">
+								<span class="colorbox-name">Chat to someone in the</span>
+								<span class="colorbox-count">#{rv.department} Department</span>
+							</div>
+						</div>
+					</div>
+				  </p:commandLink>
+				</p:repeat>
+			</div>
+            <c:if test="#{chatUI.hostingCompanyDepartments ne null}">
+                <p:defaultCommand target="sendLink"/>
+                <p:focus for="msgTxt"/>
+				<div class="ui-g-12">
+					<div class="card">
+						<div class="chat">
+							<p:panel header="Chat to #{chatUI.hostingCompanyDepartments.department}" styleClass="ui-shadow-content" id="chatPanel">
+							  <h:inputHidden value="#{chatUI.lastChatmessage.msg}" id="lastChatmessageMsg"/>
+							  <h:inputHidden value="#{chatUI.lastChatmessage.hostingCompanyDepartments.id}" id="hostingCompanyDepartmentsId"/>
+							  <p:scrollPanel mode="native" style="height:300px">
+								<ul>
+									<p:repeat var="rv" value="#{chatUI.chatMessageList}">
+									   <li class="clearfix #{rv.user.id eq sessionUI.activeUser.id?'message-own':'message-from'} ">
+										    <p:graphicImage name="images/avatar2x.png" library="ultima-layout" rendered="#{rv.user.profileImage eq null}"/>
+											<p:graphicImage value="#{imageStreamer.image}"  rendered="#{rv.user.profileImage ne null}">
+												<f:param name="imageId" value="#{rv.user.profileImage.id}" />
+											</p:graphicImage>
+										   <span>#{rv.msg}
+										  		 <br/><p:outputLabel value="#{rv.user.firstName} #{rv.user.lastName}" styleClass="Fs12 FontLight"/>
+										      <br/><p:outputLabel value="#{rv.createDate}" styleClass="Fs10 FontLight"><f:convertDateTime pattern="dd MMM yyyy hh:mm a"/></p:outputLabel>
+										   </span>
+										</li>
+									</p:repeat>
+								</ul>
+  								</p:scrollPanel>
+								<div class="new-message">
+									<div class="message-input">
+										<p:inputText placeholder="Write a message" value="#{chatUI.chatmessage.msg}" requiredMessage="Please enter a message" required="true" id="msgTxt" style=" border: 0 none;font-size: 14px;width: 100%;background-color: transparent;outline: 0 none;color: #757575;"/>
+									</div>
+									<div class="message-attachment">
+										<p:commandLink action="#{chatUI.saveChat}" update="chatPanel" style="color: #757575 !important;" id="sendLink" title="Send message" oncomplete="sendWS()">
+											<i class="fa fa-paper-plane-o" />
+										</p:commandLink>
+									</div>
+
+								</div>
+
+							</p:panel>
+						<div class="ui-g-12">
+						   <p:commandLink action="#{chatUI.findExistingChats}" update="chatPanel" oncomplete="scrollToBottom()"  styleClass="Fright" style="color: #757575" id="refresh" title="Refresh" process="@this"><i class="fa fa-refresh" aria-hidden="true"></i></p:commandLink>
+						   <p:remoteCommand name="rc" action="#{chatUI.findExistingChats}" update="chatPanel" process="@this" oncomplete="scrollToBottom()"/>
+						</div>
+						<br/>
+						</div>
+					</div>
+
+				</div>
+				</c:if>
+			</div>
+			<p:tooltip position="left"/>
+
+
+<script type="text/javascript">
+//<![CDATA[
+
+ /*    var txtAreaEcho = document.getElementById("txtAreaEcho");
+
+
+
+
+      txtAreaEcho.value = "";
+
+
+      websocket.onopen = function(msgEvent)
+                         {
+                            txtAreaEcho.value += "Connected ... \n";
+                         };
+      websocket.onmessage = function(msgEvent)
+                           {
+                        //     txtAreaEcho.value += "Server : " + msgEvent.data + "\n";
+                             console.log("----> chat.xhtml and onmessage!!!" + msgEvent.data);
+                             handleUpdate(msgEvent.data);
+                           };
+     websocket.onclose = function(msgEvent)
+                           {
+                            txtAreaEcho.value += "Disconnect ... \n";
+                           };
+      websocket.onerror = function(msgEvent)
+                            {
+                             txtAreaEcho.value += "Error ... \n";
+                            };
+*/
+
+  function sendWS() {
+
+      var message =  { employee: '#{sessionUI.employee}', message: $('#chatForm\\:lastChatmessageMsg').val(), departmentId: $('#chatForm\\:hostingCompanyDepartmentsId').val() };
+
+      if (websocket != null && websocket.readyState == 1) {
+    	  websocket.send(JSON.stringify(message));
+       }
+
+     scrollToBottom();
+     showHide(false);
+  }
+
+  function handleUpdate(data) {
+	    showHide(true);
+	    rc();
+	    scrollToBottom()
+
+	}
+
+
+function scrollToBottom() {
+    $('.ui-scrollpanel').scrollTop(100000);
+}
+
+function showHide(show) {
+  if (show) {
+	$("#chatNotificationBadge").show();
+  }
+  else {
+	  $("#chatNotificationBadge").hide();
+   }
+}
+
+
+//]]>
+</script>
+		</h:form>
+	</ui:define>
+
+</ui:composition>

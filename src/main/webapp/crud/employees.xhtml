@@ -1,0 +1,384 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Employees</h1>
+					<h:form id="employeesInsForm">
+						<p:importEnum type="haj.com.entity.enums.IdPassportEnum" var="idpass" />
+						<p:importEnum type="haj.com.entity.enums.PivotNonPivotEnum" var="pivNonPiv" />
+						<p:growl autoUpdate="true" sticky="false" />
+						<p:fieldset legend="#{lang['employee.details']}" style="margin-top: 10px">
+							<p:panelGrid columns="2" style="width:100%" id="employeesInsGrid1" layout="grid" styleClass="ui-panelgrid-blank form-group">
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="sdlNumber" value="#{employeesUI.employees.sdlNumber}" style="width:95%" />
+									<p:outputLabel value="#{lang['sdl.number']}" for="sdlNumber" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:autoComplete id="municipality" value="#{employeesUI.employees.municipality}" completeMethod="#{autoCompleteUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityDesc}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true" minQueryLength="3"
+										maxResults="10">
+										<p:column headerText="Municipality" style="white-space: nowrap">#{rv.municipalityDesc}</p:column>
+									</p:autoComplete>
+									<p:outputLabel value="#{lang['municipality']}" for="municipality" />
+								</h:panelGroup>
+								<h:panelGroup>
+									<p:selectOneMenu id="idType" value="#{employeesUI.employees.idType}" style="width:75%">
+										<p:ajax update="employeesInsForm:idInput employeesInsForm:idInput" />
+										<f:selectItem itemLabel="---#{lang['select.id.type']}---" itemValue="" styleClass="FontLight gray" noSelectionOption="true" />
+										<f:selectItems value="#{enumUI.idPassportEnumDD}" />
+									</p:selectOneMenu>
+								</h:panelGroup>
+								<p:outputPanel id="idInput">
+									<h:panelGroup id="rsaPnl" styleClass="md-inputfield" rendered="#{employeesUI.employees.idType eq idpass.RsaId}">
+										<p:inputText id="rsaIDNumber" value="#{employeesUI.employees.rsaIDNumber}" style="width:95%" />
+										<p:outputLabel value="#{lang['rsa.id.number']}" for="rsaIDNumber" />
+									</h:panelGroup>
+									<h:panelGroup id="passPnl" styleClass="md-inputfield" rendered="#{employeesUI.employees.idType eq idpass.Passport}">
+										<p:inputText id="passportNumber" value="#{employeesUI.employees.passportNumber}" style="width:95%" />
+										<p:outputLabel value="#{lang['passport.number']}" for="passportNumber" />
+									</h:panelGroup>
+								</p:outputPanel>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="firstName" value="#{employeesUI.employees.firstName}" style="width:95%" />
+									<p:outputLabel value="#{lang['first.name']}" for="firstName" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="lastName" value="#{employeesUI.employees.lastName}" style="width:95%" />
+									<p:outputLabel value="#{lang['last.name']}" for="lastName" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:calendar id="dateOfBirth" value="#{employeesUI.employees.dateOfBirth}" size="19" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" />
+									<p:outputLabel value="#{lang['date.of.birth']}" for="dateOfBirth" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:autoComplete id="gender" value="#{employeesUI.employees.gender}" completeMethod="#{autoCompleteUI.completeGender}" var="rv" itemLabel="#{rv.genderName}" itemValue="#{rv}" forceSelection="true" converter="GenderConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+										<p:column headerText="#{lang['gender']}" style="white-space: nowrap">#{rv.genderName}</p:column>
+									</p:autoComplete>
+									<p:outputLabel value="#{lang['gender']}" for="gender" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:autoComplete id="equity" value="#{employeesUI.employees.equity}" completeMethod="#{autoCompleteUI.completeEquity}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="EquityConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+										<p:column headerText="#{lang['equity']}" style="white-space: nowrap">#{rv.description}</p:column>
+									</p:autoComplete>
+									<p:outputLabel value="#{lang['equity']}" for="equity" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:autoComplete id="disability" value="#{employeesUI.employees.disability}" completeMethod="#{autoCompleteUI.completeDisabilityStatus}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="DisabilityStatusConvertor" dropdown="true" minQueryLength="3"
+										maxResults="10">
+										<p:column headerText="Disability" style="white-space: nowrap">#{rv.description}</p:column>
+									</p:autoComplete>
+									<p:outputLabel value="#{lang['disability']}" for="disability" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:autoComplete id="nationality" value="#{employeesUI.employees.nationality}" completeMethod="#{autoCompleteUI.completeNationality}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="NationalityConvertor" dropdown="true" minQueryLength="3"
+										maxResults="10">
+										<p:column headerText="#{lang['nationality']}" style="white-space: nowrap">#{rv.description}</p:column>
+									</p:autoComplete>
+									<p:outputLabel value="#{lang['nationality']}" for="nationality" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:autoComplete id="ofoCode" value="#{employeesUI.employees.ofoCode}" completeMethod="#{autoCompleteUI.completeOfoCodes}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="OfoCodesConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+										<p:column headerText="OfoCodes" style="white-space: nowrap">#{rv.description}</p:column>
+									</p:autoComplete>
+									<p:outputLabel value="#{lang['ofo.code']}" for="ofoCode" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="jobTitle" value="#{employeesUI.employees.jobTitle}" style="width:95%" />
+									<p:outputLabel value="#{lang['job.title']}" for="jobTitle" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:autoComplete id="occupationCategory" value="#{employeesUI.employees.occupationCategory}" completeMethod="#{autoCompleteUI.completeOccupationCategory}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="OccupationCategoryConvertor" dropdown="true"
+										minQueryLength="3" maxResults="10">
+										<p:column headerText="OccupationCategory" style="white-space: nowrap">#{rv.description}</p:column>
+									</p:autoComplete>
+									<p:outputLabel value="#{lang['occupation.category']}" for="occupationCategory" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:autoComplete id="highestQualTitle" value="#{employeesUI.employees.highestQualTitle}" completeMethod="#{autoCompleteUI.completeQualification}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor" dropdown="true"
+										minQueryLength="3" maxResults="10">
+										<p:column headerText="#{lang['highest.qual.type']}" style="white-space: nowrap">#{rv.description}</p:column>
+									</p:autoComplete>
+									<p:outputLabel value="#{lang['highest.qual.title']}" for="highestQualTitle" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:autoComplete id="highestQualType" value="#{employeesUI.employees.highestQualType}" completeMethod="#{autoCompleteUI.completeQualificationType}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="QualificationTypeConvertor" dropdown="true"
+										minQueryLength="3" maxResults="10">
+										<p:column headerText="#{lang['highest.qual.type']}" style="white-space: nowrap">#{rv.description}</p:column>
+									</p:autoComplete>
+									<p:outputLabel value="#{lang['highest.qual.type']}" for="highestQualType" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:autoComplete id="employmentType" value="#{employeesUI.employees.employmentType}" completeMethod="#{autoCompleteUI.completeEmploymentType}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="EmploymentTypeConvertor" dropdown="true" minQueryLength="3"
+										maxResults="10">
+										<p:column headerText="employmentType" style="white-space: nowrap">#{rv.description}</p:column>
+									</p:autoComplete>
+									<p:outputLabel value="#{lang['employment.type']}" for="employmentType" />
+								</h:panelGroup>
+								<h:panelGroup>
+									<p:selectOneMenu id="employmentStatus" value="#{employeesUI.employees.employmentStatus}" style="width:75%">
+										<p:ajax />
+										<f:selectItem itemLabel="---#{lang['select.employment.status']}---" itemValue="" noSelectionOption="true" styleClass="FontLight gray" />
+										<f:selectItems value="#{enumUI.employmentStatusEnumDD}" />
+									</p:selectOneMenu>
+								</h:panelGroup>
+								<h:panelGroup>
+									<p:selectBooleanCheckbox id="completedTraining" value="#{employeesUI.employees.completedTraining}">
+										<p:ajax />
+									</p:selectBooleanCheckbox>
+									<p:outputLabel value="#{lang['completed.training']}" for="completedTraining" />
+								</h:panelGroup>
+								<p:spacer />
+								<h:panelGroup>
+									<p:selectBooleanCheckbox id="plannedTraining" value="#{employeesUI.employees.plannedTraining}">
+										<p:ajax update="employeesInsForm:pivNonPivPnl" />
+									</p:selectBooleanCheckbox>
+									<p:outputLabel value="#{lang['planned.training']}" for="plannedTraining" />
+								</h:panelGroup>
+								<p:spacer />
+								<p:outputPanel id="pivNonPivPnl">
+									<h:panelGroup rendered="#{employeesUI.employees.plannedTraining}">
+										<p:selectOneMenu id="pivNonPiv" value="#{employeesUI.employees.pivotNonPivot}" style="width:75%">
+											<p:ajax event="change" update="employeesInsForm:otherDets" />
+											<f:selectItem itemLabel="---#{lang['select.one']}---" itemValue="" noSelectionOption="true" styleClass="FontLight gray" />
+											<f:selectItems value="#{enumUI.pivotalNonPivotalDD}" />
+										</p:selectOneMenu>
+									</h:panelGroup>
+								</p:outputPanel>
+							</p:panelGrid>
+
+							<p:outputPanel id="otherDets">
+								<p:panelGrid columns="2" style="width:100%" id="employeesInsGrid2" layout="grid" styleClass="ui-panelgrid-blank form-group">
+									<h:panelGroup styleClass="md-inputfield" rendered="#{employeesUI.employees.pivotNonPivot eq null}">
+										<p:autoComplete id="interventionType" value="#{employeesUI.employees.interventionType}" completeMethod="#{autoCompleteUI.completeInterventionType}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="InterventionTypeConvertor" dropdown="true"
+											minQueryLength="3" maxResults="10">
+											<p:column headerText="interventionType" style="white-space: nowrap">#{rv.description}</p:column>
+										</p:autoComplete>
+										<p:outputLabel value="#{lang['intervention.type']}" for="interventionType" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield" rendered="#{employeesUI.employees.pivotNonPivot ne null}">
+										<p:inputText id="interventionTitle" value="#{employeesUI.employees.interventionTitle}" style="width:95%" />
+										<p:outputLabel value="#{lang['intervention.title']}" for="interventionTitle" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield" rendered="#{employeesUI.employees.pivotNonPivot ne null}">
+										<p:autoComplete id="interventionLevel" value="#{employeesUI.employees.interventionLevel}" completeMethod="#{autoCompleteUI.completeInterventionLevel}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="InterventionLevelConvertor" dropdown="true"
+											minQueryLength="3" maxResults="10">
+											<p:column headerText="interventionLevel" style="white-space: nowrap">#{rv.description}</p:column>
+										</p:autoComplete>
+										<p:outputLabel value="#{lang['intervention.level']}" for="interventionLevel" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield" rendered="#{employeesUI.employees.pivotNonPivot ne null}">
+										<p:autoComplete id="nqfLevel" value="#{employeesUI.employees.nqfLevel}" completeMethod="#{nqflevelsUI.complete}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="NqfLevelsConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+											<p:column headerText="nqfLevel" style="white-space: nowrap">#{rv.description}</p:column>
+										</p:autoComplete>
+										<p:outputLabel value="#{lang['nqf.level']}" for="nqfLevel" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield" rendered="#{employeesUI.employees.pivotNonPivot ne null}">
+										<p:inputText id="saqaID" value="#{employeesUI.employees.saqaID}" style="width:95%" />
+										<p:outputLabel value="#{lang['saqa.id']}" for="saqaID" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield" rendered="#{employeesUI.employees.pivotNonPivot ne null}">
+										<p:inputText id="siteNumber" value="#{employeesUI.employees.siteNumber}" style="width:95%" />
+										<p:outputLabel value="#{lang['site.number']}" for="siteNumber" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield" rendered="#{employeesUI.employees.pivotNonPivot ne null}">
+										<p:inputText id="providerName" value="#{employeesUI.employees.providerName}" style="width:95%" />
+										<p:outputLabel value="#{lang['provider.name']}" for="providerName" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield" rendered="#{employeesUI.employees.pivotNonPivot ne null}">
+										<p:inputText id="etqa" value="#{employeesUI.employees.etqa}" style="width:95%" />
+										<p:outputLabel value="#{lang['etqa']}" for="etqa" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield" rendered="#{employeesUI.employees.pivotNonPivot ne null}">
+										<p:inputText id="accreditationNumber" value="#{employeesUI.employees.accreditationNumber}" style="width:95%" />
+										<p:outputLabel value="#{lang['accreditation.number']}" for="accreditationNumber" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield" rendered="#{employeesUI.employees.pivotNonPivot ne null}">
+										<p:inputNumber decimalPlaces="2" decimalSeparator="." thousandSeparator="," symbol="R " symbolPosition="p" id="interventionCost" value="#{employeesUI.employees.interventionCost}" style="width:95%" />
+										<p:outputLabel value="#{lang['intervention.cost']}" for="interventionCost" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield" rendered="#{employeesUI.employees.pivotNonPivot eq pivNonPiv.NonPivotal}">
+										<p:autoComplete id="sourceOfFunding" value="#{employeesUI.employees.sourceOfFunding}" completeMethod="#{autoCompleteUI.completeFundings}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="FundingConvertor" dropdown="true" minQueryLength="3"
+											maxResults="10">
+											<p:column headerText="sourceOfFunding" style="white-space: nowrap">#{rv.description}</p:column>
+										</p:autoComplete>
+										<p:outputLabel value="#{lang['source.of.funding']}" for="sourceOfFunding" />
+									</h:panelGroup>
+								</p:panelGrid>
+							</p:outputPanel>
+						</p:fieldset>
+						<div class="EmptyBox10" />
+						<p:panelGrid styleClass="ui-panelgrid-blank">
+							<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm @form" action="#{employeesUI.employeesInsert}" />
+							<p:spacer width="5" />
+							<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="@form" process="@this" action="#{employeesUI.prepareNew}">
+								<p:resetInput target="@form" />
+							</p:commandButton>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{employeesUI.dataModel}" filteredValue="#{employeesUI.employeesfilteredList}" id="employeesList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['sdl.number']}">
+								<h:outputText value="#{rowVar.sdlNumber}" />
+							</p:column>
+							<p:column headerText="#{lang['site.number']}">
+								<h:outputText value="#{rowVar.siteNumber}" />
+							</p:column>
+							<p:column headerText="#{lang['municipality']}">
+								<h:outputText value="#{rowVar.municipality}" />
+							</p:column>
+							<p:column headerText="#{lang['id.type']}">
+								<h:outputText value="#{rowVar.idType}" />
+							</p:column>
+							<p:column headerText="#{lang['first.name']}">
+								<h:outputText value="#{rowVar.firstName}" />
+							</p:column>
+							<p:column headerText="#{lang['last.name']}">
+								<h:outputText value="#{rowVar.lastName}" />
+							</p:column>
+							<p:column headerText="#{lang['date.of.birth']}">
+								<h:outputText value="#{rowVar.dateOfBirth}" />
+							</p:column>
+							<p:column headerText="#{lang['gender']}">
+								<h:outputText value="#{rowVar.gender}" />
+							</p:column>
+							<p:column headerText="#{lang['equity']}">
+								<h:outputText value="#{rowVar.equity}" />
+							</p:column>
+							<p:column headerText="#{lang['disability']}">
+								<h:outputText value="#{rowVar.disability}" />
+							</p:column>
+							<p:column headerText="#{lang['employment.type']}">
+								<h:outputText value="#{rowVar.employmentType}" />
+							</p:column>
+							<p:column headerText="#{lang['employment.status']}">
+								<h:outputText value="#{rowVar.employmentStatus}" />
+							</p:column>
+							<p:column headerText="#{lang['ofo.code']}">
+								<h:outputText value="#{rowVar.ofoCode}" />
+							</p:column>
+							<p:column headerText="#{lang['job.title']}">
+								<h:outputText value="#{rowVar.jobTitle}" />
+							</p:column>
+							<p:column headerText="#{lang['occupation.category']}">
+								<h:outputText value="#{rowVar.occupationCategory}" />
+							</p:column>
+							<p:column headerText="#{lang['highest.qual.title']}">
+								<h:outputText value="#{rowVar.highestQualTitle}" />
+							</p:column>
+							<p:column headerText="#{lang['passport.number']}">
+								<h:outputText value="#{rowVar.passportNumber}" />
+							</p:column>
+							<p:column headerText="#{lang['completed.training']}">
+								<h:outputText value="#{rowVar.completedTraining}" />
+							</p:column>
+							<p:column headerText="#{lang['planned.training']}">
+								<h:outputText value="#{rowVar.plannedTraining}" />
+							</p:column>
+							<p:column headerText="#{lang['intervention.type']}">
+								<h:outputText value="#{rowVar.interventionType}" />
+							</p:column>
+							<p:column headerText="#{lang['nqf.level']}">
+								<h:outputText value="#{rowVar.nqfLevel}" />
+							</p:column>
+							<p:column headerText="#{lang['wsp']}">
+								<h:outputText value="#{rowVar.wsp}" />
+							</p:column>
+							<p:column headerText="#{lang['saqa.id']}">
+								<h:outputText value="#{rowVar.saqaID}" />
+							</p:column>
+							<p:column headerText="#{lang['intervention.title']}">
+								<h:outputText value="#{rowVar.interventionTitle}" />
+							</p:column>
+							<p:column headerText="#{lang['highest.qual.type']}">
+								<h:outputText value="#{rowVar.highestQualType}" />
+							</p:column>
+							<p:column headerText="#{lang['provider.name']}">
+								<h:outputText value="#{rowVar.providerName}" />
+							</p:column>
+							<p:column headerText="#{lang['etqa']}">
+								<h:outputText value="#{rowVar.etqa}" />
+							</p:column>
+							<p:column headerText="#{lang['source.of.funding']}">
+								<h:outputText value="#{rowVar.sourceOfFunding}" />
+							</p:column>
+							<p:column headerText="#{lang['intervention.level']}">
+								<h:outputText value="#{rowVar.interventionLevel}" />
+							</p:column>
+							<p:column headerText="#{lang['createDate']}">
+								<h:outputText value="#{rowVar.createDate}" />
+							</p:column>
+							<p:column headerText="#{lang['intervention.cost']}">
+								<h:outputText value="#{rowVar.interventionCost}" />
+							</p:column>
+							<p:column headerText="#{lang['accreditation.number']}">
+								<h:outputText value="#{rowVar.accreditationNumber}" />
+							</p:column>
+							<p:column headerText="#{lang['rsa.id.number']}">
+								<h:outputText value="#{rowVar.rsaIDNumber}" />
+							</p:column>
+							<p:column width="80">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":employeesInsForm">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{employeesUI.employees}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:employeesList" action="#{employeesUI.employeesDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{employeesUI.employees}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+	<!-- 
+gender = gender
+disability = disability
+dateOfBirth = dateOfBirth
+passportNumber = passportNumber
+completedTraining = completedTraining
+plannedTraining = plannedTraining
+idType = idType
+lastName = lastName
+interventionType = interventionType
+nqfLevel = nqfLevel
+highestQualTitle = highestQualTitle
+siteNumber = siteNumber
+wsp = wsp
+saqaID = saqaID
+equity = equity
+employmentType = employmentType
+ofoCode = ofoCode
+interventionTitle = interventionTitle
+employmentStatus = employmentStatus
+highestQualType = highestQualType
+providerName = providerName
+etqa = etqa
+occupationCategory = occupationCategory
+municipality = municipality
+sourceOfFunding = sourceOfFunding
+interventionLevel = interventionLevel
+sdlNumber = sdlNumber
+createDate = createDate
+interventionCost = interventionCost
+jobTitle = jobTitle
+firstName = firstName
+accreditationNumber = accreditationNumber
+rsaIDNumber = rsaIDNumber
+
+-->
+</ui:composition>

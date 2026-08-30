@@ -1,0 +1,216 @@
+<ui:composition xmlns:o="http://omnifaces.org/ui" xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<p:fieldset legend="Main Company Profile Information" rendered="#{trainingproviderUI.company.doneSearch}">
+		<span class="FontBold"> <i class="fa fa-exclamation-circle" aria-hidden="true"></i> Main Company Information. If alteration required please contact assigned: Skills Development Facilitator (SDF) or merSETA support for assistance.
+		</span>
+		<div class="EmptyBox10" />
+		<div class="EmptyBox10" />
+		<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" id="xxxG">
+			<h:panelGroup styleClass="md-inputfield">
+				<p:inputText id="companyName" value="#{trainingproviderUI.company.companyName}" style="width:95%" required="false" requiredMessage="#{lang['enter.your.company.name']}" disabled="true">
+					<p:ajax />
+				</p:inputText>
+				<p:outputLabel value="#{lang['companyName']}" for="companyName" />
+			</h:panelGroup>
+			<h:panelGroup styleClass="md-inputfield">
+				<p:inputText id="tradingNameComp" value="#{trainingproviderUI.company.tradingName}" style="width:95%" required="false" requiredMessage="#{lang['enter.the.trading.name']}" disabled="true">
+					<p:ajax />
+				</p:inputText>
+				<p:outputLabel value="#{lang['tradingName']}" for="tradingNameComp" />
+			</h:panelGroup>
+			<h:panelGroup styleClass="md-inputfield">
+				<p:inputText id="companyRegNumber" value="#{trainingproviderUI.company.companyRegistrationNumber}" style="width:95%" required="false" requiredMessage="#{lang['enter.company.number']}" disabled="true">
+					<p:ajax />
+				</p:inputText>
+				<p:outputLabel value="#{lang['companyRegistrationNumber']}" for="companyRegNumber" />
+			</h:panelGroup>
+			<h:panelGroup styleClass="md-inputfield" rendered="#{trainingproviderUI.company.existingCompany}">
+				<p:inputText id="companyLevyNumber" value="#{trainingproviderUI.company.levyNumber}" style="width:95%" required="false" requiredMessage="#{lang['enter.levy.number']}" disabled="true" />
+				<p:outputLabel value="#{lang['levyNumber']}" for="companyLevyNumber" />
+			</h:panelGroup>
+			<h:panelGroup styleClass="md-inputfield">
+				<p:inputText id="compEmail" value="#{trainingproviderUI.company.email}" style="width:95%" required="false" requiredMessage="#{lang['enter.email.address']}" disabled="true">
+					<p:ajax />
+				</p:inputText>
+				<p:outputLabel value="#{lang['email.address']}" for="compEmail" />
+			</h:panelGroup>
+			<h:panelGroup styleClass="md-inputfield">
+				<p:inputText id="companyWebsiteEntry" value="#{trainingproviderUI.company.companyWebsite}" style="width:95%" required="false" requiredMessage="#{lang['company.website.required']}" disabled="true">
+					<p:ajax />
+				</p:inputText>
+				<p:outputLabel value="#{lang['company.website']}" for="companyWebsiteEntry" />
+			</h:panelGroup>
+			<h:panelGroup>
+				<div style="margin-top: -20px !important;">
+					<p:outputLabel value="#{lang['sicCode']}" for="sicCode" styleClass="gray Fs12" style="margin-left:5px">
+					</p:outputLabel>
+				</div>
+				<div>
+					<p:autoComplete disabled="true" id="sicCode" value="#{trainingproviderUI.company.sicCode}" style="width: 95%" completeMethod="#{autoCompleteUI.completeSIC}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SICCodeConvertor" dropdown="true"
+						minQueryLength="1" maxResults="10" required="false" requiredMessage="#{lang['sic.code.error']}">
+						<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+						<p:column headerText="#{lang['description']}" style="white-space: nowrap">#{rv.description}</p:column>
+						<p:ajax event="itemSelect" />
+					</p:autoComplete>
+				</div>
+			</h:panelGroup>
+		</p:panelGrid>
+		<h:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" id="pgCompAddress" rendered="#{trainingproviderUI.company.doneSearch}">
+			<ui:include src="/pages/includes/tpAddressesForSites.xhtml">
+			</ui:include>
+		</h:panelGrid>
+		<c:if test="#{trainingproviderUI.setmisValidiationHoldingCompany ne null and trainingproviderUI.setmisValidiationHoldingCompany ne ''}">
+			<p:fieldset legend="Main Company Profile Information" styleClass="error Fs12">
+				<p:outputLabel value="#{trainingproviderUI.setmisValidiationHoldingCompany}" escape="false"></p:outputLabel>
+			</p:fieldset>
+		</c:if>
+	</p:fieldset>
+
+	<p:fieldset legend="Training Site Assignment" rendered="#{trainingproviderUI.company.doneSearch and trainingproviderUI.applicationForSiteDisplay}">
+		<h:panelGroup rendered="#{!trainingproviderUI.company.regDone}">
+			<p:outputLabel for="assignSiteSeletCheckBox" value="Assign Training Site To Application?" />
+			<p:spacer width="45"></p:spacer>
+			<p:selectBooleanCheckbox id="assignSiteSeletCheckBox" value="#{trainingproviderUI.linkSiteToApplication}">
+				<p:ajax update=":companyInsForm:siteAssignedmentPanel :companyInsForm:siteAssignedmentSelectionPanel" event="change" listener="#{trainingproviderUI.selectIfTrainingSiteAssignment}" />
+			</p:selectBooleanCheckbox>
+		</h:panelGroup>
+
+		<p:outputPanel id="siteAssignedmentPanel">
+			<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{trainingproviderUI.linkSiteToApplication and !trainingproviderUI.company.regDone}">
+				<p:commandButton process="@this" value="New Training Site" icon="fa fa-plus" update=":companyInsForm:siteAssignedmentSelectionPanel" action="#{trainingproviderUI.prepNewSite}" />
+				<ui:include src="/pages/includes/filterGuide.xhtml" />
+				<p:dataTable var="rvSite" id="trainingSiteDM" value="#{trainingproviderUI.trainingSiteDataModel}" rowKey="#{rvSite.id}" paginator="true" rows="5" paginatorPosition="bottom"
+					paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" reflow="true" lazy="true">
+					<f:facet name="header"> Available Training Sites For Selection </f:facet>
+					<p:column headerText="NSDMS REF ID" sortBy="#{rvSite.id}">
+						<p:outputLabel value="#{rvSite.id}" />
+					</p:column>
+					<p:column headerText="Site Name" sortBy="#{rvSite.siteName}" filterBy="#{rvSite.siteName}">
+						<p:outputLabel value="#{rvSite.siteName}" />
+					</p:column>
+					<p:column headerText="Region">
+						<p:outputLabel value="#{rvSite.regionTown.region.description}" rendered="#{rvSite.regionTown ne null}" />
+						<p:outputLabel value="Unable to locate region" rendered="#{rvSite.regionTown eq null}" />
+					</p:column>
+					<p:column headerText="Action" exportable="false" style="width:5%">
+						<p:commandButton process="@this" update=":companyInsForm:siteAssignedmentSelectionPanel" title="Select Site For Application" icon="fa fa-check" action="#{trainingproviderUI.selectSite}">
+							<f:setPropertyActionListener value="#{rvSite}" target="#{trainingproviderUI.assignedTrainingSite}" />
+						</p:commandButton>
+					</p:column>
+				</p:dataTable>
+			</p:panelGrid>
+		</p:outputPanel>
+		<p:outputPanel id="siteAssignedmentSelectionPanel">
+			<c:if test="#{trainingproviderUI.assignedTrainingSite ne null and trainingproviderUI.assignedTrainingSite.id ne null}">
+				<h3>Training Site Selected (NSDMS REF ID: #{trainingproviderUI.assignedTrainingSite.id})</h3>
+
+				<p:commandButton id="cancelSiteBtn" icon="fa fa-times" value="Cancel Selection" update=":companyInsForm:siteAssignedmentSelectionPanel" action="#{trainingproviderUI.clearSelectionOfSite}" rendered="#{!trainingproviderUI.company.regDone}" />
+				<div class="EmptyBox10" />
+
+				<p:panel header="Training Site Information">
+					<div class="EmptyBox10"></div>
+					<c:if test="#{trainingproviderUI.primarySdpLinked}">
+						<span class="FontBold"> <i class="fa fa-exclamation-circle" aria-hidden="true"></i> Information display only. To alter information: contact Primary Skills Development Provider Contact (Primary SDP) assigned to site or contact merSETA support.
+						</span>
+						<div class="EmptyBox10" />
+						<ui:include src="/pages/includes/training_site_info_display.xhtml">
+							<ui:param name="trainingSite" value="#{trainingproviderUI.assignedTrainingSite}" />
+						</ui:include>
+						<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+							<p:outputPanel rendered="#{trainingproviderUI.assignedTrainingSite.residentialAddress ne null}">
+								<ui:include src="/pages/includes/addressInformation.xhtml">
+									<ui:param name="header" value="#{lang['residentialAddress']}" />
+									<ui:param name="address" value="#{trainingproviderUI.assignedTrainingSite.residentialAddress}" />
+								</ui:include>
+							</p:outputPanel>
+							<p:outputPanel rendered="#{trainingproviderUI.assignedTrainingSite.postalAddress ne null}">
+								<ui:include src="/pages/includes/addressInformation.xhtml">
+									<ui:param name="header" value="Postal Address" />
+									<ui:param name="address" value="#{trainingproviderUI.assignedTrainingSite.postalAddress}" />
+								</ui:include>
+							</p:outputPanel>
+						</p:panelGrid>
+					</c:if>
+					<c:if test="#{!trainingproviderUI.primarySdpLinked}">
+						<ui:include src="/pages/includes/training_site_info_alteration.xhtml">
+							<ui:param name="trainingSite" value="#{trainingproviderUI.assignedTrainingSite}" />
+						</ui:include>
+						<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+							<p:fieldset legend="#{lang['residentialAddress']}" style="margin-top: 20px">
+								<ui:include src="/pages/includes/address_alteration_with_geo.xhtml">
+									<ui:param name="address" value="#{trainingproviderUI.assignedTrainingSite.residentialAddress}" />
+									<ui:param name="disableEntry" value="#{trainingproviderUI.company.regDone}" />
+								</ui:include>
+							</p:fieldset>
+							<p:fieldset legend="#{lang['postalAddress']}" style="margin-top: 20px">
+								<ui:include src="/pages/includes/address_alteration_postal.xhtml">
+									<ui:param name="address" value="#{trainingproviderUI.assignedTrainingSite.postalAddress}" />
+									<ui:param name="disableEntry" value="#{trainingproviderUI.company.regDone}" />
+								</ui:include>
+							</p:fieldset>
+						</p:panelGrid>
+					</c:if>
+				</p:panel>
+			</c:if>
+			<c:if test="#{trainingproviderUI.assignedTrainingSite ne null and trainingproviderUI.assignedTrainingSite.id eq null}">
+				<h3>New Training Site Action Selected.</h3>				
+				<div class="EmptyBox10" />
+				<p:commandButton process="@this" id="cancelNewSiteBtn" icon="fa fa-times" value="Cancel Selection" update=":companyInsForm:siteAssignedmentSelectionPanel" action="#{trainingproviderUI.clearSelectionOfSite}" rendered="#{!trainingproviderUI.company.regDone}" />
+				<div class="EmptyBox10" />
+				<p:panel header="Training Site Information">
+					<ui:include src="/pages/includes/training_site_info_alteration.xhtml">
+						<ui:param name="trainingSite" value="#{trainingproviderUI.assignedTrainingSite}" />
+					</ui:include>
+					<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+						<p:fieldset legend="#{lang['residentialAddress']}" style="margin-top: 20px">
+							<ui:include src="/pages/includes/address_alteration_with_geo.xhtml">
+								<ui:param name="address" value="#{trainingproviderUI.assignedTrainingSite.residentialAddress}" />
+								<ui:param name="disableEntry" value="#{trainingproviderUI.company.regDone}" />
+							</ui:include>
+						</p:fieldset>
+						<p:fieldset legend="#{lang['postalAddress']}" style="margin-top: 20px">
+							<ui:include src="/pages/includes/address_alteration_postal_with_same_func.xhtml">
+								<ui:param name="address" value="#{trainingproviderUI.assignedTrainingSite.postalAddress}" />
+								<ui:param name="disableEntry" value="#{trainingproviderUI.company.regDone}" />
+							</ui:include>
+						</p:fieldset>
+					</p:panelGrid>
+				</p:panel>
+			</c:if>
+			<c:if test="#{trainingproviderUI.setmisValidiationSite ne null and trainingproviderUI.setmisValidiationSite ne ''}">
+				<p:fieldset legend="Training Site Validation Error(s)" styleClass="error Fs12">
+					<p:outputLabel value="#{trainingproviderUI.setmisValidiationSite}" escape="false"></p:outputLabel>
+				</p:fieldset>
+			</c:if>
+		</p:outputPanel>
+	</p:fieldset>
+
+	<h:panelGroup id="docList" rendered="#{trainingproviderUI.company.docs.size() gt 0}">
+		<br />
+		<span class="FontBold"> <i class="fa fa-exclamation-circle" aria-hidden="true"></i> #{lang['please.upload.the.following.compulsory.documents']}
+		</span>
+		<br />
+		<div class="ui-g dashboard">
+			<div class="ui-g-12">
+				<p:repeat var="rc" value="#{trainingproviderUI.company.docs}" varStatus="x">
+					<div class="ui-g-12 ui-md-6 ui-lg-3">
+						<div class="ui-g card colorbox #{rc.originalFname eq null ? 'colorbox-1' : 'colorbox-5'}">
+							<div class="ui-g-4">
+								<i class="material-icons">#{rc.originalFname eq null ? 'cloud_upload' : 'check_circle'}</i>
+							</div>
+							<div class="ui-g-8">
+								<span class="colorbox-name">#{rc.configDoc.name}</span> <span class="colorbox-count"> <p:commandButton value="#{rc.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" styleClass="#{rc.originalFname eq null ? 'red-btn' : 'green-btn'} flat" process="@this"
+										oncomplete="PF('dlgUpload').show()" update=":uploadForm">
+										<f:setPropertyActionListener value="#{rc}" target="#{trainingproviderUI.doc}" />
+									</p:commandButton>
+								</span>
+							</div>
+						</div>
+					</div>
+				</p:repeat>
+			</div>
+		</div>
+	</h:panelGroup>
+
+	<p:commandButton id="btnComp" process="companyGrid1" value="#{lang['continue']}" rendered="#{trainingproviderUI.company.doneSearch}" update="@form" icon="ui-icon-fast-forward" action="#{trainingproviderUI.doneCompanyBit}" iconPos="right" />
+
+</ui:composition>

@@ -1,0 +1,248 @@
+@page "/finance/levy-rebates"
+@inject IFinanceService FinanceService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+<div class="d-flex justify-space-between align-center mb-4">
+    <div>
+        <MudText Typo="Typo.h5" Class="font-weight-bold">Mandatory Grant 20% Rebate Payout Engine</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">Statutory 20% Skills Development Levy rebate payouts for employers submitting compliant WSP/ATR</MudText>
+    </div>
+    <div class="d-flex gap-2">
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Description" OnClick="@(() => Navigation.NavigateTo("/finance/grants"))">
+            Grant MOAs & Tranches
+        </MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Calculate" OnClick="CalculateRebates">
+            Calculate FY @_selectedFinYear Rebates
+        </MudButton>
+    </div>
+</div>
+
+<!-- Summary Metrics -->
+<MudGrid Class="mb-4" Spacing="3">
+    <MudItem xs="12" sm="6" md="3">
+        <MudCard Elevation="2">
+            <MudCardContent Class="d-flex align-center gap-3">
+                <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Large">
+                    <MudIcon Icon="@Icons.Material.Filled.ReceiptLong" />
+                </MudAvatar>
+                <div>
+                    <MudText Typo="Typo.h5" Class="fw-bold">@_disbursements.Count</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Total Calculated Rebates</MudText>
+                </div>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="3">
+        <MudCard Elevation="2">
+            <MudCardContent Class="d-flex align-center gap-3">
+                <MudAvatar Color="Color.Success" Variant="Variant.Filled" Size="Size.Large">
+                    <MudIcon Icon="@Icons.Material.Filled.AccountBalance" />
+                </MudAvatar>
+                <div>
+                    <MudText Typo="Typo.h6" Class="fw-bold text-success">@(_disbursements.Sum(d => d.CalculatedRebateAmount).ToString("C0"))</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Total 20% Rebates Entitlement</MudText>
+                </div>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="3">
+        <MudCard Elevation="2">
+            <MudCardContent Class="d-flex align-center gap-3">
+                <MudAvatar Color="Color.Warning" Variant="Variant.Filled" Size="Size.Large">
+                    <MudIcon Icon="@Icons.Material.Filled.Pending" />
+                </MudAvatar>
+                <div>
+                    <MudText Typo="Typo.h5" Class="fw-bold text-warning">@(_disbursements.Count(d => d.DisbursementStatusCode == "Calculated"))</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Pending Finance Approval</MudText>
+                </div>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="3">
+        <MudCard Elevation="2">
+            <MudCardContent Class="d-flex align-center gap-3">
+                <MudAvatar Color="Color.Info" Variant="Variant.Filled" Size="Size.Large">
+                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" />
+                </MudAvatar>
+                <div>
+                    <MudText Typo="Typo.h6" Class="fw-bold text-info">@(_disbursements.Where(d => d.DisbursementStatusCode == "Paid").Sum(d => d.CalculatedRebateAmount).ToString("C0"))</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Total Payouts Released</MudText>
+                </div>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+<MudPaper Elevation="1" Class="pa-4 mb-4">
+    <!-- Filter bar -->
+    <div class="d-flex flex-wrap gap-4 align-center justify-space-between mb-3">
+        <div class="d-flex align-center gap-3 flex-grow-1" style="max-width: 600px;">
+            <MudTextField @bind-Value="_searchString"
+                          Placeholder="Search by Employer Name, SDL Number, Disbursement Ref..."
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          IconSize="Size.Medium"
+                          Class="mt-0"
+                          Immediate="true"
+                          Clearable="true" />
+        </div>
+        <div class="d-flex align-center gap-2">
+            <MudSelect T="int" Value="_selectedFinYear" ValueChanged="OnFinYearChanged" Label="Financial Year" Variant="Variant.Outlined" Dense="true" Style="min-width: 140px;">
+                <MudSelectItem Value="2026">2026/2027</MudSelectItem>
+                <MudSelectItem Value="2025">2025/2026</MudSelectItem>
+            </MudSelect>
+        </div>
+    </div>
+
+    @if (_loading)
+    {
+        <div class="d-flex justify-center pa-8">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+        </div>
+    }
+    else
+    {
+        <MudTable T="MandatoryGrantDisbursement" Items="@FilteredDisbursements" Hover="true" Striped="true" Elevation="0">
+            <HeaderContent>
+                <MudTh>Reference #</MudTh>
+                <MudTh>Employer / SDL</MudTh>
+                <MudTh>Fin Year</MudTh>
+                <MudTh>Levies Received</MudTh>
+                <MudTh>20% Rebate Amount</MudTh>
+                <MudTh>Banking Details</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh Style="text-align: right;">Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Reference #">
+                    <span class="font-monospace fw-bold">@context.DisbursementReference</span>
+                </MudTd>
+                <MudTd DataLabel="Employer">
+                    <div>
+                        <div class="fw-semibold">@(context.Organisation?.CompanyName ?? "Employer")</div>
+                        <div class="text-muted small">SDL: @(context.Organisation?.SdlNumber ?? "N/A")</div>
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="Fin Year">@context.FinYear</MudTd>
+                <MudTd DataLabel="Levies">@context.LeviesReceivedAmount.ToString("C")</MudTd>
+                <MudTd DataLabel="20% Rebate">
+                    <span class="fw-bold text-success">@context.CalculatedRebateAmount.ToString("C")</span>
+                </MudTd>
+                <MudTd DataLabel="Banking">
+                    <div class="small text-muted font-monospace">@(context.BankAccountSnapshot ?? "Verified")</div>
+                </MudTd>
+                <MudTd DataLabel="Status">
+                    <MudChip T="string" Color="@GetStatusColor(context.DisbursementStatusCode)" Size="Size.Small" Variant="Variant.Filled">
+                        @context.DisbursementStatusCode
+                    </MudChip>
+                </MudTd>
+                <MudTd DataLabel="Actions" Style="text-align: right;">
+                    <div class="d-flex justify-end gap-1">
+                        @if (context.DisbursementStatusCode == "Calculated")
+                        {
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.ThumbUp" OnClick="@(() => ApproveDisbursement(context.Id))">
+                                Approve
+                            </MudButton>
+                        }
+                        else if (context.DisbursementStatusCode == "Approved")
+                        {
+                            <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Filled.Payment" OnClick="@(() => PayoutDisbursement(context.Id))">
+                                Payout
+                            </MudButton>
+                        }
+                    </div>
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <div class="pa-8 text-center text-muted">
+                    <MudIcon Icon="@Icons.Material.Filled.Savings" Size="Size.Large" Class="mb-2" />
+                    <MudText Typo="Typo.body1">No mandatory grant disbursements generated for FY @_selectedFinYear.</MudText>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Success" Class="mt-3" OnClick="CalculateRebates">
+                        Calculate 20% Rebates Now
+                    </MudButton>
+                </div>
+            </NoRecordsContent>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
+            </PagerContent>
+        </MudTable>
+    }
+</MudPaper>
+
+@code {
+    private List<MandatoryGrantDisbursement> _disbursements = new();
+    private bool _loading = true;
+    private int _selectedFinYear = 2026;
+    private string _searchString = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _loading = true;
+        _disbursements = await FinanceService.GetMandatoryDisbursementsAsync(_selectedFinYear);
+        _loading = false;
+    }
+
+    private async Task OnFinYearChanged(int year)
+    {
+        _selectedFinYear = year;
+        await LoadData();
+    }
+
+    private async Task CalculateRebates()
+    {
+        _loading = true;
+        var count = await FinanceService.CalculateMandatoryGrantRebatesAsync(_selectedFinYear, "Finance Admin");
+        Snackbar.Add($"Calculated {count} mandatory grant 20% rebates for compliant WSP submissions.", Severity.Success);
+        await LoadData();
+    }
+
+    private async Task ApproveDisbursement(int id)
+    {
+        var batch = $"MG-BATCH-{_selectedFinYear}-Q{DateTime.Now.Month / 4 + 1}";
+        await FinanceService.ApproveMandatoryDisbursementAsync(id, "cfo@merseta.org.za", batch);
+        Snackbar.Add($"Mandatory rebate approved for batch '{batch}'.", Severity.Success);
+        await LoadData();
+    }
+
+    private async Task PayoutDisbursement(int id)
+    {
+        await FinanceService.ProcessMandatoryDisbursementPayoutAsync(id, "finance@merseta.org.za");
+        Snackbar.Add("Mandatory rebate disbursement marked as PAID via EFT release.", Severity.Success);
+        await LoadData();
+    }
+
+    private IEnumerable<MandatoryGrantDisbursement> FilteredDisbursements
+    {
+        get
+        {
+            var query = _disbursements.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(_searchString))
+            {
+                var s = _searchString.Trim();
+                query = query.Where(d =>
+                    (d.DisbursementReference != null && d.DisbursementReference.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    (d.Organisation?.CompanyName != null && d.Organisation.CompanyName.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    (d.Organisation?.SdlNumber != null && d.Organisation.SdlNumber.Contains(s, StringComparison.OrdinalIgnoreCase)));
+            }
+
+            return query;
+        }
+    }
+
+    private Color GetStatusColor(string status) => status switch
+    {
+        "Paid" => Color.Success,
+        "Approved" => Color.Info,
+        "Calculated" => Color.Warning,
+        "On Hold" => Color.Error,
+        _ => Color.Default
+    };
+}

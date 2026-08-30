@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+<h:head>
+	<f:facet name="first">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" />
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+		<meta http-equiv="Pragma" content="no-cache" />
+		<meta http-equiv="Expires" content="0" />
+	</f:facet>
+	<title>merSETA</title>
+	<h:outputScript name="js/ripple.js" library="ultima-layout" />
+	<h:outputScript name="js/layout.js" library="ultima-layout" />
+
+	<style type="text/css">
+.ui-g-12.loginLogo {
+	margin-top: -40px;
+}
+</style>
+</h:head>
+
+<h:body styleClass="login-body">
+	<div class="card login-panel ui-fluid" style="padding-bottom: 0px">
+		<div class="ui-g">
+			<p:growl showDetail="false" sticky="false" id="growl">
+				<p:autoUpdate />
+			</p:growl>
+			<p:importEnum type="haj.com.entity.enums.YesNoEnum"></p:importEnum>
+			<h:form id="logonForm">
+				<h:inputHidden value="#{sessionUI.latitude}" id="latitude" />
+				<h:inputHidden value="#{sessionUI.longitude}" id="longitude" />
+
+				<div class="ui-g-12 loginLogo">
+					<p:graphicImage name="images/logo.png" library="hls" width="80%" />
+				</div>
+				<div class="ui-g-12">
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="emailLogin" value="#{logonUI.email}" required="true" requiredMessage="#{lang['enter.your.email']}" />
+						<label>#{lang['email']}</label>
+					</h:panelGroup>
+				</div>
+				<div class="ui-g-12">
+					<h:panelGroup styleClass="md-inputfield">
+						<p:password id="passLogin" value="#{logonUI.inputPassword}" feedback="false" required="true" requiredMessage="#{lang['enter.your.password']}" />
+						<label>#{lang['password']}</label>
+					</h:panelGroup>
+				</div>
+				<c:if test="#{logonUI.impersonateUser}">
+					<div class="ui-g-12">
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText id="impersonatedEmail" value="#{logonUI.impersonatedEmail}" required="true"  requiredMessage="#{lang['enter.user.to.impersonate']}" />
+							<label>Impersonate Email</label>
+						</h:panelGroup>
+					</div>
+				</c:if>
+				<div class="ui-g-12">
+					<p:commandButton id="login" value="#{lang['login']}" icon="ui-icon-person" action="#{logonUI.logon}" update="@form" />
+					<p:commandButton disabled="#{logonUI.accessRestricted}" id="forgotPW" value="#{lang['forgot.password']}" icon="ui-icon-help" onclick="PF('dlgPwd').show()" update=":usersPwdForm:usersPwdGrid" styleClass="secondary" immediate="true" />
+					<p:commandButton disabled="#{logonUI.accessRestricted}" id="register1" value="#{lang['company.reg']}" icon="ui-icon-business" style="background: #777776 !important;" immediate="true" onclick="PF('dlgPopi').show()" rendered="#{not sessionUI.acceptPopi}" />
+					<p:commandButton disabled="#{logonUI.accessRestricted}" id="register2" value="#{lang['company.reg']}" icon="ui-icon-business" style="background: #777776 !important;" immediate="true" onclick="PF('goToregistrationDLG').show()" rendered="#{sessionUI.acceptPopi}" />
+					<p:commandButton disabled="#{logonUI.accessRestricted}" id="companyReq" style="width: 100%" icon="ui-icon-error" value="SDF Change Request" action="accountissues.jsf?faces-redirect=true" immediate="true" rendered="true" />
+					<p:commandButton disabled="#{logonUI.accessRestricted}" id="sdpChange" style="width: 100%; background: #777776 !important;" icon="ui-icon-error"  value="SDP Change Request" action="primarySdpDelink.jsf?faces-redirect=true" immediate="true" rendered="true" />
+					<p:commandButton disabled="#{logonUI.accessRestricted}" id="resendConfirmEmail" value="#{lang['resend.confirm.email']}" icon="ui-icon-send" onclick="PF('resendDLG').show()" update=":resendForm" styleClass="amber-btn" immediate="true" action="#{resendConfirmEmailUI.initUser}" />
+					<br /> <br />
+					<p:commandLink onclick="PF('dlgOffices').show()" process="@this" update=":genOfficesForm">
+						<i class="fa fa-phone Fs20 black" aria-hidden="true"></i>
+						<i class="black Fs20">#{lang['contact.us']}</i>
+					</p:commandLink>
+					<a href="mailto:complaint@merseta.org.za">complaint@merseta.org.za</a>
+
+					<p:tooltip for="login" value="Login Button"></p:tooltip>
+				</div>
+			</h:form>
+			<c:if test="false">
+				<div class="ui-g-12">
+					<h:form>
+						<p:selectOneMenu value="#{languageUI.localeCode}" onchange="submit()" valueChangeListener="#{languageUI.countryLocaleCodeChanged}" immediate="true">
+							<f:selectItems value="#{languageUI.countriesInMap}" />
+						</p:selectOneMenu>
+						<br />
+					</h:form>
+				</div>
+			</c:if>
+		</div>
+	</div>
+
+	<p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+		<h:form>
+			<p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="fa fa-check" />
+			<p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="fa fa-times" />
+		</h:form>
+	</p:confirmDialog>
+
+	<p:ajaxStatus style="position:fixed;right:40px;bottom:7px">
+		<f:facet name="start">
+			<p:graphicImage name="images/477.gif" library="hls" />
+		</f:facet>
+
+		<f:facet name="complete">
+			<h:outputText value="" />
+		</f:facet>
+	</p:ajaxStatus>
+
+	<p:dialog header="Update User Information" position="top" fitViewport="true" dynamic="true" responsive="true" widgetVar="dlgUserInfo" resizable="false" hideEffect="clip" showEffect="clip" id="dialogUserInfo" appendTo="@(body)" modal="true" width="70%" height="80vh">
+		<h:form id="userUpdateForm">
+
+			<p:outputLabel value="Dear NSDMS User," />
+			<br />
+			<p:outputLabel
+				value="As part of our system enhancements/maintenance, we are currently reviewing user profile details and to ensure that they comply with system rules. If you see this message, it means that we require that you read the message below that indicates what may need to be resolved against your user details. Please note that you will need to update the details before proceeding with your login. Once updated, you can continue transacting as normal." />
+			<br />
+			<p:outputLabel value="Thank you for your understanding and completing this important task. If you need any assistance, please may you contact your Regional Office or Call Centre for further assistance." />
+			<br />
+			<br />
+			<p:outputLabel value="#{sessionUI.validationErrors}" escape="false" />
+
+			<p:tabView>
+				<p:tab title="User Information">
+					<p:panelGrid columns="2" style="width: 100%;" styleClass="ui-panelgrid-blank">
+						<h:panelGroup styleClass="md-inputfield" rendered="#{logonUI.firstNameFailed}">
+							<p:inputText id="firstName" value="#{logonUI.userUpdateInfo.firstName}" style="width:95%" required="true" requiredMessage="#{lang['enter.your.name']}" />
+							<p:outputLabel value="#{lang['first.name']}:" for="firstName" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield" rendered="#{logonUI.middleNameFailed}">
+							<p:inputText id="middleName" value="#{logonUI.userUpdateInfo.middleName}" style="width:95%" required="true" requiredMessage="Enter your middle name" />
+							<p:outputLabel value="Middle Name:" for="middleName" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield" rendered="#{logonUI.lastNameFailed}">
+							<p:inputText id="lastName" value="#{logonUI.userUpdateInfo.lastName}" style="width:95%" required="true" requiredMessage="Enter your last name" />
+							<p:outputLabel value="Last Name:" for="lastName" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield" rendered="#{logonUI.passportNumberFailed}">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="passportNumCriteria" value="#{logonUI.userUpdateInfo.passportNumber}" style="width:95%" maxlength="#{logonUI.MAX_PASSPORT_NUMBER}" required="true" requiredMessage="#{lang['passport.number']}" />
+								<p:outputLabel value="#{lang['passport.number']}" for="passportNumCriteria" />
+							</h:panelGroup>
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield" rendered="#{logonUI.rsaIdNumberFailed}">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="rsaIdCriteria" value="#{logonUI.userUpdateInfo.rsaIDNumber}" style="width:95%" maxlength="#{logonUI.MAX_RSA_ID_NUMBER}" required="true" requiredMessage="#{lang['passport.number']}" />
+								<p:outputLabel value="#{lang['rsa.id.number']}" for="rsaIdCriteria" />
+							</h:panelGroup>
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield" rendered="false">
+							<p:inputText id="userEmail" value="#{logonUI.userUpdateInfo.email}" maxlength="#{logonUI.MAX_EMAIL_SIZE}" style="width:95%" required="true" requiredMessage="#{lang['enter.your.email.address']}" />
+							<p:outputLabel value="#{lang['emails']}:" for="userEmail" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield" rendered="#{logonUI.telNumberFailed}">
+							<p:inputMask id="telNumber" value="#{logonUI.userUpdateInfo.telNumber}" mask="#{logonUI.TELPHONE_FORMAT}" style="width:95%" required="true" requiredMessage="#{lang['enter.tell.number']}" />
+							<p:outputLabel value="#{lang['tel.number']}:" for="telNumber" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield" rendered="#{logonUI.cellNumberFailed}">
+							<p:inputMask id="cellPhone" value="#{logonUI.userUpdateInfo.cellNumber}" mask="#{logonUI.CELLPHONE_FORMAT}" style="width:95%" required="true" requiredMessage="#{lang['enter.cell.number']}" />
+							<p:outputLabel value="#{lang['cell.number']}:" for="cellPhone" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield" rendered="#{logonUI.faxNumberFailed}">
+							<p:inputMask id="faxNumber" mask="#{logonUI.FAX_NUMBER_FORMAT}" validatorMessage="#{lang['user.faxnumber.length']}" value="#{logonUI.userUpdateInfo.faxNumber}" style="width:95%">
+							</p:inputMask>
+							<p:outputLabel value="#{lang['fax.number']} : " for="faxNumber" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield" rendered="#{logonUI.workcontactNumberFailed}">
+							<p:inputMask id="workContactNumber" value="#{logonUI.userUpdateInfo.workContactNumber}" mask="#{logonUI.CELLPHONE_FORMAT}" style="width:95%" required="true" requiredMessage="Enter Work Contact Number" />
+							<p:outputLabel value="Work Contact Number:" for="workContactNumber" />
+						</h:panelGroup>
+					</p:panelGrid>
+				</p:tab>
+
+				<p:tab title="Residential Address" rendered="#{logonUI.userUpdateInfo ne null and logonUI.userUpdateInfo.residentialAddress ne null and logonUI.userUpdateInfo.residentialAddress.id ne null and false}">
+
+				</p:tab>
+
+				<p:tab title="Postal Address" rendered="#{logonUI.userUpdateInfo ne null and logonUI.userUpdateInfo.postalAddress ne null and logonUI.userUpdateInfo.postalAddress.id ne null and false}">
+
+				</p:tab>
+
+				<p:tab title="Birth Address" rendered="#{logonUI.userUpdateInfo ne null and logonUI.userUpdateInfo.birthAddress ne null and logonUI.userUpdateInfo.birthAddress.id ne null and false}">
+
+				</p:tab>
+
+			</p:tabView>
+
+			<p:panelGrid columns="1" style="width: 100%; text-align:center" styleClass="ui-panelgrid-blank" id="submit">
+				<p:commandButton id="updateUserInfoBtn" value="Update Information" icon="fa fa-database" action="#{logonUI.updateInformation}" update="userUpdateForm" process="userUpdateForm">
+					<p:confirm header="Confirmation" message="Are You Sure?" icon="fa fa-exclamation-triangle" />
+				</p:commandButton>
+			</p:panelGrid>
+		</h:form>
+	</p:dialog>
+
+	<p:dialog header="#{lang['protection.of.personal.information.act']}" fitViewport="true" dynamic="true" responsive="true" widgetVar="dlgPopi" resizable="false" hideEffect="clip" showEffect="clip" id="dlgPopi" appendTo="@(body)" modal="true" width="70%" height="80vh">
+		<h:form id="popiForm">
+
+			<ui:include src="/pages/includes/popi.xhtml" />
+
+			<p:panelGrid columns="1" style="width: 100%; text-align:center" styleClass="ui-panelgrid-blank" id="submit">
+				<h:panelGroup>
+					<p:outputLabel styleClass="Fs12" value="#{lang['popi.act.consent']}"></p:outputLabel>
+					<p:spacer width="20"></p:spacer>
+					<p:selectBooleanCheckbox value="#{sessionUI.acceptPopi}">
+					</p:selectBooleanCheckbox>
+				</h:panelGroup>
+				<p:commandButton id="popiAct" value="#{lang['submit']}" icon="fa fa-check" action="#{logonUI.acceptPopiAct}" update="logonForm" />
+			</p:panelGrid>
+			<br />
+			<p class="Fs15 red FontBold" style="margin: 0px; text-align: center;">#{lang['declaration.please.be.advised']}.</p>
+		</h:form>
+	</p:dialog>
+
+	<p:dialog header="#{lang['reset.your.password']}" widgetVar="dlgPwd" resizable="false" hideEffect="clip" showEffect="clip" id="dialogPWD" appendTo="@(body)" modal="true" width="50%">
+		<h:form id="usersPwdForm">
+			<p:outputPanel id="usersPwdGrid" style="width: 100%">
+				<div class="ui-g dashboard">
+					<div class="ui-g-12 ui-md-12">
+						<div class="card card-w-title">
+
+							<p:panelGrid columns="2" layout="grid" styleClass="ui-panelgrid-blank">
+								<p:outputLabel value="#{lang['enter.your.email']}" for="uname" />
+								<p:inputText id="uname" value="#{logonUI.email}" placeholder="#{lang['email']}" styleClass="Container90 Fnone MarAuto Fs18" required="true" requiredMessage="#{lang['enter.your.email']}" style="width:95%" />
+							</p:panelGrid>
+							<br />
+							<p:commandButton value="#{lang['send.password']}" action="#{logonUI.newPassword}" update="@form" icon="ui-icon-contact-mail" />
+						</div>
+					</div>
+				</div>
+			</p:outputPanel>
+		</h:form>
+	</p:dialog>
+
+	<p:dialog header="Specify SDF Type" width="30%" widgetVar="sdfTypeDialog" resizable="false" hideEffect="clip" showEffect="clip" id="sdfTypeDialog" appendTo="@(body)" modal="true">
+
+		<h:form id="sdfTypeFrm">
+			<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup>
+					<p:outputLabel styleClass="FontBold Fs15" style="font-weight:bold" value="Is the SDP a merSETA Levy/Non-levy Employer ?" />
+					<br />
+					<p:selectOneMenu id="levyNonLevySDP" value="#{trainingproviderUI.levyNonLevySDP}" style="width:100%" required="true" requiredMessage="Specify SDP type">
+						<p:ajax event="itemSelect" update="@form" />
+						<f:selectItem itemLabel="---#{lang['select.one']}---" itemValue="" noSelectionOption="true" />
+						<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+					</p:selectOneMenu>
+				</h:panelGroup>
+
+				<h:panelGroup rendered="#{trainingproviderUI.levyNonLevySDP eq YesNoEnum.Yes}">
+					<p:outputLabel value="Select Employer Type" for="empType" />
+					<br />
+					<p:selectOneMenu required="true" id="empType" value="#{trainingproviderUI.employerType}" requiredMessage="Select Employer Type" style="width:100%">
+						<f:selectItem itemLabel="---#{lang['select.one']}---" itemValue="" noSelectionOption="true" />
+						<f:selectItems value="#{enumUI.sdpApplicationTypeDD}" var="rv" itemLabel="#{empType}" itemValue="#{rv}" />
+						<p:ajax update="@form" listener="#{trainingproviderUI.prepareAction}" />
+					</p:selectOneMenu>
+				</h:panelGroup>
+			</p:panelGrid>
+			<br />
+			<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup>
+					<p:commandButton rendered="#{trainingproviderUI.levyNonLevySDP eq YesNoEnum.Yes and trainingproviderUI.employerType ne null}" id="continueSDPReg" icon="ui-icon-fast-forward" iconPos="right" value="#{lang['continue']}" action="#{trainingproviderUI.getUrlAction()}" immediate="false" />
+					<p:commandButton rendered="#{trainingproviderUI.levyNonLevySDP eq YesNoEnum.No}" id="sdfRegistrationFirst" icon="ui-icon-fast-forward" iconPos="right" value="Register As SDF First" action="registercompany.jsf?faces-redirect=true" immediate="true" />
+				</h:panelGroup>
+			</p:panelGrid>
+		</h:form>
+
+	</p:dialog>
+
+	<p:dialog header="#{lang['change.password']}" width="30%" widgetVar="dlgPwdChg" resizable="false" hideEffect="clip" showEffect="clip" id="dialogPWDCHG" appendTo="@(body)" modal="true">
+		<h:form id="usersPwdChgForm">
+			<ui:include src="/pages/includes/tabinfo.xhtml">
+				<ui:param name="showInfoCircle" value="false" />
+				<ui:param name="cssClass" value="red Fs15" />
+				<ui:param name="helpTxt" value="#{lang['Password.must.be.minimum.of.8']}" />
+			</ui:include>
+			<br />
+			<br />
+			<p:panelGrid columns="1" style="width: 100%" styleClass="ui-panelgrid-blank">
+				<p:spacer />
+				<h:panelGroup styleClass="md-inputfield">
+
+					<p:password style="width: 100%" id="pwd1" value="#{logonUI.inputPassword}" match="pwd2" label="Password1" required="true" requiredMessage="#{lang['confirm.new.password.invalid']}" validatorMessage="#{lang['valid.passwords']}">
+						<f:validateLength minimum="8"></f:validateLength>
+					</p:password>
+					<p:outputLabel for="pwd1" value="#{lang['new.password']}" />
+
+				</h:panelGroup>
+				<p:spacer />
+				<h:panelGroup styleClass="md-inputfield">
+
+					<p:password style="width: 100%" id="pwd2" value="#{logonUI.inputPassword}" label="Password2" required="true" requiredMessage="#{lang['confirm.new.password.invalid']}">
+						<f:validateLength minimum="8"></f:validateLength>
+					</p:password>
+					<p:outputLabel for="pwd2" value="#{lang['confirm.new.password']}" />
+
+				</h:panelGroup>
+				<p:spacer />
+
+				<p:commandButton id="submitPWChange" value="#{lang['submit']}" styleClass="Fs16" action="#{logonUI.changePassword}" update="@form" />
+
+
+			</p:panelGrid>
+		</h:form>
+	</p:dialog>
+
+	<p:dialog header="#{lang['registration.type']}" widgetVar="goToregistrationDLG" resizable="false" hideEffect="clip" showEffect="clip" id="dialogRegistration" appendTo="@(body)" modal="true" responsive="true">
+		<h:form id="goToregistration">
+			<p:panelGrid columns="1" layout="grid" styleClass="ui-panelgrid-blank">
+				<span class="Fs13 FontBold gray"> #{lang['please.note.that.only.primary.SDFs.can.initiate.registration']} <br /> #{lang['other.SDFs.will.receive.an.invitation.to.complete.registration']}
+				</span>
+				<p:commandButton id="sdfRegistration" style="width: 100%" value="#{lang['sdf.registration']}" action="registercompany.jsf?faces-redirect=true" immediate="true" />
+				<p:commandButton id="companyRegHeadingOld" style="width: 100%" value="#{lang['company.tp.registration.heading']}" action="registertrainingprovider.jsf?faces-redirect=true" immediate="true" rendered="false" />
+				<p:commandButton id="sdbReg" action="registertrainingprovider.jsf?faces-redirect=true" immediate="true" style="width: 100%" value="#{lang['company.tp.registration.heading']}" />
+				<p:commandButton id="sdpReReg" action="primarySdpRelink.jsf?faces-redirect=true" immediate="true" style="width: 100%" value="SDP Primary Contact Registration" />
+				<p:commandButton id="legacySdpReg" action="registerlegacytrainingprovider.jsf?faces-redirect=true" immediate="true" style="width: 100%" value="#{lang['legacy.tp.registration.heading']}" rendered="true" />
+				<p:commandButton id="assessorModReg" style="width: 100%" value="#{lang['assessor.moderator.registration']}" action="registerassesormod.jsf?faces-redirect=true" immediate="true" />
+				<p:commandButton id="legacyAssessorModReg" style="width: 100%" value="#{lang['legacy.assessor.moderator.registration']}" action="registerlegacyassesormod.jsf?faces-redirect=true" immediate="true" />
+				<p:commandButton id="interSetaTransfer" style="width: 100%" value="#{lang['inter.seta.transfer']}" action="intersetatransfer.jsf?faces-redirect=true" immediate="true" />
+				<p:commandButton id="selfServiceRegistration" style="width: 100%" value="Self-Service Registration" action="registerSelfService.jsf?faces-redirect=true" immediate="true" />
+			</p:panelGrid>
+		</h:form>
+	</p:dialog>
+
+	<p:dialog header="#{lang['resend.confirm.email']}" widgetVar="resendDLG" resizable="false" id="resendDLG" hideEffect="clip" showEffect="clip" appendTo="@(body)" modal="true" responsive="true" width="50%">
+		<h:form id="resendForm">
+
+			<p:importEnum type="haj.com.entity.enums.IdPassportEnum" var="idPassportEnum"></p:importEnum>
+			<p:fieldset id="searchRsaIdOrPassport" legend="#{lang['enter.RSA.ID.number.or.passport.number']}" rendered="#{!resendConfirmEmailUI.dbUser.doneSearch}">
+				<p:panelGrid id="searchRsaIdOrPassportPnl" columns="3" styleClass="ui-panelgrid-blank form-group">
+					<p:selectOneRadio value="#{searchUserPassportOrIdUI.idpassport}" columns="1" layout="responsive">
+						<p:ajax update="@form" />
+						<f:selectItems value="#{enumUI.idPassportEnumDD}" var="idpassEnum" itemLabel="#{idpassEnum}" itemValue="#{idpassEnum}" />
+					</p:selectOneRadio>
+					<h:panelGroup id="rsaIDInput" styleClass="md-inputfield" rendered="#{searchUserPassportOrIdUI.idpassport eq idPassportEnum.RsaId}">
+						<p:inputText id="rsaIdCriteria" maxlength="#{searchUserPassportOrIdUI.MAX_RSA_ID_NUMBER}" value="#{searchUserPassportOrIdUI.idnumber}" style="width:95%" requiredMessage="#{lang['rsa.id.number']} " required="true">
+						</p:inputText>
+						<p:outputLabel value="#{lang['rsa.id.number']}" for="rsaIdCriteria" />
+					</h:panelGroup>
+					<h:panelGroup id="passportNumInput" styleClass="md-inputfield" rendered="#{searchUserPassportOrIdUI.idpassport eq idPassportEnum.Passport}">
+						<p:inputText validatorMessage="#{lang['user.passport.length']}" id="passportNumCriteria" maxlength="#{searchUserPassportOrIdUI.MAX_PASSPORT_NUMBER}" value="#{searchUserPassportOrIdUI.passportNumber}" style="width:95%" requiredMessage="#{lang['passport.number']}" required="true">
+						</p:inputText>
+						<h:message for="passportNumCriteria" />
+						<p:outputLabel value="#{lang['passport.number']}" for="passportNumCriteria" />
+					</h:panelGroup>
+					<p:commandButton id="idPassBtn" icon="fa fa-search" process="searchRsaIdOrPassport" actionListener="#{searchUserPassportOrIdUI.findUserByIDOrPassport}" update="panelSe resendForm" rendered="#{searchUserPassportOrIdUI.idpassport ne null}" />
+				</p:panelGrid>
+			</p:fieldset>
+			<h:panelGrid id="panelSe">
+
+				<p:panelGrid rendered="#{resendConfirmEmailUI.dbUser.doneSearch}" columns="2" styleClass="ui-panelgrid-blank" id="confEmailPanel">
+					<p:outputLabel for="email" value="#{lang['enter.your.email']}" />
+					<p:inputText value="#{resendConfirmEmailUI.email}" required="true" requiredMessage="#{lang['enter.your.email']}" id="email" style="width: 100%" />
+					<p:spacer />
+					<p:commandButton value="#{lang['request.resend.confirm.email']}" icon="fa fa-envelope-o" update="confEmailPanel" action="#{resendConfirmEmailUI.validateResend}" />
+				</p:panelGrid>
+
+			</h:panelGrid>
+		</h:form>
+	</p:dialog>
+
+
+	<p:dialog modal="true" widgetVar="dlgOffices" position="top" resizable="false" dynamic="true" responsive="true" minHeight="300" width="80%" height="70%" header="merSETA Offices" closeOnEscape="true">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<h:form id="genOfficesForm">
+					<div align="left">
+						<p:scrollPanel mode="native" style="width:100%;height:500px;border:none">
+							<p:repeat var="rv" value="#{officeUI.officeList}">
+								<div class="ui-g-12 ui-md-6 " style="border-bottom: 0.5pt solid #dedede">
+									<h2>#{rv.description}</h2>
+									<b>Contact Number:</b> #{rv.contactNumber} <br /> <b>Contact Person:</b> #{rv.contactPerson} <br /> <b>Contact Person Email:</b> #{rv.contactPersonEmail} <br /> <br /> <b>Address</b> <br /> #{rv.physicalAddress.addressLine1} <br /> #{rv.physicalAddress.addressLine2} <br />
+									#{rv.physicalAddress.addressLine3} <br /> #{rv.physicalAddress.town.description} <br />
+								</div>
+							</p:repeat>
+						</p:scrollPanel>
+					</div>
+				</h:form>
+			</div>
+		</div>
+	</p:dialog>
+
+	<!-- <div class="login-footer">merSETA</div> -->
+
+	<script type="text/javascript">   
+
+$(document).ready(function() {
+		getLocation();
+});
+
+function getLocation() {
+	if (navigator.geolocation) {
+		navigator.geolocation.getCurrentPosition(showPosition);
+	} else {
+		// x.innerHTML = "Geolocation is not supported by this browser.";
+	}
+}
+function showPosition(position) {
+	//     x.innerHTML = "Latitude: " + position.coords.latitude + 
+	//    ";Longitude: " + position.coords.longitude; 
+	console.log(position);
+	document.getElementById("logonForm:latitude").value = position.coords.latitude;
+	document.getElementById("logonForm:longitude").value = position.coords.longitude;
+	
+}
+
+
+function handleUnameRequest(xhr, status, args) {  
+        if(args.validationFailed) {  
+            jQuery('#dialogPWD').effect("shake", { times:3 }, 500);  
+        } else {  
+        	PF('dlgPwd').hide();  
+           
+        }  
+    } 
+</script>
+<script type="text/javascript" src="https://qdml8c54rllz.statuspage.io/embed/script.js">
+    </script>
+	<h:outputStylesheet name="css/ripple.css" library="ultima-layout" />
+	<h:outputStylesheet name="css/layout-#{guestPreferences.theme}.css" library="ultima-layout" />
+	<h:outputStylesheet name="css/hs.css" library="hls" />
+</h:body>
+
+</html>

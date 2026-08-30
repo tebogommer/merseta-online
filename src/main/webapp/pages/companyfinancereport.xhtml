@@ -1,0 +1,111 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Company Contact Details</h1>
+					<h:form id="mainForm">
+
+
+						<div align="right">
+							<h:commandLink title="#{lang['export.search.results.to.excel']}">
+								<i class="fa fa-file-excel-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+								<p:dataExporter type="xls" target="dgList" fileName="Company_SDF" pageOnly="false" />
+							</h:commandLink>
+							<h:commandLink rendered="false" title="#{lang['export.search.results.to.pdf']}">
+								<i class="fa fa-file-pdf-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+								<p:dataExporter type="pdf" target="dgList" fileName="Company_SDF" pageOnly="false" />
+							</h:commandLink>
+
+							<h:commandLink title="#{lang['export.search.results.as.a.csv']}">
+								<i class="fa fa-file-text-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+								<p:dataExporter type="csv" target="dgList" fileName="Company_SDF" pageOnly="false" />
+							</h:commandLink>
+							<h:commandLink title="#{lang['export.search.results.as.a.xml']}">
+								<i class="fa fa-file-code-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+								<p:dataExporter type="xml" target="dgList" fileName="Company_SDF" pageOnly="false" />
+							</h:commandLink>
+
+							<p:tooltip position="left" />
+						</div>
+
+
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+						<p:dataTable var="rowVar" value="#{companyFinancesReportUI.dataModel}" filteredValue="#{companyFinancesReportUI.companysdfList}" id="dgList" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+							<p:column headerText="Entity ID" exportable="true" filterBy="#{rowVar.company.levyNumber}" sortBy="#{rowVar.company.levyNumber}">
+								<p:outputLabel value="#{rowVar.company.levyNumber}"></p:outputLabel>
+							</p:column>
+							<p:column headerText="Entity Registration Number" exportable="true" filterBy="#{rowVar.company.companyRegistrationNumber}" sortBy="#{rowVar.company.companyRegistrationNumber}">
+								<p:outputLabel value="#{rowVar.company.companyRegistrationNumber}"></p:outputLabel>
+							</p:column>
+							<p:column headerText="Name of Company" exportable="true" filterBy="#{rowVar.company.companyName}" sortBy="#{rowVar.company.companyName}">
+								<p:outputLabel value="#{rowVar.company.companyName}"></p:outputLabel>
+							</p:column>
+							<p:column headerText="Trading Name" exportable="true" rendered="false">
+								<p:outputLabel value="#{rowVar.company.tradingName}"></p:outputLabel>
+							</p:column>
+							<p:column headerText="#{lang['status']}" sortBy="#{rowVar.company.companyStatus}" width="10%">
+								<h:outputText value="#{lang[rowVar.company.companyStatus.registrationName]}" />
+							</p:column>
+							<p:column headerText="Geographical Region" exportable="true">
+								<p:outputLabel value="#{rowVar.company.residentialAddress.municipality.province.provinceDesc}"></p:outputLabel>
+							</p:column>
+							
+							<p:column headerText="Region" exportable="true" rendered="false">
+								<p:outputLabel value="#{rowVar.regionTown.region.description}"></p:outputLabel>
+							</p:column>
+							
+							<p:column headerText="Chamber" exportable="true" rendered="true">
+								<p:outputLabel value="#{rowVar.company.sicCode.chamber.description}"></p:outputLabel>
+							</p:column>
+							
+							<p:column headerText="CLO Name and Surname" exportable="true" rendered="false">
+								<p:outputLabel value="#{rowVar.regionTown.clo.users.firstName} #{rowVar.regionTown.clo.users.lastName}"></p:outputLabel>
+							</p:column>
+							
+							<p:column headerText="Entity Contact Person" exportable="true">
+								<p:outputLabel value="#{rowVar.sdf.firstName} #{rowVar.sdf.lastName}"></p:outputLabel>
+							</p:column>
+							
+							<p:column headerText="SDF Surname" exportable="true" rendered="false">
+								<p:outputLabel value="#{rowVar.sdf.lastName}"></p:outputLabel>
+							</p:column>
+							
+							<p:column headerText="Entity Email Address" exportable="true">
+								<p:outputLabel value="#{rowVar.sdf.email}"></p:outputLabel>
+							</p:column>
+							
+							<p:column headerText="SDF ID Number" exportable="true" rendered="false">
+								<p:outputLabel value="#{rowVar.sdf.rsaIDNumber}" rendered="#{rowVar.sdf.rsaIDNumber ne null}"></p:outputLabel>
+								<p:outputLabel value="Not Provided" rendered="#{rowVar.sdf.rsaIDNumber eq null}"></p:outputLabel>
+							</p:column>
+							
+							<p:column headerText="SDF Passport Number" exportable="true" rendered="false">
+								<p:outputLabel value="#{rowVar.sdf.passportNumber}" rendered="#{rowVar.sdf.passportNumber ne null}"></p:outputLabel>
+								<p:outputLabel value="Not Provided" rendered="#{rowVar.sdf.passportNumber eq null}"></p:outputLabel>
+							</p:column>
+
+							<p:column headerText=" Entity Phone Number" exportable="true" >
+								<p:outputLabel value="#{rowVar.sdf.cellNumber}"></p:outputLabel>
+							</p:column>
+
+							<p:column headerText="SDF Type" exportable="true" filterBy="#{rowVar.sdfType.description}" sortBy="#{rowVar.sdfType.description}" rendered="false">
+								<p:outputLabel value="#{rowVar.sdfType.description}"></p:outputLabel>
+							</p:column>
+
+							<p:column headerText="#{lang['status']}" sortBy="#{rowVar.company.companyStatus}" width="10%" rendered="false">
+								<h:outputText value="#{lang[rowVar.company.companyStatus.registrationName]}" />
+							</p:column>
+
+							<p:column headerText="Reject Reason" exportable="true" width="30%" rendered="false">
+								<p:outputLabel value="#{rowVar.rejectReason}"></p:outputLabel>
+							</p:column>
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+</ui:composition>

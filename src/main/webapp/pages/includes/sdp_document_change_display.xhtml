@@ -1,0 +1,60 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui">
+	<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+		<p:fieldset legend="#{lang['change.reason']}" toggleable="true" collapsed="false">
+			<p:dataTable value="#{sdpmanagementUI.changeReason.docs}" id="BankDocs" var="rv1" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv1.id}">
+				<p:column headerText="#{lang['original.file.name']}" priority="4">
+					<p:outputLabel value="#{rv1.originalFname}" styleClass="Fs12"></p:outputLabel>
+				</p:column>
+				<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+				<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+					<h:outputText value="#{rv1.createDate}">
+						<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+					</h:outputText>
+				</p:column>
+				<p:column headerText="#{lang['version']}" width="10%" priority="4">
+					<h:outputText value="#{rv1.versionNo}">
+					</h:outputText>
+				</p:column>
+				<p:column headerText="#{lang['original.required']}" rendered="#{bankingdetailsUI.bankingdetails.areOriginalRequired}">
+					<center>
+						<h:panelGroup rendered="#{rv1.configDoc.originalRequired}" styleClass="green">
+							<i class="fa fa-files-o fa-3x" aria-hidden="true"></i>
+						</h:panelGroup>
+						<h:panelGroup rendered="#{not rv1.configDoc.originalRequired}" styleClass="red">
+							<i class="fa fa-times fa-3x" aria-hidden="true"></i>
+						</h:panelGroup>
+					</center>
+				</p:column>
+				<p:column width="180">
+					<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlb" rendered="#{rv1.id ne null}" immediate="true">
+						<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+					</p:commandButton>
+					<p:tooltip for="dlb" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+
+
+					<p:spacer width="5" rendered="#{rv1.id ne null}" />
+					<p:commandButton icon="fa fa-bars " id="dhist" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}" process="@this">
+						<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+					</p:commandButton>
+
+					<p:tooltip for="dhist" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+					<h:panelGroup id="panelGroupThree" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+						<p:spacer width="5" />
+						<p:commandButton icon="fa fa-comment-o" id="dnote" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel" process="@this">
+							<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+						</p:commandButton>
+						<p:tooltip for="dnote" value="#{lang['view.note']}" position="left" />
+					</h:panelGroup>
+					
+					<h:panelGroup id="panelGroupFour" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+						<p:spacer width="5" />
+						<p:commandButton icon="fa fa-eye " id="viewerButton" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}" process="@this">
+							<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+						</p:commandButton>
+						<p:tooltip for="viewerButton" value="#{lang['view.document']} " position="left" />
+					</h:panelGroup>
+				</p:column>
+			</p:dataTable>
+		</p:fieldset>
+	</p:panelGrid>
+</ui:composition>

@@ -1,0 +1,160 @@
+﻿@page "/admin/lookups/{TableName}"
+@inject LookupService LookupService
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+<div class="sticky-top bg-white pa-3 mb-4 border-bottom elevation-1 d-flex justify-space-between align-center">
+    <div class="d-flex align-center gap-2">
+        <MudButton Variant="Variant.Text" StartIcon="@Icons.Material.Filled.ArrowBack" OnClick="BackToHub">Back to Lookups Hub</MudButton>
+        <MudText Typo="Typo.h6">lookup.@TableName</MudText>
+    </div>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenCreateDialog">
+        Add New Code
+    </MudButton>
+</div>
+
+@if (_editingItem != null)
+{
+    <MudCard Outlined="true" Class="pa-4 mb-4">
+        <MudText Typo="Typo.subtitle1" Class="fw-bold mb-3">
+            @(_isNew ? $"Add New {TableName} Record" : $"Edit Code {_editingItem.Code}")
+        </MudText>
+        <MudGrid>
+            <MudItem xs="12" md="3">
+                <MudTextField T="string" Label="Code (Primary Key, varchar 15)" Required="true" Disabled="@(!_isNew)" @bind-Value="_editingItem.Code" MaxLength="15" HelperText="Uppercase unique identifier" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudTextField T="string" Label="Display Name" Required="true" @bind-Value="_editingItem.Name" />
+            </MudItem>
+            <MudItem xs="12" md="5">
+                <MudTextField T="string" Label="Description" @bind-Value="_editingItem.Description" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudSwitch T="bool" @bind-Value="_editingItem.Active" Color="Color.Success" Label="Active Status" />
+            </MudItem>
+            <MudItem xs="12" Class="d-flex gap-2">
+                <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveItem">Save Code</MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="CancelEdit">Cancel</MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudCard>
+}
+
+<MudPaper Class="pa-4" Elevation="1">
+    <div class="d-flex justify-space-between align-center mb-3">
+        <MudTextField @bind-Value="_searchString" Placeholder="Filter codes and names..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true" />
+    </div>
+
+    @if (_loading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+    }
+    else
+    {
+        <MudTable Items="@FilteredItems" Hover="true" Dense="true" T="LookupItemDto">
+            <HeaderContent>
+                <MudTh>Code (PK)</MudTh>
+                <MudTh>Name</MudTh>
+                <MudTh>Description</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh Style="text-align:right">Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Code"><MudChip T="string" Size="Size.Small" Color="Color.Dark" Variant="Variant.Outlined" Class="font-monospace">@context.Code</MudChip></MudTd>
+                <MudTd DataLabel="Name"><MudText Typo="Typo.body2" Class="fw-bold">@context.Name</MudText></MudTd>
+                <MudTd DataLabel="Description">@context.Description</MudTd>
+                <MudTd DataLabel="Status">
+                    <MudChip T="string" Color="@(context.Active ? Color.Success : Color.Error)" Size="Size.Small">
+                        @(context.Active ? "Active" : "Inactive")
+                    </MudChip>
+                </MudTd>
+                <MudTd Style="text-align:right">
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Warning" Size="Size.Small" OnClick="@(() => OpenEditDialog(context))" aria-label="Edit Item" />
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
+            </PagerContent>
+        </MudTable>
+    }
+</MudPaper>
+
+@code {
+    [Parameter] public string TableName { get; set; } = string.Empty;
+
+    private List<LookupItemDto> _items = new();
+    private string _searchString = string.Empty;
+    private bool _loading = true;
+    private LookupItemDto? _editingItem;
+    private bool _isNew;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _loading = true;
+        _items = await LookupService.GetLookupItemsAsync(TableName);
+        _loading = false;
+    }
+
+    private IEnumerable<LookupItemDto> FilteredItems =>
+        string.IsNullOrWhiteSpace(_searchString)
+            ? _items
+            : _items.Where(x => x.Code.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+                                x.Name.Contains(_searchString, StringComparison.OrdinalIgnoreCase));
+
+    private void BackToHub()
+    {
+        NavManager.NavigateTo("/admin/lookups");
+    }
+
+    private void OpenCreateDialog()
+    {
+        _isNew = true;
+        _editingItem = new LookupItemDto { Active = true };
+    }
+
+    private void OpenEditDialog(LookupItemDto item)
+    {
+        _isNew = false;
+        _editingItem = new LookupItemDto
+        {
+            Code = item.Code,
+            Name = item.Name,
+            Description = item.Description,
+            Active = item.Active
+        };
+    }
+
+    private void CancelEdit()
+    {
+        _editingItem = null;
+    }
+
+    private async Task SaveItem()
+    {
+        if (_editingItem == null) return;
+
+        if (string.IsNullOrWhiteSpace(_editingItem.Code) || string.IsNullOrWhiteSpace(_editingItem.Name))
+        {
+            Snackbar.Add("Code and Name are mandatory.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            await LookupService.SaveLookupItemAsync(TableName, _editingItem);
+            Snackbar.Add($"Lookup code {_editingItem.Code} saved successfully.", Severity.Success);
+            _editingItem = null;
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add(ex.Message, Severity.Error);
+        }
+    }
+}

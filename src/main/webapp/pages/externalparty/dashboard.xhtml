@@ -1,0 +1,714 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+	<ui:define name="content">
+
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+				<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+				<p:importEnum type="haj.com.entity.enums.AssessorModeratorTypeEnum" />
+
+				<c:if test="#{assessorModeratorApplicationUI.isAssOrMod}">
+					<h:form id="extOFScopeForm">
+						<div class="card">
+							<h1>Assessor/Moderator Application</h1>
+
+							<p:dataTable var="var" value="#{assessorModeratorApplicationUI.userAppDataModel}" id="amList" rowKey="#{var.id}" paginator="true" rows="10" paginatorPosition="bottom"
+								paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,20,40" reflow="true" lazy="true" selectionMode="single" selection="#{assessorModeratorApplicationUI.selectedAMApp}">
+								<p:ajax event="rowSelect" update=":detailInfoForm @form" listener="#{assessorModeratorApplicationUI.prepareAMInfor()}" />
+
+								<p:column style="width:16px" rendered="false" exportable="false">
+									<p:rowToggler />
+								</p:column>
+
+
+								<p:column headerText="#{lang['type.of.application']}" sortBy="#{var.applicationType}" filterStyle="width: 95%">
+									<h:outputText value="#{var.applicationType.displayName}" />
+								</p:column>
+
+								<p:column headerText="Type">
+									<h:outputText value="#{var.assessorModeratorType.friendlyName}" />
+								</p:column>
+
+								<p:column headerText="Application Date" sortBy="#{var.createDate}">
+									<h:outputText value="#{var.createDate}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</h:outputText>
+								</p:column>
+
+								<p:column headerText="#{lang['status']}" sortBy="#{var.status}" filterStyle="width: 95%">
+									<h:outputText value="#{var.status.friendlyName}" />
+								</p:column>
+
+								<p:column headerText="#{lang['registration.number']}" filterBy="#{var.certificateNumber}" sortBy="#{var.certificateNumber}" filterStyle="width: 95%">
+									<h:outputText value="#{var.certificateNumber}" />
+									<h:outputText rendered="#{var.certificateNumber eq null or var.certificateNumber eq ''}" value="N/A" />
+								</p:column>
+
+								<p:column headerText="#{lang['start.date']}" sortBy="#{var.startDate}" filterStyle="width: 95%">
+									<h:outputText value="#{var.startDate}">
+										<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+									</h:outputText>
+									<h:outputText rendered="#{var.startDate eq null}" value="N/A" />
+								</p:column>
+
+								<p:column headerText="#{lang['end.date']}" sortBy="#{var.endDate}" filterStyle="width: 95%">
+									<h:outputText value="#{var.endDate}">
+										<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+									</h:outputText>
+									<h:outputText rendered="#{var.endDate eq null}" value="N/A" />
+								</p:column>
+
+								<p:column headerText="#{lang['review.committee.date']}" sortBy="#{var.reviewCommitteeMeeting.fromDateTime}">
+									<h:outputText value="#{var.reviewCommitteeMeeting.fromDateTime}">
+										<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+									</h:outputText>
+									<h:outputText rendered="#{var.reviewCommitteeMeeting.fromDateTime eq null}" value="N/A" />
+								</p:column>
+
+								<p:column headerText="#{lang['decision.number']}" sortBy="#{var.reviewCommitteeMeetingAgenda.decisionNumber}">
+									<h:outputText rendered="#{var.reviewCommitteeMeetingAgenda ne null}" value="#{var.reviewCommitteeMeetingAgenda.decisionNumber}" />
+									<h:outputText rendered="#{var.reviewCommitteeMeetingAgenda eq null}" value="N/A" />
+								</p:column>
+
+								<p:column width="145" headerText="View / Edit">
+									<p:commandButton action="#{assessorModeratorApplicationUI.prepareAMInfor()}" icon="fa fa-search-plus" update=":detailInfoForm @form" title="View Details">
+										<f:setPropertyActionListener value="#{var}" target="#{assessorModeratorApplicationUI.selectedAMApp}" />
+									</p:commandButton>
+									<p:spacer width="10" rendered="#{assesorModiratorUI.showExtensionOfScope(var) and var.assessorModeratorType eq AssessorModeratorTypeEnum.MerSETA_AM}" />
+									<p:commandButton rendered="#{assesorModiratorUI.showExtensionOfScope(var) and var.assessorModeratorType eq AssessorModeratorTypeEnum.MerSETA_AM}" actionListener="#{assessorModeratorApplicationUI.clearSelectedAMApp()}" action="#{assesorModiratorUI.prepareExtensionOfScopeDetails}" immediate="true" icon="fa fa-plus" update="@form pgDocUplaod :detailInfoForm" title="Extension Of Scope">
+										<f:setPropertyActionListener value="#{var}" target="#{assesorModiratorUI.extensionOfScopeAmApplication}" />
+										<f:setPropertyActionListener value="true" target="#{assesorModiratorUI.extensionOfScope}" />
+									</p:commandButton>
+									<p:spacer width="10" rendered="#{assesorModiratorUI.showExtensionRequest(var) and var.assessorModeratorType eq AssessorModeratorTypeEnum.MerSETA_AM}" />
+									<p:commandButton rendered="#{assesorModiratorUI.showExtensionRequest(var) and var.assessorModeratorType eq AssessorModeratorTypeEnum.MerSETA_AM}" actionListener="#{assessorModeratorApplicationUI.clearSelectedAMApp()}" action="#{assesorModiratorUI.preparReRegistration}" update="@form pgDocUplaod :detailInfoForm" icon="fa fa-repeat" title="Re-Registration">
+										<f:setPropertyActionListener value="#{var}" target="#{assesorModiratorUI.extensionOfScopeAmApplication}" />
+										<f:setPropertyActionListener value="false" target="#{assesorModiratorUI.extensionOfScope}" />
+										<p:confirm header="#{lang['confirmation']}" message="Are you sure you want to send Re-Registration request?" icon="ui-icon-warning" />
+									</p:commandButton>
+								</p:column>
+
+								<p:rowExpansion>
+
+									<br />
+									<p:fieldset legend="#{lang['qualifications']}">
+										<p:dataTable var="qual" value="#{assessorModeratorApplicationUI.userQualifications(var.user,var)}">
+											<p:column headerText="#{lang['qualifications']}">
+												<h:outputText value="#{qual.qualification.description}" />
+											</p:column>
+
+											<p:column headerText="#{lang['saqa.id']}">
+												<h:outputText value="#{qual.qualification.code}" />
+											</p:column>
+
+											<p:column headerText="#{lang['nqf.level']}">
+												<h:outputText value="#{qual.qualification.nqflevel.description}" />
+											</p:column>
+										</p:dataTable>
+									</p:fieldset>
+									<br />
+									<p:fieldset legend="#{lang['skills.programme']}">
+										<p:dataTable var="us" value="#{assessorModeratorApplicationUI.userUnitStandard(var.user,var)}">
+											<p:column headerText="#{lang['name.of.unit.standard(s)']}">
+												<h:outputText value="#{us.unitStandard.title}" />
+											</p:column>
+
+											<p:column headerText="#{lang['code']}">
+												<h:outputText value="#{us.unitStandard.code}" />
+											</p:column>
+
+											<p:column headerText="#{lang['nqf.level']}">
+												<h:outputText value="#{us.unitStandard.nqf}" />
+											</p:column>
+										</p:dataTable>
+									</p:fieldset>
+									<br />
+									<p:fieldset legend="#{lang['etqa.review.date']}" rendered="false">
+
+										<p:panelGrid columns="1" style="width:100%" id="meetingTitleGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+											<h:panelGroup id="meetingTitle" styleClass="md-inputfield">
+												<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{var.reviewCommitteeMeeting.title}" />
+												<p:outputLabel value="#{lang['title']}" />
+											</h:panelGroup>
+
+										</p:panelGrid>
+										<br />
+										<p:panelGrid columns="4" style="width:100%" id="etqaDateGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+											<h:panelGroup id="fromDateTime" styleClass="md-inputfield">
+												<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{var.reviewCommitteeMeeting.fromDateTime}">
+													<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME}" />
+												</p:inputText>
+												<p:outputLabel value="#{lang['from']}" />
+											</h:panelGroup>
+
+											<h:panelGroup id="toDateTime" styleClass="md-inputfield">
+												<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{var.reviewCommitteeMeeting.toDateTime}">
+													<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME}" />
+												</p:inputText>
+												<p:outputLabel value="#{lang['to']}" />
+											</h:panelGroup>
+
+											<h:panelGroup id="venue" styleClass="md-inputfield">
+												<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{var.reviewCommitteeMeeting.venue}" />
+												<p:outputLabel value="#{lang['venue']}" />
+											</h:panelGroup>
+
+
+											<h:panelGroup id="decNum" styleClass="md-inputfield">
+												<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" rendered="#{var.reviewCommitteeMeetingAgenda.decisionNumber ne null}" value="#{var.reviewCommitteeMeetingAgenda.decisionNumber}" />
+												<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" rendered="#{var.reviewCommitteeMeetingAgenda.decisionNumber eq null}" value="N/A" />
+												<p:outputLabel value="Decision Number" />
+											</h:panelGroup>
+
+										</p:panelGrid>
+
+										<p:panelGrid columns="1" style="width:100%" id="agendaGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+											<p:fieldset legend="Agenda">
+												<p:dataList style="margin-top:15px" id="agendaListDisplay" value="#{var.reviewCommitteeMeeting.reviewCommitteeMeetingAgendaList}" var="ag" type="ordered">
+											       #{ag.meetingAgenda.description} (#{ag.decisionNumber})
+											     </p:dataList>
+											</p:fieldset>
+										</p:panelGrid>
+
+										<p:panelGrid columns="1" style="width:100%" id="userfoGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+											<p:fieldset legend="Users">
+												<p:dataList style="margin-top:15px" id="userListDisplay" value="#{var.reviewCommitteeMeeting.reviewCommitteeMeetingUsersList}" var="rcmu" type="ordered">
+											       #{rcmu.user.firstName} #{rcmu.user.lastName}
+											     </p:dataList>
+											</p:fieldset>
+										</p:panelGrid>
+
+										<p:panelGrid rendered="#{var.reviewCommitteeMeeting.additionalInfo ne null}" columns="1" style="width:100%" id="etqaAddInfoGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+											<h:panelGroup>
+												<p:outputLabel value="#{lang['additional.info']}" for="venue" styleClass="Fs12 FontLight" />
+												<p:textEditor readonly="true" widgetVar="addInfo" value="#{var.reviewCommitteeMeeting.additionalInfo}" height="100">
+													<f:facet name="toolbar">
+														<span class="ql-formats">
+															<button class="ql-bold"></button>
+															<button class="ql-italic"></button>
+															<button class="ql-underline"></button>
+															<button class="ql-strike"></button>
+														</span>
+														<span class="ql-formats"> <select class="ql-font"></select> <select class="ql-size"></select>
+														</span>
+													</f:facet>
+												</p:textEditor>
+											</h:panelGroup>
+										</p:panelGrid>
+									</p:fieldset>
+
+									<p:fieldset legend="Document(s)">
+										<ui:include src="/pages/includes/documents_info_display.xhtml">
+											<ui:param name="docs" value="#{assessorModeratorApplicationUI.loadDocs(var)}" />
+										</ui:include>
+										<br />
+										<p:panelGrid columns="4" style="width:100%" rendered="#{var.certificateNumber ne null}">
+											<h:panelGroup>
+												<center>
+													<p:commandButton icon="fa fa-download" value="Download Certificate" action="#{assessorModeratorApplicationUI.downloadAssessorModCertificate(var)}" ajax="false" title="Download Certificate">
+
+													</p:commandButton>
+												</center>
+											</h:panelGroup>
+
+											<h:panelGroup>
+												<center>
+													<p:commandButton icon="fa fa-download" value="Download Statement Of Qualifications" action="#{assessorModeratorApplicationUI.downloadStatementOfQualifications(var)}" ajax="false" title="Download Statement Of Qualifications">
+													</p:commandButton>
+												</center>
+											</h:panelGroup>
+
+											<h:panelGroup>
+												<center>
+													<p:commandButton icon="fa fa-download" value="Download Letter" action="#{assessorModeratorApplicationUI.downloadAssessorModCertificateLetter(var)}" ajax="false" title=" Download Letter">
+													</p:commandButton>
+												</center>
+											</h:panelGroup>
+
+											<h:panelGroup>
+												<center>
+													<p:commandButton oncomplete="PF('documentsHistoruDl').show()" action="#{assessorModeratorApplicationUI.documentHistoryInfo()}" update="documentsHistoruDl" icon="fa fa-history" value="View Document(s) History" title="View Document(s) History">
+														<f:setPropertyActionListener value="#{var}" target="#{assessorModeratorApplicationUI.selectedAMApp}" />
+													</p:commandButton>
+												</center>
+											</h:panelGroup>
+
+										</p:panelGrid>
+									</p:fieldset>
+
+								</p:rowExpansion>
+							</p:dataTable>
+						</div>
+						<h:panelGroup id="pgextensionOfScope">
+							<c:if test="#{assesorModiratorUI.extensionOfScopeAmApplication ne null and assesorModiratorUI.extensionOfScope}">
+								<div class="card">
+									<h1>Extension Of Scope</h1>
+									<ui:include src="/pages/includes/amQualificationUnitStandarsExtensionOfScope.xhtml" />
+									<br />
+									<ui:include src="/pages/includes/amUpdateDocumets.xhtml" />
+									<br />
+									<ui:include src="/pages/includes/amExtensionOfScopeCodeOfConduct.xhtml" />
+									<br />
+									<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update="@form" action="#{assesorModiratorUI.requestExternsionOfScope}" />
+									<p:spacer width="40"></p:spacer>
+									<p:commandButton value="#{lang['cancel']}" process="@this" icon="fa fa-recycle" update="@form" action="#{assesorModiratorUI.clearExternsionOfScope}">
+										<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									</p:commandButton>
+								</div>
+							</c:if>
+						</h:panelGroup>
+						<h:panelGroup id="pgAssModReRegistration">
+							<c:if test="#{assesorModiratorUI.assessorModReRegistration ne null and assesorModiratorUI.extensionOfScope ne null and !assesorModiratorUI.extensionOfScope}">
+								<div class="card">
+									<h1>Re-Registration</h1>
+									<ui:include src="/pages/includes/amReRegistrationDetails.xhtml" />
+								</div>
+							</c:if>
+						</h:panelGroup>
+					</h:form>
+
+					<h:form id="detailInfoForm">
+						<h:panelGroup rendered="#{assessorModeratorApplicationUI.selectedAMApp.id != null}">
+							<div class="ui-g">
+								<div class="ui-g-12">
+									<div class="card">
+										<h1>#{assessorModeratorApplicationUI.selectedAMApp.applicationType.displayName} Details</h1>
+										<p:tabView style="margin-bottom:40px">
+											<p:tab title="#{lang['am.information']}">
+												<ui:include src="/pages/includes/updateAMUserInfo.xhtml">
+												</ui:include>
+											</p:tab>
+
+											<p:tab title="#{lang['qualification.or.unit.standard']}">
+												<ui:include src="/pages/includes/searchAMUnitStandrsAndQualification.xhtml" />
+											</p:tab>
+
+											<p:tab title="#{lang['documents']}" rendered="true">
+												<ui:include src="/pages/includes/searchAMDocuments.xhtml" />
+											</p:tab>
+
+											<p:tab title="#{lang['code.of.conduct']}" rendered="true">
+												<ui:include src="/pages/includes/searchAMCodeOfConduct.xhtml" />
+											</p:tab>
+
+											<p:tab title="Re-Registration Details" rendered="true">
+												<ui:include src="/pages/includes/searchAMReRegistratioDetails.xhtml" />
+											</p:tab>
+
+											<p:tab title="Extension Of Scope Details" rendered="true">
+												<ui:include src="/pages/includes/searchAMExtensionOfScope.xhtml" />
+											</p:tab>
+
+											<p:tab title="#{lang['legacy.assessor.information']}" rendered="#{assessorModeratorApplicationUI.selectedAMApp.legacyAssessorAccreditation ne null}">
+												<ui:include src="/pages/includes/legacy_assessor_infor_display.xhtml">
+													<ui:param name="legacyAssessorAccreditation" value="#{assessorModeratorApplicationUI.selectedAMApp.legacyAssessorAccreditation}" />
+												</ui:include>
+											</p:tab>
+
+											<p:tab title="#{lang['legacy.moderator.information']}" rendered="#{assessorModeratorApplicationUI.selectedAMApp.legacyModeratorAccreditation ne null}">
+												<ui:include src="/pages/includes/legacy_moderator_infor_display.xhtml">
+													<ui:param name="legacyModeratorAccreditation" value="#{assessorModeratorApplicationUI.selectedAMApp.legacyModeratorAccreditation}" />
+												</ui:include>
+											</p:tab>
+
+										</p:tabView>
+									</div>
+								</div>
+							</div>
+						</h:panelGroup>
+					</h:form>
+
+					<ui:include src="/pages/includes/amDocumentsHistory.xhtml">
+						<ui:param name="docHistDataModel" value="#{assessorModeratorApplicationUI.docHistDataModel}" />
+					</ui:include>
+
+				</c:if>
+
+				<c:if test="#{not sessionUI.checkLearner}">
+					<div class="card">
+						<h1>#{lang['companies']}</h1>
+						<p:tooltip position="left" />
+						<h:form>
+							<p:dataTable value="#{dashboardExternalPartyUI.companies}" var="rv" reflow="true" emptyMessage="#{lang['no.records.found']}" rows="10" paginator="true" paginatorPosition="bottom"
+								paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,15,20,25,30,35,40,45,50,100">
+
+								<p:column headerText="#{lang['companyName']}">
+					               #{rv.companyName}
+					            </p:column>
+								<p:column headerText="#{lang['companyRegistrationNumber']}">
+					               #{rv.companyRegistrationNumber}
+					            </p:column>
+								<p:column headerText="#{lang['entity.id']}">
+					               #{rv.levyNumber}
+					            </p:column>
+								<p:column headerText="#{lang['company.status']}" width="10%">
+					               #{lang[rv.companyStatus.registrationName]}
+					            </p:column>
+								<p:column headerText="Size of Company" width="10%">#{rv.sizeOfCompany.detailDescription}</p:column>
+
+								<p:column headerText="#{lang['levy.paying']}" width="110" style="text-align:center">
+									<p:outputPanel rendered="#{rv.nonLevyPaying}">
+										<i class="fa fa-times fa-3x red" aria-hidden="true"></i>
+									</p:outputPanel>
+									<p:outputPanel rendered="#{not rv.nonLevyPaying}">
+										<i class="fa fa-check fa-3x green" aria-hidden="true"></i>
+									</p:outputPanel>
+								</p:column>
+
+								<p:column headerText="#{lang['RAG']}" width="37">
+									<h:graphicImage value="/resources/hls/images/red.svg" rendered="#{rv.companyStatus eq CompanyStatusEnum.Pending}" width="40" styleClass="animated pulse infinite" />
+									<h:graphicImage value="/resources/hls/images/green.svg" rendered="#{rv.companyStatus eq CompanyStatusEnum.Active}" width="30" />
+								</p:column>
+
+								<p:column width="40" rendered="false" headerText="Levy Data">
+									<p:commandButton rendered="#{not rv.nonLevyPaying and rv.companyStatus eq CompanyStatusEnum.Active}" icon="fa fa-money" style="background-color:#54C875;" title="#{lang['sars.levies.to.date']}" action="#{usersTaskUI.gotoLevyScreen}" ajax="false">
+										<f:setPropertyActionListener value="#{rv}" target="#{usersTaskUI.company}" />
+									</p:commandButton>
+								</p:column>
+
+								<p:column width="145" rendered="true" headerText="#{lang['view.edit']}">
+									<p:commandButton style="margin:5px;" ajax="false" icon="fa fa-arrow-right" action="#{usersTaskUI.viewCompanyInfo}" title="#{lang['company.details']}">
+										<f:setPropertyActionListener value="#{rv}" target="#{usersTaskUI.company}" />
+									</p:commandButton>
+
+									<p:commandButton style="margin:5px;" rendered="#{dashboardExternalPartyUI.checkCompanyExtensionRequests(rv).size() gt 0}" icon="fa fa-calendar" title="#{lang['view.extension.request']}" update="@form extensionReqDialogForm extensionReqDialog"
+										action="#{dashboardExternalPartyUI.companyExtensionRequests()}" oncomplete="PF('extensionReqDialog').show()">
+										<f:setPropertyActionListener value="#{rv}" target="#{dashboardExternalPartyUI.selectedCompay}" />
+									</p:commandButton>
+
+									<p:commandButton ajax="false" icon="fa fa-plane" action="#{usersTaskUI.interSetaTransfer}" title="InterSETA Transfers Out" style="margin:5px;" rendered="#{not sessionUI.hideETQA}">
+										<f:setPropertyActionListener value="#{rv}" target="#{usersTaskUI.company}" />
+									</p:commandButton>
+								</p:column>
+							</p:dataTable>
+						</h:form>
+						<!--Extension Request Dialog  -->
+						<p:dialog header="#{dashboardExternalPartyUI.selectedCompay.companyName} #{lang['extension.request']}" widgetVar="extensionReqDialog" resizable="false" hideEffect="clip" showEffect="clip" id="extensionReqDialog" width="80%" responsive="true" modal="true">
+							<h:form id="extensionReqDialogForm">
+
+								<p:dataTable var="extensionRequest" value="#{dashboardExternalPartyUI.companyExtensionRequest}">
+									<p:column headerText="#{lang['resason.for.extension']}">
+										<h:outputText value="#{extensionRequest.reasonForExtension}" escape="false" />
+									</p:column>
+
+									<p:column headerText="#{lang['financial.year']}" rendered="false">
+										<h:outputText value="#{extensionRequest.finYear}" escape="false" />
+									</p:column>
+
+									<p:column headerText="#{lang['submission.date']}" width="10%">
+										<h:outputText value="#{extensionRequest.newSubmissionDate}">
+											<f:convertDateTime pattern="dd MMM yyyy" />
+										</h:outputText>
+									</p:column>
+									<p:column headerText="#{lang['status']}" width="30%">
+										<h:outputText rendered="#{extensionRequest.status ne ApprovalEnum.Rejected}" value="#{extensionRequest.status}" />
+										<h:outputText rendered="#{extensionRequest.status eq ApprovalEnum.Rejected}" value="#{lang['please.submit.grant.application.for.record.purposes']}" />
+									</p:column>
+
+									<p:column headerText="#{lang['RAG']}" width="40">
+										<center>
+											<h:graphicImage value="/resources/hls/images/green.svg" rendered="#{extensionRequest.status eq ApprovalEnum.Approved or extensionRequest.status eq ApprovalEnum.Completed}" width="40" />
+											<h:graphicImage value="/resources/hls/images/red.svg" rendered="#{extensionRequest.status eq ApprovalEnum.Rejected}" width="40" styleClass="animated pulse infinite" />
+											<h:graphicImage value="/resources/hls/images/orange.svg"
+												rendered="#{extensionRequest.status eq ApprovalEnum.WaitingForManager or extensionRequest.status eq ApprovalEnum.PendingApproval or extensionRequest.status eq ApprovalEnum.PendingSignOff or extensionRequest.status eq ApprovalEnum.PendingSignOff}" width="40"
+												styleClass="animated pulse infinite" />
+										</center>
+									</p:column>
+								</p:dataTable>
+							</h:form>
+						</p:dialog>
+					</div>
+				</c:if>
+
+				<c:if test="#{dashboardExternalPartyUI.companyLearners.size() gt 0}">
+					<h:form id="mainForm">
+						<div class="card">
+							<h1>Training Profile</h1>
+							<p:importEnum type="haj.com.entity.enums.LearnerStatusEnum" />
+							<p:importEnum type="haj.com.entity.enums.YesNoEnum" />
+							<p:dataTable value="#{dashboardExternalPartyUI.companyLearners}" var="rowVar" reflow="true" emptyMessage="#{lang['no.records.found']}">
+								<p:column headerText="#{lang['expand.row']}" width="45">
+									<p:rowToggler></p:rowToggler>
+								</p:column>
+								<p:column headerText="Application Status">
+									<h:outputText value="#{rowVar.learnerStatus.friendlyName}" />
+								</p:column>
+								<p:column headerText="Approval Date">
+									<h:outputText value="#{rowVar.approvalDate}" />
+								</p:column>
+								<p:column headerText="#{lang['companyName']}">#{rowVar.company.companyName}</p:column>
+								<p:column headerText="#{lang['companyRegistrationNumber']}">#{rowVar.company.companyRegistrationNumber}</p:column>
+								<p:column headerText="#{lang['entity.id']}">#{rowVar.company.levyNumber}</p:column>
+
+								<p:column width="120" headerText="#{lang['view.edit']}">
+									<p:commandButton icon="fa fa-search" title="View Requests" update="@form" action="#{learnersUI.viewCompanyLearnerData}" process="@this">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{learnersUI.companyLearners}" />
+									</p:commandButton>
+									<p:spacer width="5" />
+
+									<p:commandButton icon="fa fa-external-link-square" title="Transfer Learner" update="transferLearnerForm" action="#{learnersUI.prepTransfer}" oncomplete="PF('dlgTransferLearner').show()" rendered="false" process="@this">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{learnersUI.companyLearners}" />
+									</p:commandButton>
+									<p:spacer width="5" rendered="false" />
+
+									<p:commandButton icon="fa fa-clock-o" title="Lost Time" update="lostTimeForm" action="#{learnersUI.prepLostTime}" oncomplete="PF('dlgLostTime').show()" rendered="false" process="@this">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{learnersUI.companyLearners}" />
+									</p:commandButton>
+									<p:spacer width="5" rendered="false" />
+
+									<p:commandButton icon="fa fa-trash-o" title="Terminate Agreement" update="TerminationForm" action="#{learnersUI.prepTermination}" oncomplete="PF('dlgTermination').show()" rendered="false" process="@this">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{learnersUI.companyLearners}" />
+										<f:setPropertyActionListener value="true" target="#{learnersUI.learnerRequest}" />
+									</p:commandButton>
+
+									<p:commandButton icon="fa fa-pencil" title="Change Learnership Details" update="changeForm" action="#{learnersUI.prepCompanyLearnersChange}" oncomplete="PF('dlgChange').show()" rendered="false" process="@this">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{learnersUI.companyLearners}" />
+									</p:commandButton>
+
+									<p:spacer width="5" rendered="#{rowVar.learnerStatus eq LearnerStatusEnum.Registered and not sessionUI.hideETQA}" />
+									<p:commandButton icon="fa fa-file-text-o" title="Recognition of Prior Learning" update="tradeTestForm" action="#{learnersUI.prepCompanyLearnersTradeTest}" oncomplete="PF('dlgTradeTestRPL').show()"
+										rendered="#{rowVar.learnerStatus eq LearnerStatusEnum.Registered and not sessionUI.hideETQA and false}" process="@this">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{learnersUI.companyLearners}" />
+									</p:commandButton>
+
+								</p:column>
+								<p:column width="40" headerText="#{lang['view.edit']}" rendered="false">
+									<p:commandButton icon="fa fa-book" title="View Courseware" update="@form" action="#{dashboardExternalPartyUI.courseWareInfo}" process="@this" rendered="#{learnersUI.companyLearners.user.id ne sessionUI.user.id}">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{dashboardExternalPartyUI.selectedCompayLearner}" />
+									</p:commandButton>
+								</p:column>
+
+								<p:rowExpansion>
+									<ui:include src="/pages/tp/includes/learnerinfoexpansion.xhtml" />
+								</p:rowExpansion>
+
+							</p:dataTable>
+							<c:if test="#{learnersUI.viewLearnerData}">
+								<br />
+								<ui:include src="/pages/tp/includes/learnerrequests.xhtml">
+									<ui:param name="companyLearner" value="#{learnersUI.companyLearners}"></ui:param>
+								</ui:include>
+							</c:if>
+						</div>
+						<c:if test="#{dashboardExternalPartyUI.selectedCompayLearner ne null}">
+							<div class="card card-w-title">
+								<p:commandButton icon="fa fa-times" title="Close" update="@form" process="@this" styleClass="Fright">
+									<f:setPropertyActionListener value="#{null}" target="#{dashboardExternalPartyUI.selectedCompayLearner}" />
+								</p:commandButton>
+								<h1>Available Courseware</h1>
+								<ui:include src="/pages/includes/filterGuide.xhtml" />
+								<p:dataTable var="rowVar" value="#{dashboardExternalPartyUI.coursewareDistibutionDataModel}" filteredValue="#{coursewaredistibutionUI.coursewareDistibutionfilteredList}" id="coursewaredistibutionList" rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom"
+									paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,15,20,25,50,100" reflow="true" sortBy="#{rowVar.approvalEnum}" lazy="true">
+
+									<p:column headerText="More Info" width="45">
+										<p:rowToggler rendered="#{rowVar.approvalEnum eq ApprovalEnum.Approved}" />
+									</p:column>
+									<p:column headerText="Module Title" filterBy="#{rowVar.modules.moduleTitle}">
+										<h:outputText value="#{rowVar.modules.moduleTitle}" />
+									</p:column>
+									<p:column headerText="Module Ref">
+										<h:outputText value="#{rowVar.modules.moduleRef}" />
+									</p:column>
+									<p:column headerText="Module Topic">
+										<h:outputText value="#{rowVar.modules.moduleTopic}" />
+									</p:column>
+									<p:column headerText="Application Status">
+										<h:outputText value="#{rowVar.approvalEnum.friendlyName}" />
+									</p:column>
+
+									<p:rowExpansion>
+										<p:panel>
+											<h3>Module Description</h3>
+											<p:outputLabel value="#{rowVar.modules.description}" styleClass="gray"></p:outputLabel>
+										</p:panel>
+										<br />
+										<p:dataTable value="#{rowVar.modules.docs}" var="rv1" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true" rendered="#{rowVar.modules.docs.size() gt 0}">
+											<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+											<p:column headerText="Document Name">#{rv1.originalFname}</p:column>
+											<p:column headerText="Document Title">#{rv1.modulesTitle.description}</p:column>
+											<p:column headerText="#{lang['uploaded']}" width="15%">
+												<h:outputText value="#{rv1.createDate}">
+													<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+												</h:outputText>
+											</p:column>
+											<p:column headerText="#{lang['version']}" width="15%">
+												<h:outputText value="#{rv1.versionNo}">
+												</h:outputText>
+											</p:column>
+
+											<p:column width="180" headerText="#{lang['view.edit']}">
+												<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}">
+													<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+												</p:commandButton>
+												<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+
+												<p:spacer width="5" rendered="#{rv1.id ne null}" />
+												<p:commandButton icon="fa fa-bars " id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}">
+													<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+												</p:commandButton>
+												<p:tooltip for="dhistUserDocs" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+
+												<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+													<p:spacer width="5" />
+													<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+														<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+													</p:commandButton>
+													<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+												</h:panelGroup>
+
+												<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+													<p:spacer width="5" />
+													<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+														<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+													</p:commandButton>
+													<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+												</h:panelGroup>
+
+											</p:column>
+										</p:dataTable>
+									</p:rowExpansion>
+
+								</p:dataTable>
+
+							</div>
+						</c:if>
+					</h:form>
+				</c:if>
+			</div>
+		</div>
+
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h3>#{lang['outstanding.tasks']}</h3>
+					<h:form>
+						<p:importEnum type="haj.com.entity.enums.RagEnum" />
+						<p:dataTable var="rowVar" value="#{usersTaskUI.tasks}" id="tasksList" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+							paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+
+							<p:column headerText="#{lang['process.name']}" sortBy="#{rowVar.workflowProcess.registrationName}">
+								<h:outputText value="#{lang[rowVar.workflowProcess.registrationName]}" />
+							</p:column>
+
+							<p:column headerText="#{lang['description']}" width="40%">
+								<h:outputText value="#{rowVar.description}" />
+							</p:column>
+
+							<p:column headerText="#{lang['last.action.user']}">
+								<h:outputText value="#{rowVar.actionUser.firstName} #{rowVar.actionUser.lastName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['status']}" width="120">
+								<h:outputText value="#{lang[rowVar.taskStatus.registrationName]}" />
+							</p:column>
+							<p:column headerText="#{lang['dueDate']}" width="120">
+								<h:outputText value="#{rowVar.dueDate}">
+									<f:convertDateTime pattern="dd MMM yyyy" />
+								</h:outputText>
+							</p:column>
+
+
+							<p:column headerText="#{lang['RAG']}" exportable="false" width="5%" styleClass="Fs13">
+								<center>
+									<h:graphicImage value="/resources/hls/images/red.svg" rendered="#{rowVar.rag eq RagEnum.Red}" width="33" styleClass="animated pulse infinite" />
+									<h:graphicImage value="/resources/hls/images/amber.svg" rendered="#{rowVar.rag eq RagEnum.Amber}" width="31" />
+									<h:graphicImage value="/resources/hls/images/green.svg" rendered="#{rowVar.rag eq RagEnum.Green}" width="22" />
+								</center>
+							</p:column>
+							<p:column exportable="false" width="30" headerText="#{lang['view.edit']}">
+								<p:commandButton id="directTask" ajax="false" icon="fa fa-arrow-right" action="#{usersTaskUI.taskRedirect}">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{usersTaskUI.task}" />
+								</p:commandButton>
+								<p:tooltip for="directTask" value="#{lang['view.task.detail']}" position="left" />
+							</p:column>
+
+						</p:dataTable>
+
+
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+			<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+			<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+		</p:confirmDialog>
+		<ui:include src="/pages/tp/includes/dialogs.xhtml" />
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+		<c:if test="#{qdfCompanyUI.qdfCompanyDataModel ne null}">
+			<ui:include src="/pages/includes/qdfcompanyincl.xhtml" />
+		</c:if>
+
+		<c:if test="#{assessorModeratorApplicationUI.isAssOrMod}">
+			<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgDocUpload" resizable="false" hideEffect="clip" showEffect="clip" id="docUploadID" width="80%" responsive="true" modal="true">
+				<h:form id="dlgDocUploadForm">
+					<h:panelGroup id="uploadGroup">
+						<div class="ui-g">
+							<div class="ui-g-12">
+								<div class="card">
+									<h1 style="font-weight: bold; font-size: 25px;">#{assesorModiratorUI.doc.configDoc.name}</h1>
+									<p:panel>
+										<h:panelGrid columns="2" style="width: 100%">
+											<p:outputLabel value="#{lang['notes']}:" for="note" />
+											<p:inputTextarea id="note" value="#{assesorModiratorUI.doc.note}" autoResize="false" rows="1" style="width: 100%">
+												<p:ajax />
+											</p:inputTextarea>
+										</h:panelGrid>
+
+										<div class="TexAlCenter">
+											<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+										</div>
+										<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{assesorModiratorUI.updateFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update="extOFScopeForm"
+											multiple="false" fileLimit="1" immediate="false" auto="true" />
+									</p:panel>
+									<div class="EmptyBox10" />
+								</div>
+							</div>
+						</div>
+					</h:panelGroup>
+				</h:form>
+			</p:dialog>
+		</c:if>
+
+		<h:panelGroup id="pgDocUplaod">
+			<c:if test="#{assesorModiratorUI.assessorModReRegistration ne null or (assesorModiratorUI.extensionOfScopeAmApplication ne null and assesorModiratorUI.extensionOfScope)}">
+				<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUploadUser" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOADUser" width="80%" responsive="true" modal="true">
+					<h:form id="uploadFormUser">
+						<h:panelGroup id="uploadGroupUser">
+							<div class="ui-g">
+								<div class="ui-g-12">
+									<div class="card">
+										<h1 style="font-weight: bold; font-size: 25px;">#{assesorModiratorUI.doc.configDoc.name}</h1>
+										<p:panel>
+											<h:panelGrid columns="2" style="width: 100%">
+												<p:outputLabel value="#{lang['notes']}:" for="note" />
+												<p:inputTextarea id="note" value="#{assesorModiratorUI.doc.note}" autoResize="false" rows="1" style="width: 100%">
+													<p:ajax />
+												</p:inputTextarea>
+											</h:panelGrid>
+
+											<div class="TexAlCenter">
+												<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+											</div>
+											<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{assesorModiratorUI.storeFileUser}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}"
+												update="extOFScopeForm:pgAssModReRegistration extOFScopeForm:pgextensionOfScope @form" multiple="false" fileLimit="1" immediate="false" auto="true" />
+										</p:panel>
+										<div class="EmptyBox10" />
+									</div>
+								</div>
+							</div>
+						</h:panelGroup>
+					</h:form>
+				</p:dialog>
+			</c:if>
+		</h:panelGroup>
+		<c:if test="#{assessorModeratorApplicationUI.isAssOrMod}">
+			<ui:include src="/pages/includes/addresses_update_dialog_include.xhtml" />
+		</c:if>
+	</ui:define>
+
+</ui:composition>

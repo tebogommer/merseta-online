@@ -1,0 +1,348 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+
+					<p:importEnum type="haj.com.entity.enums.PivotNonPivotEnum" />
+					<p:importEnum type="haj.com.entity.enums.LearnerStatusEnum" />
+					<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+					<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+					<p:importEnum type="haj.com.entity.enums.LearnerChangeTypeEnum" />
+					<p:importEnum type="haj.com.entity.enums.LearnerTransferTypeEnum" />
+					<p:importEnum type="haj.com.entity.enums.YesNoEnum" />
+					<p:importEnum type="haj.com.entity.enums.InterventionTypeEnum" />
+
+					<h1>#{lang['sdps']}</h1>
+
+					<h:form id="learnersInsForm">
+						<p:growl sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+
+						<p:dataTable var="rv" id="tpList" value="#{sdpmanagementUI.tpDataModel}" rowKey="#{vr.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+							rowsPerPageTemplate="5,10" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['companyName']}" filterBy="#{rv.company.companyName}" sortBy="#{rv.company.companyName}">
+								#{rv.company.companyName}
+							</p:column>
+							<p:column headerText="#{lang['tradingName']}" filterBy="#{rowVar.company.tradingName}" sortBy="#{rowVar.company.tradingName}" filterStyle="width: 95%">
+								#{rv.company.tradingName}
+							</p:column>
+							<p:column headerText="#{lang['companyRegistrationNumber']}" filterBy="#{rv.company.companyRegistrationNumber}" sortBy="#{rv.company.companyRegistrationNumber}" rendered="false">
+								#{rv.company.companyRegistrationNumber}
+							</p:column>
+							<p:column headerText="Training Site Name" filterStyle="width: 95%">
+								<h:outputText value="#{rv.trainingSite.siteName}" rendered="#{rv.trainingSite ne null}" />
+								<h:outputText value="N/A" rendered="#{rv.trainingSite eq null}" />
+							</p:column>
+							<p:column headerText="#{lang['entity.id']}" filterBy="#{rv.company.levyNumber}" sortBy="#{rv.company.levyNumber}">
+								#{rv.company.levyNumber}
+							</p:column>
+
+							<p:column headerText="#{lang['accreditation.number']}" filterBy="#{rv.certificateNumber}" sortBy="#{rv.certificateNumber}" filterStyle="width: 95%">
+								<h:outputText value="#{rv.certificateNumber}" rendered="#{rv.certificateNumber ne null}" />
+								<h:outputText value="#{rv.accreditationNumber}" rendered="#{rv.certificateNumber eq null}" />
+								<h:outputText rendered="#{(rv.certificateNumber eq null or rv.certificateNumber eq '') and (rv.accreditationNumber eq null or rv.accreditationNumber eq '') }" value="N/A" />
+							</p:column>
+
+							<p:column headerText="#{lang['start.date']}" sortBy="#{rv.startDate}" filterStyle="width: 95%">
+								<h:outputText value="#{rv.startDate}">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</h:outputText>
+								<h:outputText rendered="#{rv.startDate eq null}" value="N/A" />
+							</p:column>
+
+							<p:column headerText="Expiry Date " sortBy="#{rv.expiriyDate}" filterStyle="width: 95%">
+								<h:outputText value="#{rv.expiriyDate}">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</h:outputText>
+								<h:outputText rendered="#{rv.expiriyDate eq null}" value="N/A" />
+							</p:column>
+
+							<p:column headerText="Application Type" sortBy="#{rv.accreditationApplicationTypeEnum}">
+								#{rv.accreditationApplicationTypeEnum.friendlyName}
+							</p:column>
+							<p:column headerText="Application Status" width="10%" sortBy="#{rv.approvalStatus}">
+								#{rv.approvalStatus.friendlyName}
+							</p:column>
+							<p:column headerText="#{lang['company.status']}" width="10%" rendered="false" sortBy="#{rv.company.companyStatus.registrationName}">
+								#{lang[rv.company.companyStatus.registrationName]}
+							</p:column>
+							<p:column headerText="Size of Company" width="10%" rendered="false">#{rv.company.sizeOfCompany.detailDescription}</p:column>
+							<p:column headerText="#{lang['levy.paying']}" width="110" style="text-align:center" rendered="false">
+								<p:outputPanel rendered="#{rv.company.nonLevyPaying}">
+									<i class="fa fa-times fa-3x red" aria-hidden="true"></i>
+								</p:outputPanel>
+								<p:outputPanel rendered="#{not rv.company.nonLevyPaying}">
+									<i class="fa fa-check fa-3x green" aria-hidden="true"></i>
+								</p:outputPanel>
+							</p:column>
+							<p:column headerText="#{lang['RAG']}" width="37" rendered="false">
+								<h:graphicImage value="/resources/hls/images/red.svg" rendered="#{rv.company.companyStatus eq CompanyStatusEnum.Pending}" width="40" styleClass="animated pulse infinite" />
+								<h:graphicImage value="/resources/hls/images/green.svg" rendered="#{rv.company.companyStatus eq CompanyStatusEnum.Active}" width="30" />
+							</p:column>
+							<p:column width="95" rendered="true" headerText="#{lang['view.edit']}">
+								<center>
+									<p:commandButton icon="fa fa-users" title="#{lang['learner.registration']}" action="#{learnersUI.learnersInfo}" update="mainForm" rendered="#{rv.approvalStatus eq ApprovalEnum.Approved or rv.approvalStatus eq ApprovalEnum.DeAccredited}">
+										<f:setPropertyActionListener value="#{rv.company}" target="#{learnersUI.selectedCompany}" />
+										<f:setPropertyActionListener value="#{rv}" target="#{learnersUI.selectedTrainingProvider}" />
+									</p:commandButton>
+								</center>
+							</p:column>
+						</p:dataTable>
+
+						<p:dataTable value="#{learnersUI.companies}" var="rv" reflow="true" emptyMessage="#{lang['no.records.found']}" paginatorPosition="bottom" rendered="false" rows="10" paginator="true"
+							paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,20,30,40,50,60,70,80,90,100,150,200">
+
+							<p:column headerText="#{lang['companyName']}" filterBy="#{rv.companyName}" sortBy="#{rv.companyName}">
+								#{rv.companyName}
+							</p:column>
+							<p:column headerText="#{lang['companyRegistrationNumber']}" filterBy="#{rv.companyRegistrationNumber}" sortBy="#{rv.companyRegistrationNumber}">
+								#{rv.companyRegistrationNumber}
+							</p:column>
+							<p:column headerText="#{lang['entity.id']}" filterBy="#{rv.levyNumber}" sortBy="#{rv.levyNumber}">
+								#{rv.levyNumber}
+							</p:column>
+							<p:column headerText="#{lang['company.status']}" width="10%">#{lang[rv.companyStatus.registrationName]}</p:column>
+							<p:column headerText="Size of Company" width="10%">#{rv.sizeOfCompany.detailDescription}</p:column>
+							<p:column headerText="#{lang['levy.paying']}" width="110" style="text-align:center">
+								<p:outputPanel rendered="#{rv.nonLevyPaying}">
+									<i class="fa fa-times fa-3x red" aria-hidden="true"></i>
+								</p:outputPanel>
+								<p:outputPanel rendered="#{not rv.nonLevyPaying}">
+									<i class="fa fa-check fa-3x green" aria-hidden="true"></i>
+								</p:outputPanel>
+							</p:column>
+							<p:column headerText="#{lang['RAG']}" width="37">
+								<h:graphicImage value="/resources/hls/images/red.svg" rendered="#{rv.companyStatus eq CompanyStatusEnum.Pending}" width="40" styleClass="animated pulse infinite" />
+								<h:graphicImage value="/resources/hls/images/green.svg" rendered="#{rv.companyStatus eq CompanyStatusEnum.Active}" width="30" />
+							</p:column>
+
+							<p:column width="120" rendered="true" headerText="#{lang['view.edit']}">
+								<p:commandButton icon="fa fa-users" title="#{lang['learner.registration']}" action="#{learnersUI.learnersInfo}" update="mainForm" rendered="#{rv.companyStatus eq CompanyStatusEnum.Active}">
+									<f:setPropertyActionListener value="#{rv}" target="#{learnersUI.selectedCompany}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-files-o" rendered="false" title="Add non-merSETA Qualifications" action="#{learnersUI.prepNonMersetaQual}" update="verificationRequestForm" oncomplete="PF('dlgNonSETA').show()">
+									<f:setPropertyActionListener value="#{rv}" target="#{learnersUI.selectedCompany}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<h:form id="mainForm">
+					<p:tooltip position="left"></p:tooltip>
+					<c:if test="#{learnersUI.dataModel ne null}">
+						<div class="card card-w-title">
+							<h3>#{learnersUI.selectedCompany.companyName}'s Learners</h3>
+							<p:panelGrid columns="3" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+								<p:commandButton rendered="#{learnersUI.selectedTrainingProvider.approvalStatus eq ApprovalEnum.Approved and (sessionUI.externalParty eq false or learnersUI.registerLearners)}" icon="fa fa-plus" value="Add New Learner" update="@form" action="#{learnersUI.redirectToLearnerRegForCompany}">
+								</p:commandButton>
+
+								<p:commandButton icon="fa fa-plus" value="E-Learner Registration" update="@form" action="#{learnersUI.redirectToLearnerRegForProiderOtpSignoff}" rendered="#{not sessionUI.hideETQA}">
+								</p:commandButton>
+
+								<p:commandButton icon="fa fa-plus" value="Add Learner Details" update="@form" action="#{learnersUI.redirectToLearnerRegTP}" rendered="#{not sessionUI.hideETQA}">
+								</p:commandButton>
+								
+							</p:panelGrid>
+
+							<c:if test="false">
+								<ui:include src="/pages/includes/download_lazy.xhtml">
+									<ui:param name="file_name" value="learnersList" />
+									<ui:param name="target" value="learnersList" />
+								</ui:include>
+							</c:if>
+							<ui:include src="/pages/includes/filterGuide.xhtml" />
+							<p:dataTable var="rowVar" value="#{learnersUI.dataModel}" filteredValue="#{learnersUI.learnersfilteredList}" id="learnersList" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+								paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+								<p:column headerText="#{lang['first.name']}" filterBy="#{rowVar.user.firstName}" sortBy="#{rowVar.user.firstName}">
+									<h:outputText value="#{rowVar.user.firstName}" />
+								</p:column>
+								<p:column headerText="#{lang['last.name']}" filterBy="#{rowVar.user.lastName}" sortBy="#{rowVar.user.lastName}">
+									<h:outputText value="#{rowVar.user.lastName}" />
+								</p:column>
+								<p:column headerText="Identity Number" filterBy="#{rowVar.user.rsaIDNumber}" sortBy="#{rowVar.user.rsaIDNumber}">
+									<h:outputText value="#{rowVar.user.rsaIDNumber}" />
+									<h:outputText rendered="#{rowVar.user.rsaIDNumber.length() lt 1}" value="N/A" />
+								</p:column>
+								<p:column headerText="Passport Number" filterBy="#{rowVar.user.rsaIDNumber}" sortBy="#{rowVar.user.rsaIDNumber}">
+									<h:outputText rendered="#{rowVar.user.passportNumber.length() lt 1}" value="N/A" />
+									<h:outputText value="#{rowVar.user.passportNumber}" />
+								</p:column>
+								<p:column headerText="Employment Status">
+									<h:outputText value="#{rowVar.employmentStatus.friendlyName}" />
+								</p:column>
+								<p:column headerText="Application Status">
+									<h:outputText value="#{rowVar.learnerStatus.friendlyName}" />
+								</p:column>
+								<p:column headerText="Intervention Type">
+									<h:outputText value="#{rowVar.interventionType.description}" />
+								</p:column>
+								<p:column headerText="Course / Qualification " width="20%">
+
+									<h:outputText value="(#{rowVar.learnership.code})" rendered="#{rowVar.learnership.code ne null}" />
+									<h:outputText value="#{rowVar.learnership.description}" rendered="#{rowVar.learnership.description ne null}" />
+									<p:spacer width="5" rendered="#{rowVar.learnership.description ne null}" />
+									<h:outputText value="(#{rowVar.learnership.qualification.codeString})" rendered="#{rowVar.learnership.qualification.codeString ne null}" />
+									<h:outputText value="#{rowVar.learnership.qualification.description}" rendered="#{rowVar.learnership.qualification.description ne null}" />
+
+									<h:outputText value="(#{rowVar.skillsSet.programmeID})" rendered="#{rowVar.skillsSet ne null}" />
+									<h:outputText value="#{rowVar.skillsSet.description}" rendered="#{rowVar.skillsSet ne null}" />
+
+									<h:outputText value="(#{rowVar.skillsProgram.programmeID})" rendered="#{rowVar.skillsProgram ne null}" />
+									<h:outputText value="#{rowVar.skillsProgram.description}" rendered="#{rowVar.skillsProgram ne null}" />
+
+									<h:outputText value="(#{rowVar.unitStandard.code})" rendered="#{rowVar.unitStandard ne null}" />
+									<h:outputText value="#{rowVar.unitStandard.title}" rendered="#{rowVar.unitStandard ne null}" />
+
+									<h:outputText value="#{rowVar.nonCredidBearingDescription}" rendered="#{rowVar.nonCredidBearingDescription ne null}" />
+
+									<h:outputText value="(#{rowVar.qualification.code})" rendered="#{rowVar.qualification ne null and rowVar.skillsProgram eq null and rowVar.learnership eq null and rowVar.unitStandard eq null}" />
+									<h:outputText value="#{rowVar.qualification.description}" rendered="#{rowVar.qualification ne null and rowVar.skillsProgram eq null and rowVar.learnership eq null and rowVar.unitStandard eq null}" />
+								</p:column>
+
+								<p:column headerText="Completion Date" rendered="false">
+									<h:outputText value="#{rowVar.completionDate}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</h:outputText>
+								</p:column>
+
+								<p:column headerText="Registered Date" sortBy="#{rowVar.registeredDate}">
+									<h:outputText value="#{rowVar.registeredDate}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</h:outputText>
+								</p:column>
+
+								<p:column headerText="Registered Number" sortBy="#{rowVar.registrationNumber}">
+									<h:outputText value="#{rowVar.registrationNumber}">
+									</h:outputText>
+								</p:column>
+
+								<p:column headerText="Agreement End Date">
+									<h:outputText value="#{rowVar.nonSetaQualificationsCompletion.approvalDate}" rendered="#{rowVar.nonSetaQualificationsCompletion ne null}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</h:outputText>
+								</p:column>
+
+								<p:column width="120" headerText="#{lang['view.edit']}" exportable="false">
+									<p:commandButton icon="fa fa-database" title="#{lang['update']}" update="@form" action="#{learnersUI.redirectToLearnerUpdateForCompany}" rendered="#{rowVar.learnerStatus eq LearnerStatusEnum.Registered and not sessionUI.hideETQA}" process="@this">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{learnersUI.companyLearners}" />
+									</p:commandButton>
+									<p:spacer width="5" />
+									<p:commandButton icon="fa fa-search" title="View Requests" update="mainForm" action="#{learnersUI.viewCompanyLearnerData}" process="@this">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{learnersUI.companyLearners}" />
+									</p:commandButton>
+									<p:spacer width="5" />
+									<p:commandButton id="viewLearnerDetails" icon="fa fa-leanpub" title="View Learner Details" update="mainForm" action="#{learnersUI.viewCompanyLearnerDetails}" process="@this">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{learnersUI.companyLearners}" />
+									</p:commandButton>
+									<p:spacer width="5" rendered="#{rowVar.learnerStatus eq LearnerStatusEnum.Registered and rowVar.canAction and not sessionUI.hideETQA}" />
+									<p:commandButton icon="fa fa-external-link-square" title="Transfer Learner" update="transferLearnerForm" action="#{learnersUI.prepTransfer}" oncomplete="PF('dlgTransferLearner').show()" rendered="#{rowVar.learnerStatus eq LearnerStatusEnum.Registered}" process="@this">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{learnersUI.companyLearners}" />
+									</p:commandButton>
+									<p:spacer width="5" rendered="#{rowVar.extentionCheck eq true and rowVar.learnerStatus eq LearnerStatusEnum.Registered and not sessionUI.hideETQA}" />
+									<p:commandButton icon="fa fa-clock-o" title="Extension Request" update="lostTimeForm" action="#{learnersUI.prepLostTime}" oncomplete="PF('dlgLostTime').show()" rendered="#{rowVar.extentionCheck eq true and rowVar.learnerStatus eq LearnerStatusEnum.Registered}" process="@this">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{learnersUI.companyLearners}" />
+									</p:commandButton>
+									<p:spacer width="5" rendered="#{rowVar.learnerStatus eq LearnerStatusEnum.Registered and rowVar.canAction and not sessionUI.hideETQA}" />
+									<p:commandButton icon="fa fa-trash-o" title="Terminate Agreement" update="TerminationForm" action="#{learnersUI.prepTermination}" oncomplete="PF('dlgTermination').show()" rendered="#{rowVar.learnerStatus eq LearnerStatusEnum.Registered}" process="@this">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{learnersUI.companyLearners}" />
+										<f:setPropertyActionListener value="false" target="#{learnersUI.learnerRequest}" />
+									</p:commandButton>
+
+									<p:spacer width="5" rendered="#{rowVar.learnerStatus eq LearnerStatusEnum.Registered and rowVar.canAction and not sessionUI.hideETQA}" />
+									<p:commandButton icon="fa fa-pencil" title="Programme Details Change" update="changeForm" action="#{learnersUI.prepCompanyLearnersChange}" oncomplete="PF('dlgChange').show()" rendered="#{rowVar.learnerStatus eq LearnerStatusEnum.Registered}" process="@this">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{learnersUI.companyLearners}" />
+									</p:commandButton>
+									<p:spacer width="5" rendered="#{rowVar.learnerStatus eq LearnerStatusEnum.Registered and rowVar.canAction and rowVar.interventionType.forTradeTest eq true}" />
+									<p:commandButton icon="fa fa-file-text-o" title="Trade Test Application" update="tradeTestVersionTwoForm" action="#{learnersUI.prepCompanyLearnersTradeTestVersionTwo}"
+										rendered="#{rowVar.learnerStatus eq LearnerStatusEnum.Registered and rowVar.canAction and rowVar.interventionType.forTradeTest eq true}" process="@this">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{learnersUI.companyLearners}" />
+									</p:commandButton>
+									<p:spacer width="5" rendered="#{rowVar.learnerStatus eq LearnerStatusEnum.Registered and rowVar.canAction and rowVar.interventionType.requestVerificationOfAssesments eq true}" />
+									<p:commandButton icon="fa fa-graduation-cap" title="Request Verification of Assessments" action="#{learnersUI.prepTrainingProviderVerfication}" update="verificationRequestForm" oncomplete="PF('dlgVerificationRequestLearner').show()"
+										rendered="#{rowVar.learnerStatus eq LearnerStatusEnum.Registered and rowVar.interventionType.requestVerificationOfAssesments eq true and rowVar.qualification.etqaid eq '599'}">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{learnersUI.companyLearners}" />
+									</p:commandButton>
+									<p:spacer width="5" rendered="#{rowVar.learnerStatus eq LearnerStatusEnum.Registered and rowVar.interventionType.completionLetter ne true and rowVar.interventionType.requestVerificationOfAssesments ne true and rowVar.interventionType.forTradeTest ne true}" />
+									<p:commandButton icon="fa fa-files-o" title="Add Certificate/Results" action="#{learnersUI.prepNonMersetaQual}" update="verificationRequestForm" oncomplete="PF('dlgNonSETA1').show()"
+										rendered="#{rowVar.learnerStatus eq LearnerStatusEnum.Registered and rowVar.interventionType.completionLetter ne true and rowVar.qualification.etqaid ne '599' and false}">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{learnersUI.companyLearners}" />
+									</p:commandButton>
+									<p:spacer width="5" rendered="#{rowVar.learnerStatus eq LearnerStatusEnum.Registered and rowVar.interventionType.requestVerificationOfAssesments ne true and rowVar.interventionType.completionLetter eq true }" />
+									<p:commandButton icon="fa fa-files-o" title="#{lang['completion.letter']}" action="#{learnersUI.prepCompletionLetter}" update="verificationRequestForm" oncomplete="PF('dlgCompletionLetter').show()"
+										rendered="#{rowVar.learnerStatus eq LearnerStatusEnum.Registered and rowVar.interventionType.completionLetter eq true and (rowVar.qualification.etqaid ne '599' or rowVar.learnership.qualification.etqaid ne '599')}">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{learnersUI.companyLearners}" />
+									</p:commandButton>
+									<p:spacer width="5" rendered="#{rowVar.learnerStatus eq LearnerStatusEnum.Registered and rowVar.interventionType.arpl eq true}" />
+									<p:commandButton icon="fa fa-files-o" title="#{lang['arpl.trade.test.application']}" action="#{viewCreateArplUI.prepCLTradeTestArpl}" oncomplete="PF('dlgTradeTestRPLcl').show()" update="verificationRequestForm"
+										rendered="#{rowVar.learnerStatus eq LearnerStatusEnum.Registered and rowVar.interventionType.arpl}">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{viewCreateArplUI.companyLearners}" />
+									</p:commandButton>
+								</p:column>
+								<p:column width="30" exportable="false">
+									<p:commandButton icon="fa fa-download" title="#{lang['download']}" ajax="false" action="#{learnersUI.downlodDocument}" immediate="true">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{learnersUI.companyLearners}" />
+									</p:commandButton>
+									<p:spacer width="5" rendered="#{rowVar.learnerStatus eq LearnerStatusEnum.Application}" />
+									<p:commandButton icon="fa fa-trash-o" title="Withdraw Learner" update="withdrawForm" action="#{learnersUI.prepWithdrawal}" oncomplete="PF('dlgWithdraw').show()" process="@this" rendered="#{rowVar.learnerStatus eq LearnerStatusEnum.Application}">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{learnersUI.companyLearners}" />
+									</p:commandButton>
+								</p:column>
+							</p:dataTable>
+
+							<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+								<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+								<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+							</p:confirmDialog>
+						</div>
+						<c:if test="#{learnersUI.viewLearnerData or learnersUI.viewLearnerDetails}">
+							<div class="card card-w-title">
+								<h1>Learner Details</h1>
+								<fieldset legend="Learner Details">
+									<ui:include src="/pages/includes/user_info_display.xhtml">
+										<ui:param name="user" value="#{learnersUI.companyLearners.user}" />
+									</ui:include>
+								</fieldset>
+							</div>
+						</c:if>
+
+						<c:if test="#{learnersUI.viewLearnerData}">
+							<h:panelGroup id="pgLearnerDetails">
+								<div class="card card-w-title">
+									<fieldset legend="Learner Request">
+										<h1>Learner Request</h1>
+										<ui:include src="/pages/tp/includes/learnerrequests.xhtml">
+											<ui:param name="companyLearner" value="#{learnersUI.companyLearners}"></ui:param>
+										</ui:include>
+									</fieldset>
+								</div>
+							</h:panelGroup>
+						</c:if>
+
+						<c:if test="#{learnersUI.viewLearnerDetails}">
+							<h:panelGroup id="pageLearnerDetails">
+								<div class="card card-w-title">
+									<ui:include src="/pages/tp/includes/learnerexpansion.xhtml">
+										<ui:param name="companyLearner" value="#{learnersUI.companyLearners}"></ui:param>
+									</ui:include>
+								</div>
+							</h:panelGroup>
+						</c:if>
+					</c:if>
+				</h:form>
+			</div>
+		</div>
+
+		<ui:include src="/pages/tp/includes/dialogs.xhtml" />
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+
+	</ui:define>
+
+</ui:composition>

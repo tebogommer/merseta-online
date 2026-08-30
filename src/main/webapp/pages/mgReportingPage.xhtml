@@ -1,0 +1,104 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Mandatory Grant Verification Reporting Page</h1>
+					<h:form id="mainForm">
+						<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="Financial Year / Grant Year" />
+							</div>
+							<div>
+								<p:selectOneMenu id="test" value="#{mgReportingUI.selectedYear}" style="width:75%">
+									<p:ajax />
+									<f:selectItems value="#{mgReportingUI.financialYears}" />
+								</p:selectOneMenu>
+							</div>
+							<div class="EmptyBox10" />
+						</h:panelGroup>
+
+						<p:tabView id="tabView" activeIndex="#{mgReportingUI.index}">
+							<p:ajax event="tabChange" listener="#{mgReportingUI.onTabChange}" update="@form" />
+							<p:tab title="Mandatory Grant Verification Information By Financial Year" id="mgVerificationReportTab">
+								<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+									<h3>Report To Display Mandatory Grant Verification Information For The Selected Financial Year</h3>
+									<p:commandButton update=":mainForm:tabView:resultsPanelMgReportPanel" action="#{mgReportingUI.populateMgVerificationReportList}" value="Generate Report" />
+								</p:panelGrid>
+								<p:outputPanel id="resultsPanelMgReportPanel">
+									<c:if test="#{mgReportingUI.displayReport}">
+										<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+											<ui:include src="/pages/includes/download_lazy.xhtml">
+												<ui:param name="file_name" value="DG_Verification_Report" />
+												<ui:param name="target" value="mgVerificationReportDT" />
+											</ui:include>
+											<p:dataTable rendered="#{mgReportingUI.displayReport}" var="rvMg" value="#{mgReportingUI.mgVerificationReportBean}" id="mgVerificationReportDT" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+												paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" >
+												<p:column headerText="Entity ID">
+													<p:outputLabel value="#{rvMg.levyNumber}" />
+												</p:column>
+												<p:column headerText="Organisation Name">
+													<p:outputLabel value="#{rvMg.organisationName}" />
+												</p:column>
+												<p:column headerText="Trading Name">
+													<p:outputLabel value="#{rvMg.tradingName}" />
+												</p:column>
+												<p:column headerText="Company Size">
+													<p:outputLabel value="#{rvMg.numberOfEmployees}" />
+												</p:column>
+												<p:column headerText="Organisation Type">
+													<p:outputLabel value="#{rvMg.organisationType}" />
+												</p:column>
+												<p:column headerText="Region">
+													<p:outputLabel value="#{rvMg.region}" />
+												</p:column>
+												<p:column headerText="CLO First Name and Surname">
+													<p:outputLabel value="#{rvMg.cloFirstName} #{rvMg.cloLastName}" rendered="#{rvMg.cloFirstNameOnMg eq null or rvMg.cloFirstNameOnMg eq ''}"/>
+													<p:outputLabel value="#{rvMg.cloFirstNameOnMg} #{rvMg.cloLastNameOnMg}" rendered="#{rvMg.cloFirstNameOnMg ne null and rvMg.cloFirstNameOnMg ne ''}" />
+												</p:column>
+												<p:column headerText="CLO Sign Off Date and Time" >
+													<p:outputLabel value="N/A" rendered="#{rvMg.cloSignOffDate eq null}"/>
+													<p:outputLabel value="#{rvMg.cloSignOffDate}" rendered="#{rvMg.cloSignOffDate ne null}">
+														<f:convertDateTime pattern="dd MMMM yyyy HH:mm:ss" />
+													</p:outputLabel>
+												</p:column>
+												<p:column headerText="CRM First Name and Surname">
+													<p:outputLabel value="#{rvMg.crmFirstName} #{rvMg.crmLastName}" rendered="#{rvMg.crmFirstNameOnMg eq null or rvMg.crmFirstNameOnMg eq ''}"/>
+													<p:outputLabel value="#{rvMg.crmFirstNameOnMg} #{rvMg.crmLastNameOnMg}" rendered="#{rvMg.crmFirstNameOnMg ne null and rvMg.crmFirstNameOnMg ne ''}" />
+												</p:column>
+												<p:column headerText="CRM Sign Off Date and Time">
+													<p:outputLabel value="N/A" rendered="#{rvMg.crmSignOffDate eq null}"/>
+													<p:outputLabel value="#{rvMg.crmSignOffDate}" rendered="#{rvMg.crmSignOffDate ne null}" >
+														<f:convertDateTime pattern="dd MMMM yyyy HH:mm:ss" />
+													</p:outputLabel>
+												</p:column>
+												<p:column headerText="Representative Sign Off Date and Time">
+													<p:outputLabel value="N/A" rendered="#{rvMg.sdfSignOffDate eq null}" />
+													<p:outputLabel value="#{rvMg.sdfSignOffDate}" rendered="#{rvMg.sdfSignOffDate ne null}">
+														<f:convertDateTime pattern="dd MMMM yyyy HH:mm:ss" />
+													</p:outputLabel>
+												</p:column>
+												<p:column headerText="MG Verification Status">
+													<p:outputLabel value="#{rvMg.mgVerificationStatus}" />
+												</p:column>
+												<p:column headerText="Non-approval reason">
+													<p:outputLabel value="N/A" rendered="#{rvMg.rejectionReasons eq null or rvMg.rejectionReasons eq ''}" />
+													<p:outputLabel value="#{rvMg.rejectionReasons}" rendered="#{rvMg.rejectionReasons ne null and rvMg.rejectionReasons ne ''}"/>
+												</p:column>
+											</p:dataTable>
+										</p:panelGrid>
+									</c:if>
+								</p:outputPanel>
+							</p:tab>
+						</p:tabView>
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+</ui:composition>

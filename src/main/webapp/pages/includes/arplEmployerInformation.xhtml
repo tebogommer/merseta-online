@@ -1,0 +1,230 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+	<c:if test="false">
+		<!-- 
+			companylearnerstradetest entity
+		-->
+		<!--  
+			<ui:include src="/pages/includes/arplEmployerInformation.xhtml">
+				<ui:param name="companylearnerstradetest" value =" var.companyLearners.company" />
+				<ui:param name="companyTradeTestEmployer" value =" haj.com.entity.CompanyTradeTestEmployer " />
+				<ui:param name="companyEmployer" value=" haj.com.entity.Company " />
+				<ui:param name="TELPHONE_FORMAT" value=" companylearnerstradetestUI.TELPHONE_FORMAT " />
+				<ui:param name="FAX_NUMBER_FORMAT" value=" sdfUI.FAX_NUMBER_FORMAT " />
+				<ui:param name="CELLPHONE_FORMAT"   value=" companylearnerstradetestUI.CELLPHONE_FORMAT " /> 
+			</ui:include> 
+		-->
+	</c:if>
+	<p:importEnum type="haj.com.entity.enums.YesNoEnum" var="YesNoVar" />
+	<p:importEnum type="haj.com.entity.enums.EmploymentStatusEnum" var="EmploymentStatusVar" />
+	<h4>Employer Information</h4>
+	<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText value="#{companylearnerstradetest.employmentStatus.friendlyName}" style="width:95%" disabled="true" />
+			<p:outputLabel value="Occupation:" />
+		</h:panelGroup>
+		<h:panelGroup styleClass="md-inputfield" rendered="#{companylearnerstradetest.employmentStatus eq EmploymentStatusVar.Employed}">
+			<p:inputText value="#{companylearnerstradetest.employerOnNsdms.friendlyName}" style="width:95%" disabled="true" />
+			<p:outputLabel value="Employer On NSDMS:" />
+		</h:panelGroup>
+		<h:panelGroup styleClass="md-inputfield" rendered="#{companylearnerstradetest.employmentStatus eq EmploymentStatusVar.Employed}">
+			<p:inputText value="#{companylearnerstradetest.ofoCode.ofoDescription}" style="width:95%" disabled="true" />
+			<p:outputLabel value="#{lang['ofo.code']}:" />
+		</h:panelGroup>
+		<h:panelGroup styleClass="md-inputfield" rendered="#{companylearnerstradetest.employmentStatus eq EmploymentStatusVar.Employed}">
+			<p:inputText value="#{companylearnerstradetest.specialisation}" style="width:95%" disabled="true" />
+			<p:outputLabel value="Specialisation" />
+		</h:panelGroup>
+	</p:panelGrid>
+	<c:if test="#{companylearnerstradetest.employmentStatus eq EmploymentStatusVar.Employed}">
+		<div class="EmptyBox10" />
+		<div class="EmptyBox10" />
+		<h4> Company Information </h4>
+	</c:if>
+	<p:panelGrid columns="2" style="width: 100%" styleClass="ui-panelgrid-blank form-group" layout="grid" rendered="#{companylearnerstradetest.employmentStatus eq EmploymentStatusVar.Employed}">
+		<c:if test="false">
+			<!-- Employer Info: on NSDMS -->
+		</c:if>
+		<h:panelGroup styleClass="md-inputfield" rendered="#{companyEmployer ne null}">
+			<p:inputText value="#{companyEmployer.companyName}" style="width:95%" disabled="true" />
+			<p:outputLabel value="#{lang['company.name']}" />
+		</h:panelGroup>
+		<h:panelGroup styleClass="md-inputfield" rendered="#{companyEmployer ne null}">
+			<p:inputText value="#{companyEmployer.email}" style="width:95%" disabled="true" />
+			<p:outputLabel value="#{lang['email']}" />
+		</h:panelGroup>
+		<h:panelGroup styleClass="md-inputfield" rendered="#{companyEmployer ne null}">
+			<p:inputText value="#{companyEmployer.tradingName}" style="width:95%" disabled="true" />
+			<p:outputLabel value="#{lang['trading.name']}" />
+		</h:panelGroup>
+		<h:panelGroup styleClass="md-inputfield" rendered="#{companyEmployer ne null}">
+			<p:inputMask value="#{companyEmployer.telNumber}" mask="#{TELPHONE_FORMAT}" style="width:95%" required="true" disabled="true" />
+			<p:outputLabel value="#{lang['tel.number']}" />
+		</h:panelGroup>
+		<h:panelGroup styleClass="md-inputfield" rendered="#{companyEmployer ne null}">
+			<p:inputMask value="#{companyEmployer.faxNumber}" mask="#{FAX_NUMBER_FORMAT}" style="width:95%" disabled="true">
+			</p:inputMask>
+			<p:outputLabel value="#{lang['fax.number']}" />
+		</h:panelGroup>
+		<p:spacer rendered="#{companyEmployer ne null}" />
+		<c:if test="#{companyEmployer ne null}">
+			<ui:include src="/pages/includes/addressInformation.xhtml">
+				<ui:param name="header" value="#{lang['residentialAddress']}" />
+				<ui:param name="address" value="#{companyEmployer.residentialAddress}" />
+			</ui:include>
+		</c:if>
+		<c:if test="#{companyEmployer ne null}">
+			<ui:include src="/pages/includes/addressInformation.xhtml">
+				<ui:param name="header" value="#{lang['postalAddress']}" />
+				<ui:param name="address" value="#{companyEmployer.postalAddress}" />
+			</ui:include>
+		</c:if>
+		<c:if test="false">
+			<!-- Employer Info: on NSDMS -->
+		</c:if>
+		<h:panelGroup styleClass="md-inputfield" rendered="#{companyTradeTestEmployer ne null and companyEmployer eq null}">
+			<p:inputText value="#{companyTradeTestEmployer.companyName}" style="width:95%" disabled="true">
+			</p:inputText>
+			<p:outputLabel value="#{lang['company.name']}" />
+		</h:panelGroup>
+		<h:panelGroup styleClass="md-inputfield" rendered="#{companyTradeTestEmployer ne null and companyEmployer eq null}">
+			<p:inputText value="#{companyTradeTestEmployer.email}" style="width:95%" disabled="true">
+			</p:inputText>
+			<p:outputLabel value="#{lang['email']}" />
+		</h:panelGroup>
+		<h:panelGroup styleClass="md-inputfield" rendered="#{companyTradeTestEmployer ne null and companyEmployer eq null}">
+			<p:inputText value="#{companylearnerstradetestUI.companyTradeTestEmployer.tradingName}" style="width:95%" disabled="true">
+			</p:inputText>
+			<p:outputLabel value="#{lang['trading.name']}" />
+		</h:panelGroup>
+		<h:panelGroup styleClass="md-inputfield" rendered="#{companyTradeTestEmployer ne null and companyEmployer eq null}">
+			<p:inputMask value="#{companyTradeTestEmployer.telNumber}" mask="#{TELPHONE_FORMAT}" style="width:95%" required="true" disabled="true">
+				<p:ajax />
+			</p:inputMask>
+			<p:outputLabel value="#{lang['tel.number']}" />
+		</h:panelGroup>
+		<h:panelGroup styleClass="md-inputfield" rendered="#{companyTradeTestEmployer ne null and companyEmployer eq null}">
+			<p:inputMask value="#{companyTradeTestEmployer.faxNumber}" mask="#{FAX_NUMBER_FORMAT}" style="width:95%" disabled="true">
+			</p:inputMask>
+			<p:outputLabel value="#{lang['fax.number']}" />
+		</h:panelGroup>
+		<p:spacer rendered="#{companyTradeTestEmployer ne null and companyEmployer eq null}" />
+		<c:if test="#{companyTradeTestEmployer ne null and companyEmployer eq null}">
+			<ui:include src="/pages/includes/addressInformation.xhtml">
+				<ui:param name="header" value="#{lang['residentialAddress']}" />
+				<ui:param name="address" value="#{companyTradeTestEmployer.residentialAddress}" />
+			</ui:include>
+		</c:if>
+		<c:if test="#{companyTradeTestEmployer ne null and companyEmployer eq null}">
+			<ui:include src="/pages/includes/addressInformation.xhtml">
+				<ui:param name="header" value="#{lang['postalAddress']}" />
+				<ui:param name="address" value="#{companyTradeTestEmployer.postalAddress}" />
+			</ui:include>
+		</c:if>
+	</p:panelGrid>
+	<c:if test="#{companylearnerstradetest.employmentStatus eq EmploymentStatusVar.Employed}">
+	<h4>Contact Information</h4>
+	<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText value="#{companyTradeTestEmployer.userFirstName}" style="width:95%" disabled="true" />
+			<p:outputLabel value="#{lang['first.name']}"  />
+		</h:panelGroup>
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText value="#{companyTradeTestEmployer.userMiddleName}" style="width:95%" disabled="true" />
+			<p:outputLabel value="#{lang['middle.name']}"  />
+		</h:panelGroup>
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText value="#{companyTradeTestEmployer.userLastName}" style="width:95%" disabled="true" />
+			<p:outputLabel value="#{lang['last.name']}" />
+		</h:panelGroup>
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText value="#{companyTradeTestEmployer.userEmail}" style="width:95%" disabled="true" />
+			<p:outputLabel value="#{lang['email']}" />
+		</h:panelGroup>
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputMask value="#{companyTradeTestEmployer.userTelNumber}" mask="#{TELPHONE_FORMAT}" style="width:95%" disabled="true" />
+			<p:outputLabel value="#{lang['tel.number']}"  />
+		</h:panelGroup>
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputMask value="#{companyTradeTestEmployer.userCellNumber}" mask="#{CELLPHONE_FORMAT}" style="width:95%" disabled="true" />
+			<p:outputLabel value="#{lang['cell.number']}" />
+		</h:panelGroup>
+	</p:panelGrid>
+	</c:if>
+
+	<c:if test="false">
+		<p:fieldset legend="#{lang['residentialAddress']}" style="margin-top: 20px" rendered="#{companyEmployer ne null and false}">
+			<p:panelGrid columns="1" style="width : 95%" styleClass="ui-panelgrid-blank">
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText disabled="true" value="#{companyEmployer.residentialAddress.addressLine1}" style="opacity: 1 !important; color: black; width:95%">
+					</p:inputText>
+					<p:outputLabel value="#{lang['address.line.1']}" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText disabled="true" value="#{companyEmployer.residentialAddress.addressLine2}" style="opacity: 1 !important; color: black; width:95%">
+					</p:inputText>
+					<p:outputLabel value="#{lang['address.line.2']}" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText disabled="true" value="#{companyEmployer.residentialAddress.addressLine3}" style="opacity: 1 !important; color: black; width:95%" />
+					<p:outputLabel value="#{lang['address.line.3']}" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText value="#{companyEmployer.residentialAddress.town.description}" style="opacity: 1 !important; color: black; width:95%" disabled="true" />
+					<p:outputLabel value="#{lang['town']}" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText disabled="true" value="#{companyEmployer.residentialAddress.postcode}" style="opacity: 1 !important; color: black; width:95%" />
+					<p:outputLabel value="#{lang['post.code']}" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText value="#{companyEmployer.residentialAddress.municipality.municipalityDesc}" style="opacity: 1 !important; color: black; width:95%" disabled="true" />
+					<p:outputLabel value="#{lang['municipality']}" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText disabled="true" value="#{companyEmployer.residentialAddress.municipality.province.provinceDesc}" style="opacity: 1 !important; color: black; width:95%" />
+					<p:outputLabel value="#{lang['province']}" />
+				</h:panelGroup>
+			</p:panelGrid>
+		</p:fieldset>
+
+		<p:fieldset legend="#{lang['postalAddress']}" style="margin-top: 20px" rendered="#{companyEmployer ne null and false}">
+			<p:panelGrid columns="1" style="width : 95%" styleClass="ui-panelgrid-blank">
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText disabled="true" value="#{companyEmployer.postalAddress.addressLine1}" style="opacity: 1 !important; color: black; width:95%">
+					</p:inputText>
+					<p:outputLabel value="#{lang['address.line.1']}" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText disabled="true" value="#{companyEmployer.postalAddress.addressLine2}" style="opacity: 1 !important; color: black; width:95%">
+					</p:inputText>
+					<p:outputLabel value="#{lang['address.line.2']}" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText disabled="true" value="#{companyEmployer.postalAddress.addressLine3}" style="opacity: 1 !important; color: black; width:95%">
+					</p:inputText>
+					<p:outputLabel value="#{lang['address.line.3']}" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText value="#{companyEmployer.postalAddress.town.description}" style="opacity: 1 !important; color: black; width:95%" disabled="true" />
+					<p:outputLabel value="#{lang['town']}" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText disabled="true" value="#{companyEmployer.postalAddress.postcode}" style="opacity: 1 !important; color: black; width:95%">
+					</p:inputText>
+					<p:outputLabel value="#{lang['post.code']}" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText value="#{companyEmployer.postalAddress.municipality.municipalityDesc}" style="opacity: 1 !important; color: black; width:95%" disabled="true" />
+					<p:outputLabel value="#{lang['municipality']}" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText disabled="true" value="#{companyEmployer.postalAddress.municipality.province.provinceDesc}" style="opacity: 1 !important; color: black; width:95%" />
+					<p:outputLabel value="#{lang['province']}" />
+				</h:panelGroup>
+			</p:panelGrid>
+		</p:fieldset>
+	</c:if>
+
+	<br />
+</ui:composition>

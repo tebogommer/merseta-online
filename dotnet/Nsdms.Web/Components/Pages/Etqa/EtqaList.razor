@@ -1,0 +1,186 @@
+@page "/etqa"
+@inject IEtqaService EtqaService
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+<div class="d-flex justify-space-between align-center mb-4">
+    <div>
+        <MudText Typo="Typo.h5" Class="font-weight-bold">ETQA & Registered Assessors / Moderators</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">Education and Training Quality Assurance (ETQA) practitioner registrations, qualification scopes, and learner competency assessments</MudText>
+    </div>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAddAlt1" OnClick="CreateNewAssessor">
+        New Practitioner Registration
+    </MudButton>
+</div>
+
+<MudPaper Class="pa-4 mb-4" Elevation="1">
+    <div class="d-flex flex-wrap gap-4 align-center justify-space-between mb-3">
+        <div class="d-flex align-center gap-3 flex-grow-1" style="max-width: 600px;">
+            <MudTextField @bind-Value="_searchString"
+                          Placeholder="Search by Reg No, Practitioner Name, ID Number, Role..."
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          IconSize="Size.Medium"
+                          Class="mt-0"
+                          Immediate="true"
+                          Clearable="true" />
+        </div>
+        <div class="d-flex align-center gap-2">
+            <MudChipSet T="string" @bind-SelectedValue="_statusFilter" SelectionMode="SelectionMode.SingleSelection">
+                <MudChip T="string" Value="@("All")" Color="Color.Default" Variant="@(_statusFilter == "All" ? Variant.Filled : Variant.Outlined)">All</MudChip>
+                <MudChip T="string" Value="@("Active")" Color="Color.Success" Variant="@(_statusFilter == "Active" ? Variant.Filled : Variant.Outlined)">Active Only</MudChip>
+                <MudChip T="string" Value="@("Inactive")" Color="Color.Error" Variant="@(_statusFilter == "Inactive" ? Variant.Filled : Variant.Outlined)">Inactive</MudChip>
+            </MudChipSet>
+        </div>
+    </div>
+
+    @if (_loading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+    }
+    else
+    {
+        <MudTable Items="@FilteredAssessors"
+                  Hover="true"
+                  Dense="true"
+                  Striped="true"
+                  Breakpoint="Breakpoint.Sm"
+                  OnRowClick="@((TableRowClickEventArgs<EtqaAssessor> e) => OpenDetail(e.Item != null ? e.Item.Id : 0))"
+                  T="EtqaAssessor">
+            <HeaderContent>
+                <MudTh>Registration No</MudTh>
+                <MudTh>Practitioner Name</MudTh>
+                <MudTh>ETQA Role</MudTh>
+                <MudTh Class="d-none d-md-table-cell">RSA ID / Passport</MudTh>
+                <MudTh>Registration Period</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh Style="text-align:right">Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Registration No">
+                    <div class="d-flex align-center gap-1">
+                        <MudIcon Icon="@Icons.Material.Filled.VerifiedUser" Size="Size.Small" Color="Color.Primary" />
+                        <MudText Typo="Typo.body2" Class="fw-bold font-monospace">@context.RegistrationNumber</MudText>
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="Practitioner Name">
+                    <MudText Typo="Typo.body2" Class="fw-bold">@(context.Person != null ? $"{context.Person.FirstName} {context.Person.LastName}" : "Unlinked Person")</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@(context.Person?.Email ?? "-")</MudText>
+                </MudTd>
+                <MudTd DataLabel="ETQA Role">
+                    <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">
+                        @context.EtqaRole
+                    </MudChip>
+                </MudTd>
+                <MudTd Class="d-none d-md-table-cell" DataLabel="RSA ID">
+                    <span class="font-monospace">@(context.Person?.RsaIdNumber ?? context.Person?.PassportNumber ?? "-")</span>
+                </MudTd>
+                <MudTd DataLabel="Registration Period">
+                    <div>
+                        <MudText Typo="Typo.caption" Class="d-block">From: @context.StartDate.ToString("yyyy-MM-dd")</MudText>
+                        <MudText Typo="Typo.caption" Class="d-block text-muted">To: @context.EndDate.ToString("yyyy-MM-dd")</MudText>
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="Status">
+                    <MudChip T="string" Color="@(context.IsActive ? Color.Success : Color.Error)" Size="Size.Small" Variant="Variant.Filled">
+                        @(context.IsActive ? "Active" : "Inactive")
+                    </MudChip>
+                </MudTd>
+                <MudTd Style="text-align:right" DataLabel="Actions">
+                    <div class="d-flex justify-end gap-1">
+                        <MudTooltip Text="View & Edit Practitioner Profile">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" OnClick="@(() => OpenDetail(context.Id))" aria-label="Edit Record" />
+                        </MudTooltip>
+                        <MudTooltip Text="Delete Record">
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteAssessor(context.Id, context.RegistrationNumber))" aria-label="Delete Record" />
+                        </MudTooltip>
+                    </div>
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <div class="pa-4 text-center">
+                    <MudText Typo="Typo.body1" Color="Color.Secondary">No ETQA practitioners found matching search criteria.</MudText>
+                </div>
+            </NoRecordsContent>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
+            </PagerContent>
+        </MudTable>
+    }
+</MudPaper>
+
+@code {
+    private List<EtqaAssessor> _assessors = new();
+    private string _searchString = string.Empty;
+    private string _statusFilter = "All";
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _loading = true;
+        _assessors = await EtqaService.GetAllAssessorsAsync();
+        _loading = false;
+    }
+
+    private IEnumerable<EtqaAssessor> FilteredAssessors
+    {
+        get
+        {
+            var query = _assessors.AsEnumerable();
+
+            if (_statusFilter == "Active")
+            {
+                query = query.Where(x => x.IsActive);
+            }
+            else if (_statusFilter == "Inactive")
+            {
+                query = query.Where(x => !x.IsActive);
+            }
+
+            if (!string.IsNullOrWhiteSpace(_searchString))
+            {
+                var s = _searchString.Trim();
+                query = query.Where(x =>
+                    (x.RegistrationNumber != null && x.RegistrationNumber.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    (x.EtqaRole != null && x.EtqaRole.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    (x.Person != null && (
+                        (x.Person.FirstName != null && x.Person.FirstName.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                        (x.Person.LastName != null && x.Person.LastName.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                        (x.Person.RsaIdNumber != null && x.Person.RsaIdNumber.Contains(s, StringComparison.OrdinalIgnoreCase))
+                    )));
+            }
+
+            return query;
+        }
+    }
+
+    private void OpenDetail(int id)
+    {
+        NavManager.NavigateTo($"/etqa/{id}");
+    }
+
+    private void CreateNewAssessor()
+    {
+        NavManager.NavigateTo("/etqa/create");
+    }
+
+    private async Task DeleteAssessor(int id, string regNo)
+    {
+        var deleted = await EtqaService.DeleteAssessorAsync(id, "Admin");
+        if (deleted)
+        {
+            Snackbar.Add($"ETQA Practitioner '{regNo}' deleted successfully with audit trail.", Severity.Success);
+            await LoadData();
+        }
+        else
+        {
+            Snackbar.Add("Could not delete practitioner record.", Severity.Error);
+        }
+    }
+}

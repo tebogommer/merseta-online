@@ -1,0 +1,371 @@
+<ui:composition xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml">
+
+
+	<ui:define name="content">
+		<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum"></p:importEnum>
+		<p:importEnum type="haj.com.entity.enums.AccreditationApplicationTypeEnum"></p:importEnum>
+
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card">
+					<h:form id="hostingcompanydepartmentsInsForm">
+						<p:growl showDetail="false" sticky="false" id="msg">
+							<p:autoUpdate />
+						</p:growl>
+						<p:tooltip position="left" />
+						<h1>#{lang['search.tp']}</h1>
+						<c:if test="false">
+							<ui:include src="/pages/includes/download_lazy.xhtml">
+								<ui:param name="file_name" value="Skills_Development_Provider" />
+								<ui:param name="target" value="SDPList" />
+							</ui:include>
+						</c:if>
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+						<p:importEnum type="haj.com.entity.enums.CompanyRegOrSDLEnum" var="regSDL"></p:importEnum>
+						<p:importEnum type="haj.com.entity.enums.YesNoEnum"></p:importEnum>
+						<p:importEnum type="haj.com.entity.enums.PivotNonPivotEnum" />
+						<p:importEnum type="haj.com.entity.enums.IdPassportEnum"></p:importEnum>
+						<p:importEnum type="haj.com.entity.enums.EmploymentStatusEnum"></p:importEnum>
+						<p:importEnum type="haj.com.entity.enums.AccreditationApplicationTypeEnum"></p:importEnum>
+						<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+
+						<p:dataTable var="rowVar" value="#{trainingproviderapplicationUI.dataModel}" id="SDPList" rowKey="#{rowVar.id}" sortBy="#{rowVar.company.id}" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20,40,60,80,100" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['company.name']}" filterBy="#{rowVar.company.companyName}" sortBy="#{rowVar.company.companyName}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.company.companyName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['tradingName']}" filterBy="#{rowVar.company.tradingName}" sortBy="#{rowVar.company.tradingName}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.company.tradingName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['entity.id']}" filterBy="#{rowVar.company.levyNumber}" sortBy="#{rowVar.company.levyNumber}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.company.levyNumber}" />
+							</p:column>
+
+							<p:column headerText="Training Site Name" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.trainingSite.siteName}" rendered="#{rowVar.trainingSite ne null}" />
+								<h:outputText value="N/A" rendered="#{rowVar.trainingSite eq null}" />
+							</p:column>
+
+							<p:column headerText="#{lang['accreditation.number']}" filterBy="#{rowVar.certificateNumber}" sortBy="#{rowVar.certificateNumber}" filterStyle="width: 95%">
+								<h:outputText rendered="#{rowVar.certificateNumber ne null}" value="#{rowVar.certificateNumber}" />
+								<h:outputText rendered="#{rowVar.certificateNumber eq null}" value="#{rowVar.accreditationNumber}" />
+								<h:outputText rendered="#{(rowVar.certificateNumber eq null or rowVar.certificateNumber eq '') and (rowVar.accreditationNumber eq null or rowVar.accreditationNumber eq '') }" value="N/A" />
+							</p:column>
+
+							<p:column headerText="#{lang['start.date']}" sortBy="#{rowVar.startDate}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.startDate}">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</h:outputText>
+								<h:outputText rendered="#{rowVar.startDate eq null}" value="N/A" />
+							</p:column>
+
+							<p:column headerText="Accreditation End Date " sortBy="#{rowVar.expiriyDate}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.expiriyDate}">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</h:outputText>
+								<h:outputText rendered="#{rowVar.expiriyDate eq null}" value="N/A" />
+							</p:column>
+
+							<p:column headerText="#{lang['review.committee.date']}" sortBy="#{rvwpa.approvalDate}">
+								<h:outputText value="#{rowVar.reviewCommitteeMeeting.fromDateTime}">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</h:outputText>
+								<h:outputText rendered="#{rowVar.reviewCommitteeMeeting.fromDateTime eq null}" value="N/A" />
+							</p:column>
+
+							<p:column headerText="#{lang['decision.number']}" sortBy="#{rowVar.reviewCommitteeMeetingAgenda.decisionNumber}">
+								<h:outputText rendered="#{rowVar.reviewCommitteeMeetingAgenda ne null}" value="#{rowVar.reviewCommitteeMeetingAgenda.decisionNumber}" />
+								<h:outputText rendered="#{rowVar.reviewCommitteeMeetingAgenda eq null}" value="N/A" />
+							</p:column>
+
+							<p:column headerText="#{lang['type.of.application']}" sortBy="#{rowVar.accreditationApplicationTypeEnum}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.accreditationApplicationTypeEnum.friendlyName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['company.approval']}" sortBy="#{rowVar.company.companyStatus}" filterStyle="width: 95%" rendered="false">
+								<h:outputText value="#{lang[rowVar.company.companyStatus.registrationName]}" />
+							</p:column>
+
+							<p:column headerText="#{lang['tp.application.status']}" sortBy="#{rowVar.approvalStatus}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.approvalStatus.friendlyName}" />
+							</p:column>
+
+							<p:column width="45" rendered="true" headerText="#{lang['view.edit']}">
+								<p:commandButton action="#{trainingproviderapplicationUI.prepareSelectTPfor(false)}" icon="fa fa-search-plus" title="View Details" update=":learnerInfoForm @form :sdpTtcAssessorsForm">
+									<f:setPropertyActionListener value="#{null}" target="#{trainingProviderApplicationAssessorModLinkUI.tpa}" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{trainingproviderapplicationUI.selectedTrainingProviderApplication}" />
+								</p:commandButton>
+								<p:spacer width="5" rendered="#{rowVar.accreditationApplicationTypeEnum eq AccreditationApplicationTypeEnum.QCTOTradeTestCentre}" />
+								<p:commandButton action="#{trainingProviderApplicationAssessorModLinkUI.selectApplicationForTtcAssessorModView}" rendered="#{rowVar.accreditationApplicationTypeEnum eq AccreditationApplicationTypeEnum.QCTOTradeTestCentre}" icon="fa fa-users" title="TTC Assessor Moderators"
+									update=":learnerInfoForm :sdpTtcAssessorsForm">
+									<f:setPropertyActionListener value="#{null}" target="#{trainingproviderapplicationUI.selectedTrainingProviderApplication}" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{trainingProviderApplicationAssessorModLinkUI.tpa}" />
+								</p:commandButton>
+							</p:column>
+
+						</p:dataTable>
+
+					</h:form>
+
+
+				</div>
+			</div>
+		</div>
+
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card">
+					<h:form id="learnerInfoForm">
+						<c:if test="#{trainingproviderapplicationUI.selectedTrainingProviderApplication.id != null}">
+							<h1>#{lang['sdp']} Details</h1>
+						</c:if>
+						<p:tabView rendered="#{trainingproviderapplicationUI.selectedTrainingProviderApplication.id != null}">
+
+							<p:tab title="Holding Company Information">
+								<br />
+								<h:form id="companyInfo">
+								<ui:include src="/pages/includes/searchTPCompanyDetails.xhtml">
+									<ui:param name="company" value="#{trainingproviderapplicationUI.selectedTrainingProviderApplication.company}" />
+								</ui:include>
+								<p:commandButton id="companyDataSearch_vh" immediate="false" value="#{lang['submit']}" styleClass="green-btn flat Fs18" style="height: 50px;" icon="fa fa-check" action="#{trainingproviderapplicationUI.updateCompanyData_vh}">
+								</p:commandButton>   
+								 
+								</h:form>
+							</p:tab>
+
+							<p:tab title="Training Site Information" rendered="#{trainingproviderapplicationUI.trainingSite ne null}">
+								<br />
+								<p:outputPanel id="trainingSitePanel">
+									<c:if test="#{!trainingproviderapplicationUI.canActionInformation or !trainingproviderapplicationUI.sdpType.alterSiteInfo}">
+										<ui:include src="/pages/includes/training_site_info_display.xhtml">
+											<ui:param name="trainingSite" value="#{trainingproviderapplicationUI.trainingSite}" />
+										</ui:include>
+										<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+											<p:outputPanel rendered="#{trainingproviderapplicationUI.trainingSite.residentialAddress ne null}">
+												<ui:include src="/pages/includes/addressInformation.xhtml">
+													<ui:param name="header" value="#{lang['residentialAddress']}" />
+													<ui:param name="address" value="#{trainingproviderapplicationUI.trainingSite.residentialAddress}" />
+												</ui:include>
+											</p:outputPanel>
+											<p:outputPanel rendered="#{trainingproviderapplicationUI.trainingSite.postalAddress ne null}">
+												<ui:include src="/pages/includes/addressInformation.xhtml">
+													<ui:param name="header" value="Postal Address" />
+													<ui:param name="address" value="#{trainingproviderapplicationUI.trainingSite.postalAddress}" />
+												</ui:include>
+											</p:outputPanel>
+										</p:panelGrid>
+									</c:if>
+								</p:outputPanel>
+							</p:tab>
+
+							<p:tab title="Application Submission User" style="width:100%">
+								<ui:include src="/pages/includes/searchTrainingProviderUserInfo.xhtml" />
+							</p:tab>
+
+							<p:tab title="#{lang['sdp.contact.persons']}" id="contactPersonsTab">
+								<ui:include src="/pages/includes/tpUpdateContactPersonNewStructure.xhtml" />
+								<div class="EmptyBox10" />
+							</p:tab>
+
+							<p:tab rendered="true" title="#{lang['assessor.moderator.details']}" id="assModInfo">
+								<ui:include src="/pages/includes/tpUpdateAvailailityOfFacAndAssessorNewStructure.xhtml" />
+								<div class="EmptyBox10" />
+							</p:tab>
+
+							<p:tab title="#{lang['qualification.and.unit.stands']}">
+								<ui:include src="/pages/includes/searchTPUnitStandrsAndQualification.xhtml" />
+							</p:tab>
+
+							<p:tab title="#{lang['etqa.review.committee.date.details']}" rendered="#{trainingproviderapplicationUI.selectedTrainingProviderApplication.reviewCommitteeMeeting ne null}">
+								<h:form id="ETQDatesform_vh">
+								<ui:include src="/pages/includes/searchTrainingProviderETQADates.xhtml" />
+								<p:commandButton id="submitupdateETQAData_vh" immediate="false" value="#{lang['submit']}" styleClass="green-btn flat Fs18" style="height: 50px;" icon="fa fa-check" action="#{trainingproviderapplicationUI.updateUserApplicationData}">
+								</p:commandButton>   
+								</h:form>
+							</p:tab>
+
+							<p:tab title="#{lang['documents']}">
+								<ui:include src="/pages/includes/searchTPDocuments.xhtml" />
+							</p:tab>
+
+							<p:tab title="Company SDP Application(s)">
+								<ui:include src="/pages/includes/searchTPCompanyApplication.xhtml" />
+							</p:tab>
+
+						</p:tabView>
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+		<h:form id="sdpTtcAssessorsForm" style="width:100%">
+			<h:panelGroup style="width:100%" rendered="#{trainingProviderApplicationAssessorModLinkUI.tpa.id != null}">
+				<div class="ui-g">
+					<div class="ui-g-12">
+						<div class="card card-w-title">
+							<h1>#{trainingProviderApplicationAssessorModLinkUI.tpa.company.companyName}: Trade Test Centre Assessors &amp; Moderators</h1>
+
+							<p:tabView id="tabViewTTCAssMod">
+								<p:ajax event="tabChange" listener="#{trainingProviderApplicationAssessorModLinkUI.onTabChange}" update=":sdpTtcAssessorsForm:tabViewTTCAssMod" />
+								<p:tab title="All Trade Test Centre Assessors &amp; Moderators" id="viewAllInfoTab">
+									<p:outputPanel id="ttcOutputPanel">
+										<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+
+											<p:dataTable var="rvycc" value="#{trainingProviderApplicationAssessorModLinkUI.ttcAssessorModLinkDataModel}" id="ttcAssModDT" paginator="true" rows="5" paginatorPosition="bottom"
+												paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20,40,60,80,100" reflow="true" lazy="true">
+
+												<p:column headerText="NSDMS Link ID" style="width: 7%" sortBy="#{rvycc.assessorModeratorApplication.id}" filterStyle="width: 95%">
+													<h:outputText value="#{rvycc.id}" />
+												</p:column>
+
+												<p:column headerText="Full Name" sortBy="#{rvycc.assessorModeratorApplication.user.firstName}" filterStyle="width: 95%">
+													<h:outputText value="#{rvycc.assessorModeratorApplication.user.firstName} #{rvycc.assessorModeratorApplication.user.lastName}" />
+												</p:column>
+
+												<p:column headerText="Email" sortBy="#{rvycc.assessorModeratorApplication.user.email}" filterStyle="width: 95%">
+													<h:outputText value="#{rvycc.assessorModeratorApplication.user.email}" />
+												</p:column>
+
+												<p:column headerText="Designation Registration Number" sortBy="#{rvycc.assessorModeratorApplication.certificateNumber}" filterStyle="width: 95%">
+													<h:outputText value="#{rvycc.assessorModeratorApplication.certificateNumber}" />
+												</p:column>
+
+												<p:column headerText="Status" sortBy="#{rvycc.assessorModeratorApplication.status}" filterStyle="width: 95%" rendered="false">
+													<h:outputText value="#{rvycc.assessorModeratorApplication.status}" />
+												</p:column>
+
+												<p:column headerText="End Date" sortBy="#{rvycc.assessorModeratorApplication.endDate}" filterStyle="width: 95%">
+													<h:outputText value="#{rvycc.assessorModeratorApplication.endDate}">
+														<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+													</h:outputText>
+												</p:column>
+
+												<p:column headerText="Application Type" sortBy="#{rvycc.assessorModeratorApplication.applicationType.displayName}" filterStyle="width: 95%" exportable="false">
+													<h:outputText value="#{rvycc.assessorModeratorApplication.applicationType.displayName}" />
+												</p:column>
+
+												<p:column headerText="Edit / View" exportable="false" style="width: 7%" styleClass="action-column">
+													<p:commandButton update=":sdpTtcAssessorsForm:tabViewTTCAssMod:viewInfoAssessorModeratorPanel" icon="fa fa-search" action="#{trainingProviderApplicationAssessorModLinkUI.viewLinkInformation}" title="View Information">
+														<f:setPropertyActionListener value="#{rvycc}" target="#{trainingProviderApplicationAssessorModLinkUI.providerApplicationTradeTestAssessorsLinkView}" />
+													</p:commandButton>
+												</p:column>
+											</p:dataTable>
+										</p:panelGrid>
+									</p:outputPanel>
+
+									<p:outputPanel id="viewInfoAssessorModeratorPanel">
+
+										<c:if test="#{trainingProviderApplicationAssessorModLinkUI.providerApplicationTradeTestAssessorsLinkView ne null}">
+											<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+												<div class="EmptyBox10" />
+
+												<h3>#{trainingProviderApplicationAssessorModLinkUI.providerApplicationTradeTestAssessorsLinkView.assessorModeratorApplication.user.firstName} #{trainingProviderApplicationAssessorModLinkUI.providerApplicationTradeTestAssessorsLinkView.assessorModeratorApplication.user.lastName}
+													Selected</h3>
+
+												<p:fieldset legend="Accreditation Information">
+													<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+														<h:panelGroup styleClass="md-inputfield">
+															<p:inputText disabled="true" value="#{trainingProviderApplicationAssessorModLinkUI.assessorModeratorApplicationView.etqa.description}" style="width:95%">
+																<p:ajax />
+															</p:inputText>
+															<p:outputLabel value="Primary ETQA" />
+														</h:panelGroup>
+														<h:panelGroup styleClass="md-inputfield">
+															<p:inputText disabled="true" value="#{trainingProviderApplicationAssessorModLinkUI.assessorModeratorApplicationView.applicationType.displayName}" style="width:95%">
+																<p:ajax />
+															</p:inputText>
+															<p:outputLabel value="Application Type" />
+														</h:panelGroup>
+														<h:panelGroup styleClass="md-inputfield">
+															<p:inputText disabled="true" value="#{trainingProviderApplicationAssessorModLinkUI.assessorModeratorApplicationView.startDate}" style="width:95%">
+																<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+															</p:inputText>
+															<p:outputLabel value="Designation: Start Date" />
+														</h:panelGroup>
+
+														<h:panelGroup styleClass="md-inputfield">
+															<p:inputText disabled="true" value="#{trainingProviderApplicationAssessorModLinkUI.assessorModeratorApplicationView.endDate}" style="width:95%">
+																<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+															</p:inputText>
+															<p:outputLabel value="Designation: End Date" />
+														</h:panelGroup>
+
+														<h:panelGroup styleClass="md-inputfield">
+															<p:inputText disabled="true" value="#{trainingProviderApplicationAssessorModLinkUI.assessorModeratorApplicationView.certificateNumber}" style="width:95%">
+															</p:inputText>
+															<p:outputLabel value="Designation: Registration Number" />
+														</h:panelGroup>
+													</p:panelGrid>
+												</p:fieldset>
+
+												<p:fieldset legend="SAQA Qualifications Assigned">
+													<p:dataTable var="rvqv" value="#{trainingProviderApplicationAssessorModLinkUI.qualificationListView}" id="tpViewList" rowKey="#{rvqv.id}" paginator="true" rows="5" paginatorPosition="bottom"
+														paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10" reflow="true">
+
+														<f:facet name="header">SAQA Qualifications Link/Assigned</f:facet>
+														<p:column headerText="#{lang['code']}">
+															<h:outputText value="#{rvqv.code}" />
+														</p:column>
+														<p:column headerText="#{lang['qualification']}">
+															<h:outputText value="#{rvqv.description}" />
+														</p:column>
+
+													</p:dataTable>
+												</p:fieldset>
+
+												<p:fieldset legend="Additional Information">
+													<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+														<h:panelGroup styleClass="md-inputfield">
+															<p:inputText disabled="true"
+																value="#{trainingProviderApplicationAssessorModLinkUI.providerApplicationTradeTestAssessorsLinkView.createUser.firstName} #{trainingProviderApplicationAssessorModLinkUI.providerApplicationTradeTestAssessorsLinkView.createUser.lastName} (#{trainingProviderApplicationAssessorModLinkUI.providerApplicationTradeTestAssessorsLinkView.createUser.email})"
+																style="width:100%">
+															</p:inputText>
+															<p:outputLabel value="Created By:" />
+														</h:panelGroup>
+
+														<h:panelGroup styleClass="md-inputfield">
+															<p:inputText disabled="true" value="#{trainingProviderApplicationAssessorModLinkUI.providerApplicationTradeTestAssessorsLinkView.createDate}" style="width:100%">
+																<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME}" />
+															</p:inputText>
+															<p:outputLabel value="Date Created:" />
+														</h:panelGroup>
+
+														<h:panelGroup styleClass="md-inputfield" rendered="#{trainingProviderApplicationAssessorModLinkUI.providerApplicationTradeTestAssessorsLinkView.updateUser ne null}">
+															<p:inputText disabled="true"
+																value="#{trainingProviderApplicationAssessorModLinkUI.providerApplicationTradeTestAssessorsLinkView.updateUser.firstName} #{trainingProviderApplicationAssessorModLinkUI.providerApplicationTradeTestAssessorsLinkView.updateUser.lastName} (#{trainingProviderApplicationAssessorModLinkUI.providerApplicationTradeTestAssessorsLinkView.updateUser.email})"
+																style="width:100%">
+															</p:inputText>
+															<p:outputLabel value="Last Updated By:" />
+														</h:panelGroup>
+
+														<h:panelGroup styleClass="md-inputfield" rendered="#{trainingProviderApplicationAssessorModLinkUI.providerApplicationTradeTestAssessorsLinkView.updateUser ne null}">
+															<p:inputText disabled="true" value="#{trainingProviderApplicationAssessorModLinkUI.providerApplicationTradeTestAssessorsLinkView.updateDate}" style="width:100%">
+																<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME}" />
+															</p:inputText>
+															<p:outputLabel value="Date Updated:" />
+														</h:panelGroup>
+													</p:panelGrid>
+												</p:fieldset>
+											</p:panelGrid>
+										</c:if>
+									</p:outputPanel>
+								</p:tab>
+							</p:tabView>
+						</div>
+					</div>
+				</div>
+			</h:panelGroup>
+		</h:form>
+
+		<ui:include src="/pages/includes/amDocumentsHistory.xhtml">
+			<ui:param name="docHistDataModel" value="#{trainingproviderapplicationUI.docHistDataModel}" />
+		</ui:include>
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+	</ui:define>
+
+
+</ui:composition>

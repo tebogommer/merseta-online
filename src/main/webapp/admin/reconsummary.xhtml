@@ -1,0 +1,200 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+
+	<ui:define name="content">
+		<div class="ui-g">
+
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="uploadForm">
+						<h1>#{lang['reconciliation.summary']}</h1>
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+
+						<p:panelGrid rendered="#{reconReportSummaryUI.bySDL}" columns="3" styleClass="ui-panelgrid-blank" columnClasses="FontBold,,">
+							<p:outputLabel value="#{lang['levy.number']}" />
+							<p:inputMask required="true" mask="#{sarsReportsUI.companyLevyNumberFormat}" requiredMessage="#{lang['invalid.levy.number']}" value="#{reconReportSummaryUI.levyNumber}" />
+							<p:commandButton action="#{reconReportSummaryUI.byLevyNumber}" value="#{lang['submit']}" update="@form" />
+
+						</p:panelGrid>
+
+						<h:panelGroup rendered="#{reconReportSummaryUI.levies.size() gt 0}">
+
+							<p:fieldset legend="#{lang['company.information']}">
+								<p:panelGrid columns="4" styleClass="ui-panelgrid-blank" layout="grid" columnClasses="FontBold,Fs14,FontBold,Fs14">
+									<p:outputLabel value="#{lang['name']}" />
+									<p:outputLabel value="#{reconReportSummaryUI.sarsEmployerDetail.registeredNameOfEntity}" />
+
+									<p:outputLabel value="#{lang['company.reg.number']}" />
+									<p:outputLabel value="#{reconReportSummaryUI.sarsEmployerDetail.companyRegistrationNumber}" />
+
+									<p:outputLabel value="#{lang['tradingName']}" />
+									<p:outputLabel value="#{reconReportSummaryUI.sarsEmployerDetail.tradingName}" />
+
+									<p:outputLabel value="#{lang['trading.status']}" />
+									<p:outputLabel value="(#{reconReportSummaryUI.sarsEmployerDetail.tradingStatus}) #{sarsReportsUI.sarsEmployerDetail.status}" />
+
+									<p:outputLabel value="#{lang['sic']}" />
+									<p:outputLabel value="#{reconReportSummaryUI.sarsEmployerDetail.sicCode2}" />
+
+								</p:panelGrid>
+
+							</p:fieldset>
+
+							<br />
+							<div align="right">
+								<h:commandLink id="eExcel">
+									<i class="fa fa-file-excel-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+									<p:dataExporter type="xls" target="sarsfilesList" fileName="Recon_#{reconReportSummaryUI.levyNumber}" />
+								</h:commandLink>
+								<h:commandLink id="ePdf" rendered="false">
+									<i class="fa fa-file-pdf-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+									<p:dataExporter type="pdf" target="sarsfilesList" fileName="Recon_#{reconReportSummaryUI.levyNumber}" />
+								</h:commandLink>
+								<h:commandLink id="eCsv">
+									<i class="fa fa-file-text-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+									<p:dataExporter type="csv" target="sarsfilesList" fileName="Recon_#{reconReportSummaryUI.levyNumber}" />
+								</h:commandLink>
+								<h:commandLink id="eXml">
+									<i class="fa fa-file-code-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+									<p:dataExporter type="xml" target="sarsfilesList" fileName="Recon_#{reconReportSummaryUI.levyNumber}" />
+								</h:commandLink>
+
+								<p:tooltip for="eExcel" value="#{lang['export.search.results.to.excel']}" position="left" />
+								<p:tooltip for="ePdf" value="#{lang['export.search.results.to.pdf']}" position="left" />
+								<p:tooltip for="eCsv" value="#{lang['export.search.results.as.a.csv.file']}" position="left" />
+								<p:tooltip for="eXml" value="#{lang['export.search.results.as.a.xml.file']}" position="left" />
+							</div>
+						</h:panelGroup>
+						<br />
+
+
+
+						<p:dataTable var="rv" value="#{reconReportSummaryUI.levies}" id="sarsfilesList" rowKey="#{rowVar.id}" reflow="true" rendered="#{reconReportSummaryUI.levies.size() gt 0}">
+
+							<p:column headerText="SARS #{lang['scheme.year']}" width="10%">
+								<h:outputText value="#{rv.schemeYear}" />
+							</p:column>
+							<p:column headerText="#{lang['scheme.year']}" width="10%">
+								<h:outputText value="#{rv.schemeYear+1}" />
+							</p:column>
+
+							<p:column headerText="#{lang['mandatory.levy']}">
+								<h:outputText value="#{rv.mandatoryLevy}" styleClass="Fright">
+									<f:convertNumber pattern="###,###,###,##0.00" />
+								</h:outputText>
+							</p:column>
+
+
+
+
+							<p:column headerText="#{lang['invoice.amount']}">
+								<h:outputText value="#{rv.ts2.documentAmountD}" styleClass="Fright">
+									<f:convertNumber pattern="###,###,###,##0.00" />
+								</h:outputText>
+							</p:column>
+
+							<p:column headerText="#{lang['inter.seta.transfer']} Amount">
+								<h:outputText value="#{rv.interSetaTransfer}" styleClass="Fright">
+									<f:convertNumber pattern="###,###,###,##0.00" />
+								</h:outputText>
+							</p:column>
+
+							<p:column headerText="#{lang['difference']}">
+								<h:outputText value="#{rv.ts2.currentTrxAmountD}" styleClass="Fright">
+									<f:convertNumber pattern="###,###,###,##0.00" />
+								</h:outputText>
+							</p:column>
+
+							<p:column width="30" exportable="false" rendered="false">
+								<p:commandButton id="empd" action="#{reconReportSummaryUI.empDetail}" icon="ui-icon-people-outline" label="#{lang['view.number.of.employers.breakdown']}" oncomplete="PF('empDetail').show()" update=":empDetailForm">
+									<f:setPropertyActionListener value="#{rv}" target="#{reconReportSummaryUI.sarsLevyDetails}" />
+								</p:commandButton>
+								<p:tooltip for="empd" position="left" />
+							</p:column>
+
+
+
+
+
+						</p:dataTable>
+
+
+
+					</h:form>
+				</div>
+			</div>
+
+
+		</div>
+
+		<p:dialog modal="true" widgetVar="empDetail" responsive="true" width="70%">
+			<h:form id="empDetailForm">
+				<h2>#{lang['employer.breakdown.for.scheme.year']}: #{reconReportSummaryUI.sarsLevyDetails.schemeYear}</h2>
+
+				<h:panelGroup rendered="#{reconReportSummaryUI.sarsLevyDetails.employerSummary eq null or reconReportSummaryUI.sarsLevyDetails.employerSummary.size() eq 0}">
+					<h3>The number of employers by status is still being collected. Please return shortly if this information is required</h3>
+				</h:panelGroup>
+
+				<p:dataTable var="rv" value="#{reconReportSummaryUI.sarsLevyDetails.employerSummary}" sortBy="#{rv.id}" rendered="#{reconReportSummaryUI.sarsLevyDetails.employerSummary.size() gt 0}">
+					<p:column headerText="Status">
+						<h:outputText value="(#{rv.tradingStatus}) #{rv.status}" rendered="#{rv.tradingStatus ne null}" />
+						<h:outputText value="#{rv.status}" rendered="#{rv.tradingStatus eq null}" />
+					</p:column>
+					<p:column headerText="Employers">
+						<h:outputText value="#{rv.noEmployes}" styleClass="Fright FontBold">
+							<f:convertNumber pattern="###,###,###,###" />
+						</h:outputText>
+					</p:column>
+					<p:summaryRow>
+						<p:column style="text-align:right">
+							<h:outputText value="Total employers in SARS employer files" />
+						</p:column>
+						<p:column style="text-align:right">
+							<h:outputText value="#{reconReportSummaryUI.sarsLevyDetails.numberEmployersInSARSEmployerFiles}" styleClass="Fright FontBold Fs17">
+								<f:convertNumber pattern="###,###,###,###" />
+							</h:outputText>
+						</p:column>
+					</p:summaryRow>
+
+				</p:dataTable>
+				<br />
+				<p:panelGrid columns="3" layout="grid">
+
+
+					<p:outputLabel value="Levy Paying Employers in SARS Levy File" />
+					<p:outputLabel value="#{reconReportSummaryUI.sarsLevyDetails.numberEmployersInSARSLevyFiles}" styleClass="Fright FontBold Fs16" />
+					<p:outputLabel value="#{lang['b.a']}" styleClass="FontLight" />
+
+					<p:outputLabel value="Levy Paying Employers Paid Mandatory Grant" />
+					<p:outputLabel value="#{reconReportSummaryUI.sarsLevyDetails.numberEmployersInSETAInvoiceFile}" styleClass="Fright FontBold Fs16" />
+					<p:outputLabel value="#{lang['b.b']}" styleClass="FontLight" />
+
+					<p:spacer />
+					<p:separator styleClass="FontLight" />
+					<p:spacer />
+
+					<p:outputLabel value="#{lang['percentage.paid']}" />
+					<h:panelGroup styleClass="Fright FontLight Fs16">
+						<p:outputLabel value="#{(reconReportSummaryUI.sarsLevyDetails.numberEmployersInSETAInvoiceFile / reconReportSummaryUI.sarsLevyDetails.numberEmployersInSARSLevyFiles) * 100.0}">
+							<f:convertNumber pattern="#0.00" />
+						</p:outputLabel>%
+     	</h:panelGroup>
+					<p:outputLabel value="#{lang['b.a.100']}" styleClass="FontLight" />
+
+				</p:panelGrid>
+			</h:form>
+			<br />
+		</p:dialog>
+
+
+
+
+
+
+
+
+	</ui:define>
+
+</ui:composition>

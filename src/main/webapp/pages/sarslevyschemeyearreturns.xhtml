@@ -1,0 +1,194 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>DHET Scheme Year Mandatory Returns &amp; Invoices</h1>
+					<h:form id="sarslevyschemeyearreturnsInsForm" rendered="#{sessionUI.activeUser.sarsLevyMandInvoicesUpdate}">
+						<p:growl sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+
+						<p:panelGrid columns="1" style="width:100%" id="sarslevyschemeyearreturnsInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputMask required="true" id="forSchemeYear" requiredMessage="Provide: Year" value="#{sarslevyschemeyearreturnsUI.sarslevyschemeyearreturns.forSchemeYear}" style="width:95%" mask="#{sarslevydetailcalculationUI.YEAR_FORMAT}" />
+								<p:outputLabel value="DHET Scheme Year" for="forSchemeYear" />
+							</h:panelGroup>
+
+							<p:fieldset legend="Mandatory Levies" style="margin-bottom:20px; width:95%">
+								<p:panelGrid columns="2" style="width:95%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+									<h:panelGroup>
+										<p:selectBooleanCheckbox id="allowReturnsMandatory" value="#{sarslevyschemeyearreturnsUI.sarslevyschemeyearreturns.allowReturnsMandatory}" />
+										<p:spacer width="5" />
+										<p:outputLabel value="Allow Returns" for="allowReturnsMandatory" />
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:selectBooleanCheckbox id="allowInvoicesMandatory" value="#{sarslevyschemeyearreturnsUI.sarslevyschemeyearreturns.allowInvoicesMandatory}" />
+										<p:spacer width="5" />
+										<p:outputLabel value="Allow Invoices" for="allowInvoicesMandatory" />
+									</h:panelGroup>
+								</p:panelGrid>
+							</p:fieldset>
+
+							<c:if test="false">
+								<p:fieldset legend="Discretionary Levies" style="margin-bottom:20px">
+									<p:panelGrid columns="2" style="width:95%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+										<h:panelGroup>
+											<p:selectBooleanCheckbox id="allowReturnsDiscretionary" value="#{sarslevyschemeyearreturnsUI.sarslevyschemeyearreturns.allowReturnsDiscretionary}" />
+											<p:spacer width="5" />
+											<p:outputLabel value="Allow Returns" for="allowReturnsDiscretionary" />
+										</h:panelGroup>
+										<h:panelGroup>
+											<p:selectBooleanCheckbox id="allowInvoicesDiscretionary" value="#{sarslevyschemeyearreturnsUI.sarslevyschemeyearreturns.allowInvoicesDiscretionary}" />
+											<p:spacer width="5" />
+											<p:outputLabel value="Allow Invoices" for="allowInvoicesDiscretionary" />
+										</h:panelGroup>
+									</p:panelGrid>
+								</p:fieldset>
+							</c:if>
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:sarslevyschemeyearreturnsList :sarslevyschemeyearreturnsInsForm:sarslevyschemeyearreturnsInsGrid" action="#{sarslevyschemeyearreturnsUI.sarslevyschemeyearreturnsInsert}" />
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="sarslevyschemeyearreturnsInsGrid" process="@this" action="#{sarslevyschemeyearreturnsUI.prepareNew}">
+									<p:resetInput target="sarslevyschemeyearreturnsInsGrid" />
+								</p:commandButton>
+							</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+					<h:form id="mainFormDisplay" rendered="#{!sessionUI.activeUser.sarsLevyMandInvoicesUpdate}">
+						<ui:include src="/pages/includes/download_lazy.xhtml">
+							<ui:param name="file_name" value="Scheme_Year_Returns_List" />
+							<ui:param name="target" value="sarslevyschemeyearreturnsListDisplay" />
+						</ui:include>
+						<p:dataTable var="rowVarD" value="#{sarslevyschemeyearreturnsUI.dataModel}" id="sarslevyschemeyearreturnsListDisplay" rowKey="#{rowVarD.id}" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+							<p:column headerText="DHET Scheme Year">
+								<h:outputText value="#{rowVarD.forSchemeYear}" />
+							</p:column>
+							<p:column headerText="Mandatory Levies - Allow Returns" style="display:none">
+								<h:outputText value="Yes" rendered="#{rowVarD.allowReturnsMandatory}" />
+								<h:outputText value="No" rendered="#{!rowVarD.allowReturnsMandatory}" />
+							</p:column>
+							<p:column headerText="Mandatory Levies - Allow Invoices" style="display:none">
+								<h:outputText value="Yes" rendered="#{rowVarD.allowInvoicesMandatory}" />
+								<h:outputText value="No" rendered="#{!rowVarD.allowInvoicesMandatory}" />
+							</p:column>
+							<p:column headerText="Discretionary Levies - Allow Returns" style="display:none" rendered="false" exportable="false">
+								<h:outputText value="Yes" rendered="#{rowVarD.allowReturnsDiscretionary}" />
+								<h:outputText value="No" rendered="#{!rowVarD.allowReturnsDiscretionary}" />
+							</p:column>
+							<p:column headerText="Discretionary Levies - Allow Invoices" style="display:none" rendered="false" exportable="false">
+								<h:outputText value="Yes" rendered="#{rowVarD.allowInvoicesDiscretionary}" />
+								<h:outputText value="No" rendered="#{!rowVarD.allowInvoicesDiscretionary}" />
+							</p:column>
+							<p:column headerText="Mandatory Levies - Allow Returns" exportable="false">
+								<center>
+									<p:selectBooleanCheckbox value="#{rowVarD.allowReturnsMandatory}" disabled="true" />
+								</center>
+							</p:column>
+							<p:column headerText="Mandatory Levies - Allow Invoices" exportable="false">
+								<center>
+									<p:selectBooleanCheckbox value="#{rowVarD.allowInvoicesMandatory}" disabled="true" />
+								</center>
+							</p:column>
+							<p:column headerText="Discretionary Levies - Allow Returns" exportable="false" rendered="false">
+								<center>
+									<p:selectBooleanCheckbox value="#{rowVarD.allowReturnsDiscretionary}" disabled="true" />
+								</center>
+							</p:column>
+							<p:column headerText="Discretionary Levies - Allow Invoices" exportable="false" rendered="false">
+								<center>
+									<p:selectBooleanCheckbox value="#{rowVarD.allowInvoicesDiscretionary}" disabled="true" />
+								</center>
+							</p:column>
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<c:if test="#{sessionUI.activeUser.sarsLevyMandInvoicesUpdate}">
+					<div class="card card-w-title">
+						<h:form id="mainForm">
+
+							<ui:include src="/pages/includes/download_lazy.xhtml">
+								<ui:param name="file_name" value="Scheme_Year_Returns_List" />
+								<ui:param name="target" value="sarslevyschemeyearreturnsList" />
+							</ui:include>
+							<p:dataTable var="rowVar" value="#{sarslevyschemeyearreturnsUI.dataModel}" id="sarslevyschemeyearreturnsList" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+								paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+								<p:column headerText="Scheme Year" sortBy="#{rowVar.forSchemeYear}">
+									<h:outputText value="#{rowVar.forSchemeYear}" />
+								</p:column>
+								<p:column headerText="Mandatory Levies - Allow Returns" style="display:none">
+									<h:outputText value="Yes" rendered="#{rowVar.allowReturnsMandatory}" />
+									<h:outputText value="No" rendered="#{!rowVar.allowReturnsMandatory}" />
+								</p:column>
+								<p:column headerText="Mandatory Levies - Allow Invoices" style="display:none">
+									<h:outputText value="Yes" rendered="#{rowVar.allowInvoicesMandatory}" />
+									<h:outputText value="No" rendered="#{!rowVar.allowInvoicesMandatory}" />
+								</p:column>
+								<p:column headerText="Discretionary Levies - Allow Returns" style="display:none" rendered="false" exportable="false">
+									<h:outputText value="Yes" rendered="#{rowVar.allowReturnsDiscretionary}" />
+									<h:outputText value="No" rendered="#{!rowVar.allowReturnsDiscretionary}" />
+								</p:column>
+								<p:column headerText="Discretionary Levies - Allow Invoices" style="display:none" rendered="false" exportable="false">
+									<h:outputText value="Yes" rendered="#{rowVar.allowInvoicesDiscretionary}" />
+									<h:outputText value="No" rendered="#{!rowVar.allowInvoicesDiscretionary}" />
+								</p:column>
+								<p:column headerText="Mandatory Levies - Allow Returns" exportable="false">
+									<center>
+										<p:selectBooleanCheckbox value="#{rowVar.allowReturnsMandatory}" disabled="true" />
+									</center>
+								</p:column>
+								<p:column headerText="Mandatory Levies - Allow Invoices" exportable="false">
+									<center>
+										<p:selectBooleanCheckbox value="#{rowVar.allowInvoicesMandatory}" disabled="true" />
+									</center>
+								</p:column>
+								<p:column headerText="Discretionary Levies - Allow Returns" exportable="false" rendered="false">
+									<center>
+										<p:selectBooleanCheckbox value="#{rowVar.allowReturnsDiscretionary}" disabled="true" />
+									</center>
+								</p:column>
+								<p:column headerText="Discretionary Levies - Allow Invoices" exportable="false" rendered="false">
+									<center>
+										<p:selectBooleanCheckbox value="#{rowVar.allowInvoicesDiscretionary}" disabled="true" />
+									</center>
+								</p:column>
+								<p:column headerText="Create Date">
+									<h:outputText value="#{rowVar.createDate}">
+										<f:convertDateTime pattern="dd MMMM yyyy HH:mm:ss" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Last Update Date">
+									<h:outputText value="#{rowVar.lastActionDate}">
+										<f:convertDateTime pattern="dd MMMM yyyy HH:mm:ss" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Actions" width="80" exportable="false">
+									<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":sarslevyschemeyearreturnsInsForm:sarslevyschemeyearreturnsInsGrid">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{sarslevyschemeyearreturnsUI.sarslevyschemeyearreturns}" />
+									</p:commandButton>
+									<p:spacer width="5" />
+									<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:sarslevyschemeyearreturnsList" action="#{sarslevyschemeyearreturnsUI.sarslevyschemeyearreturnsDelete}">
+										<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+										<f:setPropertyActionListener value="#{rowVar}" target="#{sarslevyschemeyearreturnsUI.sarslevyschemeyearreturns}" />
+									</p:commandButton>
+								</p:column>
+							</p:dataTable>
+						</h:form>
+					</div>
+				</c:if>
+			</div>
+		</div>
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+			<h:form>
+				<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+				<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+			</h:form>
+		</p:confirmDialog>
+	</ui:define>
+	<!-- 
+_lang_
+-->
+</ui:composition>

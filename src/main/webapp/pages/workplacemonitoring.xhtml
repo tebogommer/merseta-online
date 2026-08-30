@@ -1,0 +1,831 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<ui:include src="/pages/includes/taskdiagram.xhtml" />
+			</div>
+		</div>
+		<h:form id="learnersInsForm">
+			<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+			<p:importEnum type="haj.com.entity.enums.LearnerTransferTypeEnum" />
+			<p:importEnum type="haj.com.entity.enums.YesNoEnum" />
+			<p:growl>
+				<p:autoUpdate></p:autoUpdate>
+			</p:growl>
+			<div class="ui-g">
+
+
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+						<p:outputLabel value="Purpose Of Site Visit" for="userRes" styleClass="Fs18" />
+						<br />
+						<br />
+						<p:selectManyMenu id="userRes" value="#{workplacemonitoringUI.selectedPurposeOfSiteVisits}" converter="PurposeOfSiteVisitConvertor" var="t" filter="true" filterMatchMode="contains" showCheckbox="true" style="width:95%;"
+							disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalEdit}">
+							<p:ajax event="change" listener="#{workplacemonitoringUI.selectPurposeOfSiteVisit}" update="@parent"></p:ajax>
+							<f:selectItems value="#{workplacemonitoringUI.purposeOfSiteVisits}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							<p:column>
+								<h:outputText value="#{t.description}" />
+							</p:column>
+						</p:selectManyMenu>
+					</div>
+				</div>
+
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+						<h1>Organisational Details</h1>
+						<ui:include src="/pages/tp/includes/company.xhtml">
+							<ui:param name="title" value="Organisational Details" />
+							<ui:param name="company" value="#{workplacemonitoringUI.workplacemonitoring.company}" />
+						</ui:include>
+					</div>
+				</div>
+
+				<c:if test="#{workplacemonitoringUI.workplacemonitoring.docs.size() gt 0}">
+					<div class="ui-g-12">
+						<div class="card card-w-title">
+							<h1>Documents</h1>
+							<p:dataTable value="#{workplacemonitoringUI.workplacemonitoring.docs}" var="rv1" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+								<p:column headerText="#{lang['type']}" width="20%">#{rv1.configDoc.name}</p:column>
+								<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+								<p:column headerText="#{lang['uploaded']}" width="15%">
+									<h:outputText value="#{rv1.createDate}">
+										<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="#{lang['version']}" width="15%">
+									<h:outputText value="#{rv1.versionNo}">
+									</h:outputText>
+								</p:column>
+								<p:column width="180" headerText="#{lang['view.edit']}">
+									<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}">
+										<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+									<p:spacer width="5" rendered="#{rv1.id ne null}" />
+									<p:commandButton icon="fa fa-bars " id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}">
+										<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="dhistUserDocs" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+									<!-- only with permission to upload can upload a new version -->
+									<p:commandButton rendered="#{sessionUI.task.processRole eq null or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload}" icon="fa fa-upload" id="uploadUserDocs" styleClass="#{rv1.originalFname eq null ? 'red-btn' : ''} flat" process="@this" oncomplete="PF('dlgUpload').show()"
+										update=":uploadForm">
+										<f:setPropertyActionListener value="#{rv1}" target="#{workplacemonitoringUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="uploadUserDocs" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+									<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+										<p:spacer width="5" />
+										<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+									</h:panelGroup>
+									<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+										<p:spacer width="5" />
+										<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+									</h:panelGroup>
+								</p:column>
+							</p:dataTable>
+						</div>
+					</div>
+				</c:if>
+
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+						<h1>Learner Induction</h1>
+						<p:outputPanel id="unitList">
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Edit or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalEdit}">
+								<h:panelGroup styleClass="md-inputfield">
+									<p:autoComplete style="width: 95%" id="highestQual" value="#{workplacemonitoringUI.learnerInduction.qualification}" completeMethod="#{autoCompleteUI.completeQualification}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+										<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+										<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+										<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+									</p:autoComplete>
+									<p:outputLabel value="#{lang['qualification']}" styleClass="gray" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="numberofattendees" style="width:95%; opacity:1 !important;" value="#{workplacemonitoringUI.learnerInduction.numberofAttendees}" />
+									<p:outputLabel value="Number of Attendees" for="numberofattendees" styleClass="gray" />
+								</h:panelGroup>
+								<p:commandButton value="Add Learner Induction" update="unitList" icon="ui-icon-plus" styleClass="flat" action="#{workplacemonitoringUI.addToList}" process="unitList" />
+							</p:panelGrid>
+							<p:dataTable value="#{workplacemonitoringUI.learnerInductions}" var="rvlearner" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+								<p:column headerText="#{lang['qualification']}">
+									<p:outputLabel value="#{rvlearner.qualification.saqaQualification}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="Number of Attendees">
+									<p:outputLabel value="#{rvlearner.numberofAttendees}"></p:outputLabel>
+								</p:column>
+								<p:column width="40" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Edit or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalEdit}">
+									<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update="learnersInsForm:unitList" action="#{workplacemonitoringUI.removeFromList}" process="@this">
+										<f:setPropertyActionListener value="#{rvlearner}" target="#{workplacemonitoringUI.learnerInduction}" />
+									</p:commandButton>
+								</p:column>
+							</p:dataTable>
+						</p:outputPanel>
+					</div>
+				</div>
+				<c:if test="#{workplacemonitoringUI.companyLearnerCount gt 0}">
+					<div class="ui-g-12">
+						<div class="card card-w-title">
+							<h1>Learner on Learnership</h1>
+							<p:dataTable rendered="true" var="rvlearnerships" value="#{workplacemonitoringUI.dataModelCompanyLearners}" lazy="true" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}" paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+								rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+
+								<p:column headerText="#{lang['expand.row']}" width="45">
+									<p:rowToggler />
+								</p:column>
+								<p:column headerText="Learners Name">
+									<p:outputLabel value="#{rvlearnerships.user.firstName} #{rvlearnerships.user.lastName}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="Identity Number">
+									<p:outputLabel value="#{rvlearnerships.user.rsaIDNumber}"></p:outputLabel>
+									<p:outputLabel value="#{rvlearnerships.user.passportNumber}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="Qualification">
+									<p:outputLabel value="#{rvlearnerships.qualification.saqaQualification}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="Nqf Level">
+									<p:outputLabel value="#{rvlearnerships.qualification.nqflevel.description}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="DG/Project Linked">
+									<p:outputLabel value="#{rvlearnerships.dgTag}/#{rvlearnerships.mandatoryGrantDetail.wsp.dgProjectType.description}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="Termination Date of MOA/Project">
+									<p:outputLabel value="#{rvlearnerships.mandatoryGrantDetail.wsp.dgTerminationDate}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</p:outputLabel>
+								</p:column>
+
+								<p:rowExpansion>
+									<br />
+									<br />
+									<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rvlearnerships.createDate}" style="width:95%; opacity: 1;" disabled="true">
+												<f:convertDateTime pattern="dd MMMM yyyy" />
+											</p:inputText>
+											<p:outputLabel value="Intake Date" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rvlearnerships.interventionType.description}" style="width:95%; opacity: 1;" disabled="true" />
+											<p:outputLabel value="Learning Area" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rvlearnerships.learnerStatus.friendlyName}" style="width:95%; opacity: 1;" disabled="true" />
+											<p:outputLabel value="Learner Status" />
+										</h:panelGroup>
+									</p:panelGrid>
+									<br />
+									<br />
+									<h3>Progress</h3>
+									<p:dataTable var="vr" value="#{rvlearnerships.companyLearnersProgresses}">
+										<p:column headerText="Progress Type">#{vr.progressType.friendlyName}#{vr.designatedTradeLevel.description}</p:column>
+										<p:column headerText="Credits Needed">#{vr.creditsNeeded}</p:column>
+										<p:column headerText="Credits Completed">#{vr.creditsCompleted}</p:column>
+										<p:column headerText="Variance">
+											<p:outputLabel value="#{100-((vr.creditsCompleted/vr.creditsNeeded) * 100)}">
+												<f:convertNumber maxFractionDigits="0" />
+											</p:outputLabel>
+										</p:column>
+										<p:column width="40" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Edit or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalEdit}">
+											<p:commandButton icon="fa fa-pencil" title="#{lang['edit']}" update="progressForm" oncomplete="PF('dlgProgress').show()" process="@this">
+												<f:setPropertyActionListener value="#{vr}" target="#{companylearnersprogressUI.companylearnersprogress}" />
+											</p:commandButton>
+										</p:column>
+									</p:dataTable>
+
+								</p:rowExpansion>
+							</p:dataTable>
+						</div>
+					</div>
+				</c:if>
+				<c:if test="#{workplacemonitoringUI.companyLearnerCBMTCount gt 0}">
+					<div class="ui-g-12">
+						<div class="card card-w-title">
+							<h1>Apprentice CBMT</h1>
+							<p:dataTable rendered="true" var="rvCBMT" value="#{workplacemonitoringUI.dataModelCompanyLearnersCBMT}" lazy="true" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}" paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+								rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+
+								<p:column headerText="#{lang['expand.row']}" width="45">
+									<p:rowToggler />
+								</p:column>
+								<p:column headerText="Learners Name">
+									<p:outputLabel value="#{rvCBMT.user.firstName} #{rvCBMT.user.lastName}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="Identity Number">
+									<p:outputLabel value="#{rvCBMT.user.rsaIDNumber}"></p:outputLabel>
+									<p:outputLabel value="#{rvCBMT.user.passportNumber}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="Qualification">
+									<p:outputLabel value="#{rvCBMT.qualification.saqaQualification}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="OFO Code">
+									<p:outputLabel value="#{rvlearnerships.ofoCodes.ofoDescription}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="DG/Project Linked">
+									<p:outputLabel value="#{rvCBMT.dgTag}/#{rvCBMT.mandatoryGrantDetail.wsp.dgProjectType.description}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="Termination Date of MOA/Project">
+									<p:outputLabel value="#{rvCBMT.mandatoryGrantDetail.wsp.dgTerminationDate}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</p:outputLabel>
+								</p:column>
+
+								<p:rowExpansion>
+									<br />
+									<br />
+									<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rvCBMT.createDate}" style="width:95%; opacity: 1;" disabled="true">
+												<f:convertDateTime pattern="dd MMMM yyyy" />
+											</p:inputText>
+											<p:outputLabel value="Intake Date" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rvCBMT.interventionType.description}" style="width:95%; opacity: 1;" disabled="true" />
+											<p:outputLabel value="Learning Area" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rvCBMT.learnerStatus.friendlyName}" style="width:95%; opacity: 1;" disabled="true" />
+											<p:outputLabel value="Learner Status" />
+										</h:panelGroup>
+									</p:panelGrid>
+									<br />
+									<br />
+									<h3>Progress</h3>
+									<p:dataTable var="vr" value="#{rvCBMT.companyLearnersProgresses}">
+										<p:column headerText="Progress Type">#{vr.progressType.friendlyName}#{vr.designatedTradeLevel.description}</p:column>
+										<p:column headerText="Credits Needed">#{vr.creditsNeeded}</p:column>
+										<p:column headerText="Credits Completed">#{vr.creditsCompleted}</p:column>
+										<p:column headerText="Variance">
+											<p:outputLabel value="#{100-((vr.creditsCompleted/vr.creditsNeeded) * 100)}">
+												<f:convertNumber maxFractionDigits="0" />
+											</p:outputLabel>
+										</p:column>
+										<p:column width="40" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Edit or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalEdit}">
+											<p:commandButton icon="fa fa-pencil" title="#{lang['edit']}" update="progressForm" oncomplete="PF('dlgProgress').show()" process="@this">
+												<f:setPropertyActionListener value="#{vr}" target="#{companylearnersprogressUI.companylearnersprogress}" />
+											</p:commandButton>
+										</p:column>
+									</p:dataTable>
+
+								</p:rowExpansion>
+							</p:dataTable>
+						</div>
+					</div>
+				</c:if>
+				<c:if test="#{workplacemonitoringUI.companyLearnerMotorCount gt 0}">
+					<div class="ui-g-12">
+						<div class="card card-w-title">
+							<h1>Apprentice Motor Time Based</h1>
+							<p:dataTable rendered="true" var="rvlearnerships" value="#{workplacemonitoringUI.dataModelCompanyLearnersMotor}" lazy="true" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+								paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+
+								<p:column headerText="#{lang['expand.row']}" width="45">
+									<p:rowToggler />
+								</p:column>
+								<p:column headerText="Learners Name">
+									<p:outputLabel value="#{rvlearnerships.user.firstName} #{rvlearnerships.user.lastName}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="Identity Number">
+									<p:outputLabel value="#{rvlearnerships.user.rsaIDNumber}"></p:outputLabel>
+									<p:outputLabel value="#{rvlearnerships.user.passportNumber}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="Qualification">
+									<p:outputLabel value="#{rvlearnerships.qualification.saqaQualification}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="OFO Code">
+									<p:outputLabel value="#{rvlearnerships.ofoCodes.ofoDescription}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="DG/Project Linked">
+									<p:outputLabel value="#{rvlearnerships.dgTag}/#{rvlearnerships.mandatoryGrantDetail.wsp.dgProjectType.description}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="Termination Date of MOA/Project">
+									<p:outputLabel value="#{rvlearnerships.mandatoryGrantDetail.wsp.dgTerminationDate}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</p:outputLabel>
+								</p:column>
+								<p:rowExpansion>
+									<br />
+									<br />
+									<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rvlearnerships.createDate}" style="width:95%; opacity: 1;" disabled="true">
+												<f:convertDateTime pattern="dd MMMM yyyy" />
+											</p:inputText>
+											<p:outputLabel value="Intake Date" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rvlearnerships.interventionType.description}" style="width:95%; opacity: 1;" disabled="true" />
+											<p:outputLabel value="Learning Area" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rvlearnerships.learnerStatus.friendlyName}" style="width:95%; opacity: 1;" disabled="true" />
+											<p:outputLabel value="Learner Status" />
+										</h:panelGroup>
+									</p:panelGrid>
+									<br />
+									<br />
+									<h3>Progress</h3>
+									<p:dataTable var="vr" value="#{rvlearnerships.companyLearnersProgresses}">
+										<p:column headerText="Progress Type">#{vr.progressType.friendlyName}#{vr.designatedTradeLevel.description}</p:column>
+										<p:column headerText="Credits Needed">#{vr.creditsNeeded}</p:column>
+										<p:column headerText="Credits Completed">#{vr.creditsCompleted}</p:column>
+										<p:column headerText="Variance">
+											<p:outputLabel value="#{100-((vr.creditsCompleted/vr.creditsNeeded) * 100)}">
+												<f:convertNumber maxFractionDigits="0" />
+											</p:outputLabel>
+										</p:column>
+										<p:column width="40" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Edit or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalEdit}">
+											<p:commandButton icon="fa fa-pencil" title="#{lang['edit']}" update="progressForm" oncomplete="PF('dlgProgress').show()" process="@this">
+												<f:setPropertyActionListener value="#{vr}" target="#{companylearnersprogressUI.companylearnersprogress}" />
+											</p:commandButton>
+										</p:column>
+									</p:dataTable>
+
+								</p:rowExpansion>
+							</p:dataTable>
+						</div>
+					</div>
+				</c:if>
+				<c:if test="#{workplacemonitoringUI.companyLearnerMetalCount gt 0}">
+					<div class="ui-g-12">
+						<div class="card card-w-title">
+							<h1>Apprentice Metal Time Based</h1>
+							<p:dataTable rendered="true" var="rvlearnerships" value="#{workplacemonitoringUI.dataModelCompanyLearnersMetal}" lazy="true" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+								paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+
+								<p:column headerText="#{lang['expand.row']}" width="45">
+									<p:rowToggler />
+								</p:column>
+								<p:column headerText="Learners Name">
+									<p:outputLabel value="#{rvlearnerships.user.firstName} #{rvlearnerships.user.lastName}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="Identity Number">
+									<p:outputLabel value="#{rvlearnerships.user.rsaIDNumber}"></p:outputLabel>
+									<p:outputLabel value="#{rvlearnerships.user.passportNumber}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="Qualification">
+									<p:outputLabel value="#{rvlearnerships.qualification.saqaQualification}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="OFO Code">
+									<p:outputLabel value="#{rvlearnerships.ofoCodes.ofoDescription}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="DG/Project Linked">
+									<p:outputLabel value="#{rvlearnerships.dgTag}/#{rvlearnerships.mandatoryGrantDetail.wsp.dgProjectType.description}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="Termination Date of MOA/Project">
+									<p:outputLabel value="#{rvlearnerships.mandatoryGrantDetail.wsp.dgTerminationDate}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</p:outputLabel>
+								</p:column>
+								<p:rowExpansion>
+									<br />
+									<br />
+									<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rvlearnerships.createDate}" style="width:95%; opacity: 1;" disabled="true">
+												<f:convertDateTime pattern="dd MMMM yyyy" />
+											</p:inputText>
+											<p:outputLabel value="Intake Date" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rvlearnerships.interventionType.description}" style="width:95%; opacity: 1;" disabled="true" />
+											<p:outputLabel value="Learning Area" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rvlearnerships.learnerStatus.friendlyName}" style="width:95%; opacity: 1;" disabled="true" />
+											<p:outputLabel value="Learner Status" />
+										</h:panelGroup>
+									</p:panelGrid>
+									<br />
+									<br />
+									<h3>Progress</h3>
+									<p:dataTable var="vr" value="#{rvlearnerships.companyLearnersProgresses}">
+										<p:column headerText="Progress Type">#{vr.progressType.friendlyName}#{vr.designatedTradeLevel.description}</p:column>
+										<p:column headerText="Credits Needed">#{vr.creditsNeeded}</p:column>
+										<p:column headerText="Credits Completed">#{vr.creditsCompleted}</p:column>
+										<p:column headerText="Variance">
+											<p:outputLabel value="#{100-((vr.creditsCompleted/vr.creditsNeeded) * 100)}">
+												<f:convertNumber maxFractionDigits="0" />
+											</p:outputLabel>
+										</p:column>
+										<p:column width="40" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Edit or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalEdit}">
+											<p:commandButton icon="fa fa-pencil" title="#{lang['edit']}" update="progressForm" oncomplete="PF('dlgProgress').show()" process="@this">
+												<f:setPropertyActionListener value="#{vr}" target="#{companylearnersprogressUI.companylearnersprogress}" />
+											</p:commandButton>
+										</p:column>
+									</p:dataTable>
+
+								</p:rowExpansion>
+							</p:dataTable>
+						</div>
+					</div>
+				</c:if>
+				<c:if test="#{workplacemonitoringUI.companyLearnerAutoCount gt 0}">
+					<div class="ui-g-12">
+						<div class="card card-w-title">
+							<h1>Apprentice Auto Time Based</h1>
+							<p:dataTable rendered="true" var="rvlearnerships" value="#{workplacemonitoringUI.dataModelCompanyLearnersAuto}" lazy="true" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+								paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+
+								<p:column headerText="#{lang['expand.row']}" width="45">
+									<p:rowToggler />
+								</p:column>
+								<p:column headerText="Learners Name">
+									<p:outputLabel value="#{rvlearnerships.user.firstName} #{rvlearnerships.user.lastName}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="Identity Number">
+									<p:outputLabel value="#{rvlearnerships.user.rsaIDNumber}"></p:outputLabel>
+									<p:outputLabel value="#{rvlearnerships.user.passportNumber}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="Qualification">
+									<p:outputLabel value="#{rvlearnerships.qualification.saqaQualification}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="OFO Code">
+									<p:outputLabel value="#{rvlearnerships.ofoCodes.ofoDescription}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="DG/Project Linked">
+									<p:outputLabel value="#{rvlearnerships.dgTag}/#{rvlearnerships.mandatoryGrantDetail.wsp.dgProjectType.description}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="Termination Date of MOA/Project">
+									<p:outputLabel value="#{rvlearnerships.mandatoryGrantDetail.wsp.dgTerminationDate}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</p:outputLabel>
+								</p:column>
+								<p:rowExpansion>
+									<br />
+									<br />
+									<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rvlearnerships.createDate}" style="width:95%; opacity: 1;" disabled="true">
+												<f:convertDateTime pattern="dd MMMM yyyy" />
+											</p:inputText>
+											<p:outputLabel value="Intake Date" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rvlearnerships.interventionType.description}" style="width:95%; opacity: 1;" disabled="true" />
+											<p:outputLabel value="Learning Area" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rvlearnerships.learnerStatus.friendlyName}" style="width:95%; opacity: 1;" disabled="true" />
+											<p:outputLabel value="Learner Status" />
+										</h:panelGroup>
+									</p:panelGrid>
+									<br />
+									<br />
+									<h3>Progress</h3>
+									<p:dataTable var="vr" value="#{rvlearnerships.companyLearnersProgresses}">
+										<p:column headerText="Progress Type">#{vr.progressType.friendlyName}#{vr.designatedTradeLevel.description}</p:column>
+										<p:column headerText="Credits Needed">#{vr.creditsNeeded}</p:column>
+										<p:column headerText="Credits Completed">#{vr.creditsCompleted}</p:column>
+										<p:column headerText="Variance">
+											<p:outputLabel value="#{100-((vr.creditsCompleted/vr.creditsNeeded) * 100)}">
+												<f:convertNumber maxFractionDigits="0" />
+											</p:outputLabel>
+										</p:column>
+										<p:column width="40" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Edit or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalEdit}">
+											<p:commandButton icon="fa fa-pencil" title="#{lang['edit']}" update="progressForm" oncomplete="PF('dlgProgress').show()" process="@this">
+												<f:setPropertyActionListener value="#{vr}" target="#{companylearnersprogressUI.companylearnersprogress}" />
+											</p:commandButton>
+										</p:column>
+									</p:dataTable>
+
+								</p:rowExpansion>
+							</p:dataTable>
+						</div>
+					</div>
+				</c:if>
+				<c:if test="#{workplacemonitoringUI.companyLearnerOtherCount gt 0}">
+					<div class="ui-g-12">
+						<div class="card card-w-title">
+							<h1>Learners Other</h1>
+							<p:dataTable rendered="true" var="rvlearnerships" value="#{workplacemonitoringUI.dataModelCompanyLearnersOther}" lazy="true" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+								paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+
+								<p:column headerText="#{lang['expand.row']}" width="45">
+									<p:rowToggler />
+								</p:column>
+								<p:column headerText="Learners Name">
+									<p:outputLabel value="#{rvlearnerships.user.firstName} #{rvlearnerships.user.lastName}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="Identity Number">
+									<p:outputLabel value="#{rvlearnerships.user.rsaIDNumber}"></p:outputLabel>
+									<p:outputLabel value="#{rvlearnerships.user.passportNumber}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="Qualification">
+									<p:outputLabel value="#{rvlearnerships.qualification.saqaQualification}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="Nqf Level">
+									<p:outputLabel value="#{rvlearnerships.qualification.nqflevel.description}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="DG/Project Linked">
+									<p:outputLabel value="#{rvlearnerships.dgTag}/#{rvlearnerships.mandatoryGrantDetail.wsp.dgProjectType.description}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="Termination Date of MOA/Project">
+									<p:outputLabel value="#{rvlearnerships.mandatoryGrantDetail.wsp.dgTerminationDate}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</p:outputLabel>
+								</p:column>
+
+								<p:rowExpansion>
+									<br />
+									<br />
+									<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rvlearnerships.createDate}" style="width:95%; opacity: 1;" disabled="true">
+												<f:convertDateTime pattern="dd MMMM yyyy" />
+											</p:inputText>
+											<p:outputLabel value="Intake Date" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rvlearnerships.interventionType.description}" style="width:95%; opacity: 1;" disabled="true" />
+											<p:outputLabel value="Learning Area" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rvlearnerships.learnerStatus.friendlyName}" style="width:95%; opacity: 1;" disabled="true" />
+											<p:outputLabel value="Learner Status" />
+										</h:panelGroup>
+									</p:panelGrid>
+									<br />
+									<br />
+									<h3>Progress</h3>
+									<p:dataTable var="vr" value="#{rvlearnerships.companyLearnersProgresses}">
+										<p:column headerText="Progress Type">#{vr.progressType.friendlyName}#{vr.designatedTradeLevel.description}</p:column>
+										<p:column headerText="Credits Needed">#{vr.creditsNeeded}</p:column>
+										<p:column headerText="Credits Completed">#{vr.creditsCompleted}</p:column>
+										<p:column headerText="Variance">
+											<p:outputLabel value="#{100-((vr.creditsCompleted/vr.creditsNeeded) * 100)}">
+												<f:convertNumber maxFractionDigits="0" />
+											</p:outputLabel>
+										</p:column>
+										<p:column width="40" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Edit or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalEdit}">
+											<p:commandButton icon="fa fa-pencil" title="#{lang['edit']}" update="progressForm" oncomplete="PF('dlgProgress').show()" process="@this">
+												<f:setPropertyActionListener value="#{vr}" target="#{companylearnersprogressUI.companylearnersprogress}" />
+											</p:commandButton>
+										</p:column>
+									</p:dataTable>
+
+								</p:rowExpansion>
+							</p:dataTable>
+						</div>
+					</div>
+				</c:if>
+
+				<div class="ui-g-12">
+					<c:if test="#{workplacemonitoringUI.learnerMonitoringSurveys.size() gt 0}">
+						<div class="card card-w-title">
+							<h1>Learner Monitoring Survey</h1>
+							<p:dataTable value="#{workplacemonitoringUI.learnerMonitoringSurveys}" var="rvlearnerships" rowKey="#{rvlearnerships.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+								<p:column headerText="Number" width="80">
+									<p:outputLabel value="#{rvlearnerships.section}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="Question/Statement">
+									<p:outputLabel value="#{rvlearnerships.question}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="Yes/No" width="180">
+									<center>
+										<p:selectOneRadio value="#{rvlearnerships.yesNo}" style="width:75%" required="true" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalEdit}">
+											<p:ajax />
+											<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+										</p:selectOneRadio>
+									</center>
+								</p:column>
+							</p:dataTable>
+						</div>
+					</c:if>
+				</div>
+
+				<div class="ui-g-12">
+					<c:if test="#{workplacemonitoringUI.mandatoryGrantCount gt 0}">
+						<div class="card card-w-title">
+							<h1>Discretionary Grant Monitoring</h1>
+							<p:dataTable rendered="true" var="rvDgm" value="#{workplacemonitoringUI.dataModelMandatoryGrant}" lazy="true" rowKey="#{rvDgm.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}" paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+								rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+								<p:column headerText="DG Year / Tag">
+									<p:outputLabel value="#{rvDgm.wsp.finYear}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="Learning Programme Title">
+									<p:outputLabel value="#{rvDgm.interventionType.description}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="Agreement/ Addendum Allocation (number of learners)">
+									<p:outputLabel value="#{rvDgm.amount}"></p:outputLabel>
+								</p:column>
+
+							</p:dataTable>
+						</div>
+					</c:if>
+				</div>
+
+				<div class="ui-g-12">
+					<c:if test="#{workplacemonitoringUI.dgMonitoringSurveys.size() gt 0}">
+						<div class="card card-w-title">
+							<h1>Discretionary Grant Compliance Survey</h1>
+							<p:dataTable value="#{workplacemonitoringUI.dgMonitoringSurveys}" var="dgMonitoring" rowKey="#{dgMonitoring.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+								<p:column headerText="Number" width="80">
+									<p:outputLabel value="#{dgMonitoring.section}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="Question/Statement">
+									<p:outputLabel value="#{dgMonitoring.question}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="Yes/No" width="180">
+									<center>
+										<p:selectOneRadio value="#{dgMonitoring.yesNo}" style="width:75%" required="true" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalEdit}">
+											<p:ajax />
+											<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+										</p:selectOneRadio>
+									</center>
+								</p:column>
+							</p:dataTable>
+						</div>
+					</c:if>
+				</div>
+
+				<div class="ui-g-12">
+					<c:if test="#{workplacemonitoringUI.otherSurveys.size() gt 0}">
+						<div class="card card-w-title">
+							<h1>Other Survey</h1>
+							<p:dataTable value="#{workplacemonitoringUI.otherSurveys}" var="rvotherSurveys" rowKey="#{rvlearnerships.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+								<p:column headerText="Number" width="80">
+									<p:outputLabel value="#{rvotherSurveys.section}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="Question/Statement">
+									<p:outputLabel value="#{rvotherSurveys.question}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="Yes/No" width="180">
+									<center>
+										<p:selectOneRadio value="#{rvlearnerships.yesNo}" style="width:75%" required="true" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalEdit}">
+											<p:ajax />
+											<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+										</p:selectOneRadio>
+									</center>
+								</p:column>
+							</p:dataTable>
+						</div>
+					</c:if>
+				</div>
+
+				<div class="ui-g-12">
+					<c:if test="#{workplacemonitoringUI.dgMonitoringSurveys.size() gt 0}">
+						<div class="card card-w-title">
+							<h1>Mitigation plan</h1>
+							<p:outputPanel id="mitigationList">
+								<p:panelGrid columns="2" style="width:100%" id="workplacemonitoringmitigationInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Edit or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalEdit}">
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText id="nonComplianceIssue" value="#{workplacemonitoringmitigationUI.workplacemonitoringmitigation.nonComplianceIssue}" style="width:95%" />
+										<p:outputLabel value="#{lang['nonComplianceIssue']}" for="nonComplianceIssue" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield">
+										<p:calendar id="actionDate" value="#{workplacemonitoringmitigationUI.workplacemonitoringmitigation.actionDate}" inputStyle="width:90%" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" showOn="button" />
+										<p:outputLabel value="#{lang['actionDate']}" for="actionDate" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield">
+										<p:calendar id="dueDate" value="#{workplacemonitoringmitigationUI.workplacemonitoringmitigation.dueDate}" inputStyle="width:90%" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" showOn="button" />
+										<p:outputLabel value="#{lang['dueDate']}" for="dueDate" />
+									</h:panelGroup>
+
+									<h:panelGroup>
+										<div>
+											<p:outputLabel value="Status" for="status" />
+										</div>
+										<div>
+											<p:selectOneMenu id="status" value="#{workplacemonitoringmitigationUI.workplacemonitoringmitigation.status}" style="width:95%" required="true">
+												<p:ajax />
+												<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+												<f:selectItems value="#{enumUI.statusEnumDD}" />
+											</p:selectOneMenu>
+										</div>
+									</h:panelGroup>
+
+									<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+										<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update="mitigationList" process="mitigationList" action="#{workplacemonitoringmitigationUI.workplacemonitoringmitigationInsert}">
+											<f:setPropertyActionListener value="#{workplacemonitoringUI.workplacemonitoring}" target="#{workplacemonitoringmitigationUI.workplacemonitoring}"></f:setPropertyActionListener>
+										</p:commandButton>
+									</p:panelGrid>
+								</p:panelGrid>
+
+								<p:dataTable rendered="true" var="rowVar" value="#{workplacemonitoringUI.dataModelWorkplaceMonitoringMitigation}" lazy="true" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+									paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+
+									<p:column headerText="Date Submitted">
+										<p:outputLabel value="#{rowVar.createDate}"></p:outputLabel>
+									</p:column>
+									<p:column headerText="#{lang['nonComplianceIssue']}">
+										<p:outputLabel value="#{rowVar.nonComplianceIssue}"></p:outputLabel>
+									</p:column>
+									<p:column headerText="Action Date">
+										<p:outputLabel value="#{rowVar.actionDate}">
+											<f:convertDateTime pattern="dd MMMM yyyy" />
+										</p:outputLabel>
+									</p:column>
+									<p:column headerText="Due Date">
+										<p:outputLabel value="#{rowVar.dueDate}">
+											<f:convertDateTime pattern="dd MMMM yyyy" />
+										</p:outputLabel>
+									</p:column>
+									<p:column headerText="Status">
+										<p:outputLabel value="#{rowVar.status.friendlyName}" />
+									</p:column>
+									<p:column width="80" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Edit or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalEdit}">
+										<p:commandButton icon="fa fa-database" title="#{lang['update']}" update="learnersInsForm:mitigationList" process="@this">
+											<f:setPropertyActionListener value="#{rowVar}" target="#{workplacemonitoringmitigationUI.workplacemonitoringmitigation}" />
+										</p:commandButton>
+										<p:spacer width="5" />
+										<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update="learnersInsForm:mitigationList" action="#{workplacemonitoringmitigationUI.workplacemonitoringmitigationDelete}" process="@this">
+											<f:setPropertyActionListener value="#{rowVar}" target="#{workplacemonitoringmitigationUI.workplacemonitoringmitigation}" />
+										</p:commandButton>
+									</p:column>
+								</p:dataTable>
+							</p:outputPanel>
+						</div>
+					</c:if>
+				</div>
+
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+						<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve}">
+							<p:commandButton value="#{lang['approve']}" icon="ui-icon-save" update="@form" action="#{workplacemonitoringUI.approveWorkflow}" styleClass="flat green-btn Fs18" style="height: 50px;">
+							</p:commandButton>
+							<p:commandButton value="#{lang['reject.task']}" icon="fa fa-times" update="@form" action="#{workplacemonitoringUI.rejectWorkflow}" styleClass="flat red-btn Fs18" style="height: 50px;" process="@this">
+							</p:commandButton>
+						</p:panelGrid>
+						<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval}">
+							<p:commandButton value="#{lang['approve']}" icon="ui-icon-save" update="@form" action="#{workplacemonitoringUI.finalApproveWorkflow}" styleClass="flat green-btn Fs18" style="height: 50px;">
+							</p:commandButton>
+							<p:commandButton value="#{lang['reject.task']}" icon="fa fa-times" update="@form" action="#{workplacemonitoringUI.rejectWorkflow}" styleClass="flat red-btn Fs18" style="height: 50px;" process="@this">
+							</p:commandButton>
+						</p:panelGrid>
+						<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalEdit}">
+							<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" update="@form" action="#{workplacemonitoringUI.completeWorkflow}" styleClass="flat green-btn Fs18" style="height: 50px;" process="@this">
+							</p:commandButton>
+						</p:panelGrid>
+						<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.SignOff}">
+							<p:commandButton value="#{lang['sign.off']}" icon="fa fa-check" update="@form" action="#{workplacemonitoringUI.approveWorkflow}" styleClass="flat green-btn Fs18" style="height: 50px;" process="@this">
+							</p:commandButton>
+						</p:panelGrid>
+						<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.View}">
+							<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" update="@form" action="#{workplacemonitoringUI.completeWorkflow}" styleClass="flat green-btn Fs18" style="height: 50px;">
+							</p:commandButton>
+							<p:commandButton value="#{lang['reject.task']}" icon="fa fa-times" update="@form" action="#{workplacemonitoringUI.rejectWorkflow}" styleClass="flat Fs18" style="height: 50px;" process="@this">
+							</p:commandButton>
+						</p:panelGrid>
+					</div>
+				</div>
+			</div>
+		</h:form>
+
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true" dynamic="true">
+			<h:form id="uploadForm">
+				<h:panelGroup id="uploadGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{workplacemonitoringUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{workplacemonitoringUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span>
+										<br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{workplacemonitoringUI.storeFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update="learnersInsForm:learnerRegUploadForm" multiple="false" fileLimit="1" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="Learner Progress" widgetVar="dlgProgress" resizable="false" hideEffect="clip" showEffect="clip" id="progressDLG" width="40%" responsive="true" modal="true" dynamic="true" closeOnEscape="true">
+			<h:form id="progressForm">
+				<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="creditsNeeded" value="#{companylearnersprogressUI.companylearnersprogress.creditsNeeded}" style="width:95%" required="true" disabled="true" />
+						<p:outputLabel value="Credits Needed" for="creditsNeeded" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="creditsCompleted" value="#{companylearnersprogressUI.companylearnersprogress.creditsCompleted}" style="width:95%" required="true" />
+						<p:outputLabel value="Credits Completed" for="creditsCompleted" />
+					</h:panelGroup>
+					<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update="learnersInsForm" action="#{companylearnersprogressUI.companylearnersprogressInsert}" oncomplete="PF('dlgProgress').hide()" />
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+
+	</ui:define>
+</ui:composition>

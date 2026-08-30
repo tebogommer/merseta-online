@@ -1,0 +1,63 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+	<c:if test="false">
+		<!--  
+			<ui:include src="/pages/includes/workplaceMonitoringInc/learnerSurveyIncludeDisplay.xhtml">
+				<ui:param name="#{LearnerMonitoringSurveyList}" value =" lazy data model of: haj.com.ui.WorkplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerSurveyView " />
+				<ui:param name="#{updateLocation}" value =":monitoringInfoForm:wpmTabView:answersPanelInc" /> 
+			</ui:include> 
+		-->
+	</c:if>
+	<div class="EmptyBox10" />
+	<ui:include src="/pages/includes/download_lazy.xhtml">
+		<ui:param name="file_name" value="learner_monitoring_Survey_Report" />
+		<ui:param name="target" value="learnerMonitoringSurveyIncDT" />
+	</ui:include>
+	<div class="EmptyBox10" />
+	<p:dataTable var="rowVarLmsInc" value="#{LearnerMonitoringSurveyList}" id="learnerMonitoringSurveyIncDT" rowKey="#{rowVarLmsInc.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+		paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+		<p:column headerText="Date Captured">
+			<p:outputLabel value="#{rowVarLmsInc.createDate}">
+				<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+			</p:outputLabel>
+		</p:column>
+		<p:column headerText="Learner">
+			<p:outputLabel value="#{rowVarLmsInc.companyLearners.user.firstName} #{rowVarLmsInc.companyLearners.user.lastName}" />
+		</p:column>
+		<p:column headerText="Intervention Type">
+			<p:outputLabel value="#{rowVarLmsInc.interventionType.description}" />
+		</p:column>
+		<p:column width="8%" headerText="Actions" exportable="false" styleClass="action-column">
+			<p:commandButton icon="fa fa-search-plus" title="View Questions" update="#{updateLocation}answersPanelInc" action="#{workplaceMonitoringInformationViewUI.viewLearnerSurveyAnswers}">
+				<f:setPropertyActionListener value="#{rowVarLmsInc}" target="#{workplaceMonitoringInformationViewUI.workplaceMonitoringLearnerSurveyView}" />
+			</p:commandButton>
+		</p:column>
+	</p:dataTable>
+
+	<c:if test="false">
+		Below quick work around. Will need to re-visit to make proper include.
+	</c:if>
+
+	<p:outputPanel id="answersPanelInc">
+		<c:if test="#{workplaceMonitoringInformationViewUI.viewAnswers}">
+			<div class="EmptyBox10" />
+			<p:commandButton value="Close View" icon="fa fa-times" update="#{updateLocation}answersPanelInc" action="#{workplaceMonitoringInformationViewUI.closeViewLearnerSurveyAnswers}" />
+			<ui:include src="/pages/includes/download_lazy.xhtml">
+				<ui:param name="file_name" value="Learner_Monitoring_Survey_Answers_Report" />
+				<ui:param name="target" value="learnerMonitoringSurveyAnswersIncDT" />
+			</ui:include>
+			<div class="EmptyBox10" />
+			<p:dataTable var="rowVarLmsaInc" value="#{workplaceMonitoringInformationViewUI.workplaceMonitoringLearnerSurveyAnswersDataModel}" id="learnerMonitoringSurveyAnswersIncDT" rowKey="#{rowVarLmsaInc.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+				paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+				
+				<p:column headerText="Question / Statement">
+					<p:outputLabel value="#{rowVarLmsaInc.question}" />
+				</p:column>
+				<p:column headerText="Answer">
+					<p:outputLabel value="#{rowVarLmsaInc.answer.friendlyName}" />
+				</p:column>
+			</p:dataTable>
+		</c:if>
+	</p:outputPanel>
+
+</ui:composition>

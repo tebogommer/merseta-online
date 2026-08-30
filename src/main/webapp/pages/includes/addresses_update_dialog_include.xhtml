@@ -1,0 +1,182 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui">
+	<p:dialog header="Update Address" widgetVar="dglAddreessUpdate" hideEffect="clip" showEffect="clip" id="dglAddreessUpdate" appendTo="@(body)" modal="true" closable="true" width="80%" height="60vh" responsive="true">
+		<h:form id="addressupdateFRM">
+			<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="true">
+			   <p:fieldset legend="#{lang['residentialAddress']}" style="margin-top: 20px">
+				     <p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank" id="compAddrPcode">
+			             <h:panelGroup styleClass="md-inputfield">
+		                     <p:inputText id="addr1" value="#{addresschangeUI.residentialAddress.addressLine1}" style="opacity: 1 !important; color: black; width:100%" required="true" requiredMessage="#{lang['enter.residential.address']}">
+		                         <o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['residentialAddress.lineone.length.error']}" />
+		                         <p:ajax />
+		                     </p:inputText>
+		                     <p:outputLabel value="#{lang['address.line.1']}" for="addr1" />
+			             </h:panelGroup>
+			             <h:panelGroup styleClass="md-inputfield">
+		                    <p:inputText id="addr2" style="opacity: 1 !important; color: black; width:100%" value="#{addresschangeUI.residentialAddress.addressLine2}" required="true" requiredMessage="Please enter address line 2">
+		                        <o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['residentialAddress.linetwo.length.error']}" />
+		                        <p:ajax />
+		                    </p:inputText>
+		                    <p:outputLabel value="#{lang['address.line.2']}" for="addr2" />
+			             </h:panelGroup>
+			             <h:panelGroup styleClass="md-inputfield">
+		                     <p:inputText id="addr3" style="opacity: 1 !important; color: black; width:100%" value="#{addresschangeUI.residentialAddress.addressLine3}">
+		                          <o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['residentialAddress.linethree.length.error']}" />
+		                          <p:ajax />
+		                     </p:inputText>
+		                     <p:outputLabel value="#{lang['address.line.3']}" for="addr3" />
+			             </h:panelGroup>
+			             <h:panelGroup styleClass="md-inputfield"> 
+		                        <p:autoComplete  id="town" value="#{addresschangeUI.residentialAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 100%" style="width: 100%" required="true"
+		                           requiredMessage="#{lang['please.select.a.town']}" >
+		                           <p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+		                           <p:ajax event="itemSelect" />
+		                        </p:autoComplete>
+		                        <p:outputLabel value="#{lang['town']}" for="town" />
+			             </h:panelGroup>
+				
+			             <h:panelGroup styleClass="md-inputfield">
+		                    <p:inputText  id="pcode" style="opacity: 1 !important; color: black; width:100%" value="#{addresschangeUI.residentialAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}">
+		                        <o:validator validatorId="javax.faces.Length" minimum="0" maximum="4" message="#{lang['residentialAddress.code.length.error']}" />
+		                        <p:ajax />
+		                    </p:inputText>
+		                    <p:outputLabel value="#{lang['post.code']}" for="pcode" />
+			             </h:panelGroup>
+			             
+			             <h:panelGroup  styleClass="md-inputfield">
+		                       <p:autoComplete  id="MunicipalityID" value="#{addresschangeUI.residentialAddress.municipality}" completeMethod="#{sdfDetailUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityDesc}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true" minQueryLength="3"
+		                            maxResults="10" inputstyle="opacity: 1 !important; color: black; width: 100%" style="opacity: 1 !important; color: black; width: 100%" required="true" requiredMessage="#{lang['select.municipality']}">
+		                            <p:column headerText="#{lang['province']}" style="white-space: nowrap">#{rv.province.provinceDesc}</p:column>
+		                            <p:column headerText="#{lang['municipality']}" style="white-space: nowrap">#{rv.municipalityDesc}</p:column>
+		                            <p:ajax event="itemSelect" update="resProvincePG" ></p:ajax>
+		                       </p:autoComplete>
+		                       <p:outputLabel value="#{lang['municipality']}" for="MunicipalityID" />
+			             </h:panelGroup>
+			             
+			             <p:panelGrid columns="1"  style="width : 100%" styleClass="ui-panelgrid-blank" id="resProvincePG"> 
+							<h:panelGroup rendered="#{addresschangeUI.residentialAddress.municipality ne null}" styleClass="md-inputfield" >
+			                    <p:inputText disabled="true" id="resProvince" value="#{addresschangeUI.residentialAddress.municipality.province.provinceDesc}" style="opacity: 1 !important; color: black; width:100%">
+			                    	 <p:ajax />
+			                    </p:inputText>
+			                    <p:outputLabel value="#{lang['province']}" for="resProvince" />
+			                   
+				            </h:panelGroup>
+			             </p:panelGrid>
+			             
+			                <h:panelGroup styleClass="md-inputfield">
+		                        <div class="EmptyBox40"></div>
+			                </h:panelGroup>
+				        </p:panelGrid>
+				</p:fieldset>
+				
+				<p:fieldset id="postalAddressFS" legend="#{lang['postalAddress']}" style="margin-top: 20px">
+				     <p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank" id="postalAddress">
+			             <h:panelGroup styleClass="md-inputfield" rendered="#{not addresschangeUI.copyAddress}">
+		                     <p:inputText id="postalAddressaddr1" value="#{addresschangeUI.postalAddress.addressLine1}" style="opacity: 1 !important; color: black; width:100%" required="true" requiredMessage="#{lang['enter.postal.address']}">
+		                         <o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['postalAddress.lineone.length.error']}" />
+		                         <p:ajax />
+		                     </p:inputText>
+		                     <p:outputLabel value="#{lang['address.line.1']}" for="postalAddressaddr1" />
+			             </h:panelGroup>
+			             <h:panelGroup styleClass="md-inputfield" rendered="#{not addresschangeUI.copyAddress}">
+		                     <p:inputText id="postalAddressaddr2" style="opacity: 1 !important; color: black; width:100%" value="#{addresschangeUI.postalAddress.addressLine2}" required="true" requiredMessage="Please enter postal address line 2">
+		                         <o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['postalAddress.linetwo.length.error']}" />
+		                         <p:ajax />
+		                     </p:inputText>
+		                     <p:outputLabel value="#{lang['address.line.2']}" for="postalAddressaddr2" />
+			             </h:panelGroup>
+			             <h:panelGroup styleClass="md-inputfield" rendered="#{not addresschangeUI.copyAddress}">
+		                    <p:inputText id="postalAddressaddr3" style="opacity: 1 !important; color: black; width:100%" value="#{addresschangeUI.postalAddress.addressLine3}">
+		                         <o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['postalAddress.linethree.length.error']}" />
+		                         <p:ajax />
+		                    </p:inputText>
+		                    <p:outputLabel value="#{lang['address.line.3']}" for="postalAddressaddr3" />
+			             </h:panelGroup>
+			             <h:panelGroup rendered="#{not addresschangeUI.copyAddress}"  styleClass="md-inputfield">
+		                       
+		                        <p:autoComplete id="townPostal" value="#{addresschangeUI.postalAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 100%" style="width: 100%" required="true"
+		                            requiredMessage="#{lang['please.select.a.town']}" >
+		                            <p:column headerText="#{lang['town']}" style="white-space: nowrap">
+						                  #{rv.description}
+						         	</p:column>
+						         	<p:ajax event="itemSelect" />
+		                        </p:autoComplete>
+		                         <p:outputLabel value="#{lang['town']}" for="townPostal" />
+		                         
+			             </h:panelGroup>
+			             <h:panelGroup styleClass="md-inputfield" rendered="#{not addresschangeUI.copyAddress}">
+		                    <p:inputText id="postalAddressPcode" style="opacity: 1 !important; color: black; width:100%" value="#{addresschangeUI.postalAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}">
+		                        <o:validator validatorId="javax.faces.Length" minimum="0" maximum="4" message="#{lang['postalAddress.code.length.error']}" />
+		                        <p:ajax />
+		                    </p:inputText>
+		                    <p:outputLabel value="#{lang['post.code']}" for="postalAddressPcode" />
+			             </h:panelGroup>
+			             <h:panelGroup rendered="#{not addresschangeUI.copyAddress}" styleClass="md-inputfield">
+		                        <p:autoComplete id="postalAddressMunicipalityID" value="#{addresschangeUI.postalAddress.municipality}" completeMethod="#{sdfDetailUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityProvince}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true" minQueryLength="3"
+		                            maxResults="10" inputstyle="opacity: 1 !important; color: black; width: 100%" style="opacity: 1 !important; color: black; width: 100%" required="true" requiredMessage="#{lang['select.municipality']}">
+		                            <p:column headerText="#{lang['province']}" style="white-space: nowrap">#{rv.province.provinceDesc}</p:column>
+		                            <p:column headerText="#{lang['municipality']}" style="white-space: nowrap">#{rv.municipalityDesc}</p:column>
+		                            <p:ajax event="itemSelect" update="postProvincePG" ></p:ajax>
+		                       </p:autoComplete>
+		                       <p:outputLabel value="#{lang['municipality']}" for="postalAddressMunicipalityID" />
+			               </h:panelGroup>
+			                
+			               <p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank" id="postProvincePG"> 
+								<h:panelGroup  rendered="#{not addresschangeUI.copyAddress and addresschangeUI.postalAddress.municipality ne null}" styleClass="md-inputfield" >
+				                    <p:inputText disabled="true" id="postProvince" value="#{addresschangeUI.postalAddress.municipality.province.provinceDesc}" style="opacity: 1 !important; color: black; width:100%">
+				                    	<p:ajax />
+				                    </p:inputText>
+				                    <p:outputLabel value="#{lang['province']}" for="postProvince" />
+					            </h:panelGroup>
+				            </p:panelGrid>
+			                
+			                
+			                <h:panelGroup>
+		                        <div>
+		                           <p:outputLabel value="#{lang['same.as.my.address']}" styleClass="FontLight" />
+		                        </div>
+		                        <div>
+		                           <p:selectBooleanCheckbox   value="#{addresschangeUI.copyAddress}" >
+		                                   <p:ajax update="@form" listener="#{addresschangeUI.clearPostal}"/>
+		                           </p:selectBooleanCheckbox>
+		                        </div>
+			                </h:panelGroup>
+				        </p:panelGrid>
+					</p:fieldset>
+			</p:panelGrid>
+			
+			<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" id="submitPanel">
+				<p:commandButton onstart="uploadStart()" value="#{lang['submit']}" icon="ui-icon-save" update="@form" action="#{addresschangeUI.requestAddressUpdate}"/>
+				
+				<p:commandButton value="#{lang['clear']}" icon="fa fa-recycle" update="@form" action="#{addresschangeUI.clearAddress()}" />
+				
+			</p:panelGrid>
+			
+		</h:form>
+		
+	</p:dialog>
+	
+	<p:dialog closeOnEscape="true" header="#{lang['change.reason']}" widgetVar="dlgChangeReason" resizable="false" hideEffect="clip" showEffect="clip" width="60%" height="45vh" responsive="true" modal="true" position="center">
+		<h:form id="changeReasonForm">
+			<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank">
+				<p:panel>
+					<h:panelGrid columns="2" style="width: 100%">
+						<p:outputLabel value="#{lang['notes']}:" for="note" />
+						<p:inputTextarea id="note" value="#{addresschangeUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+							<p:ajax />
+						</p:inputTextarea>
+					</h:panelGrid>
+
+					<div class="TexAlCenter">
+						<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span>
+						<br />
+					</div>
+					<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone(), PF('dlgChangeReason').hide();PF('dglAddreessUpdate').show()" fileUploadListener="#{addresschangeUI.storeChangeNewFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update="@form dglAddreessUpdate" multiple="false" fileLimit="1" sizeLimit="#{sdfUI.maxFileSize}"
+						allowTypes="/(\.|\/)(gif|jpe?g|png|pdf|docx|txt)$/" immediate="false" auto="true" />
+				</p:panel>
+			</p:panelGrid>
+		</h:form>
+		<p:ajax immediate="true" event="close" update="detailInfoForm" />
+		<p:ajax event="open" listener="#{addresschangeUI.prepChangeDoc}" update="changeReasonForm" />
+	</p:dialog>
+	
+</ui:composition>

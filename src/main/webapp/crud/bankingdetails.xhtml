@@ -1,0 +1,108 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>BankingDetails</h1>
+					<h:form id="bankingdetailsInsForm">
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:panelGrid columns="1" style="width:100%" id="bankingdetailsInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="bank" value="#{bankingdetailsUI.bankingdetails.bank}" style="width:95%" />
+								<p:outputLabel value="#{lang['bank']}" for="bank" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="createDate" value="#{bankingdetailsUI.bankingdetails.createDate}" style="width:95%" />
+								<p:outputLabel value="#{lang['createDate']}" for="createDate" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="bankAccNumber" value="#{bankingdetailsUI.bankingdetails.bankAccNumber}" style="width:95%" />
+								<p:outputLabel value="#{lang['bankAccNumber']}" for="bankAccNumber" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="branchCode" value="#{bankingdetailsUI.bankingdetails.branchCode}" style="width:95%" />
+								<p:outputLabel value="#{lang['branchCode']}" for="branchCode" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="bankHolder" value="#{bankingdetailsUI.bankingdetails.bankHolder}" style="width:95%" />
+								<p:outputLabel value="#{lang['bankHolder']}" for="bankHolder" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="swiftCode" value="#{bankingdetailsUI.bankingdetails.swiftCode}" style="width:95%" />
+								<p:outputLabel value="#{lang['swiftCode']}" for="swiftCode" />
+							</h:panelGroup>
+
+
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:bankingdetailsList :bankingdetailsInsForm:bankingdetailsInsGrid" action="#{bankingdetailsUI.bankingdetailsInsert}" />
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="bankingdetailsInsGrid" process="@this" action="#{bankingdetailsUI.prepareNew}">
+									<p:resetInput target="bankingdetailsInsGrid" />
+								</p:commandButton>
+							</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{bankingdetailsUI.dataModel}" filteredValue="#{bankingdetailsUI.bankingDetailsfilteredList}" id="bankingdetailsList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['bank']}">
+								<h:outputText value="#{rowVar.bank}" />
+							</p:column>
+							<p:column headerText="#{lang['createDate']}">
+								<h:outputText value="#{rowVar.createDate}" />
+							</p:column>
+							<p:column headerText="#{lang['bankAccNumber']}">
+								<h:outputText value="#{rowVar.bankAccNumber}" />
+							</p:column>
+							<p:column headerText="#{lang['branchCode']}">
+								<h:outputText value="#{rowVar.branchCode}" />
+							</p:column>
+							<p:column headerText="#{lang['bankHolder']}">
+								<h:outputText value="#{rowVar.bankHolder}" />
+							</p:column>
+							<p:column headerText="#{lang['swiftCode']}">
+								<h:outputText value="#{rowVar.swiftCode}" />
+							</p:column>
+
+
+							<p:column width="80">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":bankingdetailsInsForm:bankingdetailsInsGrid">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{bankingdetailsUI.bankingdetails}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:bankingdetailsList" action="#{bankingdetailsUI.bankingdetailsDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{bankingdetailsUI.bankingdetails}" />
+								</p:commandButton>
+							</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+	<!-- 
+bank = bank
+createDate = createDate
+bankAccNumber = bankAccNumber
+branchCode = branchCode
+bankHolder = bankHolder
+swiftCode = swiftCode
+
+-->
+</ui:composition>

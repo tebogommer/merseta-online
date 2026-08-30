@@ -1,0 +1,618 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+	<ui:define name="content">
+		<style>
+.borderless .ui-datalist-content {
+	border: none;
+}
+
+.error {
+	background-color: #F44336 !important;
+	color: white !important;
+	font-weight: bold;
+}
+</style>
+		<h:panelGroup rendered="#{!tpDetailUI.enableEdit}">
+			<div class="ui-g">
+				<div class="ui-g-12">
+					<ui:include src="/pages/includes/taskdiagram.xhtml" />
+				</div>
+			</div>
+		</h:panelGroup>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card">
+					<h:form id="mainForm">
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+
+						<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+						<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+						<p:importEnum type="haj.com.entity.enums.ConfigDocProcessEnum" var="ConfigDocProcessEnum" />
+						<p:importEnum type="haj.com.entity.enums.YesNoEnum"></p:importEnum>
+						<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+						<p:importEnum type="haj.com.entity.enums.AccreditationApplicationTypeEnum"></p:importEnum>
+
+
+
+						<p:fieldset legend="#{lang['rejection.reason']}" collapsed="false" toggleable="true" rendered="#{tpDetailUI.rejectReason.size() gt 0 and tpDetailUI.trainingProviderApplication.approvalStatus eq ApprovalEnum.Rejected}">
+							<c:if test="#{tpDetailUI.rejectReason.size() gt 0}">
+								<h4>Status: #{tpDetailUI.trainingProviderApplication.approvalStatus.friendlyName}</h4>
+							</c:if>
+							<c:if test="#{tpDetailUI.rejectReason.size() gt 0}">
+								<p:dataTable var="rowVar" value="#{tpDetailUI.rejectReason}" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+									rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+									<p:column headerText="Create Date">
+										<p:outputLabel value="#{rowVar.createDate}">
+											<f:convertDateTime pattern="dd MMMM yyyy" />
+										</p:outputLabel>
+									</p:column>
+									<p:column headerText="Reason for Rejection">
+										<p:outputLabel value="#{rowVar.description}"></p:outputLabel>
+									</p:column>
+									<p:column headerText="How to fix">
+										<p:outputLabel value="#{rowVar.howTo}"></p:outputLabel>
+									</p:column>
+								</p:dataTable>
+							</c:if>
+						</p:fieldset>
+						<div class="EmptyBox10" />
+						<p:panelGrid columns="1" style="width:100%">
+							<h3>Type Of Application: #{tpDetailUI.trainingProviderApplication.accreditationApplicationTypeEnum.friendlyName}</h3>
+						</p:panelGrid>
+						<br />
+						<!-- Tab View Start -->
+						<p:tabView style="width: 100%" id="trainingProviderTabView">
+							<p:tab title="#{lang['company.info']}" id="tpCompanyInfomation">
+								<h:panelGrid id="compInfoPG" style="width:100%">
+									<br />
+									<p:fieldset id="compInfoFS" legend="#{lang['company.info']}" rendered="true">
+										<h:form id="companyInsForm">
+											<ui:include src="/pages/tp/trainingprovidernonsetacompanydetails.xhtml" />
+										</h:form>
+									</p:fieldset>
+
+									<p:tab title="Training Site Information" rendered="#{tpDetailUI.trainingSite ne null}">
+										<br />
+										<p:outputPanel id="trainingSitePanel">
+											<ui:include src="/pages/includes/training_site_info_display.xhtml">
+												<ui:param name="trainingSite" value="#{tpDetailUI.trainingSite}" />
+											</ui:include>
+											<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+												<p:outputPanel rendered="#{tpDetailUI.trainingSite.residentialAddress ne null}">
+													<ui:include src="/pages/includes/addressInformation.xhtml">
+														<ui:param name="header" value="#{lang['residentialAddress']}" />
+														<ui:param name="address" value="#{tpDetailUI.trainingSite.residentialAddress}" />
+													</ui:include>
+												</p:outputPanel>
+												<p:outputPanel rendered="#{tpDetailUI.trainingSite.postalAddress ne null}">
+													<ui:include src="/pages/includes/addressInformation.xhtml">
+														<ui:param name="header" value="Postal Address" />
+														<ui:param name="address" value="#{tpDetailUI.trainingSite.postalAddress}" />
+													</ui:include>
+												</p:outputPanel>
+											</p:panelGrid>
+										</p:outputPanel>
+									</p:tab>
+
+									<p:fieldset legend="#{lang['company.documents']}" rendered="#{tpDetailUI.company.docs.size() gt 0}">
+										<p:dataTable expandedRow="true" value="#{tpDetailUI.companyList}" var="rv" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv.id}" reflow="true">
+											<p:column headerText="#{lang['expand.row']}" width="45">
+												<p:rowToggler rendered="#{rv.docs.size() gt 0}" />
+											</p:column>
+											<p:column headerText="#{lang['companyName']}">
+								               #{rv.companyName}
+								            </p:column>
+											<p:column headerText="#{lang['companyRegistrationNumber']}">
+								               #{rv.companyRegistrationNumber}
+								            </p:column>
+											<p:column headerText="#{lang['entity.id']}">
+								               #{rv.levyNumber}
+								            </p:column>
+											<p:column headerText="#{lang['company.status']}" width="10%" rendered="false">
+								               #{lang[rv.companyStatus.registrationName]}
+								            </p:column>
+											<p:column width="37" headerText="#{lang['RAG']}" rendered="false">
+												<h:graphicImage value="/resources/hls/images/red.svg" rendered="#{rv.companyStatus eq CompanyStatusEnum.Pending}" width="40" styleClass="animated pulse infinite" />
+											</p:column>
+
+											<p:column width="40" headerText="#{lang['view.edit']}" rendered="false">
+												<p:commandButton title="#{lang['update.company.details']}" icon="ui-icon-save" process="@this" action="#{tpDetailUI.prepForUpdate}" update="mainForm:trainingProviderTabView:compInfoPG" />
+
+											</p:column>
+											<p:rowExpansion>
+												<p:dataTable emptyMessage="#{lang['no.records.found']}" value="#{rv.docs}" var="rv1" rowKey="#{rv1.id}">
+													<p:column headerText="#{lang['type']}" width="20%">
+								                       #{rv1.configDoc.name}
+								                    </p:column>
+													<p:column headerText="#{lang['uploaded.by']}">
+								                       #{rv1.users.firstName} #{rv1.users.lastName}
+								                    </p:column>
+													<p:column headerText="#{lang['uploaded']}" width="15%">
+														<h:outputText value="#{rv1.createDate}">
+															<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+														</h:outputText>
+													</p:column>
+													<p:column headerText="#{lang['version']}" width="15%">
+														<h:outputText value="#{rv1.versionNo}">
+														</h:outputText>
+													</p:column>
+
+													<p:column width="180" headerText="#{lang['view.edit']}">
+														<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlb" rendered="#{rv1.id ne null}">
+															<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+														</p:commandButton>
+														<p:tooltip for="dlb" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+
+														<p:spacer width="5" rendered="#{rv1.id ne null}" />
+														<p:commandButton icon="fa fa-bars " id="dhist" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}">
+															<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+														</p:commandButton>
+														<p:tooltip for="dhist" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+
+														<p:commandButton rendered="#{tpDetailUI.enableEdit or (sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload)}" actionListener="#{tpDetailUI.prepUploadCloseCompanyInformation}"
+															icon="fa fa-upload" id="upload" styleClass="#{rv1.originalFname eq null ? 'red-btn' : ''} flat" process="@this" oncomplete="PF('dlgUpload').show()" update=":uploadForm">
+															<f:setPropertyActionListener value="#{rv1}" target="#{tpDetailUI.doc}" />
+															<f:setPropertyActionListener value="true" target="#{tpDetailUI.uploadCompanyDoc}" />
+														</p:commandButton>
+														<p:tooltip rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload}" for="upload" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+
+														<h:panelGroup id="panelGroupThree" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+															<p:spacer width="5" />
+															<p:commandButton icon="fa fa-comment-o " id="dnote" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+																<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+															</p:commandButton>
+															<p:tooltip for="dnote" value="#{lang['view.note']}" position="left" />
+														</h:panelGroup>
+
+														<h:panelGroup id="panelGroupFour" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+															<p:spacer width="5" />
+															<p:commandButton icon="fa fa-eye " id="viewerButton" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+																<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+															</p:commandButton>
+															<p:tooltip for="viewerButton" value="#{lang['view.document']} " position="left" />
+														</h:panelGroup>
+
+													</p:column>
+												</p:dataTable>
+											</p:rowExpansion>
+										</p:dataTable>
+									</p:fieldset>
+								</h:panelGrid>
+							</p:tab>
+
+							<p:tab title="#{lang['training.provider.information']}" id="tpUserInfomation">
+								<br />
+								<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+									<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+									<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+								</p:confirmDialog>
+
+								<p:fieldset legend="#{lang['raining.provider.representative']}">
+									<h:panelGrid id="gpUserInfoPG" style="width:100%">
+										<ui:include src="/pages/includes/user_info_display.xhtml">
+											<ui:param name="user" value="#{tpDetailUI.trainingProviderUser}" />
+										</ui:include>
+									</h:panelGrid>
+									<p:panelGrid columns="4" style="width:100%" id="sdfInsGrid" layout="grid" styleClass="ui-panelgrid-blank" rendered="false">
+										<!-- NOT IN USE -->
+										<p:outputLabel value="#{lang['name']}:" for="userName" />
+										<p:outputLabel id="userName" value="#{tpDetailUI.trainingProviderUser.firstName} #{tpDetailUI.trainingProviderUser.middleName} #{tpDetailUI.trainingProviderUser.lastName}" styleClass="FontBold" />
+
+										<p:outputLabel value="#{lang['emails']}:" for="userEmail" />
+										<p:outputLabel id="userEmail" value="#{tpDetailUI.trainingProviderUser.email}" styleClass="FontBold" />
+
+										<p:outputLabel value="#{lang['rsa.id.number']}:" for="userIdNumber" rendered="#{tpDetailUI.trainingProviderUser.rsaIDNumber.length() gt 0}" />
+										<p:outputLabel id="userIdNumber" value="#{tpDetailUI.trainingProviderUser.rsaIDNumber}" rendered="#{tpDetailUI.trainingProviderUser.rsaIDNumber.length() gt 0}" styleClass="FontBold" />
+
+										<p:outputLabel value="#{lang['passport.number']}:" for="userPassport" rendered="#{tpDetailUI.trainingProviderUser.passportNumber.length() gt 0}" />
+										<p:outputLabel id="userPassport" value="#{tpDetailUI.trainingProviderUser.passportNumber}" rendered="#{tpDetailUI.trainingProviderUser.passportNumber.length() gt 0}" styleClass="FontBold" />
+
+
+										<p:outputLabel value="#{lang['gender']}:" for="gender" />
+										<p:autoComplete disabled="true" id="gender" value="#{tpDetailUI.trainingProviderUser.gender}" completeMethod="#{autoCompleteUI.completeGender}" var="rv" itemLabel="#{rv.genderName}" itemValue="#{rv}" forceSelection="true" converter="GenderConvertor" dropdown="true" minQueryLength="3"
+											maxResults="10" requiredMessage="#{lang['provide.gender']}" required="true">
+											<p:column headerText="#{lang['gender']}" style="white-space: nowrap">#{rv.genderName}</p:column>
+										</p:autoComplete>
+
+										<p:outputLabel value="#{lang['equity']}:" for="equity" />
+										<p:autoComplete disabled="true" id="equity" value="#{tpDetailUI.trainingProviderUser.equity}" completeMethod="#{autoCompleteUI.completeEquity}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="EquityConvertor" dropdown="true" minQueryLength="3"
+											maxResults="10" requiredMessage="#{lang['provide.equity']}" required="true">
+											<p:column headerText="#{lang['equity']}" style="white-space: nowrap">#{rv.description}</p:column>
+										</p:autoComplete>
+
+										<p:outputLabel value="#{lang['nationality']}:" for="nationality" />
+										<p:autoComplete disabled="true" id="nationality" value="#{tpDetailUI.trainingProviderUser.nationality}" required="true" requiredMessage="#{lang['nationality.required']}" completeMethod="#{autoCompleteUI.completeNationality}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}"
+											forceSelection="true" converter="NationalityConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+											<p:column headerText="#{lang['nationality']}" style="white-space: nowrap">#{rv.description}</p:column>
+										</p:autoComplete>
+
+										<p:outputLabel value="#{lang['disability']}:" for="disability" />
+										<p:autoComplete disabled="true" id="disability" value="#{tpDetailUI.trainingProviderUser.disabilityStatus}" completeMethod="#{autoCompleteUI.completeDisabilityStatus}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="DisabilityStatusConvertor"
+											dropdown="true" minQueryLength="3" maxResults="10">
+											<p:column headerText="#{lang['disability']}" style="white-space: nowrap">#{rv.description}</p:column>
+										</p:autoComplete>
+
+										<p:outputLabel value="#{lang['provider.type']}" for="provType" />
+										<p:selectOneMenu id="provType" value="#{tpDetailUI.trainingProviderApplication.providerType}" style="width:95%" required="true" disabled="true" requiredMessage="Select Provider Type" converter="ProviderTypeConvertor">
+											<p:ajax />
+											<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+											<f:selectItems value="#{selectItemsUI.selectItemsProviderTypeNotWSP}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+										</p:selectOneMenu>
+
+										<p:outputLabel value="Provider Class" for="provclass" />
+										<p:selectOneMenu id="provclass" value="#{tpDetailUI.trainingProviderApplication.providerClass}" style="width:95%" required="true" converter="ProviderClassConvertor" disabled="true">
+											<p:ajax />
+											<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+											<f:selectItems value="#{selectItemsUI.selectItemsProviderClass}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+										</p:selectOneMenu>
+
+									</p:panelGrid>
+								</p:fieldset>
+
+								<p:fieldset legend="#{lang['accreditation.detail']}">
+									<p:panelGrid columns="2" style="width:100%" id="accreditGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+										<h:panelGroup rendered="false">
+											<div>
+												<p:outputLabel value="#{lang['etqa']}:" styleClass="gray" />
+											</div>
+											<div>
+												<p:selectOneMenu id="etqa" value="#{tpDetailUI.trainingProviderApplication.etqa}" converter="EtqaConvertor" style="width:75%" required="true" disabled="true">
+													<p:ajax></p:ajax>
+													<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+													<f:selectItems value="#{selectItemsUI.selectItemsEtqa}" var="il" itemLabel="#{il.description}" />
+												</p:selectOneMenu>
+											</div>
+										</h:panelGroup>
+
+
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText id="providerType" value="#{tpDetailUI.trainingProviderApplication.providerType.description}" style="width:95%" required="true" disabled="true" />
+											<p:outputLabel value="Provider Type" for="providerType" />
+										</h:panelGroup>
+
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText id="providerClass" value="#{tpDetailUI.trainingProviderApplication.providerClass.description}" style="width:95%" required="true" disabled="true" />
+											<p:outputLabel value="Provider Class" for="providerClass" />
+										</h:panelGroup>
+
+
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText id="txtEtqa" value="#{tpDetailUI.trainingProviderApplication.etqa.description}" style="width:95%" required="true" disabled="true" />
+											<p:outputLabel value="#{lang['etqa']}" for="txtEtqa" />
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText id="AccreditationNumber" value="#{tpDetailUI.trainingProviderApplication.accreditationNumber}" style="width:95%" required="true" disabled="true" />
+											<p:outputLabel value="Accreditation Number" for="AccreditationNumber" />
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield" style="margin-top:16px">
+											<p:inputText id="AccreditationStatus" value="#{tpDetailUI.trainingProviderApplication.accreditationStatus.description}" style="width:95%" required="true" disabled="true" />
+											<p:outputLabel value="Accreditation Status" for="AccreditationStatus" />
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield" rendered="false">
+											<p:inputText id="AccreditationPeriod" value="#{tpDetailUI.trainingProviderApplication.accreditationPeriod}" style="width:95%" required="true" disabled="true" />
+											<p:outputLabel value="Accreditation Period" for="AccreditationPeriod" />
+										</h:panelGroup>
+
+										<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank" rendered="true">
+											<h:panelGroup styleClass="md-inputfield" style="width:100%">
+												<p:calendar id="ExpiryDate" value="#{tpDetailUI.trainingProviderApplication.expiriyDate}" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" style="width: 95%" inputStyle="width: 90%" disabled="true">
+													<p:ajax event="dateSelect">
+													</p:ajax>
+												</p:calendar>
+												<p:outputLabel value="Accreditation End Date" for="ExpiryDate" />
+											</h:panelGroup>
+
+											<h:panelGroup styleClass="md-inputfield" style="width:100%">
+												<p:calendar id="startDate" value="#{tpDetailUI.trainingProviderApplication.startDate}" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" style="width: 95%" inputStyle="width: 90%" disabled="true">
+													<p:ajax event="dateSelect">
+													</p:ajax>
+												</p:calendar>
+												<p:outputLabel value="Start Date" for="startDate" />
+											</h:panelGroup>
+										</p:panelGrid>
+
+									</p:panelGrid>
+
+									<p:fieldset>
+										<p:panelGrid columns="2" style="width:100%" id="pgAssessment" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+											<h:panelGroup>
+												<p:outputLabel value="Training and Assessment" for="activeCheck" />
+												<p:spacer width="10"></p:spacer>
+												<p:selectBooleanCheckbox label="Training and Assessment" id="activeCheck" value="#{tpDetailUI.trainingProviderApplication.trainingAssessment}" disabled="true" />
+											</h:panelGroup>
+
+											<h:panelGroup>
+												<p:outputLabel value="Assessment Only" for="financeCheck" />
+												<p:spacer width="10"></p:spacer>
+												<p:selectBooleanCheckbox id="financeCheck" value="#{tpDetailUI.trainingProviderApplication.assessmentOnly}" disabled="true" />
+											</h:panelGroup>
+										</p:panelGrid>
+									</p:fieldset>
+								</p:fieldset>
+
+								<!-- User Documents -->
+								<p:fieldset legend="#{lang['raining.provider.representative.docs']}" id="userDocs" rendered="#{tpDetailUI.trainingProviderUser.docs.size() gt 0}">
+									<p:dataTable emptyMessage="#{lang['no.records.found']}" value="#{tpDetailUI.trainingProviderUser.docs}" var="rv1" rowKey="#{rv1.id}" rows="5" paginator="true" paginatorPosition="bottom"
+										paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25,50,100,150,300,600,900">
+
+										<p:column headerText="#{lang['type']}" width="20%">
+							                       #{rv1.configDoc.name}
+							                    </p:column>
+										<p:column headerText="#{lang['uploaded.by']}">
+							                       #{rv1.users.firstName} #{rv1.users.lastName}
+							                    </p:column>
+										<p:column headerText="#{lang['uploaded']}" width="15%">
+											<h:outputText value="#{rv1.createDate}">
+												<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+											</h:outputText>
+										</p:column>
+										<p:column headerText="#{lang['version']}" width="15%">
+											<h:outputText value="#{rv1.versionNo}">
+											</h:outputText>
+										</p:column>
+
+										<p:column width="180">
+											<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}">
+												<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+											</p:commandButton>
+											<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+
+											<p:spacer width="5" rendered="#{rv1.id ne null}" />
+											<p:commandButton icon="fa fa-bars" id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}">
+												<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+											</p:commandButton>
+											<p:tooltip for="dhistUserDocs" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+
+											<p:commandButton rendered="#{(sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload) or tpDetailUI.enableEdit}" icon="fa fa-upload" id="uploadUserDocs"
+												styleClass="#{rv1.originalFname eq null ? 'red-btn' : ''} flat" actionListener="#{tpDetailUI.prepUploadCloseCompanyInformationForUser}" process="@this" oncomplete="PF('dlgUpload').show()" update=":uploadForm">
+												<f:setPropertyActionListener value="#{rv1}" target="#{tpDetailUI.doc}" />
+											</p:commandButton>
+											<p:tooltip rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload}" for="uploadUserDocs" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}"
+												position="left" />
+
+											<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+												<p:spacer width="5" />
+												<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+													<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+												</p:commandButton>
+												<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+											</h:panelGroup>
+
+											<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+												<p:spacer width="5" />
+												<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+													<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+												</p:commandButton>
+												<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+											</h:panelGroup>
+
+										</p:column>
+									</p:dataTable>
+								</p:fieldset>
+								<br />
+								<p:panelGrid columns="1" style="width:100%">
+									<h:outputText value="Declaration For Application With merSETA" styleClass="FontBold Fs15" />
+									<p>I, the undersigned, confirm that I am authorised by this organisation to submit the Skills Development Provider application. I declare that to the best of my knowledge, the information contained herein, is accurate and up to date.</p>
+									<div class="EmptyBox20"></div>
+									<p:panel header="#{lang['accept.code.of.conduct']}" style="text-align:center">
+										<h:form id="cocForm">
+											<p:panelGrid columns="6" id="pgAccept" style="width:100%">
+
+												<h:outputText value="#{lang['name']}:" styleClass="FontBold Fs15" />
+												<h:outputText value="#{tpDetailUI.trainingProviderUser.firstName} #{tpDetailUI.trainingProviderUser.lastName}" />
+
+												<h:outputText value="#{lang['date']}:" styleClass="FontBold Fs15" />
+
+												<h:outputText value="#{tpDetailUI.trainingProviderApplication.codeOfConductAcceptDate}">
+													<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+												</h:outputText>
+
+												<h:outputText value="#{lang['accept']}:" styleClass="FontBold Fs15" />
+												<p:selectBooleanCheckbox style="width:100%" id="cbAccept" disabled="#{tpDetailUI.trainingProviderApplication.codeOfConductAccepted}" value="#{tpDetailUI.trainingProviderApplication.codeOfConductAccepted}">
+
+												</p:selectBooleanCheckbox>
+
+											</p:panelGrid>
+										</h:form>
+									</p:panel>
+								</p:panelGrid>
+								<div class="EmptyBox10" />
+							</p:tab>
+
+							<p:tab title="#{lang['sdp.contact.persons']}" id="contactPersonsTab" >
+								<ui:include src="/pages/tp/includes/tpNonSetaContactPersonNewStructure.xhtml" />
+								<div class="EmptyBox10" />
+							</p:tab>
+
+							<p:tab rendered="true" title="#{lang['assessor.moderator.details']}" id="assModInfo" >
+								<ui:include src="/pages/tp/includes/tpNonSetaAssessorModNewStructure.xhtml" />
+								<div class="EmptyBox10" />
+							</p:tab>
+
+							<p:tab rendered="#{!tpDetailUI.enableEdit}" title="#{lang['qualification.details']}" id="qualVerification" >
+								<ui:include src="/pages/tp/includes/nonsetaqualificationverification.xhtml" />
+							</p:tab>
+
+							<p:tab rendered="#{tpDetailUI.enableEdit}" title="#{lang['qualification.details']}" id="editQualTab" >
+								<ui:include src="/pages/includes/nonSetaTpQualificationUpdateDetails.xhtml">
+								</ui:include>
+							</p:tab>
+
+						</p:tabView>
+						<!-- Tab View End -->
+
+					</h:form>
+
+				</div>
+
+				<div class="card card-w-title">
+					<h:form>
+						<p:panelGrid columns="3" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Approve and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalApproval and !tpDetailUI.enableEdit}">
+							<p:commandButton onstart="uploadStart()" value="#{lang['approve.task']}" actionListener="#{tpDetailUI.approveNonSETATPApplication}" icon="ui-icon-save" update="@form" styleClass="flat green-btn Fs18" style="height: 50px;">
+							</p:commandButton>
+							<p:commandButton rendered="false" value="#{lang['reject.task']}" icon="ui-icon-save" update="@form" oncomplete="PF('rejectReasonsDlg').show()" styleClass="flat red-btn Fs18" style="height: 50px;" process="@this">
+							</p:commandButton>
+							<p:commandButton rendered="#{sessionUI.task.firstInProcess eq false}" value="#{lang['reject.task']}" icon="ui-icon-save" update="@form" oncomplete="PF('rejectReasonsDlg').show()" styleClass="flat red-btn Fs18" style="height: 50px;" process="@this">
+								<f:setPropertyActionListener value="false" target="#{tpDetailUI.finalRejection}" />
+							</p:commandButton>
+							<p:commandButton value="#{lang['final.reject']}" icon="ui-icon-save" update="@form" oncomplete="PF('rejectReasonsDlg').show()" styleClass="flat red-btn Fs18" style="height: 50px;" process="@this">
+								<f:setPropertyActionListener value="true" target="#{tpDetailUI.finalRejection}" />
+							</p:commandButton>
+						</p:panelGrid>
+						<p:panelGrid columns="3" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{tpDetailUI.enableEdit}">
+							<p:commandButton onstart="uploadStart()" value="#{lang['complete.task']}" actionListener="#{tpDetailUI.completeNonSETATPApplication}" icon="ui-icon-save" update="@form" styleClass="flat green-btn Fs18" style="height: 50px;">
+							</p:commandButton>
+						</p:panelGrid>
+					</h:form>
+				</div>
+
+
+			</div>
+		</div>
+
+		<p:dialog closeOnEscape="true" header="#{lang['add.contact.person']}" widgetVar="dlgAddContact" resizable="false" hideEffect="clip" showEffect="clip" id="dlgAddContact" width="60%" height="60vh" responsive="true" modal="true">
+			<h:form id="usersInsForm">
+				<ui:include src="/pages/tp/includes/addUser.xhtml">
+					<ui:param name="addAssFacilitator" value="#{tpDetailUI.addAssFacilitator}" />
+				</ui:include>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval}" header="#{lang['review.committee.date.scheduling']}" widgetVar="dateSchedule" hideEffect="clip" showEffect="clip" id="dateSchedule" appendTo="@(body)" modal="true" closable="true" width="80%"
+			height="50vh" responsive="true">
+			<h:form id="tableForm">
+
+				<p:commandButton icon="fa fa-calendar" value="Add New Schedule" update="@form" action="#{amDetailUI.redirectToSchedule}">
+				</p:commandButton>
+				<br />
+				<br />
+				<ui:include src="/pages/includes/tabinfo.xhtml">
+					<ui:param name="showInfoCircle" value="true" />
+					<ui:param name="cssClass" value="secondaryText Fs15" />
+					<ui:param name="helpTxt" value="#{lang['note.only.meeting.that.is.schedule.after.site.visit.date.can.be.selected']}" />
+				</ui:include>
+				<p:dataTable var="var" value="#{tpDetailUI.getTPReviewCommitteeMeetingList()}" widgetVar="scheduleTable" rows="5" paginator="true" paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+					rowsPerPageTemplate="5,10,15" paginatorPosition="bottom">
+					<f:facet name="header">
+						<p:outputPanel>
+							<h:outputText value="Select Review Committee Date" />
+						</p:outputPanel>
+					</f:facet>
+
+					<p:column filterBy="#{var.title}" sortBy="#{var.title}" headerText="#{lang['title']}">
+						<h:outputText value="#{var.title}" />
+					</p:column>
+
+					<p:column filterBy="#{var.fromDateTime}" sortBy="#{var.fromDateTime}" headerText="#{lang['from']}">
+						<h:outputText value="#{var.fromDateTime}">
+							<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME}" />
+						</h:outputText>
+					</p:column>
+
+					<p:column filterBy="#{var.toDateTime}" sortBy="#{var.toDateTime}" headerText="#{lang['to']}">
+						<h:outputText value="#{var.toDateTime}">
+							<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME}" />
+						</h:outputText>
+					</p:column>
+
+					<p:column filterBy="#{var.venue}" sortBy="#{var.venue}" headerText="#{lang['venue']}">
+						<h:outputText value="#{var.venue}" />
+					</p:column>
+
+					<p:column style="width:120px">
+						<p:commandButton value="#{lang['schedule']}" icon="ui-icon-check" update="@form" action="#{tpDetailUI.approveTask}" styleClass="flat green-btn Fs18">
+							<f:setPropertyActionListener value="#{var}" target="#{tpDetailUI.reviewCommitteeMeeting}" />
+						</p:commandButton>
+					</p:column>
+
+				</p:dataTable>
+
+			</h:form>
+			<br />
+			<p:fieldset rendered="false" legend="#{lang['add.review.committee.date.schedule']}" collapsed="true" toggleable="true">
+				<ui:include src="/pages/etqaReviewCommittee/include/scheduleDetails.xhtml">
+				</ui:include>
+			</p:fieldset>
+
+		</p:dialog>
+
+		<p:dialog closeOnEscape="true" header="ETQA Review Committee Date" widgetVar="dlgReviewComDateApprove" resizable="false" hideEffect="clip" showEffect="clip" id="dlgReviewComDateApprove" responsive="true" modal="true">
+			<h:form id="revcomForm">
+
+				<p:calendar id="inline" mode="inline" value="#{tpDetailUI.trainingProviderApplication.etqaReviewCommitteeDate}" />
+				<br />
+				<p:commandButton oncomplete="PF('dlgReviewComDateApprove').hide()" value="#{lang['submit']}" icon="ui-icon-save" update="mainForm" action="#{tpDetailUI.approveTtApplicationAndSendCertificate}">
+				</p:commandButton>
+
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="Reject Reasons" widgetVar="rejectReasonsDlg" hideEffect="clip" showEffect="clip" id="dialogRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonForm">
+				<!-- Final Reject Reasons -->
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{tpDetailUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:100%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{tpDetailUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+							</p:selectManyMenu>
+						</div>
+					</div>
+					<p:commandButton onstart="uploadStart()" value="Reject Training Provider" action="#{tpDetailUI.rejectNonSETATPApplication}" update="@form" />
+				</div>
+			</h:form>
+		</p:dialog>
+
+
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true">
+			<h:form id="uploadForm">
+				<h:panelGroup id="uploadGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{tpDetailUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{tpDetailUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{tpDetailUI.storeFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update="mainForm" multiple="false"
+										fileLimit="1" immediate="false" auto="true" />
+								</p:panel>
+
+
+								<div class="EmptyBox10" />
+
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+	</ui:define>
+
+</ui:composition>

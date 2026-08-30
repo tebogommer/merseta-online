@@ -1,0 +1,214 @@
+<ui:composition xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml">
+
+
+	<ui:define name="content">
+		<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum"></p:importEnum>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card">
+					<h:form id="hostingcompanydepartmentsInsForm">
+						<p:growl showDetail="false" sticky="false" id="msg">
+							<p:autoUpdate />
+						</p:growl>
+						<p:tooltip position="left" />
+						<h1>#{lang['search.qualification.development']}</h1>
+						<p:importEnum type="haj.com.entity.enums.CompanyRegOrSDLEnum" var="regSDL"></p:importEnum>
+						<p:importEnum type="haj.com.entity.enums.YesNoEnum"></p:importEnum>
+						<p:importEnum type="haj.com.entity.enums.PivotNonPivotEnum" />
+						<p:importEnum type="haj.com.entity.enums.IdPassportEnum"></p:importEnum>
+						<p:importEnum type="haj.com.entity.enums.EmploymentStatusEnum"></p:importEnum>
+						<p:importConstants type="haj.com.constants.HAJConstants" var="HAJConstants" />
+
+					</h:form>
+					<br />
+					<h:form id="qualDevInfoForm">
+
+
+						<ui:include src="/pages/includes/download_lazy.xhtml">
+							<ui:param name="file_name" value="Qualification_Development" />
+							<ui:param name="target" value="Qualification_Development_List" />
+						</ui:include>
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+						<p:dataTable id="Qualification_Development_List" value="#{qualificationsCurriculumDevelopmentUI.selectedCompQuallDevtList}" var="qurv" paginatorPosition="bottom" reflow="true" emptyMessage="#{lang['no.records.found']}" rows="5" paginator="true" paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25,50,100,200,400,500,1000">
+							<p:column headerText="#{lang['qual.development.type']}">
+								<p:outputLabel value="#{qurv.templateType.friendlyName}"></p:outputLabel>
+							</p:column>
+							<p:column headerText="Date Added">
+								<p:outputLabel value="#{qurv.createDate}">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="Applicant">
+								<p:outputLabel value="#{qurv.createUser.firstName} #{qurv.createUser.lastName}" />
+							</p:column>
+							<p:column headerText="Status">
+								<p:outputLabel value="#{qurv.status.friendlyName}" />
+							</p:column>
+
+							<p:column headerText="View" width="40" exportable="false">
+								<p:commandButton icon="fa fa-search-plus" title="#{lang['view']}" update=":qualDetailForm" action="#{qualificationsCurriculumDevelopmentUI.listenerMethod}">
+									<f:setPropertyActionListener value="#{qurv}" target="#{qualificationsCurriculumDevelopmentUI.selectedQualDevelopment}" />
+								</p:commandButton>
+							</p:column>
+
+						</p:dataTable>
+
+					</h:form>
+
+					<br />
+					<h:form id="qualDetailForm">
+						<p:fieldset rendered="#{qualificationsCurriculumDevelopmentUI.selectedQualDevelopment.id ne null}">
+							<ui:include src="/pages/includes/searchQualDevDetails.xhtml" />
+
+							<c:if test="#{qualificationsCurriculumDevelopmentUI.qdfCompanyList.size() > 0}">
+								<p:fieldset legend="Qualification Development Facilitator">
+									<p:dataTable id="qdfCompanyList" value="#{qualificationsCurriculumDevelopmentUI.qdfCompanyList}" var="rv" paginatorPosition="bottom" reflow="true" emptyMessage="#{lang['no.records.found']}" rows="5" paginator="true" paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25,50,100,200,400,500,1000">
+										<p:ajax event="rowToggle" listener="#{qualificationsCurriculumDevelopmentUI.findDcuments(rv)}" />
+										<p:column style="width:16px" exportable="false">
+											<p:rowToggler />
+										</p:column>
+										<p:column headerText="Name">
+											<p:outputLabel value="#{rv.user.firstName} #{rv.user.lastName}"></p:outputLabel>
+										</p:column>
+										<p:column headerText="Date Added">
+											<p:outputLabel value="#{rv.approvalDate}" />
+										</p:column>
+										<p:column headerText="Status">
+											<p:outputLabel value="#{rv.qualificationsCurriculumDevelopment.status}" />
+										</p:column>
+										<p:column headerText="View" width="40" exportable="false">
+											<p:commandButton icon="fa fa-search-plus" title="#{lang['view']}" oncomplete="PF('dlgQDTeam').show()" update="qdTeamForm" action="#{qualificationsCurriculumDevelopmentUI.findQdfUsers(rv)}">
+											</p:commandButton>
+										</p:column>
+										<p:rowExpansion>
+
+											<p:fieldset legend="Qualification Development Document(s)">
+												<p:dataTable value="#{rv.docs}" var="rv1" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+													<p:column headerText="#{lang['type']}" width="20%">#{rv1.configDoc.name}</p:column>
+													<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+													<p:column headerText="#{lang['uploaded']}" width="15%">
+														<h:outputText value="#{rv1.createDate}">
+															<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+														</h:outputText>
+													</p:column>
+													<p:column headerText="#{lang['version']}" width="15%">
+														<h:outputText value="#{rv1.versionNo}">
+														</h:outputText>
+													</p:column>
+													<p:column width="160" headerText="#{lang['view.edit']}">
+														<p:commandButton ajax="false" immediate="true" process="docsPaneldocsPanel" icon="fa fa-download" action="#{uploadDocUI.download}" id="dlbUserDocs1" rendered="#{rv1.id ne null}">
+															<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+														</p:commandButton>
+														<p:tooltip for="dlbUserDocs1" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+
+														<p:spacer width="5" rendered="#{rv1.id ne null}" />
+														<p:commandButton icon="fa fa-bars " process="@this" id="dhistUserDocs1" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}">
+															<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+														</p:commandButton>
+														<p:tooltip for="dhistUserDocs1" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+
+														<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+															<p:spacer width="5" />
+															<p:commandButton icon="fa fa-eye " process="@this" id="viewerButtonUserDocs1" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+																<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+															</p:commandButton>
+															<p:tooltip for="viewerButtonUserDocs1" value="#{lang['view.document']} " position="left" />
+														</h:panelGroup>
+													</p:column>
+												</p:dataTable>
+											</p:fieldset>
+											<br />
+											<br />
+
+											<p:fieldset legend="Additional Document(s)" id="addDocFLS">
+												<p:dataTable id="additionalDocList" value="#{qualificationsCurriculumDevelopmentUI.qdfCompany.additionalDocs}" var="rv1" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+													<p:column headerText="#{lang['type']}" width="20%">#{rv1.originalFname}</p:column>
+													<p:column headerText="Note" width="20%">#{rv1.note}</p:column>
+													<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+													<p:column headerText="#{lang['uploaded']}" width="15%">
+														<h:outputText value="#{rv1.createDate}">
+															<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+														</h:outputText>
+													</p:column>
+													<p:column headerText="#{lang['version']}" width="15%">
+														<h:outputText value="#{rv1.versionNo}">
+														</h:outputText>
+													</p:column>
+													<p:column width="160" headerText="#{lang['view.edit']}">
+														<p:commandButton ajax="false" immediate="true" process="docsPaneldocsPanel" icon="fa fa-download" action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}">
+															<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+														</p:commandButton>
+														<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+
+														<p:spacer width="5" rendered="#{rv1.id ne null}" />
+														<p:commandButton icon="fa fa-bars " process="@this" id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}">
+															<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+														</p:commandButton>
+														<p:tooltip for="dhistUserDocs" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+
+														<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+															<p:spacer width="5" />
+															<p:commandButton icon="fa fa-eye " process="@this" id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+																<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+															</p:commandButton>
+															<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+														</h:panelGroup>
+													</p:column>
+												</p:dataTable>
+											</p:fieldset>
+										</p:rowExpansion>
+									</p:dataTable>
+								</p:fieldset>
+							</c:if>
+
+						</p:fieldset>
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+		<p:dialog header="Qualification Development Team" widgetVar="dlgQDTeam" hideEffect="clip" showEffect="clip" id="dlgQDTeam" appendTo="@(body)" modal="true" closable="true" width="60%" height="80vh" responsive="true">
+			<div class="ui-g">
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+						<h:form id="qdTeamForm">
+							<h1>Qualification Development Team</h1>
+							<ui:include src="/pages/includes/download_lazy.xhtml">
+								<ui:param name="file_name" value="Team for Qualification Development (#{qualificationsCurriculumDevelopmentUI.selectedQualDevelopment.templateType.friendlyName})" />
+								<ui:param name="target" value="qdfUsersList" />
+							</ui:include>
+							<p:spacer height="20px" />
+							<p:dataTable id="qdfUsersList" var="user" value="#{qualificationsCurriculumDevelopmentUI.qdfUsersList}" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+								<p:column headerText="#{lang['first.name']}" exportable="true">
+									<h:outputText value="#{user.user.firstName}" />
+								</p:column>
+								<p:column headerText="#{lang['surname']}" exportable="true">
+									<h:outputText value="#{user.user.lastName}" />
+								</p:column>
+								<p:column headerText="#{lang['emails']}" exportable="true">
+									<h:outputText value="#{user.user.email}" />
+								</p:column>
+								<p:column headerText="#{lang['tel.number']}" exportable="true">
+									<h:outputText value="#{user.user.telNumber}" />
+								</p:column>
+								<p:column headerText="#{lang['cell.number']}" exportable="true">
+									<h:outputText value="#{user.user.cellNumber}" />
+								</p:column>
+								<p:column headerText="#{lang['rsa.id.number']}" exportable="true">
+									<h:outputText value="#{user.user.rsaIDNumber}" />
+								</p:column>
+								<p:column headerText="#{lang['passport.number']}" exportable="true">
+									<h:outputText value="#{user.user.passportNumber}" />
+								</p:column>
+							</p:dataTable>
+						</h:form>
+					</div>
+				</div>
+			</div>
+		</p:dialog>
+
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+	</ui:define>
+
+
+</ui:composition>

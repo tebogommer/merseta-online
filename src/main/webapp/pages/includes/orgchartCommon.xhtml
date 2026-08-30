@@ -1,0 +1,90 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+	<style type="text/css" >
+
+.ui-organigram .ui-organigram-node {
+	background: #572b00;
+	 text-align: center;
+}
+
+.ui-organigram .ui-organigram-node.default {
+	background: #666666;
+
+}
+
+.ui-organigram .ui-organigram-node.department {
+	background: #7d7008;
+}
+
+.ui-organigram .ui-organigram-node.na {
+	background: #666666;
+}
+
+div.ui-treenode-children {
+	padding-left: 0px !important
+}
+</style>
+
+	<div class="ui-g">
+		<div class="ui-g-12">
+			<div class="card" style="width: 3020px">
+				<h1>#{lang['ORGANOGRAM.for']} ${sessionUI.hostingCompany.companyName}</h1>
+				<h:form id="orgChartForm">
+					<p:organigram id="organigram" widgetVar="organigram" value="#{orgChartUI.rootNode}" var="node" selection="#{orgChartUI.selection}" zoom="true" style="width: 3000px">
+						<p:ajax event="select" process="@this" update=":processForm" listener="#{orgChartUI.nodeSelectListener}" />
+						<p:organigramNode type="root">
+							<h:outputText value="#{node.data}" />
+						</p:organigramNode>
+
+						<p:organigramNode type="department">
+							<h:outputText value="#{node.data.department}" />
+						</p:organigramNode>
+						<p:organigramNode type="default" icon="ui-icon-person">
+							<h:outputText value="#{node.data}" />
+						</p:organigramNode>
+
+					</p:organigram>
+
+
+
+				</h:form>
+
+			</div>
+		</div>
+
+		<div class="ui-g-12">
+			<div class="card">
+				<h:form id="processForm">
+					<c:if test="#{orgChartUI.hostingCompanyDepartments ne null}">
+
+
+						<p:tree value="#{orgChartUI.root}" var="doc" orientation="horizontal" id="processRole">
+
+
+
+							<p:treeNode expandedIcon="ui-icon-folder-open" collapsedIcon="ui-icon-folder-collapsed" type="HostingCompanyDepartment">
+								<h:outputText value="#{doc.department}" />
+							</p:treeNode>
+
+
+
+							<p:treeNode type="HostingCompanyProcess">
+								<h:outputText value="#{lang[doc.workflowProcess.registrationName]}" />
+							</p:treeNode>
+							<p:treeNode type="HostingCompanyProcessChild">
+								<h:outputText value="#{doc.note}" />
+							</p:treeNode>
+							<p:treeNode type="HostingCompanyProcessChildLast">
+								<h:outputText value="#{doc.note}" />
+							</p:treeNode>
+
+
+						</p:tree>
+
+					</c:if>
+				</h:form>
+			</div>
+		</div>
+	</div>
+
+</ui:composition>

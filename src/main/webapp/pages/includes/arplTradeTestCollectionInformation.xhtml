@@ -1,0 +1,42 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+	<c:if test="false">
+		<!-- 
+			companylearnerstradetest entity
+		-->
+		<!--  
+			<ui:include src="/pages/includes/arplTradeTestCollectionInformation.xhtml">
+				<ui:param name="companylearnerstradetest" value=" var.companyLearners.company " />
+				<ui:param name="CALENDER_PATTERN" value=" autoCompleteUI.CALENDER_PATTERN " />
+			</ui:include> 
+		-->
+
+	</c:if>
+
+	<p:importEnum type="haj.com.entity.enums.CollectionEnum" />
+
+	<h4>Certificate Collection</h4>
+	
+	<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid" rendered="#{companylearnerstradetest.collectionEnum ne null}">
+		<h:panelGroup styleClass="md-inputfield" >
+			<p:inputText value="#{companylearnerstradetest.collectionEnum.registrationName}" style="width:95%" disabled="true" />
+			<p:outputLabel value="Certificate Collection:" />
+		</h:panelGroup>
+		<h:panelGroup styleClass="md-inputfield" rendered="#{companylearnerstradetest.collectionInformation ne null and companylearnerstradetest.collectionInformation ne ''}">
+			<p:inputText value="#{companylearnerstradetest.collectionInformation}" style="width:95%" disabled="true" />
+			<p:outputLabel value="Waybill number" rendered="#{companylearnerstradetest.collectionEnum eq CollectionEnum.Courier}" />
+			<p:outputLabel value="Information on person collecting (First Name, Surname and RSA ID / Passport Number)" rendered="#{companylearnerstradetest.collectionEnum eq CollectionEnum.PersonalCollection}" />
+			<p:outputLabel value="Registered mail number" rendered="#{companylearnerstradetest.collectionEnum eq CollectionEnum.RegisteredMail}" />
+		</h:panelGroup>
+		<h:panelGroup styleClass="md-inputfield" rendered="#{companylearnerstradetest.dateOfCollection ne null}">
+			<p:calendar disabled="true" inputStyle="width:90%" value="#{companylearnerstradetest.dateOfCollection}" pattern="#{CALENDER_PATTERN}" />
+			<p:outputLabel value="Date of Collection" rendered="#{companylearnerstradetest.collectionEnum eq CollectionEnum.PersonalCollection}" />
+			<p:outputLabel value="Date Sent" rendered="#{companylearnerstradetest.collectionEnum eq CollectionEnum.Courier or companylearnerstradetest.collectionEnum eq CollectionEnum.RegisteredMail}" />
+		</h:panelGroup>
+	</p:panelGrid>
+	
+	<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid" rendered="#{companylearnerstradetest.collectionEnum eq null}">
+		<h3>Not Provided</h3>
+	</p:panelGrid>
+	
+</ui:composition>

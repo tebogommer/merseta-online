@@ -1,0 +1,113 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml" xmlns:tie="http://tiefaces.org/tiefaces">
+
+	<ui:define name="content">
+
+
+		<style type="text/css">
+div.ui-treenode-children {
+	padding-left: 0px !important
+}
+/*.ui-treenode-content{background-color: red !important}*/
+.hsGreen { {
+	background-color: green !important;
+	color: white !important;
+}
+}
+</style>
+
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card">
+					<h1 id="headerOne">Test Page: TBH TBH</h1>
+					<div>
+						<span class="fa-stack fa-3x"> <i class="fa fa-trophy fa-stack-2x" style="color: #C0C0C0"></i> <span class="fa fa-stack-1x fa-inverse" style="display: block; margin-top: -15px;"> <span style="font-size: 35px; font-weight: bold; font-family: sans-serif;"> S </span>
+						</span>
+						</span> <span class="fa-stack fa-3x"> <i class="fa fa-trophy fa-stack-2x" style="color: #D4AF37"></i> <span class="fa fa-stack-1x fa-inverse" style="display: block; margin-top: -15px;"> <span style="font-size: 35px; font-weight: bold; font-family: sans-serif;"> G </span>
+						</span>
+						</span> <span class="fa-stack fa-4x"> <i class="fa fa-certificate fa-stack-2x" style="color: #a5a4a2"></i> <span class="fa-stack fa-stack-1x" style="margin-top: 22px;"> <i class="fa fa-trophy fa-stack-2x" style="color: #e5e4e2; font-size: 70px"></i> <span
+								class="fa fa-stack-1x fa-inverse" style="display: block; margin-top: -42px;"> <span style="font-size: 30px; font-weight: bold; font-family: sans-serif;"> P </span>
+							</span>
+						</span>
+						</span>
+					</div>
+					<h:form id="companyInsForm">
+
+						<p:fieldset rendered="#{sessionUI.validationErrors.length() gt 0}" styleClass="error Fs12">
+							<h4 style="margin-top: 0px">#{lang['action.required.message']}:</h4>
+							<p:outputLabel value="#{sessionUI.validationErrors}" escape="false"></p:outputLabel>
+						</p:fieldset>
+
+						<h:panelGroup id="sdlNumInput" styleClass="md-inputfield">
+							<p:inputMask id="sdlNumCriteri1" mask="#{searchCompanyUI.companyLevyNumberFormat}" value="#{searchCompanyUI.criteria}" style="width:95%" requiredMessage="#{lang['enter.sdl.number']}" required="true">
+								<f:ajax event="change" onevent="searchCompanyUI.handleChange();" />
+							</p:inputMask>
+							<p:outputLabel value="#{lang['sdl.number']}" for="sdlNumCriteri1" />
+						</h:panelGroup>
+
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:remoteCommand name="downloadPOC()" action="#{testUI.downloadDocStore('qcto1_extract.dat', 'QCTO1_data_extract.dat')}" />
+						<p:panelGrid columns="1" layout="grid" styleClass="ui-panelgrid-blank">
+							<p:commandButton value="Test Errors" action="#{testUI.testErrors}" rendered="true" process="@this" />
+							<p:commandButton value="Load companies" action="#{testUI.test9}" rendered="false" />
+							<p:commandButton value="Create GP Creditor" action="#{testUI.test10}" />
+							<p:commandButton value="Create GP Payable Batch Entry" action="#{testUI.test8}" />
+							<p:commandButton value="Generate Verification For One Company" action="#{testUI.checkWspData}" rendered="true"></p:commandButton>
+							<p:commandButton value="Test Email Send" action="#{testUI.test}" rendered="true"></p:commandButton>
+							<p:commandButton immediate="true" value="Generate Verification" action="#{testUI.generateVerification}" rendered="true"></p:commandButton>
+							<p:commandButton value="Check WSP Data" action="#{testUI.checkWspData}" rendered="true"></p:commandButton>
+							<p:commandButton value="Download Certificate" action="#{testUI.downloadCertificates}" rendered="true" ajax="false"></p:commandButton>
+							<p:commandButton value="Do Allocation" action="#{testUI.doAllocation}" rendered="true"></p:commandButton>
+							<p:commandButton value="Generate Workplace Approval From DG Verification" action="#{testUI.generateWorkplaceApproval}" rendered="true"></p:commandButton>
+							<!-- <p:commandButton value="Download QCTO1 extract" action="#{testUI.sleepFor(3000)}" rendered="true" ajax="true" onstart="uploadStart()" oncomplete="uploadDone(),downloadPOC()" /> -->
+							<p:commandButton value="run Scheduler" action="#{testUI.runScheduler}" />
+							<p:commandButton value="Download QCTO1 extract" ajax="false" onclick="PrimeFaces.monitorDownload(uploadStart, uploadDone);" icon="ui-icon-arrowthick-1-s">
+								<p:fileDownload value="#{testUI.downloadDocStore2('qcto1_extract.dat', 'QCTO1_data_extract.dat')}" />
+							</p:commandButton>
+							<p:commandButton value="Test Excel Generation" action="#{testUI.testExcelGeneration}" rendered="true"></p:commandButton>
+							<p:commandButton value="Gen Allocation" action="#{testUI.allcoationGenerationFix}" rendered="true"></p:commandButton>
+							<p:commandButton value="Test TP By Region" action="#{testUI.testTpByRegion}" rendered="true" immediate="true" />
+							<p:commandButton value="Download Legacy Data" action="#{testUI.downloadAllLegacyData}" rendered="true" />
+							<p:commandButton value="Test ARPL Email Reminders" action="#{testUI.testArplEmailReminders}" rendered="true" />
+							<p:commandButton value="Gen N Number Site Number Generation" action="#{testUI.runSiteNumberGeneration}" rendered="true" />
+							<p:commandButton value="Gen L Number Site Number Generation" action="#{testUI.runSiteNumberLGeneration}" rendered="true" />
+							<p:commandButton value="Gen Site Number Site Number Generation" action="#{testUI.runSiteNumberGenerationSites}" rendered="true" />
+							<p:commandButton value="Test Company Copy" action="#{testUI.testCopy}" rendered="true" immediate="true" />
+							<p:commandButton value="Test Company Delete" action="#{testUI.testDelete}" rendered="true" immediate="true" />
+							<p:commandButton ajax="false" value="User Vlaidiation Execptions" action="#{testUI.runTestServiceUserValidiation}" rendered="true" immediate="true" />
+							<p:commandButton ajax="false" value="Company Vlaidiation Execptions" action="#{testUI.runTestServiceCompanyValidiation}" rendered="true" immediate="true" />
+							<p:commandButton ajax="false" value="Address Vlaidiation Execptions" action="#{testUI.runTestServiceAddressValidiation}" rendered="true" immediate="true" />
+							<p:commandButton ajax="false" value="RUN ALL Vlaidiation Execptions" action="#{testUI.runAllExecptions}" rendered="true" immediate="true" />
+							<p:commandButton ajax="false" value="test Dates CALC" action="#{testUI.runTestActiveContract}" rendered="true" immediate="true" />
+							<p:commandButton ajax="false" value="test Active COntracts Service" action="#{testUI.runTestActiveContractService}" rendered="true" immediate="true" />
+							<p:commandButton value="Generate First Task: Active COntract Extension Request" action="#{testUI.generateWorkflowContractExtensionRequest}" rendered="true" immediate="true" />
+							<p:commandButton value="Test ARPL" action="#{testUI.testArplDaysBetweenDatesCheck}" rendered="true" immediate="true" />
+							<p:commandButton value="Test GP TRANS WSDL" action="#{testUI.testGpTransactionsWS}" rendered="true" immediate="true" />
+							<p:commandButton value="Test DG Verification Report generation" action="#{testUI.testReportGeneration}" rendered="true" immediate="true" />
+							<p:commandButton value="Auto calc OFO CODES main" action="#{testUI.runOfoCodeMain}" update="@form" />
+							<p:commandButton value="Run OFO CODES Special" action="#{testUI.runOfoCodeSpecial}" update="@form" />
+							<p:commandButton value="Test Archive Read" action="#{testUI.testReadInFiles}" update="@form" immediate="true" />
+							<p:commandButton value="Test Download" action="#{testUI.downloadLastDocInArchive}" ajax="false" update="@form" immediate="true" />
+							
+							<p:commandButton rendered="false" value="Test QMR" action="#{testUI.testQMRInfo}" update="@form" immediate="true" />
+							<p:commandButton rendered="false" value="Test QMR With Filters" action="#{testUI.testQMRWithParamaters}" update="@form" immediate="true" />
+							<p:commandButton rendered="false" value="Test QMR Gen" action="#{testUI.testQMRGeneration}" update="@form" immediate="true" />
+							<p:commandButton rendered="false" value="Test QMR Quarter Gen" action="#{testUI.testGenQuarter}" update="@form" immediate="true" />
+						</p:panelGrid>
+					</h:form>
+
+				</div>
+			</div>
+		</div>
+
+
+		<script>
+			function scrollToDiv() {
+				alert('ready');
+			}
+		</script>
+
+	</ui:define>
+
+</ui:composition>

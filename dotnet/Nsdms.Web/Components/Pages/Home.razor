@@ -1,0 +1,287 @@
+@page "/"
+@inject IPersonService PersonService
+@inject IOrganisationService OrgService
+@inject ITrainingProviderService ProviderService
+@inject IWspService WspService
+@inject IGrantService GrantService
+@inject ILevyService LevyService
+@inject IEtqaService EtqaService
+@inject IWorkplaceApprovalService WpaService
+@inject ILearnerService LearnerService
+@inject NavigationManager Navigation
+
+<PageTitle>Executive Dashboard - MerSETA NSDMS</PageTitle>
+
+<div class="nsdms-dashboard">
+    <!-- Main Top Banner with H1 -->
+    <header class="d-flex justify-space-between align-center mb-6 pa-5 rounded-lg elevation-2" style="background-color: #1e3a8a; color: #ffffff;">
+        <div>
+            <h1 class="font-weight-bold" style="font-size: 1.75rem; color: #ffffff; margin: 0;">MerSETA NSDMS Executive Portal</h1>
+            <p style="color: #e0e7ff; margin: 4px 0 0 0; font-size: 0.95rem;">National Skills Development Management System &bull; Enterprise Operations Hub</p>
+        </div>
+        <div class="d-none d-md-flex align-center gap-3">
+            <span class="px-3 py-1 rounded" style="background-color: #0f172a; color: #ffffff; font-size: 0.8125rem; font-weight: 600;">Financial Year 2026/27</span>
+            <span class="px-3 py-1 rounded" style="background-color: #064e3b; color: #ffffff; font-size: 0.8125rem; font-weight: 600;">Operational</span>
+        </div>
+    </header>
+
+    <!-- Operational Metrics Section -->
+    <section aria-labelledby="kpi-heading" class="mb-6">
+        <h2 id="kpi-heading" class="font-weight-bold mb-4" style="font-size: 1.25rem; color: #0f172a;">Operational Key Metrics</h2>
+        <MudGrid Spacing="3">
+            <MudItem xs="12" sm="6" md="4" lg="3">
+                <a href="/employers" class="dashboard-metric-link" style="text-decoration: none; color: inherit; display: block;">
+                    <div class="mud-paper mud-elevation-2 pa-4 rounded-lg dashboard-metric-card" style="background-color: #ffffff; border-left: 4px solid #1e40af;">
+                        <div class="d-flex align-center justify-space-between">
+                            <div>
+                                <p class="text-uppercase font-weight-bold" style="color: #334155; font-size: 0.75rem; margin: 0; letter-spacing: 0.05em;">Registered Employers</p>
+                                <p class="font-weight-bold mt-1" style="color: #1e40af; font-size: 2.125rem; line-height: 1.2; margin: 0;">@_employerCount</p>
+                                <p style="color: #065f46; font-size: 0.75rem; font-weight: 600; margin: 4px 0 0 0;">Active Levy &amp; Non-Levy</p>
+                            </div>
+                            <div class="pa-3 rounded-circle" style="background-color: #dbeafe; color: #1e40af;">
+                                <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Medium" />
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="4" lg="3">
+                <a href="/learners" class="dashboard-metric-link" style="text-decoration: none; color: inherit; display: block;">
+                    <div class="mud-paper mud-elevation-2 pa-4 rounded-lg dashboard-metric-card" style="background-color: #ffffff; border-left: 4px solid #065f46;">
+                        <div class="d-flex align-center justify-space-between">
+                            <div>
+                                <p class="text-uppercase font-weight-bold" style="color: #334155; font-size: 0.75rem; margin: 0; letter-spacing: 0.05em;">Active Learners</p>
+                                <p class="font-weight-bold mt-1" style="color: #065f46; font-size: 2.125rem; line-height: 1.2; margin: 0;">@_learnerCount</p>
+                                <p style="color: #065f46; font-size: 0.75rem; font-weight: 600; margin: 4px 0 0 0;">Apprentices &amp; Interns</p>
+                            </div>
+                            <div class="pa-3 rounded-circle" style="background-color: #d1fae5; color: #065f46;">
+                                <MudIcon Icon="@Icons.Material.Filled.School" Size="Size.Medium" />
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="4" lg="3">
+                <a href="/workplace-approvals" class="dashboard-metric-link" style="text-decoration: none; color: inherit; display: block;">
+                    <div class="mud-paper mud-elevation-2 pa-4 rounded-lg dashboard-metric-card" style="background-color: #ffffff; border-left: 4px solid #0369a1;">
+                        <div class="d-flex align-center justify-space-between">
+                            <div>
+                                <p class="text-uppercase font-weight-bold" style="color: #334155; font-size: 0.75rem; margin: 0; letter-spacing: 0.05em;">Workplace Approvals</p>
+                                <p class="font-weight-bold mt-1" style="color: #0369a1; font-size: 2.125rem; line-height: 1.2; margin: 0;">@_approvalCount</p>
+                                <p style="color: #0369a1; font-size: 0.75rem; font-weight: 600; margin: 4px 0 0 0;">Inspected Sites &amp; Tools</p>
+                            </div>
+                            <div class="pa-3 rounded-circle" style="background-color: #e0f2fe; color: #0369a1;">
+                                <MudIcon Icon="@Icons.Material.Filled.FactCheck" Size="Size.Medium" />
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="4" lg="3">
+                <a href="/grants" class="dashboard-metric-link" style="text-decoration: none; color: inherit; display: block;">
+                    <div class="mud-paper mud-elevation-2 pa-4 rounded-lg dashboard-metric-card" style="background-color: #ffffff; border-left: 4px solid #9a3412;">
+                        <div class="d-flex align-center justify-space-between">
+                            <div>
+                                <p class="text-uppercase font-weight-bold" style="color: #334155; font-size: 0.75rem; margin: 0; letter-spacing: 0.05em;">DG Funding Windows</p>
+                                <p class="font-weight-bold mt-1" style="color: #9a3412; font-size: 2.125rem; line-height: 1.2; margin: 0;">@_grantCount</p>
+                                <p style="color: #9a3412; font-size: 0.75rem; font-weight: 600; margin: 4px 0 0 0;">R45.0M Allocated</p>
+                            </div>
+                            <div class="pa-3 rounded-circle" style="background-color: #ffedd5; color: #9a3412;">
+                                <MudIcon Icon="@Icons.Material.Filled.MonetizationOn" Size="Size.Medium" />
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </MudItem>
+        </MudGrid>
+    </section>
+
+    <!-- Operations & Modules Section -->
+    <section aria-labelledby="modules-heading" class="mb-6">
+        <h2 id="modules-heading" class="font-weight-bold mb-4" style="font-size: 1.25rem; color: #0f172a;">Core Operational Modules</h2>
+        <MudGrid Spacing="3">
+            <MudItem xs="12" sm="6" md="4">
+                <div class="mud-paper mud-elevation-2 pa-4 rounded-lg h-100 d-flex flex-column justify-space-between" style="background-color: #ffffff;">
+                    <div>
+                        <div class="d-flex align-center gap-3 mb-3">
+                            <div class="pa-2 rounded" style="background-color: #1e40af; color: #ffffff;">
+                                <MudIcon Icon="@Icons.Material.Filled.People" Size="Size.Small" />
+                            </div>
+                            <div>
+                                <h3 class="font-weight-bold" style="font-size: 1.05rem; color: #0f172a; margin: 0;">People &amp; Demographics</h3>
+                                <p style="color: #475569; font-size: 0.75rem; margin: 0;">RSA ID Validated Records</p>
+                            </div>
+                        </div>
+                        <p style="color: #334155; font-size: 0.875rem; line-height: 1.5; margin: 0 0 16px 0;">
+                            Manage individual master profiles, contacts, SDFs, assessors, and demographic classifications with real-time Luhn algorithm validation.
+                        </p>
+                    </div>
+                    <div>
+                        <a href="/people" class="btn-navigate" style="display: inline-flex; align-items: center; justify-content: center; background-color: #1e40af; color: #ffffff; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.875rem; text-decoration: none;">
+                            View People &rarr;
+                        </a>
+                    </div>
+                </div>
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="4">
+                <div class="mud-paper mud-elevation-2 pa-4 rounded-lg h-100 d-flex flex-column justify-space-between" style="background-color: #ffffff;">
+                    <div>
+                        <div class="d-flex align-center gap-3 mb-3">
+                            <div class="pa-2 rounded" style="background-color: #065f46; color: #ffffff;">
+                                <MudIcon Icon="@Icons.Material.Filled.Domain" Size="Size.Small" />
+                            </div>
+                            <div>
+                                <h3 class="font-weight-bold" style="font-size: 1.05rem; color: #0f172a; margin: 0;">Skills Development Providers</h3>
+                                <p style="color: #475569; font-size: 0.75rem; margin: 0;">SDP &amp; TVET Accreditation</p>
+                            </div>
+                        </div>
+                        <p style="color: #334155; font-size: 0.875rem; line-height: 1.5; margin: 0 0 16px 0;">
+                            Track provider accreditation status, SAQA qualifications, unit standards, maximum learner capacity, and ETQA decision approvals.
+                        </p>
+                    </div>
+                    <div>
+                        <a href="/sdp" class="btn-navigate" style="display: inline-flex; align-items: center; justify-content: center; background-color: #065f46; color: #ffffff; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.875rem; text-decoration: none;">
+                            View Providers &rarr;
+                        </a>
+                    </div>
+                </div>
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="4">
+                <div class="mud-paper mud-elevation-2 pa-4 rounded-lg h-100 d-flex flex-column justify-space-between" style="background-color: #ffffff;">
+                    <div>
+                        <div class="d-flex align-center gap-3 mb-3">
+                            <div class="pa-2 rounded" style="background-color: #0369a1; color: #ffffff;">
+                                <MudIcon Icon="@Icons.Material.Filled.Description" Size="Size.Small" />
+                            </div>
+                            <div>
+                                <h3 class="font-weight-bold" style="font-size: 1.05rem; color: #0f172a; margin: 0;">WSP &amp; Mandatory Grants</h3>
+                                <p style="color: #475569; font-size: 0.75rem; margin: 0;">Workplace Skills Plans (FinYear 2026)</p>
+                            </div>
+                        </div>
+                        <p style="color: #334155; font-size: 0.875rem; line-height: 1.5; margin: 0 0 16px 0;">
+                            Review annual WSP submissions, OFO demographic summaries, planned training budgets, and statutory mandatory grant disbursements.
+                        </p>
+                    </div>
+                    <div>
+                        <a href="/wsp" class="btn-navigate" style="display: inline-flex; align-items: center; justify-content: center; background-color: #0369a1; color: #ffffff; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.875rem; text-decoration: none;">
+                            View WSP Submissions &rarr;
+                        </a>
+                    </div>
+                </div>
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="4">
+                <div class="mud-paper mud-elevation-2 pa-4 rounded-lg h-100 d-flex flex-column justify-space-between" style="background-color: #ffffff;">
+                    <div>
+                        <div class="d-flex align-center gap-3 mb-3">
+                            <div class="pa-2 rounded" style="background-color: #9a3412; color: #ffffff;">
+                                <MudIcon Icon="@Icons.Material.Filled.AccountBalanceWallet" Size="Size.Small" />
+                            </div>
+                            <div>
+                                <h3 class="font-weight-bold" style="font-size: 1.05rem; color: #0f172a; margin: 0;">SARS Monthly Levies</h3>
+                                <p style="color: #475569; font-size: 0.75rem; margin: 0;">Levy Split Breakdown Engine</p>
+                            </div>
+                        </div>
+                        <p style="color: #334155; font-size: 0.875rem; line-height: 1.5; margin: 0 0 16px 0;">
+                            Automated statutory calculation (20% Mandatory, 49.5% DG, 10.5% Admin, 0.5% QCTO) and SDL payment reconciliation against SARS monthly files.
+                        </p>
+                    </div>
+                    <div>
+                        <a href="/levies" class="btn-navigate" style="display: inline-flex; align-items: center; justify-content: center; background-color: #9a3412; color: #ffffff; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.875rem; text-decoration: none;">
+                            View Levies &rarr;
+                        </a>
+                    </div>
+                </div>
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="4">
+                <div class="mud-paper mud-elevation-2 pa-4 rounded-lg h-100 d-flex flex-column justify-space-between" style="background-color: #ffffff;">
+                    <div>
+                        <div class="d-flex align-center gap-3 mb-3">
+                            <div class="pa-2 rounded" style="background-color: #991b1b; color: #ffffff;">
+                                <MudIcon Icon="@Icons.Material.Filled.VerifiedUser" Size="Size.Small" />
+                            </div>
+                            <div>
+                                <h3 class="font-weight-bold" style="font-size: 1.05rem; color: #0f172a; margin: 0;">ETQA &amp; Trade Testing</h3>
+                                <p style="color: #475569; font-size: 0.75rem; margin: 0;">Quality Assurance &amp; Certification</p>
+                            </div>
+                        </div>
+                        <p style="color: #334155; font-size: 0.875rem; line-height: 1.5; margin: 0 0 16px 0;">
+                            Register and monitor registered assessors, moderators, scope registrations, trade test attempts, serial certificate numbers, and competency results.
+                        </p>
+                    </div>
+                    <div>
+                        <a href="/trade-tests" class="btn-navigate" style="display: inline-flex; align-items: center; justify-content: center; background-color: #991b1b; color: #ffffff; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.875rem; text-decoration: none;">
+                            View Trade Tests &rarr;
+                        </a>
+                    </div>
+                </div>
+            </MudItem>
+
+            <MudItem xs="12" sm="6" md="4">
+                <div class="mud-paper mud-elevation-2 pa-4 rounded-lg h-100 d-flex flex-column justify-space-between" style="background-color: #ffffff;">
+                    <div>
+                        <div class="d-flex align-center gap-3 mb-3">
+                            <div class="pa-2 rounded" style="background-color: #0f172a; color: #ffffff;">
+                                <MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Small" />
+                            </div>
+                            <div>
+                                <h3 class="font-weight-bold" style="font-size: 1.05rem; color: #0f172a; margin: 0;">System Lookups &amp; Config</h3>
+                                <p style="color: #475569; font-size: 0.75rem; margin: 0;">Master Lookup Types (17 Types)</p>
+                            </div>
+                        </div>
+                        <p style="color: #334155; font-size: 0.875rem; line-height: 1.5; margin: 0 0 16px 0;">
+                            Manage standardized lookup tables including Province, Sector, Chamber, Gender, Equity, Citizen, Disability, and Accreditation types.
+                        </p>
+                    </div>
+                    <div>
+                        <a href="/admin/lookups" class="btn-navigate" style="display: inline-flex; align-items: center; justify-content: center; background-color: #0f172a; color: #ffffff; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 0.875rem; text-decoration: none;">
+                            Manage Lookups &rarr;
+                        </a>
+                    </div>
+                </div>
+            </MudItem>
+        </MudGrid>
+    </section>
+</div>
+
+<style>
+    .dashboard-metric-card {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    .dashboard-metric-card:hover, .dashboard-metric-card:focus {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12) !important;
+    }
+    .btn-navigate:hover, .btn-navigate:focus {
+        opacity: 0.92;
+        filter: brightness(1.1);
+    }
+</style>
+
+@code {
+    private int _employerCount = 0;
+    private int _learnerCount = 0;
+    private int _approvalCount = 0;
+    private int _grantCount = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var orgs = await OrgService.GetAllAsync();
+        _employerCount = orgs.Count;
+
+        var learners = await LearnerService.GetAllLearnersAsync();
+        _learnerCount = learners.Count;
+
+        var approvals = await WpaService.GetAllAsync();
+        _approvalCount = approvals.Count;
+
+        var grants = await GrantService.GetAllApplicationsAsync();
+        _grantCount = grants.Count;
+    }
+}

@@ -1,0 +1,189 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<p:growl showDetail="false" sticky="false">
+						<p:autoUpdate />
+					</p:growl>
+					<h:form id="mainForm">
+						<h1>GP Remittance Advice Web Service Test Page</h1>
+						<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="entityIDEntry" value="#{gpTransactionsTestUI.levyNumber}" style="width:95%" required="true" requiredMessage="Provide Entity ID" />
+								<p:outputLabel value="Entity ID" for="entityIDEntry" />
+							</h:panelGroup>
+						</p:panelGrid>
+
+						<p:panelGrid columns="3" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+							<p:commandButton value="Run: All Functions" icon="ui-icon-save" update="@form" styleClass="flat green-btn Fs18" action="#{gpTransactionsTestUI.runAllEntries}" style="height: 50px;" onstart="uploadStart()" oncomplete="uploadDone()">
+							</p:commandButton>
+							<p:commandButton value="Clear Entries" icon="fa fa-times" update="@form " action="#{gpTransactionsTestUI.clearAllEntries}" styleClass="red-btn flat Fs18" style="height: 50px;" process="@this" onstart="uploadStart()" oncomplete="uploadDone()">
+							</p:commandButton>
+						</p:panelGrid>
+
+						<p:panelGrid columns="3" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="false">
+							<p:commandButton value="Run: GET INFO" icon="fa fa-check" update="@form" styleClass="flat green-btn Fs18" action="#{gpTransactionsTestUI.runGetInfo}" style="height: 50px;" onstart="uploadStart()" oncomplete="uploadDone()">
+							</p:commandButton>
+							<p:commandButton value="Run: GET PAYMENTS" icon="fa fa-check" update="@form" styleClass="flat green-btn Fs18" action="#{gpTransactionsTestUI.runGetPayments}" style="height: 50px;" onstart="uploadStart()" oncomplete="uploadDone()">
+							</p:commandButton>
+							<p:commandButton value="Run: GET AJUSTMENT" icon="fa fa-check" update="@form" styleClass="flat green-btn Fs18" action="#{gpTransactionsTestUI.runGetAjustment}" style="height: 50px;" onstart="uploadStart()" oncomplete="uploadDone()">
+							</p:commandButton>
+						</p:panelGrid>
+
+
+						<div class="EmptyBox10" />
+
+						<p:fieldset legend="Result: GET INFO" style="margin-bottom:20px" >
+							<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid" rendered="#{gpTransactionsTestUI.arrayOfInfo eq null or gpTransactionsTestUI.arrayOfInfo.info.size() eq 0}">
+								<h3>No Results For: GET INFO</h3>
+							</p:panelGrid>
+							<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid" rendered="#{gpTransactionsTestUI.arrayOfInfo ne null and gpTransactionsTestUI.arrayOfInfo.info.size() ne 0}">
+								<h3>Results For: GET INFO (#{gpTransactionsTestUI.arrayOfInfo.info.size()} Records)</h3>
+								<ui:include src="/pages/includes/download_lazy.xhtml">
+									<ui:param name="file_name" value="GET INFO Results" />
+									<ui:param name="target" value="getInfoDT" />
+								</ui:include>
+								<p:dataTable var="rowVarGI" id="getInfoDT" value="#{gpTransactionsTestUI.arrayOfInfo.info}" paginator="true" rows="5" paginatorPosition="bottom"
+									paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" >
+									<p:column headerText="VendID">
+										<h:outputText value="#{rowVarGI.vendID}" />
+									</p:column>
+									<p:column headerText="Vendname">
+										<h:outputText value="#{rowVarGI.vendname}" />
+									</p:column>
+									<p:column headerText="VoucherNumber">
+										<h:outputText value="#{rowVarGI.voucherNumber}" />
+									</p:column>
+									<p:column headerText="DocType">
+										<h:outputText value="#{rowVarGI.docType}" />
+									</p:column>
+									<p:column headerText="DocDate">
+										<h:outputText value="#{rowVarGI.docDate}" />
+									</p:column>
+									<p:column headerText="DocNumber">
+										<h:outputText value="#{rowVarGI.docNumber}" />
+									</p:column>
+									<p:column headerText="DocDescription">
+										<h:outputText value="#{rowVarGI.docDescription}" />
+									</p:column>
+									<p:column headerText="DocFunctionalAmount">
+										<h:outputText value="#{rowVarGI.docFunctionalAmount}" />
+									</p:column>
+									<p:column headerText="DockBalance1">
+										<h:outputText value="#{rowVarGI.dockBalance1}" />
+									</p:column>
+									<p:column headerText="DocHold1">
+										<h:outputText value="#{rowVarGI.docHold1}" />
+									</p:column>
+									<p:column headerText="DocHoldReason1">
+										<h:outputText value="#{rowVarGI.docHoldReason1}" />
+									</p:column>
+								</p:dataTable>
+							</p:panelGrid>
+						</p:fieldset>
+						
+						<p:fieldset legend="Result: GET PAYMENTS" style="margin-bottom:20px">
+							<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid" rendered="#{gpTransactionsTestUI.arrayOfPayments eq null or gpTransactionsTestUI.arrayOfPayments.payments.size() eq 0}">
+								<h3>No Results For: GET PAYMENTS</h3>
+							</p:panelGrid>
+							<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid" rendered="#{gpTransactionsTestUI.arrayOfPayments ne null and gpTransactionsTestUI.arrayOfPayments.payments.size() ne 0}">
+								<h3>Results For: GET PAYMENTS (#{gpTransactionsTestUI.arrayOfPayments.payments.size()} Records)</h3>
+								<ui:include src="/pages/includes/download_lazy.xhtml">
+									<ui:param name="file_name" value="GET Payments Results" />
+									<ui:param name="target" value="getPaymentsDT" />
+								</ui:include>
+								<p:dataTable var="rowVarP" id="getPaymentsDT" value="#{gpTransactionsTestUI.arrayOfPayments.payments}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+									rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+									<p:column headerText="OrgID">
+										<h:outputText value="#{rowVarP.orgID}" />
+									</p:column>
+									<p:column headerText="OrgName">
+										<h:outputText value="#{rowVarP.orgName}" />
+									</p:column>
+									<p:column headerText="Pdoctype">
+										<h:outputText value="#{rowVarP.pdoctype}" />
+									</p:column>
+									<p:column headerText="AnType">
+										<h:outputText value="#{rowVarP.anType}" />
+									</p:column>
+									<p:column headerText="PDate">
+										<h:outputText value="#{rowVarP.PDate}" />
+									</p:column>
+									<p:column headerText="ADate">
+										<h:outputText value="#{rowVarP.ADate}" />
+									</p:column>
+									<p:column headerText="PNumber">
+										<h:outputText value="#{rowVarP.PNumber}" />
+									</p:column>
+									<p:column headerText="Anumber">
+										<h:outputText value="#{rowVarP.anumber}" />
+									</p:column>
+									<p:column headerText="PDescription">
+										<h:outputText value="#{rowVarP.PDescription}" />
+									</p:column>
+									<p:column headerText="ADescription">
+										<h:outputText value="#{rowVarP.ADescription}" />
+									</p:column>
+									<p:column headerText="Pamount">
+										<h:outputText value="#{rowVarP.pamount}" />
+									</p:column>
+									<p:column headerText="Aamount">
+										<h:outputText value="#{rowVarP.aamount}" />
+									</p:column>
+									<p:column headerText="Pbalance">
+										<h:outputText value="#{rowVarP.pbalance}" />
+									</p:column>
+									<p:column headerText="Abalance">
+										<h:outputText value="#{rowVarP.abalance}" />
+									</p:column>
+								</p:dataTable>
+							</p:panelGrid>
+						</p:fieldset>
+
+						<p:fieldset legend="Results: GET AJUSTMENT" style="margin-bottom:20px">
+							<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid" rendered="#{gpTransactionsTestUI.arrayOfPayments eq null or gpTransactionsTestUI.arrayOfAdjustments.adjustments.size() eq 0}">
+								<h3>No Results For: GET AJUSTMENT</h3>
+							</p:panelGrid>
+							<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid" rendered="#{gpTransactionsTestUI.arrayOfPayments ne null and gpTransactionsTestUI.arrayOfAdjustments.adjustments.size() ne 0}">
+								<h3>Results For: GET AJUSTMENT (#{gpTransactionsTestUI.arrayOfAdjustments.adjustments.size()} Records)</h3>
+								<ui:include src="/pages/includes/download_lazy.xhtml">
+									<ui:param name="file_name" value="GET AJUSTMENT Results" />
+									<ui:param name="target" value="getAjustmentDT" />
+								</ui:include>
+								<p:dataTable var="rowVarA" id="getAjustmentDT" value="#{gpTransactionsTestUI.arrayOfAdjustments.adjustments}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+									rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+									<p:column headerText="VendId">
+										<h:outputText value="#{rowVarA.vendId}" />
+									</p:column>
+									<p:column headerText="VendName">
+										<h:outputText value="#{rowVarA.vendName}" />
+									</p:column>
+									<p:column headerText="Type">
+										<h:outputText value="#{rowVarA.type}" />
+									</p:column>
+									<p:column headerText="Date">
+										<h:outputText value="#{rowVarA.date}" />
+									</p:column>
+									<p:column headerText="Number">
+										<h:outputText value="#{rowVarA.number}" />
+									</p:column>
+									<p:column headerText="Amount">
+										<h:outputText value="#{rowVarA.amount}" />
+									</p:column>
+									<p:column headerText="Reason">
+										<h:outputText value="#{rowVarA.reason}" />
+									</p:column>
+								</p:dataTable>
+							</p:panelGrid>
+						</p:fieldset>
+
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+
+</ui:composition>

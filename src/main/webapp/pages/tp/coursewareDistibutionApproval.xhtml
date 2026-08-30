@@ -1,0 +1,166 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+	<ui:define name="content">
+		<style>
+.borderless .ui-datalist-content {
+	border: none;
+}
+
+.error {
+	background-color: #F44336 !important;
+	color: white !important;
+	font-weight: bold;
+}
+</style>
+		<div class="ui-g">
+		<div class="ui-g">
+						<div class="ui-g-12">
+							<ui:include src="/pages/includes/taskdiagram.xhtml" />
+						</div>
+					</div>
+			<div class="ui-g-12">
+				<h:form id="mainForm">
+					<div class="card card-w-title">
+					
+						<h1>Company</h1>
+						<p:panelGrid columns="2" style="width:100%" id="companyInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText disabled="true" id="companyName" value="#{coursewaredistibutionUI.coursewaredistibution.company.companyName}" style="width:95%;  opacity: 1 !important; color:black !important" required="true" requiredMessage="#{lang['enter.the.company.name']}" />
+								<p:outputLabel value="#{lang['companyName']}" for="companyName" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText disabled="true" id="tradingName" value="#{coursewaredistibutionUI.coursewaredistibution.company.tradingName}" style="width:95%;  opacity: 1 !important; color:black !important" required="true" requiredMessage="#{lang['enter.the.trading.name']}" />
+								<p:outputLabel value="#{lang['tradingName']}" for="tradingName" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText disabled="true" id="telNumber" value="#{coursewaredistibutionUI.coursewaredistibution.company.telNumber}" style="width:95%;  opacity: 1 !important; color:black !important" required="true" requiredMessage="#{lang['enter.the.tel.number']}" />
+								<p:outputLabel value="#{lang['telNumber']}" for="telNumber" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText disabled="true" id="faxNumber" value="#{coursewaredistibutionUI.coursewaredistibution.company.faxNumber}" style="width:95%;  opacity: 1 !important; color:black !important" />
+								<p:outputLabel value="#{lang['faxNumber']}" for="faxNumber" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText disabled="true" id="companyRegistrationNumber" value="#{coursewaredistibutionUI.coursewaredistibution.company.companyRegistrationNumber}" style="width:95%;  opacity: 1 !important; color:black !important" required="true" requiredMessage="#{lang['enter.company.registration.number']}" />
+								<p:outputLabel value="#{lang['companyRegistrationNumber']}" for="companyRegistrationNumber" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText disabled="true" id="email" value="#{coursewaredistibutionUI.coursewaredistibution.company.email}" style="width:95%;  opacity: 1 !important; color:black !important" required="true" requiredMessage="#{lang['enter.email.address']}" />
+								<p:outputLabel value="#{lang['email']}" for="email" />
+							</h:panelGroup>
+						</p:panelGrid>
+					</div>
+					<div class="card card-w-title">
+						<h1>Module</h1>
+						<p:panelGrid columns="1" style="width:100%" id="modulesInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="moduleRef" value="#{coursewaredistibutionUI.coursewaredistibution.modules.moduleRef}" style="width:95%;  opacity: 1 !important; color:black !important" disabled="true" />
+								<p:outputLabel value="Module Ref" for="moduleRef" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="moduleTitle" value="#{coursewaredistibutionUI.coursewaredistibution.modules.moduleTitle}" style="width:95%;  opacity: 1 !important; color:black !important" disabled="true" />
+								<p:outputLabel value="Module Title" for="moduleTitle" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="moduleTopic" value="#{coursewaredistibutionUI.coursewaredistibution.modules.moduleTopic}" style="width:95%;  opacity: 1 !important; color:black !important" disabled="true" />
+								<p:outputLabel value="Module Topic" for="moduleTopic" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="description" value="#{coursewaredistibutionUI.coursewaredistibution.modules.description}" style="width:95%;  opacity: 1 !important; color:black !important" disabled="true" />
+								<p:outputLabel value="Description" for="description" />
+							</h:panelGroup>
+
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="Category" for="proc" styleClass="gray" />
+								</div>
+								<div>
+									<p:selectOneMenu id="proc" value="#{coursewaredistibutionUI.coursewaredistibution.modules.modulesCategory}" style="width:95%;  opacity: 1 !important; color:black !important" disabled="true" required="true" requiredMessage="#{lang['please.select.a.role']}" converter="ModulesCategoryConvertor" var="r">
+										<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+										<f:selectItems value="#{selectItemsUI.modulesCategory}" var="rv" itemLabel="#{rv.description}" />
+										<p:column headerText="First Description">
+											<h:outputText value="#{r.description}" />
+										</p:column>
+										<p:column headerText="Second Description">
+											<h:outputText value="#{r.secondDescription}" />
+										</p:column>
+										<p:column headerText="Third Description">
+											<h:outputText value="#{r.thirdDescription}" />
+										</p:column>
+										<p:column headerText="Fourth Description">
+											<h:outputText value="#{r.fourthDescription}" />
+										</p:column>
+									</p:selectOneMenu>
+								</div>
+							</h:panelGroup>
+
+							<h:panelGroup id="unitList">
+								<div>
+									<h3>Unit Standards</h3>
+									<br />
+									<p:dataTable var="t" value="#{coursewaredistibutionUI.coursewaredistibution.modules.modulesUnitStandards}" id="usList" rowKey="#{rowVar.id}" reflow="true">
+										<p:column headerText="Code">
+											<h:outputText value="#{t.unitStandards.code}" />
+										</p:column>
+										<p:column headerText="Title">
+											<h:outputText value="#{t.unitStandards.title}" />
+										</p:column>
+
+									</p:dataTable>
+								</div>
+							</h:panelGroup>
+						</p:panelGrid>
+					</div>
+					<div class="card card-w-title">
+						<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" >
+							<p:commandButton value="#{lang['approve']}" icon="ui-icon-save" update="@form" action="#{coursewaredistibutionUI.finalApproveRegistration}" styleClass="flat green-btn Fs18" style="height: 50px;">
+							</p:commandButton>
+							
+							<p:commandButton value="#{lang['reject']}" icon="ui-icon-circle-close" update="@form" oncomplete="PF('rejectReason').show()" process="@this" styleClass="flat red-btn Fs18" style="height: 50px;">
+								
+							</p:commandButton>
+						</p:panelGrid>
+					</div>
+				</h:form>
+			</div>
+		</div>
+		
+		<p:dialog header="Reject Reasons" widgetVar="rejectReason" hideEffect="clip" showEffect="clip" id="dialogRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{coursewaredistibutionUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{coursewaredistibutionUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+
+							</p:selectManyMenu>
+							
+							<br />
+							<br />
+						</div>
+					</div>
+					<p:commandButton oncomplete="PF('rejectReason').hide()" update="mainForm"  value="Reject" action="#{coursewaredistibutionUI.finalRejectRegistration}">
+					</p:commandButton>
+				</div>
+			</h:form>
+		</p:dialog>
+
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+
+
+	</ui:define>
+
+</ui:composition>

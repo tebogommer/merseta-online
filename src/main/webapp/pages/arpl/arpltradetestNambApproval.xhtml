@@ -1,0 +1,278 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+		<p:growl sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<ui:include src="/pages/includes/taskdiagram.xhtml" />
+			</div>
+		</div>
+		<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+		<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+		<p:importEnum type="haj.com.entity.enums.LearnerStatusEnum" />
+		<p:importEnum type="haj.com.entity.enums.YesNoEnum" />
+		<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+		<p:importEnum type="haj.com.entity.enums.CollectionEnum" />
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+						<h1>ARPL Trade Test Certificate Collection</h1>
+						<h3>ARPL Application Selected. Reference ID: #{arplNambApprovalUI.companyLearnersTradeTest.id}</h3>
+						<p:tabView dynamic="true" cache="true">
+							<p:tab title="Learner Information">
+								<ui:include src="/pages/includes/arplLearnerInformationDisplay.xhtml">
+									<ui:param name="user" value="#{arplNambApprovalUI.companyLearnersTradeTest.learner}" />
+									<ui:param name="CELLPHONE_FORMAT" value="#{arplNambApprovalUI.CELLPHONE_FORMAT}" />
+									<ui:param name="FAX_NUMBER_FORMAT" value="#{arplNambApprovalUI.FAX_NUMBER_FORMAT}" />
+									<ui:param name="TELPHONE_FORMAT" value="#{arplNambApprovalUI.TELPHONE_FORMAT}" />
+								</ui:include>
+							</p:tab>
+							<p:tab title="Initiator Information">
+								<ui:include src="/pages/includes/arplLearnerInformationDisplay.xhtml">
+									<ui:param name="user" value="#{arplNambApprovalUI.companyLearnersTradeTest.createUser}" />
+									<ui:param name="CELLPHONE_FORMAT" value="#{arplNambApprovalUI.CELLPHONE_FORMAT}" />
+									<ui:param name="FAX_NUMBER_FORMAT" value="#{arplNambApprovalUI.FAX_NUMBER_FORMAT}" />
+									<ui:param name="TELPHONE_FORMAT" value="#{arplNambApprovalUI.TELPHONE_FORMAT}" />
+								</ui:include>
+							</p:tab>
+							<p:tab title="Application Information">
+								<ui:include src="/pages/includes/arplApplicationInformation.xhtml">
+									<ui:param name="companylearnerstradetest" value="#{arplNambApprovalUI.companyLearnersTradeTest}" />
+									<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+									<ui:param name="dataModelDetailsOfExperienceArpl" value="#{arplNambApprovalUI.dataModelDetailsOfExperienceArpl}" />
+									<ui:param name="dataModelDetailsOfTrainingArpl" value="#{arplNambApprovalUI.dataModelDetailsOfTrainingArpl}" />
+								</ui:include>
+							</p:tab>
+							<p:tab title="Employer Application Information">
+								<ui:include src="/pages/includes/arplEmployerInformation.xhtml">
+									<ui:param name="companylearnerstradetest" value="#{arplNambApprovalUI.companyLearnersTradeTest}" />
+									<ui:param name="companyTradeTestEmployer" value="#{arplNambApprovalUI.companyTradeTestEmployer}" />
+									<ui:param name="companyEmployer" value="#{arplNambApprovalUI.companyLearnersTradeTest.companyEmployer}" />
+									<ui:param name="CELLPHONE_FORMAT" value="#{arplNambApprovalUI.CELLPHONE_FORMAT}" />
+									<ui:param name="FAX_NUMBER_FORMAT" value="#{arplNambApprovalUI.FAX_NUMBER_FORMAT}" />
+									<ui:param name="TELPHONE_FORMAT" value="#{arplNambApprovalUI.TELPHONE_FORMAT}" />
+								</ui:include>
+							</p:tab>
+							<p:tab title="Trade Test Results">
+								<ui:include src="/pages/includes/arplTradeTestInformation.xhtml">
+									<ui:param name="companylearnerstradetest" value="#{arplNambApprovalUI.companyLearnersTradeTest}" />
+									<ui:param name="dataModelTradeTestTaskResult" value="#{arplNambApprovalUI.dataModelTradeTestTaskResult}" />
+									<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</ui:include>
+							</p:tab>
+							<p:tab title="Sign Off Assigned">
+								<ui:include src="/pages/includes/signoffInclude.xhtml">
+									<ui:param name="SignOffList" value="#{arplNambApprovalUI.signOffLists}" />
+									<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+									<ui:param name="acknowledge" value="#{lang['arpl.signoff.declaration.text']} " />
+								</ui:include>
+							</p:tab>
+						</p:tabView>
+						<div class="EmptyBox10" />
+						<h2>Collection Information</h2>
+						<div class="EmptyBox10" />
+						<p:outputPanel id="collectionInfoPanel" style="width: 100%">
+							<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+								<h:panelGroup styleClass="md-inputfield" rendered="#{sessionUI.employee}">
+									<p:calendar disabled="true" required="true" requiredMessage="Provide: Date Recived From NAMB" inputStyle="width:90%" id="dateRecivedNambCal" value="#{arplNambApprovalUI.companyLearnersTradeTest.nambReceivedDate}" showOn="button"
+										pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" readonlyInput="true" mindate="#{arplNambApprovalUI.companyLearnersTradeTest.nambSubmissionDate}" navigator="true">
+										<p:ajax event="dateSelect" />
+									</p:calendar>
+									<p:outputLabel value="Date Recived From NAMB" for="dateRecivedNambCal" style="width:100%" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:calendar disabled="#{!sessionUI.task.firstInProcess}" required="true" requiredMessage="Provide: Date Learner Certified" inputStyle="width:90%" id="dateLearnerCertCal" value="#{arplNambApprovalUI.companyLearnersTradeTest.dateCertified}" showOn="button"
+										pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" readonlyInput="true" mindate="#{arplNambApprovalUI.companyLearnersTradeTest.nambSubmissionDate}" navigator="true">
+										<p:ajax event="dateSelect" />
+									</p:calendar>
+									<p:outputLabel value="Date Learner Certified" for="dateLearnerCertCal" style="width:100%" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText disabled="#{!sessionUI.task.firstInProcess}" id="certNumberEntry" value="#{arplNambApprovalUI.companyLearnersTradeTest.certificateNumber}" style="opacity: 1 !important; color: black; width:95%" required="true" requiredMessage="Provide: Learner Certificate Number">
+										<p:ajax />
+									</p:inputText>
+									<p:outputLabel value="Learner Certificate Number" for="certNumberEntry" />
+								</h:panelGroup>
+								<h:panelGroup>
+									<div>
+										<p:outputLabel value="Certificate Collection" for="collectionEnum" styleClass="gray" />
+									</div>
+									<div>
+										<p:selectOneMenu requiredMessage="Provide: Certificate Collection" id="collectionEnum" value="#{arplNambApprovalUI.companyLearnersTradeTest.collectionEnum}" style="width:95%" required="#{arplNambApprovalUI.canEdit}" disabled="#{!arplNambApprovalUI.canEdit}">
+											<p:ajax event="itemSelect" update="collectionInfoPanel" />
+											<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+											<f:selectItems value="#{enumUI.collectionEnumDD}" />
+										</p:selectOneMenu>
+									</div>
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield" rendered="#{arplNambApprovalUI.companyLearnersTradeTest.collectionEnum ne null and sessionUI.employee}">
+									<p:inputText disabled="#{!arplNambApprovalUI.canEdit}" id="infoCollection" required="#{arplNambApprovalUI.canEdit}" requiredMessage="Provide Information Before Proceeding" value="#{arplNambApprovalUI.companyLearnersTradeTest.collectionInformation}" style="opacity: 1 !important; color: black; width:95%" >
+										<p:ajax />
+									</p:inputText>
+									<p:outputLabel value="Waybill number" for="infoCollection" rendered="#{arplNambApprovalUI.companyLearnersTradeTest.collectionEnum eq CollectionEnum.Courier}" />
+									<p:outputLabel value="Information on person collecting (First Name, Surname and RSA ID / Passport Number)" for="infoCollection" rendered="#{arplNambApprovalUI.companyLearnersTradeTest.collectionEnum eq CollectionEnum.PersonalCollection}" />
+									<p:outputLabel value="Registered mail number" for="infoCollection" rendered="#{arplNambApprovalUI.companyLearnersTradeTest.collectionEnum eq CollectionEnum.RegisteredMail}" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield" rendered="#{arplNambApprovalUI.companyLearnersTradeTest.collectionEnum ne null and sessionUI.employee}">
+									<p:calendar inputStyle="width:90%" id="dateOfCollectionSelection" value="#{arplNambApprovalUI.companyLearnersTradeTest.dateOfCollection}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" readonlyInput="true" required="#{arplNambApprovalUI.canEdit}"
+										requiredMessage="Provide: Date" mindate="#{arplNambApprovalUI.companyLearnersTradeTest.nambSubmissionDate}" >
+										<p:ajax event="dateSelect" />
+									</p:calendar>
+									<p:outputLabel value="Date of collection" for="dateOfCollectionSelection" rendered="#{arplNambApprovalUI.companyLearnersTradeTest.collectionEnum eq CollectionEnum.PersonalCollection}" />
+									<p:outputLabel value="Date sent" for="dateOfCollectionSelection" rendered="#{arplNambApprovalUI.companyLearnersTradeTest.collectionEnum eq CollectionEnum.Courier or arplNambApprovalUI.companyLearnersTradeTest.collectionEnum eq CollectionEnum.RegisteredMail}" />
+								</h:panelGroup>
+							</p:panelGrid>
+						</p:outputPanel>
+						<h2>Documents</h2>
+						<div class="EmptyBox10" />
+						<p:dataTable value="#{arplNambApprovalUI.companyLearnersTradeTest.docs}" var="rv1" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+							<p:column headerText="#{lang['type']}" width="20%">#{rv1.configDoc.name}</p:column>
+							<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+							<p:column headerText="#{lang['uploaded']}" width="15%">
+								<h:outputText value="#{rv1.createDate}">
+									<f:convertDateTime pattern="dd MMM yyyy" />
+								</h:outputText>
+							</p:column>
+
+							<p:column headerText="#{lang['document.is.required']}" width="150">
+								<p:selectBooleanCheckbox value="#{rv1.configDoc.requiredDocument}" disabled="true" style="opacity: 1 !important" rendered="#{not rv1.required}"></p:selectBooleanCheckbox>
+								<p:selectBooleanCheckbox value="#{rv1.required}" disabled="true" style="opacity: 1 !important" rendered="#{rv1.required}"></p:selectBooleanCheckbox>
+							</p:column>
+
+							<p:column headerText="#{lang['original.required']}" width="150">
+								<p:selectBooleanCheckbox value="#{rv1.configDoc.originalRequired}" disabled="true" style="opacity: 1 !important" rendered="#{not rv1.configDoc.originalRequired}"></p:selectBooleanCheckbox>
+								<p:selectBooleanCheckbox value="#{rv1.configDoc.originalRequired}" disabled="true" style="opacity: 1 !important" rendered="#{rv1.configDoc.originalRequired}"></p:selectBooleanCheckbox>
+							</p:column>
+
+							<p:column headerText="#{lang['version']}" width="15%">
+								<h:outputText value="#{rv1.versionNo}">
+								</h:outputText>
+							</p:column>
+
+							<p:column width="180" headerText="#{lang['view.edit']}">
+								<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}">
+									<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+								</p:commandButton>
+								<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+								<p:spacer width="5" rendered="#{rv1.id ne null}" />
+
+								<p:commandButton icon="fa fa-bars " id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}">
+									<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+								</p:commandButton>
+								<p:tooltip for="dhistUserDocs" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+
+								<!-- only with permission to upload can upload a new version -->
+								<p:spacer width="5" rendered="#{arplNambApprovalUI.canUpload}" />
+								<p:commandButton rendered="#{arplNambApprovalUI.canUpload}" icon="fa fa-upload" id="uploadUserDocs" styleClass="#{rv1.originalFname eq null ? 'red-btn' : ''} flat" process="@this" oncomplete="PF('dlgUpload').show()" update=":uploadForm">
+									<f:setPropertyActionListener value="#{rv1}" target="#{arplNambApprovalUI.doc}" />
+								</p:commandButton>
+								<p:tooltip for="uploadUserDocs" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+
+								<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+									<p:spacer width="5" />
+									<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+										<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+								</h:panelGroup>
+
+								<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+									<p:spacer width="5" />
+									<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+										<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+								</h:panelGroup>
+							</p:column>
+						</p:dataTable>
+						<div class="EmptyBox10" />
+
+
+
+						<c:if test="#{arplNambApprovalUI.rejectionReasons.size() gt 0}">
+							<h1>Rejection Reasons Provided:</h1>
+							<p:repeat var="rowVarRR" value="#{arplNambApprovalUI.rejectionReasons}">
+								<p:outputLabel value="#{rowVarRR.description}" style="font-weight:bold; font-size: 20px; color: red;" />
+								<br />
+								<p:outputLabel value="#{rowVarRR.howTo}" style="color: grey;" />
+								<br />
+								<br />
+							</p:repeat>
+							<br />
+						</c:if>
+						
+						<c:if test="#{arplNambApprovalUI.setmisValidiationError ne null and arplNambApprovalUI.setmisValidiationError ne ''}">
+							<p:fieldset styleClass="error Fs12">
+								<h4>Validation Error(s):</h4>
+								<p:outputLabel value="#{arplNambApprovalUI.setmisValidiationError}" escape="false"></p:outputLabel>
+							</p:fieldset>
+							<div class="EmptyBox10" />
+							<div class="EmptyBox10" />
+						</c:if>
+
+						<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload}">
+							<!-- MerSETA Admin to upload -->
+							<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" action="#{arplNambApprovalUI.completeTaskUpload}" update="@form" styleClass="flat green-btn Fs18" style="height: 50px;" onstart="uploadStart()" oncomplete="uploadDone()">
+								<p:confirm header="Confirmation" message="Are you sure?" icon="fa fa-exclamation-triangle" />
+							</p:commandButton>
+						</p:panelGrid>
+
+						<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Edit}">
+							<!-- Initiator to provide selection -->
+							<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" update="@form" styleClass="flat green-btn Fs18" action="#{arplNambApprovalUI.completeTaskEdit}" style="height: 50px;" onstart="uploadStart()" oncomplete="uploadDone()">
+								<p:confirm header="Confirmation" message="Are you sure?" icon="fa fa-exclamation-triangle" />
+							</p:commandButton>
+						</p:panelGrid>
+
+						<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalEditUpload}">
+							<!-- MerSETA to final edit it -->
+							<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" update="@form" action="#{arplNambApprovalUI.completeTaskFinalEditAndUpload}" styleClass="flat green-btn Fs18" style="height: 50px;" onstart="uploadStart()" oncomplete="uploadDone()">
+								<p:confirm header="Confirmation" message="Are you sure?" icon="fa fa-exclamation-triangle" />
+							</p:commandButton>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+			<h:form>
+				<p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="fa fa-check" />
+				<p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="fa fa-times" />
+			</h:form>
+		</p:confirmDialog>
+
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true" dynamic="true">
+			<h:form id="uploadForm">
+				<h:panelGroup id="uploadGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{arplNambApprovalUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{arplNambApprovalUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{arplNambApprovalUI.storeFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update="@form :mainForm"
+										multiple="false" fileLimit="1" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+	</ui:define>
+</ui:composition>

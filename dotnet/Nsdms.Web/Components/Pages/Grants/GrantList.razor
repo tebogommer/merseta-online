@@ -1,0 +1,200 @@
+@page "/grants"
+@inject IGrantService GrantService
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+<div class="d-flex justify-space-between align-center mb-4">
+    <div>
+        <MudText Typo="Typo.h5" Class="font-weight-bold">Discretionary Grants (DG)</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">Strategic project funding applications, allocation windows, budget approvals, and disbursement management</MudText>
+    </div>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AddCard" OnClick="CreateNewGrant">
+        New Grant Application
+    </MudButton>
+</div>
+
+<MudPaper Class="pa-4 mb-4" Elevation="1">
+    <div class="d-flex flex-wrap gap-4 align-center justify-space-between mb-3">
+        <div class="d-flex align-center gap-3 flex-grow-1" style="max-width: 600px;">
+            <MudTextField @bind-Value="_searchString"
+                          Placeholder="Search by Application No, Project Title, Organisation Name, Grant Type..."
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          IconSize="Size.Medium"
+                          Class="mt-0"
+                          Immediate="true"
+                          Clearable="true" />
+        </div>
+        <div class="d-flex align-center gap-2">
+            <MudChipSet T="string" @bind-SelectedValue="_statusFilter" SelectionMode="SelectionMode.SingleSelection">
+                <MudChip T="string" Value="@("All")" Color="Color.Default" Variant="@(_statusFilter == "All" ? Variant.Filled : Variant.Outlined)">All</MudChip>
+                <MudChip T="string" Value="@("APPROVED")" Color="Color.Success" Variant="@(_statusFilter == "APPROVED" ? Variant.Filled : Variant.Outlined)">Approved</MudChip>
+                <MudChip T="string" Value="@("SUBMITTED")" Color="Color.Info" Variant="@(_statusFilter == "SUBMITTED" ? Variant.Filled : Variant.Outlined)">Submitted</MudChip>
+                <MudChip T="string" Value="@("DRAFT")" Color="Color.Warning" Variant="@(_statusFilter == "DRAFT" ? Variant.Filled : Variant.Outlined)">Draft</MudChip>
+            </MudChipSet>
+        </div>
+    </div>
+
+    @if (_loading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+    }
+    else
+    {
+        <MudTable Items="@FilteredGrants"
+                  Hover="true"
+                  Dense="true"
+                  Striped="true"
+                  Breakpoint="Breakpoint.Sm"
+                  OnRowClick="@((TableRowClickEventArgs<GrantApplication> e) => OpenDetail(e.Item != null ? e.Item.Id : 0))"
+                  T="GrantApplication">
+            <HeaderContent>
+                <MudTh>Application No</MudTh>
+                <MudTh>Project Title</MudTh>
+                <MudTh>Organisation</MudTh>
+                <MudTh Class="d-none d-md-table-cell">Grant Type</MudTh>
+                <MudTh>Requested Amount</MudTh>
+                <MudTh>Approved Amount</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh Style="text-align:right">Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Application No">
+                    <div class="d-flex align-center gap-1">
+                        <MudIcon Icon="@Icons.Material.Filled.AccountBalanceWallet" Size="Size.Small" Color="Color.Primary" />
+                        <MudText Typo="Typo.body2" Class="fw-bold font-monospace">@context.ApplicationNumber</MudText>
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="Project Title">
+                    <MudText Typo="Typo.body2" Class="fw-bold">@context.ProjectTitle</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Date: @context.ApplicationDate.ToString("yyyy-MM-dd")</MudText>
+                </MudTd>
+                <MudTd DataLabel="Organisation">
+                    <MudText Typo="Typo.body2">@(context.Organisation?.CompanyName ?? "Unlinked")</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@(context.Organisation?.SdlNumber ?? "-")</MudText>
+                </MudTd>
+                <MudTd Class="d-none d-md-table-cell" DataLabel="Grant Type">
+                    <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">
+                        @(!string.IsNullOrWhiteSpace(context.GrantTypeCode) ? context.GrantTypeCode : "PIVOTAL")
+                    </MudChip>
+                </MudTd>
+                <MudTd DataLabel="Requested Amount">
+                    <MudText Typo="Typo.body2" Class="fw-bold">@context.RequestedAmount.ToString("C")</MudText>
+                </MudTd>
+                <MudTd DataLabel="Approved Amount">
+                    @if (context.ApprovedAmount.HasValue)
+                    {
+                        <MudText Typo="Typo.body2" Class="fw-bold text-success">@context.ApprovedAmount.Value.ToString("C")</MudText>
+                    }
+                    else
+                    {
+                        <span class="text-muted">Pending</span>
+                    }
+                </MudTd>
+                <MudTd DataLabel="Status">
+                    <MudChip T="string" Color="@GetStatusColor(context.StatusCode)" Size="Size.Small" Variant="Variant.Filled">
+                        @(!string.IsNullOrWhiteSpace(context.StatusCode) ? context.StatusCode : "DRAFT")
+                    </MudChip>
+                </MudTd>
+                <MudTd Style="text-align:right" DataLabel="Actions">
+                    <div class="d-flex justify-end gap-1">
+                        <MudTooltip Text="View & Edit Application">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" OnClick="@(() => OpenDetail(context.Id))" aria-label="Edit Record" />
+                        </MudTooltip>
+                        <MudTooltip Text="Delete Record">
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteGrant(context.Id, context.ApplicationNumber))" aria-label="Delete Record" />
+                        </MudTooltip>
+                    </div>
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <div class="pa-4 text-center">
+                    <MudText Typo="Typo.body1" Color="Color.Secondary">No Discretionary Grant applications found matching search criteria.</MudText>
+                </div>
+            </NoRecordsContent>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
+            </PagerContent>
+        </MudTable>
+    }
+</MudPaper>
+
+@code {
+    private List<GrantApplication> _grants = new();
+    private string _searchString = string.Empty;
+    private string _statusFilter = "All";
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _loading = true;
+        _grants = await GrantService.GetAllAsync();
+        _loading = false;
+    }
+
+    private IEnumerable<GrantApplication> FilteredGrants
+    {
+        get
+        {
+            var query = _grants.AsEnumerable();
+
+            if (_statusFilter != "All")
+            {
+                query = query.Where(x => string.Equals(x.StatusCode, _statusFilter, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (!string.IsNullOrWhiteSpace(_searchString))
+            {
+                var s = _searchString.Trim();
+                query = query.Where(x =>
+                    (x.ApplicationNumber != null && x.ApplicationNumber.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    (x.ProjectTitle != null && x.ProjectTitle.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    (x.Organisation != null && x.Organisation.CompanyName.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    (x.Organisation != null && x.Organisation.SdlNumber.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    (x.GrantTypeCode != null && x.GrantTypeCode.Contains(s, StringComparison.OrdinalIgnoreCase)));
+            }
+
+            return query;
+        }
+    }
+
+    private Color GetStatusColor(string? status) => status?.ToUpperInvariant() switch
+    {
+        "APPROVED" => Color.Success,
+        "SUBMITTED" => Color.Info,
+        "RECOMMENDED" => Color.Primary,
+        "REJECTED" => Color.Error,
+        "UNDER_REVIEW" => Color.Warning,
+        _ => Color.Default
+    };
+
+    private void OpenDetail(int id)
+    {
+        NavManager.NavigateTo($"/grants/{id}");
+    }
+
+    private void CreateNewGrant()
+    {
+        NavManager.NavigateTo("/grants/create");
+    }
+
+    private async Task DeleteGrant(int id, string appNumber)
+    {
+        var deleted = await GrantService.DeleteAsync(id, "Admin");
+        if (deleted)
+        {
+            Snackbar.Add($"Grant Application '{appNumber}' deleted successfully with audit confirmation.", Severity.Success);
+            await LoadData();
+        }
+        else
+        {
+            Snackbar.Add("Could not delete grant application.", Severity.Error);
+        }
+    }
+}

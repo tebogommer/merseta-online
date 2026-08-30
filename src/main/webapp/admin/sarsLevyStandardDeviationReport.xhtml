@@ -1,0 +1,155 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>SARS Levy Standard Deviation Report By SARS Files Uploaded</h1>
+					<p:growl showDetail="false" sticky="false">
+						<p:autoUpdate />
+					</p:growl>
+					<h:form id="mainForm">
+						<p:outputLabel value="Please be advised: Report may take some time to process and generate due to the amount of data." />
+						<div class="EmptyBox10" />
+						<p:dataTable var="rv" value="#{sarsStandardDeviationReportUI.sarsDataModel}" id="sarsfilesList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="6,12,24,36,48,60,120,180,360" reflow="true" lazy="true">
+							<p:column headerText="#{lang['for.month']}" sortBy="#{rv.forMonth}">
+								<h:outputText value="#{rv.forMonth}">
+									<f:convertDateTime pattern="MMMM yyyy" />
+								</h:outputText>
+							</p:column>
+							<p:column width="80" exportable="false">
+								<p:commandButton id="generateReport" onstart="uploadStart()" oncomplete="uploadDone()" icon="ui-icon-zoom-in" title="Generate Report" update=":mainForm :schemeYearSummaryForm" action="#{sarsStandardDeviationReportUI.generateDeviationReport}">
+									<f:setPropertyActionListener value="#{rv}" target="#{sarsStandardDeviationReportUI.sarsFiles}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<h:form id="schemeYearSummaryForm">
+					<p:outputPanel id="schemeYearSummaryFormPanel" rendered="#{sarsStandardDeviationReportUI.reportGeneratedWithoutError}">
+						<div class="card card-w-title">
+							<div align="right">
+								<h:commandLink id="eExcel">
+									<i class="fa fa-file-excel-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+									<p:dataExporter type="xls" target="resultsTable" fileName="SARS_Report_Download" />
+								</h:commandLink>
+								<h:commandLink id="ePdf" rendered="false">
+									<i class="fa fa-file-pdf-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+									<p:dataExporter type="pdf" target="resultsTable" fileName="SARS_Report_Download" />
+								</h:commandLink>
+								<h:commandLink id="eCsv">
+									<i class="fa fa-file-text-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+									<p:dataExporter type="csv" target="resultsTable" fileName="SARS_Report_Download" />
+								</h:commandLink>
+								<h:commandLink id="eXml">
+									<i class="fa fa-file-code-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+									<p:dataExporter type="xml" target="resultsTable" fileName="SARS_Report_Download" />
+								</h:commandLink>
+								<p:tooltip for="eExcel" value="#{lang['export.search.results.to.excel']}" position="left" />
+								<p:tooltip for="ePdf" value="#{lang['export.search.results.to.pdf']}" position="left" />
+								<p:tooltip for="eCsv" value="#{lang['export.search.results.as.a.csv']}" position="left" />
+								<p:tooltip for="eXml" value="#{lang['export.search.results.as.a.xml']}" position="left" />
+							</div>
+							<div class="EmptyBox10" />
+							<p:dataTable var="rv" value="#{sarsStandardDeviationReportUI.levyDeviationReportDataModel}" id="resultsTable" rowKey="#{rowVar.id}" reflow="true" paginator="true" rows="20" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}" lazy="true"
+								paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="20,25,50,100,150,200">
+								<p:column headerText="Entity ID">
+									<h:outputText value="#{rv.description}" />
+								</p:column>
+								<p:column headerText="Entity Name" rendered="false">
+									<h:outputText value="#{rv.additionalInformation}" />
+								</p:column>
+								<p:column headerText="#{sarsStandardDeviationReportUI.sarsLevyStandardDeviationMonthList.get(0).reportDisplay}">
+									<h:outputText value="#{rv.monthOne}" styleClass="Fright">
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="#{sarsStandardDeviationReportUI.sarsLevyStandardDeviationMonthList.get(1).reportDisplay}">
+									<h:outputText value="#{rv.monthTwo}" styleClass="Fright">
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="#{sarsStandardDeviationReportUI.sarsLevyStandardDeviationMonthList.get(2).reportDisplay}">
+									<h:outputText value="#{rv.monthThree}" styleClass="Fright">
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="#{sarsStandardDeviationReportUI.sarsLevyStandardDeviationMonthList.get(3).reportDisplay}">
+									<h:outputText value="#{rv.monthFour}" styleClass="Fright">
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="#{sarsStandardDeviationReportUI.sarsLevyStandardDeviationMonthList.get(4).reportDisplay}">
+									<h:outputText value="#{rv.monthFive}" styleClass="Fright">
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="#{sarsStandardDeviationReportUI.sarsLevyStandardDeviationMonthList.get(5).reportDisplay}">
+									<h:outputText value="#{rv.monthSix}" styleClass="Fright">
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="#{sarsStandardDeviationReportUI.sarsLevyStandardDeviationMonthList.get(6).reportDisplay}">
+									<h:outputText value="#{rv.monthSeven}" styleClass="Fright">
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="#{sarsStandardDeviationReportUI.sarsLevyStandardDeviationMonthList.get(7).reportDisplay}">
+									<h:outputText value="#{rv.monthEight}" styleClass="Fright">
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="#{sarsStandardDeviationReportUI.sarsLevyStandardDeviationMonthList.get(8).reportDisplay}">
+									<h:outputText value="#{rv.monthNine}" styleClass="Fright">
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="#{sarsStandardDeviationReportUI.sarsLevyStandardDeviationMonthList.get(9).reportDisplay}">
+									<h:outputText value="#{rv.monthTen}" styleClass="Fright">
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="#{sarsStandardDeviationReportUI.sarsLevyStandardDeviationMonthList.get(10).reportDisplay}">
+									<h:outputText value="#{rv.monthEleven}" styleClass="Fright">
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="#{sarsStandardDeviationReportUI.sarsLevyStandardDeviationMonthList.get(11).reportDisplay}">
+									<h:outputText value="#{rv.monthTweleve}" styleClass="Fright">
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Total">
+									<h:outputText value="#{rv.total}" styleClass="Fright">
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Average">
+									<h:outputText value="#{rv.average}" styleClass="Fright">
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Standard Deviation">
+									<h:outputText value="#{rv.standardDeviation}" styleClass="Fright">
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Standard Deviation Percentage">
+									<h:outputText value="#{rv.standardPercentage}%" styleClass="Fright">
+										<f:convertNumber pattern="###,###,###,###,##0" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Status">
+									<h:outputText value="#{rv.status}" />
+								</p:column>
+							</p:dataTable>
+						</div>
+					</p:outputPanel>
+				</h:form>
+			</div>
+		</div>
+	</ui:define>
+</ui:composition>

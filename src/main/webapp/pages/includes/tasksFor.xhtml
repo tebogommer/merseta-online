@@ -1,0 +1,77 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+
+
+<p:dialog width="99%" fitViewport="true" responsive="true"  widgetVar="tasksForDialog" header="Tasks" modal="true" position="top">
+
+
+<h:form id="tasksForForm">
+
+					<p:importEnum type="haj.com.entity.enums.RagEnum" />
+					 <p:importEnum type="haj.com.entity.enums.TaskStatusEnum"/>
+	<h:panelGroup rendered="#{taskTreeUI.company ne null}">
+	   <h1>#{taskTreeUI.company.companyName} </h1>
+	</h:panelGroup>
+	<h:panelGroup rendered="#{taskTreeUI.company ne null}">
+	   <h1>#{taskTreeUI.sdf.firstName} #{taskTreeUI.sdf.firstName} #{taskTreeUI.sdf.email}</h1>
+	</h:panelGroup>
+
+	<h:panelGroup rendered="#{taskTreeUI.report.size() eq 0}">
+	   <br/><br/>
+	   <h3 class="FontLight">Unfortunately we can't retrieve this companies historical tasks</h3>
+	   <br/><br/>
+	</h:panelGroup>
+					<p:dataTable var="rowVar" value="#{taskTreeUI.report}" id="tasksList" rowKey="#{rowVar.task.id}" paginator="true" rows="6" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+						paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" rendered="#{taskTreeUI.report.size() gt 0}">
+
+						<p:column headerText="#{lang['process.name']}">
+						 <h:outputText value="#{rowVar.task.id}" /> - <h:outputText value="#{lang[rowVar.task.workflowProcess.registrationName]}" />
+						</p:column>
+
+						<p:column headerText="#{lang['description']}" width="40%">
+							<h:outputText value="#{rowVar.task.description}" />
+						</p:column>
+
+						<p:column headerText="#{lang['status']}" width="110">
+							<h:outputText value="#{lang[rowVar.task.taskStatus.registrationName]}" />
+						</p:column>
+						<p:column headerText="Initiated by">
+						  <h:panelGroup rendered="#{rowVar.task.createUser ne null}">
+							<h:outputText value="#{rowVar.task.createUser.firstName} #{rowVar.task.createUser.lastName}" />
+							 <br/>
+							<h:outputText value="#{rowVar.task.createUser.email}" styleClass="FontBold"/>
+						  </h:panelGroup>
+						</p:column>
+						<p:column headerText="Last Actioned by">
+						  <h:panelGroup rendered="#{rowVar.task.actionUser ne null}">
+							<h:outputText value="#{rowVar.task.actionUser.firstName} #{rowVar.task.actionUser.lastName}" />
+							 <br/>
+							<h:outputText value="#{rowVar.task.actionUser.email}" styleClass="FontBold"/>
+						  </h:panelGroup>
+						</p:column>
+						<p:column width="20%">
+						  <h:outputText value="Task created: " styleClass="FontBold"/> <h:outputText value="#{rowVar.task.createDate}"><f:convertDateTime pattern="dd MMM yyyy (HH:mm)"/></h:outputText><br/>
+						 <h:panelGroup rendered="#{rowVar.task.startDate ne null}">
+                           <h:outputText value="First actioned: " styleClass="FontBold"/>   <h:outputText value="#{rowVar.task.startDate}"><f:convertDateTime pattern="dd MMM yyyy (HH:mm)"/></h:outputText><p:spacer width="10"/>
+                           <h:outputText value="(#{rowVar.task.noDays} days)" styleClass="FontBold" rendered="#{rowVar.task.noDays gt 1}"/>
+                           <h:outputText value="(#{rowVar.task.noDays} day)" styleClass="FontBold" rendered="#{rowVar.task.noDays eq 1}"/>
+                         </h:panelGroup>
+						 <h:panelGroup rendered="#{rowVar.task.actionDate ne null}">
+						     <br/>
+							<h:outputText value="Last actioned: " styleClass="FontBold"/> <h:outputText value="#{rowVar.task.actionDate}"><f:convertDateTime pattern="dd MMM yyyy (HH:mm)"/></h:outputText><p:spacer width="10"/>
+						    <h:outputText value="(#{rowVar.task.noDaysLastAction} days)" styleClass="FontBold" rendered="#{rowVar.task.noDaysLastAction gt 1}"/>
+						    <h:outputText value="(#{rowVar.task.noDaysLastAction} day)" styleClass="FontBold" rendered="#{rowVar.task.noDaysLastAction eq 1}"/>
+						  </h:panelGroup>
+						</p:column>
+						<p:column width="30">
+							<p:commandButton oncomplete="PF('taskTreeDialog').show()" update="taskTreeForm" title="View Task tree" icon="fa fa-sitemap" action="#{taskTreeUI.buildTree}" rendered="#{rowVar.task.taskStatus ne TaskStatusEnum.NotStarted}">
+								<f:setPropertyActionListener value="#{rowVar.task}" target="#{taskTreeUI.task}" />
+							</p:commandButton>
+						</p:column>
+					</p:dataTable>
+
+
+</h:form>
+</p:dialog>
+<ui:include src="/pages/includes/taskTree.xhtml" />
+</ui:composition>

@@ -1,0 +1,85 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Financial Years Config</h1>
+					<h:form id="financialyearsInsForm">
+						<p:growl sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+
+						<p:panelGrid columns="1" style="width:100%" id="financialyearsInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="description" value="#{financialyearsUI.financialyears.description}" style="width:95%" required="true" />
+								<p:outputLabel value="#{lang['description']}" for="description" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="startYear" value="#{financialyearsUI.financialyears.startYear}" style="width:95%" required="true"/>
+								<p:outputLabel value="Start Year" for="startYear" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="endYear" value="#{financialyearsUI.financialyears.endYear}" style="width:95%" required="true"/>
+								<p:outputLabel value="End Year" for="endYear" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="grantFocusYear" value="#{financialyearsUI.financialyears.grantFocusYear}" style="width:95%" required="true"/>
+								<p:outputLabel value="Grant Focus Year" for="grantFocusYear" />
+							</h:panelGroup>
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:financialyearsList :financialyearsInsForm:financialyearsInsGrid" action="#{financialyearsUI.financialyearsInsert}" />
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="financialyearsInsGrid" process="@this" action="#{financialyearsUI.prepareNew}">
+									<p:resetInput target="financialyearsInsGrid" />
+								</p:commandButton>
+							</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{financialyearsUI.dataModel}" filteredValue="#{financialyearsUI.financialYearsfilteredList}" id="financialyearsList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['description']}">
+								<h:outputText value="#{rowVar.description}" />
+							</p:column>
+							<p:column headerText="Start Year">
+								<h:outputText value="#{rowVar.startYear}" />
+							</p:column>
+							<p:column headerText="End Year">
+								<h:outputText value="#{rowVar.endYear}" />
+							</p:column>
+							<p:column headerText="Grant Focus Year">
+								<h:outputText value="#{rowVar.grantFocusYear}" />
+							</p:column>
+							<p:column width="80">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":financialyearsInsForm:financialyearsInsGrid">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{financialyearsUI.financialyears}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:financialyearsList" action="#{financialyearsUI.financialyearsDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{financialyearsUI.financialyears}" />
+								</p:commandButton>
+							</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+	<!-- 
+_lang_
+-->
+</ui:composition>

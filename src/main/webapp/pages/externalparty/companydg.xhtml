@@ -1,0 +1,188 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+		<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum"></p:importEnum>
+		<p:importEnum type="haj.com.entity.enums.WspStatusEnum" />
+		<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="ui-g">
+					<p:repeat var="dgYear" value="#{initiatewspdgUI.dgYears}">
+						<div class="ui-g-12 ui-md-6 ui-lg-3">
+							<div class="card card-w-title">
+								<h3>#{dgYear.description}</h3>
+								<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+									<h:panelGroup>
+										<p:outputLabel value="Window Type" styleClass="Fs15 FontBold"></p:outputLabel>
+										<p:outputLabel value="#{dgYear.dgWindowType.registrationName}" styleClass="secondaryText Fright">
+										</p:outputLabel>
+									</h:panelGroup>
+									<h:panelGroup rendered="false">
+										<p:outputLabel value="Available Amount" styleClass="Fs15 FontBold"></p:outputLabel>
+										<p:outputLabel value="#{dgYear.allocationAmount}" styleClass="secondaryText Fright">
+											<f:convertNumber type="currency" currencySymbol="R" />
+										</p:outputLabel>
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:outputLabel value="Start Date" styleClass="Fs15 FontBold"></p:outputLabel>
+										<p:outputLabel value="#{dgYear.startDate}" styleClass="secondaryText Fright">
+											<f:convertDateTime pattern="dd MMMM yyyy" />
+										</p:outputLabel>
+									</h:panelGroup>
+									<h:panelGroup>
+										<p:outputLabel value="End Date" styleClass="Fs15 FontBold"></p:outputLabel>
+										<p:outputLabel value="#{dgYear.endDate}" styleClass="secondaryText Fright">
+											<f:convertDateTime pattern="dd MMMM yyyy" />
+										</p:outputLabel>
+									</h:panelGroup>
+								</p:panelGrid>
+							</div>
+						</div>
+					</p:repeat>
+				</div>
+				<div class="card card-w-title">
+					<h1>#{lang['companies']}</h1>
+					<h:form id="mainForm">
+						<p:tooltip position="left"></p:tooltip>
+						<p:dataTable var="rowVar" value="#{initiatewspdgUI.dataModel}" id="companyList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}" paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25"
+							reflow="true" lazy="true">
+							<p:column headerText="#{lang['companyName']}" filterBy="#{rowVar.company.companyName}">
+								<h:outputText value="#{rowVar.company.companyName}" />
+							</p:column>
+							<p:column headerText="#{lang['sdl.number']}" filterBy="#{rowVar.company.levyNumber}">
+								<h:outputText value="#{rowVar.company.levyNumber}" />
+							</p:column>
+							<p:column headerText="#{lang['email']}">
+								<h:outputText value="#{rowVar.company.email}" />
+							</p:column>
+							<p:column headerText="#{lang['status']}">
+								<h:outputText value="#{lang[rowVar.company.companyStatus.registrationName]}" />
+							</p:column>
+							<p:column headerText="Size of Company" width="10%">#{rowVar.company.sizeOfCompany.detailDescription}</p:column>
+							<p:column headerText="#{lang['levy.paying']}" width="110" style="text-align:center">
+								<p:outputPanel rendered="#{rowVar.company.nonLevyPaying}">
+									<i class="fa fa-times fa-3x red" aria-hidden="true"></i>
+								</p:outputPanel>
+								<p:outputPanel rendered="#{not rowVar.company.nonLevyPaying}">
+									<i class="fa fa-check fa-3x green" aria-hidden="true"></i>
+								</p:outputPanel>
+							</p:column>
+							<p:column width="37" headerText="#{lang['RAG']}">
+								<h:graphicImage value="/resources/hls/images/red.svg" rendered="#{rowVar.company.companyStatus eq CompanyStatusEnum.Pending}" width="40" styleClass="animated pulse infinite" />
+								<h:graphicImage value="/resources/hls/images/green.svg" rendered="#{rowVar.company.companyStatus eq CompanyStatusEnum.Active}" width="30" />
+							</p:column>
+							<p:column headerText="Barcode" width="400" rendered="false">
+								<p:barcode value="#{rowVar.company.companyGuid}" type="qr" />
+							</p:column>
+							<p:column rendered="true" width="60" headerText="#{lang['view.edit']}">
+								<center>
+									<p:commandButton icon="fa fa-newspaper-o" title="#{lang['initiate.wsp']}" update="wspInsForm" action="#{initiatewspdgUI.prepareWspForCompanyVersionTwo}" rendered="#{rowVar.company.companyStatus eq CompanyStatusEnum.Active}">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{initiatewspdgUI.selectedCompany}" />
+									</p:commandButton>
+								</center>
+							</p:column>
+						</p:dataTable>
+					</h:form>
+				</div>
+				<h:form id="wspInsForm">
+					<p:remoteCommand action="#{initiatewspdgUI.prepareWspForCompanyVersionTwo}" id="rc" name="rc" update="@form"></p:remoteCommand>
+					<c:if test="#{initiatewspdgUI.selectedCompany ne null}">
+						<ui:include src="/pages/externalparty/wspLookupTabledg.xhtml" />
+					</c:if>
+				</h:form>
+				<h:form id="extensionrequestInsForm">
+					<div class="ui-g-12">
+						<p:outputPanel rendered="#{extensionrequestUI.wsp ne null}">
+							<div class="card card-w-title">
+								<h1>#{lang['extension.request']}</h1>
+								<p:panelGrid columns="1" style="width:100%" id="extensionrequestInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+									<h:panelGroup rendered="false">
+										<div>
+											<p:outputLabel for="newSubmissionDate" value="#{lang['submission.date']}:" />
+										</div>
+										<div>
+											<p:calendar pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" id="newSubmissionDate" value="#{extensionrequestUI.extensionrequest.newSubmissionDate}" showOn="button" />
+										</div>
+									</h:panelGroup>
+									<h:panelGroup>
+										<div>
+											<p:outputLabel value="#{lang['resason.for.extension']}" for="bugReport" />
+										</div>
+										<div>
+											<p:textEditor id="bugReport" widgetVar="editor1" value="#{extensionrequestUI.extensionrequest.reasonForExtension}" height="300" style="margin-bottom:10px" required="true" requiredMessage="#{lang['please.provide.details.on.the.issue.request']}." />
+										</div>
+									</h:panelGroup>
+								</p:panelGrid>
+								<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" id="docTable">
+									<p:dataTable value="#{extensionrequestUI.extensionrequest.docs}" var="rv1" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv1.id}">
+										<p:column headerText="#{lang['type']}" width="18%">#{rv1.configDoc.name}</p:column>
+										<p:column headerText="#{lang['original.file.name']}" priority="4">
+											<p:outputLabel value="#{rv1.originalFname}" styleClass="Fs12"></p:outputLabel>
+										</p:column>
+										<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+										<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+											<h:outputText value="#{rv1.createDate}">
+												<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+											</h:outputText>
+										</p:column>
+										<p:column headerText="#{lang['version']}" width="10%" priority="4">
+											<h:outputText value="#{rv1.versionNo}">
+											</h:outputText>
+										</p:column>
+										<p:column headerText="#{lang['original.required']}">
+											<center>
+												<h:panelGroup rendered="#{rv1.configDoc.originalRequired}" styleClass="green">
+													<i class="fa fa-files-o fa-3x" aria-hidden="true"></i>
+												</h:panelGroup>
+												<h:panelGroup rendered="#{not rv1.configDoc.originalRequired}" styleClass="red">
+													<i class="fa fa-times fa-3x" aria-hidden="true"></i>
+												</h:panelGroup>
+											</center>
+										</p:column>
+										<p:column width="40">
+											<p:commandButton icon="fa fa-upload" id="upload" styleClass="flat" process="@this" oncomplete="PF('dlgUpload').show()" update=":uploadForm">
+												<f:setPropertyActionListener value="#{rv1}" target="#{extensionrequestUI.doc}" />
+											</p:commandButton>
+											<p:tooltip for="upload" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+										</p:column>
+									</p:dataTable>
+								</p:panelGrid>
+								<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+									<p:commandButton value="#{lang['submit']}" styleClass="max-btn green-btn" icon="fa fa-check" update="@form mainForm wspInsForm" action="#{extensionrequestUI.extensionrequestInsertVersionTwo}" oncomplete="rc()">
+									</p:commandButton>
+								</p:panelGrid>
+							</div>
+						</p:outputPanel>
+					</div>
+				</h:form>
+			</div>
+		</div>
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true">
+			<h:form id="uploadForm">
+				<h:panelGroup id="uploadGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{sdfUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{extensionrequestUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span>
+										<br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{extensionrequestUI.storeNewFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update=":extensionrequestInsForm:docTable" multiple="false" fileLimit="1" allowTypes="/(\.|\/)(gif|jpe?g|png|pdf|docx|txt)$/"
+										immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+	</ui:define>
+</ui:composition>

@@ -1,0 +1,195 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>#{lang['CONTRACT.OF.EMPLOYMENT.BETWEEN.AN.EMPLOYER.AND.A.LEARNER.FOR.THE.DURATION.OF.LEARNING.ON.A.merSETA.REGISTERED.LEARNING.PROGRAMME']}</h1>
+					<h4>#{lang['(Where.the.learner.was.not.in.the.employ.of.the.employer.prior.to.the.commencement.of.the.learning.programme)']}</h4>
+
+					<p:fieldset legend="#{lang['The.conditions.of.this.contract.of.employment.are.those.set.out.in.the.BASIC.CONDITION.OF.EMPLOYMENT.ACT.75.OF.1997']}:-
+">
+						<ul>
+							<li type="1"><h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="employerFullNames" value="#{entityUI.learners.employerFullNames}" style="width:95%" required="true" requiredMessage="" />
+
+									<p:outputLabel value="#{lang['Employer.Full.Names']}" for="employerFullNames" />
+								</h:panelGroup><br /> <br /></li>
+							<li type="1"><p:panelGrid columns="1" style="width : 50%" styleClass="ui-panelgrid-blank" id="employerPhysicalAddress">
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="employerPhysicalAddress1"
+											value="#{sdfDetailUI.companysdf.company.residentialAddress.addressLine1}" style="width:95%" required="true" requiredMessage="#{lang['enter.residential.address']}">
+										</p:inputText>
+										<p:outputLabel value="#{lang['address.line.1']}" for="employerPhysicalAddress1" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="employerPhysicalAddress2" style="width:95%"
+											value="#{sdfDetailUI.companysdf.company.residentialAddress.addressLine2}">
+										</p:inputText>
+										<p:outputLabel value="#{lang['address.line.2']}" for="employerPhysicalAddress2" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="employerPhysicalAddress3" style="width:95%"
+											value="#{sdfDetailUI.companysdf.company.residentialAddress.addressLine3}">
+										</p:inputText>
+										<p:outputLabel value="#{lang['address.line.3']}" for="employerPhysicalAddress3" />
+									</h:panelGroup>
+
+									<h:panelGroup>
+										<div>
+											<h:outputLabel value="#{lang['town']}" for="employerPhysicalAddress4" />
+										</div>
+										<div>
+											<p:autoComplete id="employerPhysicalAddress4" value="#{sdfDetailUI.companysdf.company.residentialAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true"
+												minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true" requiredMessage="#{lang['please.select.a.town']}"
+												disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}">
+												<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+											</p:autoComplete>
+										</div>
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_CODE_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="employerPhysicalAddress5" style="width:95%"
+											value="#{sdfDetailUI.companysdf.company.residentialAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}">
+										</p:inputText>
+										<p:outputLabel value="#{lang['post.code']}" for="employerPhysicalAddress5" />
+									</h:panelGroup>
+
+									<h:panelGroup>
+										<div>
+											<h:outputLabel value="#{lang['municipality']}" for="employerPhysicalAddress6" />
+										</div>
+										<div>
+											<p:autoComplete disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="employerPhysicalAddress6" value="#{sdfDetailUI.companysdf.company.residentialAddress.municipality}"
+												required="true" completeMethod="#{sdfDetailUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityProvince}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%"
+												requiredMessage="#{lang['select.municipality']}">
+												<p:column headerText="#{lang['province']}" style="white-space: nowrap">
+								#{rv.province.provinceDesc}
+							</p:column>
+												<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">
+								#{rv.municipalityDesc}
+							</p:column>
+											</p:autoComplete>
+										</div>
+									</h:panelGroup>
+
+
+								</p:panelGrid> <br /> <br /></li>
+							<li type="1"><h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="learnerFullNamesSurname" value="#{entityUI.learners.fullNameLearner}" style="width:95%" required="true" requiredMessage="" />
+									<p:outputLabel value="#{lang['Learner.Full.Names.and.Surname']}" for="learnerFullNamesSurname" />
+								</h:panelGroup><br /> <br /></li>
+							<li type="1"><h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="identityNumberOfLearner" value="#{entityUI.learners.learnerRsaIDNumber}" style="width:95%" required="true" requiredMessage="" />
+
+									<p:outputLabel value="#{lang['Identity.Number.of.Learner']}" for="identityNumberOfLearner" />
+
+									<!-- <small>(Please attached certified copy)</small> -->
+								</h:panelGroup><br /> <br /></li>
+							<li type="1"><h:panelGroup styleClass="md-inputfield">
+									<p:inputTextarea id="nameOfALearnership" value="#{entityUI.learners.nameOfALearnership}" style="width:95%" required="true" requiredMessage="" />
+
+									<p:outputLabel value="#{lang['Name.of.a.Learnership']}" for="nameOfALearnership" />
+								</h:panelGroup><br /> <br /></li>
+							<li type="1">#{lang['Type.of.Learning.Programme.or.Work.Integrated.Learning']}:<br /> <br />xxxxxxxxxxxxxxxxxxxxxxxxxxxx<br /> <br /> <br /> <br /></li>
+
+							<li type="1"><h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="physicalPlaceOfWorkTraining" value="#{entityUI.learners.physicalPlaceOfWorkTraining}" style="width:95%" required="true" requiredMessage="" />
+
+									<p:outputLabel value="#{lang['Physical.Place.of.Work/Training']}" for="physicalPlaceOfWorkTraining" />
+								</h:panelGroup><br /> <br /></li>
+							<li type="1">#{lang['Employment.conditions']}:<br /> <br />
+								<ul>
+									<li type="i">#{lang['Duration.of.employment']} <br /> 
+									<p:calendar showOn="button" placeholder="#{lang['FROM']}" id="durationOfEmploymentFrom" value="#{entityUI.learners.durationOfEmploymentFrom}" style="width:95%" required="true" requiredMessage="" /> <p:spacer width="30"></p:spacer> 
+									<p:calendar showOn="button" placeholder="#{lang['TO']}" id="durationOfEmploymentTo" value="#{entityUI.learners.durationOfEmploymentTo}" style="width:95%" required="true" requiredMessage="" /> <br /> <br /></li> <br />
+									<li type="i"><h:panelGroup styleClass="md-inputfield">
+											<p:inputText id="learnerOrdinaryHours" value="#{entityUI.learners.learnerOrdinaryHours}" style="width:95%" required="true" requiredMessage="" />
+
+											<p:outputLabel value="#{lang['The.learners.ordinary.hours.of.work.at.the.workplace.training']}" for="learnerOrdinaryHours" />
+										</h:panelGroup><br /> <br /></li>
+									<li type="i"><h:panelGroup styleClass="md-inputfield">
+											<p:inputText id="learnersAllowance" value="#{entityUI.learners.learnersAllowance}" style="width:95%" required="true" requiredMessage="" />
+
+											<p:outputLabel value="#{lang['Learners.allowance']}:" for="learnersAllowance" />
+										</h:panelGroup><br /> <br /></li>
+									<li type="i"><h:panelGroup styleClass="md-inputfield">
+											<p:inputText id="howFrequently" value="#{entityUI.learners.howFrequently}" style="width:95%" required="true" requiredMessage="" />
+
+											<p:outputLabel value="#{lang['How.frequently.is.remuneration.going.to.be.paid']}" for="howFrequently" />
+										</h:panelGroup><br /> <br /></li>
+									<li type="i"><h:panelGroup styleClass="md-inputfield">
+											<p:inputTextarea id="anyDeductionsTo" value="#{entityUI.learners.anyDeductions}" style="width:95%" required="true" requiredMessage="" />
+
+											<p:outputLabel value="#{lang['Any.deductions.to.be.made.from.the.learners.remuneration']}" for="anyDeductionsTo" />
+										</h:panelGroup> <br /> <br /></li>
+									<li type="i"><h:panelGroup styleClass="md-inputfield">
+											<p:inputTextarea id="theLeaveToWhichTheLearnerIsEntitled" value="#{entityUI.learners.learnersEntitledLeave}" style="width:95%" required="true" requiredMessage="" />
+
+											<p:outputLabel value="#{lang['The.leave.to.which.the.learner.is.entitled']}" for="theLeaveToWhichTheLearnerIsEntitled" />
+										</h:panelGroup> <br /> <br /></li>
+									<li type="i">#{lang['A.list.of.other.documents.that.form.part.of.this.agreement']}: <br /> <br />
+										<ul>
+											<br />
+											<br />
+											<li type="square"><h:panelGroup styleClass="md-inputfield">
+													<p:inputTextarea id="resultsFromTertiaryInstitution" value="#{entityUI.learners.learnersEntitledLeave}" style="width:95%" required="true" requiredMessage="" />
+
+													<p:outputLabel value="#{lang['Results.from.tertiary.institution']}" for="resultsFromTertiaryInstitution" />
+												</h:panelGroup> <br /> <br /></li>
+
+											<li type="square"><h:panelGroup styleClass="md-inputfield">
+													<p:inputTextarea id="anyEmployerRules" value="#{entityUI.learners.anyEmployerRules}" style="width:95%" required="true" requiredMessage="" />
+
+													<p:outputLabel value="#{lang['Any.Employer.rules']}" for="anyEmployerRules" />
+												</h:panelGroup> <br /> <br /></li>
+
+											<li type="square"><h:panelGroup styleClass="md-inputfield">
+													<p:inputTextarea id="placeWhereDocumentsAreKept" value="#{entityUI.learners.locationDocumentsAreKept}" style="width:95%" required="true" requiredMessage="" />
+
+													<p:outputLabel value="#{lang['Place.where.documents.are.kept']}" for="placeWhereDocumentsAreKept" />
+												</h:panelGroup> <br /> <br /></li>
+										</ul></li>
+								</ul> <br /> <br /></li>
+						</ul>
+						<span>#{lang['Sign.at']} <br /> <br /> <h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="signAtPlace" value="#{entityUI.learners.signAtPlace}" style="width:95%" required="true" requiredMessage="" />
+
+								<p:outputLabel value="#{lang['Place']}" for="signAtPlace" />
+							</h:panelGroup><br /> <br /> #{lang['On.the']}<p:calendar placeholder="#{lang['From']}" id="durationOfEmploymentOnThe" value="#{entityUI.learners.durationOfEmployment}" style="width:95%" required="true" requiredMessage="" showOn="button" />
+						</span>
+						<br />
+						<br />
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText id="byEmployerRepresentative" value="#{entityUI.learners.byEmployerRepresentative}" style="width:95%" required="true" requiredMessage="" />
+
+							<p:outputLabel value="#{lang['By.Employer.Representative']}:" for="byEmployerRepresentative" />
+						</h:panelGroup>
+						<br />
+						<br />
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText id="signatureOfEmployerRepresentative" value="#{entityUI.learners.signatureOfEmployer}" style="width:95%" required="true" requiredMessage="" />
+
+							<p:outputLabel value="#{lang['Signature.of.Employer.Representative']}:" for="signatureOfEmployerRepresentative" />
+						</h:panelGroup>
+						<br />
+						<br />
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText id="learnerSignature" value="#{entityUI.learners.learnerSignature}" style="width:95%" required="true" requiredMessage="" />
+
+							<p:outputLabel value="#{lang['Learner.Signature']}:" for="learnerSignature" />
+						</h:panelGroup>
+						<br />
+						<br />
+						<ul>
+							<span>#{lang['Note']}:</span>
+							<li type="1">#{lang['The.original.of.this.completed.document.must.be.submitted.to.the.merSETA']}.</li>
+							<li type="1">#{lang['A.copy.must.be.handed.to.the.learner.and.another.copy.must.be.kept.by.the.employer']}.</li>
+						</ul>
+					</p:fieldset>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+
+</ui:composition>

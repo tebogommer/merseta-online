@@ -1,0 +1,381 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+	<h2>Learnership Application</h2>
+	<div class="ui-g">
+		<div class="ui-g-12">
+		<p:fieldset legend="#{lang['company']} details" rendered="#{learnershipDevelopementUI.selectedCompany ne null}">
+			<p:panelGrid columns="2" style="width:100%" id="companyInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText disabled="true" id="companyName" value="#{learnershipDevelopementUI.selectedCompany.companyName}" style="width:95%;  opacity: 1 !important; color:black !important" requiredMessage="#{lang['enter.the.company.name']}" />
+					<p:outputLabel value="#{lang['companyName']}" for="companyName" styleClass="gray"/>
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText disabled="true" id="tradingName" value="#{learnershipDevelopementUI.selectedCompany.tradingName}" style="width:95%;  opacity: 1 !important; color:black !important" requiredMessage="#{lang['enter.the.trading.name']}" />
+					<p:outputLabel value="#{lang['tradingName']}" for="tradingName" styleClass="gray"/>
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText disabled="true" id="telNumber" value="#{learnershipDevelopementUI.selectedCompany.telNumber}" style="width:95%;  opacity: 1 !important; color:black !important" requiredMessage="#{lang['enter.the.tel.number']}" />
+					<p:outputLabel value="#{lang['telNumber']}" for="telNumber" styleClass="gray"/>
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText disabled="true" id="faxNumber" value="#{learnershipDevelopementUI.selectedCompany.faxNumber}" style="width:95%;  opacity: 1 !important; color:black !important" />
+					<p:outputLabel value="#{lang['faxNumber']}" for="faxNumber" styleClass="gray"/>
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText disabled="true" id="companyRegistrationNumber" value="#{learnershipDevelopementUI.selectedCompany.companyRegistrationNumber}" style="width:95%;  opacity: 1 !important; color:black !important"/>
+					<p:outputLabel value="#{lang['companyRegistrationNumber']}" for="companyRegistrationNumber" styleClass="gray"/>
+				</h:panelGroup>
+				
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText disabled="true" id="email" value="#{learnershipDevelopementUI.selectedCompany.email}" style="width:95%;  opacity: 1 !important; color:black !important" requiredMessage="#{lang['enter.email.address']}" />
+					<p:outputLabel value="#{lang['email']}" for="email" styleClass="gray"/>
+				</h:panelGroup>
+			</p:panelGrid>
+		</p:fieldset>
+		<h:panelGroup  rendered="#{learnershipDevelopementUI.selectedCompany ne null}">
+				<br /> <br />
+		</h:panelGroup>
+		<p:fieldset legend="Learnership Application details">
+			<p:panelGrid columns="2" style="width:100%" id="learnerDevRegGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup styleClass="md-inputfield" style="margin-top: 0px">
+					<p:inputText disabled="true" readonly="true" id="appName" style="width:95%; opacity: 1 !important; color:black !important" value="#{learnershipDevelopementUI.learnershipDevelopmentRegistration.users.firstName} #{learnershipDevelopementUI.learnershipDevelopmentRegistration.users.lastName}"
+						required="false">
+						<p:ajax />
+					</p:inputText>
+					<p:outputLabel value="Name Of Applicant" for="appName" styleClass="gray"/>
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield" style="margin-top: 0px">
+					<p:inputText disabled="#{sessionUI.task.processRole ne null and (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit)}" id="designation"
+						value="#{learnershipDevelopementUI.learnershipDevelopmentRegistration.designation}" style="width:95%; opacity: 1 !important; color:black !important"  required="true" requiredMessage="Designation is required">
+						<p:ajax />
+					</p:inputText>
+					<p:outputLabel value="#{lang['designation']}" for="designation" styleClass="gray"/>
+				</h:panelGroup>
+							
+				<h:panelGroup style="margin-top: 0px">
+					<div>
+						<p:outputLabel value="Applicant Type " for="department" styleClass="gray" />
+					</div>
+					<div>
+						<p:selectOneMenu disabled="#{sessionUI.task.processRole ne null and (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit)}" 
+										id="department" value="#{learnershipDevelopementUI.learnershipDevelopmentRegistration.applicantType}" 
+										style="width:95%; opacity: 1 !important; color:black !important"  required="true" requiredMessage="Select Applicant Type" converter="ApplicantTypeConvertor">
+							<f:selectItem itemLabel="--- #{lang['select.one']} ---" noSelectionOption="true" />
+							<f:selectItems value="#{selectItemsUI.selectItemsApplicantType}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							<p:ajax process="@this" update="@form" />
+						</p:selectOneMenu>
+					</div>
+				</h:panelGroup>	
+				
+				<h:panelGroup style="margin-top: 0px">
+					<div>
+						<p:outputLabel value="#{lang['learnership.application.type']}" for="learnershipInfo1" styleClass="gray" />
+					</div>
+					<div>
+						<p:selectOneMenu disabled="#{sessionUI.task.processRole ne null and (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit)}" 
+										id="learnershipInfo1" value="#{learnershipDevelopementUI.learnershipDevelopmentRegistration.newLearnership}" style="width:95%; opacity: 1 !important; color:black !important" required="true" requiredMessage="Select Learnership Application Type">
+							<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+							<f:selectItems var="linfo" itemValue="#{linfo}" value="#{enumUI.newExistingLearnershipEnumDD}" />
+							<p:ajax />
+						</p:selectOneMenu>
+					</div>
+				</h:panelGroup>	
+				
+				<h:panelGroup style="margin-top: 0px">
+					<div>
+						<p:outputLabel value="#{lang['learnership.identification']}" for="learnershipId" styleClass="gray" />
+					</div>
+					<div>
+						<p:selectOneMenu disabled="#{sessionUI.task.processRole ne null and (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit)}" 
+									value="#{learnershipDevelopementUI.learnershipDevelopmentRegistration.skillsIdentification}" converter="SkillsIdentificationConvertor" id="learnershipId" 
+									style="width:95%; opacity: 1 !important; color:black !important" required="true" requiredMessage="Select Learnership Identification">
+							<f:selectItem itemLabel="--- #{lang['select.one']} ---" itemValue="" styleClass="FontLight gray" noSelectionOption="true" />
+							<f:selectItems value="#{learnershipDevelopementUI.skillsIdentificationList}" var="lid" itemValue="#{lid}" itemLabel="#{lid.description}" />
+							<p:ajax />
+						</p:selectOneMenu>
+					</div>
+				</h:panelGroup>
+				
+				<p:outputPanel id="mersetaChamber"  style="width:95%;  opacity: 1 !important; color:black !important" required="true" requiredMessage="Select merSETA Chamber" rendered="#{learnershipDevelopementUI.learnershipDevelopmentRegistration.applicantType.id eq 3}">
+					<h:panelGroup>
+						<div style="margin-top: 0px !important;">
+							<p:outputLabel value="Chamber" for="sicCodeNew" styleClass="gray" style="margin-left:5px">
+							</p:outputLabel>
+						</div>
+						<div>
+							<p:autoComplete disabled="#{sessionUI.task.processRole ne null and (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit)}"  
+											id="sicCodeNew" value="#{learnershipDevelopementUI.learnershipDevelopmentRegistration.chamber}" 
+											 style="width:100%;  opacity: 1 !important; color:black !important" completeMethod="#{autoCompleteUI.completeChamberWithoutNonMersetaChamber}" 
+											var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="ChamberConvertor" 
+											dropdown="true" minQueryLength="1" maxResults="10" required="true" requiredMessage="#{lang['sic.code.error']}">
+								
+								<p:column headerText="#{lang['description']}" style="width:95%; opacity: 1 !important; color:black !important">#{rv.description}</p:column>
+							</p:autoComplete>
+						</div>
+					</h:panelGroup>													
+				</p:outputPanel>
+				
+				<p:outputPanel id="professionalBodyName" style="width:95%" required="true" requiredMessage="Enter professional body name" rendered="#{learnershipDevelopementUI.learnershipDevelopmentRegistration.applicantType.id eq 4}">
+					<h:panelGroup styleClass="md-inputfield" >
+						<br />
+						<p:inputText disabled="#{sessionUI.task.processRole ne null and (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit)}" 
+							id="professionalBodyName1" required="true" value="#{learnershipDevelopementUI.learnershipDevelopmentRegistration.professionalBodyName}" 
+							style="width:95%; opacity: 1 !important; color:black !important">
+							<p:ajax/>
+						</p:inputText>
+						<p:outputLabel for="professionalBodyName1" value="Professional Body Name" styleClass="gray"/>
+					</h:panelGroup>
+				</p:outputPanel>									
+				
+				<p:outputPanel id="industryBodyOrRepresentativeBodyName"  style="width:95%" required="true" requiredMessage="Enter Industry or Representative body name" rendered="#{learnershipDevelopementUI.learnershipDevelopmentRegistration.applicantType.id eq 5}">
+					<h:panelGroup styleClass="md-inputfield" >
+						<br />
+						<p:inputText id="industryBodyOrRepresentativeBodyName1" required="true" 
+									value="#{learnershipDevelopementUI.learnershipDevelopmentRegistration.industryBodyOrRepresentativeBodyName}" 
+									style="width:95%; opacity: 1 !important; color:black !important" 
+									disabled="#{sessionUI.task.processRole ne null and (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit)}">
+							<p:ajax/>
+						</p:inputText>
+						<p:outputLabel for="industryBodyOrRepresentativeBodyName1" value="Industry/Representative Body Name" styleClass="gray"/>
+					</h:panelGroup>
+				</p:outputPanel>
+				
+				<h:panelGroup style="margin-top: 0px">
+					<div>
+						<p:outputLabel value="#{lang['ofo.code']}" for="ofoCode" styleClass="gray"/>
+					</div>
+					<div>
+					<p:autoComplete id="ofoCode" value="#{learnershipDevelopementUI.learnershipDevelopmentRegistration.ofoCodes}" 
+									completeMethod="#{autoCompleteUI.completeOfoCodes}" var="rv" itemLabel="#{rv.ofoDescription}" 
+									itemValue="#{rv}" forceSelection="true" converter="OfoCodesConvertor" dropdown="true" minQueryLength="3" 
+									maxResults="10"  style="width:95%; opacity: 1 !important; color:black !important" required="true"
+									requiredMessage="#{lang['select.ofo.code']}" 
+									disabled="#{sessionUI.task.processRole ne null and (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit)}">
+									
+						<p:column headerText="OfoCodes" >#{rv.ofoCodeParent}</p:column>
+						<p:column headerText="Description">#{rv.description}</p:column>
+						<p:ajax event="itemSelect" />
+					</p:autoComplete>
+					</div>
+				</h:panelGroup>	
+				
+				<h:panelGroup styleClass="md-inputfield" rendered="true" style="margin-top: 0px">
+					<p:autoComplete disabled="#{sessionUI.task.processRole ne null and (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit)}" 
+						required="true" id="highestQualTitle1" value="#{learnershipDevelopementUI.learnershipDevelopmentRegistration.qualification}" completeMethod="#{autoCompleteUI.completeQualification}" var="rv" itemLabel="#{rv.saqaQualification}" itemValue="#{rv}" forceSelection="true"
+						converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+						<p:ajax event="itemSelect" update="@form" />
+						<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+						<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+						<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+						<p:ajax />
+					</p:autoComplete>
+					<p:outputLabel value="SAQA Qualification ID" for="highestQualTitle1" styleClass="gray" />
+				</h:panelGroup>	
+				
+				
+				
+				<h:panelGroup styleClass="md-inputfield" rendered="#{learnershipDevelopementUI.learnershipDevelopmentRegistration.qualification ne null}">
+					<p:inputText disabled="true" id="qualTitle" value="#{learnershipDevelopementUI.learnershipDevelopmentRegistration.qualification.description}" style="width:95%; opacity: 1 !important; color:black !important" required="true">
+						<p:ajax />
+					</p:inputText>
+					<p:outputLabel value="#{lang['title']}" for="qualTitle" styleClass="gray"/>
+				</h:panelGroup>	
+				
+				<h:panelGroup styleClass="md-inputfield" rendered="#{learnershipDevelopementUI.learnershipDevelopmentRegistration.qualification ne null}">
+					<p:inputText disabled="true" id="qualNqfLevel" value="#{learnershipDevelopementUI.learnershipDevelopmentRegistration.qualification.nqflevel.description}" 
+								style="width:95%; opacity: 1 !important; color:black !important" required="true">
+						<p:ajax />
+					</p:inputText>
+					<p:outputLabel value="NQF Level" for="qualNqfLevel" styleClass="gray"/>
+				</h:panelGroup>	
+				
+				<h:panelGroup styleClass="md-inputfield" rendered="#{learnershipDevelopementUI.learnershipDevelopmentRegistration.qualification ne null}">
+					<p:inputText disabled="true" id="qualEtqa" value="#{learnershipDevelopementUI.learnershipDevelopmentRegistration.qualification.etqaname}" 
+								style="width:95%; opacity: 1 !important; color:black !important" required="true">
+						<p:ajax />
+					</p:inputText>
+					<p:outputLabel value="#{lang['etqa']}" for="qualEtqa" />
+				</h:panelGroup>	
+				
+				<h:panelGroup styleClass="md-inputfield" rendered="#{learnershipDevelopementUI.learnershipDevelopmentRegistration.qualification ne null}">
+						<p:inputText disabled="true" id="credits" value="#{learnershipDevelopementUI.learnershipDevelopmentRegistration.qualification.credits}"
+									style="width:95%; opacity: 1 !important; color:black !important" required="true">
+							<p:ajax />
+						</p:inputText>
+						<p:outputLabel value="Minimum Credits" for="credits" styleClass="gray"/>
+				</h:panelGroup>	
+				
+				<h:panelGroup styleClass="md-inputfield" rendered="#{learnershipDevelopementUI.learnershipDevelopmentRegistration.qualification ne null}">
+						<p:inputText disabled="true" id="lastDateForEnrolment" value="#{learnershipDevelopementUI.learnershipDevelopmentRegistration.qualification.lastDateForEnrolment}" 
+									style="width:95%; opacity: 1 !important; color:black !important" required="true">
+							<p:ajax />
+							<f:convertDateTime pattern="MM/dd/yyyy" type="date" />
+						</p:inputText>
+						<p:outputLabel value="Last Date For Enrolment" for="lastDateForEnrolment" styleClass="gray"/>
+				</h:panelGroup>	
+				
+				<h:panelGroup styleClass="md-inputfield" rendered="#{learnershipDevelopementUI.learnershipDevelopmentRegistration.qualification ne null}">
+						<p:inputText disabled="true" id="lastDateForAchievement" value="#{learnershipDevelopementUI.learnershipDevelopmentRegistration.qualification.lastDateForEnrolment}" 
+									style="width:95%; opacity: 1 !important; color:black !important" required="true">
+							<p:ajax />
+							<f:convertDateTime pattern="MM/dd/yyyy" type="date" />
+						</p:inputText>
+						<p:outputLabel value="Last Date For Achievement" for="lastDateForAchievement" styleClass="gray"/>
+				</h:panelGroup>	
+			</p:panelGrid>
+			
+			<p:panelGrid columns="2" style="width:100%" id="regPanelGrid" layout="grid" styleClass="ui-panelgrid-blank form-group" 
+						rendered="#{(sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload) or (sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval)}">
+				<p:fieldset legend= "Provide #{lang['learnership.registration.number']}" style=" font-size: 12px;  padding: 1em;float:left; padding-top:0.8em; text-align:left; border:2px solid grey; font-weight:bold; width:95%"
+							rendered="#{(sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload) or (sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval)}"> 
+					<h:panelGroup styleClass="md-inputfield" rendered="#{(sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload) or (sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval)}">
+						<p:inputText disabled="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval}" id="registraNumber" 
+									value="#{learnershipDevelopementUI.learnershipDevelopmentRegistration.registrationNumber}" 
+									style="width:95%; opacity: 1 !important; color:black !important" required="true" requiredMessage="#{lang['learnership.registration.number.error']}">
+							<p:ajax />
+						</p:inputText>
+						<p:outputLabel value="#{lang['learnership.registration.number']}" for="registraNumber" styleClass="gray"/>
+					</h:panelGroup>
+				</p:fieldset>
+			</p:panelGrid>
+			
+			<p:panelGrid columns="2" style="width:100%" id="learnerDevRegGridFour" layout="grid" styleClass="ui-panelgrid-blank form-group">				
+
+				
+				<h:panelGroup styleClass="md-inputfield"
+					rendered="#{(learnershipDevelopementUI.skillsSet eq false and learnershipDevelopementUI.skillsProgram eq false and learnershipDevelopementUI.shortCreditBearing eq false) and learnershipDevelopementUI.learnershipDevelopmentRegistration.pivotNonPivot eq PivotNonPivotEnum.Pivotal}"
+					style="margin-top: 19px">
+					<p:autoComplete disabled="#{sessionUI.task.processRole ne null and (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload)}" required="true" id="highestQualTitle"
+						value="#{learnershipDevelopementUI.learnershipDevelopmentRegistration.qualification}" completeMethod="#{autoCompleteUI.completeQualification}" var="rv" itemLabel="#{rv.saqaQualification}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor" dropdown="true"
+						minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+						<p:ajax event="itemSelect" update="@form" />
+						<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+						<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+						<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+					</p:autoComplete>
+					<p:outputLabel value="#{lang['saqa.id']}" for="highestQualTitle" styleClass="gray" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield" rendered="#{learnershipDevelopementUI.skillsProgram and learnershipDevelopementUI.learnershipDevelopmentRegistration.pivotNonPivot eq PivotNonPivotEnum.Pivotal}" style="margin-top: 19px">
+					<p:autoComplete disabled="#{sessionUI.task.processRole ne null and (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload)}" required="true" id="skillsProgram"
+						value="#{learnershipDevelopementUI.learnershipDevelopmentRegistration.skillsProgram}" completeMethod="#{autoCompleteUI.completeSkillsProgram}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SkillsProgramConvertor" dropdown="true" minQueryLength="3"
+						maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+						<p:ajax event="itemSelect" update="@form" />
+						<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+						<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+					</p:autoComplete>
+					<p:outputLabel value="Skills Program" for="skillsProgram" styleClass="gray" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield" rendered="#{learnershipDevelopementUI.shortCreditBearing and learnershipDevelopementUI.learnershipDevelopmentRegistration.pivotNonPivot eq PivotNonPivotEnum.Pivotal}" style="margin-top: 19px">
+					<p:autoComplete required="true" id="unitStandard" value="#{learnershipDevelopementUI.learnershipDevelopmentRegistration.unitStandard}" completeMethod="#{autoCompleteUI.completeUnitStandards}" var="rv" itemLabel="#{rv.title}" itemValue="#{rv}" forceSelection="true"
+						converter="UnitStandardsConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+						<p:ajax event="itemSelect" update="@form" />
+						<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+						<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.title}</p:column>
+					</p:autoComplete>
+					<p:outputLabel value="#{lang['unit.standard']}" for="unitStandard" styleClass="gray" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield" rendered="#{learnershipDevelopementUI.skillsSet and learnershipDevelopementUI.learnershipDevelopmentRegistration.pivotNonPivot eq PivotNonPivotEnum.Pivotal}" style="margin-top: 19px">
+					<p:autoComplete disabled="#{sessionUI.task.processRole ne null and (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload)}" required="true" id="skillsSet"
+						value="#{learnershipDevelopementUI.learnershipDevelopmentRegistration.skillsSet}" completeMethod="#{autoCompleteUI.completeSkillsSet}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SkillsSetConvertor" dropdown="true" minQueryLength="3"
+						maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+						<p:ajax event="itemSelect" update="@form" />
+						<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+						<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+					</p:autoComplete>
+					<p:outputLabel value="Skills Set" for="skillsSet" styleClass="gray" />
+				</h:panelGroup>
+			</p:panelGrid>
+		</p:fieldset>
+		<br /> <br />
+		<p:fieldset legend="Documents">
+			<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" id="docTable" rendered="#{(learnershipDevelopementUI.learnershipDevelopmentRegistration.id ne null) and sessionUI.task.processRole ne null}">
+				<p:dataTable value="#{learnershipDevelopementUI.learnershipDevelopmentRegistration.docs}" var="rv1" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv1.id}">
+					<p:column headerText="#{lang['type']}" width="18%">#{rv1.configDoc.name}</p:column>
+					<p:column headerText="#{lang['original.file.name']}" priority="4">
+						<p:outputLabel value="#{rv1.originalFname}" styleClass="Fs12" rendered="#{rv1.originalFname ne null}" />
+						<p:outputLabel value="Document Not Uploaded" rendered="#{rv1.originalFname eq null or rv1.originalFname eq ''}" />
+					</p:column>
+					<p:column headerText="#{lang['uploaded.by']}">
+						<p:outputLabel value="#{rv1.users.firstName} #{rv1.users.lastName}" rendered="#{rv1.users ne null}" />
+						<p:outputLabel value="N/A" rendered="#{rv1.users eq null and rv1.originalFname eq null}" />
+						<p:outputLabel value="Awaiting Submission" rendered="#{rv1.users eq null and rv1.originalFname ne null}" />
+					</p:column>
+					<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+						<h:outputText value="#{rv1.createDate}" rendered="#{rv1.createDate ne null}">
+							<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+						</h:outputText>
+						<p:outputLabel value="N/A" rendered="#{rv1.createDate eq null and rv1.originalFname eq null}" />
+						<p:outputLabel value="Awaiting Submission" rendered="#{rv1.createDate eq null and rv1.originalFname ne null}" />
+					</p:column>
+					<p:column headerText="#{lang['version']}" width="11%" priority="4">
+						<h:outputText value="#{rv1.versionNo}" rendered="#{rv1.versionNo ne null}" />
+						<p:outputLabel value="N/A" rendered="#{rv1.versionNo eq null and rv1.originalFname eq null}" />
+						<p:outputLabel value="Awaiting Submission" rendered="#{rv1.versionNo eq null and rv1.originalFname ne null}" />
+					</p:column>
+					<p:column headerText="#{lang['original.required']}">
+						<center>
+							<h:panelGroup rendered="#{rv1.configDoc.originalRequired}" styleClass="green">
+								<i class="fa fa-files-o fa-3x" aria-hidden="true"></i>
+							</h:panelGroup>
+							<h:panelGroup rendered="#{not rv1.configDoc.originalRequired}" styleClass="red">
+								<i class="fa fa-times fa-3x" aria-hidden="true"></i>
+							</h:panelGroup>
+						</center>
+					</p:column>
+					<p:column width="160" headerText="#{lang['view.edit']}">
+						<p:commandButton
+							rendered="#{(sessionUI.task.processRole.rolePermission eq UserPermissionEnum.UploadApprove and rv1.id eq null) or (sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalUploadApproval or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalUpload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.UploadApprove) and rv1.id eq null}"
+							icon="fa fa-upload" id="upload" styleClass="flat" process="@this" oncomplete="PF('dlgUpload').show()" update=":uploadForm">
+							<f:setPropertyActionListener value="#{rv1}" target="#{learnershipDevelopementUI.doc}" />
+							<p:tooltip for="upload" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+						</p:commandButton>
+						<p:commandButton
+							rendered="#{rv1.id ne null and rv1.enableReupload eq true}"
+							icon="fa fa-upload" id="reupload" styleClass="flat" process="@this" oncomplete="PF('dlgUpload').show()" update=":uploadForm">
+							<f:setPropertyActionListener value="#{rv1}" target="#{learnershipDevelopementUI.doc}" />
+							<p:tooltip for="reupload" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+						</p:commandButton>
+						<p:spacer width="5" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload}" />
+						<p:commandButton ajax="false" icon="fa fa-download" action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}">
+							<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+							<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+						</p:commandButton>
+						
+						<p:commandButton icon="fa fa-bars " id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update="@form :documenttrackeForm" rendered="#{rv1.id ne null}">
+							<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+						</p:commandButton>
+						<p:tooltip for="dhistUserDocs" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+						<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+							<p:spacer width="5" />
+							<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+								<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+							</p:commandButton>
+							<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+						</h:panelGroup>
+						<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+							<p:spacer width="5" />
+							<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+								<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+							</p:commandButton>
+							<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+						</h:panelGroup>
+						<p:commandButton rendered="#{(sessionUI.task.processRole.rolePermission eq UserPermissionEnum.UploadApprove or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload) and (rv.approvalStatus.displayName eq 'Rejected')}"
+							icon="fa fa-upload" id="upload2" styleClass="flat" process="@this" oncomplete="PF('dlgUpload').show()" update=":uploadForm">
+							<f:setPropertyActionListener value="#{rv1}" target="#{learnershipDevelopementUI.doc}" />
+							<p:tooltip for="upload" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+						</p:commandButton>
+					</p:column>
+				</p:dataTable>
+			</p:panelGrid>
+		</p:fieldset>
+		</div>
+	</div>	
+	
+</ui:composition>

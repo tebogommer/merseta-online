@@ -1,0 +1,387 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:o="http://omnifaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+		<p:growl sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<ui:include src="/pages/includes/taskdiagram.xhtml" />
+			</div>
+		</div>
+		<h:form id="learnerRegUserForm">
+			<p:importEnum type="haj.com.entity.enums.CompanyRegOrSDLEnum" var="regSDL"></p:importEnum>
+			<p:importEnum type="haj.com.entity.enums.YesNoEnum"></p:importEnum>
+			<p:importEnum type="haj.com.entity.enums.PivotNonPivotEnum" />
+			<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+			<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+
+			<c:if test="#{learnerFinalApprovaFormUI.companylearners.interventionType.form eq '002'}">
+				<ui:include src="/pages/tp/includes/learnershipapprenticeapprovalform.xhtml">
+					<ui:param name="disableFields" value="true" />
+				</ui:include>
+			</c:if>
+			<c:if test="#{learnerFinalApprovaFormUI.companylearners.interventionType.form eq '015'}">
+				<ui:include src="/pages/tp/includes/otherapplicationapprovalform.xhtml">
+					<ui:param name="disableFields" value="true" />
+				</ui:include>
+			</c:if>
+			<c:if test="#{learnerRegistrationFormUI.companylearners.interventionType.form eq '009'}">
+				<ui:include src="/pages/tp/includes/applicationform.xhtml">
+					<ui:param name="disableFields" value="true" />
+				</ui:include>
+			</c:if>
+			
+			<p:outputPanel styleClass="card" id="learnerRegUploadForm" style="width: 100%" rendered="#{learnerRegistrationFormUI.companylearners.docs.size() gt 0}">
+					<h:panelGroup id="docList">
+						<p:fieldset legend="#{lang['documents']}" id="userDocs" rendered="#{learnerRegistrationFormUI.companylearners.docs.size() gt 0}">
+							<p:dataTable value="#{learnerRegistrationFormUI.companylearners.docs}" var="rv1" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+								<p:column headerText="#{lang['type']}" width="20%">
+									<p:outputLabel value="#{rv1.configDoc.name} #{rv1.configDoc.requiredDocument ? '*' : ''}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="#{lang['uploaded.by']}">
+									<p:outputLabel value="#{rv1.users.firstName} #{rv1.users.lastName}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="#{lang['uploaded']}" width="15%">
+									<h:outputText value="#{rv1.createDate}">
+										<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="#{lang['version']}" width="15%">
+									<h:outputText value="#{rv1.versionNo}">
+									</h:outputText>
+								</p:column>
+
+								<p:column width="180" headerText="#{lang['view.edit']}">
+									<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null and rv1.originalFname ne null}">
+										<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null and rv1.originalFname ne null}" />
+
+									<p:spacer width="5" rendered="#{rv1.id ne null}" />
+									<p:commandButton icon="fa fa-bars " id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null and rv1.originalFname ne null}">
+										<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="dhistUserDocs" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null and rv1.originalFname ne null}" />
+
+									<!-- only with permission to upload can upload a new version -->
+									<p:commandButton rendered="#{sessionUI.task.processRole eq null or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload}" icon="fa fa-upload" id="uploadUserDocs" styleClass="#{rv1.originalFname eq null ? 'red-btn' : ''} flat" process="@this" oncomplete="PF('dlgUpload').show()"
+										update=":uploadForm">
+										<f:setPropertyActionListener value="#{rv1}" target="#{learnerRegistrationFormUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="uploadUserDocs" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+
+									<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+										<p:spacer width="5" />
+										<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+									</h:panelGroup>
+
+									<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+										<p:spacer width="5" />
+										<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+									</h:panelGroup>
+
+								</p:column>
+							</p:dataTable>
+						</p:fieldset>
+
+					</h:panelGroup>
+				</p:outputPanel>
+
+			<p:outputPanel id="rejectReasons" style="width: 100%" rendered="#{learnerFinalApprovaFormUI.companylearners.status eq ApprovalEnum.RejectedByLearnerReview}">
+				<h:panelGroup id="rejectReasonsId">
+					<div class="ui-g dashboard">
+						<div class="ui-g-12">
+							<p:fieldset legend="Reject Reasons">
+								<h3>#{learnerFinalApprovaFormUI.companylearners.status.friendlyName}</h3>
+								<p:dataTable var="rowVar" value="#{learnerFinalApprovaFormUI.rejectReason}" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+									<p:column headerText="Create Date">
+										<p:outputLabel value="#{rowVar.createDate}">
+											<f:convertDateTime pattern="dd MMMM yyyy" />
+										</p:outputLabel>
+									</p:column>
+									<p:column headerText="Reason for Rejection">
+										<p:outputLabel value="#{rowVar.description}"></p:outputLabel>
+									</p:column>
+								</p:dataTable>
+							</p:fieldset>
+						</div>
+					</div>
+				</h:panelGroup>
+			</p:outputPanel>
+
+			<p:outputPanel id="meetingForm" style="width: 100%" rendered="#{learnerFinalApprovaFormUI.companylearners.reviewCommitteeMeeting ne null}">
+				<h:panelGroup id="meetingId">
+					<div class="ui-g dashboard">
+						<div class="ui-g-12">
+							<p:fieldset legend="#{lang['etqa.review.date']}">
+								<p:panelGrid columns="1" style="width:100%" id="meetingTitleGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+									<h:panelGroup id="meetingTitle" styleClass="md-inputfield">
+										<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{learnerFinalApprovaFormUI.companylearners.reviewCommitteeMeeting.title}" />
+										<p:outputLabel value="#{lang['title']}" styleClass="gray" />
+									</h:panelGroup>
+
+								</p:panelGrid>
+								<br />
+								<p:panelGrid columns="4" style="width:100%" id="etqaDateGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+									<h:panelGroup id="fromDateTime" styleClass="md-inputfield">
+										<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{learnerFinalApprovaFormUI.companylearners.reviewCommitteeMeeting.fromDateTime}">
+											<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME}" />
+										</p:inputText>
+										<p:outputLabel value="#{lang['from']}" styleClass="gray" />
+									</h:panelGroup>
+
+									<h:panelGroup id="toDateTime" styleClass="md-inputfield">
+										<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{learnerFinalApprovaFormUI.companylearners.reviewCommitteeMeeting.toDateTime}">
+											<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME}" />
+										</p:inputText>
+										<p:outputLabel value="#{lang['to']}" styleClass="gray" />
+									</h:panelGroup>
+
+									<h:panelGroup id="MeetingNumber" styleClass="md-inputfield" rendered="false">
+										<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{assessorModeratorApplicationUI.reviewCommitteeMettingScheduleMeetingNumber(learnerFinalApprovaFormUI.companylearners)}" />
+										<p:outputLabel value="#{lang['meeting.number']}" />
+									</h:panelGroup>
+
+									<h:panelGroup id="venue" styleClass="md-inputfield">
+										<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{learnerFinalApprovaFormUI.companylearners.reviewCommitteeMeeting.venue}" />
+										<p:outputLabel value="#{lang['venue']}" styleClass="gray" />
+									</h:panelGroup>
+								</p:panelGrid>
+
+								<p:panelGrid columns="1" style="width:100%" id="agendaGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+									<p:fieldset legend="Agenda">
+										<p:dataList style="margin-top:15px" id="agendaListDisplay" value="#{learnerFinalApprovaFormUI.companylearners.reviewCommitteeMeeting.reviewCommitteeMeetingAgendaList}" var="ag" type="ordered">
+								       #{ag.meetingAgenda.description} (#{ag.decisionNumber})
+								     </p:dataList>
+									</p:fieldset>
+								</p:panelGrid>
+
+								<p:panelGrid columns="1" style="width:100%" id="userfoGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+									<p:fieldset legend="Users">
+										<p:dataList style="margin-top:15px" id="userListDisplay" value="#{learnerFinalApprovaFormUI.companylearners.reviewCommitteeMeeting.reviewCommitteeMeetingUsersList}" var="rcmu" type="ordered">
+								       #{rcmu.user.firstName} #{rcmu.user.lastName}
+								     </p:dataList>
+									</p:fieldset>
+								</p:panelGrid>
+
+								<p:panelGrid rendered="#{learnerFinalApprovaFormUI.companylearners.reviewCommitteeMeeting.additionalInfo ne null}" columns="1" style="width:100%" id="etqaAddInfoGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['additional.info']}" for="venue" styleClass="Fs12 FontLight" />
+										<p:textEditor readonly="true" widgetVar="addInfo" value="#{learnerFinalApprovaFormUI.companylearners.reviewCommitteeMeeting.additionalInfo}" height="100" placeholder="Enter your content">
+											<f:facet name="toolbar">
+												<span class="ql-formats">
+													<button class="ql-bold"></button>
+													<button class="ql-italic"></button>
+													<button class="ql-underline"></button>
+													<button class="ql-strike"></button>
+												</span>
+												<span class="ql-formats">
+													<select class="ql-font"></select>
+													<select class="ql-size"></select>
+												</span>
+											</f:facet>
+										</p:textEditor>
+									</h:panelGroup>
+								</p:panelGrid>
+							</p:fieldset>
+
+						</div>
+					</div>
+				</h:panelGroup>
+			</p:outputPanel>
+
+			<p:outputPanel style="width: 100%">
+				<p:outputPanel style="width:100%" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval}">
+					<div class="card" >
+						<p:panel style="background:#eeeeee">
+							<h5 style="margin-top: 10px; margin-bottom: 10px">#{lang['learner.registration.acknowledgement']}</h5>
+							<p class="Fs12" style="margin: 0px;">#{lang['learner.registration.declaration.paragraph']}</p>
+							<br />
+							<p:selectBooleanCheckbox id="signoff" value="#{learnerFinalApprovaFormUI.signoff}">
+							</p:selectBooleanCheckbox>
+						</p:panel>
+					</div>
+				</p:outputPanel>
+				<div class="card">
+					<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve}">
+						<p:commandButton value="#{lang['approve']}" icon="ui-icon-save" update="@form" action="#{learnerFinalApprovaFormUI.completeCompanyLearnersForReview}" styleClass="flat green-btn Fs18" style="height: 50px;">
+						</p:commandButton>
+						<p:commandButton value="#{lang['reject.task']}" icon="ui-icon-save" oncomplete="PF('rejectReason').show()" update="@form" styleClass="flat red-btn Fs18" style="height: 50px;" process="@this">
+						</p:commandButton>
+					</p:panelGrid>
+					<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval}">
+						<p:commandButton value="#{lang['approve']}" icon="ui-icon-save" update="@form" action="#{learnerFinalApprovaFormUI.finalApproveCompanyLearners}" styleClass="flat green-btn Fs18" style="height: 50px;">
+						</p:commandButton>
+						<p:commandButton value="#{lang['reject.task']}" icon="ui-icon-save" oncomplete="PF('rejectReasonReview').show()" update="@form" styleClass="flat Fs18" style="height: 50px;" process="@this">
+
+						</p:commandButton>
+					</p:panelGrid>
+					<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.View}">
+						<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" update="@form" action="#{learnerFinalApprovaFormUI.completeCompanyLearners}" styleClass="flat green-btn Fs18" style="height: 50px;">
+						</p:commandButton>
+
+						<p:commandButton oncomplete="PF('dateSchedule').show()" styleClass="flat green-btn Fs18" style="height: 50px;" update="@form" process="@this" value="#{lang['schedule.meeting']}" icon="ui-icon-save" rendered="false">
+						</p:commandButton>
+					</p:panelGrid>
+
+					<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Approve and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalApproval and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.View}">
+						<p:commandButton value="#{lang['approve']}" icon="ui-icon-save" update="@form" action="#{learnerFinalApprovaFormUI.completeNewCompanyLearners}" styleClass="flat green-btn Fs18" style="height: 50px;" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Edit}">
+						</p:commandButton>
+						<p:commandButton value="#{lang['reject.task']}" icon="ui-icon-save" oncomplete="PF('rejectReason').show()" update="@form" styleClass="flat Fs18" style="height: 50px;" process="@this" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Edit}">
+						</p:commandButton>
+						<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" update="@form" action="#{learnerFinalApprovaFormUI.completeCompanyLearnersToRegion}" styleClass="flat green-btn Fs18" style="height: 50px;" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload}">
+						</p:commandButton>
+					</p:panelGrid>
+				</div>
+			</p:outputPanel>
+		</h:form>
+
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true" dynamic="true">
+			<h:form id="uploadForm">
+				<h:panelGroup id="uploadGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{learnerFinalApprovaFormUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{learnerFinalApprovaFormUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span>
+										<br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{learnerFinalApprovaFormUI.storeFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update="learnerRegUserForm:learnerRegUploadForm" multiple="false" fileLimit="1" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="Reject Reasons" widgetVar="rejectReason" hideEffect="clip" showEffect="clip" id="dialogRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{learnerFinalApprovaFormUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{learnerFinalApprovaFormUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+
+							</p:selectManyMenu>
+
+							<br />
+							<br />
+						</div>
+					</div>
+					<p:commandButton oncomplete="PF('rejectReason').hide()" update="learnerRegUserForm" value="Reject" action="#{learnerFinalApprovaFormUI.rejectCompanyLearners}">
+					</p:commandButton>
+				</div>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="Reject Reasons" widgetVar="rejectReasonReview" hideEffect="clip" showEffect="clip" id="dialogRejectReasonReview" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonReviewForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{learnerFinalApprovaFormUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{learnerFinalApprovaFormUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+
+							</p:selectManyMenu>
+
+							<br />
+							<br />
+						</div>
+					</div>
+					<p:commandButton oncomplete="PF('rejectReasonReview').hide()" update="learnerRegUserForm" value="Reject" action="#{learnerFinalApprovaFormUI.finalRejectCompanyLearners}">
+					</p:commandButton>
+				</div>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="#{lang['review.committee.date.scheduling']}" widgetVar="dateSchedule" hideEffect="clip" showEffect="clip" id="dateSchedule" appendTo="@(body)" modal="true" closable="true" width="80%" height="50vh" responsive="true">
+			<h:form id="tableForm">
+
+				<p:commandButton icon="fa fa-calendar" value="Add New Schedule" update="@form" action="#{amDetailUI.redirectToSchedule}" rendered="false">
+				</p:commandButton>
+
+				<br />
+				<br />
+				<h:panelGroup rendered="#{reviewCommitteeMeetingUI.reviewCommitteeMeetingList.size() lt 1}">
+					<ui:include src="/pages/includes/tabinfo.xhtml">
+						<ui:param name="showInfoCircle" value="true" />
+						<ui:param name="cssClass" value="secondaryText Fs15" />
+						<ui:param name="helpTxt" value="No review committee meeting available, Please advice employee that is responsible for scheduling meetings to login and schedule a meeting " />
+					</ui:include>
+				</h:panelGroup>
+				<p:dataTable var="var" value="#{reviewCommitteeMeetingUI.reviewCommitteeMeetingList}" widgetVar="scheduleTable" rows="5" paginator="true" paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15" paginatorPosition="bottom">
+					<f:facet name="header">
+						<p:outputPanel>
+							<h:outputText value="Select Review Committee Date" />
+						</p:outputPanel>
+					</f:facet>
+
+					<p:column filterBy="#{var.title}" sortBy="#{var.title}" headerText="#{lang['title']}">
+						<h:outputText value="#{var.title}" />
+					</p:column>
+
+					<p:column filterBy="#{var.fromDateTime}" sortBy="#{var.fromDateTime}" headerText="#{lang['from']}">
+						<h:outputText value="#{var.fromDateTime}">
+							<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME}" />
+						</h:outputText>
+					</p:column>
+
+					<p:column filterBy="#{var.toDateTime}" sortBy="#{var.toDateTime}" headerText="#{lang['to']}">
+						<h:outputText value="#{var.toDateTime}">
+							<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME}" />
+						</h:outputText>
+					</p:column>
+
+					<p:column filterBy="#{var.venue}" sortBy="#{var.venue}" headerText="#{lang['venue']}">
+						<h:outputText value="#{var.venue}" />
+					</p:column>
+
+					<p:column style="width:120px">
+						<p:commandButton value="#{lang['schedule']}" icon="ui-icon-check" update="@form" action="#{learnerFinalApprovaFormUI.completeCompanyLearnersNew}" styleClass="flat green-btn Fs18">
+							<f:setPropertyActionListener value="#{var}" target="#{learnerFinalApprovaFormUI.companylearners.reviewCommitteeMeeting}" />
+						</p:commandButton>
+					</p:column>
+
+				</p:dataTable>
+
+			</h:form>
+			<br />
+			<p:fieldset rendered="false" legend="#{lang['add.review.committee.date.schedule']}" collapsed="true" toggleable="true">
+				<ui:include src="/pages/etqaReviewCommittee/include/scheduleDetails.xhtml">
+				</ui:include>
+			</p:fieldset>
+		</p:dialog>
+	</ui:define>
+</ui:composition>

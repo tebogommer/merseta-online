@@ -1,0 +1,166 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="head">
+
+
+		<script src="#{request.contextPath}/js/highcharts.js" />
+		<script src="#{request.contextPath}/js/highcharts-3d.js" />
+		<script src="#{request.contextPath}/js/exporting.js" />
+	</ui:define>
+
+	<ui:define name="content">
+		<div class="ui-g">
+
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="uploadForm">
+						<h1>Grant List Generation</h1>
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:panelGrid layout="grid" columns="1" styleClass="ui-panelgrid-blank">
+							<p:outputLabel value="Years:" styleClass="FontBold" />
+							<p:selectManyMenu id="sarsDateF" value="#{grantlistgenerationUI.schemeYear}" style="width: 110px !important;" showCheckbox="true">
+								<f:selectItems value="#{grantlistgenerationUI.sarsYears}" var="sars" itemLabel="#{sars.year}" itemValue="#{sars.year}" />
+							</p:selectManyMenu>
+
+							<p:commandButton value="Submit" action="#{grantlistgenerationUI.populateBean}" update="@form" />
+
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+		<div class="ui-g-12">
+			<div class="card card-w-title">
+				<h:form id="detailsForm">
+
+					<p:panelGrid layout="grid" columns="1" styleClass="ui-panelgrid-blank">
+						<p:outputLabel value="#{lang['grant.list.generation.table']}" styleClass="FontBold" />
+
+					</p:panelGrid>
+					<p:spacer height="5px" />
+
+					<div align="right" style="margin-bottom: 10px">
+						<h:commandLink id="eExcel">
+							<i class="fa fa-file-excel-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+							<p:dataExporter type="xls" target="levyIncome" fileName="Grant List Generation" />
+						</h:commandLink>
+						<h:commandLink title="#{lang['export.search.results.as.a.csv']}">
+								<i class="fa fa-file-text-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+								<p:dataExporter type="csv" target="levyIncome" fileName="Grant List Generation" pageOnly="false" />
+							</h:commandLink>
+					</div>
+
+					<p:dataTable var="car" id="levyIncome" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+						<p:column headerText="L-Number">
+							<h:outputText value="" />
+						</p:column>
+
+						<p:column headerText="Employer Name">
+							<h:outputText value="" />
+						</p:column>
+
+						<p:column headerText="Grant Type (including scheme year)">
+							<h:outputText value="" />
+						</p:column>
+
+						<p:column headerText="Contribution month from">
+							<h:outputText value="" />
+						</p:column>
+
+						<p:column headerText="Contribution month to">
+							<h:outputText value="" />
+						</p:column>
+
+						<p:column headerText="Grant Amount">
+							<h:outputText value="" />
+						</p:column>
+
+						<p:column headerText="Invoice / Return indicator">
+							<h:outputText value="" />
+						</p:column>
+
+						<p:column headerText="Calculated Grant Percentage">
+							<h:outputText value="" />
+						</p:column>
+
+						<p:column headerText="Levy status">
+							<h:outputText value="" />
+						</p:column>
+
+						<p:column headerText="Deselection">
+							<h:outputText value="" />
+						</p:column>
+					</p:dataTable>
+				</h:form>
+			</div>
+		</div>
+
+		<h:form id="chartForm">
+
+
+
+
+
+			<script type="text/javascript">
+//<![CDATA[
+ 
+	function test() {
+		    alert('ready');
+	}
+	
+	function doChart () {
+
+		 Highcharts.setOptions({
+			    colors: ['#4D2600', '#999372', '#C5913E', '#C57901', '#F0C070', '#8B592E', '#1E4B88', '#767776', '#87C6E1']
+			});
+		
+		Highcharts.chart('container', {
+		    chart: {
+		        type: 'column'
+		    },
+		    title: {
+		        text: '#{sarsReportsUI.sarsEmployerDetail.registeredNameOfEntity}'
+		    },
+		    xAxis: {
+		        categories: ['Summary Totals']
+		    },
+		    credits: {
+		        enabled: false
+		    },
+		    series: [{
+		        name: 'Mandatory',
+		        data: [#{sarsReportsUI.totals.mandatoryLevy}]
+		    },
+		    {
+		        name: 'Discretionary',
+		        data: [#{sarsReportsUI.totals.discretionaryLevy}]
+		    },
+		    {
+		        name: 'Admin',
+		        data: [ #{sarsReportsUI.totals.adminLevy}]
+		    },
+		    {
+		        name: 'Interest',
+		        data: [#{sarsReportsUI.totals.interest}]
+		    },
+		    {
+		        name: 'Penalties',
+		        data: [  #{sarsReportsUI.totals.penalty}]
+		    }
+		    ]
+		});
+	 
+	 }; /* end of $(function ()  */		 
+
+//]]>		  
+</script>
+
+
+
+		</h:form>
+	</ui:define>
+
+</ui:composition>

@@ -1,0 +1,113 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                template="/WEB-INF/template.xhtml"
+                xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+    <ui:define name="content">
+    	
+	   <p:importEnum type="haj.com.entity.enums.YesNoEnum"></p:importEnum>
+        <div class="ui-g">
+            <div class="ui-g-12">
+                <div class="card">
+                <h:form id="mainForm">
+                    <h1>Learner Termination(s)</h1>
+						<ui:include src="/pages/includes/filterGuide.xhtml" />	
+						<ui:include src="/pages/includes/download_lazy.xhtml">
+								<ui:param name="file_name" value="Learner Termination Application" />
+								<ui:param name="target" value="LearnerTerminationList" />
+						 </ui:include>
+	                     <p:dataTable var="var" id="LearnerTerminationList" value="#{companylearnersterminationUI.applicationsDataModel}" rowKey="#{var.id}" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,20,30,40,50,60,70,80,90,100" reflow="true" lazy="true">
+	                     
+	                    	<p:column style="width:16px" exportable="false">
+					            <p:rowToggler />
+					        </p:column>
+						    
+						    <p:column headerText="Name" filterBy="#{var.companyLearners.user.firstName}" sortBy="#{var.companyLearners.user.firstName}">
+						        <h:outputText value="#{var.companyLearners.user.firstName}" />
+						    </p:column>
+						 
+						    <p:column headerText="Surname" filterBy="#{var.companyLearners.user.lastName}" sortBy="#{var.companyLearners.user.lastName}">
+						        <h:outputText value="#{var.companyLearners.user.lastName}" />
+						    </p:column>
+						      <p:column headerText="ID Number" filterBy="#{var.companyLearners.user.rsaIDNumber}" sortBy="#{var.companyLearners.user.rsaIDNumber}">
+						        <h:outputText  value="#{var.companyLearners.user.rsaIDNumber}" />
+						         <h:outputText rendered="#{var.companyLearners.user.rsaIDNumber.length() lt 1}"  value="N/A" />
+						    </p:column>
+						    
+						     <p:column headerText="Passport Number" filterBy="#{var.companyLearners.user.rsaIDNumber}" sortBy="#{var.companyLearners.user.rsaIDNumber}">
+						        <h:outputText  value="#{var.companyLearners.user.passportNumber}" />
+						        <h:outputText rendered="#{var.companyLearners.user.passportNumber.length() lt 1}"  value="N/A" />
+						    </p:column>
+					         
+					         <p:column headerText="#{lang['status']}">
+								 <h:outputText value="#{var.status.friendlyName}" />
+					         </p:column>
+					    	<p:rowExpansion>
+					    		
+								
+								<div class="ui-g-12">
+									<div class="card card-w-title">
+										<h1>Learner Registration Documents</h1>
+										<ui:include src="/pages/tp/includes/companylearnerdocs.xhtml">
+											<ui:param name="companyLearners" value="#{var.companyLearners}" />
+										</ui:include>
+									</div>
+								</div>
+					    		<br/>
+					    		<div class="ui-g-12">
+									<div class="card card-w-title">
+					    			    <h1>Workflow Documents</h1>
+						    			<ui:include src="/pages/includes/documents_info_display.xhtml">
+												<ui:param name="docs" value="#{var.docs}" />
+									    </ui:include>
+								    </div>
+								  </div>
+						    	<br/>
+						    	<div class="ui-g-12">
+									<div class="card card-w-title">
+					    			    <h1>Company Details</h1>
+					    			    <ui:include src="/pages/includes/company_info_display.xhtml">
+											<ui:param name="company" value="#{var.companyLearners.company}" />
+										</ui:include>
+					    			 </div>
+					    		</div>
+					    	</p:rowExpansion>
+						</p:dataTable>
+						<br/>
+						
+                  </h:form>
+                </div>
+            </div>
+        </div>
+        
+       <div class="ui-g">
+           <div class="ui-g-12">
+               <div class="card">
+	               	<h:form>
+	             		<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+							<p:commandButton onstart="uploadStart()" value="#{lang['complete.task']}" icon="ui-icon-save" update="@form" action="#{companylearnersterminationUI.completeSystemTermination}" styleClass="flat green-btn Fs18" style="height: 50px;" rendered="#{sessionUI.task ne null and sessionUI.task.processRole.rolePermission eq UserPermissionEnum.View}">
+							</p:commandButton>
+							
+							
+							<p:commandButton  value="#{lang['final.approval']}" icon="ui-icon-save" update="@form" action="#{companylearnersterminationUI.approveSystemTermination}" styleClass="flat green-btn Fs18" style="height: 50px;" rendered="#{sessionUI.task ne null and sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval}">
+							</p:commandButton>
+							
+							<p:commandButton value="#{lang['reject.task']}" icon="ui-icon-save" update="@form" oncomplete="PF('rejectReasonsDlg').show()" styleClass="flat red-btn Fs18" style="height: 50px;" process="@this" rendered="#{sessionUI.task ne null and (sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Edit or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval) and false}">
+							</p:commandButton>
+							
+						</p:panelGrid>
+					</h:form>
+               </div>
+           </div>
+        </div>
+        
+        
+        <ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+		
+    </ui:define>
+
+</ui:composition>

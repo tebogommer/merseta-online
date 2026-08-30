@@ -1,0 +1,233 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<ui:define name="content">
+		<h:form id="companyInsForm">
+			<p:growl showDetail="false" sticky="false" escape="false">
+				<p:autoUpdate />
+			</p:growl>
+			<div class="ui-g">
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+						<h1>SDP Change Request</h1>
+						<ui:include src="/pages/includes/tabinfo.xhtml">
+							<ui:param name="showInfoCircle" value="true" />
+							<ui:param name="cssClass" value="secondaryText Fs15" />
+							<ui:param name="helpTxt" value="#{lang['The.system.will.auto-fill.based.selections']}" />
+						</ui:include>
+						<c:if test="#{!primarySdpDelinkUI.formUser.doneSearch}">
+							<ui:include src="/pages/includes/searchUserPassportOrID.xhtml" />
+						</c:if>
+						<h:panelGroup rendered="#{primarySdpDelinkUI.formUser.doneSearch}">
+							<p:fieldset legend="#{!primarySdpDelinkUI.formUser.doneSearch ? 'Enter RSA ID number or Passport number' : lang['your.details'] }">
+								<p:panelGrid style="width:100%" columns="3" styleClass="ui-panelgrid-blank form-group" layout="grid" rendered="#{!primarySdpDelinkUI.userSectionDone}">
+									<p:commandButton icon="fa fa-times" process="@this" value="Clear Search" update="@form" action="#{primarySdpDelinkUI.clearUserSearch}" />
+								</p:panelGrid>
+								<p:panelGrid columns="2" style="width:100%" id="sdfInsGrid1" layout="grid" styleClass="ui-panelgrid-blank form-group">
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText id="userNameq" value="#{primarySdpDelinkUI.formUser.firstName}" maxlength="#{primarySdpDelinkUI.MAX_FIRST_NAME_SIZE}" style="width:95%" required="true" disabled="#{primarySdpDelinkUI.formUser.existingUser or primarySdpDelinkUI.formUser.regFieldsDone}"
+											requiredMessage="#{lang['enter.your.name']}" />
+										<p:outputLabel value="#{lang['first.name']}:" for="userNameq" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText id="userSurnameq" value="#{primarySdpDelinkUI.formUser.lastName}" maxlength="#{primarySdpDelinkUI.MAX_LAST_NAME_SIZE}" style="width:95%" required="true" disabled="#{primarySdpDelinkUI.formUser.existingUser or primarySdpDelinkUI.formUser.regFieldsDone}"
+											requiredMessage="#{lang['enter.your.last.name']}" />
+										<p:outputLabel value="#{lang['surname']}:" for="userSurnameq" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText id="userEmailq" value="#{primarySdpDelinkUI.formUser.email}" maxlength="#{primarySdpDelinkUI.MAX_EMAIL_SIZE}" style="width:95%" required="true" disabled="#{primarySdpDelinkUI.formUser.existingUser or primarySdpDelinkUI.formUser.regFieldsDone}"
+											requiredMessage="#{lang['enter.your.email.address']}" />
+										<p:outputLabel value="#{lang['emails']}:" for="userEmailq" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputMask id="telNumberq" value="#{primarySdpDelinkUI.formUser.telNumber}" mask="#{primarySdpDelinkUI.TELPHONE_FORMAT}" style="width:95%" required="true" requiredMessage="#{lang['enter.tell.number']}"
+											disabled="#{primarySdpDelinkUI.formUser.existingUser or primarySdpDelinkUI.formUser.regFieldsDone}" />
+										<p:outputLabel value="#{lang['tel.number']}:" for="telNumberq" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputMask id="cellPhoneq" value="#{primarySdpDelinkUI.formUser.cellNumber}" mask="#{primarySdpDelinkUI.CELLPHONE_FORMAT}" style="width:95%" required="true" requiredMessage="#{lang['enter.cell.number']}"
+											disabled="#{primarySdpDelinkUI.formUser.existingUser or primarySdpDelinkUI.formUser.regFieldsDone}" />
+										<p:outputLabel value="#{lang['cell.number']}:" for="cellPhoneq" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputMask id="faxNumberq" mask="#{primarySdpDelinkUI.FAX_NUMBER_FORMAT}" validatorMessage="#{lang['user.faxnumber.length']}" value="#{primarySdpDelinkUI.formUser.faxNumber}" style="width:95%"
+											disabled="#{primarySdpDelinkUI.formUser.existingUser or primarySdpDelinkUI.formUser.regFieldsDone}">
+										</p:inputMask>
+										<p:outputLabel value="#{lang['fax.number']} : " for="faxNumberq" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield" rendered="#{primarySdpDelinkUI.formUser.rsaIDNumber.length() gt 0}">
+										<p:inputText id="userIdNumberq" value="#{primarySdpDelinkUI.formUser.rsaIDNumber}" style="width:95%" disabled="true" />
+										<p:outputLabel value="#{lang['rsa.id.number']}:" for="userIdNumberq" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield" rendered="#{primarySdpDelinkUI.formUser.passportNumber.length() gt 0}">
+										<p:inputText id="userPassportq" value="#{primarySdpDelinkUI.formUser.passportNumber}" style="width:95%" disabled="true" />
+										<p:outputLabel value="#{lang['passport.number']}:" for="userPassportq" />
+									</h:panelGroup>
+								</p:panelGrid>
+								<p:fieldset rendered="#{primarySdpDelinkUI.userSetmisValidiations ne null and primarySdpDelinkUI.userSetmisValidiations ne ''}" styleClass="error Fs12">
+									<h4>Validation Error(s):</h4>
+									<p:outputLabel value="#{primarySdpDelinkUI.userSetmisValidiations}" escape="false"></p:outputLabel>
+									<div class="EmptyBox5" />
+								</p:fieldset>
+								<p:panelGrid columns="1" style="width:100%" id="actionGrida" layout="grid" styleClass="ui-panelgrid-blank form-group">
+									<p:commandButton id="continueBtn" process="@form" value="#{lang['continue']}" update="@form" icon="ui-icon-fast-forward" iconPos="right" styleClass="flat" action="#{primarySdpDelinkUI.doneUserBit}" rendered="#{!primarySdpDelinkUI.userSectionDone}" />
+								</p:panelGrid>
+								<p:panelGrid style="width:100%" columns="3" styleClass="ui-panelgrid-blank form-group" layout="grid" rendered="#{primarySdpDelinkUI.userSectionDone and primarySdpDelinkUI.trainingProviderApplication eq null}">
+									<p:commandButton icon="fa fa-times" process="@this" value="Re-open User Search" update="@form" action="#{primarySdpDelinkUI.reopenFormUserSection}" />
+								</p:panelGrid>
+							</p:fieldset>
+						</h:panelGroup>
+
+						<c:if test="#{primarySdpDelinkUI.userSectionDone}">
+
+							<p:fieldset legend="Provider Application Search" id="companyHeading">
+
+								<p:panelGrid id="searchCompanyPnl" style="width:100%" columns="3" styleClass="ui-panelgrid-blank form-group" rendered="#{primarySdpDelinkUI.trainingProviderApplication eq null}" layout="grid">
+									<h:panelGroup id="sdlNumInputNonLevy" styleClass="md-inputfield">
+										<p:inputText id="certNumberInput" value="#{primarySdpDelinkUI.accredNumberEntered}" style="width:95%" requiredMessage="#{lang['enter.sdl.number']}" required="true" />
+										<p:outputLabel value="Accreditation / Certificate Number" for="certNumberInput" />
+									</h:panelGroup>
+									<p:commandButton id="idSearch2" icon="fa fa-search" value="Submit" process="searchCompanyPnl" actionListener="#{primarySdpDelinkUI.searchTrainingProviderApplication}" update="@form" />
+								</p:panelGrid>
+								<p:panelGrid style="width:100%" columns="1" styleClass="ui-panelgrid-blank form-group" rendered="#{primarySdpDelinkUI.trainingProviderApplication ne null}" layout="grid">
+									<p:commandButton icon="fa fa-times" value="Clear Provider Application Search" update="@form" process="@this" action="#{primarySdpDelinkUI.failedProviderSearch}" />
+								</p:panelGrid>
+								
+								<p:fieldset legend="Additional Information" rendered="#{primarySdpDelinkUI.trainingProviderApplication ne null}" >
+									<p:panelGrid style="width:100%" columns="3" styleClass="ui-panelgrid-blank form-group"  layout="grid">
+	
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText disabled="true" value="#{primarySdpDelinkUI.company.companyName}" style="width:95%">
+											</p:inputText>
+											<p:outputLabel value="Company Name" />
+										</h:panelGroup>
+	
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText disabled="true" value="#{primarySdpDelinkUI.company.levyNumber}" style="width:95%">
+											</p:inputText>
+											<p:outputLabel value="Entity ID" />
+										</h:panelGroup>
+	
+										<h:panelGroup styleClass="md-inputfield" rendered="#{primarySdpDelinkUI.trainingSite ne null}">
+											<p:inputText disabled="true" value="#{primarySdpDelinkUI.trainingSite.siteName}" style="width:95%">
+											</p:inputText>
+											<p:outputLabel value="Site Name" />
+										</h:panelGroup>
+	
+									</p:panelGrid>
+								</p:fieldset>
+								<div class="EmptyBox10"/>
+								<p:fieldset legend="Supporting Documents" rendered="#{primarySdpDelinkUI.trainingProviderApplication ne null}" >
+									<p:panelGrid style="width:100%" columns="1" styleClass="ui-panelgrid-blank form-group" rendered="#{primarySdpDelinkUI.trainingProviderApplication ne null}" layout="grid">
+	
+										<p:commandButton icon="fa fa-upload" value="Upload Supporting Documents" update=":uploadActionDocForm" action="#{primarySdpDelinkUI.prepActionUpload}" />
+	
+										<c:if test="#{primarySdpDelinkUI.docList ne null and primarySdpDelinkUI.docList.size() ne 0}">
+	
+											<div class="EmptyBox10" />
+	
+											<p:dataTable value="#{primarySdpDelinkUI.docList}" var="rv1" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+												<f:facet name="header"> Supporting Documents</f:facet>
+												<p:column headerText="#{lang['type']}" width="20%">Supporting Document</p:column>
+												<p:column headerText="#{lang['uploaded.by']}">
+													<p:outputLabel value="#{rv1.users.firstName} #{rv1.users.lastName}" rendered="#{rv1.users ne null}" />
+													<p:outputLabel value="Awaiting Submission" rendered="#{rv1.users eq null}" />
+												</p:column>
+												<p:column headerText="#{lang['uploaded']}" width="15%">
+													<h:outputText value="#{rv1.createDate}" rendered="#{rv1.createDate ne null}">
+														<f:convertDateTime pattern="dd MMM yyyy" />
+													</h:outputText>
+													<h:outputText value="Awaiting Submission" rendered="#{rv1.createDate eq null}">
+													</h:outputText>
+												</p:column>
+	
+												<p:column headerText="Original File Name" width="150">
+													<h:outputText value="#{rv1.originalFname}">
+													</h:outputText>
+												</p:column>
+	
+												<p:column headerText="Note" width="150">
+													<h:outputText value="#{rv1.note}">
+													</h:outputText>
+												</p:column>
+	
+												<p:column headerText="#{lang['document.is.required']}" width="150" rendered="false">
+													<p:selectBooleanCheckbox value="#{rv1.configDoc.requiredDocument}" disabled="true" style="opacity: 1 !important" rendered="#{not rv1.required}"></p:selectBooleanCheckbox>
+													<p:selectBooleanCheckbox value="#{rv1.required}" disabled="true" style="opacity: 1 !important" rendered="#{rv1.required}"></p:selectBooleanCheckbox>
+												</p:column>
+	
+												<p:column headerText="#{lang['original.required']}" width="150" rendered="false">
+													<p:selectBooleanCheckbox value="#{rv1.configDoc.originalRequired}" disabled="true" style="opacity: 1 !important" rendered="#{not rv1.configDoc.originalRequired}"></p:selectBooleanCheckbox>
+													<p:selectBooleanCheckbox value="#{rv1.configDoc.originalRequired}" disabled="true" style="opacity: 1 !important" rendered="#{rv1.configDoc.originalRequired}"></p:selectBooleanCheckbox>
+												</p:column>
+	
+												<p:column headerText="#{lang['version']}" width="15%" rendered="false">
+													<h:outputText value="#{rv1.versionNo}">
+													</h:outputText>
+												</p:column>
+	
+												<p:column width="5%" headerText="Actions">
+													<p:commandButton process="@this" ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}">
+														<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+														<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+													</p:commandButton>
+													<p:commandButton process="@this" ajax="false" icon="fa fa-download " action="#{uploadDocUI.download(rv1)}" id="dlbUserDocsMemory" rendered="#{rv1.id eq null}">
+														<p:tooltip for="dlbUserDocsMemory" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+													</p:commandButton>
+												</p:column>
+											</p:dataTable>
+										</c:if>
+									</p:panelGrid>
+								</p:fieldset>
+
+								<p:panelGrid style="width:100%" columns="1" styleClass="ui-panelgrid-blank form-group" rendered="#{primarySdpDelinkUI.trainingProviderApplication ne null}" layout="grid">
+									<p:commandButton value="Submit" icon="fa fa-database" update="@form" action="#{primarySdpDelinkUI.submitSdpRemoval}">
+										<p:confirm header="#{lang['confirmation']}" message="Are you sure? Please ensure all information is correct before proceeding." icon="ui-icon-warning" />
+									</p:commandButton>
+								</p:panelGrid>
+							</p:fieldset>
+						</c:if>
+					</div>
+				</div>
+			</div>
+		</h:form>
+
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="uploadSupportingDocDlg" resizable="false" hideEffect="clip" showEffect="clip" id="uploadSupportingDocDialog" width="80%" responsive="true" modal="true">
+			<h:form id="uploadActionDocForm">
+				<h:panelGroup id="uploadGroupUser">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">Upload Supporting Documents</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{primarySdpDelinkUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{primarySdpDelinkUI.storeNewActionFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}"
+										update="@form :companyInsForm" multiple="false" fileLimit="1" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+			<h:form>
+				<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+				<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+			</h:form>
+		</p:confirmDialog>
+
+	</ui:define>
+
+</ui:composition>

@@ -1,0 +1,92 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>E-Mail Templates</h1>
+					<h:form id="mailtemplatesInsForm">
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:panelGrid columns="1" style="width:100%" id="mailtemplatesInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+
+
+							<p:selectOneMenu id="mailCode" value="#{mailtemplatesUI.mailtemplates.mailCode}" style="width:95%" required="true" requiredMessage="Select Code">
+								<f:selectItem itemLabel="---Select Code--" noSelectionOption="true" />
+								<f:selectItems value="#{enumUI.mailEnumDD}" />
+							</p:selectOneMenu>
+
+							<p:inputTextarea maxlength="500" value="#{mailtemplatesUI.mailtemplates.subjectText}" required="true" requiredMessage="Enter subject" placeholder="Subject" style="width:95%" />
+
+							<h:panelGroup>
+     							      Possible tags: 
+     							      <p:repeat var="rv" value="#{enumUI.mailTags}">
+									<span class="FontLight">#{rv}</span>
+									<p:spacer width="15" />
+								</p:repeat>
+							</h:panelGroup>
+
+							<p:textEditor id="templateText" value="#{mailtemplatesUI.mailtemplates.templateText}" placeholder="Text" required="true" requiredMessage="Enter text" height="300" />
+
+
+
+
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:mailtemplatesList :mailtemplatesInsForm:mailtemplatesInsGrid" action="#{mailtemplatesUI.mailtemplatesInsert}" />
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="mailtemplatesInsGrid" process="@this" action="#{mailtemplatesUI.prepareNew}">
+									<p:resetInput target="mailtemplatesInsGrid" />
+								</p:commandButton>
+							</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{mailtemplatesUI.dataModel}" filteredValue="#{mailtemplatesUI.mailTemplatesfilteredList}" id="mailtemplatesList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+							<p:column headerText="#{lang['code']}" width="10%">
+								<h:outputText value="#{rowVar.mailCode.friendlyName}" />
+							</p:column>
+							<p:column headerText="Subject and Body">
+								<h3>
+									<h:outputText value="#{rowVar.subjectText}" />
+								</h3>
+								<h:outputText value="#{rowVar.templateText}" escape="false" />
+							</p:column>
+
+
+
+							<p:column width="80">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":mailtemplatesInsForm:mailtemplatesInsGrid">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{mailtemplatesUI.mailtemplates}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:mailtemplatesList" action="#{mailtemplatesUI.mailtemplatesDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{mailtemplatesUI.mailtemplates}" />
+								</p:commandButton>
+							</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+	<!-- 
+templateText = templateText
+mailCode = mailCode
+
+-->
+</ui:composition>

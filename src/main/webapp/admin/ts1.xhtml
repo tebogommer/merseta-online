@@ -1,0 +1,119 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>#{lang['wsp.approval.list']}</h1>
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{ts1UI.dataModel}" filteredValue="#{ts1UI.TS1filteredList}" id="ts1List" rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom"
+							paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,25,50,100" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['scheme.year']}" sortBy="#{rowVar.schemeYear}" filterBy="#{rowVar.schemeYear}" width="10%">
+								<h:outputText value="#{rowVar.schemeYear}" />
+							</p:column>
+							<p:column  headerText="#{lang['entity.id']}"  sortBy="#{rowVar.levyNumber}" filterBy="#{rowVar.levyNumber}" filterStyle="width: 98%" width="30%">
+								<h:outputText value="#{rowVar.levyNumber}" />
+							</p:column>
+							<p:column headerText="#{lang['status']}">
+								<h:outputText value="#{rowVar.statusDescription}" />
+							</p:column>
+
+
+							<p:column width="30">
+								<p:commandButton icon="ui-icon-zoom-in" title="#{lang['view']}" action="#{ts1UI.ts2Detail}" update="dtlForm">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{ts1UI.ts1}" />
+								</p:commandButton>
+
+							</p:column>
+
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="dtlForm">
+						<h:panelGroup rendered="#{ts1UI.ts1.id ne null}">
+							<h1>#{ts1UI.ts1.schemeYear} - #{ts1UI.ts1.levyNumber} (#{ts1UI.ts1.statusDescription})</h1>
+						</h:panelGroup>
+						<p:dataTable var="rowVar" value="#{ts1UI.ts2List}" filteredValue="#{ts1UI.ts2filteredList}" id="ts2List" rowKey="#{rowVar.id}" sortBy="#{rowVar.schemeYear}" rendered="#{ts1UI.ts1.id ne null}">
+
+							<p:column headerText="#{lang['vendor']}" width="15%">
+								<h:outputText value="#{rowVar.vendorName}" />
+							</p:column>
+							<p:column headerText="#{lang['scheme.year']}" width="3%">
+								<h:outputText value="#{rowVar.schemeYear}" />
+							</p:column>
+							<p:column headerText="#{lang['document.date']}" width="4%">
+								<h:outputText value="#{rowVar.documentDateD}">
+									<f:convertDateTime pattern="dd MMM yyyy" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['posting.date']}" width="4%">
+								<h:outputText value="#{rowVar.postedDateD}">
+									<f:convertDateTime pattern="dd MMM yyyy" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['doc.type']}" width="4%">
+								<h:outputText value="#{rowVar.documentType}" />
+							</p:column>
+							<p:column headerText="#{lang['doc.number']}" width="4%">
+								<h:outputText value="#{rowVar.documentNumber}" />
+							</p:column>
+							<p:column headerText="#{lang['tran.desciption']}" width="5%">
+								<h:outputText value="#{rowVar.transactionDescription}" />
+							</p:column>
+							<p:column headerText="#{lang['account.code']}" width="4%">
+								<h:outputText value="#{rowVar.accountCode}" />
+							</p:column>
+							<p:column headerText="#{lang['status']}" width="3%">
+								<h:outputText value="#{rowVar.documentStatus2}" />
+							</p:column>
+							<p:column headerText="#{lang['chamber']}" width="3%">
+								<h:outputText value="#{rowVar.chamber}" />
+							</p:column>
+							<p:column headerText="#{lang['doc.amount']}" width="10%">
+								<div align="right">
+									<h:outputText value="#{rowVar.documentAmountD}">
+										<f:convertNumber pattern="###,###,###,##0.00" />
+									</h:outputText>
+								</div>
+							</p:column>
+							<p:column headerText="#{lang['current.tax.amount']}" width="10%">
+								<div align="right">
+									<h:outputText value="#{rowVar.currentTrxAmountD}">
+										<f:convertNumber pattern="###,###,###,##0.00" />
+									</h:outputText>
+								</div>
+							</p:column>
+							<p:summaryRow>
+								<p:column colspan="10" style="text-align:right">
+									<h:outputText value="#{lang['total']}:" styleClass="Fs18 FontBold" />
+								</p:column>
+								<p:column>
+									<div align="right">
+										<h:outputText value="#{ts1UI.total}" styleClass="Fs18 FontBold">
+											<f:convertNumber pattern="###,###,###,##0.00" />
+										</h:outputText>
+									</div>
+								</p:column>
+								<p:column>
+									<div align="right">
+										<h:outputText value="#{ts1UI.totalctx}" styleClass="Fs18 FontBold">
+											<f:convertNumber pattern="###,###,###,##0.00" />
+										</h:outputText>
+									</div>
+								</p:column>
+							</p:summaryRow>
+
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+
+</ui:composition>

@@ -1,0 +1,306 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui"
+	template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+
+		<p:growl sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<ui:include src="/pages/includes/taskdiagram.xhtml" />
+			</div>
+		</div>
+
+		<p:importEnum type="haj.com.entity.enums.IdPassportEnum" var="idPassportEnum" />
+		<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+		<p:importEnum type="haj.com.entity.enums.LearnerTransferTypeEnum" />
+		<p:importEnum type="haj.com.entity.enums.YesNoEnum" />
+		<p:importEnum type="haj.com.entity.enums.AprlProgressEnum" />
+		<p:importEnum type="haj.com.entity.enums.EmploymentStatusEnum" />
+		<p:importEnum type="haj.com.entity.enums.EmployedUnEmployedEnum" />
+		<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+		<p:importEnum type="haj.com.entity.enums.QualificationTypeSelectionEnum" />
+
+		<h:form id="mainForm">
+			<div class="ui-g">
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+
+						<h1>Workplace Monitoring Site Visit: Non-Compliance Approval For #{workplaceMonitoringSiteVisitNonComplianceWorkflowUI.workplaceMonitoringSiteVisit.company.companyName}</h1>
+						<p:tabView id="wpmTabView" dynamic="true" cache="true">
+							<p:tab title="Current Organisation Info" rendered="#{workplaceMonitoringInformationViewUI.workplaceMonitoringSiteVisit.company ne null and workplaceMonitoringInformationViewUI.workplaceMonitoringSiteVisit.company.id ne null}">
+								<ui:include src="/pages/includes/companyInformationDisplay.xhtml">
+									<ui:param name="company" value="#{workplaceMonitoringSiteVisitNonComplianceWorkflowUI.workplaceMonitoringInformationViewUI.workplaceMonitoringSiteVisit.company}" />
+									<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</ui:include>
+							</p:tab>
+							<p:tab title="Learner Induction">
+								<ui:include src="/pages/includes/workplaceMonitoringInc/learnerInductionIncludeDisplay.xhtml">
+									<ui:param name="LearnerInductionList" value="#{workplaceMonitoringInformationViewUI.workplaceMonitoringLearnerInductionDataModel}" />
+								</ui:include>
+							</p:tab>
+							<p:tab title="Learner Monitoring Survey">
+								<ui:include src="/pages/includes/workplaceMonitoringInc/learnerSurveyIncludeDisplay.xhtml">
+									<ui:param name="LearnerMonitoringSurveyList" value="#{workplaceMonitoringInformationViewUI.workplaceMonitoringLearnerSurveyDataModel}" />
+									<ui:param name="updateLocation" value=":mainForm:wpmTabView:" />
+								</ui:include>
+							</p:tab>
+							<p:tab title="Discretionary Grant Compliance Survey">
+								<ui:include src="/pages/includes/workplaceMonitoringInc/discGrantComplianceSurveyIncludeDisplay.xhtml">
+									<ui:param name="GrantComplianceSurveyList" value="#{workplaceMonitoringInformationViewUI.workplaceMonitoringDiscretionaryGrantComplianceSurveyDataModel}" />
+								</ui:include>
+							</p:tab>
+							<p:tab title="Action Plan To Improve Company Category">
+								<ui:include src="/pages/includes/workplaceMonitoringInc/actionPlanIncludeDisplay.xhtml">
+									<ui:param name="ActionPlanList" value="#{workplaceMonitoringInformationViewUI.workplaceMonitoringActionPlanDataModel}" />
+								</ui:include>
+							</p:tab>
+							<p:tab title="Sign Off Assigned" rendered="#{workplaceMonitoringInformationViewUI.signoffList ne null and workplaceMonitoringInformationViewUI.signoffList.size() gt 0}">
+								<ui:include src="/pages/includes/signoffInclude.xhtml">
+									<ui:param name="SignOffList" value="#{workplaceMonitoringInformationViewUI.signoffList}" />
+									<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+									<ui:param name="acknowledge" value="#{lang['i.acknowledge.read.understand.terms.and.conditions']}" />
+								</ui:include>
+							</p:tab>
+							<p:tab title="Documents Assigned" rendered="#{workplaceMonitoringInformationViewUI.workplaceMonitoringSiteVisit.docs ne null and workplaceMonitoringInformationViewUI.workplaceMonitoringSiteVisit.docs.size() gt 0}">
+								<ui:include src="/pages/includes/documents_info_display.xhtml">
+									<ui:param name="docs" value="#{workplaceMonitoringInformationViewUI.workplaceMonitoringSiteVisit.docs}" />
+								</ui:include>
+							</p:tab>
+						</p:tabView>
+						<div class="EmptyBox10" />
+						<h2>Action Non-Compliance For Company: #{workplaceMonitoringSiteVisitNonComplianceWorkflowUI.workplaceMonitoringSiteVisit.company.companyName} (#{workplaceMonitoringSiteVisitNonComplianceWorkflowUI.workplaceMonitoringSiteVisit.company.levyNumber}). Reference ID:
+							#{workplaceMonitoringSiteVisitNonComplianceWorkflowUI.workplaceMonitoringSiteVisit.id}</h2>
+						<ui:include src="/pages/includes/download_lazy.xhtml">
+							<ui:param name="file_name" value="WPM_Mitigation_Plan_Extracted" />
+							<ui:param name="target" value="mitigationPlanDT" />
+						</ui:include>
+						<div class="EmptyBox10" />
+						<p:dataTable var="rowVarMpAc" value="#{workplaceMonitoringSiteVisitNonComplianceWorkflowUI.workplaceMonitoringMitigationPlanDataModel}" id="mitigationPlanDT" rowKey="#{rowVarMpAc.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+							paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+							<p:column headerText="NSDMS Generated" exportable="false" width="5%">
+								<center>
+									<p:selectBooleanCheckbox value="#{rowVarMpAc.systemGenerated}" disabled="true" />
+								</center>
+							</p:column>
+							<p:column headerText="NSDMS Generated" style="display:none">
+								<p:outputLabel value="System generated" rendered="#{rowVarMpAc.systemGenerated}" />
+								<p:outputLabel value="Manually generated" rendered="#{!rowVarMpAc.systemGenerated}" />
+							</p:column>
+							<p:column headerText="Create User" style="display:none">
+								<p:outputLabel value="N/A" rendered="#{rowVarMpAc.systemGenerated}" />
+								<p:outputLabel value="#{rowVarMpAc.createUser.firstName} #{rowVarMpAc.createUser.lastName} (#{rowVarMpAc.createUser.email})" rendered="#{!rowVarMpAc.systemGenerated}" />
+							</p:column>
+							<p:column headerText="Section" width="7%">
+								<p:outputLabel value="Learner Monitoring Survey" rendered="#{rowVarMpAc.learnerSurveyAnswerLink ne null}" />
+								<p:outputLabel value="Discretionary Grant Compliance Survey" rendered="#{rowVarMpAc.discretionaryGrantComplianceLinkSurvey ne null}" />
+								<p:outputLabel value="N/A" rendered="#{rowVarMpAc.discretionaryGrantComplianceLinkSurvey eq null and rowVarMpAc.learnerSurveyAnswerLink eq null}" />
+							</p:column>
+							<p:column headerText="Date Submitted" width="5%">
+								<p:outputLabel value="#{rowVarMpAc.createDate}">
+									<f:convertDateTime pattern="dd MMMM yyyy" />
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="Non-compliance Issue" width="4%">
+								<p:outputLabel value="#{rowVarMpAc.nonComplianceIssue.friendlyName}" />
+							</p:column>
+							<p:column headerText="Action Plan" width="5%">
+								<p:outputLabel value="#{rowVarMpAc.actionPlan}" rendered="#{rowVarMpAc.actionPlan ne null and rowVarMpAc.actionPlan ne ''}" />
+								<p:outputLabel value="Not Provided" rendered="#{rowVarMpAc.actionPlan eq null or rowVarMpAc.actionPlan eq ''}" />
+							</p:column>
+							<p:column headerText="Due Date" width="5%">
+								<p:outputLabel value="#{rowVarMpAc.dueDate}" rendered="#{rowVarMpAc.dueDate ne null}">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</p:outputLabel>
+								<p:outputLabel value="Not Provided" rendered="#{rowVarMpAc.dueDate eq null}" />
+							</p:column>
+							<p:column headerText="Responsible" width="5%">
+								<p:outputLabel value="#{rowVarMpAc.responsible}" rendered="#{rowVarMpAc.responsible ne null and rowVarMpAc.responsible ne ''}" />
+								<p:outputLabel value="Not Provided" rendered="#{rowVarMpAc.responsible eq null or rowVarMpAc.responsible eq ''}" />
+							</p:column>
+							<p:column headerText="Status" width="5%">
+								<p:outputLabel value="#{rowVarMpAc.openClosedEnum}" />
+							</p:column>
+							<p:column width="3%" headerText="Actions" exportable="false" styleClass="action-column">
+								<p:commandButton icon="fa fa-database" title="Update Mitigation Plan" update="mitigationPlanForm" action="#{workplaceMonitoringSiteVisitNonComplianceWorkflowUI.prepUpdateMitigationPlan}" rendered="#{rowVarMpAc.canAction}">
+									<f:setPropertyActionListener value="#{rowVarMpAc}" target="#{workplaceMonitoringSiteVisitNonComplianceWorkflowUI.workplaceMonitoringMitigationPlan}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+						<div class="EmptyBox10" />
+						<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+							<p:commandButton value="Final Approve" icon="ui-icon-save" update="@form" action="#{workplaceMonitoringSiteVisitNonComplianceWorkflowUI.finalApproveNonComplaince}" process="@form" onstart="uploadStart()" oncomplete="uploadDone()" styleClass="flat green-btn Fs18" style="height: 50px;">
+								<p:confirm header="Confirmation" message="Are You Sure? " icon="fa fa-exclamation-triangle" />
+							</p:commandButton>
+						</p:panelGrid>
+					</div>
+				</div>
+			</div>
+		</h:form>
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+			<h:form>
+				<p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="fa fa-check" />
+				<p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="fa fa-times" />
+			</h:form>
+		</p:confirmDialog>
+
+		<p:dialog position="top" header="Update: Mitigation Plan" dynamic="true" responsive="true" widgetVar="mitigationPlanDlg" resizable="false" hideEffect="clip" showEffect="clip" id="mitigationPlanDialog" appendTo="@(body)" modal="true" width="70%" height="80vh">
+			<h:form id="mitigationPlanForm">
+				<p:fieldset id="infoFS" legend="Mitigation Plan Information" style="width:95%">
+					<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="Yes" style="width:95%" disabled="true" rendered="#{workplaceMonitoringSiteVisitNonComplianceWorkflowUI.workplaceMonitoringMitigationPlan.systemGenerated}" />
+							<p:inputText value="No" style="width:95%" disabled="true" rendered="#{!workplaceMonitoringSiteVisitNonComplianceWorkflowUI.workplaceMonitoringMitigationPlan.systemGenerated}" />
+							<p:outputLabel value="System Generated" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield" rendered="#{!workplaceMonitoringSiteVisitNonComplianceWorkflowUI.workplaceMonitoringMitigationPlan.systemGenerated}">
+							<p:inputText
+								value="#{workplaceMonitoringSiteVisitNonComplianceWorkflowUI.workplaceMonitoringMitigationPlan.createUser.firstName} #{workplaceMonitoringSiteVisitNonComplianceWorkflowUI.workplaceMonitoringMitigationPlan.createUser.lastName} (#{workplaceMonitoringSiteVisitNonComplianceWorkflowUI.workplaceMonitoringMitigationPlan.createUser.email})"
+								style="width:95%" disabled="true" />
+							<p:outputLabel value="Create User" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{workplaceMonitoringSiteVisitNonComplianceWorkflowUI.workplaceMonitoringMitigationPlan.createDate}" style="width:95%" disabled="true">
+								<f:convertDateTime pattern="dd MMMM yyyy HH:mm" />
+							</p:inputText>
+							<p:outputLabel value="Date Submitted" />
+						</h:panelGroup>
+					</p:panelGrid>
+				</p:fieldset>
+				<p:fieldset id="gcsNonComplianceFS" legend="Grants Compliance Survey: Non-compliance" style="width:95%"
+					rendered="#{workplaceMonitoringSiteVisitNonComplianceWorkflowUI.workplaceMonitoringMitigationPlan.systemGenerated and workplaceMonitoringSiteVisitNonComplianceWorkflowUI.workplaceMonitoringMitigationPlan.discretionaryGrantComplianceLinkSurvey ne null}">
+					<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{workplaceMonitoringSiteVisitNonComplianceWorkflowUI.workplaceMonitoringMitigationPlan.discretionaryGrantComplianceLinkSurvey.question}" style="width:95%" disabled="true" />
+							<p:outputLabel value="Question" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{workplaceMonitoringSiteVisitNonComplianceWorkflowUI.workplaceMonitoringMitigationPlan.discretionaryGrantComplianceLinkSurvey.answer.friendlyName}" style="width:95%" disabled="true" />
+							<p:outputLabel value="Answer" />
+						</h:panelGroup>
+					</p:panelGrid>
+				</p:fieldset>
+				<p:fieldset id="lmsNonComplianceFS" legend="Learner Monitoring Survey: Non-compliance" style="width:95%"
+					rendered="#{workplaceMonitoringSiteVisitNonComplianceWorkflowUI.workplaceMonitoringMitigationPlan.systemGenerated and workplaceMonitoringSiteVisitNonComplianceWorkflowUI.workplaceMonitoringMitigationPlan.learnerSurveyAnswerLink ne null}">
+					<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText
+								value="#{workplaceMonitoringSiteVisitNonComplianceWorkflowUI.workplaceMonitoringMitigationPlan.learnerSurveyLink.companyLearners.user.firstName} #{workplaceMonitoringSiteVisitNonComplianceWorkflowUI.workplaceMonitoringMitigationPlan.learnerSurveyLink.companyLearners.user.lastName}"
+								style="width:95%" disabled="true" />
+							<p:outputLabel value="Learner Information" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{workplaceMonitoringSiteVisitNonComplianceWorkflowUI.workplaceMonitoringMitigationPlan.learnerSurveyAnswerLink.question}" style="width:95%" disabled="true" />
+							<p:outputLabel value="Question" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{workplaceMonitoringSiteVisitNonComplianceWorkflowUI.workplaceMonitoringMitigationPlan.learnerSurveyAnswerLink.answer.friendlyName}" style="width:95%" disabled="true" />
+							<p:outputLabel value="Answer" />
+						</h:panelGroup>
+					</p:panelGrid>
+				</p:fieldset>
+				<p:fieldset legend="Information Required" style="width:95%" id="infoRequiredFS">
+					<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="Non-Compliance Issue" for="nonComplianceIssueSelect" />
+							</div>
+							<div>
+								<p:selectOneMenu id="nonComplianceIssueSelect" value="#{workplaceMonitoringSiteVisitNonComplianceWorkflowUI.workplaceMonitoringMitigationPlan.nonComplianceIssue}" style="width:95%" required="true" requiredMessage="Provide: Non-Compliance Issue">
+									<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="Status" for="statusSelect" />
+							</div>
+							<div>
+								<p:selectOneMenu id="statusSelect" value="#{workplaceMonitoringSiteVisitNonComplianceWorkflowUI.workplaceMonitoringMitigationPlan.openClosedEnum}" style="width:95%" required="true" requiredMessage="Provide: Status">
+									<f:selectItems value="#{enumUI.openClosedEnumDD}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:calendar mask="true" id="dueDateEntry" value="#{workplaceMonitoringSiteVisitNonComplianceWorkflowUI.workplaceMonitoringMitigationPlan.dueDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" required="true" requiredMessage="Provide: Due Date">
+								<p:ajax event="dateSelect" />
+							</p:calendar>
+							<p:outputLabel value="Due Date" for="dueDateEntry" />
+						</h:panelGroup>
+					</p:panelGrid>
+					<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText id="actionPlanEntry" value="#{workplaceMonitoringSiteVisitNonComplianceWorkflowUI.workplaceMonitoringMitigationPlan.actionPlan}" style="width:95%" required="true" requiredMessage="Provide: Action Plan">
+							</p:inputText>
+							<p:outputLabel value="Action Plan" for="actionPlanEntry" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText id="responsibleEntry" value="#{workplaceMonitoringSiteVisitNonComplianceWorkflowUI.workplaceMonitoringMitigationPlan.actionPlan}" style="width:95%" required="true" requiredMessage="Provide: Who is responsible">
+							</p:inputText>
+							<p:outputLabel value="Responsible" for="responsibleEntry" />
+						</h:panelGroup>
+
+					</p:panelGrid>
+
+				</p:fieldset>
+				<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:95%" layout="grid">
+					<p:commandButton value="Update" icon="fa fa-database" process="mitigationPlanForm" update="@form :mainForm" action="#{workplaceMonitoringSiteVisitNonComplianceWorkflowUI.updateMitigationPlan}" onstart="uploadStart()" oncomplete="uploadDone()" />
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="Reject Reasons" widgetVar="rejectReasonsDlg" hideEffect="clip" showEffect="clip" id="dialogRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{workplaceMonitoringSiteVisitNonComplianceWorkflowUI.selectedRejectReasonsList}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:100%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<p:ajax />
+								<f:selectItems value="#{workplaceMonitoringSiteVisitNonComplianceWorkflowUI.rejectReasonsForSelection}" var="rv" itemValue="#{rv}" />
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+							</p:selectManyMenu>
+						</div>
+					</div>
+					<p:commandButton value="Reject Task" action="#{workplaceMonitoringSiteVisitNonComplianceWorkflowUI.rejectBackToClo}" update="@form" onstart="uploadStart()" oncomplete="uploadDone()" />
+				</div>
+			</h:form>
+		</p:dialog>
+
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true" dynamic="true">
+			<h:form id="uploadForm">
+				<h:panelGroup id="uploadGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{workplaceMonitoringSiteVisitNonComplianceWorkflowUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{workplaceMonitoringSiteVisitNonComplianceWorkflowUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{workplaceMonitoringSiteVisitNonComplianceWorkflowUI.storeFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}"
+										update="mainForm" multiple="false" fileLimit="1" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+
+
+	</ui:define>
+</ui:composition>

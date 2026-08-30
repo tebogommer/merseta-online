@@ -1,0 +1,136 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<h:panelGroup id="discretionaryGrantGroup11">
+		<h:form id="unemployedDiscretionaryGrantForm11">
+			<h3>Project Motivation</h3>
+			<p:panelGrid columns="1" style="width:100%" id="discretionaryGrantGrid12" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup>
+					<p:outputLabel value="Project Description" for="projectDescription" styleClass="secondaryText" />
+					<p:inputTextarea rows="5" id="projectDescription" value="#{initiatewspdgUI.wsp.projectDescription}" disabled="#{initiatewspdgUI.wsp.wspStatusEnum ne WspStatusEnum.Draft}" style="width:100%" required="true" requiredMessage="Please Enter Project Description">
+						<p:ajax />
+					</p:inputTextarea>
+				</h:panelGroup>
+				<h:panelGroup>
+					<p:outputLabel value="Purpose" for="purpose" styleClass="secondaryText" />
+					<br />
+					<p:outputLabel value="What do you want to do?" styleClass="Fs13 gray" />
+					<p:inputTextarea rows="5" id="purpose" value="#{initiatewspdgUI.wsp.purpose}" disabled="#{initiatewspdgUI.wsp.wspStatusEnum ne WspStatusEnum.Draft}" style="width:100%" required="true" requiredMessage="Please Enter Purpose">
+						<p:ajax />
+					</p:inputTextarea>
+				</h:panelGroup>
+				<h:panelGroup>
+					<p:outputLabel value="Outcomes" for="outcomes" styleClass="secondaryText" />
+					<br />
+					<p:outputLabel value="What do you want to achieve with this project?" styleClass="Fs13 gray" />
+					<p:inputTextarea rows="5" id="outcomes" value="#{initiatewspdgUI.wsp.outcomes}" disabled="#{initiatewspdgUI.wsp.wspStatusEnum ne WspStatusEnum.Draft}" style="width:100%" required="true" requiredMessage="Please Enter Outcomes">
+						<p:ajax />
+					</p:inputTextarea>
+				</h:panelGroup>
+				<h:panelGroup>
+					<p:outputLabel value="Benefits" for="benefits" styleClass="secondaryText" />
+					<br />
+					<p:outputLabel value="What will the benefits of this project be and who would benefit – target group?" styleClass="Fs13 gray" />
+					<p:inputTextarea rows="5" id="benefits" value="#{initiatewspdgUI.wsp.benefits}" disabled="#{initiatewspdgUI.wsp.wspStatusEnum ne WspStatusEnum.Draft}" style="width:100%" required="true" requiredMessage="Please Enter Benefits">
+						<p:ajax />
+					</p:inputTextarea>
+				</h:panelGroup>
+				<h:panelGroup>
+					<p:outputLabel value="Potential Risks" for="potentialRisks" styleClass="secondaryText" />
+					<br />
+					<p:outputLabel value="What are the potential risks, project risks and mitigation actions?" styleClass="Fs13 gray" />
+					<p:inputTextarea rows="5" id="potentialRisks" value="#{initiatewspdgUI.wsp.potentialRisks}" disabled="#{initiatewspdgUI.wsp.wspStatusEnum ne WspStatusEnum.Draft}" style="width:100%" required="true" requiredMessage="Please Enter Potential Risks">
+						<p:ajax />
+					</p:inputTextarea>
+				</h:panelGroup>
+			</p:panelGrid>
+			<div class="EmptyBox10"></div>
+			<div class="EmptyBox10"></div>
+			<p:panelGrid columns="2" style="width:100%" id="discretionaryGrantGrid11" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputNumber inputStyle="width: 95%; opacity:1 !important;" disabled="#{initiatewspdgUI.wsp.wspStatusEnum ne WspStatusEnum.Draft}" id="estimatedOverallProjectCost" value="#{initiatewspdgUI.wsp.estimatedOverallProjectCost}" minValue="0" required="true">
+					</p:inputNumber>
+					<p:outputLabel value="Estimated overall project cost" for="estimatedOverallProjectCost" styleClass="gray" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputNumber inputStyle="width: 95%; opacity:1 !important;" decimalPlaces="0" disabled="#{initiatewspdgUI.wsp.wspStatusEnum ne WspStatusEnum.Draft}"  id="numberOfBeneficiaries" value="#{initiatewspdgUI.wsp.numberOfBeneficiaries}" minValue="0" required="true">
+					</p:inputNumber>
+					<p:outputLabel value="Number of beneficiaries" for="numberOfBeneficiaries" styleClass="gray" />
+				</h:panelGroup>
+			</p:panelGrid>
+			<div class="EmptyBox10"></div>
+			<div class="EmptyBox10"></div>
+			<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{(initiatewspdgUI.wsp.wspStatusEnum eq WspStatusEnum.Draft or initiatewspdgUI.wsp.wspStatusEnum eq WspStatusEnum.ProjectReview)}">
+				<h:panelGroup style="width:100%">
+					<p:outputLabel value="Project Administration fee required?" for="requireProjectAdministrationCosts" styleClass="gray"/>
+					<!--div class="EmptyBox10" /-->
+					<p:selectOneRadio value="#{initiatewspdgUI.wsp.requireProjectAdministrationCosts}" required="true" id="requireProjectAdministrationCosts"  columns="2" layout="grid" requiredMessage="Please select whether project admin costs are required or not.">
+						<p:ajax />
+						<f:selectItem itemLabel="YES" itemValue="#{true}" />
+						<f:selectItem itemLabel="NO" itemValue="#{false}" />
+					</p:selectOneRadio>
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputNumber inputStyle="width: 95%; opacity:1 !important;" decimalPlaces="2" disabled="#{initiatewspdgUI.wsp.wspStatusEnum ne WspStatusEnum.ProjectReview}" maxValue="#{initiatewspdgUI.wsp.estimatedOverallProjectCost}" id="approvedAmount" value="#{initiatewspdgUI.wsp.approvedAmount}" minValue="0" required="true">
+					</p:inputNumber>
+					<p:outputLabel value="Approved Amount" for="approvedAmount" styleClass="gray" />
+				</h:panelGroup>
+			</p:panelGrid>
+			<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{(initiatewspdgUI.wsp.wspStatusEnum eq WspStatusEnum.Draft or initiatewspdgUI.wsp.wspStatusEnum eq WspStatusEnum.ProjectReview)}">
+				<p:commandButton value="#{lang['submit']}" icon="fa fa-check" update="@form" action="#{initiatewspdgUI.updateWspAtr}" process="@form" />
+			</p:panelGrid>
+		</h:form>
+	</h:panelGroup>
+	<div class="ui-g">
+		<div class="ui-g-12">
+			<h3>Project Locations</h3>
+			<h:form id="wsplocationsInsForm">
+				<p:growl sticky="false">
+					<p:autoUpdate />
+				</p:growl>
+				<p:panelGrid columns="1" style="width:100%" id="wsplocationsInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{initiatewspdgUI.wsp.wspStatusEnum eq WspStatusEnum.Draft}">
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="Province" for="province" />
+						</div>
+						<div>
+							<p:selectOneMenu id="province" value="#{wsplocationsUI.wsplocations.province}" converter="ProvinceConvertor" style="width:75%" required="true">
+								<p:ajax></p:ajax>
+								<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsProvince}" var="il" itemLabel="#{il.provinceDesc}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+						<p:commandButton value="#{lang['add']}" icon="ui-icon-save" update="tabView:mainForm2 tabView:wsplocationsInsForm" action="#{wsplocationsUI.wsplocationsInsert}" />
+						<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="wsplocationsInsGrid" process="@this" action="#{wsplocationsUI.prepareNew}">
+							<p:resetInput target="wsplocationsInsGrid" />
+						</p:commandButton>
+					</p:panelGrid>
+				</p:panelGrid>
+			</h:form>
+		</div>
+		<div class="ui-g-12">
+			<h:form id="mainForm2">
+				<p:dataTable var="rowVar" value="#{wsplocationsUI.dataModel}" filteredValue="#{wsplocationsUI.wspLocationsfilteredList}" id="wsplocationsList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+					rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+					<p:column headerText="#{lang['province']}">
+						<h:outputText value="#{rowVar.province.provinceDesc}" />
+					</p:column>
+					<p:column width="80" rendered="#{initiatewspdgUI.wsp.wspStatusEnum eq WspStatusEnum.Draft}">
+						<p:commandButton icon="fa fa-database" title="#{lang['update']}" update="tabView:wsplocationsInsForm">
+							<f:setPropertyActionListener value="#{rowVar}" target="#{wsplocationsUI.wsplocations}" />
+						</p:commandButton>
+						<p:spacer width="5" />
+						<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update="tabView:mainForm2" action="#{wsplocationsUI.wsplocationsDelete}">
+							<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+							<f:setPropertyActionListener value="#{rowVar}" target="#{wsplocationsUI.wsplocations}" />
+						</p:commandButton>
+					</p:column>
+				</p:dataTable>
+				<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+					<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+					<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+				</p:confirmDialog>
+			</h:form>
+		</div>
+	</div>
+</ui:composition>

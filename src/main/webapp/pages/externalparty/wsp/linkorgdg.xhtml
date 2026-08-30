@@ -1,0 +1,259 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<h:panelGroup id="userDetails">
+		<h3>#{lang['users']}</h3>
+		<h:form id="mainContactForm">
+			<h:panelGroup>
+				<div>
+					<p:outputLabel value="Main Contact" for="mainContant" />
+				</div>
+				<div>
+					<p:selectOneMenu id="mainContant" value="#{initiatewspdgUI.wsp.companyContact}" converter="CompanyUsersConvertor" style="width:75%" required="true" disabled="#{initiatewspdgUI.wsp.wspStatusEnum ne WspStatusEnum.Draft}">
+						<p:ajax event="itemSelect" listener="#{initiatewspdgUI.wspInsert}"></p:ajax>
+						<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+						<f:selectItems value="#{initiatewspdgUI.companyUsers}" var="il" itemLabel="#{il.user.firstName} #{il.user.lastName}" />
+					</p:selectOneMenu>
+				</div>
+			</h:panelGroup>
+		</h:form>
+		<div class="EmptyBox10"></div>
+		<p:dataTable var="rowVar" value="#{initiatewspdgUI.companyUsers}" rowKey="#{rowVar.id}" paginator="true" rows="5" emptyMessage="#{lang['no.records.found']}" paginatorPosition="bottom" paginatorTemplate="#{lang['page']} {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+			<p:column headerText="#{lang['expand.row']}" width="45">
+				<p:rowToggler></p:rowToggler>
+			</p:column>
+			<p:column headerText="#{lang['user.select']}">
+				<p:outputLabel value="#{rowVar.user.firstName} #{rowVar.user.lastName}"></p:outputLabel>
+			</p:column>
+			<p:column headerText="#{lang['email']}">
+				<p:outputLabel value="#{rowVar.user.email}"></p:outputLabel>
+			</p:column>
+			<p:column headerText="#{lang['users.type']}">
+				<p:outputLabel value="#{lang[rowVar.companyUserType.type]}" rendered="#{rowVar.companyUserType ne null}"></p:outputLabel>
+				<p:outputLabel value="#{rowVar.position.description}" rendered="#{rowVar.position ne null}"></p:outputLabel>
+				<p:outputLabel value=" : #{rowVar.sdfLevel}" rendered="#{rowVar.sdfLevel ne null and rowVar.sdfLevel ne ''}"></p:outputLabel>
+			</p:column>
+			<p:column rendered="#{initiatewspdgUI.wsp.wspStatusEnum eq WspStatusEnum.Draft} and false" width="8%">
+				<center>
+					<p:commandButton id="updUserInfoBtn" update="tabView:updUserDatePanel" icon="fa fa-pencil-square-o" action="#{initiatewspdgUI.prepUserInformationUpdate}">
+						<f:setPropertyActionListener value="#{rowVar.user}" target="#{initiatewspdgUI.selectedUser}" />
+						<p:tooltip for="updUserInfoBtn" value="Update User's Information" position="" />
+					</p:commandButton>
+				</center>
+			</p:column>
+			<p:rowExpansion>
+				<p:panelGrid columns="3" style="width:100%" id="s" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<h:panelGroup>
+						<h:outputText value="#{lang['user.select']}" styleClass="Fs12 FontLight" />
+						<br />
+						<h:outputText value="#{rowVar.user.firstName} #{rowVar.user.lastName}" />
+					</h:panelGroup>
+					<h:panelGroup>
+						<h:outputText value="#{lang['email']}" styleClass="Fs12 FontLight" />
+						<br />
+						<h:outputText value="#{rowVar.user.email}" />
+					</h:panelGroup>
+					<h:panelGroup>
+						<h:outputText value="#{lang['tel.number']}" styleClass="Fs12 FontLight" />
+						<br />
+						<h:outputText value="#{rowVar.user.telNumber}" />
+					</h:panelGroup>
+					<h:panelGroup>
+						<h:outputText value="#{lang['cell.number']}" styleClass="Fs12 FontLight" />
+						<br />
+						<h:outputText value="#{rowVar.user.cellNumber}" />
+					</h:panelGroup>
+					<h:panelGroup>
+						<h:outputText value="#{lang['fax.number']}" styleClass="Fs12 FontLight" />
+						<br />
+						<h:outputText value="#{rowVar.user.faxNumber}" />
+					</h:panelGroup>
+					<h:panelGroup>
+						<h:outputText value="#{lang['work.contact.number']}" styleClass="Fs12 FontLight" />
+						<br />
+						<h:outputText value="#{rowVar.user.workContactNumber}" />
+					</h:panelGroup>
+				</p:panelGrid>
+				<p:panelGrid columns="2" style="width:100%" id="sa" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="false">
+					<p:fieldset legend="#{lang['residentialAddress']}">
+						<p:panelGrid columns="2" style="width : 95%" styleClass="ui-panelgrid-blank" id="addrPcode">
+							<h:panelGroup>
+								<p:outputLabel value="#{lang['address.line.1']}" for="addr1" styleClass="Fs12 FontLight" />
+								<br />
+								<p:outputLabel id="addr1" value="#{rowVar.user.residentialAddress.addressLine1}" style="width:95%" required="true" requiredMessage="#{lang['enter.residential.address']}" />
+								<br />
+								<p:outputLabel value="#{lang['address.line.2']}" for="addr2" styleClass="Fs12 FontLight" />
+								<br />
+								<p:outputLabel value="N/A" style="width:95%" rendered="#{rowVar.user.residentialAddress.addressLine2 eq null or rowVar.user.residentialAddress.addressLine2.length() eq 0}" />
+								<p:outputLabel id="addr2" style="width:95%" value="#{rowVar.user.residentialAddress.addressLine2}" rendered="#{rowVar.user.residentialAddress.addressLine2 ne null and rowVar.user.residentialAddress.addressLine2.length() gt 0}" />
+							</h:panelGroup>
+							<h:panelGroup>
+								<p:outputLabel value="#{lang['address.line.3']}" for="addr3" styleClass="Fs12 FontLight" />
+								<br />
+								<p:outputLabel id="addr3" style="width:95%" value="#{rowVar.user.residentialAddress.addressLine3}" rendered="#{rowVar.user.residentialAddress.addressLine3 ne null and rowVar.user.residentialAddress.addressLine3.length() gt 0}" />
+								<p:outputLabel value="N/A" style="width:95%" rendered="#{rowVar.user.residentialAddress.addressLine3 eq null or rowVar.user.residentialAddress.addressLine3.length() eq 0}" />
+								<br />
+								<p:outputLabel value="#{lang['address.line.4']}" for="addr4" styleClass="Fs12 FontLight" />
+								<br />
+								<p:outputLabel id="addr4" style="width:95%" value="#{rowVar.user.residentialAddress.addressLine4}" rendered="#{rowVar.user.residentialAddress.addressLine4 ne null and rowVar.user.residentialAddress.addressLine4.length() gt 0}" />
+								<p:outputLabel value="N/A" style="width:95%" rendered="#{rowVar.user.residentialAddress.addressLine4 eq null or rowVar.user.residentialAddress.addressLine4.length() eq 0}" />
+							</h:panelGroup>
+							<h:panelGroup>
+								<p:outputLabel value="#{lang['post.code']}" for="pcode" styleClass="Fs12 FontLight" />
+								<br />
+								<p:outputLabel id="pcode" style="width:95%" value="#{rowVar.user.residentialAddress.postcode}" rendered="#{rowVar.user.residentialAddress.postcode ne null and rowVar.user.residentialAddress.postcode.length() gt 0}" />
+								<p:outputLabel value="N/A" style="width:95%" rendered="#{rowVar.user.residentialAddress.postcode eq null or rowVar.user.residentialAddress.postcode.length() eq 0}" />
+								<br />
+								<h:outputLabel value="#{lang['municipality']}" for="MunicipalityID" styleClass="Fs12 FontLight" />
+								<br />
+								<p:outputLabel id="MunicipalityID" style="width:95%" value="#{rowVar.user.residentialAddress.municipality.municipalityDesc}" />
+							</h:panelGroup>
+							<h:panelGroup>
+								<div class="EmptyBox40"></div>
+							</h:panelGroup>
+						</p:panelGrid>
+					</p:fieldset>
+					<p:fieldset legend="#{lang['postalAddress']}">
+						<p:panelGrid columns="2" style="width : 95%" styleClass="ui-panelgrid-blank" id="postalAddress">
+							<h:panelGroup>
+								<p:outputLabel value="#{lang['address.line.1']}" for="postalAddressaddr1" styleClass="Fs12 FontLight" />
+								<br />
+								<p:outputLabel id="postalAddressaddr1" value="#{rowVar.user.postalAddress.addressLine1}" style="width:95%" required="true" requiredMessage="#{lang['enter.postal.address']}" />
+								<br />
+								<p:outputLabel value="#{lang['address.line.2']}" for="postalAddressaddr2" styleClass="Fs12 FontLight" />
+								<br />
+								<p:outputLabel id="postalAddressaddr2" style="width:95%" value="#{rowVar.user.postalAddress.addressLine2}" />
+								<p:outputLabel value="N/A" style="width:95%" rendered="#{rowVar.user.postalAddress.addressLine2 eq null or rowVar.user.postalAddress.addressLine2.length() eq 0}" />
+							</h:panelGroup>
+							<h:panelGroup>
+								<p:outputLabel value="#{lang['address.line.3']}" for="postalAddressaddr3" styleClass="Fs12 FontLight" />
+								<br />
+								<p:outputLabel id="postalAddressaddr3" style="width:95%" value="#{rowVar.user.postalAddress.addressLine3}" />
+								<p:outputLabel value="N/A" style="width:95%" rendered="#{rowVar.user.postalAddress.addressLine3 eq null or rowVar.user.postalAddress.addressLine3.length() eq 0}" />
+								<br />
+								<p:outputLabel value="#{lang['address.line.4']}" for="postalAddressaddr4" styleClass="Fs12 FontLight" />
+								<br />
+								<p:outputLabel id="postalAddressaddr4" style="width:95%" value="#{rowVar.user.postalAddress.addressLine4}" />
+								<p:outputLabel value="N/A" style="width:95%" rendered="#{rowVar.user.postalAddress.addressLine4 eq null or rowVar.user.postalAddress.addressLine4.length() eq 0}" />
+							</h:panelGroup>
+							<h:panelGroup>
+								<p:outputLabel value="#{lang['post.code']}" for="postalAddressPcode" styleClass="Fs12 FontLight" />
+								<br />
+								<p:outputLabel id="postalAddressPcode" style="width:95%" value="#{rowVar.user.postalAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}" />
+								<p:outputLabel value="N/A" style="width:95%" rendered="#{rowVar.user.postalAddress.postcode eq null or rowVar.user.postalAddress.postcode.length() eq 0}" />
+								<br />
+								<h:outputLabel value="#{lang['municipality']}" for="postalAddressMunicipalityID" styleClass="Fs12 FontLight" />
+								<br />
+								<p:outputLabel id="postalAddressMunicipalityID" style="width:95%" value="#{rowVar.user.postalAddress.municipality.municipalityDesc}" />
+							</h:panelGroup>
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="#{lang['same.as.my.address']}" styleClass="Fs12 FontLight" />
+								</div>
+								<div>
+									<p:selectBooleanCheckbox value="#{rowVar.user.postalAddress.sameAddress}" disabled="true">
+									</p:selectBooleanCheckbox>
+								</div>
+							</h:panelGroup>
+						</p:panelGrid>
+					</p:fieldset>
+				</p:panelGrid>
+			</p:rowExpansion>
+		</p:dataTable>
+		<p:outputPanel id="updUserDatePanel">
+			<div class="EmptyBox10" />
+			<p:fieldset legend="Update User Information" rendered="#{initiatewspdgUI.updateUserData}">
+				<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<h:panelGroup>
+						<p:outputLabel value="User" for="userFirstLastNameLabel" styleClass="Fs12 FontLight" />
+						<br />
+						<p:outputLabel id="userFirstLastNameLabel" value="#{initiatewspdgUI.selectedUser.firstName} #{initiatewspdgUI.selectedUser.lastName}" />
+					</h:panelGroup>
+					<h:panelGroup>
+						<p:outputLabel value="Email Address" for="emailAddressLabel" styleClass="Fs12 FontLight" />
+						<br />
+						<p:outputLabel id="emailAddressLabel" value="#{initiatewspdgUI.selectedUser.email}" />
+					</h:panelGroup>
+					<h:panelGroup>
+						<p:outputLabel value="Telephone Number" for="telephoneNumberLabel" styleClass="Fs12 FontLight" />
+						<br />
+						<p:outputLabel id="telephoneNumberLabel" value="#{initiatewspdgUI.selectedUser.telNumber}" />
+					</h:panelGroup>
+					<h:panelGroup>
+						<p:outputLabel value="Cell Phone Number" for="cellPhoneNumberLabel" styleClass="Fs12 FontLight" />
+						<br />
+						<p:inputText id="cellPhoneNumberLabel" value="#{initiatewspdgUI.selectedUser.cellNumber}">
+							<p:ajax />
+						</p:inputText>
+					</h:panelGroup>
+					<h:panelGroup>
+						<p:outputLabel value="Fax Number" for="faxNumberLabel" styleClass="Fs12 FontLight" />
+						<br />
+						<p:inputText id="faxNumberLabel" value="#{initiatewspdgUI.selectedUser.faxNumber}">
+							<p:ajax />
+						</p:inputText>
+					</h:panelGroup>
+					<h:panelGroup>
+						<p:outputLabel value="Work Number" for="workNumberLabel" styleClass="Fs12 FontLight" />
+						<br />
+						<p:inputText id="workNumberLabel" value="#{initiatewspdgUI.selectedUser.workContactNumber}">
+							<p:ajax />
+						</p:inputText>
+					</h:panelGroup>
+					<h:panelGroup>
+						<p:commandButton styleClass="Fs14 FontLight" value="#{lang['submit']}" icon="ui-icon-save" update=":tabView:userDetails :tabView:updUserDatePanel" action="#{initiatewspdgUI.updateUsersInformation}" rendered="#{initiatewspdgUI.wsp.wspStatusEnum eq WspStatusEnum.Draft}" />
+					</h:panelGroup>
+					<h:panelGroup>
+					</h:panelGroup>
+				</p:panelGrid>
+			</p:fieldset>
+		</p:outputPanel>
+		<!--  -->
+	</h:panelGroup>
+	<br />
+	<h:panelGroup id="linkOrg">
+		<p:outputPanel>
+			<c:if test="#{initiatewspdgUI.linkedCompanies.size() gt 0}">
+				<h3>#{lang['linked.companies']}</h3>
+				<p:dataTable var="rowVar" id="companyList" rowKey="#{rowVar.id}" value="#{initiatewspdgUI.linkedCompanies}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+					<p:column headerText="#{lang['companyName']}">
+						<h:outputText value="#{rowVar.companyName}" />
+					</p:column>
+					<p:column headerText="#{lang['sdl.number']}">
+						<h:outputText value="#{rowVar.levyNumber}" />
+					</p:column>
+					<p:column headerText="#{lang['telNumber']}">
+						<h:outputText value="#{rowVar.telNumber}" />
+					</p:column>
+					<p:column headerText="#{lang['company.status']}">
+						<h:outputText value="#{lang[rowVar.companyStatus.registrationName]}" />
+					</p:column>
+				</p:dataTable>
+			</c:if>
+		</p:outputPanel>
+		<br />
+		<p:outputPanel>
+			<c:if test="#{initiatewspdgUI.sites.size() gt 0}">
+				<h3>#{lang['sites']}</h3>
+				<p:dataTable value="#{initiatewspdgUI.sites}" var="rv4" rowKey="#{rv4.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+					<p:column headerText="#{lang['companyName']}">
+						<h:outputText value="#{rv4.companyName}" />
+					</p:column>
+					<p:column headerText="#{lang['entity.id']}">
+						<h:outputText value="#{rv4.levyNumber}" />
+					</p:column>
+					<p:column headerText="#{lang['numberOfEmployees']}">
+						<h:outputText value="#{rv4.numberOfEmployees}" />
+					</p:column>
+					<p:column headerText="#{lang['email']}">
+						<h:outputText value="#{rv4.email}" />
+					</p:column>
+					<p:column headerText="#{lang['telNumber']}">
+						<h:outputText value="#{rv4.telNumber}" />
+					</p:column>
+					<p:column headerText="#{lang['faxNumber']}">
+						<h:outputText value="#{rv4.faxNumber}" />
+					</p:column>
+				</p:dataTable>
+			</c:if>
+		</p:outputPanel>
+	</h:panelGroup>
+</ui:composition>

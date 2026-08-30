@@ -1,0 +1,311 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml" xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:o="http://omnifaces.org/ui">
+
+	<ui:define name="content">
+
+		<h:form id="profileStyleForm">
+			<style>
+.ui-fileupload-content {
+	height: 150px !important;
+	background-image:
+		url("#{request.contextPath}/resources/hls/images/upload.png")
+		!important;
+	background-repeat: no-repeat;
+	background-position: center;
+}
+
+.hsProfile {
+	width: 200px;
+	height: 200px;
+	border-radius: 100px;
+	-webkit-border-radius: 100px;
+	-moz-border-radius: 100px;
+	box-shadow: 0 0 4px rgba(0, 0, 0, .8);
+	-webkit-box-shadow: 0 0 4px rgba(0, 0, 0, .8);
+	-moz-box-shadow: 0 0 4px rgba(0, 0, 0, .8);
+	background-size: 200px 200px;
+}
+</style>
+		</h:form>
+
+		<p:growl showDetail="false" sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+
+		<!-- disabled="#{sessionUI.externalParty and sessionUI.activeUser.approvedDate ne null}" -->
+		<div class="ui-g">
+			<div class="ui-g-12 ui-md-12 ui-lg-6">
+				<div class="card card-w-title">
+					<H1>Profile #{lang['details']}</H1>
+					<h:form id="detailsForm">
+
+						<ui:include src="/pages/includes/tabinfo.xhtml">
+							<ui:param name="showInfoCircle" value="false" />
+							<ui:param name="cssClass" value="secondaryText Fs15" />
+							<ui:param name="helpTxt" value="Please ensure that names are in order as they appear in RSA ID/Passport" />
+						</ui:include>
+
+						<p:panelGrid columns="2" style="width:100%" id="prof" layout="grid" styleClass="ui-panelgrid-blank">
+							<p:outputLabel value="#{lang['title']}" for="title" />
+							<p:selectOneMenu id="title" value="#{profileUI.user.title}" disabled="true" converter="TitleConvertor" style="width:95%" required="true" requiredMessage="#{lang['select.title']}">
+								<p:ajax />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsTitles}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+							<p:outputLabel value="#{lang['first.name']}" for="firstName" />
+							<p:inputText id="firstName" value="#{profileUI.user.firstName}" disabled="true"  maxlength="#{profileUI.MAX_FIRST_NAME_SIZE}" style="width: 90%" required="true" requiredMessage="Enter first name">
+								<o:validator validatorId="javax.faces.Length" minimum="0" maximum="26" message="#{lang['user.name.length']}" />
+							</p:inputText>
+							<p:outputLabel value="#{lang['last.name']}:" for="lastName" />
+							<p:inputText id="lastName" value="#{profileUI.user.lastName}" disabled="true" maxlength="#{profileUI.MAX_LAST_NAME_SIZE}" style="width: 90%" required="true" requiredMessage="Enter last name">
+								<o:validator validatorId="javax.faces.Length" minimum="0" maximum="45" message="#{lang['user.lastname.length']}" />
+							</p:inputText>
+							<p:outputLabel value="#{lang['middle.name']}" for="middleName" />
+							<p:inputText id="middleName" value="#{profileUI.user.middleName}" disabled="true" maxlength="#{profileUI.MAX_FIRST_NAME_SIZE}" style="width: 90%">
+								<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['user.name.length']}" />
+							</p:inputText>
+
+							<p:outputLabel value="#{lang['rsa.id.number']}" for="rsaIdCriteria" rendered="#{profileUI.user.rsaIDNumber ne null and profileUI.user.rsaIDNumber.length() gt 0}" />
+							<p:inputText id="rsaIdCriteria" maxlength="#{profileUI.MAX_RSA_ID_NUMBER}" value="#{profileUI.user.rsaIDNumber}" style="width:95%" rendered="#{profileUI.user.rsaIDNumber ne null and  profileUI.user.rsaIDNumber.length() gt 0}"
+								disabled="true" requiredMessage="#{lang['rsa.id.number']} " required="true">
+							</p:inputText>
+
+							<p:outputLabel value="#{lang['passport.number']}" for="passportCriteria" rendered="#{profileUI.user.passportNumber ne null and  profileUI.user.passportNumber.length() gt 0}" />
+							<p:inputText id="passportCriteria" value="#{profileUI.user.passportNumber}" style="width:95%" rendered="#{profileUI.user.passportNumber ne null and  profileUI.user.passportNumber.length() gt 0}"
+								disabled="true" requiredMessage="Please enter your passport number" required="true">
+							</p:inputText>
+							<p:outputLabel value="#{lang['email']}:" for="email" />
+							<p:inputText id="email" value="#{profileUI.user.email}" disabled="true" maxlength="#{profileUI.MAX_EMAIL_SIZE}" style="width: 90%" required="true" requiredMessage="Enter email address">
+								<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['user.email.length']}" />
+							</p:inputText>
+							<p:outputLabel value="#{lang['mobile.number']}" for="cellNumber" />
+							<p:inputMask id="cellNumber" mask="#{profileUI.CELLPHONE_FORMAT}" disabled="true" value="#{profileUI.user.cellNumber}" style="width: 90%" label="cellNumber" required="true" requiredMessage="Enter mobile number">
+								<o:validator validatorId="javax.faces.Length" minimum="0" maximum="20" message="#{lang['user.cellnumber.length']}" />
+							</p:inputMask>
+							<p:outputLabel value="#{lang['tel.number']}:" for="telNumber" />
+							<p:inputMask id="telNumber" mask="#{profileUI.TELPHONE_FORMAT}" disabled="true" value="#{profileUI.user.telNumber}" style="width: 90%" label="telNumber" required="false" requiredMessage="Enter mobile number">
+								<o:validator validatorId="javax.faces.Length" minimum="0" maximum="20" message="#{lang['user.tellnumber.length']}" />
+							</p:inputMask>
+							<p:spacer />
+							<p:commandButton disabled="#{!profileUI.enableProfileEdit}" value="#{lang['update']}" oncomplete="if (args &amp;&amp; !args.validationFailed)" action="#{profileUI.prepUpdateUserInfo}" icon="fa fa-database" update="@form" />
+						</p:panelGrid>
+					</h:form>
+				</div>
+
+			</div>
+			<div class="ui-g-12 ui-md-12 ui-lg-6">
+				<div class="card card-w-title">
+					<h:form id="profilePicForm">
+						<h1>#{lang['profile.picture']}</h1>
+						<p:panelGrid columns="2" style="width:100%" id="ppic" layout="grid" styleClass="ui-panelgrid-blank">
+							<p:fileUpload fileUploadListener="#{profileUI.saveImage}" mode="advanced" dragDropSupport="true" showButtons="false" sizeLimit="1048576" label="#{lang['select.a.profile.picture']}" fileLimitMessage="#{lang['image.too.big.to.upload']}" allowTypes="/(\.|\/)(gif|jpe?g|png)$/" multiple="false"
+								fileLimit="1" immediate="false" auto="true" update="@form :menuform :profileStyleForm" />
+							<h:panelGroup rendered="#{sessionUI.user.profileImageForView ne null}">
+								<div align="center">
+									<p:graphicImage value="#{imageStreamer.image}" styleClass="hsProfile" rendered="#{sessionUI.user.profileImage ne null}">
+										<f:param name="imageId" value="#{sessionUI.user.profileImage.id}" />
+									</p:graphicImage>
+								</div>
+							</h:panelGroup>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<c:if test="false">
+			<div class="ui-g-12 ui-md-12 ui-lg-6">
+				<div class="card card-w-title">
+					<h:form id="otherInfoForm">
+						<h1 class="BigTopic">Other Information</h1>
+						<p:panelGrid columns="2" style="width:100%" id="prof" layout="grid" styleClass="ui-panelgrid-blank">
+							<p:outputLabel value="#{lang['gender']}" for="gender" />
+							<p:autoComplete disabled="#{!profileUI.enableProfileEdit}" id="gender" value="#{profileUI.user.gender}" completeMethod="#{autoCompleteUI.completeGender}" var="rv" itemLabel="#{rv.genderName}" itemValue="#{rv}" forceSelection="true" converter="GenderConvertor" dropdown="true"
+								minQueryLength="3" maxResults="10" requiredMessage="#{lang['provide.gender']}" required="true">
+								<p:column headerText="Gender" style="white-space: nowrap">#{rv.genderName}</p:column>
+							</p:autoComplete>
+
+							<p:outputLabel value="#{lang['equity']}" for="equity" />
+							<p:autoComplete disabled="#{!profileUI.enableProfileEdit}" id="equity" value="#{profileUI.user.equity}" completeMethod="#{autoCompleteUI.completeEquity}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="EquityConvertor" dropdown="true"
+								minQueryLength="3" maxResults="10" requiredMessage="#{lang['provide.equity']}" required="true">
+								<p:column headerText="equity" style="white-space: nowrap">#{rv.description}</p:column>
+							</p:autoComplete>
+
+							<p:outputLabel value="#{lang['nationality']}" for="nationality" />
+							<p:autoComplete disabled="#{!profileUI.enableProfileEdit}" id="nationality" value="#{profileUI.user.nationality}" required="true" requiredMessage="#{lang['nationality.required']}" completeMethod="#{autoCompleteUI.completeNationality}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}"
+								forceSelection="true" converter="NationalityConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+								<p:column headerText="#{lang['nationality']}" style="white-space: nowrap">#{rv.description}</p:column>
+							</p:autoComplete>
+
+							<p:outputLabel value="#{lang['disability']}" for="disability" />
+							<p:autoComplete disabled="#{!profileUI.enableProfileEdit}" id="disability" value="#{profileUI.user.disabilityStatus}" completeMethod="#{autoCompleteUI.completeDisabilityStatus}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true"
+								converter="DisabilityStatusConvertor" dropdown="true" minQueryLength="3" maxResults="10" required="true" requiredMessage="Please Select Disability">
+								<p:column headerText="Disability" style="white-space: nowrap">#{rv.description}</p:column>
+							</p:autoComplete>
+							<p:spacer />
+							<p:commandButton disabled="#{!profileUI.enableProfileEdit}" value="#{lang['update']}" oncomplete="if (args &amp;&amp; !args.validationFailed)  PF('dlgChangeReason').show()" icon="fa fa-database" update="@form" />
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			</c:if>
+			<div class="ui-g-12 ui-md-12 ui-lg-6">
+				<div class="card card-w-title">
+					<h1 class="BigTopic">#{lang['change.your.password']}</h1>
+					<h:form id="usersUpdPwdForm">
+						<ui:include src="/pages/includes/tabinfo.xhtml">
+							<ui:param name="showInfoCircle" value="false" />
+							<ui:param name="cssClass" value="red Fs15" />
+							<ui:param name="helpTxt" value="#{lang['Password.must.be.minimum.of.8']}" />
+						</ui:include>
+						<br />
+						<br />
+						<p:panelGrid columns="2" style="width:100%" id="pwd" layout="grid" styleClass="ui-panelgrid-blank">
+							<p:outputLabel for="pwd1" value="#{lang['existing.password']}" />
+							<p:password style="width: 90%" id="pwd1" value="#{profileUI.password}" required="true" requiredMessage="Please enter existing Password" />
+							<p:outputLabel for="pwd2" value="#{lang['new.password']}" />
+							<p:password style="width: 90%" id="pwd2" value="#{profileUI.newPassword}" match="pwd3" required="true" requiredMessage="Please enter new Password" validatorMessage="Passwords do not match" />
+							<p:outputLabel for="pwd3" value="#{lang['confirm.password']}" />
+							<p:password style="width: 90%" id="pwd3" value="#{profileUI.newPassword}" required="true" requiredMessage="Please enter confirm Password" />
+							<p:spacer />
+							<p:commandButton value="#{lang['change.password']}" icon="fa fa-key" action="#{profileUI.usersChgOwnPwdUpdate}" update="@form" />
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12 ui-md-12 ui-lg-6">
+				<c:if test="#{!sessionUI.externalParty}">
+					<div class="card card-w-title">
+						<h:form id="profilePrefForm">
+							<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+								<p:outputLabel value="Recieve email notification for tasks" />
+								<p:selectBooleanCheckbox value="#{profileUI.user.recieveEmailTaskNotification}" />
+								<p:spacer />
+								<p:commandButton value="Update" icon="fa fa-database" action="#{profileUI.updateProfile}" update="@form" />
+							</p:panelGrid>
+						</h:form>
+					</div>
+				</c:if>
+			</div>
+		</div>
+
+		<!-- ChangeReason Dialog -->
+		<p:dialog closeOnEscape="true" header="Update Profile" widgetVar="dlgChangeReason" dynamic="true" fitViewport="true" resizable="false" hideEffect="clip" showEffect="clip" appendTo="@(body)" width="70%" height="80vh" responsive="true" modal="true" position="top">
+			<h:form id="changeReasonForm">
+				<p:fieldset legend="Update User Information *">
+					<ui:include src="/pages/includes/tabinfo.xhtml">
+							<ui:param name="showInfoCircle" value="false" />
+							<ui:param name="cssClass" value="secondaryText Fs15" />
+							<ui:param name="helpTxt" value="Please ensure that names are in order as they appear in RSA ID/Passport" />
+						</ui:include>
+					<p:panelGrid columns="2" style="width : 95%" styleClass="ui-panelgrid-blank">
+						<h:panelGroup style="margin-top:19px;">
+							<div>
+								<p:outputLabel value="#{lang['title']}" for="titleUpdateSl" />
+							</div>
+							<div>
+								<p:selectOneMenu id="titleUpdateSl" value="#{profileUI.updateUserInfo.title}" converter="TitleConvertor" style="width:95%" required="true" requiredMessage="#{lang['select.title']}">
+									 <p:ajax />
+   									<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+   									<f:selectItems value="#{selectItemsUI.selectItemsTitles}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield" style="margin-top:19px;">
+							<p:inputText id="firstNameUpdate" value="#{profileUI.updateUserInfo.firstName}" maxlength="#{profileUI.MAX_FIRST_NAME_SIZE}" style="width: 95%" required="true" requiredMessage="Enter first name">
+								<p:ajax />
+								<o:validator validatorId="javax.faces.Length" minimum="0" maximum="26" message="#{lang['user.name.length']}" />
+							</p:inputText>
+							<p:outputLabel value="#{lang['first.name']}" for="firstNameUpdate" />
+						</h:panelGroup>
+						
+						<h:panelGroup styleClass="md-inputfield" style="margin-top:19px;">
+							
+							<p:inputText id="middleNameUpdate" value="#{profileUI.updateUserInfo.middleName}" maxlength="#{profileUI.MAX_FIRST_NAME_SIZE}" style="width: 95%">
+								<p:ajax/>
+							    <o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['user.name.length']}" />
+							</p:inputText>
+							<p:outputLabel value="#{lang['middle.name']}" for="middleNameUpdate" />
+						</h:panelGroup>
+						
+						<h:panelGroup styleClass="md-inputfield" style="margin-top:19px;">
+							<p:inputText id="lastNameUpdate" value="#{profileUI.updateUserInfo.lastName}" maxlength="#{profileUI.MAX_LAST_NAME_SIZE}" style="width: 95%" required="true" requiredMessage="Enter last name">
+								<p:ajax/>
+							    <o:validator validatorId="javax.faces.Length" minimum="0" maximum="45" message="#{lang['user.lastname.length']}" />
+							</p:inputText>
+							<p:outputLabel value="#{lang['last.name']}:" for="lastNameUpdate" />
+						</h:panelGroup>
+						
+						<h:panelGroup styleClass="md-inputfield" style="margin-top:19px;" rendered="#{profileUI.updateUserInfo.rsaIDNumber ne null and profileUI.updateUserInfo.rsaIDNumber.length() gt 0}">
+							<p:inputText id="rsaIdCriteriaUpdate" maxlength="#{profileUI.MAX_RSA_ID_NUMBER}" value="#{profileUI.updateUserInfo.rsaIDNumber}" style="width:95%" disabled="#{sessionUI.externalParty and sessionUI.activeUser.approvedDate ne null}" requiredMessage="#{lang['rsa.id.number']} " required="true">
+							    <p:ajax/>
+							</p:inputText>
+							<p:outputLabel value="#{lang['rsa.id.number']}" for="rsaIdCriteriaUpdate" />
+						</h:panelGroup>
+						
+						<h:panelGroup styleClass="md-inputfield" style="margin-top:19px;"  rendered="#{profileUI.updateUserInfo.passportNumber ne null and  profileUI.updateUserInfo.passportNumber.length() gt 0}">
+							<p:inputText id="passportCriteriaUpdate" value="#{profileUI.updateUserInfo.passportNumber}" style="width:95%" disabled="#{sessionUI.externalParty and sessionUI.activeUser.approvedDate ne null}" requiredMessage="Please enter your passport number" required="true">
+								<p:ajax/>
+							</p:inputText>
+							<p:outputLabel value="#{lang['passport.number']}" for="passportCriteriaUpdate" />
+						</h:panelGroup>
+						
+						<h:panelGroup styleClass="md-inputfield" style="margin-top:19px;">
+							<p:inputText id="emailUpdate" value="#{profileUI.updateUserInfo.email}" maxlength="#{profileUI.MAX_EMAIL_SIZE}" style="width: 95%" required="true" requiredMessage="Enter email address">
+							   	<p:ajax/>
+							    <o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['user.email.length']}" />
+							</p:inputText>
+							<p:outputLabel value="#{lang['email']}:" for="emailUpdate" />
+						</h:panelGroup>
+						
+						<h:panelGroup styleClass="md-inputfield" style="margin-top:19px;">
+							<p:inputMask id="cellNumberUpdate" mask="#{profileUI.CELLPHONE_FORMAT}" value="#{profileUI.updateUserInfo.cellNumber}" style="width: 95%" label="cellNumber" required="true" requiredMessage="Enter mobile number">
+								<p:ajax/>
+							    <o:validator validatorId="javax.faces.Length" minimum="0" maximum="20" message="#{lang['user.cellnumber.length']}" />
+							</p:inputMask>
+							<p:outputLabel value="#{lang['mobile.number']}" for="cellNumberUpdate" />
+						</h:panelGroup>
+						
+						<h:panelGroup styleClass="md-inputfield" style="margin-top:19px;">
+							<p:inputMask id="telNumberUpdate" mask="#{profileUI.TELPHONE_FORMAT}" value="#{profileUI.updateUserInfo.telNumber}" style="width: 95%" label="telNumber" required="false" requiredMessage="Enter mobile number">
+								<p:ajax/>
+							    <o:validator validatorId="javax.faces.Length" minimum="0" maximum="20" message="#{lang['user.tellnumber.length']}" />
+							</p:inputMask>
+							<p:outputLabel value="#{lang['tel.number']}:" for="telNumberUpdate" />
+						</h:panelGroup>
+					</p:panelGrid>
+				</p:fieldset>
+				
+				<p:fieldset legend="Validiation Errors" rendered="#{profileUI.validiationExceptionUserInfo ne ''}">
+					<p:outputLabel value="#{profileUI.validiationExceptionUserInfo}" escape="false" />
+				</p:fieldset>
+				
+				<p:fieldset legend="Provide Change Reason *">
+					<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank">
+						<p:textEditor widgetVar="txtChange" id="txtChange" rendered="true" requiredMessage="Provide change reason" value="#{profileUI.changeReason.description}" height="100" style="margin-bottom:10px">
+							<p:ajax />
+						</p:textEditor>
+					</p:panelGrid>
+				</p:fieldset>
+				<p:fieldset legend="Upload Certified Copy of ID/Passport Details *">
+					<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank" id="completeGrid">
+						<h:panelGrid columns="2" style="width: 100%">
+							<p:outputLabel value="#{lang['notes']}:" for="note" />
+							<p:inputTextarea id="note" value="#{profileUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+								<p:ajax />
+							</p:inputTextarea>
+						</h:panelGrid>
+						<div class="TexAlCenter">
+							<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+						</div>
+						<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{profileUI.storeChangeNewFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update="completeGrid"
+							multiple="false" fileLimit="1" sizeLimit="#{sdfUI.maxFileSize}" allowTypes="/(\.|\/)(gif|jpe?g|png|pdf|docx|txt)$/" immediate="false" auto="true" />
+						<h:panelGrid rendered="#{profileUI.changeReason.doc ne null}">
+							<h1 class="fa fa-check" style="color: green;">Document Uploaded</h1>
+						</h:panelGrid>
+					</p:panelGrid>
+				</p:fieldset>
+				<div class="EmptyBox10" />
+				<p:commandButton process="changeReasonForm" update="@form detailsForm" value="#{lang['submit']}" icon="ui-icon-save" action="#{profileUI.createTaskToUpdateProfile}" onstart="uploadStart()" oncomplete="uploadDone()" />
+			</h:form>
+		</p:dialog>
+	</ui:define>
+</ui:composition>

@@ -1,0 +1,358 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>#{lang['TERMINATION.OF.THE.LEARNERSHIP.AGREEMENT']}</h1>
+					<h3>#{lang['BY.MUTUAL.AGREEMENT']}</h3>
+					<p:fieldset>
+						<br />
+						<span>#{lang['A.Learnership.agreement.shall.not.be.terminated']}.<br /> #{lang['The.signatories.hereto.apply']}.
+						</span>
+						<br />
+						<br />
+						<p:panelGrid style="width:100%">
+
+
+							<p:row>
+								<p:column style="width:40%">
+									<br />
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText id="employerNameOfEmployer" value="#{entityUI.learners.employerDetailsRegisteredEmployer}" style="width:95%" required="true" requiredMessage="" />
+
+										<p:outputLabel value="#{lang['NAME.OF.EMPLOYER']}" for="employerNameOfEmployer" />
+									</h:panelGroup>
+								</p:column>
+								<p:column rowspan="3">
+
+									<p:panelGrid columns="1" style="width : 95%" styleClass="ui-panelgrid-blank" id="employerAddress">
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="employerAddress1" value="#{sdfDetailUI.companysdf.company.residentialAddress.addressLine1}" style="width:95%" required="true" requiredMessage="#{lang['enter.residential.address']}">
+											</p:inputText>
+											<p:outputLabel value="#{lang['address.line.1']}" for="employerAddress1" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="employerAddress2" style="width:95%" value="#{sdfDetailUI.companysdf.company.residentialAddress.addressLine2}">
+											</p:inputText>
+											<p:outputLabel value="#{lang['address.line.2']}" for="employerAddress2" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="employerAddress3" style="width:95%" value="#{sdfDetailUI.companysdf.company.residentialAddress.addressLine3}">
+											</p:inputText>
+											<p:outputLabel value="#{lang['address.line.3']}" for="employerAddress3" />
+										</h:panelGroup>
+
+										<h:panelGroup>
+											<div>
+												<h:outputLabel value="#{lang['town']}" for="employerAddress4" />
+											</div>
+											<div>
+												<p:autoComplete id="employerAddress4" value="#{sdfDetailUI.companysdf.company.residentialAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true" requiredMessage="#{lang['please.select.a.town']}"
+													disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}">
+													<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+												</p:autoComplete>
+											</div>
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_CODE_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="employerAddress5" style="width:95%" value="#{sdfDetailUI.companysdf.company.residentialAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}">
+											</p:inputText>
+											<p:outputLabel value="#{lang['post.code']}" for="employerAddress5" />
+										</h:panelGroup>
+
+										<h:panelGroup>
+											<div>
+												<h:outputLabel value="#{lang['municipality']}" for="employerAddress6" />
+											</div>
+											<div>
+												<p:autoComplete disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="employerAddress6" value="#{sdfDetailUI.companysdf.company.residentialAddress.municipality}" required="true" completeMethod="#{sdfDetailUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityProvince}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true"
+													minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" requiredMessage="#{lang['select.municipality']}">
+													<p:column headerText="#{lang['province']}" style="white-space: nowrap">
+								#{rv.province.provinceDesc}
+							</p:column>
+													<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">
+								#{rv.municipalityDesc}
+							</p:column>
+												</p:autoComplete>
+											</div>
+										</h:panelGroup>
+
+
+									</p:panelGrid>
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column>
+									<br />
+									<h:panelGroup styleClass="md-inputfield">
+										<p:calendar id="employerDate" value="#{entityUI.learners.employerDate}" style="width:95%" required="true" requiredMessage="" showOn="button"/>
+
+										<p:outputLabel value="#{lang['DATE']}" for="employerDate" />
+									</h:panelGroup>
+								</p:column>
+
+							</p:row>
+							<p:row>
+								<p:column>
+									<br />
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText id="employerSignature" value="#{entityUI.learners.XXXXXX}" style="width:95%" required="true" requiredMessage="" />
+
+										<p:outputLabel value="#{lang['SIGNATURE']}" for="employerSignature" />
+									</h:panelGroup>
+								</p:column>
+
+							</p:row>
+
+
+						</p:panelGrid>
+						<br />
+						<p:panelGrid style="width:100%">
+
+
+							<p:row>
+
+
+								<p:column>
+									<br />
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText id="fullNameOfApprentice" value="#{entityUI.learners.fullNameOfApprentice}" style="width:95%" required="true" requiredMessage="" />
+
+										<p:outputLabel value="#{lang['FULL.NAME.OF.APPRENTICE']}" for="fullNameOfApprentice" />
+									</h:panelGroup>
+								</p:column>
+
+								<p:column rowspan="4">
+
+									<p:panelGrid columns="1" style="width : 95%" styleClass="ui-panelgrid-blank" id="apprenticeAddress">
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="apprenticeAddress1" value="#{sdfDetailUI.companysdf.company.residentialAddress.addressLine1}" style="width:95%" required="true" requiredMessage="#{lang['enter.residential.address']}">
+											</p:inputText>
+											<p:outputLabel value="#{lang['address.line.1']}" for="apprenticeAddress1" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="apprenticeAddress2" style="width:95%" value="#{sdfDetailUI.companysdf.company.residentialAddress.addressLine2}">
+											</p:inputText>
+											<p:outputLabel value="#{lang['address.line.2']}" for="apprenticeAddress2" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="apprenticeAddress3" style="width:95%" value="#{sdfDetailUI.companysdf.company.residentialAddress.addressLine3}">
+											</p:inputText>
+											<p:outputLabel value="#{lang['address.line.3']}" for="apprenticeAddress3" />
+										</h:panelGroup>
+
+										<h:panelGroup>
+											<div>
+												<h:outputLabel value="#{lang['town']}" for="apprenticeAddress4" />
+											</div>
+											<div>
+												<p:autoComplete id="apprenticeAddress4" value="#{sdfDetailUI.companysdf.company.residentialAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true" requiredMessage="#{lang['please.select.a.town']}"
+													disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}">
+													<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+												</p:autoComplete>
+											</div>
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_CODE_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="apprenticeAddress5" style="width:95%" value="#{sdfDetailUI.companysdf.company.residentialAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}">
+											</p:inputText>
+											<p:outputLabel value="#{lang['post.code']}" for="apprenticeAddress5" />
+										</h:panelGroup>
+
+										<h:panelGroup>
+											<div>
+												<h:outputLabel value="#{lang['municipality']}" for="apprenticeAddress6" />
+											</div>
+											<div>
+												<p:autoComplete disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="apprenticeAddress6" value="#{sdfDetailUI.companysdf.company.residentialAddress.municipality}" required="true" completeMethod="#{sdfDetailUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityProvince}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true"
+													minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" requiredMessage="#{lang['select.municipality']}">
+													<p:column headerText="#{lang['province']}" style="white-space: nowrap">
+								#{rv.province.provinceDesc}
+							</p:column>
+													<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">
+								#{rv.municipalityDesc}
+							</p:column>
+												</p:autoComplete>
+											</div>
+										</h:panelGroup>
+
+
+									</p:panelGrid>
+
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column style="width:40%">
+									<br />
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText id="learnershipNameOfEmployer" value="#{entityUI.learners.learnershipNameOfEmployer}" style="width:95%" required="true" requiredMessage="" />
+
+										<p:outputLabel value="#{lang['NAME.OF.EMPLOYER']}" for="learnershipNameOfEmployer" />
+									</h:panelGroup>
+								</p:column>
+							</p:row>
+							<p:row>
+								<p:column>
+									<br />
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText id="identityNumberDate" value="#{entityUI.learners.identityNumberDate}" style="width:95%" required="true" requiredMessage="" />
+
+										<p:outputLabel value="#{lang['IDENTITY.NUMBER']}" for="identityNumberDate" />
+									</h:panelGroup>
+								</p:column>
+
+							</p:row>
+
+							<p:row>
+								<p:column>
+									<br />
+									<h:panelGroup styleClass="md-inputfield">
+										<p:calendar id="learnershipDate" value="#{entityUI.learners.learnershipDate}" style="width:95%" required="true" requiredMessage="" showOn="button"/>
+
+										<p:outputLabel value="#{lang['DATE']}" for="learnershipDate" />
+									</h:panelGroup>
+								</p:column>
+
+							</p:row>
+							<p:row>
+								<p:column>
+									<br />
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText id="learnershipSignature" value="#{entityUI.learners.XXXXXX}" style="width:95%" required="true" requiredMessage="" />
+
+										<p:outputLabel value="#{lang['SIGNATURE']}" for="learnershipSignature" />
+									</h:panelGroup>
+								</p:column>
+
+							</p:row>
+
+
+						</p:panelGrid>
+						<br />
+						<p:panelGrid style="width:100%">
+
+
+							<p:row>
+								<p:column style="width:40%">
+									<br />
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText id="legalGuardian" value="#{entityUI.learners.parentGuardianFullNames}" style="width:95%" required="true" requiredMessage="" />
+
+										<p:outputLabel value="#{lang['LEGAL.GUARDIAN']}" for="legalGuardian" />
+									</h:panelGroup>
+								</p:column>
+								<p:column rowspan="3">
+									<p:panelGrid columns="1" style="width : 95%" styleClass="ui-panelgrid-blank" id="legalGuardianAddress">
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="legalGuardianAddress1" value="#{sdfDetailUI.companysdf.company.residentialAddress.addressLine1}" style="width:95%" required="true" requiredMessage="#{lang['enter.residential.address']}">
+											</p:inputText>
+											<p:outputLabel value="#{lang['address.line.1']}" for="legalGuardianAddress1" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="legalGuardianAddress2" style="width:95%" value="#{sdfDetailUI.companysdf.company.residentialAddress.addressLine2}">
+											</p:inputText>
+											<p:outputLabel value="#{lang['address.line.2']}" for="legalGuardianAddress2" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="legalGuardianAddress3" style="width:95%" value="#{sdfDetailUI.companysdf.company.residentialAddress.addressLine3}">
+											</p:inputText>
+											<p:outputLabel value="#{lang['address.line.3']}" for="legalGuardianAddress3" />
+										</h:panelGroup>
+
+										<h:panelGroup>
+											<div>
+												<h:outputLabel value="#{lang['town']}" for="legalGuardianAddress4" />
+											</div>
+											<div>
+												<p:autoComplete id="legalGuardianAddress4" value="#{sdfDetailUI.companysdf.company.residentialAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true" requiredMessage="#{lang['please.select.a.town']}"
+													disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}">
+													<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+												</p:autoComplete>
+											</div>
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_CODE_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="legalGuardianAddress5" style="width:95%" value="#{sdfDetailUI.companysdf.company.residentialAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}">
+											</p:inputText>
+											<p:outputLabel value="#{lang['post.code']}" for="legalGuardianAddress5" />
+										</h:panelGroup>
+
+										<h:panelGroup>
+											<div>
+												<h:outputLabel value="#{lang['municipality']}" for="legalGuardianAddress6" />
+											</div>
+											<div>
+												<p:autoComplete disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="legalGuardianAddress6" value="#{sdfDetailUI.companysdf.company.residentialAddress.municipality}" required="true" completeMethod="#{sdfDetailUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityProvince}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true"
+													minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" requiredMessage="#{lang['select.municipality']}">
+													<p:column headerText="#{lang['province']}" style="white-space: nowrap">
+								#{rv.province.provinceDesc}
+							</p:column>
+													<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">
+								#{rv.municipalityDesc}
+							</p:column>
+												</p:autoComplete>
+											</div>
+										</h:panelGroup>
+
+
+									</p:panelGrid>
+									</p:column>
+							</p:row>
+							<p:row>
+								<p:column>
+									<br />
+									<h:panelGroup styleClass="md-inputfield">
+										<p:calendar id="legalGuardianDate" value="#{entityUI.learners.legalGuardianDate}" style="width:95%" required="true" requiredMessage="" showOn="button"/>
+
+										<p:outputLabel value="#{lang['DATE']}" for="legalGuardianDate" />
+									</h:panelGroup>
+								</p:column>
+
+							</p:row>
+							<p:row>
+								<p:column>
+									<br />
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText id="providerSignature" value="#{entityUI.learners.XXXXXX}" style="width:95%" required="true" requiredMessage="" />
+
+										<p:outputLabel value="#{lang['SIGNATURE']}" for="providerSignature" />
+									</h:panelGroup>
+								</p:column>
+
+							</p:row>
+
+
+						</p:panelGrid>
+						<br />
+
+						<br />
+						<br />
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText id="lastWorkingDayOfLearner" value="#{entityUI.learners.lastWorkingDayOfLearner}" style="width:95%" required="true" requiredMessage="" />
+
+							<p:outputLabel value="#{lang['LAST.WORKING.DAY.OF.LEARNER']}" for="lastWorkingDayOfLearner" />
+						</h:panelGroup>
+						<br />
+						<br />
+						<span> <b>#{lang['Attach.a.copy.of.the.learners.letter']}.<br /> <br /> #{lang['This.application.form.should.be.submitted']}.
+
+						</b> <br /> <br /> #{lang['AGREED.to.and.ACCEPTED.by.the.Programme.Manager']}
+						</span>
+						<br />
+						<br />
+						<h:panelGroup styleClass="md-inputfield">
+							<p:calendar id="managerDate" value="#{entityUI.learners.managerDate}" style="width:95%" required="true" requiredMessage="" showOn="button"/>
+
+							<p:outputLabel value="#{lang['DATE']}" for="managerDate" />
+						</h:panelGroup>
+					</p:fieldset>
+				</div>
+			</div>
+
+		</div>
+
+
+	</ui:define>
+
+</ui:composition>

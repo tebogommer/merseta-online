@@ -1,0 +1,295 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<p:importEnum type="haj.com.entity.enums.PivotNonPivotEnum" />
+					<p:importEnum type="haj.com.entity.enums.LearnerStatusEnum" />
+					<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+					<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+					<p:importEnum type="haj.com.entity.enums.LearnerChangeTypeEnum" />
+					<p:importEnum type="haj.com.entity.enums.YesNoEnum" />
+					<p:importEnum type="haj.com.entity.enums.WorkplaceApprovalTypeEnum" />
+					<h1>Companies</h1>
+					
+					<h:form id="learnersInsForm">
+						<p:growl sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						
+						<p:dataTable value="#{dashboardExternalPartyUI.companies}" var="rv" reflow="true" emptyMessage="#{lang['no.records.found']}"
+							 rows="5" paginatorPosition="bottom"
+			                 paginator="true"
+			                 paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+			                 rowsPerPageTemplate="5,10,15,25,30,35,40,45,50,100,150,200">
+							<p:column headerText="#{lang['companyName']}" filterBy="#{rv.companyName}" sortBy="#{rv.companyName}">#{rv.companyName}</p:column>
+							<p:column headerText="#{lang['companyRegistrationNumber']}" filterBy="#{rv.companyRegistrationNumber}" sortBy="#{rv.companyRegistrationNumber}">#{rv.companyRegistrationNumber}</p:column>
+							<p:column headerText="#{lang['entity.id']}" filterBy="#{rv.levyNumber}" sortBy="#{rv.levyNumber}">#{rv.levyNumber}</p:column>
+							<p:column headerText="#{lang['company.status']}" width="10%">#{lang[rv.companyStatus.registrationName]}</p:column>
+							<p:column headerText="Size of Company" width="10%">#{rv.sizeOfCompany.detailDescription}</p:column>
+							<p:column headerText="#{lang['levy.paying']}" width="110" style="text-align:center">
+								<p:outputPanel rendered="#{rv.nonLevyPaying}">
+									<i class="fa fa-times fa-3x red" aria-hidden="true"></i>
+								</p:outputPanel>
+								<p:outputPanel rendered="#{not rv.nonLevyPaying}">
+									<i class="fa fa-check fa-3x green" aria-hidden="true"></i>
+								</p:outputPanel>
+							</p:column>
+							<p:column headerText="#{lang['RAG']}" width="37">
+								<h:graphicImage value="/resources/hls/images/red.svg" rendered="#{rv.companyStatus eq CompanyStatusEnum.Pending}" width="40" styleClass="animated pulse infinite" />
+								<h:graphicImage value="/resources/hls/images/green.svg" rendered="#{rv.companyStatus eq CompanyStatusEnum.Active}" width="30" />
+							</p:column>
+
+							<p:column width="45" rendered="true" headerText="#{lang['view.edit']}">
+								<p:commandButton icon="fa fa-users" title="#{lang['workplace.approval.management']}" action="#{companyWorkplaceApprovalUI.workplaceApprovalDataInfo}" update="learnersInsForm" rendered="#{rv.companyStatus eq CompanyStatusEnum.Active and rv.organisationType.workplaceApprovalRequired}">
+									<f:setPropertyActionListener value="#{rv}" target="#{companyWorkplaceApprovalUI.selectedCompany}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+						
+						<c:if test="#{companyWorkplaceApprovalUI.selectedCompany ne null}">
+						<div class="card card-w-title">
+							<h3>#{companyWorkplaceApprovalUI.selectedCompany.companyName}'s Workplace Approval</h3>
+							
+							<ui:include src="/pages/includes/filterGuide.xhtml" />
+								<p:commandButton id="newWpaBtn" icon="fa fa-plus" value="Request New WPA" immediate="true" update=":wpaForm" oncomplete="PF('dlgAddWpa').show()" rendered="#{sessionUI.mentorregistration}" action="#{companyWorkplaceApprovalUI.prepWorkplaceApprovalRequest}" />
+										<br />
+										<br />
+								<ui:include src="/pages/includes/download_lazy.xhtml">
+									<ui:param name="file_name" value="WorkPlaceApprovalData" />
+									<ui:param name="target" value="workPlaceApprovalData" />
+								</ui:include>
+								<p:dataTable id="workPlaceApprovalData" var="rvwpa" value="#{companyWorkplaceApprovalUI.allWorkPlaceApprovalDataModel}" rowKey="#{rvwpa.id}" paginator="true" rows="5" paginatorPosition="bottom"
+									paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+									<p:column style="width:7%" headerText="#{lang['expand.row']}">
+										<p:rowToggler />
+									</p:column>
+									<p:column headerText="Site" sortBy="#{rvwpa.sites}">
+										<p:outputLabel value="#{rvwpa.sites.companyName}" rendered="#{rvwpa.sites ne null}" />
+										<p:outputLabel value="#{rvwpa.company.companyName}" rendered="#{rvwpa.sites eq null}" />
+									</p:column>
+
+									<p:column headerText="Company #{lang['wpa.num']}" rendered="true">
+										<p:outputLabel value=" #{rvwpa.company.workplaceApprovalNumber}" rendered="#{rvwpa.company.workplaceApprovalNumber ne null}" />
+									</p:column>
+
+									<p:column headerText="Workplace Approval Review Date">
+										<h:outputText value="#{rvwpa.approvalReviewDate}" rendered="#{rvwpa.approvalReviewDate ne null}">
+											<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+										</h:outputText>
+										<p:outputLabel value="#{lang['N/A']}" rendered="#{rvwpa.approvalReviewDate eq null}" />
+									</p:column>
+
+									<p:column headerText="Address">
+										<p:outputLabel value="#{rvwpa.sites.registeredAddress.addressLine1}" rendered="#{rvwpa.sites ne null}" />
+										<p:outputLabel value="#{rvwpa.company.residentialAddress.addressLine1}" rendered="#{rvwpa.company.residentialAddress ne null}" />
+										<br />
+										<p:outputLabel value="#{rvwpa.sites.registeredAddress.addressLine2}" rendered="#{rvwpa.sites ne null}" />
+										<p:outputLabel value="#{rvwpa.company.residentialAddress.addressLine2}" rendered="#{rvwpa.company.residentialAddress ne null}" />
+										<br />
+										<p:outputLabel value="#{rvwpa.sites.registeredAddress.addressLine3}" rendered="#{rvwpa.sites ne null}" />
+										<p:outputLabel value="#{rvwpa.company.residentialAddress.addressLine3}" rendered="#{rvwpa.company.residentialAddress ne null}" />
+										<br />
+										<p:outputLabel value="#{rvwpa.sites.registeredAddress.town.description}" rendered="#{rvwpa.sites ne null}" />
+										<p:outputLabel value="#{rvwpa.company.residentialAddress.town.description}" rendered="#{rvwpa.company.residentialAddress ne null}" />
+										<br />
+									</p:column>
+									<p:column headerText="Qualification/Trade Code">
+										<p:outputLabel value="#{rvwpa.qualification.code}" rendered="#{rvwpa.qualification.code ne null}" />
+										<p:outputLabel value="#{rvwpa.ofoCodes.ofoCodeParent}" rendered="#{rvwpa.ofoCodes ne null}" />
+									</p:column>
+
+									<p:column headerText="Qualification/Trade Title">
+										<p:outputLabel value=" #{rvwpa.qualification.description}" rendered="#{rvwpa.qualification ne null}" />
+										<p:outputLabel value=" #{rvwpa.ofoCodes.description}" rendered="#{rvwpa.ofoCodes ne null}" />
+
+									</p:column>
+
+									<p:column headerText="Status" sortBy="#{rvwpa.approvalEnum}">
+										<p:outputLabel value="#{rvwpa.approvalEnum.friendlyName}" />
+									</p:column>
+
+									<p:column headerText="#{lang['approval.date']}" sortBy="#{rvwpa.approvalDate}">
+										<h:outputText value="#{rvwpa.approvalDate}" rendered="#{rvwpa.approvalDate ne null}">
+											<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+										</h:outputText>
+										<p:outputLabel value="#{lang['N/A']}" rendered="#{rvwpa.approvalDate eq null}" />
+									</p:column>
+
+									<p:column headerText="Qualification/Trade #{lang['wpa.num']}" rendered="true">
+										<p:outputLabel value=" #{rvwpa.workPlaceApprovalNumber}" rendered="#{rvwpa.workPlaceApprovalNumber ne null}" />
+									</p:column>
+
+									<p:column width="30" rendered="#{sessionUI.mentorregistration}">
+										<p:commandButton title="Download WPA Form" ajax="false" icon="fa fa-download " action="#{companyWorkplaceApprovalUI.downloadWorkPlaceApproval}" id="dlb" rendered="#{rvwpa.approvalEnum eq ApprovalEnum.Approved and rvwpa.targetKey eq null}" immediate="true">
+											<f:setPropertyActionListener value="#{rvwpa}" target="#{companyWorkplaceApprovalUI.workPlaceApproval}" />
+										</p:commandButton>
+										<p:commandButton title="Withdraw WPA" icon="fa fa-remove" oncomplete="PF('dlgWithdrawalDocument').show()" id="dlb2" rendered="#{rvwpa.approvalEnum eq ApprovalEnum.PendingApproval or rvwpa.approvalEnum eq ApprovalEnum.PendingSignOff or rvwpa.approvalEnum eq ApprovalEnum.PendingFinalApproval}" update="@form">
+											<f:setPropertyActionListener value="#{rvwpa}" target="#{companyWorkplaceApprovalUI.workPlaceApproval}" />
+										</p:commandButton>
+									</p:column>
+
+									<p:rowExpansion>
+										<p:outputPanel>
+											<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+												<p:dataTable id="skillsList" value="#{rvwpa.skillsProgramlist}" var="rvql2" rowKey="#{rvql2.id}" paginator="true" paginatorPosition="bottom" rows="5" reflow="true">
+
+													<p:column headerText="Programme ID" style="width:8%">
+														<p:outputLabel value="#{rvql2.programmeID}" />
+													</p:column>
+
+													<p:column headerText="Description" style="width:8%">
+														<p:outputLabel value="#{rvql2.description}" />
+													</p:column>
+
+													<p:column headerText="Qualification ID" style="width:8%">
+														<p:outputLabel value="#{rvql2.qualification.codeString}" />
+													</p:column>
+
+													<p:column headerText="Qualification Title" style="width:8%">
+														<p:outputLabel value="#{rvql2.qualification.description}" />
+													</p:column>
+
+													<p:column headerText="Qualification Registration Start Date" style="width:8%">
+														<p:outputLabel value="#{rvql2.qualification.qualregistrationstartDate}">
+															<f:convertDateTime pattern="MM/dd/yyyy" type="date" />
+														</p:outputLabel>
+													</p:column>
+
+													<p:column headerText="Qualification Registration End Date" style="width:8%">
+														<p:outputLabel value="#{rvql2.qualification.qualregistrationendDate}">
+															<f:convertDateTime pattern="MM/dd/yyyy" type="date" />
+														</p:outputLabel>
+													</p:column>
+
+												</p:dataTable>
+											</p:panelGrid>
+										</p:outputPanel>
+									</p:rowExpansion>
+
+								</p:dataTable>
+
+							<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+								<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+								<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+							</p:confirmDialog>
+
+						</div>
+					</c:if>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<h:form id="mainForm">
+					<p:tooltip position="left"></p:tooltip>
+					
+				</h:form>
+			</div>
+		</div>
+
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+		<p:dialog closeOnEscape="true" position="top" header="Request New WPA" width="75%" widgetVar="dlgAddWpa" resizable="false" hideEffect="clip" showEffect="clip" id="dialogAddWpa" appendTo="@(body)" modal="true">
+			<h:form id="wpaForm">
+
+				<c:if test="#{companyWorkplaceApprovalUI.sitesList.size() ne 0}">
+					<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%">
+						<h:panelGroup styleClass="md-inputfield" rendered="#{!companyWorkplaceApprovalUI.useCompanyAsSite}">
+							<p:autoComplete style="width:100%" inputStyle="width:100%" id="siteForWpa" value="#{companyWorkplaceApprovalUI.selectedSite}" completeMethod="#{companyWorkplaceApprovalUI.completeSites}" var="rv" itemLabel="#{rv.companyName}" itemValue="#{rv}" forceSelection="true" converter="SitesConvertor" dropdown="true"
+								minQueryLength="3" maxResults="10">
+								<p:ajax event="itemSelect" />
+							</p:autoComplete>
+							<p:outputLabel value="Select #{lang['sites']}" for="siteForWpa" />
+						</h:panelGroup>
+						<h:panelGroup>
+							<p:outputLabel value="Use Company Address:" style="color:grey" />
+							<p:spacer width="5" />
+							<p:selectBooleanCheckbox value="#{companyWorkplaceApprovalUI.useCompanyAsSite}">
+								<p:ajax update="wpaForm" />
+							</p:selectBooleanCheckbox>
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+						</h:panelGroup>
+					</p:panelGrid>
+				</c:if>
+				<!-- Abaility to select which type: either ofo code or qualification -->
+				<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%">
+					<p:outputLabel value="Select what type of workplace approval is required: " />
+					<p:selectOneRadio id="selectWhichSection" value="#{companyWorkplaceApprovalUI.byQualification}">
+						<f:selectItem itemLabel="Qualification" itemValue="true" />
+						<f:selectItem itemLabel="Trade" itemValue="false" />
+						<p:ajax listener="#{companyWorkplaceApprovalUI.clearQualification}" update="wpaForm" />
+					</p:selectOneRadio>
+					<c:if test="#{companyWorkplaceApprovalUI.byQualification}">
+						<h:panelGroup class="md-inputfield" style="margin-top:19px;">
+							<p:autoComplete style="width:100%" inputStyle="width:50%" id="qualificationSelection" value="#{companyWorkplaceApprovalUI.qualification}" completeMethod="#{assesorModiratorUI.findQualificationAutocompleteWPARequired}" var="rvq" itemLabel="#{rvq.description}" itemValue="#{rvq}" forceSelection="true"
+								converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+
+
+								<p:column headerText="SAQA ID" style="white-space: nowrap">#{rvq.code}</p:column>
+								<p:column headerText="#{lang['description']}" style="white-space: nowrap">#{rvq.description}</p:column>
+								<p:column headerText="NQF Level" style="white-space: nowrap">#{rvq.nqflevelg2description}</p:column>
+								<p:ajax event="itemSelect" update="@form" />
+							</p:autoComplete>
+							<p:outputLabel value="#{lang['qualification']}" for="qualificationSelection"></p:outputLabel>
+						</h:panelGroup>
+					</c:if>
+					<c:if test="#{!companyWorkplaceApprovalUI.byQualification}">
+						<h:panelGroup class="md-inputfield" style="margin-top:19px;">
+							<p:autoComplete style="width:100%" inputStyle="width:50%" id="qualificationSelectionTrade" value="#{companyWorkplaceApprovalUI.qualification}" completeMethod="#{autoCompleteUI.completeQualificationTrade}" var="rvq" itemLabel="#{rvq.description}" itemValue="#{rvq}" forceSelection="true"
+								converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+								<p:column headerText="SAQA ID" style="white-space: nowrap">#{rvq.code}</p:column>
+								<p:column headerText="#{lang['description']}" style="white-space: nowrap">#{rvq.description}</p:column>
+								<p:column headerText="NQF Level" style="white-space: nowrap">#{rvq.nqflevelg2description}</p:column>
+								<p:ajax event="itemSelect" update="@form" />
+							</p:autoComplete>
+							<p:outputLabel value="#{lang['trade']}" for="qualificationSelectionTrade"></p:outputLabel>
+						</h:panelGroup>
+
+
+						<h:panelGroup class="md-inputfield" style="margin-top:19px;" rendered="false">
+							<p:autoComplete id="ofoCode" value="#{companyWorkplaceApprovalUI.ofoCodes}" completeMethod="#{autoCompleteUI.completeOfoCodesTradeWpa}" var="rv" itemLabel="#{rv.ofoDescription}" itemValue="#{rv}" forceSelection="true" converter="OfoCodesConvertor" dropdown="true" minQueryLength="3" maxResults="10"
+								inputStyle="opacity: 1 !important; color: black; width: 95%" style="opacity: 1 !important; color: black; width: 95%" required="true" requiredMessage="#{lang['select.ofo.code']}">
+								<p:column headerText="OfoCodes" style="white-space: nowrap">#{rv.ofoCodeParent}</p:column>
+								<p:column headerText="Description" style="white-space: nowrap">#{rv.description}</p:column>
+								<p:ajax event="itemSelect" />
+							</p:autoComplete>
+							<p:outputLabel value="Trade" for="ofoCode" />
+						</h:panelGroup>
+					</c:if>
+					<p:commandButton value="Submit" action="#{companyWorkplaceApprovalUI.createNewWorkPlaceApproval}" update="wpaForm learnersInsForm" />
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+		
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgWithdrawalDocument" resizable="false" hideEffect="clip" showEffect="clip" id="docWithdrawalUpload" width="80%" responsive="true" modal="true">
+			<h:form id="WithdrawalFormUser">
+				<h:panelGroup id="WithdrawalGroupUser">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">Withdrawal Letter</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{companyWorkplaceApprovalUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone();PF('dlgWithdrawalDocument').hide()" fileUploadListener="#{companyWorkplaceApprovalUI.storeWithdrawalFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}"
+										fileLimitMessage="#{lang['file.to.big.to.upload']}" update="learnersInsForm" multiple="false" fileLimit="1" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+	</ui:define>
+
+</ui:composition>

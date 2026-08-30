@@ -1,0 +1,187 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui">
+	
+	<!-- disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" -->
+	<p:panelGrid columns="2" style="width:100%" id="companyInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText  disabled="true" id="companyName" value="#{sdpextensionofscopeUI.company.companyName}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.company.name']}">
+			</p:inputText>
+			<p:outputLabel value="#{lang['companyName']}" for="companyName" />
+		</h:panelGroup>
+
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText disabled="true"  id="tradingName" value="#{sdpextensionofscopeUI.company.tradingName}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.trading.name']}">
+			</p:inputText>
+			<p:outputLabel value="#{lang['tradingName']}" for="tradingName" />
+		</h:panelGroup>
+
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputMask  disabled="true"  id="telNumber" value="#{sdpextensionofscopeUI.company.telNumber}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.tel.number']}">
+			</p:inputMask>
+			<p:outputLabel value="#{lang['telNumber']}" for="telNumber" />
+		</h:panelGroup>
+
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputMask id="faxNumber" validatorMessage="#{lang['user.faxnumber.length']}" value="#{sdpextensionofscopeUI.company.faxNumber}" maxlength="#{sdfUI.MAX_FAX_NUMBER}" style="width:95%" required="false" requiredMessage="#{lang['fax.number']}"
+				disabled="true" >
+			</p:inputMask>
+			<p:outputLabel value="#{lang['faxNumber']}" for="faxNumber" />
+		</h:panelGroup>
+		
+		<h:panelGroup styleClass="md-inputfield" rendered="#{not sdpextensionofscopeUI.company.nonLevyPaying}">
+			<p:inputMask disabled="true" id="companyRegistrationNumber" value="#{sdpextensionofscopeUI.company.companyRegistrationNumber}" style="width:95%" required="true"
+				requiredMessage="#{lang['enter.company.registration.number']}">
+			</p:inputMask>
+			<p:outputLabel value="#{lang['companyRegistrationNumber']}" for="companyRegistrationNumber" />
+		</h:panelGroup>
+
+		<h:panelGroup styleClass="md-inputfield" rendered="#{sdpextensionofscopeUI.company.nonLevyPaying}">
+			<p:inputMask disabled="true" id="companyRegistrationNumbera" value="#{sdpextensionofscopeUI.company.companyRegistrationNumber}" style="width:95%" required="true" requiredMessage="#{lang['enter.company.registration.number']}">
+			</p:inputMask>
+			<p:outputLabel value="#{lang['companyRegistrationNumber']}" for="companyRegistrationNumbera" />
+		</h:panelGroup>
+
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText  disabled="true" id="email" value="#{sdpextensionofscopeUI.company.email}" style="width:95%" required="true" requiredMessage="#{lang['enter.email.address']}">
+			</p:inputText>
+			<p:outputLabel value="#{lang['email']}" for="email" />
+		</h:panelGroup>
+
+		<p:fieldset legend="#{lang['residentialAddress']}" style="margin-top: 20px">
+			<p:panelGrid columns="1" style="width : 95%" styleClass="ui-panelgrid-blank" id="addrPcode">
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" disabled="true"  id="addr1" value="#{sdpextensionofscopeUI.company.residentialAddress.addressLine1}" style="width:95%" required="true"
+						requiredMessage="#{lang['enter.residential.address']}">
+					</p:inputText>
+					<p:outputLabel value="#{lang['address.line.1']}" for="addr1" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" disabled="true" id="addr2" style="width:95%" value="#{sdpextensionofscopeUI.company.residentialAddress.addressLine2}">
+					</p:inputText>
+					<p:outputLabel value="#{lang['address.line.2']}" for="addr2" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" disabled="true"  id="addr3" style="width:95%" value="#{sdpextensionofscopeUI.company.residentialAddress.addressLine3}">
+					</p:inputText>
+					<p:outputLabel value="#{lang['address.line.3']}" for="addr3" />
+				</h:panelGroup>
+
+				<h:panelGroup>
+					<div>
+						<h:outputLabel value="#{lang['town']}" for="town" />
+					</div>
+					<div>
+						<p:autoComplete id="town" value="#{sdpextensionofscopeUI.company.residentialAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true" requiredMessage="#{lang['please.select.a.town']}"
+							disabled="true">
+							<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+						</p:autoComplete>
+					</div>
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_CODE_SIZE}" disabled="true" id="pcode" style="width:95%" value="#{sdpextensionofscopeUI.company.residentialAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}">
+					</p:inputText>
+					<p:outputLabel value="#{lang['post.code']}" for="pcode" />
+				</h:panelGroup>
+
+				<h:panelGroup>
+					<div>
+						<h:outputLabel value="#{lang['municipality']}" for="MunicipalityID" />
+					</div>
+					<div>
+						<p:autoComplete disabled="true" id="MunicipalityID" value="#{sdpextensionofscopeUI.company.residentialAddress.municipality}" required="true" completeMethod="#{tpDetailUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityProvince}" itemValue="#{rv}"
+							forceSelection="true" converter="MunicipalityConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" requiredMessage="#{lang['select.municipality']}">
+							<p:column headerText="#{lang['province']}" style="white-space: nowrap">
+								#{rv.province.provinceDesc}
+							</p:column>
+							<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">
+								#{rv.municipalityDesc}
+							</p:column>
+						</p:autoComplete>
+					</div>
+				</h:panelGroup>
+				
+				<h:panelGroup styleClass="md-inputfield">
+	                    <p:inputText type="number" rendered="true" disabled="true" required="true" completeMethod="#{tpDetailUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityProvince}"  id="latitude" style="opacity: 1 !important; color: black; width:95%" value="#{sdpextensionofscopeUI.company.residentialAddress.latitude}">
+	                        <o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['enter.latitude']}" />
+	                    </p:inputText>
+	                    <p:outputLabel value="#{lang['latitude']}" for="latitude" />
+		          </h:panelGroup>
+	             
+	              <h:panelGroup styleClass="md-inputfield">
+	                     <p:inputText type="number" disabled="true" id="longitude" value="#{sdpextensionofscopeUI.company.residentialAddress.longitude}" style="opacity: 1 !important; color: black; width:95%" required="true" requiredMessage="#{lang['enter.longitude']}">
+	                    </p:inputText>
+	                     <p:outputLabel value="#{lang['longitude']}" for="longitude" />
+		           </h:panelGroup>
+		           
+		           <h:panelGroup rendered="false">
+		            	<!-- <a href="http://itouchmap.com/latlong.html" target="_blank">Check GPS Coordinate</a>  -->
+		            	<a href="https://www.gps-coordinates.net" target="_blank">Check GPS Coordinate</a>
+		           </h:panelGroup>
+				
+			</p:panelGrid>
+		</p:fieldset>
+
+		<p:fieldset legend="#{lang['postalAddress']}" style="margin-top: 20px">
+			<p:panelGrid columns="1" style="width : 95%" styleClass="ui-panelgrid-blank" id="postalAddress">
+				<h:panelGroup styleClass="md-inputfield" rendered="true">
+					<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" disabled="true"  id="postalAddressaddr1" style="width:95%" required="true"
+						requiredMessage="#{lang['enter.postal.address']}">
+					</p:inputText>
+					<p:outputLabel value="#{lang['address.line.1']}" for="postalAddressaddr1" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield" rendered="true">
+					<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" disabled="true" id="postalAddressaddr2" style="width:95%" value="#{sdpextensionofscopeUI.company.postalAddress.addressLine2}">
+
+					</p:inputText>
+					<p:outputLabel value="#{lang['address.line.2']}" for="postalAddressaddr2" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield" rendered="true">
+					<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" disabled="true"  id="postalAddressaddr3" style="width:95%" value="#{sdpextensionofscopeUI.company.postalAddress.addressLine3}">
+
+					</p:inputText>
+					<p:outputLabel value="#{lang['address.line.3']}" for="postalAddressaddr3" />
+				</h:panelGroup>
+				<h:panelGroup rendered="true">
+					<div>
+						<h:outputLabel value="#{lang['town']}" for="townPostal" />
+					</div>
+					<div>
+						<p:autoComplete id="townPostal" value="#{sdpextensionofscopeUI.company.postalAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true" requiredMessage="#{lang['please.select.a.town']}"
+							disabled="true" >
+							<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+						</p:autoComplete>
+					</div>
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield" rendered="true">
+					<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_CODE_SIZE}" disabled="true"  id="postalAddressPcode" style="width:95%" value="#{sdpextensionofscopeUI.company.postalAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}">
+						<o:validator validatorId="javax.faces.Length" minimum="0" maximum="4" message="#{lang['postalAddress.code.length.error']}" />
+					</p:inputText>
+					<p:outputLabel value="#{lang['post.code']}" for="postalAddressPcode" />
+				</h:panelGroup>
+
+				<h:panelGroup rendered="true">
+					<div>
+						<h:outputLabel value="#{lang['municipality']}" for="postalAddressMunicipalityID" />
+					</div>
+					<div>
+						<p:autoComplete disabled="true"  id="postalAddressMunicipalityID" required="true" value="#{sdpextensionofscopeUI.company.postalAddress.municipality}" completeMethod="#{tpDetailUI.completeMunicipality}" var="rv" requiredMessage="Municipality is Required"
+							itemLabel="#{rv.municipalityProvince}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%">
+							<p:column headerText="#{lang['province']}" style="white-space: nowrap">
+								#{rv.province.provinceDesc}
+							</p:column>
+							<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">
+								#{rv.municipalityDesc}
+							</p:column>
+						</p:autoComplete>
+					</div>
+				</h:panelGroup>
+
+				
+			</p:panelGrid>
+		</p:fieldset>
+
+		
+
+	</p:panelGrid>
+</ui:composition>

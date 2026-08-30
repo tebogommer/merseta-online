@@ -1,0 +1,99 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>SARS Levy Calculation Information</h1>
+					<h:form id="sarslevydetailcalculationInsForm" >
+						<p:growl sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+
+						<p:panelGrid columns="1" style="width:100%" id="sarslevydetailcalculationInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputMask required="true" id="forSchemeYear" requiredMessage="Provide: Year" value="#{sarslevydetailcalculationUI.sarslevydetailcalculation.forSchemeYear}" style="width:95%" mask="#{sarslevydetailcalculationUI.YEAR_FORMAT}" />
+								<p:outputLabel value="DHET Scheme Year" for="forSchemeYear" />
+							</h:panelGroup>
+						
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText required="true" requiredMessage="Provide: Mandatory Percentage" id="mandatoryPercentage" value="#{sarslevydetailcalculationUI.sarslevydetailcalculation.mandatoryPercentage}" style="width:95%" />
+								<p:outputLabel value="Mandatory Percentage" for="mandatoryPercentage" />
+							</h:panelGroup>
+						
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText required="true" requiredMessage="Provide: Discretionary Percentage" id="discretionaryPercentage" value="#{sarslevydetailcalculationUI.sarslevydetailcalculation.discretionaryPercentage}" style="width:95%" />
+								<p:outputLabel value="Discretionary Percentage" for="discretionaryPercentage" />
+							</h:panelGroup>
+							
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText required="true" requiredMessage="Provide: QCTO Percentage" id="qctoPercentage" value="#{sarslevydetailcalculationUI.sarslevydetailcalculation.qctoPercentage}" style="width:95%" />
+								<p:outputLabel value="QCTO Percentage" for="qctoPercentage" />
+							</h:panelGroup>
+						
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText required="true" requiredMessage="Provide: Admin Percentage" id="adminPercentage" value="#{sarslevydetailcalculationUI.sarslevydetailcalculation.adminPercentage}" style="width:95%" />
+								<p:outputLabel value="Admin Percentage" for="adminPercentage" />
+							</h:panelGroup>
+
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:sarslevydetailcalculationList :sarslevydetailcalculationInsForm:sarslevydetailcalculationInsGrid" action="#{sarslevydetailcalculationUI.sarslevydetailcalculationInsert}" />
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="sarslevydetailcalculationInsGrid" process="@this" action="#{sarslevydetailcalculationUI.prepareNew}">
+									<p:resetInput target="sarslevydetailcalculationInsGrid" />
+								</p:commandButton>
+							</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+						<p:dataTable var="rowVar" value="#{sarslevydetailcalculationUI.dataModel}" id="sarslevydetailcalculationList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+							<p:column headerText="DHET Scheme Year" sortBy="Year">
+								<h:outputText value="#{rowVar.forSchemeYear}" />
+							</p:column>
+							<p:column headerText="Mandatory Percentage">
+								<h:outputText value="#{rowVar.mandatoryPercentage}" />
+							</p:column>
+							<p:column headerText="Discretionary Percentage">
+								<h:outputText value="#{rowVar.discretionaryPercentage}" />
+							</p:column>
+							<p:column headerText="Admin Percentage">
+								<h:outputText value="#{rowVar.adminPercentage}" />
+							</p:column>
+							<p:column headerText="QCTO Percentage">
+								<h:outputText value="#{rowVar.qctoPercentage}" />
+							</p:column>
+							<p:column width="80">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":sarslevydetailcalculationInsForm:sarslevydetailcalculationInsGrid">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{sarslevydetailcalculationUI.sarslevydetailcalculation}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":sarslevydetailcalculationInsForm:sarslevydetailcalculationInsGrid">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{sarslevydetailcalculationUI.sarslevydetailcalculation}" />
+								</p:commandButton>
+								
+								<p:commandButton rendered="false" icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:sarslevydetailcalculationList" action="#{sarslevydetailcalculationUI.sarslevydetailcalculationDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{sarslevydetailcalculationUI.sarslevydetailcalculation}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+			<h:form>
+				<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+				<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+			</h:form>
+		</p:confirmDialog>
+	</ui:define>
+	<!-- 
+_lang_
+-->
+</ui:composition>

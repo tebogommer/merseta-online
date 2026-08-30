@@ -1,0 +1,172 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui">
+
+	<!-- disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" -->
+	<p:panelGrid columns="2" style="width:100%" id="companyInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText disabled="true" id="companyName" value="#{sdpreaccreditationUI.company.companyName}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.company.name']}">
+			</p:inputText>
+			<p:outputLabel value="#{lang['companyName']}" for="companyName" />
+		</h:panelGroup>
+
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputMask disabled="true" id="companyRegNumber1" value="#{sdpreaccreditationUI.company.companyRegistrationNumber}" style="width:95%" requiredMessage="#{lang['enter.reg.number']}" required="true">
+				<p:ajax />
+			</p:inputMask>
+			<p:outputLabel value="#{lang['registration.number']}" for="companyRegNumber1" />
+		</h:panelGroup>
+
+		<h:panelGroup styleClass="md-inputfield" rendered="true">
+			<p:inputText id="companyAccreditationNumber1" disabled="true" maxlength="50" value="#{sdpreaccreditationUI.company.accreditationNumber}" style="width:95%" requiredMessage="Provide Accreditation Number" required="true">
+				<p:ajax />
+			</p:inputText>
+			<p:outputLabel value="Accreditation Number" for="companyAccreditationNumber1" />
+		</h:panelGroup>
+		
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText disabled="true" id="email" value="#{sdpreaccreditationUI.company.email}" style="width:95%" required="true" requiredMessage="#{lang['enter.email.address']}">
+			</p:inputText>
+			<p:outputLabel value="#{lang['email']}" for="email" />
+		</h:panelGroup>
+		
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputMask disabled="true" id="telNumber" value="#{sdpreaccreditationUI.company.telNumber}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.tel.number']}">
+			</p:inputMask>
+			<p:outputLabel value="#{lang['telNumber']}" for="telNumber" />
+		</h:panelGroup>
+
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputMask id="faxNumber" validatorMessage="#{lang['user.faxnumber.length']}" value="#{sdpreaccreditationUI.company.faxNumber}" maxlength="#{sdfUI.MAX_FAX_NUMBER}" style="width:95%" required="false" requiredMessage="#{lang['fax.number']}" disabled="true">
+			</p:inputMask>
+			<p:outputLabel value="#{lang['faxNumber']}" for="faxNumber" />
+		</h:panelGroup>
+
+	
+
+		<p:fieldset legend="#{lang['residentialAddress']}" style="margin-top: 20px">
+			<p:panelGrid columns="1" style="width : 95%" styleClass="ui-panelgrid-blank" id="addrPcode">
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" disabled="true" id="addr1" value="#{sdpreaccreditationUI.company.residentialAddress.addressLine1}" style="width:95%" required="true" requiredMessage="#{lang['enter.residential.address']}">
+					</p:inputText>
+					<p:outputLabel value="#{lang['address.line.1']}" for="addr1" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" disabled="true" id="addr2" style="width:95%" value="#{sdpreaccreditationUI.company.residentialAddress.addressLine2}">
+					</p:inputText>
+					<p:outputLabel value="#{lang['address.line.2']}" for="addr2" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" disabled="true" id="addr3" style="width:95%" value="#{sdpreaccreditationUI.company.residentialAddress.addressLine3}">
+					</p:inputText>
+					<p:outputLabel value="#{lang['address.line.3']}" for="addr3" />
+				</h:panelGroup>
+				
+				<h:panelGroup styleClass="md-inputfield" rendered="true">
+					<p:inputText disabled="true" id="town" style="width:95%" value="#{sdpreaccreditationUI.company.residentialAddress.town.description}" required="true" >
+					</p:inputText>
+					<p:outputLabel value="#{lang['town']}" for="town" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText disabled="true" id="pcode" style="width:95%" value="#{sdpreaccreditationUI.company.residentialAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}">
+					</p:inputText>
+					<p:outputLabel value="#{lang['post.code']}" for="pcode" />
+				</h:panelGroup>
+				
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText disabled="true" id="MunicipalityID" style="width:95%" value="#{sdpreaccreditationUI.company.residentialAddress.municipality}" >
+					</p:inputText>
+					<p:outputLabel value="#{lang['municipality']}" for="MunicipalityID" />
+				</h:panelGroup>
+
+
+				<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank" >
+					<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank">
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText type="number" rendered="true" disabled="#{sdpreaccreditationUI.company.residentialAddress.longitudeDegrees ne null}" id="longitudeDegrees" style="opacity: 1 !important; color: black; width:100%" value="#{sdpreaccreditationUI.company.residentialAddress.longitudeDegrees}" required="true" requiredMessage="Enter #{lang['longitude']}: Degrees">
+							</p:inputText>
+							<p:outputLabel value="#{lang['longitude']}: Degrees" for="longitudeDegrees" />
+						</h:panelGroup>
+		
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText type="number" disabled="#{sdpreaccreditationUI.company.residentialAddress.longitudeMinutes ne null}" id="longitudeMinutes" value="#{sdpreaccreditationUI.company.residentialAddress.longitudeMinutes}" style="opacity: 1 !important; color: black; width:100%" required="true" requiredMessage="Enter #{lang['longitude']}: Minutes">
+							</p:inputText>
+							<p:outputLabel value="#{lang['longitude']}: Minutes" for="longitudeMinutes" />
+						</h:panelGroup>
+		
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText type="number" disabled="#{sdpreaccreditationUI.company.residentialAddress.longitudeSeconds ne null}" id="longitudeSeconds" value="#{sdpreaccreditationUI.company.residentialAddress.longitudeSeconds}" style="opacity: 1 !important; color: black; width:100%" required="true" requiredMessage="Enter #{lang['longitude']}: Seconds">
+							</p:inputText>
+							<p:outputLabel value="#{lang['longitude']}: Seconds" for="longitudeSeconds" />
+						</h:panelGroup>
+					</p:panelGrid>
+					
+					<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank">
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText type="number" rendered="true" disabled="#{sdpreaccreditationUI.company.residentialAddress.latitudeDegrees ne null}" id="latitudeDegrees" style="opacity: 1 !important; color: black; width:100%" value="#{sdpreaccreditationUI.company.residentialAddress.latitudeDegrees}" required="true" requiredMessage="Enter #{lang['latitude']}: Degrees">
+							</p:inputText>
+							<p:outputLabel value="#{lang['latitude']}: Degrees" for="latitudeDegrees" />
+						</h:panelGroup>
+		
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText type="number" disabled="#{sdpreaccreditationUI.company.residentialAddress.latitudeMinutes ne null}" id="latitudeMinutes" value="#{sdpreaccreditationUI.company.residentialAddress.latitudeMinutes}" style="opacity: 1 !important; color: black; width:100%" required="true" requiredMessage="Enter #{lang['latitude']}: Minutes">
+							</p:inputText>
+							<p:outputLabel value="#{lang['latitude']}: Minutes" for="latitudeMinutes" />
+						</h:panelGroup>
+		
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText type="number" disabled="#{sdpreaccreditationUI.company.residentialAddress.latitudeSeconds ne null}" id="latitudeSeconds" value="#{sdpreaccreditationUI.company.residentialAddress.latitudeSeconds}" style="opacity: 1 !important; color: black; width:100%" required="true" requiredMessage="Enter #{lang['latitude']}: Seconds">
+							</p:inputText>
+							<p:outputLabel value="#{lang['latitude']}: Seconds" for="latitudeSeconds" />
+						</h:panelGroup>
+					</p:panelGrid>
+				</p:panelGrid>
+
+
+			</p:panelGrid>
+		</p:fieldset>
+
+		<p:fieldset legend="#{lang['postalAddress']}" style="margin-top: 20px">
+			<p:panelGrid columns="1" style="width : 95%" styleClass="ui-panelgrid-blank" id="postalAddress">
+				<h:panelGroup styleClass="md-inputfield" rendered="true">
+					<p:inputText  disabled="true" id="postalAddressaddr1" value="#{sdpreaccreditationUI.company.postalAddress.addressLine1}" style="width:95%" required="true" requiredMessage="#{lang['enter.postal.address']}">
+					</p:inputText>
+					<p:outputLabel value="#{lang['address.line.1']}" for="postalAddressaddr1" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield" rendered="true">
+					<p:inputText  disabled="true" id="postalAddressaddr2" style="width:95%" value="#{sdpreaccreditationUI.company.postalAddress.addressLine2}">
+					</p:inputText>
+					<p:outputLabel value="#{lang['address.line.2']}" for="postalAddressaddr2" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield" rendered="true">
+					<p:inputText  disabled="true" id="postalAddressaddr3" style="width:95%" value="#{sdpreaccreditationUI.company.postalAddress.addressLine3}">
+
+					</p:inputText>
+					<p:outputLabel value="#{lang['address.line.3']}" for="postalAddressaddr3" />
+				</h:panelGroup>
+								
+				<h:panelGroup styleClass="md-inputfield" rendered="true">
+					<p:inputText disabled="true" id="townPostal" style="width:95%" value="#{sdpreaccreditationUI.company.postalAddress.town.description}" required="true" >
+					</p:inputText>
+					<p:outputLabel value="#{lang['town']}" for="townPostal" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield" rendered="true">
+					<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_CODE_SIZE}" disabled="true" id="postalAddressPcode" style="width:95%" value="#{sdpreaccreditationUI.company.postalAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}">
+						<o:validator validatorId="javax.faces.Length" minimum="0" maximum="4" message="#{lang['postalAddress.code.length.error']}" />
+					</p:inputText>
+					<p:outputLabel value="#{lang['post.code']}" for="postalAddressPcode" />
+				</h:panelGroup>
+				
+				<h:panelGroup styleClass="md-inputfield" rendered="true">
+					<p:inputText disabled="true" id="postalAddressMunicipalityID" style="width:95%" value="#{sdpreaccreditationUI.company.postalAddress.municipality.municipalityDesc}" required="true">
+					</p:inputText>
+					<p:outputLabel value="#{lang['municipality']}" for="postalAddressMunicipalityID" />
+				</h:panelGroup>
+				
+			</p:panelGrid>
+			
+		<p:spacer height="180"></p:spacer>
+		</p:fieldset>
+	</p:panelGrid>
+	
+</ui:composition>

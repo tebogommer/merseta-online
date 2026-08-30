@@ -1,0 +1,365 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+	<p:tabView>
+		<p:tab title="Transfer Requests">
+
+			<p:outputPanel rendered="#{companyLearner.companyLearnersTransfer.size() eq 0}">
+				<ui:include src="/pages/includes/tabinfo.xhtml">
+					<ui:param name="showInfoCircle" value="false" />
+					<ui:param name="cssClass" value="Fs15" />
+					<ui:param name="helpTxt" value="No transfer requests have been made" />
+				</ui:include>
+			</p:outputPanel>
+
+			<p:dataTable var="rowVar" value="#{companyLearner.companyLearnersTransfer}" rendered="#{companyLearner.companyLearnersTransfer.size() gt 0}" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+				paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+				<p:column headerText="#{lang['expand.row']}" width="45">
+					<p:rowToggler></p:rowToggler>
+				</p:column>
+				<p:column headerText="Date">
+					<h:outputText value="#{rowVar.createDate}">
+						 <f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+					</h:outputText>
+				</p:column>
+
+				<p:column headerText="Requested By">
+					<h:outputText value="#{rowVar.transferRequestType.friendlyName}" />
+				</p:column>
+
+				<p:column headerText="Transfer Request Type">
+					<h:outputText value="#{rowVar.learnerTransferType.friendlyName}" />
+				</p:column>
+
+				<p:column headerText="Transfer To">
+					<h:outputText value="#{rowVar.transferToCompany.companyName}" />
+				</p:column>
+
+				<p:column headerText="Status">
+					<h:outputText value="#{rowVar.status.friendlyName}" />
+				</p:column>
+
+				<p:column headerText="Approval Date">
+					<h:outputText value="#{rowVar.approvalDate}">
+						 <f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+					</h:outputText>
+					<h:outputText rendered="#{rowVar.approvalDate eq null}" value="N/A"/>
+				</p:column>
+
+				<p:rowExpansion>
+				
+					<p:fieldset legend="Company Approval User">
+						<p:panelGrid columns="2" style="width:100%" id="appcompDetail" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							
+							<h:panelGroup rendered="#{rowVar.companySelectedApprovalUser eq null}" styleClass="md-inputfield" >
+								<p:inputText  value="Awaiting Approval" disabled="true" style="width: 95%"></p:inputText>
+								<p:outputLabel value="Awaiting Approval" />
+							</h:panelGroup>
+							
+							<h:panelGroup rendered="#{rowVar.companySelectedApprovalUser ne null}" styleClass="md-inputfield" >
+								<p:inputText value="#{rowVar.companySelectedApprovalUser.firstName} #{rowVar.companySelectedApprovalUser.lastName}"  disabled="true" style="width: 95%"></p:inputText>
+								<p:outputLabel value="Approval User"/>
+							</h:panelGroup>
+							
+							<h:panelGroup  rendered="#{rowVar.companySelectedApprovalUser ne null}" styleClass="md-inputfield" >
+								<p:inputText value="#{rowVar.approvalDateCompanySelected}" disabled="true" style="width: 95%">
+									 <f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</p:inputText>
+								<p:outputLabel value="Date of Approval"/>
+							</h:panelGroup>
+						</p:panelGrid>
+					</p:fieldset>
+					<p:fieldset legend="Documents">
+						<ui:include src="/pages/includes/documents_info_display.xhtml">
+							<ui:param name="docs" value="#{rowVar.docs}" />
+				    	</ui:include>
+					</p:fieldset>
+				</p:rowExpansion>
+			</p:dataTable>
+		</p:tab>
+		<p:tab title="Change Requests">
+			<p:outputPanel rendered="#{companyLearner.companyLearnersChange.size() eq 0}">
+				<ui:include src="/pages/includes/tabinfo.xhtml">
+					<ui:param name="showInfoCircle" value="false" />
+					<ui:param name="cssClass" value="Fs15" />
+					<ui:param name="helpTxt" value="No change requests have been made" />
+				</ui:include>
+			</p:outputPanel>
+
+			<p:dataTable var="rowVar" value="#{companyLearner.companyLearnersChange}" rendered="#{companyLearner.companyLearnersChange.size() gt 0}" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+				paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+				<p:column headerText="#{lang['expand.row']}" width="45">
+					<p:rowToggler></p:rowToggler>
+				</p:column>
+				<p:column headerText="Date">
+					<h:outputText value="#{rowVar.createDate}" >
+						 <f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+					</h:outputText>
+				</p:column>
+
+				<p:column headerText="Change Type">
+					<h:outputText value="#{rowVar.learnerChangeTypeEnum.friendlyName}" />
+				</p:column>
+
+				<p:column headerText="Information Changed to">
+					<h:outputText value="#{rowVar.commencmentDate}" />
+					<h:outputText value="#{rowVar.qualification.description}" />
+					<h:outputText value="#{rowVar.skillsSet.description}" />
+					<h:outputText value="#{rowVar.skillsProgram.description}" />
+					<h:outputText value="#{rowVar.unitStandard.title}" />
+				</p:column>
+
+				<p:column headerText="Status">
+					<h:outputText value="#{rowVar.status.friendlyName}" />
+				</p:column>
+
+				<p:column headerText="Approval Date">
+					<h:outputText value="#{rowVar.approvalDate}">
+						 <f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+					</h:outputText>
+					<h:outputText rendered="#{rowVar.approvalDate eq null}" value="N/A"/>
+				</p:column>
+				<p:rowExpansion>
+					<p:fieldset legend="Documents">
+						<ui:include src="/pages/includes/documents_info_display.xhtml">
+							<ui:param name="docs" value="#{rowVar.docs}" />
+				    	</ui:include>
+					</p:fieldset>
+					
+					<p:fieldset legend="E-Learner Change Documents">
+						<p:panelGrid columns="4" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">	
+							<p:commandButton ajax="false" value="Download Form" icon="fa fa-download " action="#{learnersUI.downloadForm(rowVar)}" >
+							</p:commandButton>
+						</p:panelGrid>
+					</p:fieldset>
+				</p:rowExpansion>
+			</p:dataTable>
+		</p:tab>
+		<p:tab title="Lost Time Request">
+			<p:outputPanel rendered="#{companyLearner.companyLearnersLostTime.size() eq 0}">
+				<ui:include src="/pages/includes/tabinfo.xhtml">
+					<ui:param name="showInfoCircle" value="false" />
+					<ui:param name="cssClass" value="Fs15" />
+					<ui:param name="helpTxt" value="No lost time Requests have been made" />
+				</ui:include>
+			</p:outputPanel>
+			<p:dataTable var="rowVar" value="#{companyLearner.companyLearnersLostTime}" rendered="#{companyLearner.companyLearnersLostTime.size() gt 0}" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+				paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+				<p:column headerText="#{lang['expand.row']}" width="45">
+					<p:rowToggler></p:rowToggler>
+				</p:column>
+				<p:column headerText="Date">
+					<h:outputText value="#{rowVar.createDate}">
+						 <f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+					</h:outputText>
+				</p:column>
+
+				<p:column headerText="Change Type">
+					<h:outputText value="#{rowVar.lostTimeReason.friendlyName}" />
+				</p:column>
+
+				<p:column headerText="Status">
+					<h:outputText value="#{rowVar.status.friendlyName}" />
+				</p:column>
+
+				<p:column headerText="Approval Date">
+					<h:outputText value="#{rowVar.approvalDate}">
+						 <f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+					</h:outputText>
+					<h:outputText rendered="#{rowVar.approvalDate eq null}" value="N/A"/>
+				</p:column>
+				<p:rowExpansion>
+					<p:fieldset legend="Documents">
+						<ui:include src="/pages/includes/documents_info_display.xhtml">
+							<ui:param name="docs" value="#{rowVar.docs}" />
+				    	</ui:include>
+					</p:fieldset>
+					<p:fieldset legend="E-Learner Lost Time Documents">
+						<p:panelGrid columns="4" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">	
+							<p:commandButton ajax="false" value="Download Form" icon="fa fa-download " action="#{learnersUI.downloadLPMAD001(rowVar)}" >
+							</p:commandButton>
+						</p:panelGrid>
+					</p:fieldset>
+				</p:rowExpansion>
+			</p:dataTable>
+		</p:tab>
+		<p:tab title="Trade Test Request">
+			<p:outputPanel rendered="#{companyLearner.companyLearnersTradeTest.size() eq 0}">
+				<ui:include src="/pages/includes/tabinfo.xhtml">
+					<ui:param name="showInfoCircle" value="false" />
+					<ui:param name="cssClass" value="Fs15" />
+					<ui:param name="helpTxt" value="No lost time Requests have been made" />
+				</ui:include>
+			</p:outputPanel>
+			<p:dataTable var="rowVar" value="#{companyLearner.companyLearnersTradeTest}" rendered="#{companyLearner.companyLearnersTradeTest.size() gt 0}" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+				paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+				<p:column headerText="#{lang['expand.row']}" width="45">
+					<p:rowToggler></p:rowToggler>
+				</p:column>
+				<p:column headerText="Date">
+					<h:outputText value="#{rowVar.createDate}">
+						 <f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+					</h:outputText>
+				</p:column>
+
+				<p:column headerText="Preferred Training Center">
+					<h:outputText value="#{rowVar.preferredTrainingCenter.companyNameDisplay}" />
+				</p:column>
+
+				<p:column headerText="Previously Attempted">
+					<h:outputText value="#{rowVar.attemptedTradeTest.friendlyName}" />
+				</p:column>
+
+				<p:column headerText="Previous Training Center">
+					<h:outputText value="#{rowVar.preferredTrainingCenter.companyNameDisplay}" />
+				</p:column>
+
+				<p:column headerText="Attempt Number">
+					<h:outputText value="#{rowVar.attemptNumber}" />
+				</p:column>
+
+				<p:column headerText="Competence">
+					<h:outputText value="#{rowVar.competenceEnum.friendlyName}" />
+				</p:column>
+
+				<p:column headerText="Status">
+					<h:outputText value="#{rowVar.status.friendlyName}" />
+				</p:column>
+
+				<p:column headerText="Approval Date">
+					<h:outputText value="#{rowVar.approvalDate}" >
+						 <f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+					</h:outputText>
+					<h:outputText rendered="#{rowVar.approvalDate eq null}" value="N/A"/>
+				</p:column>
+				<p:rowExpansion>
+					<p:fieldset legend="Documents">
+						<ui:include src="/pages/includes/documents_info_display.xhtml">
+							<ui:param name="docs" value="#{rowVar.docs}" />
+				    	</ui:include>
+					</p:fieldset>
+				</p:rowExpansion>
+			</p:dataTable>
+		</p:tab>
+		
+		<p:tab title="Agreement Termination ">
+
+			<p:outputPanel rendered="#{companyLearner.companyLearnersTermination.size() eq 0}">
+				<ui:include src="/pages/includes/tabinfo.xhtml">
+					<ui:param name="showInfoCircle" value="false" />
+					<ui:param name="cssClass" value="Fs15" />
+					<ui:param name="helpTxt" value="No Learner Agreement Termination requests have been made" />
+				</ui:include>
+			</p:outputPanel>
+			
+			<p:dataTable var="rowVar" value="#{companyLearner.companyLearnersTermination}" rendered="#{companyLearner.companyLearnersTermination.size() gt 0}" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+				paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+				<p:column headerText="#{lang['expand.row']}" width="45">
+					<p:rowToggler></p:rowToggler>
+				</p:column>
+				<p:column headerText="Date">
+					<h:outputText value="#{rowVar.createDate}">
+						 <f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+					</h:outputText>
+				</p:column>
+				
+				<p:column headerText="Type Of Termination">
+					<h:outputText value="#{rowVar.terminationTypeEnum.friendlyName}" />
+				</p:column>
+				
+				<p:column headerText="Investigate Date">
+					<h:outputText value="#{rowVar.investigateDate}">
+						 <f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+					</h:outputText>
+					<h:outputText rendered="#{rowVar.investigateDate eq null}" value="N/A"/>
+				</p:column>
+				
+				<p:column headerText="Status">
+					<h:outputText value="#{rowVar.status.friendlyName}" />
+				</p:column>
+
+				<p:column headerText="Approval Date">
+					<h:outputText value="#{rowVar.approvalDate}">
+						 <f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+					</h:outputText>
+					<h:outputText rendered="#{rowVar.approvalDate eq null}" value="N/A"/>
+				</p:column>
+				<p:rowExpansion>
+					<p:fieldset legend="Documents">
+						<ui:include src="/pages/includes/documents_info_display.xhtml">
+							<ui:param name="docs" value="#{rowVar.docs}" />
+				    	</ui:include>
+					</p:fieldset>
+					<p:fieldset legend="E-Learner Termination Documents" >
+						<p:panelGrid columns="4" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">	
+							<p:commandButton ajax="false" value="Download Form" icon="fa fa-download " action="#{learnersUI.downloadTerminationForm(rowVar)}" >
+							</p:commandButton>
+						</p:panelGrid>
+					</p:fieldset>
+				</p:rowExpansion>
+			</p:dataTable>
+			
+		</p:tab>
+		
+		<p:tab title="Completion">
+			<p:outputPanel rendered="#{companyLearner.completionLetters.size() eq 0}">
+				<ui:include src="/pages/includes/tabinfo.xhtml">
+					<ui:param name="showInfoCircle" value="false" />
+					<ui:param name="cssClass" value="Fs15" />
+					<ui:param name="helpTxt" value="No Completions requests have been made" />
+				</ui:include>
+			</p:outputPanel>	
+			<p:dataTable var="rowVarCompletion" value="#{companyLearner.completionLetters}" rendered="#{companyLearner.completionLetters.size() gt 0}" rowKey="#{rowVarCompletion.id}" paginator="true" rows="5" paginatorPosition="bottom"
+				paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+				
+				<p:column headerText="#{lang['expand.row']}" width="45">
+					<p:rowToggler></p:rowToggler>
+				</p:column>
+				
+				<p:column headerText="Date">
+					<h:outputText value="#{rowVarCompletion.createDate}">
+						 <f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+					</h:outputText>
+				</p:column>
+				
+				<p:column headerText="Status">
+					<h:outputText value="#{rowVarCompletion.status.friendlyName}" />
+				</p:column>
+				
+				<p:column headerText="Competence Status">
+					<h:outputText value="#{rowVarCompletion.competenceEnum.friendlyName}" />
+				</p:column>
+				
+				<p:column headerText="Assessment Date">
+					<h:outputText value="#{rowVarCompletion.assessmentDate}">
+						 <f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+					</h:outputText>
+					<h:outputText rendered="#{rowVarCompletion.assessmentDate eq null}" value="N/A"/>
+				</p:column>
+				
+				<p:column headerText="Moderation Date">
+					<h:outputText value="#{rowVarCompletion.moderationDate}">
+						 <f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+					</h:outputText>
+					<h:outputText rendered="#{rowVarCompletion.moderationDate eq null}" value="N/A"/>
+				</p:column>
+
+				<p:column headerText="Approval Date">
+					<h:outputText value="#{rowVarCompletion.approvalDate}">
+						 <f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+					</h:outputText>
+					<h:outputText rendered="#{rowVarCompletion.approvalDate eq null}" value="N/A"/>
+				</p:column>
+				
+				<p:rowExpansion>
+					<p:fieldset legend="Documents">
+						<ui:include src="/pages/includes/documents_info_display.xhtml">
+							<ui:param name="docs" value="#{rowVarCompletion.docs}" />
+				    	</ui:include>
+					</p:fieldset>
+				</p:rowExpansion>
+				
+			</p:dataTable>	
+		</p:tab>
+	</p:tabView>
+
+</ui:composition>

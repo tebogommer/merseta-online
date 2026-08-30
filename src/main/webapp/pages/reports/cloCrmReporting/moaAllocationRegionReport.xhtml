@@ -1,0 +1,96 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<p:growl sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>MOA Allocation Region Report</h1>
+					<c:if test="#{moaAllocationRegionReportUI.cloCrmUser eq false}">
+						<h3>You are currently not linked to any region. Note this report is limited to CLO and CRM users. If you have any queries please contact support.</h3>
+					</c:if>
+					<h:form id="mainForm" rendered="#{moaAllocationRegionReportUI.cloCrmUser}">
+
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="Filter By: Financial Year / Grant Year" for="selectedFinYear" style="width:100%; color:#977949" />
+							</div>
+							<div>
+								<p:selectOneMenu id="selectedFinYear" value="#{moaAllocationRegionReportUI.selectedYear}" style="width:95%">
+									<p:ajax event="itemSelect" update="@form" listener="#{moaAllocationRegionReportUI.selectFinYear}" />
+									<f:selectItems value="#{moaAllocationRegionReportUI.financialYears}" />
+								</p:selectOneMenu>
+							</div>
+							<div class="EmptyBox10" />
+						</h:panelGroup>
+
+
+						<c:if test="#{moaAllocationRegionReportUI.selectedYear ne null}">
+							<div class="EmptyBox10" />
+							<c:if test="#{moaAllocationRegionReportUI.displayNormalDownload}">
+								<ui:include src="/pages/includes/download_lazy.xhtml">
+									<ui:param name="file_name" value="MOA_Allocation_Region_Report" />
+									<ui:param name="target" value="moaAllocationRegionDT" />
+								</ui:include>
+							</c:if>
+
+							<c:if test="false">	
+								<ui:include src="/pages/includes/filterGuide.xhtml" />
+							</c:if>
+							<div class="EmptyBox5"/>
+
+							<p:dataTable emptyMessage="No Results Found" widgetVar="moaAllocationRegionWR" id="moaAllocationRegionDT" var="rowVar" value="#{moaAllocationRegionReportUI.activeContractsDataModel}" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+								paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+								<p:column headerText="#{lang['entity.id']}" >
+									<p:outputLabel value="#{rowVar.dgAllocationParent.wsp.company.levyNumber}" />
+								</p:column>
+
+								<p:column headerText="#{lang['company.name']}" >
+									<p:outputLabel value="#{rowVar.dgAllocationParent.wsp.company.companyName}" />
+								</p:column>
+
+								<p:column headerText="#{lang['trading.name']}"  >
+									<p:outputLabel value="#{rowVar.dgAllocationParent.wsp.company.tradingName}" />
+								</p:column>
+
+								<p:column headerText="Current Company: Categorisation">
+									<h:outputText value="#{rowVar.dgAllocationParent.wsp.company.categorizationLookUp.friendlyName}" rendered="#{rowVar.dgAllocationParent.wsp.company.categorizationLookUp ne null}" />
+									<h:outputText value="#{rowVar.dgAllocationParent.wsp.company.categorization.friendlyName}" rendered="#{rowVar.dgAllocationParent.wsp.company.categorizationLookUp eq null}" />
+								</p:column>
+
+								<p:column headerText="MOA: Categorisation">
+									<p:outputLabel value="#{rowVar.dgAllocationParent.companyCategorization.friendlyName}" />
+								</p:column>
+
+								<p:column headerText="DG Year">
+									<h:outputText value="#{rowVar.dgAllocationParent.wsp.finYear}" styleClass="Fright">
+									</h:outputText>
+								</p:column>
+
+								<p:column headerText="MOA Value">
+									<h:outputText value="#{rowVar.contractvalue}" styleClass="Fright" >
+										<f:convertNumber pattern="###,###,###,###,##0.00" />
+									</h:outputText>
+								</p:column>
+
+								<p:column headerText="MOA Status" >
+									<p:outputLabel value="#{rowVar.contractStatusEnum.friendlyName}" />
+								</p:column>
+
+								<p:column headerText="Number Of Learners" >
+									<h:outputText value="#{rowVar.nooflearners}" styleClass="Fright">
+										<f:convertNumber pattern="###,###,###,###,##0" />
+									</h:outputText>
+								</p:column>
+
+							</p:dataTable>
+						</c:if>
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+</ui:composition>

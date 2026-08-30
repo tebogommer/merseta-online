@@ -1,0 +1,141 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<ui:define name="content">
+		<h:form id="mainForm">
+			<div class="ui-g">
+				<div class="ui-g-12">
+					<div class="card">
+						<h3>Submitted Applications</h3>
+						<ui:include src="/pages/includes/download_lazy.xhtml">
+							<ui:param name="file_name" value="Submitted_Applications" />
+							<ui:param name="target" value="submittedApplications" />
+						</ui:include>
+						<div class="EmptyBox10" />
+						<p:dataTable id="submittedApplications" var="rowVar" value="#{projectreviewUI.dataModel}" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}" paginatorTemplate="#{lang['page']} {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+							rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+							<p:column headerText="#{lang['id']}" width="8%">
+								<p:outputLabel value="#{rowVar.id}"></p:outputLabel>
+							</p:column>
+							<p:column headerText="Company">
+								<p:outputLabel value="#{rowVar.company.companyName}">
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="Entity ID">
+								<p:outputLabel value="#{rowVar.company.levyNumber}">
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="Funding Window" rendered="true">
+								<p:outputLabel value="#{rowVar.dgYear.description} (#{rowVar.dgYear.dgWindowType})">
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="Estimated Cost">
+								<p:outputLabel value="#{rowVar.estimatedOverallProjectCost}" />
+							</p:column>
+							<p:column headerText="Approved Amount">
+								<p:outputLabel value="#{rowVar.approvedAmount}" />
+							</p:column>
+							<p:column headerText="#{lang['status']}" rendered="true">
+								<p:outputLabel value="#{rowVar.wspStatusEnum.friendlyName}">
+								</p:outputLabel>
+								<p:outputLabel rendered="#{rowVar.wspStatusEnum.friendlyName eq 'Rejected'}" value=" - #{rowVar.rejectionReasons}">
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="#{lang['decision.date']}">
+								<p:outputLabel value="#{rowVar.approvedDate}" rendered="#{rowVar.wspStatusEnum.friendlyName eq 'Rejected' or rowVar.wspStatusEnum.friendlyName eq 'Approved'}">
+									<f:convertDateTime pattern="dd MMMM yyyy" />
+								</p:outputLabel>
+								<p:outputLabel value="N/A" rendered="#{rowVar.wspStatusEnum.friendlyName ne 'Rejected' and rowVar.wspStatusEnum.friendlyName ne 'Approved'}" />
+							</p:column>
+							<p:column width="50" headerText="Actions" exportable="false" rendered="#{sessionUI.activeUser.holdingRoom}">
+								<p:commandButton icon="fa fa-pencil" title="Assign Project Owner" process="@this" oncomplete="PF('assignProjectOwner').show()" update="assignProjectOwnerForm">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{projectreviewUI.wsp}" />
+								</p:commandButton>
+								<p:commandButton icon="fa fa-arrow-right" action="#{projectreviewUI.goToWspForCompany}" ajax="false" title="View Application" immediate="true">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{projectreviewUI.wsp}" />
+								</p:commandButton></p:column>
+						</p:dataTable>
+					</div>
+				</div>
+				<div class="ui-g-12">
+					<div class="card">
+						<h3>Awaiting Approval</h3>
+						<ui:include src="/pages/includes/download_lazy.xhtml">
+							<ui:param name="file_name" value="Awaiting_Approval" />
+							<ui:param name="target" value="AwaitingApproval" />
+						</ui:include>
+						<div class="EmptyBox10" />
+						<p:dataTable id="AwaitingApproval" var="rowVar" value="#{projectreviewUI.dataModelCompleted}" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}" paginatorTemplate="#{lang['page']} {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+							rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+							<p:column headerText="#{lang['id']}" width="8%">
+								<p:outputLabel value="#{rowVar.id}"></p:outputLabel>
+							</p:column>
+							<p:column headerText="Company">
+								<p:outputLabel value="#{rowVar.company.companyName}">
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="Entity ID">
+								<p:outputLabel value="#{rowVar.company.levyNumber}">
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="Project Owner">
+								<p:outputLabel value="#{rowVar.projectOwner.firstName} #{rowVar.projectOwner.lastName}">
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="Recommendation">
+								<p:outputLabel value="#{rowVar.holdingRoomStatusEnum.friendlyName}">
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="Funding Window" rendered="true">
+								<p:outputLabel value="#{rowVar.dgYear.description} (#{rowVar.dgYear.dgWindowType})">
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="Estimated Cost">
+								<p:outputLabel value="#{rowVar.estimatedOverallProjectCost}" />
+							</p:column>
+							<p:column headerText="#{lang['status']}" rendered="true">
+								<p:outputLabel value="#{rowVar.wspStatusEnum.friendlyName}">
+								</p:outputLabel>
+								<p:outputLabel rendered="#{rowVar.wspStatusEnum.friendlyName eq 'Rejected'}" value=" - #{rowVar.rejectionReasons}">
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="#{lang['decision.date']}">
+								<p:outputLabel value="#{rowVar.approvedDate}" rendered="#{rowVar.wspStatusEnum.friendlyName eq 'Rejected' or rowVar.wspStatusEnum.friendlyName eq 'Approved'}">
+									<f:convertDateTime pattern="dd MMMM yyyy" />
+								</p:outputLabel>
+								<p:outputLabel value="N/A" rendered="#{rowVar.wspStatusEnum.friendlyName ne 'Rejected' and rowVar.wspStatusEnum.friendlyName ne 'Approved'}" />
+							</p:column>
+							<p:column width="50" headerText="Actions" exportable="false" rendered="#{sessionUI.activeUser.holdingRoom}">
+								<p:commandButton icon="fa fa-arrow-right" action="#{projectreviewUI.goToWspForCompany}" ajax="false" title="View Application" immediate="true">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{projectreviewUI.wsp}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+						<div class="EmptyBox10"></div>
+						<p:commandButton icon="fa fa-check" action="#{projectreviewUI.approveRecommendation}" rendered="#{sessionUI.activeUser.holdingRoom}" update="@form" value="Approve Recommendations">
+						</p:commandButton>
+					</div>
+				</div>
+			</div>
+		</h:form>
+		<p:dialog header="Assign Project Owner" widgetVar="assignProjectOwner" resizable="false" hideEffect="clip" showEffect="clip" id="dlgAssignPOID" width="30%" responsive="true" modal="true" dynamic="true">
+			<h:form id="assignProjectOwnerForm">
+				<p:panelGrid columns="1" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<h:panelGroup styleClass="md-inputfield">
+						<p:autoComplete id="gender" value="#{projectreviewUI.wsp.projectOwner}" completeMethod="#{autoCompleteUI.completeEmployee}" var="rv" itemLabel="#{rv.users.firstName} #{rv.users.lastName}" itemValue="#{rv.users}" forceSelection="true" converter="UsersConvertor" dropdown="true" minQueryLength="3" maxResults="10" required="true">
+							<p:column style="white-space: nowrap">#{rv.users.firstName}</p:column>
+							<p:column style="white-space: nowrap">#{rv.users.lastName}</p:column>
+						</p:autoComplete>
+						<p:outputLabel value="Project Owner" for="gender" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:autoComplete id="gender2" value="#{projectreviewUI.wsp.projectManager}" completeMethod="#{autoCompleteUI.completeEmployee}" var="rv" itemLabel="#{rv.users.firstName} #{rv.users.lastName}" itemValue="#{rv.users}" forceSelection="true" converter="UsersConvertor" dropdown="true" minQueryLength="3" maxResults="10" required="true">
+							<p:column style="white-space: nowrap">#{rv.users.firstName}</p:column>
+							<p:column style="white-space: nowrap">#{rv.users.lastName}</p:column>
+						</p:autoComplete>
+						<p:outputLabel value="Manager" for="gender2" />
+					</h:panelGroup>
+				</p:panelGrid>
+				<p:commandButton value="#{lang['submit']}" icon="fa fa-check" styleClass="flat" action="#{projectreviewUI.insertWSP}" update="mainForm" oncomplete="PF('assignProjectOwner').hide()" />
+			</h:form>
+		</p:dialog>
+	</ui:define>
+</ui:composition>

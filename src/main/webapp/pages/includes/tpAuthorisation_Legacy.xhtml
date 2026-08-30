@@ -1,0 +1,64 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:pt="http://xmlns.jcp.org/jsf/passthrough" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	
+	<p:outputPanel styleClass="card" id="signoffGroup" rendered="#{trainingproviderUI.doneSMEReg and trainingproviderUI.formUser.regFieldsDone and trainingproviderUI.company.regDone}">
+	
+		  <h1>Declaration For Application With merSETA</h1>
+		
+			<h:panelGroup rendered="#{trainingproviderUI.trainingProviderApplication.accreditationApplicationTypeEnum eq AccreditationApplicationTypeEnum.ACCREDITATIONAPPROVAL}">
+				<p>
+					I, the undersigned, confirm that I am authorised by 
+					this organisation to submit the Skills Development 
+					Provider application. I declare that to the best of my 
+					knowledge, the information contained herein, is accurate 
+					and up to date. I declare that we have not been granted primary 
+					accreditation by or applied for primary accreditation to another 
+					Education and Training Quality Assurance Body/Quality Assurance 
+					Partner. I also declare that the primary focus of training falls 
+					within the scope of the merSETA. 
+				</p>
+			</h:panelGroup>
+			
+			<h:panelGroup rendered="#{trainingproviderUI.trainingProviderApplication.accreditationApplicationTypeEnum ne AccreditationApplicationTypeEnum.ACCREDITATIONAPPROVAL}">
+				<p>
+					I, the undersigned, confirm that I am authorised by 
+					this organisation to submit the Skills Development 
+					Provider application. I declare that to the best of my 
+					knowledge, the information contained herein, is accurate 
+					and up to date. 
+				</p>
+			</h:panelGroup>
+			<div class="EmptyBox20"></div>
+			<p:panel header="#{lang['accept.code.of.conduct']}" style="text-align:center">
+				
+					<p:growl showDetail="false" sticky="false">
+						<p:autoUpdate />
+					</p:growl>
+					<p:panelGrid columns="4" id="pgAccept" style="width:100%">
+						
+						<h:panelGroup>
+							<h:outputText value="#{lang['name']}: " styleClass="FontBold Fs15" />
+							<h:outputText value="#{trainingproviderUI.formUser.firstName} #{trainingproviderUI.formUser.lastName}" />
+						</h:panelGroup>
+						
+						
+						<h:panelGroup>
+							<h:outputText value="#{lang['date']}: " styleClass="FontBold Fs15" />
+							
+							<p:outputLabel value="#{trainingproviderUI.trainingProviderApplication.codeOfConductAcceptDate}" rendered="#{trainingproviderUI.trainingProviderApplication.codeOfConductAccepted}">
+								<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+							</p:outputLabel>
+						</h:panelGroup>
+						
+						<h:panelGroup>
+							<h:outputText value="#{lang['accept']}: " styleClass="FontBold Fs15" />
+							<p:selectBooleanCheckbox style="width:100%" id="cbAccept" disabled="#{trainingproviderUI.trainingProviderApplication.codeOfConductAccepted}" value="#{trainingproviderUI.trainingProviderApplication.codeOfConductAccepted}">
+								<p:ajax event="change" update="pgAccept" listener="#{trainingproviderUI.acceptCodeOfConduct}"/>
+							</p:selectBooleanCheckbox>
+						</h:panelGroup>
+						
+					</p:panelGrid>
+			</p:panel>
+		
+	
+	</p:outputPanel>
+</ui:composition>

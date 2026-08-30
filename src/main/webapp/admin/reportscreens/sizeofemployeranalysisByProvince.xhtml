@@ -1,0 +1,390 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+	<ui:define name="head">
+		<script src="#{request.contextPath}/js/highcharts.js" />
+		<script src="#{request.contextPath}/js/highcharts-3d.js" />
+		<script src="#{request.contextPath}/js/exporting.js" />
+	</ui:define>
+	<ui:define name="content">
+		<p:growl sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="uploadForm">
+						<h1>Employers Contributing by Employer Size, Chamber &amp; Province</h1>
+
+						<span class="Fs13 gray"><p:commandButton icon="fa fa-globe" disabled="true" /> Generate Report: Total Contributing Employers By Chamber With Province Assigned. </span>
+						<div class="EmptyBox5" />
+						<span class="Fs13 gray"><p:commandButton icon="fa fa-handshake-o" disabled="true" /> Generate Report: Total Contributing Employers By Province. </span>
+						<div class="EmptyBox5" />
+						<span class="Fs13 gray"><p:commandButton icon="fa fa-book" disabled="true" /> Generate Report: Active &amp; Contributing Employers By Province. </span>
+						<div class="EmptyBox5" />
+						<span class="Fs13 gray"><p:commandButton icon="fa fa-building" disabled="true" /> Generate Report: Total Contributing Employers By Chamber &amp; Province. </span>
+
+						<div class="EmptyBox10" />
+						<p:dataTable var="rv" value="#{sizeOfEmployerAnalysisByProvinceUI.sarsFilesDataModel}" id="sarsfilesList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="6,12,24,36,48,60,120,180,360" reflow="true" lazy="true">
+							<p:column headerText="#{lang['for.month']}" sortBy="#{rv.forMonth}">
+								<h:outputText value="#{rv.forMonth}">
+									<f:convertDateTime pattern="MMMM yyyy" />
+								</h:outputText>
+							</p:column>
+							<p:column width="80" exportable="false" styleClass="action-column">
+								<p:commandButton icon="fa fa-globe" title="Generate Report" action="#{sizeOfEmployerAnalysisByProvinceUI.generateEmployerSizeWithProvinceAssignedReport}" update=":detailsForm" onstart="uploadStart()" oncomplete="uploadDone()">
+									<f:setPropertyActionListener value="#{rv}" target="#{sizeOfEmployerAnalysisByProvinceUI.sarsFiles}" />
+								</p:commandButton>
+								
+								<p:commandButton icon="fa fa-handshake-o" title="Generate Report" action="#{sizeOfEmployerAnalysisByProvinceUI.generateEmployerProvince}" update=":detailsForm" onstart="uploadStart()" oncomplete="uploadDone()">
+									<f:setPropertyActionListener value="#{rv}" target="#{sizeOfEmployerAnalysisByProvinceUI.sarsFiles}" />
+								</p:commandButton>
+								
+								<p:commandButton icon="fa fa-book" title="Generate Report" action="#{sizeOfEmployerAnalysisByProvinceUI.generateActiveContributingByProvince}" update=":detailsForm" onstart="uploadStart()" oncomplete="uploadDone()">
+									<f:setPropertyActionListener value="#{rv}" target="#{sizeOfEmployerAnalysisByProvinceUI.sarsFiles}" />
+								</p:commandButton>
+								
+								<p:commandButton icon="fa fa-building" title="Generate Report" action="#{sizeOfEmployerAnalysisByProvinceUI.generateEmployerSizeWithProvinceAssignedByChamber}" update=":detailsForm" onstart="uploadStart()" oncomplete="uploadDone()">
+									<f:setPropertyActionListener value="#{rv}" target="#{sizeOfEmployerAnalysisByProvinceUI.sarsFiles}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+		</div>
+		<div class="ui-g-12">
+			<div class="card card-w-title">
+				<h:form id="detailsForm">
+					<p:outputPanel rendered="#{sizeOfEmployerAnalysisByProvinceUI.displayReport}">
+						<h2>Employers Contributing by Employer Size, Chamber &amp; Province For: #{sizeOfEmployerAnalysisByProvinceUI.forMonthStringFormat}</h2>
+						<h:outputText rendered="false" style="font-size:18px;" value="#{sizeOfEmployerAnalysisByProvinceUI.sarsFiles.forMonth}">
+							<f:convertDateTime pattern="MMMM yyyy" />
+						</h:outputText>
+
+						<span class="Fs13 gray"><i class="fa fa-info-circle" aria-hidden="true"></i> Note: All results are where employers from the SARS files were successfully linked with a province based on post code assigned.</span>
+						<div class="EmptyBox5" />
+
+						<p:tabView id="tabView">
+							<p:tab title="Total Contributing Employers By Chamber With Province Assigned" id="employersByChamber" rendered="#{sizeOfEmployerAnalysisByProvinceUI.displayEmployerSizeWithProvinceAssigned}">
+								<p:panelGrid layout="grid" columns="1" styleClass="ui-panelgrid-blank">
+									<ui:include src="/pages/includes/download_lazy.xhtml">
+										<ui:param name="file_name" value="Total Contributing Employers By Chamber With Province Assigned" />
+										<ui:param name="target" value="levyIncome" />
+									</ui:include>
+									<p:dataTable value="#{sizeOfEmployerAnalysisByProvinceUI.employerSizeBean}" var="rowVar" id="levyIncome" rowKey="#{rowVar.description}" paginator="true" rows="6" paginatorPosition="bottom"
+										paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+										<f:facet name="header">Total Contributing Employers By Chamber With Province Assigned For: #{sizeOfEmployerAnalysisByProvinceUI.forMonthStringFormat}</f:facet>
+										<p:columnGroup type="header">
+											<p:row>
+												<p:column colspan="1" headerText="Size" width="25%" />
+												<p:column colspan="8" headerText="Chamber" />
+											</p:row>
+											<p:row>
+												<p:column headerText="" />
+												<p:column headerText="#{lang['auto']}" />
+												<p:column headerText="#{lang['metal']}" />
+												<p:column headerText="#{lang['motor']}" />
+												<p:column headerText="#{lang['new.tyre']}" />
+												<p:column headerText="#{lang['plastics']}" />
+												<p:column headerText="#{lang['unknown']}" />
+												<p:column headerText="#{lang['acm']}" />
+												<p:column headerText="#{lang['grand.total']}" />
+											</p:row>
+										</p:columnGroup>
+										<p:column headerText="Size">
+											<h:outputText value="#{rowVar.description}" />
+										</p:column>
+										<p:column headerText="#{lang['auto']}" styleClass="number-column">
+											<h:outputText value="#{rowVar.auto}">
+												<f:convertNumber pattern="###,###,###,###,##0" />
+											</h:outputText>
+										</p:column>
+										<p:column headerText="#{lang['metal']}" styleClass="number-column">
+											<h:outputText value="#{rowVar.metal}">
+												<f:convertNumber pattern="###,###,###,###,##0" />
+											</h:outputText>
+										</p:column>
+										<p:column headerText="#{lang['motor']}" styleClass="number-column">
+											<h:outputText value="#{rowVar.motor}">
+												<f:convertNumber pattern="###,###,###,###,##0" />
+											</h:outputText>
+										</p:column>
+										<p:column headerText="#{lang['new.tyre']}" styleClass="number-column">
+											<h:outputText value="#{rowVar.newTyre}">
+												<f:convertNumber pattern="###,###,###,###,##0" />
+											</h:outputText>
+										</p:column>
+										<p:column headerText="#{lang['plastics']}" styleClass="number-column">
+											<h:outputText value="#{rowVar.plastic}">
+												<f:convertNumber pattern="###,###,###,###,##0" />
+											</h:outputText>
+										</p:column>
+										<p:column headerText="#{lang['unknown']}" styleClass="number-column">
+											<h:outputText value="#{rowVar.unknown}">
+												<f:convertNumber pattern="###,###,###,###,##0" />
+											</h:outputText>
+										</p:column>
+										<p:column headerText="#{lang['acm']}" styleClass="number-column">
+											<h:outputText value="#{rowVar.acm}">
+												<f:convertNumber pattern="###,###,###,###,##0" />
+											</h:outputText>
+										</p:column>
+										<p:column headerText="#{lang['grand.total']}" styleClass="number-column">
+											<h:outputText value="#{rowVar.auto + rowVar.metal + rowVar.motor + rowVar.newTyre + rowVar.plastic + rowVar.unknown + rowVar.acm}">
+												<f:convertNumber pattern="###,###,###,###,##0" />
+											</h:outputText>
+										</p:column>
+
+									</p:dataTable>
+								</p:panelGrid>
+							</p:tab>
+							<p:tab title="Total Contributing Employers By Province" id="employersByProvince" rendered="#{sizeOfEmployerAnalysisByProvinceUI.displayEmployerProvince}">
+								<p:panelGrid layout="grid" columns="1" styleClass="ui-panelgrid-blank">
+									<ui:include src="/pages/includes/download_lazy.xhtml">
+										<ui:param name="file_name" value="Total Contributing Employers By Province" />
+										<ui:param name="target" value="resultsTableprovince" />
+									</ui:include>
+									<p:dataTable value="#{sizeOfEmployerAnalysisByProvinceUI.provinceReportList}" var="rvPDetail" id="resultsTableprovince" paginator="true" rows="5" paginatorPosition="bottom"
+										paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20,40,50" reflow="true">
+										<f:facet name="header">Total Contributing Employers By Province For: #{sizeOfEmployerAnalysisByProvinceUI.forMonthStringFormat}</f:facet>
+										<p:column headerText="Description">
+											<p:outputLabel value="#{rvPDetail.description}" />
+										</p:column>
+										<p:column headerText="Gauteng">
+											<p:outputLabel value="#{rvPDetail.gauteng}" styleClass="Fright">
+												<f:convertNumber pattern="###,###,###,###,##0" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="Eastern Cape">
+											<p:outputLabel value="#{rvPDetail.easternCape}" styleClass="Fright">
+												<f:convertNumber pattern="###,###,###,###,##0" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="Free State">
+											<p:outputLabel value="#{rvPDetail.freeState}" styleClass="Fright">
+												<f:convertNumber pattern="###,###,###,###,##0" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="KwaZulu-Natal">
+											<p:outputLabel value="#{rvPDetail.kwazulunatal}" styleClass="Fright">
+												<f:convertNumber pattern="###,###,###,###,##0" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="Limpopo">
+											<p:outputLabel value="#{rvPDetail.limpopo}" styleClass="Fright">
+												<f:convertNumber pattern="###,###,###,###,##0" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="Mpumalanga">
+											<p:outputLabel value="#{rvPDetail.mpumalanga}" styleClass="Fright">
+												<f:convertNumber pattern="###,###,###,###,##0" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="Northern Cape">
+											<p:outputLabel value="#{rvPDetail.northernCape}" styleClass="Fright">
+												<f:convertNumber pattern="###,###,###,###,##0" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="North West">
+											<p:outputLabel value="#{rvPDetail.northWest}" styleClass="Fright">
+												<f:convertNumber pattern="###,###,###,###,##0" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="Western Cape">
+											<p:outputLabel value="#{rvPDetail.westernCape}" styleClass="Fright">
+												<f:convertNumber pattern="###,###,###,###,##0" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="SA National (in SA but province unspecified)">
+											<p:outputLabel value="#{rvPDetail.saNational}" styleClass="Fright">
+												<f:convertNumber pattern="###,###,###,###,##0" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="Outside SA">
+											<p:outputLabel value="#{rvPDetail.outsideSA}" styleClass="Fright">
+												<f:convertNumber pattern="###,###,###,###,##0" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="Total">
+											<p:outputLabel value="#{rvPDetail.total}" styleClass="Fright">
+												<f:convertNumber pattern="###,###,###,###,##0" />
+											</p:outputLabel>
+										</p:column>
+									</p:dataTable>
+								</p:panelGrid>
+							</p:tab>
+							<p:tab title="Active &amp; Contributing Employers By Province" id="activeCOntributingEmployersProvince" rendered="#{sizeOfEmployerAnalysisByProvinceUI.displayActiveContributing}">
+								<p:panelGrid layout="grid" columns="1" styleClass="ui-panelgrid-blank">
+									<ui:include src="/pages/includes/download_lazy.xhtml">
+										<ui:param name="file_name" value="Active Contributing Employers" />
+										<ui:param name="target" value="resultsTableActiveContriTable" />
+									</ui:include>
+									<p:dataTable value="#{sizeOfEmployerAnalysisByProvinceUI.activeContributingEmployersReport}" var="rvACDetail" id="resultsTableActiveContriTable" paginator="true" rows="5" paginatorPosition="bottom"
+										paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20,40,50" reflow="true">
+										<f:facet name="header">Active &amp; Contributing Employers By Province For: #{sizeOfEmployerAnalysisByProvinceUI.forMonthStringFormat}</f:facet>
+										<p:column headerText="Description">
+											<p:outputLabel value="#{rvACDetail.description}" />
+										</p:column>
+										<p:column headerText="Gauteng">
+											<p:outputLabel value="#{rvACDetail.gauteng}" styleClass="Fright">
+												<f:convertNumber pattern="###,###,###,###,##0" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="Eastern Cape">
+											<p:outputLabel value="#{rvACDetail.easternCape}" styleClass="Fright">
+												<f:convertNumber pattern="###,###,###,###,##0" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="Free State">
+											<p:outputLabel value="#{rvACDetail.freeState}" styleClass="Fright">
+												<f:convertNumber pattern="###,###,###,###,##0" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="KwaZulu-Natal">
+											<p:outputLabel value="#{rvACDetail.kwazulunatal}" styleClass="Fright">
+												<f:convertNumber pattern="###,###,###,###,##0" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="Limpopo">
+											<p:outputLabel value="#{rvACDetail.limpopo}" styleClass="Fright">
+												<f:convertNumber pattern="###,###,###,###,##0" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="Mpumalanga">
+											<p:outputLabel value="#{rvACDetail.mpumalanga}" styleClass="Fright">
+												<f:convertNumber pattern="###,###,###,###,##0" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="Northern Cape">
+											<p:outputLabel value="#{rvACDetail.northernCape}" styleClass="Fright">
+												<f:convertNumber pattern="###,###,###,###,##0" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="North West">
+											<p:outputLabel value="#{rvACDetail.northWest}" styleClass="Fright">
+												<f:convertNumber pattern="###,###,###,###,##0" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="Western Cape">
+											<p:outputLabel value="#{rvACDetail.westernCape}" styleClass="Fright">
+												<f:convertNumber pattern="###,###,###,###,##0" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="SA National (in SA but province unspecified)">
+											<p:outputLabel value="#{rvACDetail.saNational}" styleClass="Fright">
+												<f:convertNumber pattern="###,###,###,###,##0" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="Outside SA">
+											<p:outputLabel value="#{rvACDetail.outsideSA}" styleClass="Fright">
+												<f:convertNumber pattern="###,###,###,###,##0" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="Grand Total" rendered="true">
+											<p:outputLabel value="#{rvACDetail.total}" styleClass="Fright">
+												<f:convertNumber pattern="###,###,###,###,##0" />
+											</p:outputLabel>
+										</p:column>
+									</p:dataTable>
+								</p:panelGrid>
+							</p:tab>
+							<p:tab title="Total Contributing Employers By Chamber &amp; Province" id="employersByChamberAndProvince" rendered="#{sizeOfEmployerAnalysisByProvinceUI.displayEmployerSize}">
+								<p:panelGrid layout="grid" columns="1" styleClass="ui-panelgrid-blank">
+									<p:repeat var="rv" value="#{sizeOfEmployerAnalysisByProvinceUI.chamberProvinceReportList}">
+										<p:fieldset legend="#{rv.description}" style="margin-bottom:20px">
+
+											<p:outputPanel rendered="#{rv.resultsList.size() eq 0}">
+												<h3>No Results</h3>
+											</p:outputPanel>
+
+											<p:outputPanel rendered="#{rv.resultsList.size() ne 0}">
+
+												<ui:include src="/pages/includes/download_lazy.xhtml">
+													<ui:param name="file_name" value="#{rv.description}" />
+													<ui:param name="target" value="resultsTable" />
+												</ui:include>
+
+												<p:dataTable value="#{rv.resultsList}" var="rvDetail" id="resultsTable" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+													rowsPerPageTemplate="5,10,20,40,50" reflow="true">
+													<f:facet name="header">#{rv.description}</f:facet>
+													<p:column headerText="Chamber" style="display:none">
+														<p:outputLabel value="#{rv.description}" />
+													</p:column>
+													<p:column headerText="Description">
+														<p:outputLabel value="#{rvDetail.description}" />
+													</p:column>
+													<p:column headerText="Gauteng">
+														<p:outputLabel value="#{rvDetail.gauteng}" styleClass="Fright">
+															<f:convertNumber pattern="###,###,###,###,##0" />
+														</p:outputLabel>
+													</p:column>
+													<p:column headerText="Eastern Cape">
+														<p:outputLabel value="#{rvDetail.easternCape}" styleClass="Fright">
+															<f:convertNumber pattern="###,###,###,###,##0" />
+														</p:outputLabel>
+													</p:column>
+													<p:column headerText="Free State">
+														<p:outputLabel value="#{rvDetail.freeState}" styleClass="Fright">
+															<f:convertNumber pattern="###,###,###,###,##0" />
+														</p:outputLabel>
+													</p:column>
+													<p:column headerText="KwaZulu-Natal">
+														<p:outputLabel value="#{rvDetail.kwazulunatal}" styleClass="Fright">
+															<f:convertNumber pattern="###,###,###,###,##0" />
+														</p:outputLabel>
+													</p:column>
+													<p:column headerText="Limpopo">
+														<p:outputLabel value="#{rvDetail.limpopo}" styleClass="Fright">
+															<f:convertNumber pattern="###,###,###,###,##0" />
+														</p:outputLabel>
+													</p:column>
+													<p:column headerText="Mpumalanga">
+														<p:outputLabel value="#{rvDetail.mpumalanga}" styleClass="Fright">
+															<f:convertNumber pattern="###,###,###,###,##0" />
+														</p:outputLabel>
+													</p:column>
+													<p:column headerText="Northern Cape">
+														<p:outputLabel value="#{rvDetail.northernCape}" styleClass="Fright">
+															<f:convertNumber pattern="###,###,###,###,##0" />
+														</p:outputLabel>
+													</p:column>
+													<p:column headerText="North West">
+														<p:outputLabel value="#{rvDetail.northWest}" styleClass="Fright">
+															<f:convertNumber pattern="###,###,###,###,##0" />
+														</p:outputLabel>
+													</p:column>
+													<p:column headerText="Western Cape">
+														<p:outputLabel value="#{rvDetail.westernCape}" styleClass="Fright">
+															<f:convertNumber pattern="###,###,###,###,##0" />
+														</p:outputLabel>
+													</p:column>
+													<p:column headerText="SA National (in SA but province unspecified)">
+														<p:outputLabel value="#{rvDetail.saNational}" styleClass="Fright">
+															<f:convertNumber pattern="###,###,###,###,##0" />
+														</p:outputLabel>
+													</p:column>
+													<p:column headerText="Outside SA">
+														<p:outputLabel value="#{rvDetail.outsideSA}" styleClass="Fright">
+															<f:convertNumber pattern="###,###,###,###,##0" />
+														</p:outputLabel>
+													</p:column>
+													<p:column headerText="Total">
+														<p:outputLabel value="#{rvDetail.total}" styleClass="Fright">
+															<f:convertNumber pattern="###,###,###,###,##0" />
+														</p:outputLabel>
+													</p:column>
+												</p:dataTable>
+											</p:outputPanel>
+										</p:fieldset>
+										<div class="EmptyBox10" />
+									</p:repeat>
+								</p:panelGrid>
+							</p:tab>
+						</p:tabView>
+					</p:outputPanel>
+				</h:form>
+			</div>
+		</div>
+	</ui:define>
+
+</ui:composition>

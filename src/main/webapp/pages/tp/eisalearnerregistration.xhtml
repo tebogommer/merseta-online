@@ -1,0 +1,202 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		 <p:importEnum type="haj.com.entity.enums.YesNoEnum" />
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Learner registration For the EISA</h1>
+					<h:form id="mainForm">
+						<p:growl sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:fieldset legend="Learner details">
+							
+						    <p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+						    		<h:panelGroup styleClass="md-inputfield">
+										<br />
+										<p:inputText id="firstName" value="#{eisaLearnerRegistrationUI.learner.firstName}" style="width:95%" required="true" requiredMessage="#{lang['provide.first.name']}" />
+										<br />
+										<p:outputLabel value="#{lang['first.name']}:" for="firstName" />
+									</h:panelGroup>
+									
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText id="lastName" value="#{eisaLearnerRegistrationUI.learner.lastName}" style="width:95%" required="true" requiredMessage="#{lang['provide.last.name']}" />
+										<p:outputLabel value="#{lang['last.name']}:" for="lastName" />
+									</h:panelGroup>
+									
+									<h:panelGroup styleClass="md-inputfield" rendered="#{eisaLearnerRegistrationUI.learner.rsaIDNumber.length() gt 0}">
+										<p:inputText id="rsaId" value="#{eisaLearnerRegistrationUI.learner.rsaIDNumber}" style="width:95%" required="true" requiredMessage="#{lang['rsa.id.number']}" />
+										<p:outputLabel value="#{lang['rsa.id.number']}" for="rsaId" />
+									</h:panelGroup>
+									
+									<h:panelGroup styleClass="md-inputfield" rendered="#{eisaLearnerRegistrationUI.learner.passportNumber.length() gt 0}">
+										<p:inputText id="passPort" value="#{eisaLearnerRegistrationUI.learner.passportNumber}" style="width:95%" required="true" requiredMessage="#{lang['passport.number']}" />
+										<p:outputLabel value="#{lang['passport.number']}" for="passPort" />
+								   </h:panelGroup>
+								   
+								   <h:panelGroup styleClass="md-inputfield">
+										<p:calendar id="glPostingDate" value="#{eisaLearnerRegistrationUI.learner.dateOfBirth}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" readonlyInput="true">
+										</p:calendar>
+										<p:outputLabel value="Date Of Birth" for="glPostingDate" />
+									</h:panelGroup>
+									
+								   <h:panelGroup styleClass="md-inputfield">
+										<p:inputText id="email1" value="#{eisaLearnerRegistrationUI.learner.email}" type="email" style="width:95%" required="true" requiredMessage="#{lang['provide.email']}" />
+										<p:outputLabel value="#{lang['email']}" for="email1" />
+								   </h:panelGroup>
+								   
+								   <h:panelGroup styleClass="md-inputfield">
+										<p:inputMask id="telNumber1" value="#{eisaLearnerRegistrationUI.learner.telNumber}" mask="099 999 9999" style="width:95%" required="true" requiredMessage="#{lang['tel.number.error']}" />
+										<p:outputLabel value="#{lang['tel.number']}" for="telNumber1" />
+								   </h:panelGroup>
+								   
+								   <h:panelGroup styleClass="md-inputfield">
+										<p:inputMask id="cellPhone1" value="#{eisaLearnerRegistrationUI.learner.cellNumber}" mask="099 999 9999" style="width:95%" required="true" requiredMessage="#{lang['cell.number']}" />
+										<p:outputLabel value="#{lang['cell.number']}" for="cellPhone1" />
+								   </h:panelGroup>
+								   
+								   <h:panelGroup>
+										<div>
+											<p:outputLabel value="#{lang['gender']}" styleClass="gray" />
+										</div>
+										<div>
+											<p:selectOneMenu id="gender" value="#{eisaLearnerRegistrationUI.learner.gender}" converter="GenderConvertor" style="width:95%" required="true">
+												<p:ajax />
+												<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+												<f:selectItems value="#{selectItemsUI.selectItemsGender}" var="rv" itemLabel="#{rv.genderName}" itemValue="#{rv}" />
+											</p:selectOneMenu>
+										</div>
+								</h:panelGroup>
+								
+								<h:panelGroup styleClass="md-inputfield">
+										<p:autoComplete id="equity" value="#{eisaLearnerRegistrationUI.learner.equity}" completeMethod="#{autoCompleteUI.completeEquity}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="EquityConvertor" dropdown="true" minQueryLength="3" maxResults="10" requiredMessage="#{lang['provide.equity']}" required="true">
+											<p:column headerText="equity" style="white-space: nowrap">#{rv.description}</p:column>
+										</p:autoComplete>
+										<p:outputLabel value="#{lang['equity']}" for="equity" />
+								</h:panelGroup>
+						    </p:panelGrid>
+						    
+						      <p:outputLabel value="Special Assessment Needs (accompanied by amedical certificate/letter, ifrelevant)" />
+						    <p:textEditor widgetVar="editor2" value="#{eisaLearnerRegistrationUI.eisaLearnerRegistration.specialAssesmentNeeds}" height="100" style="margin-bottom:10px" placeholder="Enter your content">
+						        <f:facet name="toolbar">
+						             <span class="ql-formats">
+						                <button class="ql-bold"></button>
+						                <button class="ql-italic"></button>
+						                <button class="ql-underline"></button>
+						                <button class="ql-strike"></button>
+						            </span>
+						            <span class="ql-formats">
+						                <select class="ql-font"></select>
+						                <select class="ql-size"></select>
+						            </span>
+						        </f:facet>
+						    </p:textEditor>
+						</p:fieldset>
+						
+						<p:fieldset legend="Entrance To Final External Integrated Summative Assessment">
+							<p:panelGrid columns="2" style="width:100%" id="eisaLearnerRegistrationInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+								<h:panelGroup styleClass="md-inputfield">
+									<p:autoComplete style="width:100%;" id="company" value="#{eisaLearnerRegistrationUI.eisaLearnerRegistration.company}" completeMethod="#{autoCompleteUI.completeCompany}" var="rv" itemLabel="#{rv.companyNameDisplay}" itemValue="#{rv}" forceSelection="true" converter="CompanyConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+										<p:column headerText="#{lang['companyName']}" style="white-space: nowrap">#{rv.companyName}</p:column>
+										<p:column headerText="#{lang['entity.id']}" style="white-space: nowrap">#{rv.levyNumber}</p:column>
+									</p:autoComplete>
+									<p:outputLabel value="#{lang['company']}" for="company" />
+								</h:panelGroup>
+								
+								<h:panelGroup styleClass="md-inputfield">
+									<p:autoComplete style="width:100%;" id="sdp" value="#{eisaLearnerRegistrationUI.eisaLearnerRegistration.sdp}" completeMethod="#{autoCompleteUI.completeCompany}" var="rv" itemLabel="#{rv.companyNameDisplay}" itemValue="#{rv}" forceSelection="true" converter="CompanyConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+										<p:column headerText="#{lang['companyName']}" style="white-space: nowrap">#{rv.companyName}</p:column>
+										<p:column headerText="#{lang['entity.id']}" style="white-space: nowrap">#{rv.levyNumber}</p:column>
+									</p:autoComplete>
+									<p:outputLabel value="#{lang['skills.development.provider']}" for="sdp" />
+								</h:panelGroup>
+								
+							 <h:panelGroup>
+								<div>
+									<p:outputLabel value="#{lang['competence.has.been.achieved.in']}" for="completence" styleClass=" gray" />
+								</div>
+								<div>
+									<p:selectOneMenu id="completence" value="#{eisaLearnerRegistrationUI.eisaLearnerRegistration.completence}" style="width:75%" required="true">
+										<p:ajax />
+										<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass=" gray" noSelectionOption="true" />
+										<f:selectItems value="#{enumUI.learnerCompletenceEnumDD}" />
+									</p:selectOneMenu>
+								</div>
+							</h:panelGroup>
+							
+						   <h:panelGroup>
+								<div>
+									<p:outputLabel value="#{lang['is.flc.a.requirement.for.entrance.to.the.eisa']}" for="requireFLC" styleClass=" gray" />
+								</div>
+								<div>
+									<p:selectOneMenu id="requireFLC" style="width:75%" value="#{eisaLearnerRegistrationUI.eisaLearnerRegistration.flcRequired}" required="true">
+										<p:ajax />
+										<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass=" gray" noSelectionOption="true" />
+										<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+									</p:selectOneMenu>
+								</div>
+							</h:panelGroup>
+
+								
+							</p:panelGrid>
+						</p:fieldset>
+						
+						<p:fieldset legend="Details Of Final External Integrated Summative Assessment">
+						  <p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							
+								<h:panelGroup styleClass="md-inputfield">
+										<p:autoComplete style="width:100%;" id="assCentre" value="#{eisaLearnerRegistrationUI.eisaLearnerRegistration.assessmentCentre}" completeMethod="#{autoCompleteUI.completeCompany}" var="rv" itemLabel="#{rv.companyNameDisplay}" itemValue="#{rv}" forceSelection="true" converter="CompanyConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+											<p:column headerText="#{lang['companyName']}" style="white-space: nowrap">#{rv.companyName}</p:column>
+											<p:column headerText="#{lang['entity.id']}" style="white-space: nowrap">#{rv.levyNumber}</p:column>
+										</p:autoComplete>
+										<p:outputLabel value="#{lang['assessment.centre']}" for="assCentre" />
+								</h:panelGroup>
+									
+								<h:panelGroup styleClass="md-inputfield">
+									<p:autoComplete id="qualification" value="#{eisaLearnerRegistrationUI.eisaLearnerRegistration.qualification}" completeMethod="#{autoCompleteUI.completeQualification}" var="rv" itemLabel="#{rv.saqaQualification}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;"
+										style="width: 95%">
+										<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+										<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+										<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+									</p:autoComplete>
+	
+									<p:outputLabel value="#{lang['qualification']}" for="qualification" />
+								</h:panelGroup>
+								
+								<h:panelGroup styleClass="md-inputfield">
+									<p:calendar id="eisaDate" value="#{eisaLearnerRegistrationUI.eisaLearnerRegistration.eisaDate}" inputStyle="width:95%" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" timeControlType="select">
+										
+									</p:calendar>
+									<p:outputLabel value="#{lang['eisa.date']}" for="eisaDate" />
+								</h:panelGroup>
+								
+								<h:panelGroup styleClass="md-inputfield">
+									<p:calendar id="eisaTime" value="#{eisaLearnerRegistrationUI.eisaLearnerRegistration.eisaTime}" inputStyle="width:95%" timeOnly="true" pattern="HH:mm" timeControlType="select">
+										
+									</p:calendar>
+									<p:outputLabel value="#{lang['eisa.date']}" for="eisaTime" />
+								</h:panelGroup>
+						</p:panelGrid>
+							
+						</p:fieldset>
+						
+						<p:panelGrid columns="3" styleClass="ui-panelgrid-blank">
+							<p:commandButton icon="fa fa-download" value="Registration Form" action="#{eisaLearnerRegistrationUI.downloadLearnerRegistrationForm}" ajax="false" title="Download "/>
+							
+							<p:commandButton value="#{lang['submit']}" icon="ui-icon-save"  action="#{eisaLearnerRegistrationUI.saveRegistration}" />
+							
+							<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="@form" process="@this" action="#{eisaLearnerRegistrationUI.prepareNew}">
+								
+							</p:commandButton>
+						</p:panelGrid>
+
+					</h:form>
+				</div>
+			</div>
+		
+
+		</div>
+	</ui:define>
+	
+</ui:composition>

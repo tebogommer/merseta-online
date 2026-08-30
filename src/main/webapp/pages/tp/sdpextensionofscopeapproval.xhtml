@@ -1,0 +1,510 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                template="/WEB-INF/template.xhtml"
+                xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+    <ui:define name="content">
+    	
+	   <p:importEnum type="haj.com.entity.enums.YesNoEnum"></p:importEnum>
+        <div class="ui-g">
+            <div class="ui-g-12">
+                <div class="card">
+                <h:form id="mainForm">
+                    <h1>SDP Extension Of Scope Application(s)</h1>
+						<ui:include src="/pages/includes/filterGuide.xhtml" />	
+						<ui:include src="/pages/includes/download_lazy.xhtml">
+								<ui:param name="file_name" value="Skills Development Provider" />
+								<ui:param name="target" value="tpList" />
+						 </ui:include>
+	                     <p:dataTable var="var" id="tpList" value="#{sdpextensionofscopeUI.pendingAppDataModel}" rowKey="#{var.id}" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,20,30,40,50,60,70,80,90,100" reflow="true" lazy="true">
+	                     
+	                    	<p:column style="width:16px" exportable="false">
+					            <p:rowToggler />
+					        </p:column>
+						    
+						    <p:column headerText="Name" filterBy="#{var.users.firstName}" sortBy="#{var.users.firstName}">
+						        <h:outputText value="#{var.users.firstName}" />
+						    </p:column>
+						 
+						    <p:column headerText="Surname" filterBy="#{var.users.lastName}" sortBy="#{var.users.lastName}">
+						        <h:outputText value="#{var.users.lastName}" />
+						    </p:column>
+						    
+						     <p:column headerText="ID Number" filterBy="#{var.users.rsaIDNumber}" sortBy="#{var.users.rsaIDNumber}">
+						        <h:outputText  value="#{var.users.rsaIDNumber}" />
+						    </p:column>
+						    
+						    <p:column headerText="#{lang['provider.type']}">
+						        <h:outputText value="#{var.trainingProviderApplication.providerType.description}" />
+						    </p:column>
+						    
+						     <p:column headerText="Provider Class">
+								 <h:outputText value="#{var.trainingProviderApplication.providerClass.description}" />
+					         </p:column>
+					         
+					         <p:column headerText="#{lang['status']}">
+								 <h:outputText value="#{var.approvalStatus.friendlyName}" />
+					         </p:column>
+					         
+					         <p:column style="width:115px" exportable="false" headerText="Self Evaluation Form" >
+					         	<p:commandButton rendered="true" icon="fa fa-download" value="Download" action="#{sdpextensionofscopeUI.downloadSelfEvaluationForm}" ajax="false" title="Download Self Evaluation Form">
+					         		<f:setPropertyActionListener value="#{var}" target="#{sdpextensionofscopeUI.sdpextensionofscope}" />
+					         	</p:commandButton>
+							 </p:column>
+						     
+						    <p:column style="width:230px"  exportable="false" rendered="#{sessionUI.user.reviewCommitteeMember}" headerText="ETQA Review Committee Outcome">
+						        <p:commandButton  rendered="#{reviewCommitteeMeetingUI.showActionButton(var.reviewCommitteeMeeting)}" value="#{lang['approve']}" icon="ui-icon-check" update="@form" action="#{sdpextensionofscopeUI.extensionOfScopeETQAApproval()}" styleClass="flat green-btn Fs18">
+									<f:setPropertyActionListener value="#{var}" target="#{sdpextensionofscopeUI.sdpextensionofscope}" />
+								</p:commandButton>
+								<p:spacer width="5"></p:spacer>
+								<p:commandButton  rendered="#{reviewCommitteeMeetingUI.showActionButton(var.reviewCommitteeMeeting)}" value="#{lang['reject.am']}" icon="ui-icon-circle-close" update="@form" oncomplete="PF('rejectReason').show()" process="@this" styleClass="flat red-btn Fs18">
+									<f:setPropertyActionListener value="#{var}" target="#{sdpextensionofscopeUI.sdpextensionofscope}" />
+								</p:commandButton>
+								<p:outputLabel style="color: #FF6600;" value="#{reviewCommitteeMeetingUI.meetingMessage}" />
+						    </p:column>
+						 
+						  	<p:rowExpansion>
+						  	
+						  	<p:fieldset legend="#{lang['etqa.review.date']}">
+									<p:panelGrid columns="1" style="width:100%" id="meetingTitleGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+										
+										<h:panelGroup  id="meetingTitle" styleClass="md-inputfield">
+											<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%"  value="#{var.reviewCommitteeMeeting.title}" />
+											<p:outputLabel value="#{lang['title']}" />
+										</h:panelGroup>
+										
+									</p:panelGrid>
+									<br/>
+									<p:panelGrid columns="4" style="width:100%" id="etqaDateGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+										
+										<h:panelGroup  id="fromDateTime" styleClass="md-inputfield">
+											<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%"  value="#{var.reviewCommitteeMeeting.fromDateTime}" >
+												<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME}" />
+											</p:inputText>
+											<p:outputLabel value="#{lang['from']}" />
+										</h:panelGroup>
+										
+										<h:panelGroup  id="toDateTime" styleClass="md-inputfield">
+											<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%"  value="#{var.reviewCommitteeMeeting.toDateTime}" >
+												<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME}" />
+											</p:inputText>
+											<p:outputLabel value="#{lang['to']}" />
+										</h:panelGroup>
+										
+										<h:panelGroup  id="MeetingNumber" styleClass="md-inputfield" rendered="true">
+											<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%"  value="#{var.reviewCommitteeMeetingAgenda.decisionNumber}" />
+											<p:outputLabel value="Decision Number " />
+										</h:panelGroup>
+										
+										<h:panelGroup  id="venue" styleClass="md-inputfield">
+											<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%"  value="#{var.reviewCommitteeMeeting.venue}" />
+											<p:outputLabel value="#{lang['venue']}" />
+										</h:panelGroup>
+									</p:panelGrid>
+									
+									<p:panelGrid  columns="1" style="width:100%" id="agendaGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+										<p:fieldset legend="Agenda">
+											<p:dataList style="margin-top:15px" id="agendaListDisplay" value="#{var.reviewCommitteeMeeting.reviewCommitteeMeetingAgendaList}" var="ag" type="ordered">
+										       #{ag.meetingAgenda.description} (#{ag.decisionNumber})
+										     </p:dataList>
+										</p:fieldset>
+									</p:panelGrid>
+									
+									<p:panelGrid  columns="1" style="width:100%" id="userfoGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+										<p:fieldset legend="Users">
+											<p:dataList style="margin-top:15px" id="userListDisplay" value="#{var.reviewCommitteeMeeting.reviewCommitteeMeetingUsersList}" var="rcmu" type="ordered">
+										       #{rcmu.user.firstName} #{rcmu.user.lastName}
+										     </p:dataList>
+										</p:fieldset>
+									</p:panelGrid>
+									
+									<p:panelGrid rendered="#{var.reviewCommitteeMeeting.additionalInfo ne null}" columns="1" style="width:100%" id="etqaAddInfoGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+									    <h:panelGroup>
+										    <p:outputLabel value="#{lang['additional.info']}"  for="venue" styleClass="Fs12 FontLight" />
+										    <p:textEditor readonly="true"  widgetVar="addInfo" value="#{var.reviewCommitteeMeeting.additionalInfo}" height="100"  placeholder="Enter your content">
+										        <f:facet name="toolbar">
+										             <span class="ql-formats">
+										                <button class="ql-bold"></button>
+										                <button class="ql-italic"></button>
+										                <button class="ql-underline"></button>
+										                <button class="ql-strike"></button>
+										            </span>
+										            <span class="ql-formats">
+										                <select class="ql-font"></select>
+										                <select class="ql-size"></select>
+										            </span>
+										        </f:facet>
+										    </p:textEditor>
+										</h:panelGroup>
+									</p:panelGrid>
+								</p:fieldset>
+						  	
+						  	
+						  			<p:fieldset legend="#{lang['user.info']}" id="userInfoFs">
+						  			
+										<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+											
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{var.users.title.description}" />
+												<p:outputLabel value="#{lang['title']}" />
+											</h:panelGroup>
+											
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{var.users.firstName}" />
+												<p:outputLabel value="#{lang['name']}" />
+											</h:panelGroup>
+											
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{var.users.lastName}" />
+												<p:outputLabel value="#{lang['surname']}" />
+											</h:panelGroup>
+											
+											<h:panelGroup styleClass="md-inputfield" rendered="#{var.users.rsaIDNumber.length() gt 0}">
+												<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{var.users.title.description}" />
+												<p:outputLabel value="#{lang['rsa.id.number']}" />
+											</h:panelGroup>
+											
+											<h:panelGroup styleClass="md-inputfield"  rendered="#{var.users.passportNumber.length() gt 0}">
+												<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{var.users.lastName}" />
+												<p:outputLabel value="#{lang['passport.number']}" />
+											</h:panelGroup>
+											
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{var.users.email}" />
+												<p:outputLabel value="#{lang['email']}" />
+											</h:panelGroup>
+											
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{var.users.cellNumber}" />
+												<p:outputLabel value="#{lang['cell.number']}" />
+											</h:panelGroup>
+											
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{var.users.telNumber}" />
+												<p:outputLabel value="#{lang['tel.number']}" />
+											</h:panelGroup>
+											
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{var.users.equity.description}" />
+												<p:outputLabel  value="#{lang['equity']}" />
+											</h:panelGroup>
+											
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{var.users.nationality.description}" />
+												<p:outputLabel value="#{lang['nationality']}" />
+											</h:panelGroup>
+											
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{var.users.disabilityStatus.description}" />
+												<p:outputLabel value="#{lang['disability']}" />
+											</h:panelGroup>
+											
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{var.users.employmentStatus}" />
+												<p:outputLabel value="#{lang['employment.status']}" />
+											</h:panelGroup>
+											
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{var.users.dateOfBirth}">
+													 <f:convertDateTime pattern="dd MMMM yyyy" />
+												</p:inputText>
+												<p:outputLabel value="#{lang['date.of.birth']}" />
+											</h:panelGroup>
+											
+										</p:panelGrid>		
+						  			</p:fieldset>
+						  			
+						  			<!-- User Documents -->
+									<p:fieldset legend="#{lang['user.documents']}" id="userDocs">
+										<p:dataTable emptyMessage="#{lang['no.records.found']}" value="#{trainingproviderapplicationUI.loadUserDocumentsByConfig(var.users,var.trainingProviderApplication.id)}" var="rv1" rowKey="#{rv1.id}"
+											 rows="5" paginator="true" paginatorPosition="bottom"
+								                        paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+								                        rowsPerPageTemplate="5,10,15,20,25,50,100,150,300,600,900">
+											<p:column headerText="#{lang['type']}" width="20%">
+											
+								                       #{rv1.configDoc.name}
+								                    </p:column>
+											<p:column headerText="#{lang['uploaded.by']}">
+								                       #{rv1.users.firstName} #{rv1.users.lastName}
+								                    </p:column>
+											<p:column headerText="#{lang['uploaded']}" width="15%">
+												<h:outputText value="#{rv1.createDate}">
+													<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+												</h:outputText>
+											</p:column>
+											<p:column headerText="#{lang['version']}" width="15%">
+												<h:outputText value="#{rv1.versionNo}">
+												</h:outputText>
+											</p:column>
+								
+											<p:column width="80">
+												<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}">
+													<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+												</p:commandButton>
+												<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+								
+												<p:spacer width="5" rendered="#{rv1.id ne null}" />
+												
+												<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+													<p:spacer width="5" />
+													<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+														<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+													</p:commandButton>
+													<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+												</h:panelGroup>
+								
+												<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+													<p:spacer width="5" />
+													<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+														<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+													</p:commandButton>
+													<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+												</h:panelGroup>
+								
+											</p:column>
+										</p:dataTable>
+									</p:fieldset>
+						  			
+								<p:fieldset legend="#{lang['company.info']}">
+									<p:dataTable value="#{sdpextensionofscopeUI.companyList(var)}" var="rv" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv.id}" reflow="true">
+										<p:column headerText="#{lang['expand.row']}" width="45">
+											<p:rowToggler rendered="#{rv.docs.size() gt 0}" />
+										</p:column>
+										<p:column headerText="#{lang['companyName']}">
+							               #{rv.companyName}
+							            </p:column>
+										<p:column headerText="#{lang['companyRegistrationNumber']}">
+							               #{rv.companyRegistrationNumber}
+							            </p:column>
+										<p:column headerText="#{lang['entity.id']}">
+							               #{rv.levyNumber}
+							            </p:column>
+										<p:column headerText="#{lang['company.status']}" width="10%">
+							               #{lang[rv.companyStatus.registrationName]}
+							            </p:column>
+										<p:column width="37" headerText="#{lang['RAG']}">
+											<h:graphicImage value="/resources/hls/images/red.svg" rendered="#{rv.companyStatus eq CompanyStatusEnum.Pending}" width="40" styleClass="animated pulse infinite" />
+										</p:column>
+
+										<p:rowExpansion>
+											<p:dataTable emptyMessage="#{lang['no.records.found']}" value="#{rv.docs}" var="rv1" rowKey="#{rv1.id}">
+												<p:column headerText="#{lang['type']}" width="20%">
+							                       #{rv1.configDoc.name}
+							                    </p:column>
+												<p:column headerText="#{lang['uploaded.by']}">
+							                       #{rv1.users.firstName} #{rv1.users.lastName}
+							                    </p:column>
+												<p:column headerText="#{lang['uploaded']}" width="15%">
+													<h:outputText value="#{rv1.createDate}">
+														<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+													</h:outputText>
+												</p:column>
+												<p:column headerText="#{lang['version']}" width="15%">
+													<h:outputText value="#{rv1.versionNo}">
+													</h:outputText>
+												</p:column>
+
+												<p:column width="80">
+													<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlb" rendered="#{rv1.id ne null}">
+														<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+													</p:commandButton>
+													<p:tooltip for="dlb" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+
+													
+													<h:panelGroup id="panelGroupThree" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+														<p:spacer width="5" />
+														<p:commandButton icon="fa fa-comment-o " id="dnote" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+															<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+														</p:commandButton>
+														<p:tooltip for="dnote" value="#{lang['view.note']}" position="left" />
+													</h:panelGroup>
+
+													<h:panelGroup id="panelGroupFour" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+														<p:spacer width="5" />
+														<p:commandButton icon="fa fa-eye " id="viewerButton" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+															<f:setPropertyActionListener value="#{rv}" target="#{uploadDocUI.doc}" />
+														</p:commandButton>
+														<p:tooltip for="viewerButton" value="#{lang['view.document']} " position="left" />
+													</h:panelGroup>
+
+												</p:column>
+											</p:dataTable>
+										</p:rowExpansion>
+									</p:dataTable>
+								</p:fieldset>
+								<p:fieldset legend="#{lang['qualification.details']}">
+									<br/>
+									<p:dataTable var="qual" value="#{sdpextensionofscopeUI.companyQualifications(var)}">
+										<p:column headerText="#{lang['qualifications']}">
+											<h:outputText value="#{qual.qualification.description}" />
+										</p:column>
+	
+										<p:column headerText="#{lang['saqa.id']}">
+											<h:outputText value="#{qual.qualification.code}" />
+										</p:column>
+	
+										<p:column headerText="#{lang['nqf.level']}">
+											<h:outputText value="#{qual.qualification.nqflevel.description}" />
+										</p:column>
+										
+										<p:column headerText="Approve" width="60">
+											<center>
+												<p:selectBooleanCheckbox value="#{qual.accept}" disabled="true"/>
+											</center>
+										</p:column>
+									</p:dataTable>
+									
+									
+									<br/>
+						            <p:dataTable var="us" value="#{sdpextensionofscopeUI.companyUnitStandard(var)}">
+										<p:column headerText="#{lang['name.of.unit.standard(s)']}">
+											<h:outputText value="#{us.unitStandard.title}" />
+										</p:column>
+	
+										<p:column headerText="#{lang['code']}">
+											<h:outputText value="#{us.unitStandard.code}" />
+										</p:column>
+	
+										<p:column headerText="#{lang['nqf.level']}">
+											<h:outputText value="#{us.unitStandard.nqf}" />
+										</p:column>
+										
+										<p:column headerText="Approve" width="60">
+											<center>
+												<p:selectBooleanCheckbox value="#{us.accept}" disabled="true"/>
+											</center>
+										</p:column>
+									</p:dataTable>
+									<br/>
+									
+						            <p:dataTable var="sp" value="#{sdpextensionofscopeUI.trainingProviderSkillsProgrammes(var)}">
+										<p:column headerText="#{lang['skills.programme']}">
+											<h:outputText value="#{sp.skillsProgram.description}" />
+										</p:column>
+										
+										<p:column headerText="#{lang['programmeID']}">
+												<h:outputText value="#{sp.skillsProgram.programmeID}" />
+										</p:column>
+	
+										<p:column headerText="#{lang['code']}" rendered="false">
+											<h:outputText value="#{sp.skillsProgram.code}" />
+										</p:column>
+										
+										<p:column headerText="Approve" width="60">
+												<center>
+													<p:selectBooleanCheckbox value="#{sp.accept}" disabled="true"/>
+												</center>
+											</p:column>
+									</p:dataTable>
+									
+									<br/>
+						            <p:dataTable var="ss" value="#{sdpextensionofscopeUI.trainingProviderSkillsSet(var)}">
+										<p:column headerText="#{lang['skills.set']}">
+											<h:outputText value="#{ss.skillsSet.description}" />
+										</p:column>
+										
+										<p:column headerText="#{lang['programmeID']}">
+											<h:outputText value="#{ss.skillsSet.programmeID}" />
+										</p:column>
+	
+										<p:column headerText="#{lang['code']}" rendered="false">
+											<h:outputText value="#{ss.skillsSet.code}" />
+										</p:column>
+										<p:column headerText="Approve" width="60">
+											<center>
+												<p:selectBooleanCheckbox value="#{ss.accept}" disabled="true"/>
+											</center>
+										</p:column>
+									</p:dataTable>
+									
+									<p:fieldset legend="Skills programme route">
+										<p:panelGrid columns="3" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+											<h:panelGroup>
+												<p:outputLabel  styleClass="FontBold Fs15" style="font-weight:bold" value="Skills programme route will be used for obtaining the unit standards?"  />
+											</h:panelGroup>
+											
+											<h:panelGroup>
+												<p:selectOneMenu disabled="true"  id="useSkillProgrammeRoute" value="#{var.useSkillProgrammeRoute}" style="width:100%" required="true" requiredMessage="#{lang['use.skill.programme.route.error.msg']}">
+													
+													<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+												</p:selectOneMenu>
+											</h:panelGroup>
+											
+											<h:panelGroup styleClass="md-inputfield" rendered="#{var.useSkillProgrammeRoute eq YesNoEnum.Yes}">
+												<p:autoComplete id="skillsSet"  value="#{var.skillsSet}" completeMethod="#{autoCompleteUI.completeSkillsSet}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SkillsSetConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 100%"
+													disabled="true">
+													<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+													<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+												</p:autoComplete>
+												<p:outputLabel  value="Skills Set" for="skillsSet" />
+											</h:panelGroup>
+										</p:panelGrid>
+									</p:fieldset>
+								</p:fieldset>
+								
+								<ui:include src="/pages/tp/includes/tpExOfScopeContactPersonAndAssFacilitators.xhtml"/>
+								<br/>
+								<p:panel header="#{lang['accept.code.of.conduct']}" style="text-align:center">
+										<h:form id="cocForm">
+											<p:panelGrid columns="6" id="pgAccept" style="width:100%">
+						
+												<h:outputText value="#{lang['name']}:" styleClass="FontBold Fs15" />
+												<h:outputText value="#{var.users.firstName} #{tpDetailUI.trainingProviderUser.lastName}" />
+						
+												<h:outputText value="#{lang['date']}:"  styleClass="FontBold Fs15" >
+													
+												</h:outputText>
+												<h:outputText value="#{var.trainingProviderApplication.codeOfConductAcceptDate}" >
+													 <f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+												</h:outputText>
+						
+												<h:outputText value="#{lang['accept']}:" styleClass="FontBold Fs15" />
+												<p:selectBooleanCheckbox style="width:100%" id="cbAccept" disabled="true" value="#{var.trainingProviderApplication.codeOfConductAccepted}">
+													
+												</p:selectBooleanCheckbox>
+						
+											</p:panelGrid>
+										</h:form>
+									</p:panel>
+								
+					        </p:rowExpansion>
+						</p:dataTable>
+						<br/>
+						
+                  </h:form>
+                </div>
+            </div>
+        </div>
+        
+        <ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+		<p:dialog header="Reject Reasons" widgetVar="rejectReason" hideEffect="clip" showEffect="clip" id="dialogRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{sdpextensionofscopeUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:100%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{sdpextensionofscopeUI.tpRejectReasons}" var="rv" itemValue="#{rv}" />
+
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+
+							</p:selectManyMenu>
+							
+						</div>
+					</div>
+					<p:commandButton rendered="true" oncomplete="PF('rejectReason').hide()" update="mainForm"  value="Reject" action="#{sdpextensionofscopeUI.extensionOfScopeETQARejection}">
+					</p:commandButton>
+				</div>
+			</h:form>
+		</p:dialog>
+        
+    </ui:define>
+
+</ui:composition>

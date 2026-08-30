@@ -1,0 +1,196 @@
+
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:pt="http://xmlns.jcp.org/jsf/passthrough">
+
+	<h:form id="skillsgapForm">
+		<h:panelGroup id="skillsgapGroup">
+			<p:growl showDetail="false" sticky="false">
+				<p:autoUpdate />
+			</p:growl>
+			<p:fieldset legend="#{lang['skills.gap.section.one']}">
+				<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<h:panelGroup style="width:100%">
+						<p:outputLabel value="#{lang['skills.gap.yesno.keep.track']}" for="trackSkillGapYesNo" />
+						<div class="EmptyBox10" />
+						<p:selectOneRadio disabled="#{wspSkillsGapUI.wsp.wspStatusEnum ne WspStatusEnum.Draft}" required="true" id="trackSkillGapYesNo" value="#{wspSkillsGapUI.wsp.trackSkillsGap}" converter="YesNoLookupConvertor" columns="2" layout="grid">
+							<p:ajax update=":tabView:skillsgapsectionForm:" />
+							<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+						</p:selectOneRadio>
+					</h:panelGroup>
+				</p:panelGrid>
+			</p:fieldset>
+		</h:panelGroup>
+	</h:form>
+
+	<h:form id="skillsgapsectionForm" onsubmit="checkDisableAll()">
+		<p:fieldset legend="#{lang['skills.gap.section.two']}" rendered="#{wspSkillsGapUI.wsp.trackSkillsGap ne null and wspSkillsGapUI.wsp.trackSkillsGap.yesNoName.toLowerCase() eq 'yes'}">
+			<p:panelGrid columns="2" style="width:100%" id="skillsgapsection2Grid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup>
+					<div>
+						<p:outputLabel styleClass="Fs14 FontLight" value="#{lang['skills.gap.dropdown.how.keep.track']}" for="trackSelectionSkillsGap" />
+						<div class="EmptyBox5" />
+					</div>
+					<div>
+						<p:selectOneMenu disabled="#{wspSkillsGapUI.wsp.wspStatusEnum ne WspStatusEnum.Draft}" style="width:100%" id="trackSelectionSkillsGap" converter="SkillsGapTrackLookUpConvertor" value="#{wspSkillsGapUI.wsp.skillsGapTrackSelection}">
+							<p:ajax update="skillsgapsection2Grid" event="itemSelect" />
+							<f:selectItems value="#{selectItemsUI.skillsGapTrackLookUp}" var="trackSelection" itemLabel="#{trackSelection.description}" itemValue="#{trackSelection}" />
+						</p:selectOneMenu>
+					</div>
+				</h:panelGroup>
+				<h:panelGroup rendered="#{wspSkillsGapUI.wsp.skillsGapTrackSelection ne null and wspSkillsGapUI.wsp.skillsGapTrackSelection.futherDetailRequired}">
+					<div class="EmptyBox10" />
+					<div>
+						<p:outputLabel styleClass="Fs14 FontLight" value="#{lang['skills.gap.specify']}" for="trackSelectionSkillsGapDetail" />
+						<div class="EmptyBox5" />
+					</div>
+					<div>
+						<p:inputTextarea disabled="#{wspSkillsGapUI.wsp.wspStatusEnum ne WspStatusEnum.Draft}" id="trackSelectionSkillsGapDetail" value="#{wspSkillsGapUI.wsp.skillsGapTrackSelectionDetail}" style="width:100%" rows="3">
+							<p:ajax />
+						</p:inputTextarea>
+					</div>
+				</h:panelGroup>
+			</p:panelGrid>
+		</p:fieldset>
+
+		<p:panelGrid columns="1" style="width:100%" id="skillsgapsection3Grid" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{wspSkillsGapUI.wsp.trackSkillsGap ne null and wspSkillsGapUI.wsp.trackSkillsGap.yesNoName.toLowerCase() eq 'yes'}">
+
+			<p:dataTable var="wsg" rows="#{wspSkillsGapUI.wspSkillsGapSectionThreeList.size()}" emptyMessage="#{lang['no.records.found']}" value="#{wspSkillsGapUI.wspSkillsGapSectionThreeList}" id="skill3">
+				<f:facet name="header">#{lang['skills.gap.datatable.section.three']}</f:facet>
+				<p:column>
+					<p:outputLabel value="#{wsg.rowDescription}" />
+				</p:column>
+				<p:column headerText="#{lang['skills.gap.managers.coloum.heading']}">
+					<p:selectBooleanCheckbox value="#{wsg.managerSelection}" onchange="disableCheckBox('manager3')" pt:type="manager3" disabled="#{wspSkillsGapUI.viewOnly}">
+					</p:selectBooleanCheckbox>
+				</p:column>
+				<p:column headerText="#{lang['skills.gap.professionals.coloum.heading']}">
+					<p:selectBooleanCheckbox value="#{wsg.professionalsSelection}" onchange="disableCheckBox('profesionals3')" pt:type="profesionals3" disabled="#{wspSkillsGapUI.viewOnly}">
+					</p:selectBooleanCheckbox>
+				</p:column>
+				<p:column headerText="#{lang['skills.gap.technicians.associate.professionals.coloum.heading']}">
+					<p:selectBooleanCheckbox value="#{wsg.techniciansAssociateProfessionalsSelection}" onchange="disableCheckBox('assprofesionals3')" pt:type="assprofesionals3" disabled="#{wspSkillsGapUI.viewOnly}">
+					</p:selectBooleanCheckbox>
+				</p:column>
+				<p:column headerText="#{lang['skills.gap.clerical.support.workers.coloum.heading']}">
+					<p:selectBooleanCheckbox value="#{wsg.clericalSupportWorkersSelection}" onchange="disableCheckBox('supportWorkers3')" pt:type="supportWorkers3" disabled="#{wspSkillsGapUI.viewOnly}">
+					</p:selectBooleanCheckbox>
+				</p:column>
+				<p:column headerText="#{lang['skills.gap.service.sales.workers.coloum.heading']}">
+					<p:selectBooleanCheckbox value="#{wsg.serviceSalesWorkersSelection}" onchange="disableCheckBox('service3')" pt:type="service3" disabled="#{wspSkillsGapUI.viewOnly}">
+					</p:selectBooleanCheckbox>
+				</p:column>
+				<p:column headerText="#{lang['skills.gap.skilled.trades.workers.coloum.heading']}">
+					<p:selectBooleanCheckbox value="#{wsg.skilledTradesWorkersSelection}" onchange="disableCheckBox('tradeWorkers3')" pt:type="tradeWorkers3" disabled="#{wspSkillsGapUI.viewOnly}">
+					</p:selectBooleanCheckbox>
+				</p:column>
+				<p:column headerText="#{lang['skills.gap.plant.machine.operator.sassemblers.coloum.heading']}">
+					<p:selectBooleanCheckbox value="#{wsg.plantMachineOperatorsAssemblersSelection}" onchange="disableCheckBox('machOper3')" pt:type="machOper3" disabled="#{wspSkillsGapUI.viewOnly}">
+					</p:selectBooleanCheckbox>
+				</p:column>
+				<p:column headerText="#{lang['skills.gap.elementary.workers.coloum.heading']}">
+					<p:selectBooleanCheckbox value="#{wsg.elementaryWorkersSelection}" onchange="disableCheckBox('workElem3')" pt:type="workElem3" disabled="#{wspSkillsGapUI.viewOnly}">
+					</p:selectBooleanCheckbox>
+				</p:column>
+
+			</p:dataTable>
+
+		</p:panelGrid>
+		<div class="EmptyBox10" />
+		<p:panelGrid columns="1" style="width:100%" id="skillsgapsection4Grid" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{wspSkillsGapUI.wsp.trackSkillsGap ne null and wspSkillsGapUI.wsp.trackSkillsGap.yesNoName.toLowerCase() eq 'yes'}">
+
+			<p:dataTable var="wsg" rows="#{wspSkillsGapUI.wspSkillsGapSectionFourList.size()}" emptyMessage="#{lang['no.records.found']}" value="#{wspSkillsGapUI.wspSkillsGapSectionFourList}" rowKey="id">
+				<f:facet name="header">#{lang['skills.gap.datatable.section.four']}</f:facet>
+				<p:column>
+					<p:outputLabel value="#{wsg.rowDescription}" />
+				</p:column>
+				<p:column headerText="#{lang['skills.gap.managers.coloum.heading']}">
+					<p:selectBooleanCheckbox value="#{wsg.managerSelection}" onchange="disableCheckBox('manager4')" pt:type="manager4" disabled="#{wspSkillsGapUI.viewOnly}">
+					</p:selectBooleanCheckbox>
+				</p:column>
+				<p:column headerText="#{lang['skills.gap.professionals.coloum.heading']}">
+					<p:selectBooleanCheckbox value="#{wsg.professionalsSelection}" onchange="disableCheckBox('profesionals4')" pt:type="profesionals4" disabled="#{wspSkillsGapUI.viewOnly}">
+					</p:selectBooleanCheckbox>
+				</p:column>
+				<p:column headerText="#{lang['skills.gap.technicians.associate.professionals.coloum.heading']}">
+					<p:selectBooleanCheckbox value="#{wsg.techniciansAssociateProfessionalsSelection}" onchange="disableCheckBox('assprofesionals4')" pt:type="assprofesionals4" disabled="#{wspSkillsGapUI.viewOnly}">
+					</p:selectBooleanCheckbox>
+				</p:column>
+				<p:column headerText="#{lang['skills.gap.clerical.support.workers.coloum.heading']}">
+					<p:selectBooleanCheckbox value="#{wsg.clericalSupportWorkersSelection}" onchange="disableCheckBox('supportWorkers4')" pt:type="supportWorkers4" disabled="#{wspSkillsGapUI.viewOnly}">
+					</p:selectBooleanCheckbox>
+				</p:column>
+				<p:column headerText="#{lang['skills.gap.service.sales.workers.coloum.heading']}">
+					<p:selectBooleanCheckbox value="#{wsg.serviceSalesWorkersSelection}" onchange="disableCheckBox('service4')" pt:type="service4" disabled="#{wspSkillsGapUI.viewOnly}">
+					</p:selectBooleanCheckbox>
+				</p:column>
+				<p:column headerText="#{lang['skills.gap.skilled.trades.workers.coloum.heading']}">
+					<p:selectBooleanCheckbox value="#{wsg.skilledTradesWorkersSelection}" onchange="disableCheckBox('tradeWorkers4')" pt:type="tradeWorkers4" disabled="#{wspSkillsGapUI.viewOnly}">
+					</p:selectBooleanCheckbox>
+				</p:column>
+				<p:column headerText="#{lang['skills.gap.plant.machine.operator.sassemblers.coloum.heading']}">
+					<p:selectBooleanCheckbox value="#{wsg.plantMachineOperatorsAssemblersSelection}" onchange="disableCheckBox('machOper4')" pt:type="machOper4" disabled="#{wspSkillsGapUI.viewOnly}">
+					</p:selectBooleanCheckbox>
+				</p:column>
+				<p:column headerText="#{lang['skills.gap.elementary.workers.coloum.heading']}">
+					<p:selectBooleanCheckbox value="#{wsg.elementaryWorkersSelection}" onchange="disableCheckBox('workElem4')" pt:type="workElem4" disabled="#{wspSkillsGapUI.viewOnly}">
+					</p:selectBooleanCheckbox>
+				</p:column>
+
+			</p:dataTable>
+		</p:panelGrid>
+		<p:panelGrid columns="1" style="width:100%" id="submitSection" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{wspSkillsGapUI.wsp.trackSkillsGap ne null}">
+			<p:commandButton styleClass="Fs14 FontLight" value="#{lang['submit']}" icon="ui-icon-save" update="@form" actionListener="#{wspSkillsGapUI.saveSectionsResults}" process="skillsgapsectionForm" rendered="#{wspSkillsGapUI.wsp.wspStatusEnum eq WspStatusEnum.Draft}" />
+		</p:panelGrid>
+		<script>
+		$( document ).ready(function() {
+			checkDisableAll();
+		});
+		function checkDisableAll(){
+			disableCheckBox("manager3");
+			disableCheckBox("profesionals3");
+			disableCheckBox("assprofesionals3");
+			disableCheckBox("supportWorkers3");
+			disableCheckBox("service3");
+			disableCheckBox("tradeWorkers3");
+			disableCheckBox("machOper3");
+			disableCheckBox("workElem3");
+			
+			disableCheckBox("manager4");
+			disableCheckBox("profesionals4");
+			disableCheckBox("assprofesionals4");
+			disableCheckBox("supportWorkers4");
+			disableCheckBox("service4");
+			disableCheckBox("tradeWorkers4");
+			disableCheckBox("machOper4");
+			disableCheckBox("workElem4");
+		}
+	function disableCheckBox(type){
+		let count = 0;
+		$('.ui-chkbox[type="'+type+'"]').each(function() {
+			let childDiv = $(this).children(":first");
+			if (childDiv.children()[0].checked) {
+				count += 1;
+			}
+		});
+		if (count >= 3) {
+			$('.ui-chkbox[type="'+type+'"]').each(function() {
+				let childDiv = $(this).children(":first");
+				let childDiv2 = $(this).children(":nth-child(2)");
+				if (!childDiv.children()[0].checked) {
+					childDiv2.addClass("ui-state-disabled");
+					childDiv.children()[0].disabled = true;					
+				}
+			});
+		}else{
+			$('.ui-chkbox[type="'+type+'"]').each(function() {
+				let childDiv = $(this).children(":first");
+				let childDiv2 = $(this).children(":nth-child(2)");
+				childDiv2.removeClass("ui-state-disabled");
+				childDiv.children()[0].disabled = false;
+			});
+		}
+	}
+
+</script>
+	</h:form>
+</ui:composition>

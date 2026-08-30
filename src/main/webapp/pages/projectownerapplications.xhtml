@@ -1,0 +1,98 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+		<h:form id="mainForm">
+			<div class="ui-g">
+				<div class="ui-g-12">
+					<div class="card">
+						<h3>Active Projects</h3>
+						<ui:include src="/pages/includes/download_lazy.xhtml">
+							<ui:param name="file_name" value="Pending_Recommendation" />
+							<ui:param name="target" value="pendingRecommendation" />
+						</ui:include>
+						<div class="EmptyBox10" />
+						<p:dataTable id="pendingRecommendation" var="rowVar" value="#{projectownerapplicationUI.dataModel}" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}" paginatorTemplate="#{lang['page']} {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+							rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+							<p:column headerText="#{lang['id']}" width="8%">
+								<p:outputLabel value="#{rowVar.id}"></p:outputLabel>
+							</p:column>
+							<p:column headerText="Company" filterBy="#{rowVar.company.companyName}">
+								<p:outputLabel value="#{rowVar.company.companyName}">
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="Entity ID" filterBy="#{rowVar.company.levyNumber}">
+								<p:outputLabel value="#{rowVar.company.levyNumber}">
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="Project Owner" filterBy="#{rowVar.projectOwner.firstName}">
+								<p:outputLabel value="#{rowVar.projectOwner.firstName} #{rowVar.projectOwner.lastName}">
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="Senior Manager" filterBy="#{rowVar.projectManager.firstName}">
+								<p:outputLabel value="#{rowVar.projectManager.firstName} #{rowVar.projectManager.lastName}">
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="Recommendation" filterBy="#{rowVar.holdingRoomStatusEnum}">
+								<p:outputLabel value="#{rowVar.holdingRoomStatusEnum.friendlyName}">
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="Funding Window" rendered="true">
+								<p:outputLabel value="#{rowVar.dgYear.description} (#{rowVar.dgYear.dgWindowType})">
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="Estimated Cost">
+								<p:outputLabel value="#{rowVar.estimatedOverallProjectCost}">
+									<f:convertNumber maxFractionDigits="2" minFractionDigits="2" />
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="Award Amount">
+								<p:outputLabel value="#{rowVar.approvedAmount}">
+									<f:convertNumber maxFractionDigits="2" minFractionDigits="2" />
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="#{lang['status']}" rendered="true">
+								<p:outputLabel value="#{rowVar.wspStatusEnum.friendlyName}">
+								</p:outputLabel>
+								<p:outputLabel rendered="#{rowVar.wspStatusEnum.friendlyName eq 'Rejected'}" value=" - #{rowVar.rejectionReasons}">
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="#{lang['decision.date']}">
+								<p:outputLabel value="#{rowVar.approvedDate}" rendered="#{rowVar.wspStatusEnum.friendlyName eq 'Rejected' or rowVar.wspStatusEnum.friendlyName eq 'Approved'}">
+									<f:convertDateTime pattern="dd MMMM yyyy" />
+								</p:outputLabel>
+								<p:outputLabel value="N/A" rendered="#{rowVar.wspStatusEnum.friendlyName ne 'Rejected' and rowVar.wspStatusEnum.friendlyName ne 'Approved'}" />
+							</p:column>
+							<p:column width="80" headerText="Actions" exportable="false">
+								<p:commandButton icon="fa fa-arrow-right" action="#{projectownerapplicationUI.goToWspForCompany}" ajax="false" title="View Application" immediate="true">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{projectownerapplicationUI.wsp}" />
+								</p:commandButton>
+								<p:spacer width="5"></p:spacer>
+								<p:commandButton icon="fa fa-money" oncomplete="PF('deliverable').show()" update="DeliverableForm" title="Request Payment" immediate="true">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{projectownerapplicationUI.wsp}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+					</div>
+				</div>
+			</div>
+		</h:form>
+		<p:dialog header="Payment Request" widgetVar="deliverable" resizable="false" hideEffect="clip" showEffect="clip" id="dlgDeliverableID" width="30%" responsive="true" modal="true" dynamic="true">
+			<h:form id="DeliverableForm">
+				<p:panelGrid columns="1" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="Deliverable" for="pip" />
+						</div>
+						<div>
+							<p:selectOneMenu id="pip" value="#{projectownerapplicationUI.projectImplementationPlan}" converter="ProjectImplementationPlanConvertor" style="width:75%" required="true">
+								<p:ajax></p:ajax>
+								<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+								<f:selectItems value="#{projectownerapplicationUI.deliverables}" var="il" itemLabel="#{il.interventionTypeDescription}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+				</p:panelGrid>
+				<p:commandButton value="#{lang['submit']}" icon="fa fa-check" styleClass="flat" action="#{projectownerapplicationUI.makeRequest}" update="mainForm" oncomplete="PF('deliverable').hide()" />
+			</h:form>
+		</p:dialog>
+	</ui:define>
+</ui:composition>

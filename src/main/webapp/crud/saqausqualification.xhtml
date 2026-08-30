@@ -1,0 +1,124 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Saqa Us Qualification</h1>
+					<h:form id="saqausqualificationInsForm">
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:panelGrid columns="1" style="width:100%" id="saqausqualificationInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="saqaQualification" value="#{saqausqualificationUI.saqausqualification.saqaQualification}" style="width:95%" />
+								<p:outputLabel value="#{lang['saqaQualification']}" for="saqaQualification" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="nqfleveldescription" value="#{saqausqualificationUI.saqausqualification.nqfleveldescription}" style="width:95%" />
+								<p:outputLabel value="#{lang['nqfleveldescription']}" for="nqfleveldescription" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="nqflevelg2description" value="#{saqausqualificationUI.saqausqualification.nqflevelg2description}" style="width:95%" />
+								<p:outputLabel value="#{lang['nqflevelg2description']}" for="nqflevelg2description" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="qualificationid" value="#{saqausqualificationUI.saqausqualification.qualificationid}" style="width:95%" />
+								<p:outputLabel value="#{lang['qualificationid']}" for="qualificationid" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="unitstandardid" value="#{saqausqualificationUI.saqausqualification.unitstandardid}" style="width:95%" />
+								<p:outputLabel value="#{lang['unitstandardid']}" for="unitstandardid" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="unitstdnumberofcredits" value="#{saqausqualificationUI.saqausqualification.unitstdnumberofcredits}" style="width:95%" />
+								<p:outputLabel value="#{lang['unitstdnumberofcredits']}" for="unitstdnumberofcredits" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="unitstdtitle" value="#{saqausqualificationUI.saqausqualification.unitstdtitle}" style="width:95%" />
+								<p:outputLabel value="#{lang['unitstdtitle']}" for="unitstdtitle" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="usqualtypedescription" value="#{saqausqualificationUI.saqausqualification.usqualtypedescription}" style="width:95%" />
+								<p:outputLabel value="#{lang['usqualtypedescription']}" for="usqualtypedescription" />
+							</h:panelGroup>
+
+
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:saqausqualificationList :saqausqualificationInsForm:saqausqualificationInsGrid" action="#{saqausqualificationUI.saqausqualificationInsert}" />
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="saqausqualificationInsGrid" process="@this" action="#{saqausqualificationUI.prepareNew}">
+									<p:resetInput target="saqausqualificationInsGrid" />
+								</p:commandButton>
+							</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{saqausqualificationUI.dataModel}" filteredValue="#{saqausqualificationUI.saqaUsQualificationfilteredList}" id="saqausqualificationList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['saqaQualification']}">
+								<h:outputText value="#{rowVar.saqaQualification}" />
+							</p:column>
+							<p:column headerText="#{lang['nqfleveldescription']}">
+								<h:outputText value="#{rowVar.nqfleveldescription}" />
+							</p:column>
+							<p:column headerText="#{lang['nqflevelg2description']}">
+								<h:outputText value="#{rowVar.nqflevelg2description}" />
+							</p:column>
+							<p:column headerText="#{lang['qualificationid']}">
+								<h:outputText value="#{rowVar.qualificationid}" />
+							</p:column>
+							<p:column headerText="#{lang['unitstandardid']}">
+								<h:outputText value="#{rowVar.unitstandardid}" />
+							</p:column>
+							<p:column headerText="#{lang['unitstdnumberofcredits']}">
+								<h:outputText value="#{rowVar.unitstdnumberofcredits}" />
+							</p:column>
+							<p:column headerText="#{lang['unitstdtitle']}">
+								<h:outputText value="#{rowVar.unitstdtitle}" />
+							</p:column>
+							<p:column headerText="#{lang['usqualtypedescription']}">
+								<h:outputText value="#{rowVar.usqualtypedescription}" />
+							</p:column>
+
+
+							<p:column width="80">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":saqausqualificationInsForm:saqausqualificationInsGrid">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{saqausqualificationUI.saqausqualification}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:saqausqualificationList" action="#{saqausqualificationUI.saqausqualificationDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{saqausqualificationUI.saqausqualification}" />
+								</p:commandButton>
+							</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+	<!-- 
+saqaQualification = saqaQualification
+nqfleveldescription = nqfleveldescription
+nqflevelg2description = nqflevelg2description
+qualificationid = qualificationid
+unitstandardid = unitstandardid
+unitstdnumberofcredits = unitstdnumberofcredits
+unitstdtitle = unitstdtitle
+usqualtypedescription = usqualtypedescription
+
+-->
+</ui:composition>

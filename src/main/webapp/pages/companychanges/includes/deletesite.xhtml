@@ -1,0 +1,193 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+		<p:fieldset legend="#{lang['change.reason']}" toggleable="true" collapsed="true">
+			<p:dataTable value="#{companymanagementUI.changeReason.docs}" id="BankDocs" var="rv1" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv1.id}">
+				<p:column headerText="#{lang['original.file.name']}" priority="4">
+					<p:outputLabel value="#{rv1.originalFname}" styleClass="Fs12"></p:outputLabel>
+				</p:column>
+				<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+				<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+					<h:outputText value="#{rv1.createDate}">
+						<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+					</h:outputText>
+				</p:column>
+				<p:column headerText="#{lang['version']}" width="10%" priority="4">
+					<h:outputText value="#{rv1.versionNo}">
+					</h:outputText>
+				</p:column>
+				<p:column headerText="#{lang['original.required']}" rendered="#{bankingdetailsUI.bankingdetails.areOriginalRequired}">
+					<center>
+						<h:panelGroup rendered="#{rv1.configDoc.originalRequired}" styleClass="green">
+							<i class="fa fa-files-o fa-3x" aria-hidden="true"></i>
+						</h:panelGroup>
+						<h:panelGroup rendered="#{not rv1.configDoc.originalRequired}" styleClass="red">
+							<i class="fa fa-times fa-3x" aria-hidden="true"></i>
+						</h:panelGroup>
+					</center>
+				</p:column>
+				<p:column width="180">
+					<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlb" rendered="#{rv1.id ne null}" immediate="true">
+						<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+					</p:commandButton>
+					<p:tooltip for="dlb" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+
+
+					<p:spacer width="5" rendered="#{rv1.id ne null}" />
+					<p:commandButton icon="fa fa-bars " id="dhist" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}" process="@this">
+						<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+					</p:commandButton>
+
+					<p:tooltip for="dhist" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+					<h:panelGroup id="panelGroupThree" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+						<p:spacer width="5" />
+						<p:commandButton icon="fa fa-comment-o" id="dnote" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel" process="@this">
+							<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+						</p:commandButton>
+						<p:tooltip for="dnote" value="#{lang['view.note']}" position="left" />
+					</h:panelGroup>
+					<h:panelGroup id="panelGroupFour" rendered="#{rv1.extension.toLowerCase() eq 'pdf' and rv1.id ne null}">
+						<p:spacer width="5" />
+						<p:commandButton icon="fa fa-eye " id="viewerButton" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}" process="@this">
+							<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+						</p:commandButton>
+						<p:tooltip for="viewerButton" value="#{lang['view.document']} " position="left" />
+					</h:panelGroup>
+				</p:column>
+			</p:dataTable>
+		</p:fieldset>
+	</p:panelGrid>
+	<!-- Parent Company Info -->
+	<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+		<p:panel header="Parent Company">
+
+			<div class="EmptyBox10"></div>
+			<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+				<h:panelGroup>
+					<p:outputLabel value="#{lang['companyName']}" fo="acompanyName" styleClass="Fs12 FontLight" />
+					<br />
+					<p:outputLabel id="acompanyName" value="#{companymanagementUI.company.companyName}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.company.name']}" />
+				</h:panelGroup>
+				<h:panelGroup>
+					<p:outputLabel value="#{lang['tradingName']}" fo="atradingName" styleClass="Fs12 FontLight" />
+					<br />
+					<p:outputLabel id="atradingName" value="#{companymanagementUI.company.tradingName}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.trading.name']}" />
+				</h:panelGroup>
+
+				<h:panelGroup>
+					<p:outputLabel value="#{lang['telNumber']}" fo="atelNumberComp" styleClass="Fs12 FontLight" />
+					<br />
+					<p:outputLabel id="atelNumberComp" value="#{companymanagementUI.company.telNumber}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.tel.number']}" />
+				</h:panelGroup>
+				<h:panelGroup>
+					<p:outputLabel value="#{lang['faxNumber']}" fo="afaxNumberComp" styleClass="Fs12 FontLight" />
+					<br />
+					<p:outputLabel id="afaxNumberComp" value="#{companymanagementUI.company.faxNumber}" style="width:95%" rendered="#{companymanagementUI.company.faxNumber ne null and companymanagementUI.company.faxNumber.length() gt 0}" />
+					<p:outputLabel id="afaxNumberComp2" value="N/A" style="width:95%" rendered="#{companymanagementUI.company.faxNumber eq null or companymanagementUI.company.faxNumber.length() eq 0}" />
+				</h:panelGroup>
+				<h:panelGroup>
+					<p:outputLabel value="#{lang['companyRegistrationNumber']}" fo="acompanyRegistrationNumber" styleClass="Fs12 FontLight" />
+					<br />
+					<p:outputLabel id="acompanyRegistrationNumber" value="#{companymanagementUI.company.companyRegistrationNumber}" style="width:95%" />
+				</h:panelGroup>
+				<h:panelGroup>
+					<p:outputLabel value="#{lang['email']}" fo="aemailComp" styleClass="Fs12 FontLight" />
+					<br />
+					<p:outputLabel id="aemailComp" value="#{companymanagementUI.company.email}" style="width:95%" />
+				</h:panelGroup>
+				<h:panelGroup>
+					<p:outputLabel value="#{lang['levyNumber']}" fo="alevyNumber" styleClass="Fs12 FontLight" />
+					<br />
+					<p:outputLabel id="alevyNumber" value="#{companymanagementUI.company.levyNumber}" style="width:95%" />
+				</h:panelGroup>
+				<h:panelGroup>
+					<p:outputLabel value="#{lang['numberOfEmployees']}" fo="anumberOfEmployees" styleClass="Fs12 FontLight" />
+					<br />
+					<p:outputLabel id="anumberOfEmployees" value="#{companymanagementUI.company.numberOfEmployees}" style="width:95%" />
+				</h:panelGroup>
+				<h:panelGroup>
+					<p:outputLabel value="#{lang['sicCode']}" fo="asicCode" styleClass="Fs12 FontLight" />
+					<br />
+					<p:outputLabel id="asicCode" value="#{companymanagementUI.company.sicCode.description}" style="width:95%" required="true" requiredMessage="#{lang['enter.sic.code']}" />
+				</h:panelGroup>
+				<h:panelGroup>
+					<p:outputLabel value="#{lang['organisation.type']}" fo="aorganisationType" styleClass="Fs12 FontLight" />
+					<br />
+					<p:outputLabel value="N/A" rendered="#{companymanagementUI.company.organisationType eq null}" />
+					<p:outputLabel id="aorganisationType" value="#{companymanagementUI.company.organisationType.description}" style="width:95%" rendered="#{companymanagementUI.company.organisationType ne null}" />
+				</h:panelGroup>
+			</p:panelGrid>
+			<p:panelGrid columns="1" style="width:100%" id="acompanyInsGrida" layout="grid" styleClass="ui-panelgrid-blank">
+				<c:if test="#{companymanagementUI.company.residentialAddress ne null and companymanagementUI.company.residentialAddress.id ne null}">
+					<ui:include src="/pages/includes/addressInformation.xhtml">
+						<ui:param name="header" value="#{lang['residentialAddress']}" />
+						<ui:param name="address" value="#{companymanagementUI.company.residentialAddress}" />
+					</ui:include>
+				</c:if>
+
+				<c:if test="#{companymanagementUI.company.registeredAddress ne null and companymanagementUI.company.registeredAddress.id ne null}">
+					<ui:include src="/pages/includes/addressInformation.xhtml">
+						<ui:param name="header" value="#{lang['registeredAddress']}" />
+						<ui:param name="address" value="#{companymanagementUI.company.registeredAddress}" />
+					</ui:include>
+				</c:if>
+
+				<c:if test="#{companymanagementUI.company.postalAddress ne null and companymanagementUI.company.postalAddress.id ne null}">
+					<ui:include src="/pages/includes/addressInformation.xhtml">
+						<ui:param name="header" value="#{lang['postalAddress']}" />
+						<ui:param name="address" value="#{companymanagementUI.company.postalAddress}" />
+					</ui:include>
+				</c:if>
+			</p:panelGrid>
+		</p:panel>
+
+		<p:panel header="Site Info">
+			<div class="EmptyBox10"></div>
+			<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+				<h:panelGroup>
+					<p:outputLabel value="#{lang['site.name']}" for="sitename" styleClass="Fs12 FontLight" />
+					<br />
+					<p:outputLabel id="sitename" value="#{companymanagementUI.sites.companyName}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.company.name']}" />
+				</h:panelGroup>
+
+				<h:panelGroup>
+					<p:outputLabel value="#{lang['telNumber']}" for="telNumberComp" styleClass="Fs12 FontLight" />
+					<br />
+					<p:outputLabel id="telNumberComp" value="#{companymanagementUI.sites.telNumber}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.tel.number']}" />
+				</h:panelGroup>
+
+				<h:panelGroup>
+					<p:outputLabel value="#{lang['number.of.employees']}" for="numEmp" styleClass="Fs12 FontLight" />
+					<br />
+					<p:outputLabel id="numEmp" value="#{companymanagementUI.sites.numberOfEmployees}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.tel.number']}" />
+				</h:panelGroup>
+				<h:panelGroup>
+					<p:outputLabel value="#{lang['faxNumber']}" for="faxNumber" styleClass="Fs12 FontLight" />
+					<br />
+					<p:outputLabel id="faxNumber" for="faxNumberComp2" value="#{companymanagementUI.sites.faxNumber}" style="width:95%" rendered="#{companymanagementUI.sites.faxNumber ne null and companymanagementUI.sites.faxNumber.length() gt 0}" />
+					<p:outputLabel id="faxNumberComp2" value="N/A" style="width:95%" rendered="#{companymanagementUI.sites.faxNumber eq null or companymanagementUI.sites.faxNumber.length() eq 0}" />
+				</h:panelGroup>
+
+			</p:panelGrid>
+			<p:panelGrid columns="1" style="width:100%" id="companyInsGrida" layout="grid" styleClass="ui-panelgrid-blank">
+				<c:if test="#{companymanagementUI.sites.registeredAddress ne null and companymanagementUI.sites.registeredAddress.id ne null}">
+					<ui:include src="/pages/includes/addressInformation.xhtml">
+						<ui:param name="header" value="#{lang['registeredAddress']}" />
+						<ui:param name="address" value="#{companymanagementUI.sites.registeredAddress}" />
+					</ui:include>
+				</c:if>
+			</p:panelGrid>
+		</p:panel>
+
+	</p:panelGrid>
+
+
+	<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="text-align: center; width:100%" layout="grid">
+
+		<p:commandButton value="#{lang['approve.task']}" icon="ui-icon-save" update="@form" action="#{companymanagementUI.approveSiteDeleteTask}" styleClass="flat green-btn Fs18" style="height: 50px;">
+		</p:commandButton>
+
+		<p:commandButton value="#{lang['reject.task']}" icon="ui-icon-clear-all" update="@form" action="#{companymanagementUI.rejectSiteDeleteTask}" process="@this" styleClass="flat red-btn Fs18" style="height: 50px;">
+		</p:commandButton>
+
+	</p:panelGrid>
+</ui:composition>

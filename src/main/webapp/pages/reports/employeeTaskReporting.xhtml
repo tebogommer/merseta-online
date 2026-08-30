@@ -1,0 +1,284 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<p:growl>
+						<p:autoUpdate />
+					</p:growl>
+					<h:form id="mainForm">
+						<H1>Employee Task Reporting / Analysis</H1>
+
+						<span class="Fs15 gray"><p:commandButton icon="fa fa-address-card-o" disabled="true" /> - All Tasks Action / Completed By User </span>
+						<div class="EmptyBox5" />
+						<span class="Fs15 gray"><p:commandButton icon="fa fa-users" disabled="true" /> - All Tasks Assigned To User </span>
+						<div class="EmptyBox5" />
+						<span class="Fs15 gray"><p:commandButton icon="fa fa-bar-chart" disabled="true" /> - Summary Report By User </span>
+						<div class="EmptyBox5" />
+						<span class="Fs15 gray"><p:commandButton icon="fa fa-calendar" disabled="true" /> - Summary Report By User Including Date Range </span>
+						<div class="EmptyBox10" />
+
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+						<p:dataTable var="rowVarHostEmp" value="#{employeeTaskReportingUI.hostingCompanyEmployeesDataModel}" id="hcEmployeeDataTable" rowKey="#{rowVarHostEmp.id}" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+							<p:column headerText="#{lang['hosting.company.name']}" groupRow="true" rendered="false">
+								<h:outputText value="#{rowVarHostEmp.hostingCompany.companyName}" />
+							</p:column>
+							<p:column headerText="Employee First Name" sortBy="#{rowVarHostEmp.users.firstName}" filterBy="#{rowVarHostEmp.users.firstName}" filterStyle="width: 98%">
+								<h:outputText value="#{rowVarHostEmp.users.firstName}" />
+							</p:column>
+							<p:column headerText="Employee Last Name" sortBy="#{rowVarHostEmp.users.lastName}" filterBy="#{rowVarHostEmp.users.lastName}" filterStyle="width: 98%">
+								<h:outputText value="#{rowVarHostEmp.users.lastName}" />
+							</p:column>
+							<p:column headerText="#{lang['email']}" sortBy="#{rowVarHostEmp.users.email}" filterBy="#{rowVarHostEmp.users.email}" filterStyle="width: 98%">
+								<h:outputText value="#{rowVarHostEmp.users.email}" />
+							</p:column>
+							<p:column headerText="#{lang['rsa.id.number']}" width="100" rendered="false">
+								<h:outputText value="#{rowVarHostEmp.users.rsaIDNumber}" />
+							</p:column>
+							<p:column headerText="#{lang['passport.number']}" width="100" rendered="false">
+								<h:outputText value="#{rowVarHostEmp.users.passportNumber}" />
+							</p:column>
+							<p:column headerText="Temp ID" width="100" rendered="false">
+								<h:outputText value="#{rowVarHostEmp.users.tempRasIdOrPassportNumber}" />
+							</p:column>
+							<p:column headerText="Job Titile">
+								<h:outputText value="#{rowVarHostEmp.jobTitle.description}" />
+							</p:column>
+							<p:column headerText="Office">
+								<h:outputText value="#{rowVarHostEmp.users.office.description}" />
+							</p:column>
+							<p:column headerText="User Status" sortBy="#{rowVarHostEmp.users.status}" >
+								<h:outputText value="#{rowVarHostEmp.users.status.friendlyName}" />
+							</p:column>
+							<p:column exportable="false" styleClass="action-column">
+								<p:commandButton process="@this" title="View All Tasks Action / Completed" action="#{employeeTaskReportingUI.viewAllTasksUserAction}" icon="fa fa-address-card-o" update="reportingForm" onstart="uploadStart()" oncomplete="uploadDone()">
+									<f:setPropertyActionListener value="#{rowVarHostEmp.users}" target="#{employeeTaskReportingUI.selectedUser}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton process="@this" title="All Tasks Assigned To User" action="#{employeeTaskReportingUI.viewAllTasksUserAssignedTo}" icon="fa fa-users" update="reportingForm" onstart="uploadStart()" oncomplete="uploadDone()">
+									<f:setPropertyActionListener value="#{rowVarHostEmp.users}" target="#{employeeTaskReportingUI.selectedUser}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton process="@this" title="Summary Report By User" action="#{employeeTaskReportingUI.generateTaskSummaryReport}" icon="fa fa-bar-chart" update="reportingForm" onstart="uploadStart()" oncomplete="uploadDone()">
+									<p:confirm header="#{lang['confirmation']}" message="Report may take some time to generate. Do you wish to proceed?" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVarHostEmp.users}" target="#{employeeTaskReportingUI.selectedUser}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton process="@this" title="Summary Report By User Including Date Range" action="#{employeeTaskReportingUI.prepDateRangeReports}" icon="fa fa-calendar" update="reportingForm" onstart="uploadStart()" oncomplete="uploadDone()">
+									<f:setPropertyActionListener value="#{rowVarHostEmp.users}" target="#{employeeTaskReportingUI.selectedUser}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+					</h:form>
+					<h:form id="reportingForm">
+						<div class="EmptyBox10" />
+						<c:if test="#{employeeTaskReportingUI.taskSummaryReportDateRange}">
+							<H2>Summary Report By User Including Date Range For: #{employeeTaskReportingUI.selectedUser.firstName} #{employeeTaskReportingUI.selectedUser.lastName} (#{employeeTaskReportingUI.selectedUser.email})</H2>
+
+							<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+
+								<h:panelGroup styleClass="md-inputfield">
+									<p:calendar required="true" value="#{employeeTaskReportingUI.fromDate}" navigator="true" id="startDate" showOn="button" requiredMessage="Provide: From Date" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" inputStyle="width:90%">
+										<p:ajax event="dateSelect" />
+									</p:calendar>
+									<p:outputLabel value="From Date" for="startDate" style="width:100%" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield">
+									<p:calendar required="true" value="#{employeeTaskReportingUI.toDate}" navigator="true" id="toDate" showOn="button" requiredMessage="Provide: To Date" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" inputStyle="width:90%">
+										<p:ajax event="dateSelect" />
+									</p:calendar>
+									<p:outputLabel value="To Date" for="toDate" style="width:100%" />
+								</h:panelGroup>
+
+								<p:commandButton action="#{employeeTaskReportingUI.generateReportWithDateRanges}" icon="fa fa-list" update="reportingForm" value="Generate Report" onstart="uploadStart()" oncomplete="uploadDone()">
+									<p:confirm header="#{lang['confirmation']}" message="Report may take some time to generate. Do you wish to proceed?" icon="ui-icon-warning" />
+								</p:commandButton>
+
+							</p:panelGrid>
+
+							<c:if test="#{employeeTaskReportingUI.taskSummaryReportDateRangeReport}">
+								<div class="EmptyBox10" />
+								<ui:include src="/pages/includes/download_lazy.xhtml">
+									<ui:param name="file_name" value="Tasks_Summary_Report" />
+									<ui:param name="target" value="summaryReportDateDT" />
+								</ui:include>
+								<div class="EmptyBox10" />
+								<p:dataTable var="rvSummaryReportDate" value="#{employeeTaskReportingUI.taskCounterReportList}" id="summaryReportDateDT" paginator="true" rows="10" paginatorPosition="bottom"
+									paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,15,20,25" reflow="true" lazy="false">
+									<p:column headerText="User" style="display:none">
+										<p:outputLabel value="#{employeeTaskReportingUI.selectedUser.firstName} #{employeeTaskReportingUI.selectedUser.lastName} (#{employeeTaskReportingUI.selectedUser.email})" />
+									</p:column>
+									<p:column headerText="From Date" style="display:none">
+										<p:outputLabel value="#{rvSummaryReportDate.fromDate}" >
+											<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+										</p:outputLabel>
+									</p:column>
+									<p:column headerText="To Date" style="display:none">
+										<p:outputLabel value="#{rvSummaryReportDate.toDate}" >
+											<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+										</p:outputLabel>
+									</p:column>
+									<p:column headerText="Generation Date" width="10%">
+										<h:outputText value="#{rvSummaryReportDate.generated}">
+											<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME_SECOND}" />
+										</h:outputText>
+									</p:column>
+									<p:column headerText="Description">
+										<h:outputText value="#{rvSummaryReportDate.description}" />
+									</p:column>
+									<p:column headerText="Amount" styleClass="number-column">
+										<h:outputText value="#{rvSummaryReportDate.counter}">
+											<f:convertNumber pattern="###,###,###,###,##0" />
+										</h:outputText>
+									</p:column>
+								</p:dataTable>
+
+								<div class="EmptyBox10" />
+								<ui:include src="/pages/includes/download_lazy.xhtml">
+									<ui:param name="file_name" value="Tasks_Summary_Report_By_Process" />
+									<ui:param name="target" value="summaryReportByProcessDateDT" />
+								</ui:include>
+								<div class="EmptyBox10" />
+								<p:dataTable var="rvSummaryReportProcessDate" value="#{employeeTaskReportingUI.taskProcessReport}" id="summaryReportByProcessDateDT" paginator="true" rows="10" paginatorPosition="bottom"
+									paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,15,20,25" reflow="true" lazy="false">
+									<p:column headerText="User" style="display:none">
+										<p:outputLabel value="#{employeeTaskReportingUI.selectedUser.firstName} #{employeeTaskReportingUI.selectedUser.lastName} (#{employeeTaskReportingUI.selectedUser.email})" />
+									</p:column>
+									<p:column headerText="From Date" style="display:none">
+										<p:outputLabel value="#{rvSummaryReportProcessDate.fromDate}" >
+											<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+										</p:outputLabel>
+									</p:column>
+									<p:column headerText="To Date" style="display:none">
+										<p:outputLabel value="#{rvSummaryReportProcessDate.toDate}" >
+											<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+										</p:outputLabel>
+									</p:column>
+									<p:column headerText="Generation Date" width="10%">
+										<h:outputText value="#{rvSummaryReportProcessDate.generated}">
+											<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME_SECOND}" />
+										</h:outputText>
+									</p:column>
+									<p:column headerText="Process">
+										<h:outputText value="#{lang[rvSummaryReportProcessDate.hostingCompanyProcess.workflowProcess.registrationName]}" rendered="#{rvSummaryReportProcessDate.hostingCompanyProcess ne null}" />
+										<h:outputText value="#{rvSummaryReportProcessDate.description}" rendered="#{rvSummaryReportProcessDatehostingCompanyProcess eq null}" />
+									</p:column>
+									<p:column headerText="Tasks Completed" styleClass="number-column">
+										<h:outputText value="#{rvSummaryReportProcessDate.completedCounter}">
+											<f:convertNumber pattern="###,###,###,###,##0" />
+										</h:outputText>
+									</p:column>
+									<p:column headerText="Tasks Underway" styleClass="number-column">
+										<h:outputText value="#{rvSummaryReportProcessDate.underwayCounter}">
+											<f:convertNumber pattern="###,###,###,###,##0" />
+										</h:outputText>
+									</p:column>
+									<p:column headerText="Tasks Assigned To" styleClass="number-column">
+										<h:outputText value="#{rvSummaryReportProcessDate.assignedCounter}">
+											<f:convertNumber pattern="###,###,###,###,##0" />
+										</h:outputText>
+									</p:column>
+								</p:dataTable>
+							</c:if>
+
+						</c:if>
+						<c:if test="#{employeeTaskReportingUI.taskSummaryReport}">
+							<H2>Summary Report By User: #{employeeTaskReportingUI.selectedUser.firstName} #{employeeTaskReportingUI.selectedUser.lastName} (#{employeeTaskReportingUI.selectedUser.email})</H2>
+							<ui:include src="/pages/includes/download_lazy.xhtml">
+								<ui:param name="file_name" value="Tasks_Summary_Report" />
+								<ui:param name="target" value="summaryReportDT" />
+							</ui:include>
+							<div class="EmptyBox10" />
+							<p:dataTable var="rvSummaryReport" value="#{employeeTaskReportingUI.taskCounterReportList}" id="summaryReportDT" paginator="true" rows="10" paginatorPosition="bottom"
+								paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,15,20,25" reflow="true" lazy="false">
+								<p:column headerText="User" style="display:none">
+									<p:outputLabel value="#{employeeTaskReportingUI.selectedUser.firstName} #{employeeTaskReportingUI.selectedUser.lastName} (#{employeeTaskReportingUI.selectedUser.email})" />
+								</p:column>
+								<p:column headerText="Generation Date" width="10%">
+									<h:outputText value="#{rvSummaryReport.generated}">
+										<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME_SECOND}" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Description">
+									<h:outputText value="#{rvSummaryReport.description}" />
+								</p:column>
+								<p:column headerText="Amount" styleClass="number-column">
+									<h:outputText value="#{rvSummaryReport.counter}">
+										<f:convertNumber pattern="###,###,###,###,##0" />
+									</h:outputText>
+								</p:column>
+							</p:dataTable>
+
+							<div class="EmptyBox10" />
+							<ui:include src="/pages/includes/download_lazy.xhtml">
+								<ui:param name="file_name" value="Tasks_Summary_Report_By_Process" />
+								<ui:param name="target" value="summaryReportByProcessDT" />
+							</ui:include>
+							<div class="EmptyBox10" />
+							<p:dataTable var="rvSummaryReportProcess" value="#{employeeTaskReportingUI.taskProcessReport}" id="summaryReportByProcessDT" paginator="true" rows="10" paginatorPosition="bottom"
+								paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,15,20,25" reflow="true" lazy="false">
+								<p:column headerText="User" style="display:none">
+									<p:outputLabel value="#{employeeTaskReportingUI.selectedUser.firstName} #{employeeTaskReportingUI.selectedUser.lastName} (#{employeeTaskReportingUI.selectedUser.email})" />
+								</p:column>
+								<p:column headerText="Generation Date" width="10%">
+									<h:outputText value="#{rvSummaryReportProcess.generated}">
+										<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME_SECOND}" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Process">
+									<h:outputText value="#{lang[rvSummaryReportProcess.hostingCompanyProcess.workflowProcess.registrationName]}" rendered="#{rvSummaryReportProcess.hostingCompanyProcess ne null}" />
+									<h:outputText value="#{rvSummaryReportProcess.description}" rendered="#{rvSummaryReportProcess.hostingCompanyProcess eq null}" />
+								</p:column>
+								<p:column headerText="Tasks Completed" styleClass="number-column">
+									<h:outputText value="#{rvSummaryReportProcess.completedCounter}">
+										<f:convertNumber pattern="###,###,###,###,##0" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Tasks Underway" styleClass="number-column">
+									<h:outputText value="#{rvSummaryReportProcess.underwayCounter}">
+										<f:convertNumber pattern="###,###,###,###,##0" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Tasks Assigned To" styleClass="number-column">
+									<h:outputText value="#{rvSummaryReportProcess.assignedCounter}">
+										<f:convertNumber pattern="###,###,###,###,##0" />
+									</h:outputText>
+								</p:column>
+							</p:dataTable>
+
+						</c:if>
+						<c:if test="#{employeeTaskReportingUI.viewAllTasksUserAssigned}">
+							<H2>All Tasks Assigned To: #{employeeTaskReportingUI.selectedUser.firstName} #{employeeTaskReportingUI.selectedUser.lastName} (#{employeeTaskReportingUI.selectedUser.email})</H2>
+							<span class="Fs13 gray"><i class="fa fa-info-circle" aria-hidden="true"></i> Displays tasks user was assigned to but might not have necessarily actioned / completed. </span>
+							<div class="EmptyBox5" />
+							<ui:include src="/pages/includes/taskInformationIncludeNoDownload.xhtml">
+								<ui:param name="TaskList" value="#{employeeTaskReportingUI.dataModelAllTasksLinked}" />
+								<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+							</ui:include>
+						</c:if>
+						<c:if test="#{employeeTaskReportingUI.viewAllTasksUserActioned}">
+							<H2>All Tasks Action / Completed By: #{employeeTaskReportingUI.selectedUser.firstName} #{employeeTaskReportingUI.selectedUser.lastName} (#{employeeTaskReportingUI.selectedUser.email})</H2>
+							<span class="Fs13 gray"><i class="fa fa-info-circle" aria-hidden="true"></i> Displays tasks user has actioned / completed. </span>
+							<div class="EmptyBox5" />
+							<ui:include src="/pages/includes/taskInformationIncludeNoDownload.xhtml">
+								<ui:param name="TaskList" value="#{employeeTaskReportingUI.dataModelTasks}" />
+								<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+							</ui:include>
+						</c:if>
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+			<h:form>
+				<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+				<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+			</h:form>
+		</p:confirmDialog>
+
+	</ui:define>
+</ui:composition>

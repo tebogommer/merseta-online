@@ -1,0 +1,111 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+					<p:importEnum type="haj.com.entity.enums.UsersStatusEnum" />
+					<p:growl showDetail="false" sticky="false" id="msg">
+						<p:autoUpdate />
+					</p:growl>
+					<h1>Monitor Company History</h1>
+					<h:form id="mainForm">
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+						<p:dataTable var="rowVar" value="#{monitorCompanyHistoryUI.dataModelWspCompanyMainHistory}" id="companyHistoryList" rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,20,40" reflow="true" lazy="true">
+							<p:column headerText="ID">
+								<h:outputText value="#{rowVar.id}" width="10%"/>
+							</p:column>
+							<p:column headerText="Date Saved">
+								<h:outputText value="#{rowVar.createDate}" width="10%">
+									<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="Target Class" >
+								<h:outputText value="#{rowVar.targetClass}" />
+							</p:column>
+							<p:column headerText="Target Key" >
+								<h:outputText value="#{rowVar.targetKey}" />
+							</p:column>
+							<p:column headerText="#{lang['company.name']}" filterBy="#{rowVar.company.companyName}" >
+								<h:outputText value="#{rowVar.company.companyName}" />
+							</p:column>
+							<p:column headerText="#{lang['tradingName']}" filterBy="#{rowVar.company.tradingName}" >
+								<h:outputText value="#{rowVar.company.tradingName}" />
+							</p:column>
+							<p:column headerText="#{lang['entity.id']}" filterBy="#{rowVar.company.levyNumber}" > 
+								<h:outputText value="#{rowVar.company.levyNumber}" />
+							</p:column>
+							<p:column headerText="#{lang['status']}" width="10%">
+								<h:outputText value="#{lang[rowVar.company.companyStatus.registrationName]}" />
+							</p:column>
+							<p:column width="30">
+								<p:commandButton icon="fa fa-tasks" title="View Company Banking Details" action="#{monitorCompanyHistoryUI.selectHistory}" update=":displayForm">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{monitorCompanyHistoryUI.wspCompanyMainHistory}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<h:form id="displayForm">
+					<c:if test="#{monitorCompanyHistoryUI.displayInfo}">
+						<div class="card card-w-title">
+							<h2>Company History For: #{monitorCompanyHistoryUI.wspCompanyMainHistory.company.companyName} (#{monitorCompanyHistoryUI.wspCompanyMainHistory.company.levyNumber}) </h2>
+							<p:commandButton icon="fa fa-times" value="Close View" update=":displayForm" onstart="uploadStart()" oncomplete="uploadDone()" action="#{monitorCompanyHistoryUI.closeView}" />
+							<div class="EmptyBox10" />
+							<p:tabView dynamic="true" cache="true">
+							 	<p:tab title="Company Information">
+							 		<br/>
+									<ui:include src="/pages/includes/companyHistoryDisplay.xhtml">
+										<ui:param name="company" value="#{monitorCompanyHistoryUI.wspCompanyHistory}" />
+										<ui:param name="dateTaken" value="#{monitorCompanyHistoryUI.wspCompanyHistory.wspCompanyMainHistory.createDate}" />
+										<ui:param name="CALENDER_PATTERN_DETAILED" value="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME_SECOND}" />
+										<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+									</ui:include>
+								</p:tab>
+								<p:tab title="Employee Information">
+							 		<br/>
+									<ui:include src="/pages/includes/companyEmployeeDisplay.xhtml">
+										<ui:param name="dataModelList" value="#{monitorCompanyHistoryUI.dataModelWspCompanyEmployeesHistory}" />
+										<ui:param name="dateTaken" value="#{monitorCompanyHistoryUI.wspCompanyHistory.wspCompanyMainHistory.createDate}" />
+										<ui:param name="CALENDER_PATTERN_DETAILED" value="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME_SECOND}" />
+										<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+									</ui:include>
+								</p:tab>
+								<p:tab title="Training Committee Information">
+							 		<br/>
+									<ui:include src="/pages/includes/companyTrainingCommitee.xhtml">
+										<ui:param name="dataModelListTC" value="#{monitorCompanyHistoryUI.dataModelWspCompanyTrainingComittee}" />
+										<ui:param name="dateTaken" value="#{monitorCompanyHistoryUI.wspCompanyHistory.wspCompanyMainHistory.createDate}" />
+										<ui:param name="CALENDER_PATTERN_DETAILED" value="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME_SECOND}" />
+										<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+									</ui:include>
+								</p:tab>
+								<p:tab title="SDF Information">
+							 		<br/>
+										<ui:include src="/pages/includes/companySdfHistory.xhtml">
+											<ui:param name="dataModelListSDF" value="#{monitorCompanyHistoryUI.dataModelWspSdfCompanyHistory}" />
+											<ui:param name="dateTaken" value="#{monitorCompanyHistoryUI.wspCompanyHistory.wspCompanyMainHistory.createDate}" />
+											<ui:param name="CALENDER_PATTERN_DETAILED" value="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME_SECOND}" />
+											<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+										</ui:include>
+								</p:tab>
+							</p:tabView>
+						</div>
+					</c:if>
+				</h:form>
+			</div>
+		</div>
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+			<h:form>
+				<p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="pi pi-check" />
+				<p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="pi pi-times" />
+			</h:form>
+		</p:confirmDialog>
+
+	</ui:define>
+</ui:composition>

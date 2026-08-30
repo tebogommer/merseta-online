@@ -1,0 +1,247 @@
+@page "/levies"
+@inject ILevyService LevyService
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+<div class="d-flex justify-space-between align-center mb-4">
+    <div>
+        <MudText Typo="Typo.h5" Class="font-weight-bold">SARS Levy Files</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">Monthly SARS Skills Development Levy (SDL) payment schedules, line-item imports, and employer account reconciliation</MudText>
+    </div>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.FileUpload" OnClick="OpenImportBatch">
+        Import SARS Levy Batch
+    </MudButton>
+</div>
+
+@if (_showImportDialog)
+{
+    <MudCard Class="pa-4 mb-4 border-primary" Elevation="3">
+        <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-3">Import Monthly SARS SDL Levy File</MudText>
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string" Label="SARS Data File Name" Required="true" @bind-Value="_newFile.FileName" Variant="Variant.Outlined" Placeholder="e.g. SARS_SDL_2026_M04.dat" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField T="string" Label="SARS Transmission Reference" @bind-Value="_newFile.FileRef" Variant="Variant.Outlined" Placeholder="e.g. SARS-202604-01" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudDatePicker Label="Import Date" @bind-Date="_importDate" Variant="Variant.Outlined" DateFormat="yyyy-MM-dd" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudNumericField T="int" Label="Initial Record Count" @bind-Value="_newFile.TotalRecords" Variant="Variant.Outlined" Min="0" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudNumericField T="decimal" Label="Total File Value (ZAR)" @bind-Value="_newFile.TotalAmount" Variant="Variant.Outlined" Format="N2" Min="0" />
+            </MudItem>
+            <MudItem xs="12" Class="d-flex justify-end gap-2">
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" OnClick="@(() => _showImportDialog = false)">Cancel</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Filled.Check" OnClick="SubmitImportBatch">Confirm Batch Import</MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudCard>
+}
+
+<MudPaper Class="pa-4 mb-4" Elevation="1">
+    <div class="d-flex flex-wrap gap-4 align-center justify-space-between mb-3">
+        <div class="d-flex align-center gap-3 flex-grow-1" style="max-width: 600px;">
+            <MudTextField @bind-Value="_searchString"
+                          Placeholder="Search by File Name, SARS Reference, Status..."
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          IconSize="Size.Medium"
+                          Class="mt-0"
+                          Immediate="true"
+                          Clearable="true" />
+        </div>
+        <div class="d-flex align-center gap-2">
+            <MudChipSet T="string" @bind-SelectedValue="_statusFilter" SelectionMode="SelectionMode.SingleSelection">
+                <MudChip T="string" Value="@("All")" Color="Color.Default" Variant="@(_statusFilter == "All" ? Variant.Filled : Variant.Outlined)">All</MudChip>
+                <MudChip T="string" Value="@("RECONCILED")" Color="Color.Success" Variant="@(_statusFilter == "RECONCILED" ? Variant.Filled : Variant.Outlined)">Reconciled</MudChip>
+                <MudChip T="string" Value="@("IMPORTED")" Color="Color.Info" Variant="@(_statusFilter == "IMPORTED" ? Variant.Filled : Variant.Outlined)">Imported</MudChip>
+            </MudChipSet>
+        </div>
+    </div>
+
+    @if (_loading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+    }
+    else
+    {
+        <MudTable Items="@FilteredFiles"
+                  Hover="true"
+                  Dense="true"
+                  Striped="true"
+                  Breakpoint="Breakpoint.Sm"
+                  OnRowClick="@((TableRowClickEventArgs<LevyFile> e) => OpenDetail(e.Item != null ? e.Item.Id : 0))"
+                  T="LevyFile">
+            <HeaderContent>
+                <MudTh>File Name</MudTh>
+                <MudTh>SARS File Reference</MudTh>
+                <MudTh>Import Date</MudTh>
+                <MudTh>Records</MudTh>
+                <MudTh>Total Levy Value</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh Style="text-align:right">Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="File Name">
+                    <div class="d-flex align-center gap-1">
+                        <MudIcon Icon="@Icons.Material.Filled.ReceiptLong" Size="Size.Small" Color="Color.Primary" />
+                        <MudText Typo="Typo.body2" Class="fw-bold font-monospace">@context.FileName</MudText>
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="File Reference">
+                    <MudText Typo="Typo.body2" Class="font-monospace">@context.FileRef</MudText>
+                </MudTd>
+                <MudTd DataLabel="Import Date">
+                    <MudText Typo="Typo.body2">@context.ImportDate.ToString("yyyy-MM-dd HH:mm")</MudText>
+                </MudTd>
+                <MudTd DataLabel="Records">
+                    <MudChip T="string" Size="Size.Small" Color="Color.Secondary" Variant="Variant.Outlined">
+                        @context.TotalRecords records
+                    </MudChip>
+                </MudTd>
+                <MudTd DataLabel="Total Levy Value">
+                    <MudText Typo="Typo.body2" Class="fw-bold text-success">@context.TotalAmount.ToString("C")</MudText>
+                </MudTd>
+                <MudTd DataLabel="Status">
+                    <MudChip T="string" Color="@GetStatusColor(context.StatusCode)" Size="Size.Small" Variant="Variant.Filled">
+                        @(!string.IsNullOrWhiteSpace(context.StatusCode) ? context.StatusCode : "IMPORTED")
+                    </MudChip>
+                </MudTd>
+                <MudTd Style="text-align:right" DataLabel="Actions">
+                    <div class="d-flex justify-end gap-1">
+                        <MudTooltip Text="View & Reconcile Line Items">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" OnClick="@(() => OpenDetail(context.Id))" aria-label="Edit Record" />
+                        </MudTooltip>
+                        <MudTooltip Text="Delete File Batch">
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteLevyFile(context.Id, context.FileName))" aria-label="Delete Record" />
+                        </MudTooltip>
+                    </div>
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <div class="pa-4 text-center">
+                    <MudText Typo="Typo.body1" Color="Color.Secondary">No SARS levy files found matching search criteria.</MudText>
+                </div>
+            </NoRecordsContent>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
+            </PagerContent>
+        </MudTable>
+    }
+</MudPaper>
+
+@code {
+    private List<LevyFile> _files = new();
+    private string _searchString = string.Empty;
+    private string _statusFilter = "All";
+    private bool _loading = true;
+
+    private bool _showImportDialog = false;
+    private LevyFile _newFile = new();
+    private DateTime? _importDate = DateTime.Today;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _loading = true;
+        _files = await LevyService.GetAllAsync();
+        _loading = false;
+    }
+
+    private IEnumerable<LevyFile> FilteredFiles
+    {
+        get
+        {
+            var query = _files.AsEnumerable();
+
+            if (_statusFilter != "All")
+            {
+                query = query.Where(x => string.Equals(x.StatusCode, _statusFilter, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (!string.IsNullOrWhiteSpace(_searchString))
+            {
+                var s = _searchString.Trim();
+                query = query.Where(x =>
+                    (x.FileName != null && x.FileName.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    (x.FileRef != null && x.FileRef.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    (x.StatusCode != null && x.StatusCode.Contains(s, StringComparison.OrdinalIgnoreCase)));
+            }
+
+            return query;
+        }
+    }
+
+    private Color GetStatusColor(string? status) => status?.ToUpperInvariant() switch
+    {
+        "RECONCILED" => Color.Success,
+        "IMPORTED" => Color.Info,
+        "PARTIAL" => Color.Warning,
+        _ => Color.Default
+    };
+
+    private void OpenDetail(int id)
+    {
+        NavManager.NavigateTo($"/levies/{id}");
+    }
+
+    private void OpenImportBatch()
+    {
+        _newFile = new LevyFile
+        {
+            FileName = $"SARS_SDL_{DateTime.UtcNow:yyyyMM}_BATCH.dat",
+            FileRef = $"SARS-{DateTime.UtcNow:yyyyMM}-{new Random().Next(1000, 9999)}",
+            StatusCode = "IMPORTED",
+            TotalRecords = 1,
+            TotalAmount = 750000m
+        };
+        _importDate = DateTime.Today;
+        _showImportDialog = true;
+    }
+
+    private async Task SubmitImportBatch()
+    {
+        if (string.IsNullOrWhiteSpace(_newFile.FileName))
+        {
+            Snackbar.Add("File Name is required.", Severity.Warning);
+            return;
+        }
+
+        _newFile.ImportDate = _importDate ?? DateTime.UtcNow;
+
+        try
+        {
+            var saved = await LevyService.CreateAsync(_newFile, "Admin");
+            Snackbar.Add($"SARS Levy File '{saved.FileName}' imported successfully.", Severity.Success);
+            _showImportDialog = false;
+            await LoadData();
+            NavManager.NavigateTo($"/levies/{saved.Id}");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error importing batch: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task DeleteLevyFile(int id, string fileName)
+    {
+        var deleted = await LevyService.DeleteAsync(id, "Admin");
+        if (deleted)
+        {
+            Snackbar.Add($"Levy File '{fileName}' deleted successfully.", Severity.Success);
+            await LoadData();
+        }
+        else
+        {
+            Snackbar.Add("Could not delete levy file.", Severity.Error);
+        }
+    }
+}

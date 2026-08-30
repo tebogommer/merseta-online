@@ -1,0 +1,79 @@
+<ui:composition xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+		<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Search Company Regional Details</h1>
+					
+					
+					
+					<h:form id="dataTableForm">
+					
+						<p:commandButton icon="fa fa-download" value="Download Report" ajax="false" action="#{companyRegionReportingUI.downloadReport}" />
+						
+						<div align="right">
+							<h:commandLink title="#{lang['export.search.results.to.excel']}">
+								<i class="fa fa-file-excel-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+								<p:dataExporter type="xls" target="hcEmployeeDataTable" fileName="Available_Region_Office_Report" pageOnly="true" />
+							</h:commandLink>
+							<h:commandLink rendered="false" title="#{lang['export.search.results.to.pdf']}">
+								<i class="fa fa-file-pdf-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+								<p:dataExporter type="pdf" target="hcEmployeeDataTable" fileName="Available_Region_Office_Report" pageOnly="true" />
+							</h:commandLink>
+							<h:commandLink title="#{lang['export.search.results.as.a.csv']}">
+								<i class="fa fa-file-text-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+								<p:dataExporter type="csv" target="hcEmployeeDataTable" fileName="Available_Region_Office_Report" pageOnly="true" />
+							</h:commandLink>
+							<h:commandLink title="#{lang['export.search.results.as.a.xml']}">
+								<i class="fa fa-file-code-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+								<p:dataExporter type="xml" target="hcEmployeeDataTable" fileName="Available_Region_Office_Report" pageOnly="true" />
+							</h:commandLink>
+							<p:tooltip position="left" />
+						</div>
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+						<p:dataTable var="rowVar" value="#{companyRegionReportingUI.companies}" id="hcEmployeeDataTable" rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" reflow="true" lazy="true">
+							<p:column headerText="Company Name" filterBy="#{rowVar.companyName}">
+								<h:outputText value="#{rowVar.companyName}" rendered="#{rowVar.companyName ne null}" />
+								<h:outputText value="N/A" rendered="#{rowVar.companyName eq null}" />
+							</p:column>
+							<p:column headerText="Trading Name" filterBy="#{rowVar.tradingName}">
+								<h:outputText value="#{rowVar.tradingName}" rendered="#{rowVar.tradingName ne null}" />
+								<h:outputText value="N/A" rendered="#{rowVar.tradingName eq null}" />
+							</p:column>
+							<p:column headerText="Entity ID" filterBy="#{rowVar.levyNumber}">
+								<h:outputText value="#{rowVar.levyNumber}" rendered="#{rowVar.levyNumber ne null}" />
+								<h:outputText value="N/A" rendered="#{rowVar.levyNumber eq null}" />
+							</p:column>
+							<p:column headerText="Region/Office">
+								<h:outputText value="#{rowVar.region.description}" rendered="#{rowVar.region.description ne null}" />
+								<h:outputText value="N/A" rendered="#{rowVar.region.description eq null}" />
+							</p:column>
+							<p:column headerText="Town">
+								<h:outputText value="#{rowVar.regionTown.town.description}" rendered="#{rowVar.regionTown.town.description ne null}" />
+								<h:outputText value="N/A" rendered="#{rowVar.regionTown.town.description eq null}" />
+							</p:column>
+							<p:column headerText="Client Relations Manager Details">
+								<h:outputText value="#{rowVar.crm.firstName} #{rowVar.crm.lastName}" rendered="#{rowVar.crm.lastName ne null}" />
+								<h:outputText value="N/A" rendered="#{rowVar.crm.lastName eq null}" />
+							</p:column>
+							<p:column headerText="Client Relations Manager Email">
+								<h:outputText value="#{rowVar.crm.email}" rendered="#{rowVar.crm.email ne null}" />
+								<h:outputText value="N/A" rendered="#{rowVar.crm.email eq null}" />
+							</p:column>
+							<p:column headerText="Client Liaison Officer Details">
+								<h:outputText value="#{rowVar.clo.firstName} #{rowVar.clo.lastName}" rendered="#{rowVar.crm.lastName ne null}" />
+								<h:outputText value="N/A" rendered="#{rowVar.crm.lastName eq null}" />
+							</p:column>
+							<p:column headerText="Client Liaison Officer Email">
+								<h:outputText value="#{rowVar.clo.email}" rendered="#{rowVar.clo.email ne null}" />
+								<h:outputText value="N/A" rendered="#{rowVar.clo.email eq null}" />
+							</p:column>
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+</ui:composition>

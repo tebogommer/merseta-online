@@ -1,0 +1,700 @@
+@page "/etqa/{id:int}"
+@page "/etqa/create"
+@inject IEtqaService EtqaService
+@inject IPersonService PersonService
+@inject IOrganisationService OrgService
+@inject LookupService LookupService
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+<!-- Sticky Top Bar with Breadcrumbs and Action Buttons -->
+<div class="sticky-top bg-white pa-4 mb-4 border-bottom elevation-1 d-flex flex-wrap justify-space-between align-center gap-3">
+    <div class="d-flex align-center gap-3">
+        <MudButton Variant="Variant.Text"
+                   StartIcon="@Icons.Material.Filled.ArrowBack"
+                   Color="Color.Default"
+                   OnClick="BackToList">
+            Back to ETQA Registry
+        </MudButton>
+        <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-2" />
+        <div>
+            <MudBreadcrumbs Items="_breadcrumbItems" Separator=">" Class="pa-0 ma-0" />
+            <MudText Typo="Typo.h6" Class="font-weight-bold">
+                @(Id == 0 ? "New ETQA Practitioner Registration" : $"{_assessor.RegistrationNumber} - {_assessor.Person?.FirstName} {_assessor.Person?.LastName}")
+            </MudText>
+        </div>
+    </div>
+    <div class="d-flex align-center gap-2">
+        @if (Id > 0)
+        {
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Error"
+                       StartIcon="@Icons.Material.Filled.Delete"
+                       OnClick="DeleteAssessor">
+                Delete
+            </MudButton>
+        }
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Secondary"
+                   OnClick="BackToList">
+            Cancel
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Save"
+                   OnClick="SaveAssessor"
+                   Disabled="_isSaving">
+            @(_isSaving ? "Saving..." : "Save Practitioner")
+        </MudButton>
+    </div>
+</div>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-0">
+    @if (_loading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-6" />
+    }
+    else
+    {
+        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Color="Color.Surface">
+            <!-- TAB 1: Assessor Profile -->
+            <MudTabPanel Text="Assessor Profile" Icon="@Icons.Material.Filled.VerifiedUser">
+                <MudForm @ref="_form" @bind-IsValid="_isValid">
+                    <MudGrid Spacing="3">
+                        <MudItem xs="12" lg="8">
+                            <MudCard Elevation="2" Class="mb-4">
+                                <MudCardHeader>
+                                    <CardHeaderAvatar>
+                                        <MudAvatar Color="Color.Primary" Variant="Variant.Filled">
+                                            <MudIcon Icon="@Icons.Material.Filled.Badge" />
+                                        </MudAvatar>
+                                    </CardHeaderAvatar>
+                                    <CardHeaderContent>
+                                        <MudText Typo="Typo.h6">Practitioner Registration Identification</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">SETA QA accreditation role, registration numbers, and active validity window</MudText>
+                                    </CardHeaderContent>
+                                </MudCardHeader>
+                                <MudCardContent>
+                                    <MudGrid>
+                                        <MudItem xs="12" md="6">
+                                            <MudSelect T="int" Label="Registered Practitioner Person" Required="true" RequiredError="Practitioner person is mandatory" @bind-Value="_assessor.PersonId" Variant="Variant.Outlined">
+                                                @foreach (var p in _peopleList)
+                                                {
+                                                    <MudSelectItem Value="@p.Id">@p.FirstName @p.LastName (@(!string.IsNullOrWhiteSpace(p.RsaIdNumber) ? p.RsaIdNumber : p.Email))</MudSelectItem>
+                                                }
+                                            </MudSelect>
+                                        </MudItem>
+                                        <MudItem xs="12" md="6">
+                                            <MudTextField T="string"
+                                                          Label="ETQA Registration Number"
+                                                          Required="true"
+                                                          RequiredError="Registration Number is mandatory"
+                                                          @bind-Value="_assessor.RegistrationNumber"
+                                                          Variant="Variant.Outlined" />
+                                        </MudItem>
+                                        <MudItem xs="12" md="6">
+                                            <MudSelect T="string" Label="Practitioner ETQA Role" @bind-Value="_assessor.EtqaRole" Variant="Variant.Outlined">
+                                                <MudSelectItem Value="@("Assessor")">Registered Assessor</MudSelectItem>
+                                                <MudSelectItem Value="@("Moderator")">Registered Moderator</MudSelectItem>
+                                                <MudSelectItem Value="@("Assessor & Moderator")">Assessor & Moderator</MudSelectItem>
+                                            </MudSelect>
+                                        </MudItem>
+                                        <MudItem xs="12" md="6">
+                                            <MudSelect T="string" Label="Registration Status" @bind-Value="_assessor.StatusCode" Variant="Variant.Outlined">
+                                                <MudSelectItem Value="@("REGISTERED")">Registered / Active</MudSelectItem>
+                                                <MudSelectItem Value="@("SUSPENDED")">Suspended</MudSelectItem>
+                                                <MudSelectItem Value="@("EXPIRED")">Expired</MudSelectItem>
+                                                <MudSelectItem Value="@("DRAFT")">Pending Verification</MudSelectItem>
+                                            </MudSelect>
+                                        </MudItem>
+                                        <MudItem xs="12" md="6">
+                                            <MudDatePicker Label="Registration Start Date" @bind-Date="_startDate" Required="true" Variant="Variant.Outlined" DateFormat="yyyy-MM-dd" />
+                                        </MudItem>
+                                        <MudItem xs="12" md="6">
+                                            <MudDatePicker Label="Registration End Date" @bind-Date="_endDate" Required="true" Variant="Variant.Outlined" DateFormat="yyyy-MM-dd" />
+                                        </MudItem>
+                                    </MudGrid>
+                                </MudCardContent>
+                            </MudCard>
+                        </MudItem>
+
+                        <!-- Right Column: Practitioner Bio & Governance -->
+                        <MudItem xs="12" lg="4">
+                            @if (_assessor.PersonId > 0)
+                            {
+                                var selectedPerson = _peopleList.FirstOrDefault(p => p.Id == _assessor.PersonId);
+                                if (selectedPerson != null)
+                                {
+                                    <MudCard Elevation="2" Class="mb-4">
+                                        <MudCardHeader>
+                                            <CardHeaderAvatar>
+                                                <MudAvatar Color="Color.Info" Variant="Variant.Filled">
+                                                    <MudIcon Icon="@Icons.Material.Filled.Person" />
+                                                </MudAvatar>
+                                            </CardHeaderAvatar>
+                                            <CardHeaderContent>
+                                                <MudText Typo="Typo.h6">@selectedPerson.FirstName @selectedPerson.LastName</MudText>
+                                                <MudText Typo="Typo.caption" Color="Color.Secondary">Central Registry Profile</MudText>
+                                            </CardHeaderContent>
+                                        </MudCardHeader>
+                                        <MudCardContent>
+                                            <div class="d-flex flex-column gap-2 text-muted">
+                                                <div>
+                                                    <MudText Typo="Typo.caption">RSA ID / Passport:</MudText>
+                                                    <MudText Typo="Typo.body2" Class="fw-bold font-monospace">@(!string.IsNullOrWhiteSpace(selectedPerson.RsaIdNumber) ? selectedPerson.RsaIdNumber : selectedPerson.PassportNumber ?? "-")</MudText>
+                                                </div>
+                                                <div>
+                                                    <MudText Typo="Typo.caption">Email Address:</MudText>
+                                                    <MudText Typo="Typo.body2">@(selectedPerson.Email ?? "-")</MudText>
+                                                </div>
+                                                <div>
+                                                    <MudText Typo="Typo.caption">Phone / Mobile:</MudText>
+                                                    <MudText Typo="Typo.body2">@(selectedPerson.CellNumber ?? selectedPerson.PhoneNumber ?? "-")</MudText>
+                                                </div>
+                                            </div>
+                                        </MudCardContent>
+                                    </MudCard>
+                                }
+                            }
+
+                            <MudCard Elevation="2" Class="mb-4">
+                                <MudCardHeader>
+                                    <CardHeaderAvatar>
+                                        <MudAvatar Color="Color.Dark" Variant="Variant.Filled">
+                                            <MudIcon Icon="@Icons.Material.Filled.Security" />
+                                        </MudAvatar>
+                                    </CardHeaderAvatar>
+                                    <CardHeaderContent>
+                                        <MudText Typo="Typo.h6">Record Governance</MudText>
+                                    </CardHeaderContent>
+                                </MudCardHeader>
+                                <MudCardContent>
+                                    <MudSwitch T="bool" @bind-Value="_assessor.IsActive" Color="Color.Success" Label="Practitioner Active Status" />
+                                    <MudDivider Class="my-3" />
+                                    <div class="d-flex flex-column gap-2 text-muted">
+                                        <div class="d-flex justify-space-between">
+                                            <MudText Typo="Typo.caption">Practitioner ID:</MudText>
+                                            <MudText Typo="Typo.caption" Class="fw-bold">@(Id > 0 ? Id.ToString() : "Draft")</MudText>
+                                        </div>
+                                        <div class="d-flex justify-space-between">
+                                            <MudText Typo="Typo.caption">Created At:</MudText>
+                                            <MudText Typo="Typo.caption">@(_assessor.CreatedAt > DateTime.MinValue ? _assessor.CreatedAt.ToString("yyyy-MM-dd HH:mm") : "-")</MudText>
+                                        </div>
+                                        <div class="d-flex justify-space-between">
+                                            <MudText Typo="Typo.caption">Created By:</MudText>
+                                            <MudText Typo="Typo.caption">@(!string.IsNullOrWhiteSpace(_assessor.CreatedBy) ? _assessor.CreatedBy : "-")</MudText>
+                                        </div>
+                                    </div>
+                                </MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                    </MudGrid>
+                </MudForm>
+            </MudTabPanel>
+
+            <!-- TAB 2: Registered Scopes -->
+            <MudTabPanel Text="Registered Scopes" Icon="@Icons.Material.Filled.WorkspacePremium">
+                <div class="d-flex justify-space-between align-center mb-4">
+                    <div>
+                        <MudText Typo="Typo.h6">Accredited Assessment / Moderation Scope</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Registered national qualifications this practitioner is approved to assess or moderate</MudText>
+                    </div>
+                    @if (Id > 0)
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenAddScopeForm">
+                            Add Scope Qualification
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <MudAlert Severity="Severity.Info" Dense="true">Save the practitioner profile first to register qualification scopes.</MudAlert>
+                    }
+                </div>
+
+                @if (_showAddScopeForm)
+                {
+                    <MudCard Class="pa-4 mb-4 border-primary" Elevation="3">
+                        <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-3">Add Registered Scope Qualification</MudText>
+                        <MudGrid>
+                            <MudItem xs="12" md="3">
+                                <MudNumericField T="int" Label="SAQA Qualification ID" Required="true" @bind-Value="_newScope.SaqaQualificationId" Variant="Variant.Outlined" Placeholder="e.g. 58270" />
+                            </MudItem>
+                            <MudItem xs="12" md="5">
+                                <MudTextField T="string" Label="Qualification Title" Required="true" @bind-Value="_newScope.QualificationTitle" Variant="Variant.Outlined" Placeholder="e.g. NC: Welding Application and Practice" />
+                            </MudItem>
+                            <MudItem xs="12" md="2">
+                                <MudSelect T="string" Label="Registration Status" @bind-Value="_newScope.RegistrationStatusCode" Variant="Variant.Outlined">
+                                    <MudSelectItem Value="@("REGISTERED")">Registered</MudSelectItem>
+                                    <MudSelectItem Value="@("EXTENSION")">Extension</MudSelectItem>
+                                    <MudSelectItem Value="@("EXPIRED")">Expired</MudSelectItem>
+                                </MudSelect>
+                            </MudItem>
+                            <MudItem xs="12" md="2">
+                                <MudDatePicker Label="Expiry Date" @bind-Date="_scopeExpiryDate" Variant="Variant.Outlined" DateFormat="yyyy-MM-dd" />
+                            </MudItem>
+                            <MudItem xs="12" Class="d-flex justify-end gap-2">
+                                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" OnClick="CancelAddScopeForm">Cancel</MudButton>
+                                <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveScope">Save Scope</MudButton>
+                            </MudItem>
+                        </MudGrid>
+                    </MudCard>
+                }
+
+                <MudTable Items="_scopes" Hover="true" Dense="true" Striped="true">
+                    <HeaderContent>
+                        <MudTh>SAQA ID</MudTh>
+                        <MudTh>Qualification Title</MudTh>
+                        <MudTh>Status</MudTh>
+                        <MudTh>Expiry Date</MudTh>
+                        <MudTh Style="text-align:right">Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="SAQA ID">
+                            <span class="font-monospace fw-bold">@context.SaqaQualificationId</span>
+                        </MudTd>
+                        <MudTd DataLabel="Qualification Title">
+                            <MudText Typo="Typo.body2" Class="fw-bold">@context.QualificationTitle</MudText>
+                        </MudTd>
+                        <MudTd DataLabel="Status">
+                            <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled">
+                                @(!string.IsNullOrWhiteSpace(context.RegistrationStatusCode) ? context.RegistrationStatusCode : "REGISTERED")
+                            </MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Expiry Date">
+                            @(context.ExpiryDate.HasValue ? context.ExpiryDate.Value.ToString("yyyy-MM-dd") : "Ongoing")
+                        </MudTd>
+                        <MudTd Style="text-align:right" DataLabel="Actions">
+                            <MudTooltip Text="Remove Scope">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => RemoveScope(context.Id))" aria-label="Remove Scope" />
+                            </MudTooltip>
+                        </MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <div class="pa-4 text-center">
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">No registered qualification scopes recorded yet.</MudText>
+                        </div>
+                    </NoRecordsContent>
+                </MudTable>
+            </MudTabPanel>
+
+            <!-- TAB 3: Learner Assessments -->
+            <MudTabPanel Text="Learner Assessments" Icon="@Icons.Material.Filled.FactCheck">
+                <div class="d-flex justify-space-between align-center mb-4">
+                    <div>
+                        <MudText Typo="Typo.h6">Conducted Learner Assessments & Moderation</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Formative/summative assessments, competency decisions, and internal/external moderation outcomes</MudText>
+                    </div>
+                    @if (Id > 0)
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenAddAssessmentForm">
+                            Log Assessment
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <MudAlert Severity="Severity.Info" Dense="true">Save the practitioner profile first to log assessments.</MudAlert>
+                    }
+                </div>
+
+                @if (_showAddAssessmentForm)
+                {
+                    <MudCard Class="pa-4 mb-4 border-primary" Elevation="3">
+                        <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-3">Log Learner Assessment & Competency Decision</MudText>
+                        <MudGrid>
+                            <MudItem xs="12" md="6">
+                                <MudSelect T="int" Label="Assessed Learner (from People Registry)" Required="true" @bind-Value="_newAssessment.PersonId" Variant="Variant.Outlined">
+                                    @foreach (var p in _peopleList)
+                                    {
+                                        <MudSelectItem Value="@p.Id">@p.FirstName @p.LastName (@(!string.IsNullOrWhiteSpace(p.RsaIdNumber) ? p.RsaIdNumber : p.Email))</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </MudItem>
+                            <MudItem xs="12" md="6">
+                                <MudSelect T="int" Label="Host Employer / SDP Organisation" Required="true" @bind-Value="_newAssessment.OrganisationId" Variant="Variant.Outlined">
+                                    @foreach (var org in _organisations)
+                                    {
+                                        <MudSelectItem Value="@org.Id">@org.CompanyName (@org.SdlNumber)</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </MudItem>
+                            <MudItem xs="12" md="6">
+                                <MudTextField T="string" Label="Assessed Qualification Title" Required="true" @bind-Value="_newAssessment.QualificationTitle" Variant="Variant.Outlined" Placeholder="e.g. National Certificate: Automotive Repair" />
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudDatePicker Label="Assessment Date" @bind-Date="_assessmentDate" Required="true" Variant="Variant.Outlined" DateFormat="yyyy-MM-dd" />
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudSelect T="string" Label="Competency Outcome" @bind-Value="_newAssessment.CompetencyStatusCode" Variant="Variant.Outlined">
+                                    <MudSelectItem Value="@("COMPETENT")">Competent (C)</MudSelectItem>
+                                    <MudSelectItem Value="@("NOT_YET_COMPETENT")">Not Yet Competent (NYC)</MudSelectItem>
+                                    <MudSelectItem Value="@("PENDING_REASSESSMENT")">Pending Re-assessment</MudSelectItem>
+                                </MudSelect>
+                            </MudItem>
+                            <MudItem xs="12" md="6">
+                                <MudSelect T="int?" Label="Moderator Person" @bind-Value="_newAssessment.ModeratorPersonId" Variant="Variant.Outlined" Clearable="true">
+                                    <MudSelectItem Value="@((int?)null)">-- No Moderator Assigned --</MudSelectItem>
+                                    @foreach (var p in _peopleList)
+                                    {
+                                        <MudSelectItem Value="@((int?)p.Id)">@p.FirstName @p.LastName</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </MudItem>
+                            <MudItem xs="12" md="6">
+                                <MudDatePicker Label="Moderation Date" @bind-Date="_moderationDate" Variant="Variant.Outlined" DateFormat="yyyy-MM-dd" />
+                            </MudItem>
+                            <MudItem xs="12" Class="d-flex justify-end gap-2">
+                                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" OnClick="CancelAddAssessmentForm">Cancel</MudButton>
+                                <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveAssessment">Save Assessment Decision</MudButton>
+                            </MudItem>
+                        </MudGrid>
+                    </MudCard>
+                }
+
+                <MudTable Items="_assessments" Hover="true" Dense="true" Striped="true">
+                    <HeaderContent>
+                        <MudTh>Learner</MudTh>
+                        <MudTh>Host Employer</MudTh>
+                        <MudTh>Qualification Title</MudTh>
+                        <MudTh>Assessment Date</MudTh>
+                        <MudTh>Competency</MudTh>
+                        <MudTh>Moderator</MudTh>
+                        <MudTh Style="text-align:right">Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Learner">
+                            @if (context.Person != null)
+                            {
+                                <MudText Typo="Typo.body2" Class="fw-bold">@context.Person.FirstName @context.Person.LastName</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">ID: @(!string.IsNullOrWhiteSpace(context.Person.RsaIdNumber) ? context.Person.RsaIdNumber : "N/A")</MudText>
+                            }
+                            else
+                            {
+                                <span>Person ID: @context.PersonId</span>
+                            }
+                        </MudTd>
+                        <MudTd DataLabel="Employer">
+                            @(context.Organisation?.CompanyName ?? "-")
+                        </MudTd>
+                        <MudTd DataLabel="Qualification">
+                            <MudText Typo="Typo.body2">@context.QualificationTitle</MudText>
+                        </MudTd>
+                        <MudTd DataLabel="Date">@context.AssessmentDate.ToString("yyyy-MM-dd")</MudTd>
+                        <MudTd DataLabel="Competency">
+                            <MudChip T="string" Color="@(context.CompetencyStatusCode == "COMPETENT" ? Color.Success : Color.Warning)" Size="Size.Small" Variant="Variant.Filled">
+                                @(!string.IsNullOrWhiteSpace(context.CompetencyStatusCode) ? context.CompetencyStatusCode : "COMPETENT")
+                            </MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Moderator">
+                            @if (context.ModeratorPerson != null)
+                            {
+                                <span>@context.ModeratorPerson.FirstName @context.ModeratorPerson.LastName</span>
+                                @if (context.ModerationDate.HasValue)
+                                {
+                                    <MudText Typo="Typo.caption" Class="d-block text-muted">@context.ModerationDate.Value.ToString("yyyy-MM-dd")</MudText>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted">Unmoderated</span>
+                            }
+                        </MudTd>
+                        <MudTd Style="text-align:right" DataLabel="Actions">
+                            <MudTooltip Text="Remove Assessment Decision">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => RemoveAssessment(context.Id))" aria-label="Remove Assessment" />
+                            </MudTooltip>
+                        </MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <div class="pa-4 text-center">
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">No learner assessments logged by this practitioner yet.</MudText>
+                        </div>
+                    </NoRecordsContent>
+                </MudTable>
+            </MudTabPanel>
+        </MudTabs>
+    }
+</MudContainer>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private EtqaAssessor _assessor = new();
+    private MudForm? _form;
+    private bool _isValid;
+    private bool _loading = true;
+    private bool _isSaving = false;
+
+    private List<Person> _peopleList = new();
+    private List<Organisation> _organisations = new();
+
+    private List<AssessorModeratorScope> _scopes = new();
+    private List<LearnerAssessment> _assessments = new();
+
+    private DateTime? _startDate;
+    private DateTime? _endDate;
+
+    // Scope form
+    private bool _showAddScopeForm = false;
+    private AssessorModeratorScope _newScope = new();
+    private DateTime? _scopeExpiryDate;
+
+    // Assessment form
+    private bool _showAddAssessmentForm = false;
+    private LearnerAssessment _newAssessment = new();
+    private DateTime? _assessmentDate;
+    private DateTime? _moderationDate;
+
+    private List<BreadcrumbItem> _breadcrumbItems = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+        SetupBreadcrumbs();
+
+        // Sequential lookup loading
+        _peopleList = await PersonService.GetAllAsync();
+        _organisations = await OrgService.GetAllAsync();
+
+        if (Id > 0)
+        {
+            await LoadAssessorData();
+        }
+        else
+        {
+            _assessor = new EtqaAssessor
+            {
+                PersonId = _peopleList.FirstOrDefault()?.Id ?? 0,
+                RegistrationNumber = $"ETQA-{DateTime.UtcNow.Year}-{new Random().Next(1000, 9999)}",
+                EtqaRole = "Assessor",
+                StatusCode = "REGISTERED",
+                StartDate = DateTime.Today,
+                EndDate = DateTime.Today.AddYears(3),
+                IsActive = true
+            };
+            _startDate = DateTime.Today;
+            _endDate = DateTime.Today.AddYears(3);
+        }
+
+        _loading = false;
+    }
+
+    private void SetupBreadcrumbs()
+    {
+        _breadcrumbItems = new List<BreadcrumbItem>
+        {
+            new BreadcrumbItem("Home", href: "/"),
+            new BreadcrumbItem("ETQA & Assessors", href: "/etqa"),
+            new BreadcrumbItem(Id == 0 ? "Create" : $"Assessor #{Id}", href: null, disabled: true)
+        };
+    }
+
+    private async Task LoadAssessorData()
+    {
+        var a = await EtqaService.GetAssessorByIdAsync(Id);
+        if (a != null)
+        {
+            _assessor = a;
+            _startDate = a.StartDate;
+            _endDate = a.EndDate;
+            _scopes = await EtqaService.GetScopesAsync(Id);
+            _assessments = await EtqaService.GetLearnerAssessmentsAsync(Id);
+        }
+        else
+        {
+            Snackbar.Add($"Practitioner #{Id} not found.", Severity.Error);
+            NavManager.NavigateTo("/etqa");
+        }
+    }
+
+    private async Task SaveAssessor()
+    {
+        if (string.IsNullOrWhiteSpace(_assessor.RegistrationNumber))
+        {
+            Snackbar.Add("Registration Number is required.", Severity.Warning);
+            return;
+        }
+
+        if (_assessor.PersonId <= 0)
+        {
+            Snackbar.Add("Practitioner person must be selected.", Severity.Warning);
+            return;
+        }
+
+        _assessor.StartDate = _startDate ?? DateTime.Today;
+        _assessor.EndDate = _endDate ?? DateTime.Today.AddYears(3);
+
+        _isSaving = true;
+        try
+        {
+            var saved = await EtqaService.SaveAssessorAsync(_assessor, "Admin");
+            Snackbar.Add($"ETQA Practitioner '{saved.RegistrationNumber}' saved successfully with audit log.", Severity.Success);
+
+            if (Id == 0)
+            {
+                NavManager.NavigateTo($"/etqa/{saved.Id}");
+            }
+            else
+            {
+                await LoadAssessorData();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving practitioner: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task DeleteAssessor()
+    {
+        if (Id <= 0) return;
+
+        try
+        {
+            var deleted = await EtqaService.DeleteAssessorAsync(Id, "Admin");
+            if (deleted)
+            {
+                Snackbar.Add("ETQA Practitioner deleted successfully.", Severity.Success);
+                NavManager.NavigateTo("/etqa");
+            }
+            else
+            {
+                Snackbar.Add("Could not delete practitioner record.", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error deleting record: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void BackToList()
+    {
+        NavManager.NavigateTo("/etqa");
+    }
+
+    // Scopes Management
+    private void OpenAddScopeForm()
+    {
+        _newScope = new AssessorModeratorScope
+        {
+            EtqaAssessorId = Id,
+            RegistrationStatusCode = "REGISTERED"
+        };
+        _scopeExpiryDate = DateTime.Today.AddYears(3);
+        _showAddScopeForm = true;
+    }
+
+    private void CancelAddScopeForm()
+    {
+        _showAddScopeForm = false;
+    }
+
+    private async Task SaveScope()
+    {
+        if (_newScope.SaqaQualificationId <= 0 || string.IsNullOrWhiteSpace(_newScope.QualificationTitle))
+        {
+            Snackbar.Add("SAQA ID and Title are required.", Severity.Warning);
+            return;
+        }
+
+        _newScope.EtqaAssessorId = Id;
+        _newScope.ExpiryDate = _scopeExpiryDate;
+
+        try
+        {
+            await EtqaService.AddScopeAsync(_newScope, "Admin");
+            Snackbar.Add("Scope qualification registered successfully.", Severity.Success);
+            _showAddScopeForm = false;
+            _scopes = await EtqaService.GetScopesAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error adding scope: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task RemoveScope(int scopeId)
+    {
+        try
+        {
+            var removed = await EtqaService.RemoveScopeAsync(scopeId, "Admin");
+            if (removed)
+            {
+                Snackbar.Add("Scope qualification removed.", Severity.Success);
+                _scopes = await EtqaService.GetScopesAsync(Id);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error removing scope: {ex.Message}", Severity.Error);
+        }
+    }
+
+    // Learner Assessments Management
+    private void OpenAddAssessmentForm()
+    {
+        _newAssessment = new LearnerAssessment
+        {
+            EtqaAssessorId = Id,
+            PersonId = _peopleList.FirstOrDefault()?.Id ?? 0,
+            OrganisationId = _organisations.FirstOrDefault()?.Id ?? 0,
+            QualificationTitle = _scopes.FirstOrDefault()?.QualificationTitle ?? "National Certificate: Automotive Repair",
+            CompetencyStatusCode = "COMPETENT"
+        };
+        _assessmentDate = DateTime.Today;
+        _moderationDate = DateTime.Today.AddDays(7);
+        _showAddAssessmentForm = true;
+    }
+
+    private void CancelAddAssessmentForm()
+    {
+        _showAddAssessmentForm = false;
+    }
+
+    private async Task SaveAssessment()
+    {
+        if (string.IsNullOrWhiteSpace(_newAssessment.QualificationTitle))
+        {
+            Snackbar.Add("Qualification Title is required.", Severity.Warning);
+            return;
+        }
+
+        _newAssessment.EtqaAssessorId = Id;
+        _newAssessment.AssessmentDate = _assessmentDate ?? DateTime.Today;
+        _newAssessment.ModerationDate = _moderationDate;
+
+        try
+        {
+            await EtqaService.AddLearnerAssessmentAsync(_newAssessment, "Admin");
+            Snackbar.Add("Learner assessment decision recorded successfully.", Severity.Success);
+            _showAddAssessmentForm = false;
+            _assessments = await EtqaService.GetLearnerAssessmentsAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error adding assessment: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task RemoveAssessment(int assessmentId)
+    {
+        try
+        {
+            var removed = await EtqaService.RemoveLearnerAssessmentAsync(assessmentId, "Admin");
+            if (removed)
+            {
+                Snackbar.Add("Learner assessment decision removed.", Severity.Success);
+                _assessments = await EtqaService.GetLearnerAssessmentsAsync(Id);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error removing assessment: {ex.Message}", Severity.Error);
+        }
+    }
+}

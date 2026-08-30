@@ -1,0 +1,177 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Administration Of AQP Activities</h1>
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{administrationofaqpUI.dataModel}" filteredValue="#{administrationofaqpUI.administrationOfAQPfilteredList}" id="administrationofaqpList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+							rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+							<p:column headerText="#{lang['first.name']}">
+								<h:outputText value="#{rowVar.contactPerson.firstName}" />
+							</p:column>
+							<p:column headerText="#{lang['last.name']}">
+								<h:outputText value="#{rowVar.contactPerson.lastName}" />
+							</p:column>
+							<p:column headerText="#{lang['qualification']}">
+								<h:outputText value="#{rowVar.qualification.saqaQualification}" />
+							</p:column>
+							<p:column headerText="#{lang['eisa.date']}">
+								<h:outputText value="#{rowVar.eisaDate}">
+									<f:convertDateTime pattern="dd MMMM yyyy" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="Start-End Time">
+								<h:outputText value="#{rowVar.eisaDate}">
+									<f:convertDateTime pattern="HH:mm" />
+								</h:outputText>
+								-
+								<h:outputText value="#{rowVar.endTime}">
+									<f:convertDateTime pattern="HH:mm" />
+								</h:outputText>
+							</p:column>
+							<p:column width="120">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":administrationofaqpInsForm:administrationofaqpInsGrid">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{administrationofaqpUI.administrationofaqp}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:administrationofaqpList" action="#{administrationofaqpUI.administrationofaqpDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{administrationofaqpUI.administrationofaqp}" />
+								</p:commandButton>
+							</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="administrationofaqpInsForm">
+						<p:growl sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+
+						<p:panelGrid columns="2" style="width:100%" id="administrationofaqpInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:autoComplete style="width:100%;" id="company" value="#{administrationofaqpUI.administrationofaqp.assessmentCenter}" completeMethod="#{autoCompleteUI.completeCompany}" var="rv" itemLabel="#{rv.companyNameDisplay}" itemValue="#{rv}" forceSelection="true" converter="CompanyConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+									<p:ajax event="itemSelect" listener="#{administrationofaqpUI.findProviderContact}" update="anationality"></p:ajax>
+									<p:column headerText="#{lang['companyName']}" style="white-space: nowrap">#{rv.companyName}</p:column>
+									<p:column headerText="#{lang['entity.id']}" style="white-space: nowrap">#{rv.levyNumber}</p:column>
+								</p:autoComplete>
+								<p:outputLabel value="#{lang['company']}" for="company" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield" id="anationality">
+								<p:inputText id="contactPerson" disabled="true" value="#{administrationofaqpUI.administrationofaqp.contactPerson.firstName} #{administrationofaqpUI.administrationofaqp.contactPerson.lastName}" style="width:95%;opacity:1 !important;color:black;"></p:inputText>
+								<p:outputLabel value="#{lang['merseta.contact.person']}:" for="contactPerson" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:autoComplete id="qualification" value="#{administrationofaqpUI.administrationofaqp.qualification}" completeMethod="#{autoCompleteUI.completeQualification}" var="rv" itemLabel="#{rv.saqaQualification}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;"
+									style="width: 95%">
+									<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+									<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+									<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+								</p:autoComplete>
+
+								<p:outputLabel value="#{lang['qualification']}" for="qualification" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:calendar id="eisaDate" value="#{administrationofaqpUI.administrationofaqp.eisaDate}" inputStyle="width:95%" mask="true" pattern="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME}"  timeControlType="select">
+									<p:ajax event="dateSelect" update="endTime" listener="#{administrationofaqpUI.dateSelect}"></p:ajax>
+								</p:calendar>
+								<p:outputLabel value="#{lang['eisa.date']}" for="eisaDate" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield" id="endDate">
+								<p:calendar id="endTime" value="#{administrationofaqpUI.administrationofaqp.endTime}" maxdate="#{administrationofaqpUI.maxDate}" inputStyle="width:95%"  mask="true" mindate="#{administrationofaqpUI.administrationofaqp.eisaDate}" pattern="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME}"  timeControlType="select" />
+								<p:outputLabel value="#{lang['end.time']}" for="endTime" />
+							</h:panelGroup>
+
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="#{lang['recieved.required.training']}" for="recievedREquiredTraining" styleClass=" gray" />
+								</div>
+								<div>
+									<p:selectOneMenu id="recievedREquiredTraining" value="#{administrationofaqpUI.administrationofaqp.recievedRequiredTraining}" style="width:75%" required="true">
+										<p:ajax />
+										<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass=" gray" noSelectionOption="true" />
+										<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+									</p:selectOneMenu>
+								</div>
+							</h:panelGroup>
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="#{lang['in.possession.final.eisa']}" for="inPossessionFinalEISA" styleClass=" gray" />
+								</div>
+								<div>
+									<p:selectOneMenu id="inPossessionFinalEISA" value="#{administrationofaqpUI.administrationofaqp.inPossessionFinalEISA}" style="width:75%" required="true">
+										<p:ajax />
+										<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass=" gray" noSelectionOption="true" />
+										<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+									</p:selectOneMenu>
+								</div>
+							</h:panelGroup>
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="#{lang['exemplar.eisa.has.been.published']}" for="exemplarEISAHasBeenPublished" styleClass=" gray" />
+								</div>
+								<div>
+									<p:selectOneMenu id="exemplarEISAHasBeenPublished" value="#{administrationofaqpUI.administrationofaqp.exemplarEISAHasBeenPublished}" style="width:75%" required="true">
+										<p:ajax />
+										<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass=" gray" noSelectionOption="true" />
+										<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+									</p:selectOneMenu>
+								</div>
+							</h:panelGroup>
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="#{lang['entry.requirements.met']}" for="entryRequirementsMet" styleClass=" gray" />
+								</div>
+								<div>
+									<p:selectOneMenu id="entryRequirementsMet" value="#{administrationofaqpUI.administrationofaqp.entryRequirementsMet}" style="width:75%" required="true">
+										<p:ajax />
+										<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass=" gray" noSelectionOption="true" />
+										<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+									</p:selectOneMenu>
+								</div>
+							</h:panelGroup>
+						</p:panelGrid>
+
+						<p:panelGrid columns="3" styleClass="ui-panelgrid-blank">
+							<p:commandButton icon="fa fa-download" value="Confidentiality Agreement" action="#{administrationofaqpUI.downloadManagerJasper}" ajax="false" title="Download ">
+							</p:commandButton>
+							<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:administrationofaqpList :administrationofaqpInsForm:administrationofaqpInsGrid" action="#{administrationofaqpUI.requestAdministrationOfAQP}" />
+							<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="administrationofaqpInsGrid" process="@this" action="#{administrationofaqpUI.prepareNew}">
+								<p:resetInput target="administrationofaqpInsGrid" />
+							</p:commandButton>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+
+		</div>
+	</ui:define>
+	<!-- 
+createDate = createDate
+contactPerson = contactPerson
+qualification = qualification
+eisaDate = eisaDate
+endTime = endTime
+recievedRequiredTraining = recievedRequiredTraining
+inPossessionFinalEISA = inPossessionFinalEISA
+exemplarEISAHasBeenPublished = exemplarEISAHasBeenPublished
+entryRequirementsMet = entryRequirementsMet
+
+-->
+</ui:composition>

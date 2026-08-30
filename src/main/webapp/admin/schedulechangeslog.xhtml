@@ -1,0 +1,62 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+					 
+						<h1>Schedule Changes Log</h1>
+						
+						<ui:include src="/pages/includes/download_lazy.xhtml">
+							<ui:param name="file_name" value="Schedule_Changes_Log_Extract" />
+							<ui:param name="target" value="schedulechangeslogList" />
+						</ui:include>
+						<p:dataTable var="rowVar" value="#{schedulechangeslogUI.dataModel}" filteredValue="#{schedulechangeslogUI.scheduleChangesLogfilteredList}" id="schedulechangeslogList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+							<p:column headerText="Reference ID" sortBy="#{rowVar.id}">
+								<p:outputLabel value="#{rowVar.id}"/>
+							</p:column>
+
+							<p:column headerText="#{lang['createDate']}" sortBy="#{rowVar.createDate}">
+								<h:outputText value="#{rowVar.createDate}" >
+									<f:convertDateTime pattern="dd MMMM yyyy HH:mm"/>
+								</h:outputText>
+							</p:column>
+							
+							<p:column headerText="Manual Intervention" exportable="false" sortBy="#{rowVar.manualIntervention}">
+								<p:selectBooleanCheckbox disabled="true" value="#{rowVar.manualIntervention}"/>
+							</p:column>
+							
+							<p:column headerText="Manual Intervention" style="display:none">
+								<p:outputLabel value="No - Automated" rendered="#{!rowVar.manualIntervention}"/>
+								<p:outputLabel value="Yes" rendered="#{rowVar.manualIntervention}"/>
+							</p:column>
+							
+							<p:column headerText="Entity ID">
+								<p:outputLabel value="#{rowVar.company.levyNumber}" rendered="#{rowVar.company ne null}"/>
+							</p:column>
+							
+							<p:column headerText="Company Name">
+								<p:outputLabel value="#{rowVar.company.companyName}" rendered="#{rowVar.company ne null}"/>
+							</p:column>
+							
+							<p:column headerText="Target Class">
+								<p:outputLabel value="#{rowVar.targetClass}"/>
+							</p:column>
+							
+							<p:column headerText="Target Key / ID" sortBy="#{rowVar.targetKey}">
+								<p:outputLabel value="#{rowVar.targetKey}"/>
+							</p:column>
+							
+							<p:column headerText="Information On Changes">
+								<p:outputLabel value="#{rowVar.information}"/>
+							</p:column>
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+</ui:composition>

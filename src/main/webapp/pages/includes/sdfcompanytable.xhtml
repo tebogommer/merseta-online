@@ -1,0 +1,223 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<p:dataTable value="#{sdfDetailUI.details}" var="rv" rowKey="#{rv.company.id}" emptyMessage="#{lang['no.records.found']}" reflow="true" expandedRow="#{rv.company.expanded}" id="companyListTable">
+		<p:column headerText="#{lang['expand.row']}" width="45">
+			<p:rowToggler rendered="#{rv.company.docs.size() gt 0}" />
+		</p:column>
+		<p:column headerText="#{lang['companyName']}">#{rv.company.companyName}</p:column>
+		<p:column headerText="#{lang['companyRegistrationNumber']}">#{rv.company.companyRegistrationNumber}</p:column>
+		<p:column headerText="#{lang['entity.id']}">#{rv.company.levyNumber}</p:column>
+		<p:column headerText="#{lang['company.status']}" width="10%">#{lang[rv.company.companyStatus.registrationName]}</p:column>
+		<p:column headerText="Size of Company" width="10%">#{rv.company.sizeOfCompany.detailDescription}</p:column>
+		<p:column headerText="#{lang['levy.paying']}" width="110" style="text-align:center">
+			<p:outputPanel rendered="#{rv.company.nonLevyPaying}">
+				<i class="fa fa-times fa-3x red" aria-hidden="true"></i>
+			</p:outputPanel>
+			<p:outputPanel rendered="#{not rv.company.nonLevyPaying}">
+				<i class="fa fa-check fa-3x green" aria-hidden="true"></i>
+			</p:outputPanel>
+		</p:column>
+		<p:column width="37" style="text-align: center" headerText="#{lang['RAG']}">
+			<h:graphicImage value="/resources/hls/images/red.svg" rendered="#{rv.company.companyStatus eq companyStat.Pending}" width="40" styleClass="animated pulse infinite" />
+			<h:graphicImage value="/resources/hls/images/green.svg" rendered="#{rv.company.companyStatus eq companyStat.Active}" width="30" />
+		</p:column>
+
+		<p:column width="120" headerText="#{lang['company.details']}" rendered="#{sessionUI.task.processRole ne null}">
+			<p:outputPanel rendered="#{rv.company.companyStatus eq companyStat.Pending}">
+				<p:commandButton id="updateCompInfo" icon="ui-icon-search" title="#{lang['update']}" update=":companyInsForm :usersInsForm tabView companyInsForm" action="#{sdfDetailUI.prepForUpdate}">
+					<f:actionListener binding="#{companyUsersUI.clearViews()}" />
+					<f:actionListener binding="#{employeesimportUI.clearViews()}" />
+					<f:actionListener binding="#{linkedcompanyUI.clearViews()}" />
+					<f:actionListener binding="#{sdfDetailUI.clearViews()}" />
+					<f:setPropertyActionListener value="#{rv}" target="#{sdfDetailUI.companysdf}" />
+				</p:commandButton>
+				<p:spacer width="5"></p:spacer>
+
+				<p:commandButton id="otherSDFs" icon="fa fa-users" title="#{lang['other.sdf']}" update=":sdfForm" action="#{sdfcompanyUI.prepNewSDF}" oncomplete="PF('dlgSdf').show()">
+					<f:setPropertyActionListener value="#{rv}" target="#{sdfcompanyUI.companysdf}" />
+				</p:commandButton>
+				<p:spacer width="5" rendered="#{not rv.company.nonLevyPaying}"></p:spacer>
+
+				<p:commandButton id="contractPerson" icon="fa fa-user" title="#{lang['contact.persons']}" action="#{companyUsersUI.resolveUsers}" update=":usersInsForm :companyInsForm tabView companyInsForm" oncomplete="PF('dlgContact').show()">
+					<f:actionListener binding="#{companyUsersUI.clearViews()}" />
+					<f:actionListener binding="#{employeesimportUI.clearViews()}" />
+					<f:actionListener binding="#{linkedcompanyUI.clearViews()}" />
+					<f:actionListener binding="#{sdfDetailUI.clearViews()}" />
+					<f:setPropertyActionListener value="#{rv}" target="#{companyUsersUI.selectedCompany}" />
+				</p:commandButton>
+				<p:spacer width="5"></p:spacer>
+
+				<p:commandButton id="bankingDetails" icon="fa fa-bank" title="#{lang['banking.details']}" update=":bankingDetailForm" oncomplete="PF('dlgbankDetails').show()" rendered="false">
+					<f:setPropertyActionListener value="#{rv.company}" target="#{bankingdetailsUI.company}" />
+				</p:commandButton>
+				<p:spacer width="5" rendered="false"></p:spacer>
+
+				<p:commandButton id="trainingComittee" icon="fa fa-address-card-o" title="#{lang['training.comittee']}" rendered="#{rv.company.trainingCommitteeInPlace}" update=":trainingComitteeForm trainingComitteeTableForm" oncomplete="PF('dlgtrainingComittee').show()">
+					<f:setPropertyActionListener value="#{rv.company}" target="#{trainingcomitteeUI.company}" />
+				</p:commandButton>
+				<p:spacer width="5" rendered="#{rv.company.trainingCommitteeInPlace}"></p:spacer>
+
+				<p:commandButton id="LinkSite" icon="fa fa-plus" title="#{lang['link.site']}" update=":sitesInsForm" action="#{sitesUI.prepareNew}" oncomplete="PF('dlgSites').show()">
+					<f:setPropertyActionListener value="#{rv.company}" target="#{sitesUI.company}" />
+				</p:commandButton>
+				<p:spacer width="5"></p:spacer>
+
+				<p:commandButton id="employeeDetails" immediate="true" icon="fa fa-address-book-o" title="#{lang['employee.details']}" update="tabView companyInsForm :companyInsForm :usersInsForm" action="#{employeesimportUI.employeesInfo}">
+					<f:actionListener binding="#{companyUsersUI.clearViews()}" />
+					<f:actionListener binding="#{linkedcompanyUI.clearViews()}" />
+					<f:actionListener binding="#{sdfDetailUI.clearViews()}" />
+					<f:actionListener binding="#{employeesUI.employeesInfo()}" />
+					<f:setPropertyActionListener value="#{rv.company}" target="#{employeesimportUI.company}" />
+					<f:setPropertyActionListener value="#{rv.company}" target="#{employeesUI.company}" />
+					<f:setPropertyActionListener value="#{rv.company.residentialAddress.municipality}" target="#{employeesUI.employees.municipality}" />
+				</p:commandButton>
+
+				<p:spacer width="5"></p:spacer>
+
+				<p:commandButton id="LinkNewCompany" icon="fa fa-building" title="#{lang['link.new.company']}" update="companyInsForm tabView :companyInsForm :usersInsForm" action="#{linkedcompanyUI.setObjects}" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Edit or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload and false}">
+					<f:actionListener binding="#{companyUsersUI.clearViews()}" />
+					<f:actionListener binding="#{employeesimportUI.clearViews()}" />
+					<f:actionListener binding="#{linkedcompanyUI.clearViews()}" />
+					<f:actionListener binding="#{sdfDetailUI.clearViews()}" />
+					<f:setPropertyActionListener value="#{rv}" target="#{linkedcompanyUI.sdfCompany}" />
+					<f:setPropertyActionListener value="#{null}" target="#{linkedcompanyUI.company}" />
+				</p:commandButton>
+			</p:outputPanel>
+		</p:column>
+
+		<p:column width="80" rendered="false" headerText="#{lang['company.approval']}">
+			<p:outputPanel rendered="#{rv.company.companyStatus eq companyStat.Pending}">
+				<p:commandButton id="companyApproval" icon="fa fa-check" title="#{lang['approve']}" action="#{sdfDetailUI.approveCompany}" styleClass="green-btn" oncomplete="findDetails()">
+					<f:setPropertyActionListener value="#{rv}" target="#{sdfDetailUI.companysdf}" />
+				</p:commandButton>
+				<p:spacer width="5"></p:spacer>
+
+				<p:commandButton id="companyRejection" icon="fa fa-times" title="#{lang['reject']}" action="#{sdfDetailUI.rejectCompany}" styleClass="red-btn" oncomplete="findDetails()">
+					<f:setPropertyActionListener value="#{rv}" target="#{sdfDetailUI.companysdf}" />
+				</p:commandButton>
+			</p:outputPanel>
+
+		</p:column>
+
+		<p:rowExpansion>
+			<!-- <p:outputPanel rendered="#{rv.company.sites ne null and rv.company.sites.size() gt 0}">
+				<h3>#{lang['sites']}</h3>
+				<p:dataTable value="#{rv.company.sites}" var="rv4" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv4.id}">
+
+					<p:column headerText="#{lang['companyName']}">
+						<h:outputText value="#{rv4.companyName}" />
+					</p:column>
+					<p:column headerText="#{lang['numberOfEmployees']}">
+						<h:outputText value="#{rv4.numberOfEmployees}" />
+					</p:column>
+					<p:column headerText="#{lang['telNumber']}">
+						<h:outputText value="#{rv4.telNumber}" />
+					</p:column>
+					<p:column headerText="#{lang['faxNumber']}">
+						<h:outputText value="#{rv4.faxNumber}" />
+					</p:column>
+				</p:dataTable>
+				<br />
+			</p:outputPanel> -->
+			<h3>#{lang['documents']}</h3>
+			<p:dataTable value="#{rv.company.docs}" var="rv1" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv1.id}">
+				<p:column headerText="#{lang['type']}" width="20%">#{rv1.configDoc.name}</p:column>
+				<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+				<p:column headerText="#{lang['uploaded']}" width="15%">
+					<h:outputText value="#{rv1.createDate}">
+						<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+					</h:outputText>
+				</p:column>
+				<p:column headerText="#{lang['version']}" width="15%">
+					<h:outputText value="#{rv1.versionNo}">
+					</h:outputText>
+				</p:column>
+
+				<p:column width="180" headerText="#{lang['view.edit']}">
+					<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlb" rendered="#{rv1.id ne null}">
+						<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+					</p:commandButton>
+					<p:tooltip for="dlb" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+
+					<p:spacer width="5" rendered="#{rv1.id ne null}" />
+					<p:commandButton icon="fa fa-bars " id="dhist" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}">
+						<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+					</p:commandButton>
+					<p:tooltip for="dhist" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+
+					<p:commandButton icon="fa fa-upload" rendered="#{rv.company.companyStatus eq companyStat.Pending and (sessionUI.task.processRole eq null or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload)}" id="upload" styleClass="#{rv1.originalFname eq null ? 'red-btn' : ''} flat" process="@this"
+						oncomplete="PF('dlgUpload').show()" update=":uploadForm" action="#{sdfDetailUI.prepUploadCloseCompanyInformation}">
+						<f:setPropertyActionListener value="#{rv1}" target="#{sdfDetailUI.doc}" />
+						<f:setPropertyActionListener value="#{rv}" target="#{sdfDetailUI.companysdf}" />
+					</p:commandButton>
+					<p:tooltip for="upload" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload}" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+
+					<h:panelGroup id="panelGroupThree" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+						<p:spacer width="5" />
+						<p:commandButton icon="fa fa-comment-o " id="dnote" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+							<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+						</p:commandButton>
+						<p:tooltip for="dnote" value="#{lang['view.note']}" position="left" />
+					</h:panelGroup>
+
+					<h:panelGroup id="panelGroupFour" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+						<p:spacer width="5" />
+						<p:commandButton icon="fa fa-eye " id="viewerButton" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+							<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+						</p:commandButton>
+						<p:tooltip for="viewerButton" value="#{lang['view.document']} " position="left" />
+					</h:panelGroup>
+
+				</p:column>
+			</p:dataTable>
+			<br />
+			<p:outputPanel rendered="#{rv.company.linkedCompanies ne null and rv.company.linkedCompanies.size() gt 0}">
+				<h3>#{lang['linked.companies']}</h3>
+				<p:dataTable value="#{rv.company.linkedCompanies}" emptyMessage="#{lang['no.records.found']}" var="rv2" rowKey="#{rv2.id}" expandedRow="#{rv2.company.expanded}">
+
+					<p:column headerText="#{lang['companyName']}">#{rv2.company.companyName}</p:column>
+					<p:column headerText="#{lang['companyRegistrationNumber']}">#{rv2.company.companyRegistrationNumber}</p:column>
+					<p:column headerText="#{lang['entity.id']}">#{rv2.company.levyNumber}</p:column>
+					<p:column headerText="#{lang['company.status']}" width="10%">#{lang[rv2.company.companyStatus.registrationName]}</p:column>
+
+					<p:column width="80" rendered="#{not companyinfoUI.sdfCompany.company.locked}" headerText="#{lang['view.edit']}">
+						<p:commandButton icon="fa fa-database" title="#{lang['update']}" update="companyInsForm tabView :companyInsForm :usersInsForm" action="#{linkedcompanyUI.changeObjects}">
+							<f:setPropertyActionListener value="#{rv2.company}" target="#{linkedcompanyUI.company}" />
+							<f:setPropertyActionListener value="#{rv}" target="#{linkedcompanyUI.sdfCompany}" />
+						</p:commandButton>
+						<p:spacer width="5"></p:spacer>
+						<p:commandButton icon="fa fa-trash" title="#{lang['update']}" update="companyInsForm tabView :companyInsForm :usersInsForm" action="#{linkedcompanyUI.deleteLinkedCompany}" oncomplete="findDetails()">
+							<f:setPropertyActionListener value="#{rv2.company}" target="#{linkedcompanyUI.company}" />
+							<f:setPropertyActionListener value="#{rv}" target="#{linkedcompanyUI.sdfCompany}" />
+						</p:commandButton>
+
+					</p:column>
+
+					<p:column width="37" headerText="#{lang['RAG']}">
+						<h:graphicImage value="/resources/hls/images/red.svg" rendered="#{rv2.company.companyStatus eq companyStat.Pending}" width="40" styleClass="animated pulse infinite" />
+						<h:graphicImage value="/resources/hls/images/green.svg" rendered="#{rv2.company.companyStatus eq companyStat.Active}" width="30" />
+					</p:column>
+
+					<p:column headerText="#{lang['company.approval']}" width="80" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval}">
+
+						<p:commandButton icon="fa fa-check" title="#{lang['link.new.company']}" action="#{sdfDetailUI.approveCompany}" rendered="#{rv2.company.companyStatus eq companyStat.Pending and rv2.validCompany and (sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval)}" styleClass="green-btn"
+							oncomplete="findDetails()">
+							<f:setPropertyActionListener value="#{rv2}" target="#{sdfDetailUI.companysdf}" />
+						</p:commandButton>
+						<p:spacer width="5"></p:spacer>
+
+						<p:commandButton icon="fa fa-times" title="#{lang['link.new.company']}" action="#{sdfDetailUI.rejectCompany}" rendered="#{rv2.company.companyStatus eq companyStat.Pending and rv2.validCompany and (sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval)}" styleClass="red-btn"
+							oncomplete="findDetails()">
+							<f:setPropertyActionListener value="#{rv2}" target="#{sdfDetailUI.companysdf}" />
+						</p:commandButton>
+						<p:spacer width="5"></p:spacer>
+
+					</p:column>
+
+				</p:dataTable>
+			</p:outputPanel>
+
+		</p:rowExpansion>
+
+	</p:dataTable>
+
+</ui:composition>

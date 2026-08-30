@@ -1,0 +1,208 @@
+@page "/learners"
+@rendermode InteractiveServer
+@inject ILearnerService LearnerService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>Learner Lifecycle Management - NSDMS</PageTitle>
+
+<div class="mb-4 d-flex justify-space-between align-center">
+    <div>
+        <MudBreadcrumbs Items="_breadcrumbItems" Class="pa-0 mb-1" />
+        <MudText Typo="Typo.h4" Class="fw-bold">Learner Lifecycle Management</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">Enrolment, apprentice agreements, learnership tracking, and qualification completion.</MudText>
+    </div>
+    <div class="d-flex gap-2">
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.FactCheck" OnClick="@(() => Navigation.NavigateTo("/trade-tests"))">
+            Trade Tests Hub
+        </MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd" OnClick="@(() => Navigation.NavigateTo("/learners/create"))">
+            Register Learner
+        </MudButton>
+    </div>
+</div>
+
+<MudCard Outlined="true" Class="mb-4">
+    <MudCardContent Class="py-3">
+        <MudGrid AlignItems="Center">
+            <MudItem xs="12" sm="6" md="4">
+                <MudTextField @bind-Value="_searchString" Immediate="true" Placeholder="Search contract no, learner name, ID number..."
+                              Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                              Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" OnClearButtonClick="@(() => OnSearch(""))" TextChanged="OnSearch" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudSelect T="string" Value="_selectedStatus" Label="Status" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" ValueChanged="OnStatusFilterChanged">
+                    <MudSelectItem Value="@("Registered")">Registered</MudSelectItem>
+                    <MudSelectItem Value="@("InProgress")">In Progress</MudSelectItem>
+                    <MudSelectItem Value="@("Completed")">Completed</MudSelectItem>
+                    <MudSelectItem Value="@("Terminated")">Terminated</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="3">
+                <MudSelect T="string" Value="_selectedProgramme" Label="Programme Type" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" ValueChanged="OnProgrammeFilterChanged">
+                    <MudSelectItem Value="@("Apprenticeship")">Apprenticeship</MudSelectItem>
+                    <MudSelectItem Value="@("Learnership")">Learnership</MudSelectItem>
+                    <MudSelectItem Value="@("SkillsProgramme")">Skills Programme</MudSelectItem>
+                    <MudSelectItem Value="@("Internship")">Internship</MudSelectItem>
+                    <MudSelectItem Value="@("Bursary")">Bursary</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="2" Class="d-flex justify-end">
+                <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadData">
+                    Refresh
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudCardContent>
+</MudCard>
+
+@if (_loading)
+{
+    <div class="d-flex justify-center my-8">
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+    </div>
+}
+else
+{
+    <MudTable T="CompanyLearner" Items="_learners" Hover="true" Striped="true" Elevation="1" Class="rounded-lg" RowClass="cursor-pointer" OnRowClick="@(args => Navigation.NavigateTo($"/learners/{args.Item.Id}"))">
+        <HeaderContent>
+            <MudTh>Contract Number</MudTh>
+            <MudTh>Learner Demographics</MudTh>
+            <MudTh>Host Employer</MudTh>
+            <MudTh>Learning Programme</MudTh>
+            <MudTh>Enrolment Date</MudTh>
+            <MudTh>Trade Tests</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh Style="text-align: right;">Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Contract No">
+                <div class="d-flex align-center gap-2">
+                    <MudIcon Icon="@Icons.Material.Filled.Badge" Color="Color.Primary" Size="Size.Small" />
+                    <span class="fw-bold font-monospace">@context.LearnerContractNumber</span>
+                </div>
+            </MudTd>
+            <MudTd DataLabel="Learner">
+                <div>
+                    <div class="fw-bold">@(context.Person?.FullName ?? "Unknown")</div>
+                    <div class="text-muted small">RSA ID: @(context.Person?.RsaIdNumber ?? "N/A")</div>
+                </div>
+            </MudTd>
+            <MudTd DataLabel="Employer">
+                <div>
+                    <div class="fw-semibold">@(context.Organisation?.CompanyName ?? "Unknown")</div>
+                    <div class="text-muted small">SDL: @(context.Organisation?.SdlNumber ?? "N/A")</div>
+                </div>
+            </MudTd>
+            <MudTd DataLabel="Programme">
+                <div class="fw-medium">@context.QualificationTitle</div>
+                <div class="d-flex gap-1 mt-1">
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">@context.LearningProgrammeTypeCode</MudChip>
+                    @if (context.NqfLevel.HasValue)
+                    {
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Secondary">NQF @context.NqfLevel</MudChip>
+                    }
+                </div>
+            </MudTd>
+            <MudTd DataLabel="Enrolment Date">
+                @(context.RegistrationDate.ToString("yyyy-MM-dd"))
+            </MudTd>
+            <MudTd DataLabel="Trade Tests">
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Tertiary" Icon="@Icons.Material.Filled.FactCheck">
+                    @context.TradeTests.Count Tests
+                </MudChip>
+            </MudTd>
+            <MudTd DataLabel="Status">
+                @if (context.StatusCode == "Completed")
+                {
+                    <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Verified">Completed</MudChip>
+                }
+                else if (context.StatusCode == "InProgress")
+                {
+                    <MudChip T="string" Color="Color.Info" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.PlayArrow">In Progress</MudChip>
+                }
+                else if (context.StatusCode == "Registered")
+                {
+                    <MudChip T="string" Color="Color.Warning" Size="Size.Small" Variant="Variant.Filled">Registered</MudChip>
+                }
+                else
+                {
+                    <MudChip T="string" Color="Color.Default" Size="Size.Small" Variant="Variant.Filled">@context.StatusCode</MudChip>
+                }
+            </MudTd>
+            <MudTd DataLabel="Actions" Style="text-align: right;">
+                <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Primary" Size="Size.Small" Title="View Learner"
+                               OnClick="@(() => Navigation.NavigateTo($"/learners/{context.Id}"))" />
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" Title="Delete"
+                               OnClick="@(() => DeleteLearner(context.Id))" />
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
+        </PagerContent>
+    </MudTable>
+}
+
+@code {
+    private List<CompanyLearner> _learners = new();
+    private bool _loading = true;
+    private string _searchString = "";
+    private string? _selectedStatus;
+    private string? _selectedProgramme;
+
+    private List<BreadcrumbItem> _breadcrumbItems = new()
+    {
+        new BreadcrumbItem("Dashboard", href: "/"),
+        new BreadcrumbItem("Learners", href: null, disabled: true)
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _loading = true;
+        try
+        {
+            _learners = await LearnerService.GetAllLearnersAsync(_searchString, _selectedStatus, programmeType: _selectedProgramme);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading learners: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task OnSearch(string text)
+    {
+        _searchString = text;
+        await LoadData();
+    }
+
+    private async Task OnStatusFilterChanged(string value)
+    {
+        _selectedStatus = value;
+        await LoadData();
+    }
+
+    private async Task OnProgrammeFilterChanged(string value)
+    {
+        _selectedProgramme = value;
+        await LoadData();
+    }
+
+    private async Task DeleteLearner(int id)
+    {
+        var success = await LearnerService.DeleteLearnerAsync(id, "ADMIN");
+        if (success)
+        {
+            Snackbar.Add("Learner record deleted successfully.", Severity.Success);
+            await LoadData();
+        }
+    }
+}

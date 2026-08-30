@@ -1,0 +1,78 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:pt="http://xmlns.jcp.org/jsf/passthrough">
+	<h:form id="impactOfStaffTrainingForm" onsubmit="checkDisableAllImpact()">
+		<h:panelGroup id="impactoftrainingGroup">
+			<p:panelGrid columns="1" style="width:100%" id="impactoftrainingGrid" layout="grid" styleClass="ui-panelgrid-blank form-group" columnClasses="largeCol, smalLCol, largeCol, smalLCol">
+
+				<p:dataTable var="wsg" emptyMessage="#{lang['no.records.found']}" value="#{wspimpactofstafftrainingUI.wspImpactOfStaffTrainingList}" rowIndexVar="rowIndex" id="impactTable">
+					<p:column>
+						<p:outputLabel value="#{wsg.rowDescription}" />
+					</p:column>
+					<p:column headerText="#{lang['not.at.all']}">
+						<p:selectBooleanCheckbox value="#{wsg.notAtAll}" onchange="disableCheckBoxImpact(#{rowIndex})" disabled="#{wspSkillsGapUI.viewOnly}" required="true">
+						</p:selectBooleanCheckbox>
+					</p:column>
+					<p:column headerText=" #{lang['not.really']}">
+						<p:selectBooleanCheckbox value="#{wsg.notReally}" onchange="disableCheckBoxImpact(#{rowIndex})" disabled="#{wspSkillsGapUI.viewOnly}" required="true">
+						</p:selectBooleanCheckbox>
+					</p:column>
+					<p:column headerText=" #{lang['neutral']}">
+						<p:selectBooleanCheckbox value="#{wsg.nuetral}" onchange="disableCheckBoxImpact(#{rowIndex})" disabled="#{wspSkillsGapUI.viewOnly}" required="true">
+						</p:selectBooleanCheckbox>
+					</p:column>
+					<p:column headerText=" #{lang['to.a.limited.extent']}">
+						<p:selectBooleanCheckbox value="#{wsg.toaLimitedExtent}" onchange="disableCheckBoxImpact(#{rowIndex})" disabled="#{wspSkillsGapUI.viewOnly}" required="true">
+						</p:selectBooleanCheckbox>
+					</p:column>
+					<p:column headerText="#{lang['to.a.large.extent']}">
+						<p:selectBooleanCheckbox value="#{wsg.toaLargeExtent}" onchange="disableCheckBoxImpact(#{rowIndex})" disabled="#{wspSkillsGapUI.viewOnly}" required="true">
+						</p:selectBooleanCheckbox>
+					</p:column>
+				</p:dataTable>
+
+			</p:panelGrid>
+			<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<p:commandButton styleClass="Fs14 FontLight" value="#{lang['submit']}" icon="ui-icon-save" update="impactOfStaffTrainingForm" action="#{wspimpactofstafftrainingUI.wspimpactofstafftrainingUpdate}" process="impactOfStaffTrainingForm"
+					rendered="#{initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.Draft}" />
+			</p:panelGrid>
+		</h:panelGroup>
+
+	<script>
+		$( document ).ready(function() {
+			checkDisableAllImpact(); 
+		});
+		function checkDisableAllImpact(){
+			for (var i = 0; i &lt; 20; i++) {
+				disableCheckBoxImpact(i);				
+			}
+		}
+		function disableCheckBoxImpact(type){
+			let count = 0;
+			/* rowIndex */
+			$(PrimeFaces.escapeClientId('tabView:impactOfStaffTrainingForm:impactTable')+' tr[data-ri="'+type+'"] .ui-chkbox').each(function() {
+				let childDiv = $(this).children(":first");
+				if (childDiv.children()[0].checked) {
+					count += 1;
+				}
+			});
+			if (count == 1) {
+				$(PrimeFaces.escapeClientId('tabView:impactOfStaffTrainingForm:impactTable')+' tr[data-ri="'+type+'"] .ui-chkbox').each(function() {
+					let childDiv = $(this).children(":first");
+					let childDiv2 = $(this).children(":nth-child(2)");
+					if (!childDiv.children()[0].checked) {
+						childDiv2.addClass("ui-state-disabled");
+						childDiv.children()[0].disabled = true;					
+					}
+				});
+			}else{
+				$(PrimeFaces.escapeClientId('tabView:impactOfStaffTrainingForm:impactTable')+' tr[data-ri="'+type+'"] .ui-chkbox').each(function() {
+					let childDiv = $(this).children(":first");
+					let childDiv2 = $(this).children(":nth-child(2)");
+					childDiv2.removeClass("ui-state-disabled");
+					childDiv.children()[0].disabled = false;
+				});
+			}
+		}
+	</script>
+	</h:form>
+</ui:composition>

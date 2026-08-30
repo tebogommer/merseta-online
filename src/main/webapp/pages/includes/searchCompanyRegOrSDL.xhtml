@@ -1,0 +1,44 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:o="http://omnifaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:p="http://primefaces.org/ui">
+	<p:importEnum type="haj.com.entity.enums.CompanyRegOrSDLEnum" var="regSDL"></p:importEnum>
+	<p:fieldset id="searchREGSDL" legend="#{lang['enter.Reg.number.or.SDL.number']}">
+
+		<p:panelGrid>
+			<h:panelGroup id="searchNGO">
+				<p:outputLabel value="#{lang['non.levy.paying']}" styleClass="gray" />
+				<p:spacer width="20"></p:spacer>
+				<p:selectBooleanCheckbox id="nonLevy" value="#{searchCompanyUI.searchNGO}">
+					<p:ajax update="companyInsForm" event="change" listener="#{searchCompanyUI.returnNonLevyPaying}"></p:ajax>
+				</p:selectBooleanCheckbox>
+				<br />
+				<p:outputLabel value="#{lang['levy.paying.entity']}" styleClass="gray" />
+				<p:spacer width="20"></p:spacer>
+				<p:selectBooleanCheckbox id="levypaying" value="#{searchCompanyUI.searchLevyPaying}">
+					<p:ajax update="companyInsForm" event="change"></p:ajax>
+				</p:selectBooleanCheckbox>
+			</h:panelGroup>
+		</p:panelGrid>
+
+		<p:panelGrid id="searchCompanyPnl" style="width:50%" columns="3" styleClass="ui-panelgrid-blank form-group" rendered="#{searchCompanyUI.searchLevyPaying}" layout="grid">
+
+			<p:selectOneRadio value="#{searchCompanyUI.companyRegOrSDLEnum}" columns="1" layout="responsive" rendered="#{!searchCompanyUI.searchNGO}">
+				<p:ajax update="searchCompanyPnl " />
+				<f:selectItems value="#{enumUI.companyRegOrSDLEnumDD}" var="idpassEnum" itemLabel="#{idpassEnum}" itemValue="#{idpassEnum}" />
+			</p:selectOneRadio>
+
+			<h:panelGroup id="regNumInput" styleClass="md-inputfield" rendered="#{searchCompanyUI.companyRegOrSDLEnum eq regSDL.REG}">
+				<p:inputMask id="regNumCriteria" mask="#{searchCompanyUI.companyRegistrationNumberFormat}" value="#{searchCompanyUI.criteria}" style="width:95%" requiredMessage="#{lang['enter.reg.number']}" required="true" />
+				<p:outputLabel value="#{lang['registration.number']}" for="regNumCriteria" />
+			</h:panelGroup>
+
+			<h:panelGroup id="sdlNumInput" styleClass="md-inputfield" rendered="#{searchCompanyUI.companyRegOrSDLEnum eq regSDL.SDLNumber and !searchCompanyUI.searchNGO}">
+				<p:inputMask id="sdlNumCriteria" mask="#{searchCompanyUI.companyLevyNumberFormat}" value="#{searchCompanyUI.criteria}" style="width:95%" requiredMessage="#{lang['enter.sdl.number']}" required="true" />
+				<p:outputLabel value="#{lang['sdl.number']}" for="sdlNumCriteria" />
+			</h:panelGroup>
+
+			<p:commandButton id="idSearch" icon="fa fa-search" value="Submit" process="searchCompanyPnl" actionListener="#{searchCompanyUI.find}" update="companyInsForm" rendered="#{searchCompanyUI.companyRegOrSDLEnum eq regSDL.REG or searchCompanyUI.searchNGO}" />
+			<p:commandButton id="idSearch2" icon="fa fa-search" value="Submit" process="searchCompanyPnl" actionListener="#{searchCompanyUI.findBySDL}" update="companyInsForm" rendered="#{searchCompanyUI.companyRegOrSDLEnum eq regSDL.SDLNumber and !searchCompanyUI.searchNGO}" />
+		</p:panelGrid>
+
+
+	</p:fieldset>
+</ui:composition>

@@ -1,0 +1,132 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Skills Registration</h1>
+					<h:form id="skillsregistrationInsForm">
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:panelGrid columns="1" style="width:100%" id="skillsregistrationInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="researchSummary" value="#{skillsregistrationUI.skillsregistration.researchSummary}" style="width:95%" />
+								<p:outputLabel value="#{lang['researchSummary']}" for="researchSummary" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="fitCareer" value="#{skillsregistrationUI.skillsregistration.fitCareer}" style="width:95%" />
+								<p:outputLabel value="#{lang['fitCareer']}" for="fitCareer" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="company" value="#{skillsregistrationUI.skillsregistration.company}" style="width:95%" />
+								<p:outputLabel value="#{lang['company']}" for="company" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="proposedTitle" value="#{skillsregistrationUI.skillsregistration.proposedTitle}" style="width:95%" />
+								<p:outputLabel value="#{lang['proposedTitle']}" for="proposedTitle" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="qualification" value="#{skillsregistrationUI.skillsregistration.qualification}" style="width:95%" />
+								<p:outputLabel value="#{lang['qualification']}" for="qualification" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="createDate" value="#{skillsregistrationUI.skillsregistration.createDate}" style="width:95%" />
+								<p:outputLabel value="#{lang['createDate']}" for="createDate" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="skillsIdentification" value="#{skillsregistrationUI.skillsregistration.skillsIdentification}" style="width:95%" />
+								<p:outputLabel value="#{lang['skillsIdentification']}" for="skillsIdentification" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="ofoCodes" value="#{skillsregistrationUI.skillsregistration.ofoCodes}" style="width:95%" />
+								<p:outputLabel value="#{lang['ofo.codes']}" for="ofoCodes" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="skillsType" value="#{skillsregistrationUI.skillsregistration.skillsType}" style="width:95%" />
+								<p:outputLabel value="#{lang['skillsType']}" for="skillsType" />
+							</h:panelGroup>
+
+
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:skillsregistrationList :skillsregistrationInsForm:skillsregistrationInsGrid" action="#{skillsregistrationUI.skillsregistrationInsert}" />
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="skillsregistrationInsGrid" process="@this" action="#{skillsregistrationUI.prepareNew}">
+									<p:resetInput target="skillsregistrationInsGrid" />
+								</p:commandButton>
+							</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{skillsregistrationUI.dataModel}" filteredValue="#{skillsregistrationUI.skillsRegistrationfilteredList}" id="skillsregistrationList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['researchSummary']}">
+								<h:outputText value="#{rowVar.researchSummary}" />
+							</p:column>
+							<p:column headerText="#{lang['fitCareer']}">
+								<h:outputText value="#{rowVar.fitCareer}" />
+							</p:column>
+							<p:column headerText="#{lang['company']}">
+								<h:outputText value="#{rowVar.company}" />
+							</p:column>
+							<p:column headerText="#{lang['proposedTitle']}">
+								<h:outputText value="#{rowVar.proposedTitle}" />
+							</p:column>
+							<p:column headerText="#{lang['qualification']}">
+								<h:outputText value="#{rowVar.qualification}" />
+							</p:column>
+							<p:column headerText="#{lang['createDate']}">
+								<h:outputText value="#{rowVar.createDate}" />
+							</p:column>
+							<p:column headerText="#{lang['skillsIdentification']}">
+								<h:outputText value="#{rowVar.skillsIdentification}" />
+							</p:column>
+							<p:column headerText="#{lang['ofo.codes']}">
+								<h:outputText value="#{rowVar.ofoCodes}" />
+							</p:column>
+							<p:column headerText="#{lang['skillsType']}">
+								<h:outputText value="#{rowVar.skillsType}" />
+							</p:column>
+
+
+							<p:column width="80">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":skillsregistrationInsForm:skillsregistrationInsGrid">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{skillsregistrationUI.skillsregistration}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:skillsregistrationList" action="#{skillsregistrationUI.skillsregistrationDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{skillsregistrationUI.skillsregistration}" />
+								</p:commandButton>
+							</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+	<!-- 
+researchSummary = researchSummary
+fitCareer = fitCareer
+company = company
+proposedTitle = proposedTitle
+qualification = qualification
+createDate = createDate
+skillsIdentification = skillsIdentification
+ofoCodes = ofoCodes
+skillsType = skillsType
+
+-->
+</ui:composition>

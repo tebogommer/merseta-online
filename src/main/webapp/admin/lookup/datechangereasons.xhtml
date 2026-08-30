@@ -1,0 +1,132 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Date Change Reasons</h1>
+					<h:form id="datechangereasonsInsForm">
+						<p:growl sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:panelGrid columns="1" style="width:100%" id="datechangereasonsInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="#{lang['process']}" for="forProcess" />
+								</div>
+								<div>
+									<p:selectOneMenu id="forProcess" value="#{datechangereasonsUI.datechangereasons.forProcess}" style="width:75%" required="true" requiredMessage="#{lang['select.process']}">
+										<p:ajax />
+										<f:selectItem itemLabel="#{lang['select.one']}" itemValue="" noSelectionOption="true" />
+										<f:selectItems value="#{enumUI.processEnumDD}" />
+									</p:selectOneMenu>
+								</div>
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="description" value="#{datechangereasonsUI.datechangereasons.description}" style="width:95%" />
+								<p:outputLabel value="#{lang['description']}" for="description" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="code" value="#{datechangereasonsUI.datechangereasons.code}" style="width:95%" />
+								<p:outputLabel value="#{lang['code']}" for="code" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield" rendered="false">
+								<p:inputText id="createDate" value="#{datechangereasonsUI.datechangereasons.createDate}" style="width:95%" />
+								<p:outputLabel value="#{lang['createDate']}" for="createDate" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield" rendered="">
+								<p:inputText id="setmisCode" value="#{datechangereasonsUI.datechangereasons.setmisCode}" style="width:95%" />
+								<p:outputLabel value="#{lang['setmisCode']}" for="setmisCode" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="qctoCode" value="#{datechangereasonsUI.datechangereasons.qctoCode}" style="width:95%" />
+								<p:outputLabel value="#{lang['qctoCode']}" for="qctoCode" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="nlrdCode" value="#{datechangereasonsUI.datechangereasons.nlrdCode}" style="width:95%" />
+								<p:outputLabel value="#{lang['nlrdCode']}" for="nlrdCode" />
+							</h:panelGroup>
+							<h:panelGroup>
+								<p:outputLabel value="Manager Selection Only" for="forManagerSelection" styleClass="gray" />
+								<p:spacer width="10" />
+								<p:selectBooleanCheckbox id="forManagerSelection" value="#{datechangereasonsUI.datechangereasons.forManagerSelection}" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield" rendered="false">
+								<p:inputText id="smsCode" value="#{datechangereasonsUI.datechangereasons.smsCode}" style="width:95%" />
+								<p:outputLabel value="#{lang['smsCode']}" for="smsCode" />
+							</h:panelGroup>
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:datechangereasonsList :datechangereasonsInsForm:datechangereasonsInsGrid" action="#{datechangereasonsUI.datechangereasonsInsert}" />
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="datechangereasonsInsGrid" process="@this" action="#{datechangereasonsUI.prepareNew}">
+									<p:resetInput target="datechangereasonsInsGrid" />
+								</p:commandButton>
+							</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{datechangereasonsUI.dataModel}" filteredValue="#{datechangereasonsUI.dateChangeReasonsfilteredList}" id="datechangereasonsList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['process']}" sortBy="#{rowVar.forProcess}">
+								<h:outputText value="#{rowVar.forProcess}" />
+							</p:column>
+							
+							<p:column headerText="#{lang['description']}" filterBy="#{rowVar.description}">
+								<h:outputText value="#{rowVar.description}" />
+							</p:column>
+							<p:column headerText="#{lang['code']}" rendered="false">
+								<h:outputText value="#{rowVar.code}" />
+							</p:column>
+							<p:column headerText="#{lang['createDate']}" rendered="false">
+								<h:outputText value="#{rowVar.createDate}" />
+							</p:column>
+							<p:column headerText="Manager Selection Only" sortBy="#{rowVar.forManagerSelection}">
+								<p:selectBooleanCheckbox disabled="true" value="#{rowVar.forManagerSelection}">
+								</p:selectBooleanCheckbox>
+							</p:column>
+							<p:column headerText="#{lang['setmisCode']}" rendered="false">
+								<h:outputText value="#{rowVar.setmisCode}" />
+							</p:column>
+							<p:column headerText="#{lang['qctoCode']}" rendered="false">
+								<h:outputText value="#{rowVar.qctoCode}" />
+							</p:column>
+							<p:column headerText="#{lang['nlrdCode']}" rendered="false">
+								<h:outputText value="#{rowVar.nlrdCode}" />
+							</p:column>
+							<p:column headerText="#{lang['smsCode']}" rendered="false">
+								<h:outputText value="#{rowVar.smsCode}" />
+							</p:column>
+
+
+							<p:column width="80">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":datechangereasonsInsForm:datechangereasonsInsGrid">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{datechangereasonsUI.datechangereasons}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:datechangereasonsList" action="#{datechangereasonsUI.datechangereasonsDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{datechangereasonsUI.datechangereasons}" />
+								</p:commandButton>
+							</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+	<!-- 
+_lang_
+-->
+</ui:composition>

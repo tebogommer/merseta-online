@@ -1,0 +1,117 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui">
+	<p:dialog closeOnEscape="true" header="#{trainingproviderapplicationUI.contactPersonTitle}" widgetVar="dlgContatPersonChange" resizable="false" hideEffect="clip" showEffect="clip" width="60%" height="45vh" responsive="true" modal="true" position="center">
+			<h:form id="sdpuserForm">
+				<c:if test="#{!trainingproviderapplicationUI.user.doneSearch}">
+					<ui:include  src="/pages/includes/searchUserPassportOrID.xhtml" />
+				</c:if>
+				
+				<p:fieldset rendered="#{trainingproviderapplicationUI.user.doneSearch}" >
+					<p:panelGrid columns="2" style="width:100%" id="cpInsGrid" layout="grid" rendered="#{trainingproviderapplicationUI.user.doneSearch}" styleClass="ui-panelgrid-blank form-group">
+						
+						<h:panelGroup style="margin-top: -20px" rendered="#{!trainingproviderapplicationUI.assessorModUpdate}">
+							<div>
+								<p:outputLabel value="#{lang['designation']}" for="designation" />
+							</div>
+							<div>
+								<p:selectOneMenu disabled="false" id="designation" value="#{trainingproviderapplicationUI.user.designation}" converter="DesignationConvertor" style="width:95%" required="true" requiredMessage="#{lang['select.designation']}">
+									<p:ajax />
+									<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+									<f:selectItems value="#{selectItemsUI.selectedDesignation}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+						
+					 	<h:panelGroup style="margin-top: -20px" rendered="#{trainingproviderapplicationUI.assessorModUpdate}">
+							<div>
+								<p:outputLabel value="Type" for="type" />
+							</div>
+							<div>
+								<p:selectOneMenu id="type" value="#{trainingproviderapplicationUI.user.assessorModType}" style="width:95%" required="true">
+									<p:ajax />
+									<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+									<f:selectItems value="#{trainingproviderapplicationUI.assessorModTypeDD}" />
+									<p:ajax event="itemSelect"/>
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+						
+						<h:panelGroup style="margin-top: -20px">
+							<div>
+								<p:outputLabel value="#{lang['title']}" for="cptitle" />
+							</div>
+							<div>
+								<p:selectOneMenu disabled="#{trainingproviderapplicationUI.user.existingUser and trainingproviderapplicationUI.user.title ne null}" id="cptitle" value="#{trainingproviderapplicationUI.user.title}" converter="TitleConvertor" style="width:95%" required="true" requiredMessage="#{lang['select.title']}">
+									<p:ajax />
+									<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+									<f:selectItems value="#{selectItemsUI.selectItemsTitles}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+						
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText id="cpuserName" value="#{trainingproviderapplicationUI.user.firstName}" style="width:95%" required="true" disabled="#{trainingproviderapplicationUI.user.existingUser}" requiredMessage="#{lang['enter.your.name']}" />
+							<p:outputLabel value="#{lang['first.name']}" for="cpuserName" />
+						</h:panelGroup>
+						
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText id="cpuserSurname" value="#{trainingproviderapplicationUI.user.lastName}" style="width:95%" required="true" disabled="#{trainingproviderapplicationUI.user.existingUser}" requiredMessage="#{lang['enter.your.last.name']}" />
+							<p:outputLabel value="#{lang['surname']}" for="cpuserSurname" />
+						</h:panelGroup>
+						
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText id="cpuserEmail" value="#{trainingproviderapplicationUI.user.email}" style="width:95%" required="true" disabled="#{trainingproviderapplicationUI.user.existingUser}" requiredMessage="#{lang['enter.your.email.address']}" />
+							<p:outputLabel value="#{lang['emails']}" for="cpuserEmail" />
+						</h:panelGroup>
+						
+						<h:panelGroup styleClass="md-inputfield" rendered="#{trainingproviderapplicationUI.user.rsaIDNumber.length() gt 0}">
+							<p:inputText id="cpuserIdNumber" value="#{trainingproviderapplicationUI.user.rsaIDNumber}" style="width:95%" disabled="#{trainingproviderapplicationUI.user.existingUser}" />
+							<p:outputLabel value="#{lang['rsa.id.number']}" for="cpuserIdNumber" />
+						</h:panelGroup>
+						
+						<h:panelGroup styleClass="md-inputfield" rendered="#{trainingproviderapplicationUI.user.passportNumber.length() gt 0}">
+							<p:inputText id="cpuserPassport" value="#{trainingproviderapplicationUI.user.passportNumber}" style="width:95%" disabled="true" />
+							<p:outputLabel value="#{lang['passport.number']}" for="cpuserPassport" />
+						</h:panelGroup>
+						
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputMask disabled="#{trainingproviderapplicationUI.user.existingUser}" id="cpcellNumber" mask="#{profileUI.CELLPHONE_FORMAT}" value="#{trainingproviderapplicationUI.user.cellNumber}" style="width: 95%" label="cellNumber" required="true" requiredMessage="Enter mobile number">
+								<o:validator validatorId="javax.faces.Length" minimum="0" maximum="20" message="#{lang['user.cellnumber.length']}" />
+							</p:inputMask>
+							<p:outputLabel value="#{lang['mobile.number']}" for="cpcellNumber" />
+						</h:panelGroup>
+				
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputMask disabled="#{trainingproviderapplicationUI.user.existingUser}" id="cptelNumber" mask="#{profileUI.TELPHONE_FORMAT}" value="#{trainingproviderapplicationUI.user.telNumber}" style="width: 95%" label="telNumber" required="false" requiredMessage="Enter tel number">
+								<o:validator validatorId="javax.faces.Length" minimum="0" maximum="20" message="#{lang['user.tellnumber.length']}" />
+							</p:inputMask>
+							<p:outputLabel value="#{lang['tel.number']}:" for="cptelNumber" />
+						</h:panelGroup>
+						
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputMask disabled="#{trainingproviderapplicationUI.user.existingUser}" id="cpfax" mask="#{profileUI.CELLPHONE_FORMAT}" value="#{trainingproviderapplicationUI.user.faxNumber}" style="width: 95%" label="cellNumber" required="false" requiredMessage="Enter fax number">
+								
+							</p:inputMask>
+							<p:outputLabel value="#{lang['fax.number']}" for="cpfax" />
+						</h:panelGroup>
+						
+						<h:panelGroup styleClass="md-inputfield">
+						</h:panelGroup>
+					</p:panelGrid>
+					
+				</p:fieldset>
+				<br/>
+				<h:panelGroup styleClass="md-inputfield"  rendered="#{trainingproviderapplicationUI.user.doneSearch and trainingproviderapplicationUI.selectedCompanyUser eq null}">
+					<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update="@form" onstart="uploadStart()"   oncomplete="uploadDone()" process="sdpuserForm" action="#{trainingproviderapplicationUI.submitNewContactPerson}" />
+					<p:spacer width="10"></p:spacer>
+					<p:commandButton value="#{lang['clear']}" icon="ui-icon-save" process="@this" update="@form" action="#{trainingproviderapplicationUI.clearUser}" />
+				</h:panelGroup>
+				
+				<h:panelGroup styleClass="md-inputfield"  rendered="#{trainingproviderapplicationUI.user.doneSearch and trainingproviderapplicationUI.selectedCompanyUser ne null}">
+					<p:commandButton value="#{lang['update']}" icon="ui-icon-save" update="@form" onstart="uploadStart()"   oncomplete="uploadDone()" process="sdpuserForm" action="#{trainingproviderapplicationUI.submitContactPersonUpdate}" />
+					<p:spacer width="10"></p:spacer>
+					<p:commandButton value="#{lang['clear']}" icon="ui-icon-save" process="@this" update="@form" action="#{trainingproviderapplicationUI.clearUser}" />
+				</h:panelGroup>
+		</h:form>
+		<p:ajax event="open" listener="#{trainingproviderapplicationUI.prepareAdstractObject}"></p:ajax>
+	</p:dialog>
+</ui:composition>

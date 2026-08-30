@@ -1,0 +1,104 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<p:growl sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+
+
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+						<h1>Legacy Data: Moderator Skills Programme</h1>
+
+						<p:outputLabel value="Data Source: Moderator.xlsx" />
+						<br />
+						<p:outputLabel value="Tab: Skills Programme" />
+						<div class="EmptyBox10" />
+
+						<c:if test="#{legacymoderatorskillsprogrammeUI.displayDownload}">
+							<ui:include src="/pages/includes/download_lazy.xhtml">
+								<ui:param name="file_name" value="legacymoderatorskillsprogrammeList_dataextract" />
+								<ui:param name="target" value="legacymoderatorskillsprogrammeList" />
+							</ui:include>
+							<div class="EmptyBox10" />
+						</c:if>
+
+						<p:dataTable var="rowVar" value="#{legacymoderatorskillsprogrammeUI.dataModel}" filteredValue="#{legacymoderatorskillsprogrammeUI.legacyModeratorSkillsProgrammefilteredList}" id="legacymoderatorskillsprogrammeList" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true"
+							lazy="true">
+							<p:column style="width:5%" headerText="Expand">
+								<p:rowToggler />
+							</p:column>
+							
+							<p:column headerText="DATE TIME CREATED">
+								<h:outputText value="#{rowVar.createDate}">
+									<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="NSDMS REF ID">
+								<h:outputText value="#{rowVar.id}" />
+							</p:column>
+							<p:column headerText="ModeratorId" filterBy="#{rowVar.moderatorId}">
+								<h:outputText value="#{rowVar.moderatorId}" />
+							</p:column>
+							<p:column headerText="Firstname" filterBy="#{rowVar.firstName}">
+								<h:outputText value="#{rowVar.firstName}" />
+							</p:column>
+							<p:column headerText="MiddleNames" filterBy="#{rowVar.middleNames}">
+								<h:outputText value="#{rowVar.middleNames}" />
+							</p:column>
+							<p:column headerText="Surname" filterBy="#{rowVar.surname}">
+								<h:outputText value="#{rowVar.surname}" />
+							</p:column>
+							<p:column headerText="sProgrammeCode">
+								<h:outputText value="#{rowVar.sProgrammeCode}" />
+							</p:column>
+							<p:column headerText="ModeratorRegStartDate">
+								<h:outputText value="#{rowVar.moderatorRegStartDate}" />
+							</p:column>
+							<p:column headerText="ModeratorFirstRegDate">
+								<h:outputText value="#{rowVar.moderatorFirstRegDate}" />
+							</p:column>
+							<p:column headerText="ModeratorRegEndDate">
+								<h:outputText value="#{rowVar.moderatorRegEndDate}" />
+							</p:column>
+							<p:column headerText="ModeratorRegNo">
+								<h:outputText value="#{rowVar.moderatorRegNo}" />
+							</p:column>
+							<p:rowExpansion>
+								<p:fieldset legend="NSDMS REF ID: #{rowVar.id}" style="margin-bottom:20px">
+									<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rowVar.moderatorStatusDesc}" style="width:95%" disabled="true" />
+											<p:outputLabel value="ModeratorStatusDesc" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rowVar.comments}" style="width:95%" disabled="true" />
+											<p:outputLabel value="Comments" />
+										</h:panelGroup>
+									</p:panelGrid>
+								</p:fieldset>
+							</p:rowExpansion>
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<c:if test="false">
+					<ui:include src="/pages/legacyData/reportingIncludes/legacyReporting.xhtml">
+						<ui:param name="title" value="Legacy Data: Moderator Skills Programme"></ui:param>
+						<ui:param name="reportingBeans" value="#{legacymoderatorskillsprogrammeUI.legacyReportingBeans}"></ui:param>
+						<ui:param name="reportingMap" value="#{legacymoderatorskillsprogrammeUI.columnMap}"></ui:param>
+					</ui:include>
+				</c:if>
+			</div>
+		</div>
+
+	</ui:define>
+</ui:composition>

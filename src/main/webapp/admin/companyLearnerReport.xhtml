@@ -1,0 +1,73 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Company Learners</h1>
+					<p:growl sticky="false">
+						<p:autoUpdate />
+					</p:growl>
+					<h:form id="taskForm">
+						<p:importEnum type="haj.com.entity.enums.RagEnum" />
+						<ui:include src="/pages/includes/download_lazy.xhtml">
+							<ui:param name="file_name" value="Wsp_Status_report" />
+							<ui:param name="target" value="tasksList" />
+						</ui:include>
+						<br />
+						<p:dataTable var="rowVar" value="#{companylearnersUI.dataModel}" filteredValue="#{searchtasksUI.tasksFilteredList}" id="tasksList" emptyMessage="#{lang['no.records.found']}" rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom"
+							paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,20,40,80,160,320" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['learner.name']}">
+								<h:outputText value="#{rowVar.user.firstName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['learner.surname']}">
+								<h:outputText value="#{rowVar.user.lastName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['learner.email']}" width="15%">
+								<h:outputText value="#{rowVar.user.email}" />
+							</p:column>
+
+							<p:column headerText="#{lang['learner.contact.number']}">
+								<h:outputText value="#{rowVar.user.cellNumber}" />
+							</p:column>
+
+							<p:column headerText="#{lang['company.name']}">
+								<h:outputText value="#{rowVar.company.companyName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['company.trading.name']}">
+								<h:outputText value="#{rowVar.company.tradingName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['company.email']}" width="15%">
+								<h:outputText value="#{rowVar.company.email}" />
+							</p:column>
+
+							<p:column headerText="#{lang['company.contact.number']}">
+								<h:outputText value="#{rowVar.company.telNumber}" />
+							</p:column>
+
+							<p:column headerText="#{lang['RAG']}" exportable="false" width="5%" styleClass="Fs13" rendered="false">
+								<center>
+									<h:graphicImage value="/resources/hls/images/red.svg" rendered="#{rowVar.rag eq RagEnum.Red}" width="33" styleClass="animated pulse infinite" />
+									<h:graphicImage value="/resources/hls/images/amber.svg" rendered="#{rowVar.rag eq RagEnum.Amber}" width="31" />
+									<h:graphicImage value="/resources/hls/images/green.svg" rendered="#{rowVar.rag eq RagEnum.Green}" width="22" />
+								</center>
+							</p:column>
+
+							<p:column width="35" exportable="false">
+								<p:commandButton immediate="true" title="View Users" icon="fa fa-user" action="#{backing_bean}" update="" oncomplete="PF('viewUsers').show()">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{backing_bean}" />
+								</p:commandButton>
+							</p:column>
+
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+</ui:composition>

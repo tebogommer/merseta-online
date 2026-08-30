@@ -1,0 +1,70 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<p:growl>
+						<p:autoUpdate />
+					</p:growl>
+					<h:form id="mainForm">
+						<H1>Employee Login Report</H1>
+						<ui:include src="/pages/includes/download_lazy.xhtml">
+							<ui:param name="file_name" value="Employee Login Report" />
+							<ui:param name="target" value="hcEmployeeDataTable" />
+						</ui:include>
+						<div class="EmptyBox10" />
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+						<p:dataTable var="rowVarHostEmp" value="#{employeeTaskReportingUI.hostingCompanyEmployeesDataModel}" id="hcEmployeeDataTable" rowKey="#{rowVarHostEmp.id}" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+							<p:column headerText="#{lang['hosting.company.name']}" groupRow="true" rendered="false">
+								<h:outputText value="#{rowVarHostEmp.hostingCompany.companyName}" />
+							</p:column>
+							<p:column headerText="Employee First Name" sortBy="#{rowVarHostEmp.users.firstName}" filterBy="#{rowVarHostEmp.users.firstName}" filterStyle="width: 98%">
+								<h:outputText value="#{rowVarHostEmp.users.firstName}" />
+							</p:column>
+							<p:column headerText="Employee Last Name" sortBy="#{rowVarHostEmp.users.lastName}" filterBy="#{rowVarHostEmp.users.lastName}" filterStyle="width: 98%">
+								<h:outputText value="#{rowVarHostEmp.users.lastName}" />
+							</p:column>
+							<p:column headerText="#{lang['email']}" sortBy="#{rowVarHostEmp.users.email}" filterBy="#{rowVarHostEmp.users.email}" filterStyle="width: 98%">
+								<h:outputText value="#{rowVarHostEmp.users.email}" />
+							</p:column>
+							<p:column headerText="Temp ID" width="100" rendered="false">
+								<h:outputText value="#{rowVarHostEmp.users.tempRasIdOrPassportNumber}" />
+							</p:column>
+							<p:column headerText="Job Titile">
+								<h:outputText value="#{rowVarHostEmp.jobTitle.description}" />
+							</p:column>
+							<p:column headerText="Office">
+								<h:outputText value="#{rowVarHostEmp.users.office.description}" />
+							</p:column>
+							<p:column headerText="User Status"  sortBy="#{rowVarHostEmp.users.status}" >
+								<h:outputText value="#{rowVarHostEmp.users.status.friendlyName}" />
+							</p:column>
+							<p:column headerText="Email Confirm Date" sortBy="#{rowVarHostEmp.users.emailConfirmDate}">
+								<p:outputLabel value="#{rowVarHostEmp.users.emailConfirmDate}" rendered="#{rowVarHostEmp.users.emailConfirmDate ne null}" >
+									<f:convertDateTime pattern="dd MMMM yyyy HH:mm:ss" />
+								</p:outputLabel>
+								<p:outputLabel value="N/A" rendered="#{rowVarHostEmp.users.emailConfirmDate eq null}" />
+							</p:column>
+							<p:column headerText="Last Login Date" sortBy="#{rowVarHostEmp.users.lastLogin}">
+								<p:outputLabel value="#{rowVarHostEmp.users.lastLogin}" rendered="#{rowVarHostEmp.users.lastLogin ne null}" >
+									<f:convertDateTime pattern="dd MMMM yyyy HH:mm:ss" />
+								</p:outputLabel>
+								<p:outputLabel value="N/A" rendered="#{rowVarHostEmp.users.lastLogin eq null}" />
+							</p:column>
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+			<h:form>
+				<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+				<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+			</h:form>
+		</p:confirmDialog>
+
+	</ui:define>
+</ui:composition>

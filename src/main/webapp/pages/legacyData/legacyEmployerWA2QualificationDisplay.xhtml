@@ -1,0 +1,134 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<p:growl sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+						<h1>Legacy Data: EmployerWA2 Qualification</h1>
+						<p:outputLabel value="Data Source: Employer WA2.xlsx " />
+						<br />
+						<p:outputLabel value="Tab: Qualification" />
+						<div class="EmptyBox10" />
+
+						<c:if test="#{legacyemployerwa2qualificationUI.displayDownload}">
+							<ui:include src="/pages/includes/download_lazy.xhtml">
+								<ui:param name="file_name" value="legacyemployerwa2qualificationList_dataextract" />
+								<ui:param name="target" value="legacyemployerwa2qualificationList" />
+							</ui:include>
+							<div class="EmptyBox10" />
+						</c:if>
+
+						<p:dataTable var="rowVar" value="#{legacyemployerwa2qualificationUI.dataModel}" filteredValue="#{legacyemployerwa2qualificationUI.legacyEmployerWA2QualificationfilteredList}" id="legacyemployerwa2qualificationList" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true"
+							lazy="true">
+							<p:column headerText="DATE TIME CREATED">
+								<h:outputText value="#{rowVar.createDate}">
+									<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="NSDMD REF ID">
+								<h:outputText value="#{rowVar.id}" />
+							</p:column>
+							<p:column headerText="Linked_SDL" filterBy="#{rowVar.linkedSld}">
+								<h:outputText value="#{rowVar.linkedSld}" />
+							</p:column>
+							<p:column headerText="SDLNo" filterBy="#{rowVar.sdlNo}">
+								<h:outputText value="#{rowVar.sdlNo}" />
+							</p:column>
+							<p:column headerText="Linked_SDL_Number" filterBy="#{rowVar.linkedSdlNumber}">
+								<h:outputText value="#{rowVar.linkedSdlNumber}" />
+							</p:column>
+							<p:column headerText="OrganisationNameLegal" filterBy="#{rowVar.organisationNameLegal}">
+								<h:outputText value="#{rowVar.organisationNameLegal}" />
+							</p:column>
+							<p:column headerText="OrganisationNameTrade" filterBy="#{rowVar.organisationNameTrade}">
+								<h:outputText value="#{rowVar.organisationNameTrade}" />
+							</p:column>
+							<p:column headerText="Phone">
+								<h:outputText value="#{rowVar.phone}" />
+							</p:column>
+							<p:column headerText="Fax">
+								<h:outputText value="#{rowVar.fax}" />
+							</p:column>
+							<p:column headerText="EmailAddress">
+								<h:outputText value="#{rowVar.emailAddress}" />
+							</p:column>
+							<p:column headerText="CompanyRegistrationNo">
+								<h:outputText value="#{rowVar.companyRegistrationNo}" />
+							</p:column>
+							<p:column headerText="SicCode">
+								<h:outputText value="#{rowVar.sicCode}" />
+							</p:column>
+
+							<p:rowExpansion>
+								<p:fieldset legend="NSDMS REF ID: #{rowVar.id}" style="margin-bottom:20px">
+									<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="VVVVVVVVV" style="width:95%" disabled="true" />
+											<p:outputLabel value="NNNNNNNN" />
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rowVar.sicCodeDescription}" style="width:95%" disabled="true" />
+											<p:outputLabel value="SicCodeDescription" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rowVar.orgCatSize}" style="width:95%" disabled="true" />
+											<p:outputLabel value="OrgCatSize" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rowVar.chamberDescription}" style="width:95%" disabled="true" />
+											<p:outputLabel value="ChamberDescription" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rowVar.qualCode}" style="width:95%" disabled="true" />
+											<p:outputLabel value="QualCode" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rowVar.qualDesc}" style="width:95%" disabled="true" />
+											<p:outputLabel value="QualDesc" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rowVar.applicationRecDate}" style="width:95%" disabled="true" />
+											<p:outputLabel value="ApplicationRecDate" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rowVar.accreditationStartDate}" style="width:95%" disabled="true" />
+											<p:outputLabel value="AccreditationStartDate" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rowVar.accreditationEndDate}" style="width:95%" disabled="true" />
+											<p:outputLabel value="AccreditationEndDate" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rowVar.dateCreated}" style="width:95%" disabled="true" />
+											<p:outputLabel value="DateCreated" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rowVar.waEmployerStatus}" style="width:95%" disabled="true" />
+											<p:outputLabel value="WAEmployerStatus" />
+										</h:panelGroup>
+									</p:panelGrid>
+								</p:fieldset>
+							</p:rowExpansion>
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<c:if test="false">
+					<ui:include src="/pages/legacyData/reportingIncludes/legacyReporting.xhtml">
+						<ui:param name="title" value="Legacy Data: EmployerWA2 Qualification"></ui:param>
+						<ui:param name="reportingBeans" value="#{legacyemployerwa2qualificationUI.legacyReportingBeans}"></ui:param>
+						<ui:param name="reportingMap" value="#{legacyemployerwa2qualificationUI.columnMap}"></ui:param>
+					</ui:include>
+				</c:if>
+			</div>
+		</div>
+
+	</ui:define>
+</ui:composition>

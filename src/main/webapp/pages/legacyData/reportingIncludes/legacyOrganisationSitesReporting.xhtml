@@ -1,0 +1,1537 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+
+	<div class="card card-w-title">
+		<h:form>
+			<h2>Legacy Data: Organisation Sites - Reporting</h2>
+			<p:tabView>
+				<p:tab title="Information Tab">
+					<div class="EmptyBox5" />
+					<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacyorganisationsitesUI.totalNotProcessed}" style="width:95%" disabled="true" />
+							<p:outputLabel value="Total Not Processed" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacyorganisationsitesUI.totalProcessed}" style="width:95%" disabled="true" />
+							<p:outputLabel value="Total Processed" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacyorganisationsitesUI.nonDuplicateSiteNumber}" style="width:95%" disabled="true" />
+							<p:outputLabel value="Total Non-Duplicate SDL_Number Processed" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacyorganisationsitesUI.duplicateSiteNumber}" style="width:95%" disabled="true" />
+							<p:outputLabel value="Total Duplicate SDL_Number Processed" />
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacyorganisationsitesUI.mainSdlNumberOnSars}" style="width:95%" disabled="true" />
+							<p:outputLabel value="Total MainSDL Processed On SARS Employer File" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacyorganisationsitesUI.mainSdlNumberNotOnSars}" style="width:95%" disabled="true" />
+							<p:outputLabel value="Total MainSDL Processed Not On SARS Employer File" />
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacyorganisationsitesUI.linkedSdlNumberOnSars}" style="width:95%" disabled="true" />
+							<p:outputLabel value="Total Linked_SDL_Number Processed On SARS Employer File" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacyorganisationsitesUI.linkedSdlNumberNotOnSars}" style="width:95%" disabled="true" />
+							<p:outputLabel value="Total Linked_SDL_Number Processed Not On SARS Employer File" />
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{legacyorganisationsitesUI.notLinkedToCompany}" style="width:95%" disabled="true" />
+							<p:outputLabel value="Total Processed Entries Not Linked To Employer On Company List" />
+						</h:panelGroup>
+					</p:panelGrid>
+				</p:tab>
+
+				<p:tab title="Duplicate SDL_Number Processed">
+					<!-- Duplicate Reporting Results -->
+					<ui:include src="/pages/includes/filterGuide.xhtml" />
+					<p:dataTable var="rowVarD" value="#{legacyorganisationsitesUI.duplicateSiteNumberDataModel}" rowKey="#{rowVarD.id}" paginator="true" rows="5" paginatorPosition="bottom"
+						paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+						<f:facet name="header"> Duplicate SDL_Number Processed </f:facet>
+						<p:column style="width:5%" headerText="Expand">
+							<p:rowToggler />
+						</p:column>
+						<p:column headerText="NSDMS REF ID">
+							<h:outputText value="#{rowVarD.id}" />
+						</p:column>
+						<p:column headerText="OrganisationID" filterBy="#{rowVarD.organisationId}">
+							<h:outputText value="#{rowVarD.organisationId}" />
+						</p:column>
+						<p:column headerText="SDL_Number" filterBy="#{rowVarD.sdlNumber}">
+							<h:outputText value="#{rowVarD.sdlNumber}" />
+						</p:column>
+						<p:column headerText="Linked_SDL" filterBy="#{rowVarD.linkedSdl}">
+							<h:outputText value="#{rowVarD.linkedSdl}" />
+						</p:column>
+						<p:column headerText="MainSDL" filterBy="#{rowVarD.mainSDL}">
+							<h:outputText value="#{rowVarD.mainSDL}" />
+						</p:column>
+						<p:column headerText="OrganisationNameLegal" filterBy="#{rowVarD.organisationNameLegal}">
+							<h:outputText value="#{rowVarD.organisationNameLegal}" />
+						</p:column>
+						<p:column headerText="OrganisationNameTrade">
+							<h:outputText value="#{rowVarD.organisationNameTrade}" />
+						</p:column>
+						<p:column headerText="LinkedOrganisationID">
+							<h:outputText value="#{rowVarD.linkedOrganisationID}" />
+						</p:column>
+						<p:column headerText="Linked_SDL_Number">
+							<h:outputText value="#{rowVarD.linkedSdlNumber}" />
+						</p:column>
+						<p:column headerText="LegalStatus">
+							<h:outputText value="#{rowVarD.legalStatus}" />
+						</p:column>
+						<p:column headerText="SicCode">
+							<h:outputText value="#{rowVarD.sicCode}" />
+						</p:column>
+						<p:rowExpansion>
+							<p:fieldset legend="NSDMS REF ID: #{rowVarD.id}" style="margin-bottom:20px">
+								<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.sicCodeDescription}" style="width:95%" disabled="true" />
+										<p:outputLabel value="SicCodeDescription" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.chamberDescription}" style="width:95%" disabled="true" />
+										<p:outputLabel value="ChamberDescription" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.mainBusinessActivity}" style="width:95%" disabled="true" />
+										<p:outputLabel value="MainBusinessActivity" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.phone}" style="width:95%" disabled="true" />
+										<p:outputLabel value="Phone" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.fax}" style="width:95%" disabled="true" />
+										<p:outputLabel value="Fax" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.emailAddress}" style="width:95%" disabled="true" />
+										<p:outputLabel value="EmailAddress" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.websiteURL}" style="width:95%" disabled="true" />
+										<p:outputLabel value="Website_URL" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.sarsRegistrationNo}" style="width:95%" disabled="true" />
+										<p:outputLabel value="SARSRegistrationNo" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.companyRegistrationNo}" style="width:95%" disabled="true" />
+										<p:outputLabel value="CompanyRegistrationNo" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.payroll}" style="width:95%" disabled="true" />
+										<p:outputLabel value="Payroll" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.geographicAreaDesc}" style="width:95%" disabled="true" />
+										<p:outputLabel value="GeographicAreaDesc" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.totalEmployment}" style="width:95%" disabled="true" />
+										<p:outputLabel value="TotalEmployment" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.totalEmployment}" style="width:95%" disabled="true" />
+										<p:outputLabel value="TotalEmployment" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.annualTurnover}" style="width:95%" disabled="true" />
+										<p:outputLabel value="AnnualTurnover" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.companyRegistrationNo2}" style="width:95%" disabled="true" />
+										<p:outputLabel value="CompanyRegistrationNo2" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.mainBusinessActivityTwo}" style="width:95%" disabled="true" />
+										<p:outputLabel value="MainBusinessActivity2" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.deleteStatus}" style="width:95%" disabled="true" />
+										<p:outputLabel value="DeleteStatus" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.organisationStatusEffectiveDate}" style="width:95%" disabled="true" />
+										<p:outputLabel value="OrganisationStatusEffectiveDate" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.compRegYear}" style="width:95%" disabled="true" />
+										<p:outputLabel value="CompRegYear" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.companyYearsTrading}" style="width:95%" disabled="true" />
+										<p:outputLabel value="CompanyYearsTrading" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.communicationStatus}" style="width:95%" disabled="true" />
+										<p:outputLabel value="CommunicationStatus" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.financialYearStart}" style="width:95%" disabled="true" />
+										<p:outputLabel value="FinancialYearStart" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.financialYearEnd}" style="width:95%" disabled="true" />
+										<p:outputLabel value="FinancialYearEnd" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.dateCreated}" style="width:95%" disabled="true" />
+										<p:outputLabel value="DateCreated" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.lastDateChanged}" style="width:95%" disabled="true" />
+										<p:outputLabel value="LastDateChanged" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.possibleSDLNo}" style="width:95%" disabled="true" />
+										<p:outputLabel value="PossibleSDLNo" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.nqfLevel}" style="width:95%" disabled="true" />
+										<p:outputLabel value="NQFLevel" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.registrationYear}" style="width:95%" disabled="true" />
+										<p:outputLabel value="RegistrationYear" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.yearsTrading}" style="width:95%" disabled="true" />
+										<p:outputLabel value="YearsTrading" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.interSetaTransfer}" style="width:95%" disabled="true" />
+										<p:outputLabel value="InterSetaTransfer" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.setaStatus}" style="width:95%" disabled="true" />
+										<p:outputLabel value="SETAStatus" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.coreBusinessDesc}" style="width:95%" disabled="true" />
+										<p:outputLabel value="CoreBusinessDesc" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.sector}" style="width:95%" disabled="true" />
+										<p:outputLabel value="Sector" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.isCBO}" style="width:95%" disabled="true" />
+										<p:outputLabel value="IsCBO" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.isNGO}" style="width:95%" disabled="true" />
+										<p:outputLabel value="IsNGO" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.isStwentyOne}" style="width:95%" disabled="true" />
+										<p:outputLabel value="IsS21" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.isBEE}" style="width:95%" disabled="true" />
+										<p:outputLabel value="IsBEE" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.subSector}" style="width:95%" disabled="true" />
+										<p:outputLabel value="SubSector" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.nonLevyNumber}" style="width:95%" disabled="true" />
+										<p:outputLabel value="NonLevyNumber" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.uifNumber}" style="width:95%" disabled="true" />
+										<p:outputLabel value="UIFNumber" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.entityType}" style="width:95%" disabled="true" />
+										<p:outputLabel value="EntityType" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.payeNo}" style="width:95%" disabled="true" />
+										<p:outputLabel value="PAYENo" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.bbbeeOne}" style="width:95%" disabled="true" />
+										<p:outputLabel value="BBBEE1" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.bbbeeTwo}" style="width:95%" disabled="true" />
+										<p:outputLabel value="BBBEE2" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.bbbeeThree}" style="width:95%" disabled="true" />
+										<p:outputLabel value="BBBEE3" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.bbbeeFour}" style="width:95%" disabled="true" />
+										<p:outputLabel value="BBBEE4" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.regCiproNo}" style="width:95%" disabled="true" />
+										<p:outputLabel value="RegCiproNo" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.collegeId}" style="width:95%" disabled="true" />
+										<p:outputLabel value="CollegeId" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.institution}" style="width:95%" disabled="true" />
+										<p:outputLabel value="Institution" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.partnershipDesc}" style="width:95%" disabled="true" />
+										<p:outputLabel value="PartnershipDesc" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.magisterialDistrict}" style="width:95%" disabled="true" />
+										<p:outputLabel value="MagisterialDistrict" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.orgCatSize}" style="width:95%" disabled="true" />
+										<p:outputLabel value="OrgCatSize" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.region}" style="width:95%" disabled="true" />
+										<p:outputLabel value="Region" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.orgCategoryDesc}" style="width:95%" disabled="true" />
+										<p:outputLabel value="OrgCategoryDesc" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.unionAgreement}" style="width:95%" disabled="true" />
+										<p:outputLabel value="UnionAgreement" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.description}" style="width:95%" disabled="true" />
+										<p:outputLabel value="Description" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.isNew}" style="width:95%" disabled="true" />
+										<p:outputLabel value="IsNew" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.regDate}" style="width:95%" disabled="true" />
+										<p:outputLabel value="RegDate" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.confirmSICCode}" style="width:95%" disabled="true" />
+										<p:outputLabel value="ConfirmSICCode" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.coreBusiness}" style="width:95%" disabled="true" />
+										<p:outputLabel value="CoreBusiness" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.province}" style="width:95%" disabled="true" />
+										<p:outputLabel value="Province" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.smsChamber}" style="width:95%" disabled="true" />
+										<p:outputLabel value="SMS_Chamber" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarD.sicCodeChamber}" style="width:95%" disabled="true" />
+										<p:outputLabel value="SIC_Code_Chamber" />
+									</h:panelGroup>
+								</p:panelGrid>
+							</p:fieldset>
+						</p:rowExpansion>
+					</p:dataTable>
+				</p:tab>
+				<p:tab title="MainSDL Processed Not On SARS Employer File">
+					<!-- MainSDL Reporting Results -->
+					<ui:include src="/pages/includes/filterGuide.xhtml" />
+					<p:dataTable var="rowVarMainSdl" value="#{legacyorganisationsitesUI.mainSdlNumberNotOnSarsDataModel}" rowKey="#{rowVarMainSdl.id}" paginator="true" rows="5" paginatorPosition="bottom"
+						paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+						<f:facet name="header">MainSDL Processed Not On SARS Employer File</f:facet>
+						<p:column style="width:5%" headerText="Expand">
+							<p:rowToggler />
+						</p:column>
+						<p:column headerText="NSDMS REF ID">
+							<h:outputText value="#{rowVarMainSdl.id}" />
+						</p:column>
+						<p:column headerText="OrganisationID" filterBy="#{rowVarMainSdl.organisationId}">
+							<h:outputText value="#{rowVarMainSdl.organisationId}" />
+						</p:column>
+						<p:column headerText="SDL_Number" filterBy="#{rowVarMainSdl.sdlNumber}">
+							<h:outputText value="#{rowVarMainSdl.sdlNumber}" />
+						</p:column>
+						<p:column headerText="Linked_SDL" filterBy="#{rowVarMainSdl.linkedSdl}">
+							<h:outputText value="#{rowVarMainSdl.linkedSdl}" />
+						</p:column>
+						<p:column headerText="MainSDL" filterBy="#{rowVarMainSdl.mainSDL}">
+							<h:outputText value="#{rowVarMainSdl.mainSDL}" />
+						</p:column>
+						<p:column headerText="OrganisationNameLegal" filterBy="#{rowVarMainSdl.organisationNameLegal}">
+							<h:outputText value="#{rowVarMainSdl.organisationNameLegal}" />
+						</p:column>
+						<p:column headerText="OrganisationNameTrade">
+							<h:outputText value="#{rowVarMainSdl.organisationNameTrade}" />
+						</p:column>
+						<p:column headerText="LinkedOrganisationID">
+							<h:outputText value="#{rowVarMainSdl.linkedOrganisationID}" />
+						</p:column>
+						<p:column headerText="Linked_SDL_Number">
+							<h:outputText value="#{rowVarMainSdl.linkedSdlNumber}" />
+						</p:column>
+						<p:column headerText="LegalStatus">
+							<h:outputText value="#{rowVarMainSdl.legalStatus}" />
+						</p:column>
+						<p:column headerText="SicCode">
+							<h:outputText value="#{rowVarMainSdl.sicCode}" />
+						</p:column>
+						<p:rowExpansion>
+							<p:fieldset legend="NSDMS REF ID: #{rowVarMainSdl.id}" style="margin-bottom:20px">
+								<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.sicCodeDescription}" style="width:95%" disabled="true" />
+										<p:outputLabel value="SicCodeDescription" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.chamberDescription}" style="width:95%" disabled="true" />
+										<p:outputLabel value="ChamberDescription" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.mainBusinessActivity}" style="width:95%" disabled="true" />
+										<p:outputLabel value="MainBusinessActivity" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.phone}" style="width:95%" disabled="true" />
+										<p:outputLabel value="Phone" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.fax}" style="width:95%" disabled="true" />
+										<p:outputLabel value="Fax" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.emailAddress}" style="width:95%" disabled="true" />
+										<p:outputLabel value="EmailAddress" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.websiteURL}" style="width:95%" disabled="true" />
+										<p:outputLabel value="Website_URL" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.sarsRegistrationNo}" style="width:95%" disabled="true" />
+										<p:outputLabel value="SARSRegistrationNo" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.companyRegistrationNo}" style="width:95%" disabled="true" />
+										<p:outputLabel value="CompanyRegistrationNo" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.payroll}" style="width:95%" disabled="true" />
+										<p:outputLabel value="Payroll" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.geographicAreaDesc}" style="width:95%" disabled="true" />
+										<p:outputLabel value="GeographicAreaDesc" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.totalEmployment}" style="width:95%" disabled="true" />
+										<p:outputLabel value="TotalEmployment" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.totalEmployment}" style="width:95%" disabled="true" />
+										<p:outputLabel value="TotalEmployment" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.annualTurnover}" style="width:95%" disabled="true" />
+										<p:outputLabel value="AnnualTurnover" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.companyRegistrationNo2}" style="width:95%" disabled="true" />
+										<p:outputLabel value="CompanyRegistrationNo2" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.mainBusinessActivityTwo}" style="width:95%" disabled="true" />
+										<p:outputLabel value="MainBusinessActivity2" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.deleteStatus}" style="width:95%" disabled="true" />
+										<p:outputLabel value="DeleteStatus" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.organisationStatusEffectiveDate}" style="width:95%" disabled="true" />
+										<p:outputLabel value="OrganisationStatusEffectiveDate" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.compRegYear}" style="width:95%" disabled="true" />
+										<p:outputLabel value="CompRegYear" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.companyYearsTrading}" style="width:95%" disabled="true" />
+										<p:outputLabel value="CompanyYearsTrading" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.communicationStatus}" style="width:95%" disabled="true" />
+										<p:outputLabel value="CommunicationStatus" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.financialYearStart}" style="width:95%" disabled="true" />
+										<p:outputLabel value="FinancialYearStart" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.financialYearEnd}" style="width:95%" disabled="true" />
+										<p:outputLabel value="FinancialYearEnd" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.dateCreated}" style="width:95%" disabled="true" />
+										<p:outputLabel value="DateCreated" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.lastDateChanged}" style="width:95%" disabled="true" />
+										<p:outputLabel value="LastDateChanged" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.possibleSDLNo}" style="width:95%" disabled="true" />
+										<p:outputLabel value="PossibleSDLNo" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.nqfLevel}" style="width:95%" disabled="true" />
+										<p:outputLabel value="NQFLevel" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.registrationYear}" style="width:95%" disabled="true" />
+										<p:outputLabel value="RegistrationYear" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.yearsTrading}" style="width:95%" disabled="true" />
+										<p:outputLabel value="YearsTrading" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.interSetaTransfer}" style="width:95%" disabled="true" />
+										<p:outputLabel value="InterSetaTransfer" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.setaStatus}" style="width:95%" disabled="true" />
+										<p:outputLabel value="SETAStatus" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.coreBusinessDesc}" style="width:95%" disabled="true" />
+										<p:outputLabel value="CoreBusinessDesc" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.sector}" style="width:95%" disabled="true" />
+										<p:outputLabel value="Sector" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.isCBO}" style="width:95%" disabled="true" />
+										<p:outputLabel value="IsCBO" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.isNGO}" style="width:95%" disabled="true" />
+										<p:outputLabel value="IsNGO" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.isStwentyOne}" style="width:95%" disabled="true" />
+										<p:outputLabel value="IsS21" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.isBEE}" style="width:95%" disabled="true" />
+										<p:outputLabel value="IsBEE" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.subSector}" style="width:95%" disabled="true" />
+										<p:outputLabel value="SubSector" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.nonLevyNumber}" style="width:95%" disabled="true" />
+										<p:outputLabel value="NonLevyNumber" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.uifNumber}" style="width:95%" disabled="true" />
+										<p:outputLabel value="UIFNumber" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.entityType}" style="width:95%" disabled="true" />
+										<p:outputLabel value="EntityType" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.payeNo}" style="width:95%" disabled="true" />
+										<p:outputLabel value="PAYENo" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.bbbeeOne}" style="width:95%" disabled="true" />
+										<p:outputLabel value="BBBEE1" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.bbbeeTwo}" style="width:95%" disabled="true" />
+										<p:outputLabel value="BBBEE2" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.bbbeeThree}" style="width:95%" disabled="true" />
+										<p:outputLabel value="BBBEE3" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.bbbeeFour}" style="width:95%" disabled="true" />
+										<p:outputLabel value="BBBEE4" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.regCiproNo}" style="width:95%" disabled="true" />
+										<p:outputLabel value="RegCiproNo" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.collegeId}" style="width:95%" disabled="true" />
+										<p:outputLabel value="CollegeId" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.institution}" style="width:95%" disabled="true" />
+										<p:outputLabel value="Institution" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.partnershipDesc}" style="width:95%" disabled="true" />
+										<p:outputLabel value="PartnershipDesc" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.magisterialDistrict}" style="width:95%" disabled="true" />
+										<p:outputLabel value="MagisterialDistrict" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.orgCatSize}" style="width:95%" disabled="true" />
+										<p:outputLabel value="OrgCatSize" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.region}" style="width:95%" disabled="true" />
+										<p:outputLabel value="Region" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.orgCategoryDesc}" style="width:95%" disabled="true" />
+										<p:outputLabel value="OrgCategoryDesc" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.unionAgreement}" style="width:95%" disabled="true" />
+										<p:outputLabel value="UnionAgreement" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.description}" style="width:95%" disabled="true" />
+										<p:outputLabel value="Description" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.isNew}" style="width:95%" disabled="true" />
+										<p:outputLabel value="IsNew" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.regDate}" style="width:95%" disabled="true" />
+										<p:outputLabel value="RegDate" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.confirmSICCode}" style="width:95%" disabled="true" />
+										<p:outputLabel value="ConfirmSICCode" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.coreBusiness}" style="width:95%" disabled="true" />
+										<p:outputLabel value="CoreBusiness" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.province}" style="width:95%" disabled="true" />
+										<p:outputLabel value="Province" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.smsChamber}" style="width:95%" disabled="true" />
+										<p:outputLabel value="SMS_Chamber" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarMainSdl.sicCodeChamber}" style="width:95%" disabled="true" />
+										<p:outputLabel value="SIC_Code_Chamber" />
+									</h:panelGroup>
+								</p:panelGrid>
+							</p:fieldset>
+						</p:rowExpansion>
+					</p:dataTable>
+				</p:tab>
+				<p:tab title="Linked_SDL_Number Processed Not On SARS Employer File">
+					<ui:include src="/pages/includes/filterGuide.xhtml" />
+					<p:dataTable var="rowVarLSN" value="#{legacyorganisationsitesUI.linkedSdlNumberNotOnSarsDataModel}" rowKey="#{rowVarLSN.id}" paginator="true" rows="5" paginatorPosition="bottom"
+						paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+						<f:facet name="header">Linked_SDL_Number Processed Not On SARS Employer File</f:facet>
+						<p:column style="width:5%" headerText="Expand">
+							<p:rowToggler />
+						</p:column>
+						<p:column headerText="NSDMS REF ID">
+							<h:outputText value="#{rowVarLSN.id}" />
+						</p:column>
+						<p:column headerText="OrganisationID" filterBy="#{rowVarLSN.organisationId}">
+							<h:outputText value="#{rowVarLSN.organisationId}" />
+						</p:column>
+						<p:column headerText="SDL_Number" filterBy="#{rowVarLSN.sdlNumber}">
+							<h:outputText value="#{rowVarLSN.sdlNumber}" />
+						</p:column>
+						<p:column headerText="Linked_SDL" filterBy="#{rowVarLSN.linkedSdl}">
+							<h:outputText value="#{rowVarLSN.linkedSdl}" />
+						</p:column>
+						<p:column headerText="MainSDL" filterBy="#{rowVarLSN.mainSDL}">
+							<h:outputText value="#{rowVarLSN.mainSDL}" />
+						</p:column>
+						<p:column headerText="OrganisationNameLegal" filterBy="#{rowVarLSN.organisationNameLegal}">
+							<h:outputText value="#{rowVarLSN.organisationNameLegal}" />
+						</p:column>
+						<p:column headerText="OrganisationNameTrade">
+							<h:outputText value="#{rowVarLSN.organisationNameTrade}" />
+						</p:column>
+						<p:column headerText="LinkedOrganisationID">
+							<h:outputText value="#{rowVarLSN.linkedOrganisationID}" />
+						</p:column>
+						<p:column headerText="Linked_SDL_Number">
+							<h:outputText value="#{rowVarLSN.linkedSdlNumber}" />
+						</p:column>
+						<p:column headerText="LegalStatus">
+							<h:outputText value="#{rowVarLSN.legalStatus}" />
+						</p:column>
+						<p:column headerText="SicCode">
+							<h:outputText value="#{rowVarLSN.sicCode}" />
+						</p:column>
+						<p:column width="80" rendered="false">
+							<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":legacyorganisationsitesInsForm:legacyorganisationsitesInsGrid">
+								<f:setPropertyActionListener value="#{rowVar}" target="#{legacyorganisationsitesUI.legacyorganisationsites}" />
+							</p:commandButton>
+							<p:spacer width="5" />
+							<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:legacyorganisationsitesList" action="#{legacyorganisationsitesUI.legacyorganisationsitesDelete}">
+								<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+								<f:setPropertyActionListener value="#{rowVar}" target="#{legacyorganisationsitesUI.legacyorganisationsites}" />
+							</p:commandButton>
+						</p:column>
+						<p:rowExpansion>
+							<p:fieldset legend="NSDMS REF ID: #{rowVarLSN.id}" style="margin-bottom:20px">
+								<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.sicCodeDescription}" style="width:95%" disabled="true" />
+										<p:outputLabel value="SicCodeDescription" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.chamberDescription}" style="width:95%" disabled="true" />
+										<p:outputLabel value="ChamberDescription" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.mainBusinessActivity}" style="width:95%" disabled="true" />
+										<p:outputLabel value="MainBusinessActivity" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.phone}" style="width:95%" disabled="true" />
+										<p:outputLabel value="Phone" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.fax}" style="width:95%" disabled="true" />
+										<p:outputLabel value="Fax" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.emailAddress}" style="width:95%" disabled="true" />
+										<p:outputLabel value="EmailAddress" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.websiteURL}" style="width:95%" disabled="true" />
+										<p:outputLabel value="Website_URL" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.sarsRegistrationNo}" style="width:95%" disabled="true" />
+										<p:outputLabel value="SARSRegistrationNo" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.companyRegistrationNo}" style="width:95%" disabled="true" />
+										<p:outputLabel value="CompanyRegistrationNo" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.payroll}" style="width:95%" disabled="true" />
+										<p:outputLabel value="Payroll" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.geographicAreaDesc}" style="width:95%" disabled="true" />
+										<p:outputLabel value="GeographicAreaDesc" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.totalEmployment}" style="width:95%" disabled="true" />
+										<p:outputLabel value="TotalEmployment" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.totalEmployment}" style="width:95%" disabled="true" />
+										<p:outputLabel value="TotalEmployment" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.annualTurnover}" style="width:95%" disabled="true" />
+										<p:outputLabel value="AnnualTurnover" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.companyRegistrationNo2}" style="width:95%" disabled="true" />
+										<p:outputLabel value="CompanyRegistrationNo2" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.mainBusinessActivityTwo}" style="width:95%" disabled="true" />
+										<p:outputLabel value="MainBusinessActivity2" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.deleteStatus}" style="width:95%" disabled="true" />
+										<p:outputLabel value="DeleteStatus" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.organisationStatusEffectiveDate}" style="width:95%" disabled="true" />
+										<p:outputLabel value="OrganisationStatusEffectiveDate" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.compRegYear}" style="width:95%" disabled="true" />
+										<p:outputLabel value="CompRegYear" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.companyYearsTrading}" style="width:95%" disabled="true" />
+										<p:outputLabel value="CompanyYearsTrading" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.communicationStatus}" style="width:95%" disabled="true" />
+										<p:outputLabel value="CommunicationStatus" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.financialYearStart}" style="width:95%" disabled="true" />
+										<p:outputLabel value="FinancialYearStart" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.financialYearEnd}" style="width:95%" disabled="true" />
+										<p:outputLabel value="FinancialYearEnd" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.dateCreated}" style="width:95%" disabled="true" />
+										<p:outputLabel value="DateCreated" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.lastDateChanged}" style="width:95%" disabled="true" />
+										<p:outputLabel value="LastDateChanged" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.possibleSDLNo}" style="width:95%" disabled="true" />
+										<p:outputLabel value="PossibleSDLNo" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.nqfLevel}" style="width:95%" disabled="true" />
+										<p:outputLabel value="NQFLevel" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.registrationYear}" style="width:95%" disabled="true" />
+										<p:outputLabel value="RegistrationYear" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.yearsTrading}" style="width:95%" disabled="true" />
+										<p:outputLabel value="YearsTrading" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.interSetaTransfer}" style="width:95%" disabled="true" />
+										<p:outputLabel value="InterSetaTransfer" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.setaStatus}" style="width:95%" disabled="true" />
+										<p:outputLabel value="SETAStatus" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.coreBusinessDesc}" style="width:95%" disabled="true" />
+										<p:outputLabel value="CoreBusinessDesc" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.sector}" style="width:95%" disabled="true" />
+										<p:outputLabel value="Sector" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.isCBO}" style="width:95%" disabled="true" />
+										<p:outputLabel value="IsCBO" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.isNGO}" style="width:95%" disabled="true" />
+										<p:outputLabel value="IsNGO" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.isStwentyOne}" style="width:95%" disabled="true" />
+										<p:outputLabel value="IsS21" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.isBEE}" style="width:95%" disabled="true" />
+										<p:outputLabel value="IsBEE" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.subSector}" style="width:95%" disabled="true" />
+										<p:outputLabel value="SubSector" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.nonLevyNumber}" style="width:95%" disabled="true" />
+										<p:outputLabel value="NonLevyNumber" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.uifNumber}" style="width:95%" disabled="true" />
+										<p:outputLabel value="UIFNumber" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.entityType}" style="width:95%" disabled="true" />
+										<p:outputLabel value="EntityType" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.payeNo}" style="width:95%" disabled="true" />
+										<p:outputLabel value="PAYENo" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.bbbeeOne}" style="width:95%" disabled="true" />
+										<p:outputLabel value="BBBEE1" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.bbbeeTwo}" style="width:95%" disabled="true" />
+										<p:outputLabel value="BBBEE2" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.bbbeeThree}" style="width:95%" disabled="true" />
+										<p:outputLabel value="BBBEE3" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.bbbeeFour}" style="width:95%" disabled="true" />
+										<p:outputLabel value="BBBEE4" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.regCiproNo}" style="width:95%" disabled="true" />
+										<p:outputLabel value="RegCiproNo" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.collegeId}" style="width:95%" disabled="true" />
+										<p:outputLabel value="CollegeId" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.institution}" style="width:95%" disabled="true" />
+										<p:outputLabel value="Institution" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.partnershipDesc}" style="width:95%" disabled="true" />
+										<p:outputLabel value="PartnershipDesc" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.magisterialDistrict}" style="width:95%" disabled="true" />
+										<p:outputLabel value="MagisterialDistrict" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.orgCatSize}" style="width:95%" disabled="true" />
+										<p:outputLabel value="OrgCatSize" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.region}" style="width:95%" disabled="true" />
+										<p:outputLabel value="Region" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.orgCategoryDesc}" style="width:95%" disabled="true" />
+										<p:outputLabel value="OrgCategoryDesc" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.unionAgreement}" style="width:95%" disabled="true" />
+										<p:outputLabel value="UnionAgreement" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.description}" style="width:95%" disabled="true" />
+										<p:outputLabel value="Description" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.isNew}" style="width:95%" disabled="true" />
+										<p:outputLabel value="IsNew" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.regDate}" style="width:95%" disabled="true" />
+										<p:outputLabel value="RegDate" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.confirmSICCode}" style="width:95%" disabled="true" />
+										<p:outputLabel value="ConfirmSICCode" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.coreBusiness}" style="width:95%" disabled="true" />
+										<p:outputLabel value="CoreBusiness" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.province}" style="width:95%" disabled="true" />
+										<p:outputLabel value="Province" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.smsChamber}" style="width:95%" disabled="true" />
+										<p:outputLabel value="SMS_Chamber" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarLSN.sicCodeChamber}" style="width:95%" disabled="true" />
+										<p:outputLabel value="SIC_Code_Chamber" />
+									</h:panelGroup>
+								</p:panelGrid>
+							</p:fieldset>
+						</p:rowExpansion>
+					</p:dataTable>
+				</p:tab>
+				<p:tab title="Entries Not Linked To Employer On Company List">
+					<ui:include src="/pages/includes/filterGuide.xhtml" />
+					<p:dataTable var="rowVarNC" value="#{legacyorganisationsitesUI.notLinkedToCompanyDataModel}" rowKey="#{rowVarNC.id}" paginator="true" rows="5" paginatorPosition="bottom"
+						paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+						<f:facet name="header">Entries Not Linked To Employer On Company List</f:facet>
+						<p:column style="width:5%" headerText="Expand">
+							<p:rowToggler />
+						</p:column>
+						<p:column headerText="NSDMS REF ID">
+							<h:outputText value="#{rowVarNC.id}" />
+						</p:column>
+						<p:column headerText="OrganisationID" filterBy="#{rowVarNC.organisationId}">
+							<h:outputText value="#{rowVarNC.organisationId}" />
+						</p:column>
+						<p:column headerText="SDL_Number" filterBy="#{rowVarNC.sdlNumber}">
+							<h:outputText value="#{rowVarNC.sdlNumber}" />
+						</p:column>
+						<p:column headerText="Linked_SDL" filterBy="#{rowVarNC.linkedSdl}">
+							<h:outputText value="#{rowVarNC.linkedSdl}" />
+						</p:column>
+						<p:column headerText="MainSDL" filterBy="#{rowVarNC.mainSDL}">
+							<h:outputText value="#{rowVarNC.mainSDL}" />
+						</p:column>
+						<p:column headerText="OrganisationNameLegal" filterBy="#{rowVarNC.organisationNameLegal}">
+							<h:outputText value="#{rowVarNC.organisationNameLegal}" />
+						</p:column>
+						<p:column headerText="OrganisationNameTrade">
+							<h:outputText value="#{rowVarNC.organisationNameTrade}" />
+						</p:column>
+						<p:column headerText="LinkedOrganisationID">
+							<h:outputText value="#{rowVarNC.linkedOrganisationID}" />
+						</p:column>
+						<p:column headerText="Linked_SDL_Number">
+							<h:outputText value="#{rowVarNC.linkedSdlNumber}" />
+						</p:column>
+						<p:column headerText="LegalStatus">
+							<h:outputText value="#{rowVarNC.legalStatus}" />
+						</p:column>
+						<p:column headerText="SicCode">
+							<h:outputText value="#{rowVarNC.sicCode}" />
+						</p:column>
+						<p:column width="80" rendered="false">
+							<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":legacyorganisationsitesInsForm:legacyorganisationsitesInsGrid">
+								<f:setPropertyActionListener value="#{rowVar}" target="#{legacyorganisationsitesUI.legacyorganisationsites}" />
+							</p:commandButton>
+							<p:spacer width="5" />
+							<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:legacyorganisationsitesList" action="#{legacyorganisationsitesUI.legacyorganisationsitesDelete}">
+								<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+								<f:setPropertyActionListener value="#{rowVar}" target="#{legacyorganisationsitesUI.legacyorganisationsites}" />
+							</p:commandButton>
+						</p:column>
+						<p:rowExpansion>
+							<p:fieldset legend="NSDMS REF ID: #{rowVarNC.id}" style="margin-bottom:20px">
+								<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.sicCodeDescription}" style="width:95%" disabled="true" />
+										<p:outputLabel value="SicCodeDescription" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.chamberDescription}" style="width:95%" disabled="true" />
+										<p:outputLabel value="ChamberDescription" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.mainBusinessActivity}" style="width:95%" disabled="true" />
+										<p:outputLabel value="MainBusinessActivity" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.phone}" style="width:95%" disabled="true" />
+										<p:outputLabel value="Phone" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.fax}" style="width:95%" disabled="true" />
+										<p:outputLabel value="Fax" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.emailAddress}" style="width:95%" disabled="true" />
+										<p:outputLabel value="EmailAddress" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.websiteURL}" style="width:95%" disabled="true" />
+										<p:outputLabel value="Website_URL" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.sarsRegistrationNo}" style="width:95%" disabled="true" />
+										<p:outputLabel value="SARSRegistrationNo" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.companyRegistrationNo}" style="width:95%" disabled="true" />
+										<p:outputLabel value="CompanyRegistrationNo" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.payroll}" style="width:95%" disabled="true" />
+										<p:outputLabel value="Payroll" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.geographicAreaDesc}" style="width:95%" disabled="true" />
+										<p:outputLabel value="GeographicAreaDesc" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.totalEmployment}" style="width:95%" disabled="true" />
+										<p:outputLabel value="TotalEmployment" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.totalEmployment}" style="width:95%" disabled="true" />
+										<p:outputLabel value="TotalEmployment" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.annualTurnover}" style="width:95%" disabled="true" />
+										<p:outputLabel value="AnnualTurnover" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.companyRegistrationNo2}" style="width:95%" disabled="true" />
+										<p:outputLabel value="CompanyRegistrationNo2" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.mainBusinessActivityTwo}" style="width:95%" disabled="true" />
+										<p:outputLabel value="MainBusinessActivity2" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.deleteStatus}" style="width:95%" disabled="true" />
+										<p:outputLabel value="DeleteStatus" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.organisationStatusEffectiveDate}" style="width:95%" disabled="true" />
+										<p:outputLabel value="OrganisationStatusEffectiveDate" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.compRegYear}" style="width:95%" disabled="true" />
+										<p:outputLabel value="CompRegYear" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.companyYearsTrading}" style="width:95%" disabled="true" />
+										<p:outputLabel value="CompanyYearsTrading" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.communicationStatus}" style="width:95%" disabled="true" />
+										<p:outputLabel value="CommunicationStatus" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.financialYearStart}" style="width:95%" disabled="true" />
+										<p:outputLabel value="FinancialYearStart" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.financialYearEnd}" style="width:95%" disabled="true" />
+										<p:outputLabel value="FinancialYearEnd" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.dateCreated}" style="width:95%" disabled="true" />
+										<p:outputLabel value="DateCreated" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.lastDateChanged}" style="width:95%" disabled="true" />
+										<p:outputLabel value="LastDateChanged" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.possibleSDLNo}" style="width:95%" disabled="true" />
+										<p:outputLabel value="PossibleSDLNo" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.nqfLevel}" style="width:95%" disabled="true" />
+										<p:outputLabel value="NQFLevel" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.registrationYear}" style="width:95%" disabled="true" />
+										<p:outputLabel value="RegistrationYear" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.yearsTrading}" style="width:95%" disabled="true" />
+										<p:outputLabel value="YearsTrading" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.interSetaTransfer}" style="width:95%" disabled="true" />
+										<p:outputLabel value="InterSetaTransfer" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.setaStatus}" style="width:95%" disabled="true" />
+										<p:outputLabel value="SETAStatus" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.coreBusinessDesc}" style="width:95%" disabled="true" />
+										<p:outputLabel value="CoreBusinessDesc" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.sector}" style="width:95%" disabled="true" />
+										<p:outputLabel value="Sector" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.isCBO}" style="width:95%" disabled="true" />
+										<p:outputLabel value="IsCBO" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.isNGO}" style="width:95%" disabled="true" />
+										<p:outputLabel value="IsNGO" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.isStwentyOne}" style="width:95%" disabled="true" />
+										<p:outputLabel value="IsS21" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.isBEE}" style="width:95%" disabled="true" />
+										<p:outputLabel value="IsBEE" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.subSector}" style="width:95%" disabled="true" />
+										<p:outputLabel value="SubSector" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.nonLevyNumber}" style="width:95%" disabled="true" />
+										<p:outputLabel value="NonLevyNumber" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.uifNumber}" style="width:95%" disabled="true" />
+										<p:outputLabel value="UIFNumber" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.entityType}" style="width:95%" disabled="true" />
+										<p:outputLabel value="EntityType" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.payeNo}" style="width:95%" disabled="true" />
+										<p:outputLabel value="PAYENo" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.bbbeeOne}" style="width:95%" disabled="true" />
+										<p:outputLabel value="BBBEE1" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.bbbeeTwo}" style="width:95%" disabled="true" />
+										<p:outputLabel value="BBBEE2" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.bbbeeThree}" style="width:95%" disabled="true" />
+										<p:outputLabel value="BBBEE3" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.bbbeeFour}" style="width:95%" disabled="true" />
+										<p:outputLabel value="BBBEE4" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.regCiproNo}" style="width:95%" disabled="true" />
+										<p:outputLabel value="RegCiproNo" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.collegeId}" style="width:95%" disabled="true" />
+										<p:outputLabel value="CollegeId" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.institution}" style="width:95%" disabled="true" />
+										<p:outputLabel value="Institution" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.partnershipDesc}" style="width:95%" disabled="true" />
+										<p:outputLabel value="PartnershipDesc" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.magisterialDistrict}" style="width:95%" disabled="true" />
+										<p:outputLabel value="MagisterialDistrict" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.orgCatSize}" style="width:95%" disabled="true" />
+										<p:outputLabel value="OrgCatSize" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.region}" style="width:95%" disabled="true" />
+										<p:outputLabel value="Region" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.orgCategoryDesc}" style="width:95%" disabled="true" />
+										<p:outputLabel value="OrgCategoryDesc" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.unionAgreement}" style="width:95%" disabled="true" />
+										<p:outputLabel value="UnionAgreement" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.description}" style="width:95%" disabled="true" />
+										<p:outputLabel value="Description" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.isNew}" style="width:95%" disabled="true" />
+										<p:outputLabel value="IsNew" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.regDate}" style="width:95%" disabled="true" />
+										<p:outputLabel value="RegDate" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.confirmSICCode}" style="width:95%" disabled="true" />
+										<p:outputLabel value="ConfirmSICCode" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.coreBusiness}" style="width:95%" disabled="true" />
+										<p:outputLabel value="CoreBusiness" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.province}" style="width:95%" disabled="true" />
+										<p:outputLabel value="Province" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.smsChamber}" style="width:95%" disabled="true" />
+										<p:outputLabel value="SMS_Chamber" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText value="#{rowVarNC.sicCodeChamber}" style="width:95%" disabled="true" />
+										<p:outputLabel value="SIC_Code_Chamber" />
+									</h:panelGroup>
+								</p:panelGrid>
+							</p:fieldset>
+						</p:rowExpansion>
+					</p:dataTable>
+				</p:tab>
+
+			</p:tabView>
+		</h:form>
+	</div>
+
+
+</ui:composition>

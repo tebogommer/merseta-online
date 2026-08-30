@@ -1,0 +1,218 @@
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@inject IWorkflowEngineService WorkflowService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<div class="workflow-action-bridge pa-3 my-3 rounded-lg elevation-1" style="background-color: #f8fafc; border: 1px solid #e2e8f0;">
+    <div class="d-flex flex-wrap align-center justify-space-between gap-3">
+        <!-- Current Workflow State Badge & Info -->
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.AccountTree" Style="color: #1e40af;" Size="Size.Small" />
+            <span style="font-weight: 600; font-size: 0.875rem; color: #334155;">Workflow Status:</span>
+            @if (_instance != null && _instance.CurrentWorkflowState != null)
+            {
+                <span class="px-2 py-1 rounded" style="background-color: #dbeafe; color: #1e40af; font-size: 0.8125rem; font-weight: 700;">
+                    @_instance.CurrentWorkflowState.StateName
+                </span>
+                @if (_instance.IsCompleted)
+                {
+                    <span class="px-2 py-1 rounded" style="background-color: #d1fae5; color: #065f46; font-size: 0.75rem; font-weight: 700;">
+                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" Style="vertical-align: middle;" /> Completed
+                    </span>
+                }
+            }
+            else
+            {
+                <span class="px-2 py-1 rounded" style="background-color: #f1f5f9; color: #64748b; font-size: 0.8125rem; font-weight: 600;">
+                    Not Initiated
+                </span>
+            }
+        </div>
+
+        <!-- Interactive Transition Action Buttons -->
+        <div class="d-flex flex-wrap align-center gap-2">
+            @if (_instance == null)
+            {
+                <MudButton Variant="Variant.Filled" 
+                           Color="Color.Primary" 
+                           Size="Size.Small"
+                           StartIcon="@Icons.Material.Filled.PlayArrow"
+                           Disabled="@_isProcessing"
+                           OnClick="StartWorkflowAsync">
+                    Initiate Workflow
+                </MudButton>
+            }
+            else if (!_instance.IsCompleted && _availableTransitions.Any())
+            {
+                @foreach (var transition in _availableTransitions)
+                {
+                    var isReject = transition.ActionName.Contains("Reject", StringComparison.OrdinalIgnoreCase) || transition.ActionName.Contains("Decline", StringComparison.OrdinalIgnoreCase);
+                    <button type="button"
+                            class="btn-action-transition"
+                            style="background-color: @(isReject ? "#991b1b" : (transition.ButtonColor ?? "#1e40af")); color: #ffffff; padding: 6px 14px; border-radius: 6px; font-weight: 600; font-size: 0.8125rem; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;"
+                            disabled="@_isProcessing"
+                            @onclick="() => HandleTransitionClickAsync(transition)">
+                        <MudIcon Icon="@(isReject ? Icons.Material.Filled.Cancel : Icons.Material.Filled.Check)" Size="Size.Small" />
+                        @transition.ActionName
+                    </button>
+                }
+            }
+            else if (_instance.IsCompleted)
+            {
+                <span style="color: #065f46; font-size: 0.8125rem; font-weight: 600;">
+                    <MudIcon Icon="@Icons.Material.Filled.Lock" Size="Size.Small" Style="vertical-align: middle;" /> Final State Locked
+                </span>
+            }
+        </div>
+    </div>
+
+    @if (_showCommentModal && _selectedTransition != null)
+    {
+        <div class="comment-modal-backdrop mt-3 pa-4 rounded-lg elevation-2" style="background-color: #ffffff; border: 1px solid #cbd5e1;">
+            <p style="font-weight: 700; color: #0f172a; margin: 0 0 8px 0; font-size: 0.9rem;">
+                Confirm Action: @_selectedTransition.ActionName
+            </p>
+            <p style="font-size: 0.8125rem; color: #475569; margin: 0 0 12px 0;">
+                Please provide notes or justification for this state transition.
+            </p>
+            <MudTextField @bind-Value="_commentText" 
+                          Label="Action Comments / Notes" 
+                          Variant="Variant.Outlined" 
+                          Lines="3" 
+                          FullWidth="true"
+                          Required="@_selectedTransition.RequiresComments" />
+            <div class="d-flex justify-end gap-2 mt-3">
+                <MudButton Variant="Variant.Text" OnClick="() => _showCommentModal = false" Disabled="@_isProcessing">
+                    Cancel
+                </MudButton>
+                <MudButton Variant="Variant.Filled" 
+                           Color="Color.Primary" 
+                           OnClick="ExecuteTransitionAsync" 
+                           Disabled="@(_isProcessing || (_selectedTransition.RequiresComments && string.IsNullOrWhiteSpace(_commentText)))">
+                    Confirm Transition
+                </MudButton>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .btn-action-transition:hover {
+        opacity: 0.92;
+        filter: brightness(1.1);
+    }
+</style>
+
+@code {
+    [Parameter] public string ProcessCode { get; set; } = string.Empty;
+    [Parameter] public int EntityId { get; set; }
+    [Parameter] public string EntityTitle { get; set; } = string.Empty;
+    [Parameter] public string EntityRef { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> OnStatusChanged { get; set; }
+
+    private WorkflowInstance? _instance;
+    private List<WorkflowTransition> _availableTransitions = new();
+    private bool _isProcessing = false;
+    private bool _showCommentModal = false;
+    private WorkflowTransition? _selectedTransition;
+    private string _commentText = string.Empty;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadWorkflowStateAsync();
+    }
+
+    private async Task LoadWorkflowStateAsync()
+    {
+        if (string.IsNullOrEmpty(ProcessCode) || EntityId <= 0) return;
+
+        _instance = await WorkflowService.GetInstanceByEntityAsync(ProcessCode, EntityId);
+        if (_instance != null)
+        {
+            _availableTransitions = await WorkflowService.GetAvailableTransitionsAsync(_instance.Id, null);
+        }
+        else
+        {
+            _availableTransitions.Clear();
+        }
+    }
+
+    private async Task StartWorkflowAsync()
+    {
+        _isProcessing = true;
+        try
+        {
+            var result = await WorkflowService.StartWorkflowAsync(
+                ProcessCode, 
+                EntityId, 
+                EntityTitle, 
+                EntityRef, 
+                "admin@merseta.org.za", 
+                "System Administrator");
+
+            if (result.Success)
+            {
+                Snackbar.Add($"Workflow initialized: {result.NewStateName}", Severity.Success);
+                await LoadWorkflowStateAsync();
+                await OnStatusChanged.InvokeAsync(result.NewStateName ?? "INITIALIZED");
+            }
+            else
+            {
+                Snackbar.Add(result.Message, Severity.Error);
+            }
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+
+    private async Task HandleTransitionClickAsync(WorkflowTransition transition)
+    {
+        _selectedTransition = transition;
+        _commentText = string.Empty;
+
+        if (transition.RequiresComments || transition.ActionName.Contains("Reject", StringComparison.OrdinalIgnoreCase))
+        {
+            _showCommentModal = true;
+        }
+        else
+        {
+            await ExecuteTransitionAsync();
+        }
+    }
+
+    private async Task ExecuteTransitionAsync()
+    {
+        if (_instance == null || _selectedTransition == null) return;
+
+        _isProcessing = true;
+        try
+        {
+            var result = await WorkflowService.AdvanceWorkflowAsync(
+                _instance.Id,
+                _selectedTransition.Id,
+                "admin@merseta.org.za",
+                "System Administrator",
+                "Administrator",
+                _commentText);
+
+            if (result.Success)
+            {
+                _showCommentModal = false;
+                Snackbar.Add(result.Message, Severity.Success);
+                await LoadWorkflowStateAsync();
+                await OnStatusChanged.InvokeAsync(result.NewStateName ?? "UPDATED");
+            }
+            else
+            {
+                Snackbar.Add(result.Message, Severity.Error);
+            }
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+}

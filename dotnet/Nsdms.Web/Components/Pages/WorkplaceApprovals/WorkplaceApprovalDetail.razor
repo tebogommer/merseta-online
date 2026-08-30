@@ -1,0 +1,552 @@
+@page "/workplace-approvals/{Id:int}"
+@page "/workplace-approvals/create"
+@using Nsdms.Web.Components.Shared
+@rendermode InteractiveServer
+@inject IWorkplaceApprovalService ApprovalService
+@inject IOrganisationService OrganisationService
+@inject IPersonService PersonService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>@(IsNew ? "New Workplace Approval" : $"Workplace Approval {_approval.ApprovalNumber}") - NSDMS</PageTitle>
+
+<!-- STICKY TOP BAR -->
+<MudPaper Elevation="2" Class="sticky-top pa-4 mb-4 rounded-lg bg-surface d-flex justify-space-between align-center" Style="top: 0; z-index: 10;">
+    <div class="d-flex align-center gap-3">
+        <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Default" OnClick="@(() => Navigation.NavigateTo("/workplace-approvals"))" Title="Back to List" />
+        <div>
+            <MudBreadcrumbs Items="_breadcrumbItems" Class="pa-0 ma-0" />
+            <MudText Typo="Typo.h5" Class="fw-bold">
+                @(IsNew ? "Create Workplace Approval Application" : $"Workplace Approval: {_approval.ApprovalNumber}")
+            </MudText>
+        </div>
+    </div>
+    <div class="d-flex gap-2 align-center">
+        @if (!IsNew)
+        {
+            @if (_approval.ApprovalStatusCode == "Approved" || _approval.ApprovalStatusCode == "APPROVED")
+            {
+                <MudChip T="string" Color="Color.Success" Variant="Variant.Filled" Icon="@Icons.Material.Filled.CheckCircle">Approved</MudChip>
+            }
+            else if (_approval.ApprovalStatusCode == "AUDITED" || _approval.ApprovalStatusCode == "AUDIT_SCHEDULED")
+            {
+                <MudChip T="string" Color="Color.Info" Variant="Variant.Filled" Icon="@Icons.Material.Filled.FactCheck">Audit Completed</MudChip>
+            }
+            else
+            {
+                <MudChip T="string" Color="Color.Warning" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Schedule">@_approval.ApprovalStatusCode</MudChip>
+            }
+
+            <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="DeleteAsync">
+                Delete
+            </MudButton>
+        }
+
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveAsync" Disabled="_saving">
+            @if (_saving)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                <span>Saving...</span>
+            }
+            else
+            {
+                <span>Save</span>
+            }
+        </MudButton>
+    </div>
+</MudPaper>
+
+@if (!IsNew)
+{
+    <!-- Workflow Action Bridge -->
+    <WorkflowActionBridge ProcessCode="WPAPP" 
+                          EntityId="@Id" 
+                          EntityTitle="@($"{_approval.QualificationTitle} ({_approval.ApprovalNumber})")" 
+                          EntityRef="@_approval.ApprovalNumber" 
+                          OnStatusChanged="OnWorkflowStatusChanged" />
+}
+
+@if (_loading)
+{
+    <div class="d-flex justify-center my-8">
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+    </div>
+}
+else
+{
+    <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6" Color="Color.Primary">
+        <!-- TAB 1: MASTER APPLICATION DETAILS -->
+        <MudTabPanel Text="Workplace Details" Icon="@Icons.Material.Filled.FactCheck">
+            <MudCard Outlined="true" Class="mb-4">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6" Class="fw-bold">Host Employer &amp; Trade Scope</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudGrid>
+                        <MudItem xs="12" md="6">
+                            <MudSelect T="int" @bind-Value="_approval.OrganisationId" Label="Host Employer / Organisation" Variant="Variant.Outlined" Required="true">
+                                <MudSelectItem Value="0">-- Select Employer --</MudSelectItem>
+                                @foreach (var org in _organisations)
+                                {
+                                    <MudSelectItem Value="@org.Id">@org.CompanyName (@org.SdlNumber)</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="_approval.ApprovalNumber" Label="Approval Reference Number" Variant="Variant.Outlined" ReadOnly="!IsNew" HelperText="Auto-generated upon creation" />
+                        </MudItem>
+
+                        <MudItem xs="12" md="8">
+                            <MudTextField @bind-Value="_approval.QualificationTitle" Label="Qualification / Trade Scope" Variant="Variant.Outlined" Required="true"
+                                          Placeholder="e.g. Automotive Motor Mechanic, Boilermaker, Electrician, Fitter &amp; Turner" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudNumericField @bind-Value="_approval.SaqaQualificationId" Label="SAQA Qualification ID" Variant="Variant.Outlined" />
+                        </MudItem>
+
+                        <MudItem xs="12" md="4">
+                            <MudDatePicker @bind-Date="_inspectionDate" Label="Site Inspection Date" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudDatePicker @bind-Date="_approvalDate" Label="Approval Granted Date" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" md="4">
+                            <MudDatePicker @bind-Date="_expiryDate" Label="Accreditation Expiry Date" Variant="Variant.Outlined" />
+                        </MudItem>
+
+                        <MudItem xs="12" md="6">
+                            <MudSelect T="int?" @bind-Value="_approval.AssessorPersonId" Label="Evaluating Assessor" Variant="Variant.Outlined" Clearable="true">
+                                <MudSelectItem Value="@((int?)null)">-- Select Assessor --</MudSelectItem>
+                                @foreach (var person in _people)
+                                {
+                                    <MudSelectItem Value="@((int?)person.Id)">@person.FullName (@person.RsaIdNumber)</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudSelect T="string" @bind-Value="_approval.ApprovalStatusCode" Label="Approval Status" Variant="Variant.Outlined">
+                                <MudSelectItem Value="@("DRAFT")">Draft</MudSelectItem>
+                                <MudSelectItem Value="@("AUDIT_SCHEDULED")">Audit Scheduled</MudSelectItem>
+                                <MudSelectItem Value="@("AUDITED")">Audited</MudSelectItem>
+                                <MudSelectItem Value="@("APPROVED")">Approved</MudSelectItem>
+                                <MudSelectItem Value="@("REJECTED")">Rejected</MudSelectItem>
+                                <MudSelectItem Value="@("EXPIRED")">Expired</MudSelectItem>
+                            </MudSelect>
+                        </MudItem>
+
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="_approval.Recommendations" Label="Audit Findings &amp; Recommendations" Variant="Variant.Outlined" Lines="3"
+                                          Placeholder="Enter evaluator findings on tooling, safety equipment, and artisan ratios..." />
+                        </MudItem>
+                    </MudGrid>
+                </MudCardContent>
+            </MudCard>
+        </MudTabPanel>
+
+        <!-- TAB 2: CERTIFIED WORKSHOP MENTORS -->
+        <MudTabPanel Text="Workshop Mentors" Icon="@Icons.Material.Filled.Engineering" Disabled="IsNew">
+            <div class="d-flex justify-space-between align-center mb-4">
+                <div>
+                    <MudText Typo="Typo.h6" Class="fw-bold">Designated Workshop Mentors &amp; Artisans</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Qualified artisans supervising apprentices in the workshop.</MudText>
+                </div>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd" OnClick="OpenAddMentorDialog">
+                    Add Mentor
+                </MudButton>
+            </div>
+
+            <MudTable Items="_approval.Mentors" Hover="true" Striped="true" Elevation="1" Class="rounded-lg">
+                <HeaderContent>
+                    <MudTh>Mentor Name</MudTh>
+                    <MudTh>RSA ID Number</MudTh>
+                    <MudTh>Designation / Trade Title</MudTh>
+                    <MudTh>Artisan Trade Number</MudTh>
+                    <MudTh>Experience (Years)</MudTh>
+                    <MudTh>Certified</MudTh>
+                    <MudTh Style="text-align: right;">Action</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Mentor Name">
+                        <div class="fw-bold">@(context.Person?.FullName ?? "Unknown")</div>
+                    </MudTd>
+                    <MudTd DataLabel="RSA ID">@(context.Person?.RsaIdNumber ?? "N/A")</MudTd>
+                    <MudTd DataLabel="Designation">@context.Designation</MudTd>
+                    <MudTd DataLabel="Trade No">@(context.ArtisanTradeNumber ?? "—")</MudTd>
+                    <MudTd DataLabel="Experience">@context.YearsExperience yrs</MudTd>
+                    <MudTd DataLabel="Certified">
+                        @if (context.IsCertifiedArtisan)
+                        {
+                            <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled">Certified</MudChip>
+                        }
+                        else
+                        {
+                            <MudChip T="string" Color="Color.Warning" Size="Size.Small" Variant="Variant.Filled">Under Review</MudChip>
+                        }
+                    </MudTd>
+                    <MudTd DataLabel="Action" Style="text-align: right;">
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => RemoveMentor(context.Id))" />
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudTabPanel>
+
+        <!-- TAB 3: WORKSHOP TOOL & EQUIPMENT CHECKLIST -->
+        <MudTabPanel Text="Tools &amp; Equipment Checklist" Icon="@Icons.Material.Filled.Handyman" Disabled="IsNew">
+            <div class="d-flex justify-space-between align-center mb-4">
+                <div>
+                    <MudText Typo="Typo.h6" Class="fw-bold">Workshop Tools &amp; Machinery Inventory</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Required equipment verification for curriculum training delivery.</MudText>
+                </div>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenAddToolDialog">
+                    Add Tool / Equipment
+                </MudButton>
+            </div>
+
+            <MudTable Items="_approval.ToolItems" Hover="true" Striped="true" Elevation="1" Class="rounded-lg">
+                <HeaderContent>
+                    <MudTh>Tool / Equipment Name</MudTh>
+                    <MudTh>Category</MudTh>
+                    <MudTh>Required Qty</MudTh>
+                    <MudTh>Available Qty</MudTh>
+                    <MudTh>Compliance Status</MudTh>
+                    <MudTh>Remarks</MudTh>
+                    <MudTh Style="text-align: right;">Action</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Tool Name">
+                        <div class="fw-bold">@context.ToolName</div>
+                    </MudTd>
+                    <MudTd DataLabel="Category">
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Info">@context.Category</MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Required">@context.RequiredQuantity</MudTd>
+                    <MudTd DataLabel="Available">@context.AvailableQuantity</MudTd>
+                    <MudTd DataLabel="Compliance">
+                        @if (context.IsCompliant)
+                        {
+                            <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Check">Compliant</MudChip>
+                        }
+                        else
+                        {
+                            <MudChip T="string" Color="Color.Error" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Warning">Deficient</MudChip>
+                        }
+                    </MudTd>
+                    <MudTd DataLabel="Remarks">@(context.Remarks ?? "—")</MudTd>
+                    <MudTd DataLabel="Action" Style="text-align: right;">
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => RemoveToolItem(context.Id))" />
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudTabPanel>
+
+        <!-- TAB 4: Evidence Vault -->
+        @if (!IsNew)
+        {
+            <MudTabPanel Text="Evidence Vault" Icon="@Icons.Material.Filled.FolderZip">
+                <DocumentVault TargetEntityName="WorkplaceApproval" TargetEntityId="@Id" />
+            </MudTabPanel>
+
+            <!-- TAB 5: Workflow History -->
+            <MudTabPanel Text="Workflow History" Icon="@Icons.Material.Filled.History">
+                <WorkflowTimeline ProcessCode="WPAPP" EntityId="@Id" />
+            </MudTabPanel>
+        }
+    </MudTabs>
+}
+
+<!-- ADD MENTOR DIALOG -->
+<MudDialog @bind-Visible="_addMentorOpen">
+    <TitleContent>
+        <MudText Typo="Typo.h6">Add Workshop Mentor</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="12">
+                <MudSelect T="int" @bind-Value="_newMentor.PersonId" Label="Select Mentor Person" Variant="Variant.Outlined" Required="true">
+                    @foreach (var person in _people)
+                    {
+                        <MudSelectItem Value="@person.Id">@person.FullName (@person.RsaIdNumber)</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="_newMentor.Designation" Label="Designation / Title" Variant="Variant.Outlined" Required="true" Placeholder="e.g. Master Toolmaker" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="_newMentor.ArtisanTradeNumber" Label="Artisan Trade Number" Variant="Variant.Outlined" Placeholder="e.g. ART-2015-8841" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudNumericField @bind-Value="_newMentor.YearsExperience" Label="Years of Experience" Variant="Variant.Outlined" Min="0" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudCheckBox @bind-Value="_newMentor.IsCertifiedArtisan" Label="Is Certified Artisan" Color="Color.Primary" />
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _addMentorOpen = false)">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveNewMentor">Add Mentor</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<!-- ADD TOOL DIALOG -->
+<MudDialog @bind-Visible="_addToolOpen">
+    <TitleContent>
+        <MudText Typo="Typo.h6">Add Workshop Tool / Equipment</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="12">
+                <MudTextField @bind-Value="_newTool.ToolName" Label="Tool / Machine Name" Variant="Variant.Outlined" Required="true" Placeholder="e.g. CNC Lathe, Hydraulic Press, MIG Welder" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudSelect T="string" @bind-Value="_newTool.Category" Label="Category" Variant="Variant.Outlined">
+                    <MudSelectItem Value="@("Mechanical")">Mechanical</MudSelectItem>
+                    <MudSelectItem Value="@("Electrical")">Electrical</MudSelectItem>
+                    <MudSelectItem Value="@("Welding")">Welding &amp; Fabrication</MudSelectItem>
+                    <MudSelectItem Value="@("Safety")">Safety &amp; PPE</MudSelectItem>
+                    <MudSelectItem Value="@("Diagnostic")">Diagnostic &amp; Electronic</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudNumericField @bind-Value="_newTool.RequiredQuantity" Label="Required Qty" Variant="Variant.Outlined" Min="1" />
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudNumericField @bind-Value="_newTool.AvailableQuantity" Label="Available Qty" Variant="Variant.Outlined" Min="0" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField @bind-Value="_newTool.Remarks" Label="Remarks / Condition" Variant="Variant.Outlined" Placeholder="e.g. Operational, serviced 2026" />
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _addToolOpen = false)">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveNewTool">Add Tool</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private bool IsNew => Id == 0;
+
+    private WorkplaceApproval _approval = new();
+    private List<Organisation> _organisations = new();
+    private List<Person> _people = new();
+
+    private bool _loading = true;
+    private bool _saving = false;
+
+    private DateTime? _inspectionDate;
+    private DateTime? _approvalDate;
+    private DateTime? _expiryDate;
+
+    private bool _addMentorOpen = false;
+    private WorkplaceApprovalMentor _newMentor = new();
+
+    private bool _addToolOpen = false;
+    private WorkplaceApprovalToolList _newTool = new();
+
+    private List<BreadcrumbItem> _breadcrumbItems = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+        try
+        {
+            _organisations = await OrganisationService.GetAllAsync();
+            _people = await PersonService.GetAllAsync();
+
+            if (!IsNew)
+            {
+                await LoadApprovalDataAsync();
+            }
+
+            UpdateBreadcrumbs();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading approval details: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task LoadApprovalDataAsync()
+    {
+        var existing = await ApprovalService.GetByIdAsync(Id);
+        if (existing != null)
+        {
+            _approval = existing;
+            _inspectionDate = _approval.InspectionDate;
+            _approvalDate = _approval.ApprovalDate;
+            _expiryDate = _approval.ExpiryDate;
+        }
+        else
+        {
+            Snackbar.Add($"Workplace approval with ID {Id} not found.", Severity.Warning);
+            Navigation.NavigateTo("/workplace-approvals");
+        }
+    }
+
+    private async Task OnWorkflowStatusChanged(string newStatus)
+    {
+        await LoadApprovalDataAsync();
+        StateHasChanged();
+    }
+
+    private void UpdateBreadcrumbs()
+    {
+        _breadcrumbItems = new List<BreadcrumbItem>
+        {
+            new BreadcrumbItem("Dashboard", href: "/"),
+            new BreadcrumbItem("Workplace Approvals", href: "/workplace-approvals"),
+            new BreadcrumbItem(IsNew ? "Create" : _approval.ApprovalNumber, href: null, disabled: true)
+        };
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_approval.OrganisationId <= 0)
+        {
+            Snackbar.Add("Please select a valid Host Employer.", Severity.Warning);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_approval.QualificationTitle))
+        {
+            Snackbar.Add("Please specify the Qualification / Trade Title.", Severity.Warning);
+            return;
+        }
+
+        _saving = true;
+        try
+        {
+            _approval.InspectionDate = _inspectionDate;
+            _approval.ApprovalDate = _approvalDate;
+            _approval.ExpiryDate = _expiryDate;
+
+            var saved = await ApprovalService.SaveAsync(_approval, "ADMIN");
+            Snackbar.Add("Workplace Approval saved successfully!", Severity.Success);
+
+            if (IsNew)
+            {
+                Navigation.NavigateTo($"/workplace-approvals/{saved.Id}");
+            }
+            else
+            {
+                _approval = saved;
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving approval: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private async Task DeleteAsync()
+    {
+        var success = await ApprovalService.DeleteAsync(Id, "ADMIN");
+        if (success)
+        {
+            Snackbar.Add("Workplace Approval deleted successfully.", Severity.Success);
+            Navigation.NavigateTo("/workplace-approvals");
+        }
+    }
+
+    private void OpenAddMentorDialog()
+    {
+        _newMentor = new WorkplaceApprovalMentor
+        {
+            WorkplaceApprovalId = _approval.Id,
+            PersonId = _people.FirstOrDefault()?.Id ?? 0,
+            IsCertifiedArtisan = true
+        };
+        _addMentorOpen = true;
+    }
+
+    private async Task SaveNewMentor()
+    {
+        if (_newMentor.PersonId <= 0)
+        {
+            Snackbar.Add("Please select a person.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            await ApprovalService.AddMentorAsync(_newMentor, "ADMIN");
+            var refreshed = await ApprovalService.GetByIdAsync(Id);
+            if (refreshed != null) _approval = refreshed;
+            Snackbar.Add("Mentor added successfully.", Severity.Success);
+            _addMentorOpen = false;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error adding mentor: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task RemoveMentor(int mentorId)
+    {
+        var success = await ApprovalService.RemoveMentorAsync(mentorId, "ADMIN");
+        if (success)
+        {
+            var refreshed = await ApprovalService.GetByIdAsync(Id);
+            if (refreshed != null) _approval = refreshed;
+            Snackbar.Add("Mentor removed.", Severity.Success);
+        }
+    }
+
+    private void OpenAddToolDialog()
+    {
+        _newTool = new WorkplaceApprovalToolList
+        {
+            WorkplaceApprovalId = _approval.Id,
+            Category = "Mechanical",
+            RequiredQuantity = 1,
+            AvailableQuantity = 1
+        };
+        _addToolOpen = true;
+    }
+
+    private async Task SaveNewTool()
+    {
+        if (string.IsNullOrWhiteSpace(_newTool.ToolName))
+        {
+            Snackbar.Add("Tool name is required.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            await ApprovalService.AddToolItemAsync(_newTool, "ADMIN");
+            var refreshed = await ApprovalService.GetByIdAsync(Id);
+            if (refreshed != null) _approval = refreshed;
+            Snackbar.Add("Tool added successfully.", Severity.Success);
+            _addToolOpen = false;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error adding tool: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task RemoveToolItem(int toolItemId)
+    {
+        var success = await ApprovalService.RemoveToolItemAsync(toolItemId, "ADMIN");
+        if (success)
+        {
+            var refreshed = await ApprovalService.GetByIdAsync(Id);
+            if (refreshed != null) _approval = refreshed;
+            Snackbar.Add("Tool removed.", Severity.Success);
+        }
+    }
+}

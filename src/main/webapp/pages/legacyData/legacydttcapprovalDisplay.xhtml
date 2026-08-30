@@ -1,0 +1,129 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<p:growl sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<h1>Legacy Data: DTTC Approval</h1>
+
+						<p:outputLabel value="Data Source: DTTC.xlsx" />
+						<br />
+						<p:outputLabel value="Tab: Approval" />
+						<div class="EmptyBox10" />
+
+						<c:if test="#{legacydttcapprovalUI.displayDownload}">
+							<ui:include src="/pages/includes/download_lazy.xhtml">
+								<ui:param name="file_name" value="legacydttcapprovalList_dataextract" />
+								<ui:param name="target" value="legacydttcapprovalList" />
+							</ui:include>
+							<div class="EmptyBox10" />
+						</c:if>
+
+						<p:dataTable var="rowVar" value="#{legacydttcapprovalUI.dataModel}" filteredValue="#{legacydttcapprovalUI.legacyDTTCApprovalfilteredList}" id="legacydttcapprovalList" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+							<p:column style="width:5%" headerText="Expand">
+								<p:rowToggler />
+							</p:column>
+							
+							<p:column headerText="DATE TIME CREATED">
+								<h:outputText value="#{rowVar.createDate}">
+									<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+								</h:outputText>
+							</p:column>
+
+							<p:column headerText="NSDMS REF ID">
+								<h:outputText value="#{rowVar.id}" />
+							</p:column>
+							<p:column headerText="Linked_SDL" filterBy="#{rowVar.linkedSdl}">
+								<h:outputText value="#{rowVar.linkedSdl}" />
+							</p:column>
+							<p:column headerText="DTTCId">
+								<h:outputText value="#{rowVar.dttcId}" />
+							</p:column>
+							<p:column headerText="SDLNo" filterBy="#{rowVar.sdlNo}">
+								<h:outputText value="#{rowVar.sdlNo}" />
+							</p:column>
+							<p:column headerText="OrganisationNameLegal" filterBy="#{rowVar.organisationNameLegal}">
+								<h:outputText value="#{rowVar.organisationNameLegal}" />
+							</p:column>
+							<p:column headerText="OrganisationNameTrade" filterBy="#{rowVar.organisationNameTrade}">
+								<h:outputText value="#{rowVar.organisationNameTrade}" />
+							</p:column>
+							<p:column headerText="DTTCStatus">
+								<h:outputText value="#{rowVar.dttcStatus}" />
+							</p:column>
+							<p:column headerText="ApplicationRecDate">
+								<h:outputText value="#{rowVar.applicationRecDate}" />
+							</p:column>
+							<p:column headerText="AccreditationStartDate">
+								<h:outputText value="#{rowVar.accreditationStartDate}" />
+							</p:column>
+
+							<p:rowExpansion>
+								<p:fieldset legend="NSDMS REF ID: #{rowVar.id}" style="margin-bottom:20px">
+
+									<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rowVar.accreditationEndDate}" style="width:95%" disabled="true" />
+											<p:outputLabel value="AccreditationEndDate" />
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rowVar.noOfEmployees}" style="width:95%" disabled="true" />
+											<p:outputLabel value="NoOfEmployees" />
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rowVar.lastDateChanged}" style="width:95%" disabled="true" />
+											<p:outputLabel value="LastDateChanged" />
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rowVar.dateCreated}" style="width:95%" disabled="true" />
+											<p:outputLabel value="DateCreated" />
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rowVar.sRefNo}" style="width:95%" disabled="true" />
+											<p:outputLabel value="sRefNo" />
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{rowVar.approvalNumber}" style="width:95%" disabled="true" />
+											<p:outputLabel value="ApprovalNumber" />
+										</h:panelGroup>
+
+									</p:panelGrid>
+								</p:fieldset>
+							</p:rowExpansion>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<c:if test="false">
+					<ui:include src="/pages/legacyData/reportingIncludes/legacyReporting.xhtml">
+						<ui:param name="title" value="Legacy Data: DTTC Approval"></ui:param>
+						<ui:param name="reportingBeans" value="#{legacydttcapprovalUI.legacyReportingBeans}"></ui:param>
+						<ui:param name="reportingMap" value="#{legacydttcapprovalUI.columnMap}"></ui:param>
+					</ui:include>
+				</c:if>
+			</div>
+		</div>
+	</ui:define>
+	<!-- 
+-->
+</ui:composition>

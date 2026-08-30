@@ -1,0 +1,64 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:pt="http://xmlns.jcp.org/jsf/passthrough" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+
+	<p:fieldset legend="#{lang['qualifications']}"  rendered="#{trainingproviderUI.doneSMEReg}">
+		<p:outputPanel rendered="#{trainingproviderUI.doneSMEReg}" id="lpQualifications">
+			<p:panelGrid columns="2" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup>
+					<div>
+						<p:outputLabel rendered="true" value="#{lang['qualification']}" for="lpMersetaQualification"></p:outputLabel>
+					</div>
+					<div>
+					<p:autoComplete
+						style="width: 100%" id="lpMersetaQualification" value="#{trainingproviderUI.learningProgrammeQualification}" completeMethod="#{autoCompleteUI.completeHostingCompanyQualification}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+						<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+						<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+						<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+						<p:ajax event="itemSelect" update="pgLP"/>
+					</p:autoComplete>
+					</div>
+				</h:panelGroup>
+				<p:commandButton style="float:left;" value="Clear" update="companyInsForm" process="@this" icon="fa fa-recycle" iconPos="left" styleClass="flat Fright" action="#{trainingproviderUI.clearLearningProgrammeQualification}" />
+			</p:panelGrid>
+		</p:outputPanel>
+	</p:fieldset>
+	
+	<h:panelGroup id="pgLP">
+		<p:fieldset legend="Learning Programme" id="fsLeaningProg" rendered="#{trainingproviderUI.learningProgrammeQualification.id ne null}">
+			<p:outputPanel id="lpCompanyQualifications"  >
+				<p:panelGrid columns="2" layout="grid" styleClass="ui-panelgrid-blank form-group" >
+					<h:panelGroup>
+						<div>
+							<p:outputLabel rendered="true" value="Select Learning Programme" for="lpAualificationAuto"></p:outputLabel>
+						</div>
+						<div>
+							<p:autoComplete
+								style="width: 100%" id="lpAualificationAuto" value="#{trainingproviderUI.qualification}" completeMethod="#{trainingproviderUI.completeLeaningProgrameQualification}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="3"
+								maxResults="10">
+								<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+								<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+								<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+								<p:ajax event="itemSelect" update="@form"/>
+							</p:autoComplete>
+						</div>
+					</h:panelGroup>
+					<p:commandButton style="float:left;" value="#{lang['add.qualification']}" update="companyQualifications pgSkillsProg companyInsForm" process="@this companyQualifications" icon="ui-icon-plus" iconPos="right" styleClass="flat Fright" action="#{trainingproviderUI.addQualificationToList}" />
+				</p:panelGrid>
+			</p:outputPanel>
+		</p:fieldset>
+		<br/><br/>
+		<p:dataList value="#{trainingproviderUI.qualificationList}" var="company" rendered="#{trainingproviderUI.qualificationList.size() gt 0}">
+			<p:outputLabel value="#{company.saqaQualification}"></p:outputLabel>
+			<p:commandLink id="ajaxs" update="@form" process="@this" action="#{trainingproviderUI.removeQualificationFromList}">
+				<span class="fa fa-times Fs12 grey"></span>
+				<f:setPropertyActionListener value="#{company}" target="#{trainingproviderUI.qualification}" />
+			</p:commandLink>
+		</p:dataList>
+	</h:panelGroup>
+
+	<p:panelGrid columns="1" style="width:95%" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{trainingproviderUI.doneSMEReg}">
+		<p:commandButton value="#{lang['continue']}" update="companyInsForm" icon="ui-icon-fast-forward" iconPos="right" action="#{trainingproviderUI.doneQualificationDetails}" />
+	</p:panelGrid>
+				
+	
+</ui:composition>

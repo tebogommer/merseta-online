@@ -1,0 +1,128 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Designated Trade Level Items</h1>
+					<h:form id="designatedtradelevelitemsInsForm">
+						<p:growl sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+
+						<p:panelGrid columns="1" style="width:100%" id="designatedtradelevelitemsInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="code" value="#{designatedtradelevelitemsUI.designatedtradelevelitems.code}" style="width:95%" />
+								<p:outputLabel value="#{lang['code']}" for="code" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="description" value="#{designatedtradelevelitemsUI.designatedtradelevelitems.description}" style="width:95%" required="true" />
+								<p:outputLabel value="#{lang['description']}" for="description" />
+							</h:panelGroup>
+
+							<h:panelGroup class="md-inputfield" style="margin-top:19px;">
+								<p:autoComplete id="designatedTradeLevel" value="#{designatedtradelevelitemsUI.designatedtradelevelitems.designatedTradeLevel}" completeMethod="#{autoCompleteUI.completeDesignatedTradeLevel}" var="rv" itemLabel="#{rv.designatedTrade.description} #{rv.qualification.code} #{rv.qualification.description} #{rv.description} #{rv.level}" itemValue="#{rv}" forceSelection="true"
+									converter="DesignatedTradeLevelConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="opacity: 1 !important; color: black; width: 95%" style="opacity: 1 !important; color: black; width: 95%" required="true">
+									<p:column headerText="Type" style="white-space: nowrap">#{rv.designatedTrade.description}</p:column>
+									<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">(#{rv.qualification.code}) #{rv.qualification.description}</p:column>
+									<p:column headerText="Description" style="white-space: nowrap">#{rv.description}</p:column>
+									<p:column headerText="Level / Order Completion" style="white-space: nowrap">#{rv.level}</p:column>
+									<p:ajax event="itemSelect" />
+								</p:autoComplete>
+								<p:outputLabel value="Designated Trade Level" for="designatedTradeLevel" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield" rendered="false">
+								<p:inputText id="createDate" value="#{designatedtradelevelitemsUI.designatedtradelevelitems.createDate}" style="width:95%" />
+								<p:outputLabel value="#{lang['createDate']}" for="createDate" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="setmisCode" value="#{designatedtradelevelitemsUI.designatedtradelevelitems.setmisCode}" style="width:95%" />
+								<p:outputLabel value="#{lang['setmisCode']}" for="setmisCode" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="qctoCode" value="#{designatedtradelevelitemsUI.designatedtradelevelitems.qctoCode}" style="width:95%" />
+								<p:outputLabel value="#{lang['qctoCode']}" for="qctoCode" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="nlrdCode" value="#{designatedtradelevelitemsUI.designatedtradelevelitems.nlrdCode}" style="width:95%" />
+								<p:outputLabel value="#{lang['nlrdCode']}" for="nlrdCode" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="smsCode" value="#{designatedtradelevelitemsUI.designatedtradelevelitems.smsCode}" style="width:95%" />
+								<p:outputLabel value="#{lang['smsCode']}" for="smsCode" />
+							</h:panelGroup>
+
+
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:designatedtradelevelitemsList :designatedtradelevelitemsInsForm:designatedtradelevelitemsInsGrid" action="#{designatedtradelevelitemsUI.designatedtradelevelitemsInsert}" />
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="designatedtradelevelitemsInsGrid" process="@this" action="#{designatedtradelevelitemsUI.prepareNew}">
+									<p:resetInput target="designatedtradelevelitemsInsGrid" />
+								</p:commandButton>
+							</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{designatedtradelevelitemsUI.dataModel}" filteredValue="#{designatedtradelevelitemsUI.designatedTradeLevelItemsfilteredList}" id="designatedtradelevelitemsList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['code']}">
+								<h:outputText value="#{rowVar.code}" />
+							</p:column>
+							<p:column headerText="#{lang['description']}">
+								<h:outputText value="#{rowVar.description}" />
+							</p:column>
+							<p:column headerText="Designated Trade Level">
+								<h:outputText value="#{rowVar.designatedTradeLevel.designatedTrade.description} - (#{rowVar.designatedTradeLevel.qualification.code}) #{rowVar.designatedTradeLevel.qualification.description} - #{rowVar.designatedTradeLevel.description} (#{rowVar.designatedTradeLevel.level})" />
+							</p:column>
+							<p:column headerText="#{lang['createDate']}" rendered="false">
+								<h:outputText value="#{rowVar.createDate}" />
+							</p:column>
+							<p:column headerText="#{lang['setmisCode']}" rendered="false">
+								<h:outputText value="#{rowVar.setmisCode}" />
+							</p:column>
+							<p:column headerText="#{lang['qctoCode']}" rendered="false">
+								<h:outputText value="#{rowVar.qctoCode}" />
+							</p:column>
+							<p:column headerText="#{lang['nlrdCode']}" rendered="false">
+								<h:outputText value="#{rowVar.nlrdCode}" />
+							</p:column>
+							<p:column headerText="#{lang['smsCode']}" rendered="false">
+								<h:outputText value="#{rowVar.smsCode}" />
+							</p:column>
+
+
+							<p:column width="80">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":designatedtradelevelitemsInsForm:designatedtradelevelitemsInsGrid">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{designatedtradelevelitemsUI.designatedtradelevelitems}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:designatedtradelevelitemsList" action="#{designatedtradelevelitemsUI.designatedtradelevelitemsDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{designatedtradelevelitemsUI.designatedtradelevelitems}" />
+								</p:commandButton>
+							</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+	<!-- 
+_lang_
+-->
+</ui:composition>

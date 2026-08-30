@@ -1,0 +1,136 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>FormSectionQuestions</h1>
+					<h:form id="formsectionquestionsInsForm">
+						<p:growl sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+
+						<p:panelGrid columns="1" style="width:100%" id="formsectionquestionsInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="question" value="#{formsectionquestionsUI.formsectionquestions.question}" style="width:95%" />
+								<p:outputLabel value="#{lang['question']}" for="question" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="questionDesc" value="#{formsectionquestionsUI.formsectionquestions.questionDesc}" style="width:95%" />
+								<p:outputLabel value="#{lang['questionDesc']}" for="questionDesc" />
+							</h:panelGroup>
+
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="orderPos" value="#{formsectionquestionsUI.formsectionquestions.orderPos}" style="width:95%" />
+								<p:outputLabel value="#{lang['orderPos']}" for="orderPos" />
+							</h:panelGroup>
+
+
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:formsectionquestionsList :formsectionquestionsInsForm:formsectionquestionsInsGrid" action="#{formsectionquestionsUI.formsectionquestionsInsert}" />
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="formsectionquestionsInsGrid" process="@this" action="#{formsectionquestionsUI.prepareNew}">
+									<p:resetInput target="formsectionquestionsInsGrid" />
+								</p:commandButton>
+							</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{formsectionquestionsUI.dataModel}" filteredValue="#{formsectionquestionsUI.formSectionQuestionsfilteredList}" id="formsectionquestionsList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+							rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['createDate']}">
+								<h:outputText value="#{rowVar.createDate}" />
+							</p:column>
+							<p:column headerText="#{lang['answerType']}">
+								<h:outputText value="#{rowVar.answerType}" />
+							</p:column>
+							<p:column headerText="#{lang['question']}">
+								<h:outputText value="#{rowVar.question}" />
+							</p:column>
+							<p:column headerText="#{lang['questionDesc']}">
+								<h:outputText value="#{rowVar.questionDesc}" />
+							</p:column>
+							<p:column headerText="#{lang['formTypeSections']}">
+								<h:outputText value="#{rowVar.formTypeSections}" />
+							</p:column>
+							<p:column headerText="#{lang['formSectionQuestions']}">
+								<h:outputText value="#{rowVar.formSectionQuestions}" />
+							</p:column>
+							<p:column headerText="#{lang['selectedAnswer']}">
+								<h:outputText value="#{rowVar.selectedAnswer}" />
+							</p:column>
+							<p:column headerText="#{lang['showOnParentAnswers']}">
+								<h:outputText value="#{rowVar.showOnParentAnswers}" />
+							</p:column>
+							<p:column headerText="#{lang['orderPos']}">
+								<h:outputText value="#{rowVar.orderPos}" />
+							</p:column>
+							<p:column headerText="#{lang['textAnswer']}">
+								<h:outputText value="#{rowVar.textAnswer}" />
+							</p:column>
+							<p:column headerText="#{lang['usedEditorForQuestion']}">
+								<h:outputText value="#{rowVar.usedEditorForQuestion}" />
+							</p:column>
+							<p:column headerText="#{lang['displayQuestion']}">
+								<h:outputText value="#{rowVar.displayQuestion}" />
+							</p:column>
+							<p:column headerText="#{lang['multipleSelectionPoints']}">
+								<h:outputText value="#{rowVar.multipleSelectionPoints}" />
+							</p:column>
+							<p:column headerText="#{lang['multipleAnswerSelection']}">
+								<h:outputText value="#{rowVar.multipleAnswerSelection}" />
+							</p:column>
+							<p:column headerText="#{lang['failedMultipleSelection']}">
+								<h:outputText value="#{rowVar.failedMultipleSelection}" />
+							</p:column>
+
+
+							<p:column width="80">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":formsectionquestionsInsForm:formsectionquestionsInsGrid">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{formsectionquestionsUI.formsectionquestions}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:formsectionquestionsList" action="#{formsectionquestionsUI.formsectionquestionsDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{formsectionquestionsUI.formsectionquestions}" />
+								</p:commandButton>
+							</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+	<!-- 
+createDate = createDate
+answerType = answerType
+question = question
+questionDesc = questionDesc
+formTypeSections = formTypeSections
+formSectionQuestions = formSectionQuestions
+selectedAnswer = selectedAnswer
+showOnParentAnswers = showOnParentAnswers
+orderPos = orderPos
+textAnswer = textAnswer
+usedEditorForQuestion = usedEditorForQuestion
+displayQuestion = displayQuestion
+multipleSelectionPoints = multipleSelectionPoints
+multipleAnswerSelection = multipleAnswerSelection
+failedMultipleSelection = failedMultipleSelection
+
+-->
+</ui:composition>

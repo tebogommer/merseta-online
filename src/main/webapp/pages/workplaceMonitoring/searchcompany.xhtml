@@ -1,0 +1,828 @@
+<ui:composition xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+		<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+		<p:growl showDetail="false" sticky="false" id="msg">
+			<p:autoUpdate />
+		</p:growl>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card">
+					<h:form id="companySelectionForm">
+						<h1>Search Company: Workplace Monitoring</h1>
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+						<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+						<p:importEnum type="haj.com.entity.enums.UsersStatusEnum" />
+						<p:dataTable var="rowVar" value="#{searchCompanyWorkplaceMonitoringUI.companyListDataModel}" id="companySelectionDT" rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,20,40" reflow="true" lazy="true">
+							<p:column headerText="#{lang['company.name']}" filterBy="#{rowVar.companyName}" sortBy="#{rowVar.companyName}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.companyName}" />
+							</p:column>
+							<p:column headerText="#{lang['tradingName']}" filterBy="#{rowVar.tradingName}" sortBy="#{rowVar.tradingName}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.tradingName}" />
+							</p:column>
+							<p:column headerText="#{lang['entity.id']}" filterBy="#{rowVar.levyNumber}" sortBy="#{rowVar.levyNumber}" filterStyle="width: 95%" width="10%">
+								<h:outputText value="#{rowVar.levyNumber}" />
+							</p:column>
+							<p:column headerText="#{lang['status']}" sortBy="#{rowVar.companyStatus}" width="10%">
+								<h:outputText value="#{lang[rowVar.companyStatus.registrationName]}" />
+							</p:column>
+							<p:column width="30">
+								<p:commandButton icon="fa fa-search" title="View Company Information" onstart="uploadStart()" oncomplete="uploadDone()" update="monitoringInformationDisplayPanel" action="#{searchCompanyWorkplaceMonitoringUI.selectCompany}">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{searchCompanyWorkplaceMonitoringUI.selectedCompany}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+					</h:form>
+				</div>
+				<p:outputPanel id="monitoringInformationDisplayPanel">
+					<c:if test="#{searchCompanyWorkplaceMonitoringUI.selectedCompany.id ne null}">
+						<div class="card">
+							<h:form id="mainForm">
+								<h2>#{searchCompanyWorkplaceMonitoringUI.selectedCompany.companyName} (#{searchCompanyWorkplaceMonitoringUI.selectedCompany.levyNumber}) Selected</h2>
+								<p:commandButton icon="fa fa-times" value="Close View" update="monitoringInformationDisplayPanel" action="#{searchCompanyWorkplaceMonitoringUI.deselectCompany}" onstart="uploadStart()" oncomplete="uploadDone()" />
+								<div class="EmptyBox10" />
+								<span class="Fs13 gray"><i class="fa fa-info-circle" aria-hidden="true"></i> Note: Please wait for tab to load first before switching to another</span>
+								<div class="EmptyBox5" />
+								<p:tabView id="tabView" activeIndex="#{searchCompanyWorkplaceMonitoringUI.index}">
+									<p:ajax event="tabChange" listener="#{searchCompanyWorkplaceMonitoringUI.onTabChange}" update="@form" />
+									<p:tab title="Company Information" id="companyInfoTab">
+										<p:outputPanel id="companyInfoOP">
+											<ui:include src="/pages/includes/companyInformationDisplay.xhtml">
+												<ui:param name="company" value="#{searchCompanyWorkplaceMonitoringUI.selectedCompany}" />
+												<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+											</ui:include>
+										</p:outputPanel>
+									</p:tab>
+									<p:tab title="DG / MOA Contracts" id="activeContractsTab">
+										<p:outputPanel id="activeContractsOP">
+											<div class="EmptyBox10" />
+											<p:dataTable var="rowVarMoa" value="#{searchCompanyWorkplaceMonitoringUI.allActiveContractsDataModel}" id="allActiveContractsDT" rowKey="#{rowVarMoa.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+												paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+												<p:column headerText="Company Name">
+													<p:outputLabel value="#{rowVarMoa.dgAllocationParent.wsp.company.companyName}" />
+												</p:column>
+
+												<p:column headerText="Entity ID">
+													<p:outputLabel value="#{rowVarMoa.dgAllocationParent.wsp.company.levyNumber}" />
+												</p:column>
+
+												<p:column headerText="Reference Number">
+													<p:outputLabel value="#{rowVarMoa.refnoAuto}" />
+												</p:column>
+
+												<p:column headerText="Value">
+													<p:outputLabel value="#{rowVarMoa.contractvalue}" styleClass="Fright">
+														<f:convertNumber type="currency" currencySymbol="R" />
+													</p:outputLabel>
+												</p:column>
+
+												<p:column headerText="Grant Year" rendered="false">
+													<p:outputLabel value="#{rowVarMoa.dgAllocationParent.wsp.finYear}" />
+												</p:column>
+
+												<p:column headerText="Status">
+													<p:outputLabel value="#{rowVarMoa.status.friendlyName}" />
+												</p:column>
+
+												<p:column headerText="View">
+													<p:commandButton title="View Information" action="#{searchCompanyWorkplaceMonitoringUI.viewActiveContractInformation}" update=":mainForm:tabView:activeContractsInformationOP" icon="fa fa-search-plus" onstart="uploadStart()" oncomplete="uploadDone()">
+														<f:setPropertyActionListener value="#{rowVarMoa}" target="#{searchCompanyWorkplaceMonitoringUI.selectedActiveContracts}" />
+													</p:commandButton>
+												</p:column>
+											</p:dataTable>
+
+											<p:outputPanel id="activeContractsInformationOP">
+												<c:if test="#{searchCompanyWorkplaceMonitoringUI.selectedActiveContracts.id ne null}">
+													<div class="EmptyBox10" />
+													<p:commandButton icon="fa fa-times" value="Close View" update="activeContractsInformationOP" action="#{searchCompanyWorkplaceMonitoringUI.deselectActiveContract}" onstart="uploadStart()" oncomplete="uploadDone()" />
+													<div class="EmptyBox10" />
+													<h2>#{searchCompanyWorkplaceMonitoringUI.selectedActiveContracts.refnoAuto} Selected</h2>
+													<p:panelGrid columns="2" style="width:100%" id="infoGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+														<h:panelGroup styleClass="md-inputfield">
+															<p:inputText id="refno" value="#{searchCompanyWorkplaceMonitoringUI.selectedActiveContracts.refnoAuto}" required="false" style="width:95%; opacity: 1; color : black;" disabled="true" />
+															<p:outputLabel value="#{lang['refno']}" for="refno" />
+														</h:panelGroup>
+														<h:panelGroup styleClass="md-inputfield">
+															<p:calendar mask="true" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" id="startdate" value="#{searchCompanyWorkplaceMonitoringUI.selectedActiveContracts.startdate}" required="false" inputStyle="width:95%" disabled="true" />
+															<p:outputLabel value="Company #{lang['signdate']}" for="startdate" />
+														</h:panelGroup>
+														<h:panelGroup styleClass="md-inputfield">
+															<p:calendar mask="true" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" id="signdate" value="#{searchCompanyWorkplaceMonitoringUI.selectedActiveContracts.signdate}" required="false" inputStyle="width:95%" disabled="true" />
+															<p:outputLabel value="merSETA #{lang['signdate']}" for="signdate" />
+														</h:panelGroup>
+														<h:panelGroup styleClass="md-inputfield">
+															<p:calendar mask="true" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" id="originalenddate" value="#{searchCompanyWorkplaceMonitoringUI.selectedActiveContracts.endDateAuto}" required="false" inputStyle="width:95%; opacity: 1; color : black;" disabled="true" />
+															<p:outputLabel value="#{lang['end.date']}" for="originalenddate" pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+														</h:panelGroup>
+														<h:panelGroup styleClass="md-inputfield" rendered="false">
+															<p:calendar mask="true" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" id="amendmentenddate" value="#{searchCompanyWorkplaceMonitoringUI.selectedActiveContracts.amendmentenddate}" inputStyle="width:95%" disabled="true" />
+															<p:outputLabel value="#{lang['amendmentenddate']}" for="amendmentenddate" pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+														</h:panelGroup>
+														<h:panelGroup styleClass="md-inputfield" rendered="false">
+															<p:calendar mask="true" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" id="reviseddate" value="#{searchCompanyWorkplaceMonitoringUI.selectedActiveContracts.reviseddate}" inputStyle="width:95%" disabled="true" />
+															<p:outputLabel value="#{lang['reviseddate']}" for="reviseddate" pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+														</h:panelGroup>
+													</p:panelGrid>
+													<c:if test="#{searchCompanyWorkplaceMonitoringUI.signOffMoaList ne null and searchCompanyWorkplaceMonitoringUI.signOffMoaList.size() gt 0}">
+														<h3>MOA Sign Off</h3>
+														<div class="EmptyBox10" />
+														<p:dataTable var="rvso" value="#{searchCompanyWorkplaceMonitoringUI.signOffMoaList}" id="signoffList" reflow="true">
+															<p:column headerText="#{lang['signed.off.by']}">
+																<p:outputLabel value="#{rvso.user.firstName} #{rvso.user.lastName}" rendered="#{rvso.user ne null}" />
+																<p:outputLabel value="Awaiting Assignment" rendered="#{rvso.user eq null}" />
+															</p:column>
+															<p:column headerText="#{lang['date']}">
+																<p:outputLabel value="Pending Sign Off" rendered="#{rvso.signOffDate eq null}" />
+																<p:outputLabel value="#{rvso.signOffDate}" rendered="#{rvso.signOffDate ne null}">
+																	<f:convertDateTime pattern="dd/MM/yyyy HH:MM" />
+																</p:outputLabel>
+															</p:column>
+															<p:column headerText="#{lang['acknowledge']}">
+																<div>
+																	<p:selectBooleanCheckbox value="#{rvso.accept}" disabled="true">
+																	</p:selectBooleanCheckbox>
+																</div>
+																<div>
+																	<p:outputLabel value="#{lang['i.acknowledge.read.understand.terms.and.conditions']}"></p:outputLabel>
+																</div>
+															</p:column>
+														</p:dataTable>
+													</c:if>
+													<c:if test="#{searchCompanyWorkplaceMonitoringUI.projectImplementationPlanList ne null and searchCompanyWorkplaceMonitoringUI.projectImplementationPlanList.size() gt 0}">
+														<h3>Project Implementation Plan</h3>
+														<p:dataTable var="rowVar" value="#{searchCompanyWorkplaceMonitoringUI.projectImplementationPlanList}" id="projectimplementationplanList" rowKey="#{rowVar.id}" reflow="true">
+															<p:column>
+																<f:facet name="header">
+																	<label style="text-align: top; position: relative;">NSDMS Ref ID</label>
+																</f:facet>
+																<h:outputText value="#{rowVar.id}" />
+															</p:column>
+															<p:column>
+																<f:facet name="header">
+																	<label style="text-align: top; position: relative;">#{lang['recommendedIntervention']}</label>
+																</f:facet>
+																<h:outputText value="#{rowVar.interventionTypeDescription}" />
+															</p:column>
+															<p:column>
+																<f:facet name="header">
+																	<label style="text-align: top; position: relative;">#{lang['awarded.learners']}</label>
+																</f:facet>
+																<h:outputText value="#{rowVar.fullyFundedLearnerAwarded + rowVar.coFundingLearnersAwarded}" />
+															</p:column>
+															<p:column>
+																<f:facet name="header">
+																	<label style="text-align: top; position: relative;">Awarded Amount</label>
+																</f:facet>
+																<h:outputText value="#{rowVar.totalAwardAmount}">
+																	<f:convertNumber type="currency" currencySymbol="R" />
+																</h:outputText>
+															</p:column>
+															<p:column>
+																<f:facet name="header">
+																	<label style="text-align: top; position: relative;">#{lang['projectedRecruitmentDate1']}</label>
+																	<p style="color: orange; text-align: top;">Before Projected Registration Date</p>
+																</f:facet>
+																<div>
+																	<p:outputLabel value="#{rowVar.projectedRecruitmentDate}">
+																		<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+																	</p:outputLabel>
+																</div>
+															</p:column>
+															<p:column>
+																<f:facet name="header">
+																	<label style="text-align: top; position: relative;">#{lang['projectedInductionDate1']}</label>
+																	<p style="color: orange; text-align: top;">Before Projected Registration Date</p>
+																</f:facet>
+																<div>
+																	<p:outputLabel value="#{rowVar.projectedInductionDate}">
+																		<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+																	</p:outputLabel>
+																</div>
+															</p:column>
+															<p:column>
+																<f:facet name="header">
+																	<label style="text-align: top; position: relative;">#{lang['projectedRegistrationDate1']}</label>
+																	<p style="color: orange; text-align: top;">#{activecontractsUI.projectedRegistrationDisplayDate}</p>
+																</f:facet>
+																<div>
+																	<p:outputLabel value="#{rowVar.projectedRegistrationDate}">
+																		<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+																	</p:outputLabel>
+																</div>
+															</p:column>
+															<p:column>
+																<f:facet name="header">
+																	<label style="text-align: top; position: relative;">#{lang['estimatedProgressDate1']}</label>
+																	<p style="color: orange; text-align: top;">Within MOA period</p>
+																</f:facet>
+																<div>
+																	<p:outputLabel value="#{rowVar.estimatedProgressDate}">
+																		<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+																	</p:outputLabel>
+																</div>
+															</p:column>
+															<p:column headerText="">
+																<f:facet name="header">
+																	<label style="text-align: top; position: relative;">#{lang['estimatedCompletionDate1']}</label>
+																	<p style="color: orange; text-align: top;">Within MOA period</p>
+																</f:facet>
+																<div>
+																	<p:outputLabel value="#{rowVar.estimatedCompletionDate}">
+																		<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+																	</p:outputLabel>
+																</div>
+															</p:column>
+															<p:column>
+																<f:facet name="header">
+																	<label style="text-align: top; position: relative;">#{lang['logisticalAspectsAddressed']}</label>
+																</f:facet>
+																<p:outputLabel value="#{rowVar.logisticalAspectsAddressed.friendlyName}">
+																</p:outputLabel>
+															</p:column>
+															<p:column>
+																<f:facet name="header">
+																	<label style="text-align: top; position: relative;">#{lang['accreditedProviderIdentified']}</label>
+																</f:facet>
+																<p:outputLabel value="#{rowVar.accreditedProviderIdentified.friendlyName}">
+																</p:outputLabel>
+															</p:column>
+															<p:column exportable="false">
+																<f:facet name="header">
+																	<label style="text-align: top; position: relative;">View</label>
+																</f:facet>
+																<p:commandButton title="View Payments" action="#{searchCompanyWorkplaceMonitoringUI.viewTranchPaymnetsByProjectImplementationPlanSelected}" update=":mainForm:tabView:activeContractsInformationOP" icon="fa fa-search-plus" onstart="uploadStart()" oncomplete="uploadDone()">
+																	<f:setPropertyActionListener value="#{rowVar}" target="#{searchCompanyWorkplaceMonitoringUI.selectedProjectImplementationPlan}" />
+																</p:commandButton>
+															</p:column>
+														</p:dataTable>
+													</c:if>
+													<c:if test="#{searchCompanyWorkplaceMonitoringUI.allProjectImplementationPlanPaymentsDataModel ne null}">
+														<h3>Project Implementation Plan (NSDMS Ref ID: #{searchCompanyWorkplaceMonitoringUI.selectedProjectImplementationPlan.id}) Selected.</h3>
+														<p:dataTable var="rowVarMoaPipPayment" value="#{searchCompanyWorkplaceMonitoringUI.allProjectImplementationPlanPaymentsDataModel}" id="allActiveContractsPipTranchPaymentsDT" rowKey="#{rowVarMoaPipPayment.id}" paginator="true" rows="5" paginatorPosition="bottom"
+															emptyMessage="#{lang['no.records.found']}" paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+															<p:column headerText="NSDMS Ref ID">
+																<p:outputLabel value="#{rowVarMoaPipPayment.id}" />
+															</p:column>
+															<p:column headerText="Amount">
+																<p:outputLabel value="#{rowVarMoaPipPayment.payments}">
+																	<f:convertNumber type="currency" currencySymbol="R" />
+																</p:outputLabel>
+															</p:column>
+															<p:column headerText="Tranch">
+																<p:outputLabel value="#{rowVarMoaPipPayment.trancheEnum.friendlyName}" />
+															</p:column>
+															<p:column headerText="Status">
+																<p:outputLabel value="#{rowVarMoaPipPayment.status.friendlyName}" />
+															</p:column>
+															<p:column headerText="Approved Date">
+																<p:outputLabel value="#{rowVarMoaPipPayment.approvalDate}">
+																	<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+																</p:outputLabel>
+															</p:column>
+														</p:dataTable>
+													</c:if>
+													<h3>All DG / MOA Contract Payments</h3>
+													<p:dataTable var="rowVarMoaPayment" value="#{searchCompanyWorkplaceMonitoringUI.allActiveContractPaymentsDataModel}" id="allActiveContractsTranchPaymentsDT" rowKey="#{rowVarMoaPayment.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+														paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+														<p:column headerText="NSDMS Ref ID">
+															<p:outputLabel value="#{rowVarMoaPayment.id}" />
+														</p:column>
+														<p:column headerText="Amount">
+															<p:outputLabel value="#{rowVarMoaPayment.payments}">
+																<f:convertNumber type="currency" currencySymbol="R" />
+															</p:outputLabel>
+														</p:column>
+														<p:column headerText="Tranch">
+															<p:outputLabel value="#{rowVarMoaPayment.trancheEnum.friendlyName}" />
+														</p:column>
+														<p:column headerText="Status">
+															<p:outputLabel value="#{rowVarMoaPayment.status.friendlyName}" />
+														</p:column>
+														<p:column headerText="Approved Date">
+															<p:outputLabel value="#{rowVarMoaPayment.approvalDate}">
+																<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+															</p:outputLabel>
+														</p:column>
+													</p:dataTable>
+												</c:if>
+											</p:outputPanel>
+										</p:outputPanel>
+									</p:tab>
+									<p:tab title="All Learners" id="allLearnersTab">
+										<p:outputPanel id="allLearnersOP">
+											<div class="EmptyBox10" />
+											<p:dataTable var="rowVarAllLearners" value="#{searchCompanyWorkplaceMonitoringUI.allLearnersDataModel}" id="allLearnersDT" rowKey="#{rowVarAllLearners.id}" paginator="true" rows="5" paginatorPosition="bottom"
+												paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+												<p:column headerText="#{lang['first.name']}" filterBy="#{rowVarAllLearners.user.firstName}" sortBy="#{rowVarAllLearners.user.firstName}">
+													<h:outputText value="#{rowVarAllLearners.user.firstName}" />
+												</p:column>
+												<p:column headerText="#{lang['last.name']}" filterBy="#{rowVarAllLearnersuser.lastName}" sortBy="#{rowVarAllLearners.user.lastName}">
+													<h:outputText value="#{rowVarAllLearners.user.lastName}" />
+												</p:column>
+												<p:column headerText="Identity Number" filterBy="#{rowVarAllLearners.user.rsaIDNumber}" sortBy="#{rowVarAllLearners.user.rsaIDNumber}">
+													<h:outputText value="#{rowVarAllLearners.user.rsaIDNumber}" />
+													<h:outputText rendered="#{rowVarAllLearners.user.rsaIDNumber.length() lt 1}" value="N/A" />
+												</p:column>
+												<p:column headerText="Passport Number" filterBy="#{rowVarAllLearners.user.rsaIDNumber}" sortBy="#{rowVarAllLearners.user.rsaIDNumber}">
+													<h:outputText rendered="#{rowVarAllLearners.user.passportNumber.length() lt 1}" value="N/A" />
+													<h:outputText value="#{rowVarAllLearners.user.passportNumber}" />
+												</p:column>
+												<p:column headerText="Employment Status">
+													<h:outputText value="#{rowVarAllLearners.employmentStatus.friendlyName}" />
+												</p:column>
+												<p:column headerText="Application Status">
+													<h:outputText value="#{rowVarAllLearners.learnerStatus.friendlyName}" />
+												</p:column>
+												<p:column headerText="Intervention Type">
+													<h:outputText value="#{rowVarAllLearners.interventionType.description}" />
+												</p:column>
+												<p:column headerText="Course / Qualification ">
+													<h:outputText value="(#{rowVarAllLearners.qualification.code})" rendered="#{rowVarAllLearners.qualification ne null}" />
+													<h:outputText value="#{rowVarAllLearners.qualification.description}" rendered="#{rowVarAllLearners.qualification ne null}" />
+													<h:outputText value="(#{rowVarAllLearners.qualification.nqflevelg2description})" rendered="#{rowVarAllLearners.qualification ne null}" />
+													<h:outputText value="#{rowVarAllLearners.skillsSet.description}" rendered="#{rowVarAllLearners.skillsSet ne null}" />
+													<h:outputText value="#{rowVarAllLearners.skillsProgram.description}" rendered="#{rowVarAllLearners.skillsProgram ne null}" />
+													<h:outputText value="#{rowVarAllLearners.unitStandard.title}" rendered="#{rowVarAllLearners.unitStandard ne null}" />
+													<h:outputText value="#{rowVarAllLearners.nonCredidBearingDescription}" rendered="#{rowVarAllLearners.nonCredidBearingDescription ne null}" />
+												</p:column>
+
+												<p:column headerText="Completion Date" rendered="false">
+													<h:outputText value="#{rowVarAllLearners.completionDate}">
+														<f:convertDateTime pattern="dd MMMM yyyy" />
+													</h:outputText>
+												</p:column>
+
+												<p:column headerText="Registered Date">
+													<h:outputText value="#{rowVarAllLearners.registeredDate}">
+														<f:convertDateTime pattern="dd MMMM yyyy" />
+													</h:outputText>
+												</p:column>
+
+												<p:column headerText="Agreement End Date">
+													<h:outputText value="#{rowVarAllLearners.nonSetaQualificationsCompletion.approvalDate}" rendered="#{rowVarAllLearners.nonSetaQualificationsCompletion ne null}">
+														<f:convertDateTime pattern="dd MMMM yyyy" />
+													</h:outputText>
+												</p:column>
+
+												<p:column headerText="Registered Number">
+													<h:outputText value="#{rowVarAllLearners.registrationNumber}">
+													</h:outputText>
+												</p:column>
+											</p:dataTable>
+										</p:outputPanel>
+									</p:tab>
+									<p:tab title="Learners: Learnership" id="learnersLearnershipTab">
+										<p:outputPanel id="learnershipLearnesOP">
+											<div class="EmptyBox10" />
+											<p:outputLabel value="Filtered By The Following Intervention Types:" />
+											<br />
+											<p:repeat var="rvLearnershipIT" value="#{searchCompanyWorkplaceMonitoringUI.allApprenticeshipInterventions}">
+												<p:outputLabel value="- #{rvLearnershipIT.description}" />
+												<br />
+											</p:repeat>
+											<div class="EmptyBox10" />
+											<p:dataTable var="rowVarLearnershipL" value="#{searchCompanyWorkplaceMonitoringUI.allLearnershipLearnersDataModel}" id="allLearnershipLDT" rowKey="#{rowVarLearnershipL.id}" paginator="true" rows="5" paginatorPosition="bottom"
+												paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+												<p:column headerText="Learners Name">
+													<h:outputText value="#{rowVarLearnershipL.user.firstName} #{rowVarLearnershipL.user.lastName}" />
+												</p:column>
+												<p:column headerText="Identity Number">
+													<h:outputText value="#{rowVarLearnershipL.user.rsaIDNumber}" rendered="#{rowVarLearnershipL.user.rsaIDNumber ne null}" />
+													<h:outputText value="#{rowVarLearnershipL.user.passportNumber}" rendered="#{rowVarLearnershipL.user.passportNumber ne null}" />
+												</p:column>
+												<p:column headerText="Qualification">
+													<h:outputText value="(#{rowVarLearnershipL.qualification.code})" rendered="#{rowVarLearnershipL.qualification ne null}" />
+													<h:outputText value="#{rowVarLearnershipL.qualification.description}" rendered="#{rowVarLearnershipL.qualification ne null}" />
+													<h:outputText value="#{rowVarLearnershipL.skillsSet.description}" rendered="#{rowVarLearnershipL.skillsSet ne null}" />
+													<h:outputText value="#{rowVarLearnershipL.skillsProgram.description}" rendered="#{rowVarLearnershipL.skillsProgram ne null}" />
+													<h:outputText value="#{rowVarLearnershipL.unitStandard.title}" rendered="#{rowVarLearnershipL.unitStandard ne null}" />
+													<h:outputText value="#{rowVarLearnershipL.nonCredidBearingDescription}" rendered="#{rowVarLearnershipL.nonCredidBearingDescription ne null}" />
+													<h:outputText value="#{rowVarLearnershipL.learnership.description}" rendered="#{rowVarLearnershipL.learnership ne null}" />
+												</p:column>
+												<p:column headerText="Intake Date">
+													<h:outputText value="#{rowVarLearnershipL.registeredDate}">
+														<f:convertDateTime pattern="dd MMMM yyyy" />
+													</h:outputText>
+												</p:column>
+												<p:column headerText="Learnering Area">
+													<h:outputText value="#{rowVarLearnershipL.qualification.subfield.description}" rendered="#{rowVarLearnershipL.qualification ne null}" />
+													<h:outputText value="#{rowVarLearnershipL.skillsSet.qualification.subfield.description}" rendered="#{rowVarLearnershipL.skillsSet ne null and rowVarLearnershipL.skillsSet.qualification ne null}" />
+													<h:outputText value="#{rowVarLearnershipL.skillsProgram.qualification.subfield.description}" rendered="#{rowVarLearnershipL.skillsProgram ne null and rowVarLearnershipL.skillsProgram.qualification ne null}" />
+													<h:outputText value="#{rowVarLearnershipL.learnership.qualification.subfield.description}" rendered="#{rowVarLearnershipL.learnership ne null and rowVarLearnershipL.learnership.qualification ne null}" />
+												</p:column>
+												<p:column headerText="NQF Level">
+													<h:outputText value="#{rowVarLearnershipL.qualification.nqflevelg2description}" rendered="#{rowVarLearnershipL.qualification ne null}" />
+												</p:column>
+												<p:column headerText="Learner Status">
+													<h:outputText value="#{rowVarLearnershipL.learnerStatus.friendlyName}" />
+												</p:column>
+												<p:column headerText="DG / Project Linked To">
+													<h:outputText value="Not Linked" rendered="#{rowVarLearnershipL.projectImplementationPlan eq null}" />
+													<h:outputText value="#{rowVarLearnershipL.projectImplementationPlan.activeContracts.refnoAuto}" rendered="#{rowVarLearnershipL.projectImplementationPlan ne null}" />
+												</p:column>
+												<p:column headerText="Termination Date Of MOA / Project">
+													<h:outputText value="N/A" rendered="#{rowVarLearnershipL.projectImplementationPlan eq null}" />
+													<h:outputText value="#{rowVarLearnershipL.projectImplementationPlan.activeContracts.endDateAuto}" rendered="#{rowVarLearnershipL.projectImplementationPlan ne null}">
+														<f:convertDateTime pattern="dd MMMM yyyy" />
+													</h:outputText>
+												</p:column>
+												<p:column headerText="View" rendered="true">
+													<p:commandButton title="View Payments" rendered="#{rowVarLearnershipL.projectImplementationPlan ne null}" update="mainForm:tabView:learnershipLearnesPaymentsOP" action="#{searchCompanyWorkplaceMonitoringUI.viewCompanyLearnersPayments}" icon="fa fa-search-plus" onstart="uploadStart()"
+														oncomplete="uploadDone()">
+														<f:setPropertyActionListener value="#{rowVarLearnershipL}" target="#{searchCompanyWorkplaceMonitoringUI.selectedCompanyLearners}" />
+													</p:commandButton>
+												</p:column>
+
+											</p:dataTable>
+
+											<p:outputPanel id="learnershipLearnesPaymentsOP">
+												<c:if test="#{searchCompanyWorkplaceMonitoringUI.allCompanyLearnerPaymentsDataModel ne null}">
+													<h3>Learner Payments</h3>
+													<p:outputLabel value="- Intervention Tranch Intervals: #{searchCompanyWorkplaceMonitoringUI.selectedCompanyLearners.interventionType.tranchintervals}" />
+													<c:if test="false">
+														<div class="EmptyBox10" />
+														<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+															<p:commandButton value="Generate Tranch 3 Payment" rendered="#{searchCompanyWorkplaceMonitoringUI.selectedCompanyLearners.interventionType.tranchintervals eq 3 or searchCompanyWorkplaceMonitoringUI.selectedCompanyLearners.interventionType.tranchintervals gt 3}" />
+															<p:commandButton value="Generate Tranch 4 Payment" rendered="#{searchCompanyWorkplaceMonitoringUI.selectedCompanyLearners.interventionType.tranchintervals eq 4}" />
+															<p:commandButton value="Generate Tranch 3 Payment With Checks" rendered="#{searchCompanyWorkplaceMonitoringUI.selectedCompanyLearners.interventionType.tranchintervals eq 3 or searchCompanyWorkplaceMonitoringUI.selectedCompanyLearners.interventionType.tranchintervals gt 3}" />
+															<p:commandButton value="Generate Tranch 4 Payment With Checks" rendered="#{searchCompanyWorkplaceMonitoringUI.selectedCompanyLearners.interventionType.tranchintervals eq 4}" />
+														</p:panelGrid>
+													</c:if>
+													<div class="EmptyBox10" />
+													<p:dataTable var="rowVarLearnershipMoaPayment" value="#{searchCompanyWorkplaceMonitoringUI.allCompanyLearnerPaymentsDataModel}" id="allLearnerLernershipTranchPaymentsDT" rowKey="#{rowVarLearnershipMoaPayment.id}" paginator="true" rows="5" paginatorPosition="bottom"
+														emptyMessage="#{lang['no.records.found']}" paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+														<p:column headerText="NSDMS Ref ID">
+															<p:outputLabel value="#{rowVarLearnershipMoaPayment.id}" />
+														</p:column>
+														<p:column headerText="Amount">
+															<p:outputLabel value="#{rowVarLearnershipMoaPayment.payments}">
+																<f:convertNumber type="currency" currencySymbol="R" />
+															</p:outputLabel>
+														</p:column>
+														<p:column headerText="Tranch">
+															<p:outputLabel value="#{rowVarLearnershipMoaPayment.trancheEnum.friendlyName}" />
+														</p:column>
+														<p:column headerText="Status">
+															<p:outputLabel value="#{rowVarLearnershipMoaPayment.status.friendlyName}" />
+														</p:column>
+														<p:column headerText="Approved Date">
+															<p:outputLabel value="#{rowVarLearnershipMoaPayment.approvalDate}">
+																<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+															</p:outputLabel>
+														</p:column>
+													</p:dataTable>
+												</c:if>
+											</p:outputPanel>
+										</p:outputPanel>
+									</p:tab>
+									<p:tab title="Learners: Apprentice CBMT" id="learnersAppCbmtTab">
+										<p:outputPanel id="learnersAppCbmtOP">
+											<div class="EmptyBox10" />
+											<p:dataTable var="rowVarlearnersAppCbmt" value="#{searchCompanyWorkplaceMonitoringUI.allApprenticeCbmtLearnersDataModel}" id="alllearnersAppCbmtDT" rowKey="#{rowVarlearnersAppCbmt.id}" paginator="true" rows="5" paginatorPosition="bottom"
+												paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+												<p:column headerText="Learners Name">
+													<h:outputText value="#{rowVarlearnersAppCbmt.user.firstName} #{rowVarlearnersAppCbmt.user.lastName}" />
+												</p:column>
+												<p:column headerText="Identity Number">
+													<h:outputText value="#{rowVarlearnersAppCbmt.user.rsaIDNumber}" rendered="#{rowVarlearnersAppCbmt.user.rsaIDNumber ne null}" />
+													<h:outputText value="#{rowVarlearnersAppCbmt.user.passportNumber}" rendered="#{rowVarlearnersAppCbmt.user.passportNumber ne null}" />
+												</p:column>
+												<p:column headerText="Qualification">
+													<h:outputText value="(#{rowVarlearnersAppCbmt.qualification.code})" rendered="#{rowVarlearnersAppCbmt.qualification ne null}" />
+													<h:outputText value="#{rowVarlearnersAppCbmt.qualification.description}" rendered="#{rowVarlearnersAppCbmt.qualification ne null}" />
+													<h:outputText value="#{rowVarlearnersAppCbmt.skillsSet.description}" rendered="#{rowVarlearnersAppCbmt.skillsSet ne null}" />
+													<h:outputText value="#{rowVarlearnersAppCbmt.skillsProgram.description}" rendered="#{rowVarlearnersAppCbmt.skillsProgram ne null}" />
+													<h:outputText value="#{rowVarlearnersAppCbmt.unitStandard.title}" rendered="#{rowVarlearnersAppCbmt.unitStandard ne null}" />
+													<h:outputText value="#{rowVarlearnersAppCbmt.nonCredidBearingDescription}" rendered="#{rowVarlearnersAppCbmt.nonCredidBearingDescription ne null}" />
+													<h:outputText value="#{rowVarlearnersAppCbmt.learnership.description}" rendered="#{rowVarlearnersAppCbmt.learnership ne null}" />
+												</p:column>
+												<p:column headerText="Intake Date">
+													<h:outputText value="#{rowVarlearnersAppCbmt.registeredDate}">
+														<f:convertDateTime pattern="dd MMMM yyyy" />
+													</h:outputText>
+												</p:column>
+												<p:column headerText="Learnering Area">
+													<h:outputText value="#{rowVarlearnersAppCbmt.qualification.subfield.description}" rendered="#{rowVarlearnersAppCbmt.qualification ne null}" />
+													<h:outputText value="#{rowVarlearnersAppCbmt.skillsSet.qualification.subfield.description}" rendered="#{rowVarlearnersAppCbmt.skillsSet ne null and rowVarlearnersAppCbmt.skillsSet.qualification ne null}" />
+													<h:outputText value="#{rowVarlearnersAppCbmt.skillsProgram.qualification.subfield.description}" rendered="#{rowVarlearnersAppCbmt.skillsProgram ne null and rowVarlearnersAppCbmt.skillsProgram.qualification ne null}" />
+													<h:outputText value="#{rowVarlearnersAppCbmt.learnership.qualification.subfield.description}" rendered="#{rowVarlearnersAppCbmt.learnership ne null and rowVarlearnersAppCbmt.learnership.qualification ne null}" />
+												</p:column>
+												<p:column headerText="NQF Level">
+													<h:outputText value="#{rowVarlearnersAppCbmt.qualification.nqflevelg2description}" rendered="#{rowVarlearnersAppCbmt.qualification ne null}" />
+												</p:column>
+												<p:column headerText="Learner Status">
+													<h:outputText value="#{rowVarlearnersAppCbmt.learnerStatus.friendlyName}" />
+												</p:column>
+												<p:column headerText="DG / Project Linked To">
+													<h:outputText value="Not Linked" rendered="#{rowVarlearnersAppCbmt.projectImplementationPlan eq null}" />
+													<h:outputText value="#{rowVarlearnersAppCbmt.projectImplementationPlan.activeContracts.refnoAuto}" rendered="#{rowVarlearnersAppCbmt.projectImplementationPlan ne null}" />
+												</p:column>
+												<p:column headerText="Termination Date Of MOA / Project">
+													<h:outputText value="N/A" rendered="#{rowVarlearnersAppCbmt.projectImplementationPlan eq null}" />
+													<h:outputText value="#{rowVarlearnersAppCbmt.projectImplementationPlan.activeContracts.endDateAuto}" rendered="#{rowVarlearnersAppCbmt.projectImplementationPlan ne null}">
+														<f:convertDateTime pattern="dd MMMM yyyy" />
+													</h:outputText>
+												</p:column>
+												<p:column headerText="View" rendered="true">
+													<p:commandButton title="View Payments" rendered="#{rowVarlearnersAppCbmt.projectImplementationPlan ne null}" update="mainForm:tabView:learnersAppCbmtPaymentsOP" action="#{searchCompanyWorkplaceMonitoringUI.viewCompanyLearnersPayments}" icon="fa fa-search-plus" onstart="uploadStart()"
+														oncomplete="uploadDone()">
+														<f:setPropertyActionListener value="#{rowVarlearnersAppCbmt}" target="#{searchCompanyWorkplaceMonitoringUI.selectedCompanyLearners}" />
+													</p:commandButton>
+												</p:column>
+											</p:dataTable>
+
+											<p:outputPanel id="learnersAppCbmtPaymentsOP">
+												<c:if test="#{searchCompanyWorkplaceMonitoringUI.allCompanyLearnerPaymentsDataModel ne null}">
+													<h3>Learner Payments</h3>
+													<p:outputLabel value="- Intervention Tranch Intervals: #{searchCompanyWorkplaceMonitoringUI.selectedCompanyLearners.interventionType.tranchintervals}" />
+													<c:if test="false">
+														<div class="EmptyBox10" />
+														<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+															<p:commandButton value="Generate Tranch 3 Payment" rendered="#{searchCompanyWorkplaceMonitoringUI.selectedCompanyLearners.interventionType.tranchintervals eq 3 or searchCompanyWorkplaceMonitoringUI.selectedCompanyLearners.interventionType.tranchintervals gt 3}" />
+															<p:commandButton value="Generate Tranch 4 Payment" rendered="#{searchCompanyWorkplaceMonitoringUI.selectedCompanyLearners.interventionType.tranchintervals eq 4}" />
+															<p:commandButton value="Generate Tranch 3 Payment With Checks" rendered="#{searchCompanyWorkplaceMonitoringUI.selectedCompanyLearners.interventionType.tranchintervals eq 3 or searchCompanyWorkplaceMonitoringUI.selectedCompanyLearners.interventionType.tranchintervals gt 3}" />
+															<p:commandButton value="Generate Tranch 4 Payment With Checks" rendered="#{searchCompanyWorkplaceMonitoringUI.selectedCompanyLearners.interventionType.tranchintervals eq 4}" />
+														</p:panelGrid>
+													</c:if>
+													<div class="EmptyBox10" />
+													<p:dataTable var="rowVarAppCbmtMoaPayment" value="#{searchCompanyWorkplaceMonitoringUI.allCompanyLearnerPaymentsDataModel}" id="allLearnerAppCbmtTranchPaymentsDT" rowKey="#{rowVarAppCbmtMoaPayment.id}" paginator="true" rows="5" paginatorPosition="bottom"
+														emptyMessage="#{lang['no.records.found']}" paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+														<p:column headerText="NSDMS Ref ID">
+															<p:outputLabel value="#{rowVarAppCbmtMoaPayment.id}" />
+														</p:column>
+														<p:column headerText="Amount">
+															<p:outputLabel value="#{rowVarAppCbmtMoaPayment.payments}">
+																<f:convertNumber type="currency" currencySymbol="R" />
+															</p:outputLabel>
+														</p:column>
+														<p:column headerText="Tranch">
+															<p:outputLabel value="#{rowVarAppCbmtMoaPayment.trancheEnum.friendlyName}" />
+														</p:column>
+														<p:column headerText="Status">
+															<p:outputLabel value="#{rowVarAppCbmtMoaPayment.status.friendlyName}" />
+														</p:column>
+														<p:column headerText="Approved Date">
+															<p:outputLabel value="#{rowVarAppCbmtMoaPayment.approvalDate}">
+																<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+															</p:outputLabel>
+														</p:column>
+													</p:dataTable>
+												</c:if>
+											</p:outputPanel>
+										</p:outputPanel>
+									</p:tab>
+									<p:tab title="Learners: Apprentice Motor Time Based" id="learnersAppMotorTbTab">
+										<p:outputPanel id="learnersAppMotorTbOP">
+											<div class="EmptyBox10" />
+											<p:dataTable var="rowVarlearnersMotorTb" value="#{searchCompanyWorkplaceMonitoringUI.allMotorTbLearnersDataModel}" id="alllearnersMotorTbDT" rowKey="#{rowVarlearnersMotorTb.id}" paginator="true" rows="5" paginatorPosition="bottom"
+												paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+												<p:column headerText="Learners Name">
+													<h:outputText value="#{rowVarlearnersMotorTb.user.firstName} #{rowVarlearnersMotorTb.user.lastName}" />
+												</p:column>
+												<p:column headerText="Identity Number">
+													<h:outputText value="#{rowVarlearnersMotorTb.user.rsaIDNumber}" rendered="#{rowVarlearnersMotorTb.user.rsaIDNumber ne null}" />
+													<h:outputText value="#{rowVarlearnersMotorTb.user.passportNumber}" rendered="#{rowVarlearnersMotorTb.user.passportNumber ne null}" />
+												</p:column>
+												<p:column headerText="Qualification">
+													<h:outputText value="(#{rowVarlearnersMotorTb.qualification.code})" rendered="#{rowVarlearnersMotorTb.qualification ne null}" />
+													<h:outputText value="#{rowVarlearnersMotorTb.qualification.description}" rendered="#{rowVarlearnersMotorTb.qualification ne null}" />
+													<h:outputText value="#{rowVarlearnersMotorTb.skillsSet.description}" rendered="#{rowVarlearnersMotorTb.skillsSet ne null}" />
+													<h:outputText value="#{rowVarlearnersMotorTb.skillsProgram.description}" rendered="#{rowVarlearnersMotorTb.skillsProgram ne null}" />
+													<h:outputText value="#{rowVarlearnersMotorTb.unitStandard.title}" rendered="#{rowVarlearnersMotorTb.unitStandard ne null}" />
+													<h:outputText value="#{rowVarlearnersMotorTb.nonCredidBearingDescription}" rendered="#{rowVarlearnersMotorTb.nonCredidBearingDescription ne null}" />
+													<h:outputText value="#{rowVarlearnersMotorTb.learnership.description}" rendered="#{rowVarlearnersMotorTb.learnership ne null}" />
+												</p:column>
+												<p:column headerText="Intake Date">
+													<h:outputText value="#{rowVarlearnersMotorTb.registeredDate}">
+														<f:convertDateTime pattern="dd MMMM yyyy" />
+													</h:outputText>
+												</p:column>
+												<p:column headerText="Learnering Area">
+													<h:outputText value="#{rowVarlearnersMotorTb.qualification.subfield.description}" rendered="#{rowVarlearnersMotorTb.qualification ne null}" />
+													<h:outputText value="#{rowVarlearnersMotorTb.skillsSet.qualification.subfield.description}" rendered="#{rowVarlearnersMotorTb.skillsSet ne null and rowVarlearnersMotorTb.skillsSet.qualification ne null}" />
+													<h:outputText value="#{rowVarlearnersMotorTb.skillsProgram.qualification.subfield.description}" rendered="#{rowVarlearnersMotorTb.skillsProgram ne null and rowVarlearnersMotorTb.skillsProgram.qualification ne null}" />
+													<h:outputText value="#{rowVarlearnersMotorTb.learnership.qualification.subfield.description}" rendered="#{rowVarlearnersMotorTb.learnership ne null and rowVarlearnersMotorTb.learnership.qualification ne null}" />
+												</p:column>
+												<p:column headerText="NQF Level">
+													<h:outputText value="#{rowVarlearnersMotorTb.qualification.nqflevelg2description}" rendered="#{rowVarlearnersMotorTb.qualification ne null}" />
+												</p:column>
+												<p:column headerText="Learner Status">
+													<h:outputText value="#{rowVarlearnersMotorTb.learnerStatus.friendlyName}" />
+												</p:column>
+												<p:column headerText="DG / Project Linked To">
+													<h:outputText value="Not Linked" rendered="#{rowVarlearnersMotorTb.projectImplementationPlan eq null}" />
+													<h:outputText value="#{rowVarlearnersMotorTb.projectImplementationPlan.activeContracts.refnoAuto}" rendered="#{rowVarlearnersMotorTb.projectImplementationPlan ne null}" />
+												</p:column>
+												<p:column headerText="Termination Date Of MOA / Project">
+													<h:outputText value="N/A" rendered="#{rowVarlearnersMotorTb.projectImplementationPlan eq null}" />
+													<h:outputText value="#{rowVarlearnersMotorTb.projectImplementationPlan.activeContracts.endDateAuto}" rendered="#{rowVarlearnersMotorTb.projectImplementationPlan ne null}">
+														<f:convertDateTime pattern="dd MMMM yyyy" />
+													</h:outputText>
+												</p:column>
+												<p:column headerText="View" rendered="true">
+													<p:commandButton title="View Payments" rendered="#{rowVarlearnersMotorTb.projectImplementationPlan ne null}" update="mainForm:tabView:learnersAppMotorTbPaymentsOP" action="#{searchCompanyWorkplaceMonitoringUI.viewCompanyLearnersPayments}" icon="fa fa-search-plus" onstart="uploadStart()"
+														oncomplete="uploadDone()">
+														<f:setPropertyActionListener value="#{rowVarlearnersMotorTb}" target="#{searchCompanyWorkplaceMonitoringUI.selectedCompanyLearners}" />
+													</p:commandButton>
+												</p:column>
+											</p:dataTable>
+
+											<p:outputPanel id="learnersAppMotorTbPaymentsOP">
+												<c:if test="#{searchCompanyWorkplaceMonitoringUI.allCompanyLearnerPaymentsDataModel ne null}">
+													<h3>Learner Payments</h3>
+													<p:outputLabel value="- Intervention Tranch Intervals: #{searchCompanyWorkplaceMonitoringUI.selectedCompanyLearners.interventionType.tranchintervals}" />
+													<c:if test="false">
+														<div class="EmptyBox10" />
+														<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+															<p:commandButton value="Generate Tranch 3 Payment" rendered="#{searchCompanyWorkplaceMonitoringUI.selectedCompanyLearners.interventionType.tranchintervals eq 3 or searchCompanyWorkplaceMonitoringUI.selectedCompanyLearners.interventionType.tranchintervals gt 3}" />
+															<p:commandButton value="Generate Tranch 4 Payment" rendered="#{searchCompanyWorkplaceMonitoringUI.selectedCompanyLearners.interventionType.tranchintervals eq 4}" />
+															<p:commandButton value="Generate Tranch 3 Payment With Checks" rendered="#{searchCompanyWorkplaceMonitoringUI.selectedCompanyLearners.interventionType.tranchintervals eq 3 or searchCompanyWorkplaceMonitoringUI.selectedCompanyLearners.interventionType.tranchintervals gt 3}" />
+															<p:commandButton value="Generate Tranch 4 Payment With Checks" rendered="#{searchCompanyWorkplaceMonitoringUI.selectedCompanyLearners.interventionType.tranchintervals eq 4}" />
+														</p:panelGrid>
+													</c:if>
+													<div class="EmptyBox10" />
+													<p:dataTable var="rowVarMotorTbMoaPayment" value="#{searchCompanyWorkplaceMonitoringUI.allCompanyLearnerPaymentsDataModel}" id="allLearnerMotorTbTranchPaymentsDT" rowKey="#{rowVarMotorTbMoaPayment.id}" paginator="true" rows="5" paginatorPosition="bottom"
+														emptyMessage="#{lang['no.records.found']}" paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+														<p:column headerText="NSDMS Ref ID">
+															<p:outputLabel value="#{rowVarMotorTbMoaPayment.id}" />
+														</p:column>
+														<p:column headerText="Amount">
+															<p:outputLabel value="#{rowVarMotorTbMoaPayment.payments}">
+																<f:convertNumber type="currency" currencySymbol="R" />
+															</p:outputLabel>
+														</p:column>
+														<p:column headerText="Tranch">
+															<p:outputLabel value="#{rowVarMotorTbMoaPayment.trancheEnum.friendlyName}" />
+														</p:column>
+														<p:column headerText="Status">
+															<p:outputLabel value="#{rowVarMotorTbMoaPayment.status.friendlyName}" />
+														</p:column>
+														<p:column headerText="Approved Date">
+															<p:outputLabel value="#{rowVarMotorTbMoaPayment.approvalDate}">
+																<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+															</p:outputLabel>
+														</p:column>
+													</p:dataTable>
+												</c:if>
+											</p:outputPanel>
+										</p:outputPanel>
+									</p:tab>
+									<p:tab title="Learners: Apprentice Metal Time Based" id="learnersAppMetalTbTab" rendered="true">
+										<p:outputPanel id="learnersAppMetalTbOP">
+											<div class="EmptyBox10" />
+											<p:dataTable var="rowVarlearnersAppMetalTb" value="#{searchCompanyWorkplaceMonitoringUI.allMetalTbLearnersDataModel}" id="alllearnersMetalTbDT" rowKey="#{rowVarlearnersAppMetalTb.id}" paginator="true" rows="5" paginatorPosition="bottom"
+												paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+												<p:column headerText="Learners Name">
+													<h:outputText value="#{rowVarlearnersAppMetalTb.user.firstName} #{rowVarlearnersAppMetalTb.user.lastName}" />
+												</p:column>
+												<p:column headerText="Identity Number">
+													<h:outputText value="#{rowVarlearnersAppMetalTb.user.rsaIDNumber}" rendered="#{rowVarlearnersAppMetalTb.user.rsaIDNumber ne null}" />
+													<h:outputText value="#{rowVarlearnersAppMetalTb.user.passportNumber}" rendered="#{rowVarlearnersAppMetalTb.user.passportNumber ne null}" />
+												</p:column>
+												<p:column headerText="Qualification">
+													<h:outputText value="(#{rowVarlearnersAppMetalTb.qualification.code})" rendered="#{rowVarlearnersAppMetalTb.qualification ne null}" />
+													<h:outputText value="#{rowVarlearnersAppMetalTb.qualification.description}" rendered="#{rowVarlearnersAppMetalTb.qualification ne null}" />
+													<h:outputText value="#{rowVarlearnersAppMetalTb.skillsSet.description}" rendered="#{rowVarlearnersAppMetalTb.skillsSet ne null}" />
+													<h:outputText value="#{rowVarlearnersAppMetalTb.skillsProgram.description}" rendered="#{rowVarlearnersAppMetalTb.skillsProgram ne null}" />
+													<h:outputText value="#{rowVarlearnersAppMetalTb.unitStandard.title}" rendered="#{rowVarlearnersAppMetalTb.unitStandard ne null}" />
+													<h:outputText value="#{rowVarlearnersAppMetalTb.nonCredidBearingDescription}" rendered="#{rowVarlearnersAppMetalTb.nonCredidBearingDescription ne null}" />
+													<h:outputText value="#{rowVarlearnersAppMetalTb.learnership.description}" rendered="#{rowVarlearnersAppMetalTb.learnership ne null}" />
+												</p:column>
+												<p:column headerText="Intake Date">
+													<h:outputText value="#{rowVarlearnersAppMetalTb.registeredDate}">
+														<f:convertDateTime pattern="dd MMMM yyyy" />
+													</h:outputText>
+												</p:column>
+												<p:column headerText="Learnering Area">
+													<h:outputText value="#{rowVarlearnersAppMetalTb.qualification.subfield.description}" rendered="#{rowVarlearnersAppMetalTb.qualification ne null}" />
+													<h:outputText value="#{rowVarlearnersAppMetalTb.skillsSet.qualification.subfield.description}" rendered="#{rowVarlearnersAppMetalTb.skillsSet ne null and rowVarlearnersAppMetalTb.skillsSet.qualification ne null}" />
+													<h:outputText value="#{rowVarlearnersAppMetalTb.skillsProgram.qualification.subfield.description}" rendered="#{rowVarlearnersAppMetalTb.skillsProgram ne null and rowVarlearnersAppMetalTb.skillsProgram.qualification ne null}" />
+													<h:outputText value="#{rowVarlearnersAppMetalTb.learnership.qualification.subfield.description}" rendered="#{rowVarlearnersAppMetalTb.learnership ne null and rowVarlearnersAppMetalTb.learnership.qualification ne null}" />
+												</p:column>
+												<p:column headerText="NQF Level">
+													<h:outputText value="#{rowVarlearnersAppMetalTb.qualification.nqflevelg2description}" rendered="#{rowVarlearnersAppMetalTb.qualification ne null}" />
+												</p:column>
+												<p:column headerText="Learner Status">
+													<h:outputText value="#{rowVarlearnersAppMetalTb.learnerStatus.friendlyName}" />
+												</p:column>
+												<p:column headerText="DG / Project Linked To">
+													<h:outputText value="Not Linked" rendered="#{rowVarlearnersAppMetalTb.projectImplementationPlan eq null}" />
+													<h:outputText value="#{rowVarlearnersAppMetalTb.projectImplementationPlan.activeContracts.refnoAuto}" rendered="#{rowVarlearnersAppMetalTb.projectImplementationPlan ne null}" />
+												</p:column>
+												<p:column headerText="Termination Date Of MOA / Project">
+													<h:outputText value="N/A" rendered="#{rowVarlearnersAppMetalTb.projectImplementationPlan eq null}" />
+													<h:outputText value="#{rowVarlearnersAppMetalTb.projectImplementationPlan.activeContracts.endDateAuto}" rendered="#{rowVarlearnersAppMetalTb.projectImplementationPlan ne null}">
+														<f:convertDateTime pattern="dd MMMM yyyy" />
+													</h:outputText>
+												</p:column>
+												<p:column headerText="View" rendered="true">
+													<p:commandButton title="View Payments" rendered="#{rowVarlearnersAppMetalTb.projectImplementationPlan ne null}" update="mainForm:tabView:learnersAppMetalTbPaymentsOP" action="#{searchCompanyWorkplaceMonitoringUI.viewCompanyLearnersPayments}" icon="fa fa-search-plus"
+														onstart="uploadStart()" oncomplete="uploadDone()">
+														<f:setPropertyActionListener value="#{rowVarlearnersAppMetalTb}" target="#{searchCompanyWorkplaceMonitoringUI.selectedCompanyLearners}" />
+													</p:commandButton>
+												</p:column>
+											</p:dataTable>
+
+											<p:outputPanel id="learnersAppMetalTbPaymentsOP">
+												<c:if test="#{searchCompanyWorkplaceMonitoringUI.allCompanyLearnerPaymentsDataModel ne null}">
+													<h3>Learner Payments</h3>
+													<p:outputLabel value="- Intervention Tranch Intervals: #{searchCompanyWorkplaceMonitoringUI.selectedCompanyLearners.interventionType.tranchintervals}" />
+													<c:if test="false">
+														<div class="EmptyBox10" />
+														<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+															<p:commandButton value="Generate Tranch 3 Payment" rendered="#{searchCompanyWorkplaceMonitoringUI.selectedCompanyLearners.interventionType.tranchintervals eq 3 or searchCompanyWorkplaceMonitoringUI.selectedCompanyLearners.interventionType.tranchintervals gt 3}" />
+															<p:commandButton value="Generate Tranch 4 Payment" rendered="#{searchCompanyWorkplaceMonitoringUI.selectedCompanyLearners.interventionType.tranchintervals eq 4}" />
+															<p:commandButton value="Generate Tranch 3 Payment With Checks" rendered="#{searchCompanyWorkplaceMonitoringUI.selectedCompanyLearners.interventionType.tranchintervals eq 3 or searchCompanyWorkplaceMonitoringUI.selectedCompanyLearners.interventionType.tranchintervals gt 3}" />
+															<p:commandButton value="Generate Tranch 4 Payment With Checks" rendered="#{searchCompanyWorkplaceMonitoringUI.selectedCompanyLearners.interventionType.tranchintervals eq 4}" />
+														</p:panelGrid>
+													</c:if>
+													<div class="EmptyBox10" />
+													<p:dataTable var="rowVarMetalTbMoaPayment" value="#{searchCompanyWorkplaceMonitoringUI.allCompanyLearnerPaymentsDataModel}" id="allLearnerMetalTbTranchPaymentsDT" rowKey="#{rowVarMetalTbMoaPayment.id}" paginator="true" rows="5" paginatorPosition="bottom"
+														emptyMessage="#{lang['no.records.found']}" paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+														<p:column headerText="NSDMS Ref ID">
+															<p:outputLabel value="#{rowVarMetalTbMoaPayment.id}" />
+														</p:column>
+														<p:column headerText="Amount">
+															<p:outputLabel value="#{rowVarMetalTbMoaPayment.payments}">
+																<f:convertNumber type="currency" currencySymbol="R" />
+															</p:outputLabel>
+														</p:column>
+														<p:column headerText="Tranch">
+															<p:outputLabel value="#{rowVarMetalTbMoaPayment.trancheEnum.friendlyName}" />
+														</p:column>
+														<p:column headerText="Status">
+															<p:outputLabel value="#{rowVarMetalTbMoaPayment.status.friendlyName}" />
+														</p:column>
+														<p:column headerText="Approved Date">
+															<p:outputLabel value="#{rowVarMetalTbMoaPayment.approvalDate}">
+																<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+															</p:outputLabel>
+														</p:column>
+													</p:dataTable>
+												</c:if>
+											</p:outputPanel>
+										</p:outputPanel>
+									</p:tab>
+									<p:tab title="Workplace Monitoring Site Visits" id="workplaceMonitoringTab" rendered="true">
+										<p:outputPanel id="workplaceMonitoringTabOP">
+											<div class="EmptyBox10" />
+											<p:commandButton rendered="#{searchCompanyWorkplaceMonitoringUI.canCreateSiteVisit}" update=":newMonitoringSiteVisitForm" action="#{searchCompanyWorkplaceMonitoringUI.prepCreateSiteVisit}" value="Initiate: Monitoring Site Visit" icon="fa fa-plus" />
+											<div class="EmptyBox10" />
+											<p:dataTable var="rowVarWPM" value="#{searchCompanyWorkplaceMonitoringUI.allWorkplaceMonitoringSiteVisitByCompanyDataModel}" id="workplaceMonitoringDT" rowKey="#{rowVarWPM.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+												paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+												<p:column headerText="NSDMS Ref ID">
+													<p:outputLabel value="#{rowVarWPM.id}" />
+												</p:column>
+												<p:column headerText="Generated Date">
+													<p:outputLabel value="#{rowVarWPM.createDate}">
+														<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+													</p:outputLabel>
+												</p:column>
+												<p:column headerText="Site Visit Date">
+													<p:outputLabel value="#{rowVarWPM.monitoringDate}">
+														<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+													</p:outputLabel>
+												</p:column>
+											</p:dataTable>
+										</p:outputPanel>
+									</p:tab>
+								</p:tabView>
+							</h:form>
+						</div>
+					</c:if>
+				</p:outputPanel>
+			</div>
+		</div>
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+			<h:form>
+				<p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="fa fa-check" />
+				<p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="fa fa-times" />
+			</h:form>
+		</p:confirmDialog>
+
+		<p:dialog header="New: Workplace Monitoring Site Visit" widgetVar="newMonitoringSiteVisitDlg" position="top" hideEffect="clip" showEffect="clip" id="newMonitoringSiteVisitDialog" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="newMonitoringSiteVisitForm">
+			
+				<p:panelGrid columns="1" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<div class="EmptyBox10" />
+					<h:panelGroup styleClass="md-inputfield">
+						<p:calendar mindate="#{searchCompanyWorkplaceMonitoringUI.today}" id="siteVisitDateSel" value="#{searchCompanyWorkplaceMonitoringUI.siteVisitDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN_DATE_AND_TIME}" mask="true" readonlyInput="true">
+						</p:calendar>
+						<p:outputLabel value="Site Visit Date" for="siteVisitDateSel" />
+					</h:panelGroup>
+				</p:panelGrid>
+				
+				<p:panelGrid columns="1" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<p:commandButton process="newMonitoringSiteVisitForm" value="Create" icon="fa fa-plus" update="@form :monitoringInformationDisplayPanel" action="#{searchCompanyWorkplaceMonitoringUI.createSiteVisit}" onstart="uploadStart()" oncomplete="uploadDone()" />
+				</p:panelGrid>
+				
+			</h:form>
+		</p:dialog>
+
+	</ui:define>
+</ui:composition>

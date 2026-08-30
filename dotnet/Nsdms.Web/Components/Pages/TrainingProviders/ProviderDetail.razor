@@ -1,0 +1,676 @@
+@page "/sdp/{id:int}"
+@page "/sdp/create"
+@using Nsdms.Web.Components.Shared
+@inject ITrainingProviderService ProviderService
+@inject IOrganisationService OrgService
+@inject IPersonService PersonService
+@inject LookupService LookupService
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+<!-- Sticky Top Bar with Breadcrumbs and Action Buttons -->
+<div class="sticky-top bg-white pa-4 mb-4 border-bottom elevation-1 d-flex flex-wrap justify-space-between align-center gap-3">
+    <div class="d-flex align-center gap-3">
+        <MudButton Variant="Variant.Text"
+                   StartIcon="@Icons.Material.Filled.ArrowBack"
+                   Color="Color.Default"
+                   OnClick="BackToList">
+            Back to SDP Registry
+        </MudButton>
+        <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-2" />
+        <div>
+            <MudBreadcrumbs Items="_breadcrumbItems" Separator=">" Class="pa-0 ma-0" />
+            <MudText Typo="Typo.h6" Class="font-weight-bold">
+                @(Id == 0 ? "New SDP Accreditation Registration" : $"{_provider.AccreditationNumber} - {_provider.Organisation?.CompanyName ?? "Provider Detail"}")
+            </MudText>
+        </div>
+    </div>
+    <div class="d-flex align-center gap-2">
+        @if (Id > 0)
+        {
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Error"
+                       StartIcon="@Icons.Material.Filled.Delete"
+                       OnClick="DeleteProvider">
+                Delete
+            </MudButton>
+        }
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Secondary"
+                   OnClick="BackToList">
+            Cancel
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Save"
+                   OnClick="SaveProvider"
+                   Disabled="_isSaving">
+            @(_isSaving ? "Saving..." : "Save Provider")
+        </MudButton>
+    </div>
+</div>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-0">
+    @if (Id > 0)
+    {
+        <!-- Action Bridge for Workflow Transitions -->
+        <WorkflowActionBridge ProcessCode="PROVIDER" 
+                              EntityId="@Id" 
+                              EntityTitle="@($"{_provider.AccreditationNumber} - {_provider.Organisation?.CompanyName ?? "Provider"}")" 
+                              EntityRef="@_provider.AccreditationNumber" 
+                              OnStatusChanged="OnWorkflowStatusChanged" />
+    }
+
+    @if (_loading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-6" />
+    }
+    else
+    {
+        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Color="Color.Surface">
+            <!-- TAB 1: General Info -->
+            <MudTabPanel Text="General Info" Icon="@Icons.Material.Filled.School">
+                <MudForm @ref="_form" @bind-IsValid="_isValid">
+                    <MudGrid Spacing="3">
+                        <!-- Left Column: Core Accreditation Details -->
+                        <MudItem xs="12" lg="8">
+                            <MudCard Elevation="2" Class="mb-4">
+                                <MudCardHeader>
+                                    <CardHeaderAvatar>
+                                        <MudAvatar Color="Color.Primary" Variant="Variant.Filled">
+                                            <MudIcon Icon="@Icons.Material.Filled.WorkspacePremium" />
+                                        </MudAvatar>
+                                    </CardHeaderAvatar>
+                                    <CardHeaderContent>
+                                        <MudText Typo="Typo.h6">Accreditation &amp; Provider Details</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Official SETA accreditation credentials, capacity, and legal host organisation</MudText>
+                                    </CardHeaderContent>
+                                </MudCardHeader>
+                                <MudCardContent>
+                                    <MudGrid>
+                                        <MudItem xs="12" md="6">
+                                            <MudSelect T="int" Label="Host Organisation / Legal Entity" Required="true" RequiredError="Organisation is mandatory" @bind-Value="_provider.OrganisationId" Variant="Variant.Outlined">
+                                                @foreach (var org in _organisations)
+                                                {
+                                                    <MudSelectItem Value="@org.Id">@org.CompanyName (@org.SdlNumber)</MudSelectItem>
+                                                }
+                                            </MudSelect>
+                                        </MudItem>
+                                        <MudItem xs="12" md="6">
+                                            <MudTextField T="string"
+                                                          Label="Accreditation Number"
+                                                          Required="true"
+                                                          RequiredError="Accreditation Number is mandatory"
+                                                          @bind-Value="_provider.AccreditationNumber"
+                                                          Variant="Variant.Outlined"
+                                                          Placeholder="e.g. SDP-2026-0812" />
+                                        </MudItem>
+                                        <MudItem xs="12" md="6">
+                                            <MudSelect T="string" Label="Provider Type" @bind-Value="_provider.ProviderTypeCode" Variant="Variant.Outlined">
+                                                @foreach (var pt in _providerTypes)
+                                                {
+                                                    <MudSelectItem Value="@pt.Code">@pt.Name (@pt.Code)</MudSelectItem>
+                                                }
+                                            </MudSelect>
+                                        </MudItem>
+                                        <MudItem xs="12" md="6">
+                                            <MudSelect T="string" Label="Provider Status" @bind-Value="_provider.ProviderStatusCode" Variant="Variant.Outlined">
+                                                @foreach (var ps in _providerStatusTypes)
+                                                {
+                                                    <MudSelectItem Value="@ps.Code">@ps.Name</MudSelectItem>
+                                                }
+                                            </MudSelect>
+                                        </MudItem>
+                                        <MudItem xs="12" md="6">
+                                            <MudTextField T="string"
+                                                          Label="ETQA Decision Number"
+                                                          @bind-Value="_provider.EtqaDecisionNumber"
+                                                          Variant="Variant.Outlined"
+                                                          Placeholder="e.g. ETQA-DEC-48201" />
+                                        </MudItem>
+                                        <MudItem xs="12" md="6">
+                                            <MudNumericField T="int?"
+                                                             Label="Max Learner Capacity"
+                                                             @bind-Value="_provider.MaxLearnerCapacity"
+                                                             Variant="Variant.Outlined"
+                                                             Min="0"
+                                                             Placeholder="e.g. 150" />
+                                        </MudItem>
+                                        <MudItem xs="12" md="6">
+                                            <MudDatePicker Label="Accreditation Start Date" @bind-Date="_startDate" Variant="Variant.Outlined" DateFormat="yyyy-MM-dd" />
+                                        </MudItem>
+                                        <MudItem xs="12" md="6">
+                                            <MudDatePicker Label="Accreditation End Date" @bind-Date="_endDate" Variant="Variant.Outlined" DateFormat="yyyy-MM-dd" />
+                                        </MudItem>
+                                    </MudGrid>
+                                </MudCardContent>
+                            </MudCard>
+                        </MudItem>
+
+                        <!-- Right Column: Contact & Record Governance -->
+                        <MudItem xs="12" lg="4">
+                            <MudCard Elevation="2" Class="mb-4">
+                                <MudCardHeader>
+                                    <CardHeaderAvatar>
+                                        <MudAvatar Color="Color.Warning" Variant="Variant.Filled">
+                                            <MudIcon Icon="@Icons.Material.Filled.PersonPin" />
+                                        </MudAvatar>
+                                    </CardHeaderAvatar>
+                                    <CardHeaderContent>
+                                        <MudText Typo="Typo.h6">Primary Contact Person</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Designated SDP manager</MudText>
+                                    </CardHeaderContent>
+                                </MudCardHeader>
+                                <MudCardContent>
+                                    <MudSelect T="int?" Label="Primary Contact Person" @bind-Value="_provider.PrimaryContactPersonId" Variant="Variant.Outlined" Clearable="true">
+                                        <MudSelectItem Value="@((int?)null)">-- No Contact Assigned --</MudSelectItem>
+                                        @foreach (var p in _peopleList)
+                                        {
+                                            <MudSelectItem Value="@((int?)p.Id)">@p.FirstName @p.LastName (@(!string.IsNullOrWhiteSpace(p.RsaIdNumber) ? p.RsaIdNumber : p.Email))</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudCardContent>
+                            </MudCard>
+
+                            <MudCard Elevation="2" Class="mb-4">
+                                <MudCardHeader>
+                                    <CardHeaderAvatar>
+                                        <MudAvatar Color="Color.Dark" Variant="Variant.Filled">
+                                            <MudIcon Icon="@Icons.Material.Filled.Security" />
+                                        </MudAvatar>
+                                    </CardHeaderAvatar>
+                                    <CardHeaderContent>
+                                        <MudText Typo="Typo.h6">Governance &amp; Audit</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Status and tracking</MudText>
+                                    </CardHeaderContent>
+                                </MudCardHeader>
+                                <MudCardContent>
+                                    <MudSwitch T="bool" @bind-Value="_provider.IsActive" Color="Color.Success" Label="Provider Active Status" />
+                                    <MudDivider Class="my-3" />
+                                    <div class="d-flex flex-column gap-2 text-muted">
+                                        <div class="d-flex justify-space-between">
+                                            <MudText Typo="Typo.caption">Provider ID:</MudText>
+                                            <MudText Typo="Typo.caption" Class="fw-bold">@(Id > 0 ? Id.ToString() : "Draft")</MudText>
+                                        </div>
+                                        <div class="d-flex justify-space-between">
+                                            <MudText Typo="Typo.caption">Created At:</MudText>
+                                            <MudText Typo="Typo.caption">@(_provider.CreatedAt > DateTime.MinValue ? _provider.CreatedAt.ToString("yyyy-MM-dd HH:mm") : "-")</MudText>
+                                        </div>
+                                        <div class="d-flex justify-space-between">
+                                            <MudText Typo="Typo.caption">Created By:</MudText>
+                                            <MudText Typo="Typo.caption">@(!string.IsNullOrWhiteSpace(_provider.CreatedBy) ? _provider.CreatedBy : "-")</MudText>
+                                        </div>
+                                        <div class="d-flex justify-space-between">
+                                            <MudText Typo="Typo.caption">Modified At:</MudText>
+                                            <MudText Typo="Typo.caption">@(_provider.ModifiedAt.HasValue ? _provider.ModifiedAt.Value.ToString("yyyy-MM-dd HH:mm") : "-")</MudText>
+                                        </div>
+                                    </div>
+                                </MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                    </MudGrid>
+                </MudForm>
+            </MudTabPanel>
+
+            <!-- TAB 2: Accredited Qualifications -->
+            <MudTabPanel Text="Qualifications" Icon="@Icons.Material.Filled.CardMembership">
+                <div class="d-flex justify-space-between align-center mb-4">
+                    <div>
+                        <MudText Typo="Typo.h6">Accredited SAQA Qualifications</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Registered national qualifications this provider is accredited to deliver</MudText>
+                    </div>
+                    @if (Id > 0)
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenAddQualForm">
+                            Add Qualification
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <MudAlert Severity="Severity.Info" Dense="true">Save the provider first to add accredited qualifications.</MudAlert>
+                    }
+                </div>
+
+                @if (_showAddQualForm)
+                {
+                    <MudCard Class="pa-4 mb-4 border-primary" Elevation="3">
+                        <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-3">Add Accredited Qualification</MudText>
+                        <MudGrid>
+                            <MudItem xs="12" md="3">
+                                <MudNumericField T="int" Label="SAQA Qual ID" Required="true" @bind-Value="_newQual.SaqaQualificationId" Variant="Variant.Outlined" Placeholder="e.g. 58270" />
+                            </MudItem>
+                            <MudItem xs="12" md="5">
+                                <MudTextField T="string" Label="Qualification Title" Required="true" @bind-Value="_newQual.QualificationTitle" Variant="Variant.Outlined" Placeholder="e.g. National Certificate: Welding Application and Practice" />
+                            </MudItem>
+                            <MudItem xs="12" md="2">
+                                <MudNumericField T="int?" Label="NQF Level" @bind-Value="_newQual.NqfLevel" Variant="Variant.Outlined" Min="1" Max="10" />
+                            </MudItem>
+                            <MudItem xs="12" md="2">
+                                <MudDatePicker Label="Expiry Date" @bind-Date="_qualExpiryDate" Variant="Variant.Outlined" DateFormat="yyyy-MM-dd" />
+                            </MudItem>
+                            <MudItem xs="12" Class="d-flex justify-end gap-2">
+                                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" OnClick="CancelAddQualForm">Cancel</MudButton>
+                                <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveQualification">Save Qualification</MudButton>
+                            </MudItem>
+                        </MudGrid>
+                    </MudCard>
+                }
+
+                <MudTable Items="_qualifications" Hover="true" Dense="true" Striped="true">
+                    <HeaderContent>
+                        <MudTh>SAQA ID</MudTh>
+                        <MudTh>Qualification Title</MudTh>
+                        <MudTh>NQF Level</MudTh>
+                        <MudTh>Status</MudTh>
+                        <MudTh>Expiry Date</MudTh>
+                        <MudTh Style="text-align:right">Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="SAQA ID">
+                            <span class="font-monospace fw-bold">@context.SaqaQualificationId</span>
+                        </MudTd>
+                        <MudTd DataLabel="Qualification Title">
+                            <MudText Typo="Typo.body2" Class="fw-bold">@context.QualificationTitle</MudText>
+                        </MudTd>
+                        <MudTd DataLabel="NQF Level">
+                            <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">NQF @(context.NqfLevel?.ToString() ?? "-")</MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Status">
+                            <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled">Accredited</MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Expiry Date">
+                            @(context.ExpiryDate.HasValue ? context.ExpiryDate.Value.ToString("yyyy-MM-dd") : "Ongoing")
+                        </MudTd>
+                        <MudTd Style="text-align:right" DataLabel="Actions">
+                            <MudTooltip Text="Remove Qualification">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => RemoveQualification(context.Id))" aria-label="Remove Qualification" />
+                            </MudTooltip>
+                        </MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <div class="pa-4 text-center">
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">No accredited qualifications added yet.</MudText>
+                        </div>
+                    </NoRecordsContent>
+                </MudTable>
+            </MudTabPanel>
+
+            <!-- TAB 3: Unit Standards Scope -->
+            <MudTabPanel Text="Unit Standards" Icon="@Icons.Material.Filled.FactCheck">
+                <div class="d-flex justify-space-between align-center mb-4">
+                    <div>
+                        <MudText Typo="Typo.h6">Registered Unit Standards Scope</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Single unit standards and skills programme unit approvals</MudText>
+                    </div>
+                    @if (Id > 0)
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenAddUnitStandardForm">
+                            Add Unit Standard
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <MudAlert Severity="Severity.Info" Dense="true">Save the provider first to add unit standards.</MudAlert>
+                    }
+                </div>
+
+                @if (_showAddUsForm)
+                {
+                    <MudCard Class="pa-4 mb-4 border-primary" Elevation="3">
+                        <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-3">Add Unit Standard</MudText>
+                        <MudGrid>
+                            <MudItem xs="12" md="3">
+                                <MudNumericField T="int" Label="Unit Standard ID" Required="true" @bind-Value="_newUs.UnitStandardId" Variant="Variant.Outlined" Placeholder="e.g. 116235" />
+                            </MudItem>
+                            <MudItem xs="12" md="5">
+                                <MudTextField T="string" Label="Unit Standard Title" Required="true" @bind-Value="_newUs.UnitStandardTitle" Variant="Variant.Outlined" Placeholder="e.g. Apply safety in work area" />
+                            </MudItem>
+                            <MudItem xs="12" md="2">
+                                <MudNumericField T="int?" Label="NQF Level" @bind-Value="_newUs.NqfLevel" Variant="Variant.Outlined" Min="1" Max="10" />
+                            </MudItem>
+                            <MudItem xs="12" md="2">
+                                <MudNumericField T="int" Label="Credits" @bind-Value="_newUs.Credits" Variant="Variant.Outlined" Min="1" />
+                            </MudItem>
+                            <MudItem xs="12" Class="d-flex justify-end gap-2">
+                                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" OnClick="CancelAddUsForm">Cancel</MudButton>
+                                <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveUnitStandard">Save Unit Standard</MudButton>
+                            </MudItem>
+                        </MudGrid>
+                    </MudCard>
+                }
+
+                <MudTable Items="_unitStandards" Hover="true" Dense="true" Striped="true">
+                    <HeaderContent>
+                        <MudTh>US ID</MudTh>
+                        <MudTh>Unit Standard Title</MudTh>
+                        <MudTh>NQF Level</MudTh>
+                        <MudTh>Credits</MudTh>
+                        <MudTh Style="text-align:right">Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="US ID">
+                            <span class="font-monospace fw-bold">@context.UnitStandardId</span>
+                        </MudTd>
+                        <MudTd DataLabel="Unit Standard Title">
+                            <MudText Typo="Typo.body2" Class="fw-bold">@context.UnitStandardTitle</MudText>
+                        </MudTd>
+                        <MudTd DataLabel="NQF Level">
+                            <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">NQF @(context.NqfLevel?.ToString() ?? "-")</MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Credits">
+                            <MudChip T="string" Size="Size.Small" Color="Color.Secondary" Variant="Variant.Outlined">@context.Credits Credits</MudChip>
+                        </MudTd>
+                        <MudTd Style="text-align:right" DataLabel="Actions">
+                            <MudTooltip Text="Remove Unit Standard">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => RemoveUnitStandard(context.Id))" aria-label="Remove Unit Standard" />
+                            </MudTooltip>
+                        </MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <div class="pa-4 text-center">
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">No unit standards linked yet.</MudText>
+                        </div>
+                    </NoRecordsContent>
+                </MudTable>
+            </MudTabPanel>
+
+            <!-- TAB 4: Evidence Vault -->
+            @if (Id > 0)
+            {
+                <MudTabPanel Text="Evidence Vault" Icon="@Icons.Material.Filled.FolderZip">
+                    <DocumentVault TargetEntityName="TrainingProvider" TargetEntityId="@Id" />
+                </MudTabPanel>
+
+                <!-- TAB 5: Workflow History -->
+                <MudTabPanel Text="Workflow History" Icon="@Icons.Material.Filled.History">
+                    <WorkflowTimeline ProcessCode="PROVIDER" EntityId="@Id" />
+                </MudTabPanel>
+            }
+        </MudTabs>
+    }
+</MudContainer>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private TrainingProvider _provider = new();
+    private MudForm? _form;
+    private bool _isValid;
+    private bool _loading = true;
+    private bool _isSaving = false;
+
+    private List<Organisation> _organisations = new();
+    private List<Person> _peopleList = new();
+    private List<LookupItemDto> _providerTypes = new();
+    private List<LookupItemDto> _providerStatusTypes = new();
+
+    private List<TrainingProviderQualification> _qualifications = new();
+    private List<TrainingProviderUnitStandard> _unitStandards = new();
+
+    private DateTime? _startDate;
+    private DateTime? _endDate;
+
+    // Qualification Form
+    private bool _showAddQualForm = false;
+    private TrainingProviderQualification _newQual = new();
+    private DateTime? _qualExpiryDate;
+
+    // Unit Standard Form
+    private bool _showAddUsForm = false;
+    private TrainingProviderUnitStandard _newUs = new();
+
+    private List<BreadcrumbItem> _breadcrumbItems = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+        SetupBreadcrumbs();
+
+        // Sequential lookup loading to prevent DbContext threading collisions
+        _providerTypes = await LookupService.GetLookupItemsAsync("ProviderType");
+        _providerStatusTypes = await LookupService.GetLookupItemsAsync("ProviderStatusType");
+        _organisations = await OrgService.GetAllAsync();
+        _peopleList = await PersonService.GetAllAsync();
+
+        if (Id > 0)
+        {
+            await LoadProviderData();
+        }
+        else
+        {
+            _provider = new TrainingProvider
+            {
+                OrganisationId = _organisations.FirstOrDefault()?.Id ?? 0,
+                AccreditationNumber = $"SDP-{DateTime.UtcNow.Year}-{new Random().Next(1000, 9999)}",
+                ProviderTypeCode = "PRIMARY",
+                ProviderStatusCode = "ACCREDITED",
+                IsActive = true
+            };
+            _startDate = DateTime.Today;
+            _endDate = DateTime.Today.AddYears(3);
+        }
+
+        _loading = false;
+    }
+
+    private void SetupBreadcrumbs()
+    {
+        _breadcrumbItems = new List<BreadcrumbItem>
+        {
+            new BreadcrumbItem("Home", href: "/"),
+            new BreadcrumbItem("Skills Development Providers", href: "/sdp"),
+            new BreadcrumbItem(Id == 0 ? "Create" : $"Provider #{Id}", href: null, disabled: true)
+        };
+    }
+
+    private async Task LoadProviderData()
+    {
+        var p = await ProviderService.GetByIdAsync(Id);
+        if (p != null)
+        {
+            _provider = p;
+            _startDate = p.AccreditationStartDate;
+            _endDate = p.AccreditationEndDate;
+            _qualifications = await ProviderService.GetQualificationsAsync(Id);
+            _unitStandards = await ProviderService.GetUnitStandardsAsync(Id);
+        }
+        else
+        {
+            Snackbar.Add($"Training Provider #{Id} not found.", Severity.Error);
+            NavManager.NavigateTo("/sdp");
+        }
+    }
+
+    private async Task OnWorkflowStatusChanged(string newStatus)
+    {
+        await LoadProviderData();
+        StateHasChanged();
+    }
+
+    private async Task SaveProvider()
+    {
+        if (string.IsNullOrWhiteSpace(_provider.AccreditationNumber))
+        {
+            Snackbar.Add("Accreditation Number is required.", Severity.Warning);
+            return;
+        }
+
+        if (_provider.OrganisationId <= 0)
+        {
+            Snackbar.Add("Host Organisation is required.", Severity.Warning);
+            return;
+        }
+
+        _provider.AccreditationStartDate = _startDate;
+        _provider.AccreditationEndDate = _endDate;
+
+        _isSaving = true;
+        try
+        {
+            var saved = await ProviderService.SaveAsync(_provider, "Admin");
+            Snackbar.Add($"Training Provider '{saved.AccreditationNumber}' saved successfully with audit trail.", Severity.Success);
+
+            if (Id == 0)
+            {
+                NavManager.NavigateTo($"/sdp/{saved.Id}");
+            }
+            else
+            {
+                await LoadProviderData();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving provider: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task DeleteProvider()
+    {
+        if (Id <= 0) return;
+
+        try
+        {
+            var deleted = await ProviderService.DeleteAsync(Id, "Admin");
+            if (deleted)
+            {
+                Snackbar.Add("Training Provider record deleted successfully.", Severity.Success);
+                NavManager.NavigateTo("/sdp");
+            }
+            else
+            {
+                Snackbar.Add("Could not delete training provider.", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error deleting record: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void BackToList()
+    {
+        NavManager.NavigateTo("/sdp");
+    }
+
+    // Qualifications Management
+    private void OpenAddQualForm()
+    {
+        _newQual = new TrainingProviderQualification
+        {
+            TrainingProviderId = Id,
+            NqfLevel = 4,
+            AccreditationStatusCode = "ACCREDITED"
+        };
+        _qualExpiryDate = DateTime.Today.AddYears(3);
+        _showAddQualForm = true;
+    }
+
+    private void CancelAddQualForm()
+    {
+        _showAddQualForm = false;
+    }
+
+    private async Task SaveQualification()
+    {
+        if (_newQual.SaqaQualificationId <= 0 || string.IsNullOrWhiteSpace(_newQual.QualificationTitle))
+        {
+            Snackbar.Add("SAQA ID and Qualification Title are required.", Severity.Warning);
+            return;
+        }
+
+        _newQual.ExpiryDate = _qualExpiryDate;
+        _newQual.TrainingProviderId = Id;
+
+        try
+        {
+            await ProviderService.AddQualificationAsync(_newQual, "Admin");
+            Snackbar.Add("Qualification registered under SDP scope.", Severity.Success);
+            _showAddQualForm = false;
+            _qualifications = await ProviderService.GetQualificationsAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error adding qualification: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task RemoveQualification(int qualId)
+    {
+        try
+        {
+            var removed = await ProviderService.RemoveQualificationAsync(qualId, "Admin");
+            if (removed)
+            {
+                Snackbar.Add("Qualification removed from scope.", Severity.Success);
+                _qualifications = await ProviderService.GetQualificationsAsync(Id);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error removing qualification: {ex.Message}", Severity.Error);
+        }
+    }
+
+    // Unit Standards Management
+    private void OpenAddUnitStandardForm()
+    {
+        _newUs = new TrainingProviderUnitStandard
+        {
+            TrainingProviderId = Id,
+            NqfLevel = 3,
+            Credits = 4
+        };
+        _showAddUsForm = true;
+    }
+
+    private void CancelAddUsForm()
+    {
+        _showAddUsForm = false;
+    }
+
+    private async Task SaveUnitStandard()
+    {
+        if (_newUs.UnitStandardId <= 0 || string.IsNullOrWhiteSpace(_newUs.UnitStandardTitle))
+        {
+            Snackbar.Add("Unit Standard ID and Title are required.", Severity.Warning);
+            return;
+        }
+
+        _newUs.TrainingProviderId = Id;
+
+        try
+        {
+            await ProviderService.AddUnitStandardAsync(_newUs, "Admin");
+            Snackbar.Add("Unit standard registered under SDP scope.", Severity.Success);
+            _showAddUsForm = false;
+            _unitStandards = await ProviderService.GetUnitStandardsAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error adding unit standard: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task RemoveUnitStandard(int usId)
+    {
+        try
+        {
+            var removed = await ProviderService.RemoveUnitStandardAsync(usId, "Admin");
+            if (removed)
+            {
+                Snackbar.Add("Unit standard removed from scope.", Severity.Success);
+                _unitStandards = await ProviderService.GetUnitStandardsAsync(Id);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error removing unit standard: {ex.Message}", Severity.Error);
+        }
+    }
+}

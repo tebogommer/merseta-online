@@ -1,0 +1,278 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<h:form id="learnersInsForm">
+			<div class="ui-g">
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+						<p:importEnum type="haj.com.entity.enums.PivotNonPivotEnum" />
+						<p:importEnum type="haj.com.entity.enums.LearnerStatusEnum" />
+						<h1>Event View: Monitoring / Audits Scheduled Dates</h1>
+						<p:growl sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+						<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+						<p:importEnum type="haj.com.entity.enums.LearnerChangeTypeEnum" />
+						<p:importEnum type="haj.com.entity.enums.TrainingProviderFilterEnum" />
+
+						<div class="EmptyBox10" />
+						<h3>Up and coming Monitoring / Audit Dates</h3>
+						<ui:include src="/pages/includes/download_lazy.xhtml">
+							<ui:param name="file_name" value="Upcomin_Monitoring_Audit_Dates_Extract" />
+							<ui:param name="target" value="upandocming" />
+						</ui:include>
+						<p:dataTable var="rvupcoming" value="#{monitoringAuditScheduleUI.dataModelUpComing}" id="upandocming" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+							paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+							<f:facet name="header">Up and Coming Monitoring / Audit Dates</f:facet>
+							<p:column headerText="Reference ID">
+								<p:outputLabel value="#{rvupcoming.id}" />
+							</p:column>
+							<p:column headerText="Generated Date" sortBy="#{rvupcoming.createDate}">
+								<p:outputLabel value="#{rvupcoming.createDate}">
+									<f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="Date" sortBy="#{rvupcoming.monitoringDate}">
+								<p:outputLabel value="#{rvupcoming.monitoringDate}">
+									<f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="Event" sortBy="#{rvupcoming.audit}">
+								<p:outputLabel value="Provider: Audit" rendered="#{rvupcoming.audit}" />
+								<p:outputLabel value="Provider: Monitoring" rendered="#{!rvupcoming.audit}" />
+							</p:column>
+							<p:column headerText="Initiated By">
+								<h:outputText value="#{rvupcoming.user.firstName} #{rvupcoming.user.lastName}" />
+							</p:column>
+							<p:column headerText="Quality Assuror">
+								<h:outputText value="#{rvupcoming.initiatingQA.firstName} #{rvupcoming.initiatingQA.lastName}">
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['type.of.application']}">
+								<h:outputText value="#{rvupcoming.trainingProviderApplication.accreditationApplicationTypeEnum.friendlyName}" />
+							</p:column>
+							<p:column headerText="Region" filterStyle="width: 95%">
+								<h:outputText value="#{rvupcoming.company.regionTown.region.description}" />
+							</p:column>
+							<p:column headerText="Training Site Name"  filterStyle="width: 95%">
+								<h:outputText value="#{rvupcoming.trainingProviderApplication.trainingSite.siteName}" rendered="#{rvupcoming.trainingProviderApplication ne null and rvupcoming.trainingProviderApplication.trainingSite ne null}" />
+								<h:outputText value="N/A" rendered="#{rvupcoming.trainingProviderApplication eq null or rvupcoming.trainingProviderApplication.trainingSite eq null}" />
+							</p:column>
+							<p:column headerText="Training Site Region"  filterStyle="width: 95%">
+								<h:outputText value="#{rvupcoming.trainingProviderApplication.trainingSite.regionTown.region.description}" rendered="#{rvupcoming.trainingProviderApplication ne null and rvupcoming.trainingProviderApplication.trainingSite ne null}" />
+								<h:outputText value="N/A" rendered="#{rvupcoming.trainingProviderApplication eq null or rvupcoming.trainingProviderApplication.trainingSite eq null}" />
+							</p:column>
+							<p:column headerText="#{lang['accreditation.number']}">
+								<h:outputText rendered="#{rvupcoming.trainingProviderApplication.certificateNumber ne null}" value="#{rvupcoming.trainingProviderApplication.certificateNumber}" />
+								<h:outputText rendered="#{rvupcoming.trainingProviderApplication.certificateNumber eq null}" value="#{rvupcoming.trainingProviderApplication.accreditationNumber}" />
+								<h:outputText
+									rendered="#{(rvupcoming.trainingProviderApplication.certificateNumber eq null or rvupcoming.trainingProviderApplication.certificateNumber eq '') and (rvupcoming.trainingProviderApplication.accreditationNumber eq null or rvupcoming.trainingProviderApplication.accreditationNumber eq '') }"
+									value="N/A" />
+							</p:column>
+							<p:column headerText="Status">
+								<h:outputText value="#{rvupcoming.status.friendlyName}" />
+							</p:column>
+							<p:column headerText="Entity Name">
+								<p:outputLabel value="#{rvupcoming.company.companyName} (#{rvupcoming.company.levyNumber})" />
+							</p:column>
+							<p:column headerText="Main Address" exportable="false">
+								<p:outputLabel value="#{rvupcoming.company.residentialAddress.addressLine1}" />
+								<br />
+								<p:outputLabel value="#{rvupcoming.company.residentialAddress.addressLine2}" />
+								<br />
+								<p:outputLabel value="#{rvupcoming.company.residentialAddress.addressLine3}" />
+								<br />
+								<p:outputLabel value="#{rvupcoming.company.residentialAddress.addressLine4}" />
+							</p:column>
+							<p:column headerText="Main Address" style="display:none">
+								<p:outputLabel value="#{rvupcoming.company.residentialAddress.addressLine1}" />,
+								<p:outputLabel value="#{rvupcoming.company.residentialAddress.addressLine2}" />,
+								<p:outputLabel value="#{rvupcoming.company.residentialAddress.addressLine3}" />,
+								<p:outputLabel value="#{rvupcoming.company.residentialAddress.addressLine4}" />
+							</p:column>
+							<p:column headerText="Contact Information">
+								<p:outputLabel value="#{rvupcoming.company.email} " rendered="#{rvupcoming.company.email ne null}" />
+
+								<p:outputLabel value="- #{rvupcoming.company.telNumber}" rendered="#{rvupcoming.company.telNumber ne null}" />
+							</p:column>
+							<p:column headerText="Rejection Reasons">
+								<p:outputLabel value="#{rvupcoming.rejectionReasons}" rendered="#{rvupcoming.rejectionReasons ne null}" />
+								<p:outputLabel value="N/A" rendered="#{rvupcoming.rejectionReasons eq null}" />
+							</p:column>
+						</p:dataTable>
+
+						<div class="EmptyBox10" />
+						<h3>Past Monitoring / Audit Dates</h3>
+						<ui:include src="/pages/includes/download_lazy.xhtml">
+							<ui:param name="file_name" value="Past_Monitoring_Audit_Dates_Extract" />
+							<ui:param name="target" value="past" />
+						</ui:include>
+						<p:dataTable var="rvpassed" value="#{monitoringAuditScheduleUI.dataModelPassed}" id="past" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+							paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+							<f:facet name="header">Past Monitoring / Audit Dates</f:facet>
+							<p:column headerText="Reference ID">
+								<p:outputLabel value="#{rvpassed.id}" />
+							</p:column>
+							<p:column headerText="Generated Date" sortBy="#{rvpassed.createDate}">
+								<p:outputLabel value="#{rvpassed.createDate}">
+									<f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="Date" sortBy="#{rvpassed.monitoringDate}">
+								<p:outputLabel value="#{rvpassed.monitoringDate}">
+									<f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="Event" sortBy="#{rvpassed.audit}">
+								<p:outputLabel value="Provider: Audit" rendered="#{rvpassed.audit}" />
+								<p:outputLabel value="Provider: Monitoring" rendered="#{!rvpassed.audit}" />
+							</p:column>
+							<p:column headerText="Initiated By">
+								<h:outputText value="#{rvpassed.user.firstName} #{rvpassed.user.lastName}" />
+							</p:column>
+							<p:column headerText="Quality Assuror">
+								<h:outputText value="#{rvpassed.initiatingQA.firstName} #{rvpassed.initiatingQA.lastName}">
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['type.of.application']}">
+								<h:outputText value="#{rvpassed.trainingProviderApplication.accreditationApplicationTypeEnum.friendlyName}" />
+							</p:column>
+							<p:column headerText="Region" filterStyle="width: 95%">
+								<h:outputText value="#{rvpassed.company.regionTown.region.description}" />
+							</p:column>
+							<p:column headerText="Training Site Name"  filterStyle="width: 95%">
+								<h:outputText value="#{rvpassed.trainingProviderApplication.trainingSite.siteName}" rendered="#{rvpassed.trainingProviderApplication ne null and rvpassed.trainingProviderApplication.trainingSite ne null}" />
+								<h:outputText value="N/A" rendered="#{rvpassed.trainingProviderApplication eq null or rvpassed.trainingProviderApplication.trainingSite eq null}" />
+							</p:column>
+							<p:column headerText="Training Site Region"  filterStyle="width: 95%">
+								<h:outputText value="#{rvpassed.trainingProviderApplication.trainingSite.regionTown.region.description}" rendered="#{rvpassed.trainingProviderApplication ne null and rvpassed.trainingProviderApplication.trainingSite ne null}" />
+								<h:outputText value="N/A" rendered="#{rvpassed.trainingProviderApplication eq null or rvpassed.trainingProviderApplication.trainingSite eq null}" />
+							</p:column>
+							<p:column headerText="#{lang['accreditation.number']}">
+								<h:outputText rendered="#{rvpassed.trainingProviderApplication.certificateNumber ne null}" value="#{rvpassed.trainingProviderApplication.certificateNumber}" />
+								<h:outputText rendered="#{rvpassed.trainingProviderApplication.certificateNumber eq null}" value="#{rvpassed.trainingProviderApplication.accreditationNumber}" />
+								<h:outputText
+									rendered="#{(rvpassed.trainingProviderApplication.certificateNumber eq null or rvpassed.trainingProviderApplication.certificateNumber eq '') and (rvpassed.trainingProviderApplication.accreditationNumber eq null or rvpassed.trainingProviderApplication.accreditationNumber eq '') }"
+									value="N/A" />
+							</p:column>
+							<p:column headerText="Status">
+								<h:outputText value="#{rvpassed.status.friendlyName}" />
+							</p:column>
+							<p:column headerText="Entity Name">
+								<p:outputLabel value="#{rvpassed.company.companyName} (#{rvpassed.company.levyNumber})" />
+							</p:column>
+							<p:column headerText="Main Address" exportable="false">
+								<p:outputLabel value="#{rvpassed.company.residentialAddress.addressLine1}" />
+								<br />
+								<p:outputLabel value="#{rvpassed.company.residentialAddress.addressLine2}" />
+								<br />
+								<p:outputLabel value="#{rvpassed.company.residentialAddress.addressLine3}" />
+								<br />
+								<p:outputLabel value="#{rvpassed.company.residentialAddress.addressLine4}" />
+							</p:column>
+							<p:column headerText="Main Address" style="display:none">
+								<p:outputLabel value="#{rvpassed.company.residentialAddress.addressLine1}" />,
+								<p:outputLabel value="#{rvpassed.company.residentialAddress.addressLine2}" />,
+								<p:outputLabel value="#{rvpassed.company.residentialAddress.addressLine3}" />,
+								<p:outputLabel value="#{rvpassed.company.residentialAddress.addressLine4}" />
+							</p:column>
+							<p:column headerText="Contact Information">
+								<p:outputLabel value="#{rvpassed.company.email} " rendered="#{rvpassed.company.email ne null}" />
+								<p:outputLabel value="- #{rvpassed.company.telNumber}" rendered="#{rvpassed.company.telNumber ne null}" />
+							</p:column>
+							<p:column headerText="Rejection Reasons">
+								<p:outputLabel value="#{rvpassed.rejectionReasons}" rendered="#{rvpassed.rejectionReasons ne null}" />
+								<p:outputLabel value="N/A" rendered="#{rvpassed.rejectionReasons eq null}" />
+							</p:column>
+						</p:dataTable>
+						<div class="EmptyBox10" />
+						<h3>All Information</h3>
+						<ui:include src="/pages/includes/download_lazy.xhtml">
+							<ui:param name="file_name" value="data_extract" />
+							<ui:param name="target" value="eventsTable" />
+						</ui:include>
+						<p:dataTable var="rvall" value="#{monitoringAuditScheduleUI.dataModel}" id="eventsTable" rowKey="#{rvall.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+							paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+							<f:facet name="header"> All Information </f:facet>
+							<p:column headerText="Reference ID">
+								<p:outputLabel value="#{rvall.id}" />
+							</p:column>
+							<p:column headerText="Generated Date" sortBy="#{rvall.createDate}">
+								<p:outputLabel value="#{rvall.createDate}">
+									<f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="Date" sortBy="#{rvall.monitoringDate}">
+								<p:outputLabel value="#{rvall.monitoringDate}">
+									<f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+								</p:outputLabel>
+							</p:column>
+							<p:column headerText="Event" sortBy="#{rvall.audit}">
+								<p:outputLabel value="Provider: Audit" rendered="#{rvall.audit}" />
+								<p:outputLabel value="Provider: Monitoring" rendered="#{!rvall.audit}" />
+							</p:column>
+							<p:column headerText="Initiated By">
+								<h:outputText value="#{rvall.user.firstName} #{rvall.user.lastName}" />
+							</p:column>
+							<p:column headerText="Quality Assuror">
+								<h:outputText value="#{rvall.initiatingQA.firstName} #{rvall.initiatingQA.lastName}">
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['type.of.application']}">
+								<h:outputText value="#{rvall.trainingProviderApplication.accreditationApplicationTypeEnum.friendlyName}" />
+							</p:column>
+							<p:column headerText="Region" filterStyle="width: 95%">
+								<h:outputText value="#{rvall.company.regionTown.region.description}" />
+							</p:column>
+							<p:column headerText="Training Site Name"  filterStyle="width: 95%">
+								<h:outputText value="#{rvall.trainingProviderApplication.trainingSite.siteName}" rendered="#{rvall.trainingProviderApplication ne null and rvall.trainingProviderApplication.trainingSite ne null}" />
+								<h:outputText value="N/A" rendered="#{rvall.trainingProviderApplication eq null or rvall.trainingProviderApplication.trainingSite eq null}" />
+							</p:column>
+							<p:column headerText="Training Site Region"  filterStyle="width: 95%">
+								<h:outputText value="#{rvall.trainingProviderApplication.trainingSite.regionTown.region.description}" rendered="#{rvall.trainingProviderApplication ne null and rvall.trainingProviderApplication.trainingSite ne null}" />
+								<h:outputText value="N/A" rendered="#{rvall.trainingProviderApplication eq null or rvall.trainingProviderApplication.trainingSite eq null}" />
+							</p:column>
+							<p:column headerText="#{lang['accreditation.number']}">
+								<h:outputText rendered="#{rvall.trainingProviderApplication.certificateNumber ne null}" value="#{rvall.trainingProviderApplication.certificateNumber}" />
+								<h:outputText rendered="#{rvall.trainingProviderApplication.certificateNumber eq null}" value="#{rvall.trainingProviderApplication.accreditationNumber}" />
+								<h:outputText rendered="#{(rvall.trainingProviderApplication.certificateNumber eq null or rvall.trainingProviderApplication.certificateNumber eq '') and (rvall.trainingProviderApplication.accreditationNumber eq null or rvall.trainingProviderApplication.accreditationNumber eq '') }"
+									value="N/A" />
+							</p:column>
+							<p:column headerText="Status">
+								<h:outputText value="#{rvall.status.friendlyName}" />
+							</p:column>
+							<p:column headerText="Entity Name">
+								<p:outputLabel value="#{rvall.company.companyName} (#{rvall.company.levyNumber})" />
+							</p:column>
+							<p:column headerText="Main Address" exportable="false">
+								<p:outputLabel value="#{rvall.company.residentialAddress.addressLine1}" />
+								<br />
+								<p:outputLabel value="#{rvall.company.residentialAddress.addressLine2}" />
+								<br />
+								<p:outputLabel value="#{rvall.company.residentialAddress.addressLine3}" />
+								<br />
+								<p:outputLabel value="#{rvall.company.residentialAddress.addressLine4}" />
+							</p:column>
+							<p:column headerText="Main Address" style="display:none">
+								<p:outputLabel value="#{rvall.company.residentialAddress.addressLine1}" />,
+								<p:outputLabel value="#{rvall.company.residentialAddress.addressLine2}" />,
+								<p:outputLabel value="#{rvall.company.residentialAddress.addressLine3}" />,
+								<p:outputLabel value="#{rvall.company.residentialAddress.addressLine4}" />
+							</p:column>
+							<p:column headerText="Contact Information">
+								<p:outputLabel value="#{rvall.company.email} " rendered="#{rvall.company.email ne null}" />
+
+								<p:outputLabel value="- #{rvall.company.telNumber}" rendered="#{rvall.company.telNumber ne null}" />
+							</p:column>
+							<p:column headerText="Rejection Reasons">
+								<p:outputLabel value="#{rvall.rejectionReasons}" rendered="#{rvall.rejectionReasons ne null}" />
+								<p:outputLabel value="N/A" rendered="#{rvall.rejectionReasons eq null}" />
+							</p:column>
+						</p:dataTable>
+					</div>
+				</div>
+			</div>
+		</h:form>
+	</ui:define>
+</ui:composition>

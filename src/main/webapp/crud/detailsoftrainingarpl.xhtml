@@ -1,0 +1,109 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:c="http://java.sun.com/jsp/jstl/core"
+                template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>DetailsOfTrainingArpl</h1>
+					<h:form id="detailsoftrainingarplInsForm">
+						<p:growl sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						
+						<p:panelGrid columns="1" style="width:100%" id="detailsoftrainingarplInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+       						         							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="toDate" value="#{detailsoftrainingarplUI.detailsoftrainingarpl.toDate}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['toDate']}" for="toDate"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="companyLearnersTradeTest" value="#{detailsoftrainingarplUI.detailsoftrainingarpl.companyLearnersTradeTest}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['companyLearnersTradeTest']}" for="companyLearnersTradeTest"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="createDate" value="#{detailsoftrainingarplUI.detailsoftrainingarpl.createDate}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['createDate']}" for="createDate"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="nameSkillsProvider" value="#{detailsoftrainingarplUI.detailsoftrainingarpl.nameSkillsProvider}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['nameSkillsProvider']}" for="nameSkillsProvider"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="course" value="#{detailsoftrainingarplUI.detailsoftrainingarpl.course}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['course']}" for="course"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="fromDate" value="#{detailsoftrainingarplUI.detailsoftrainingarpl.fromDate}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['fromDate']}" for="fromDate"/>
+     							</h:panelGroup>  
+
+
+        					    <p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+									<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:detailsoftrainingarplList :detailsoftrainingarplInsForm:detailsoftrainingarplInsGrid" action="#{detailsoftrainingarplUI.detailsoftrainingarplInsert}" />
+									<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="detailsoftrainingarplInsGrid" process="@this" action="#{detailsoftrainingarplUI.prepareNew}">
+										<p:resetInput target="detailsoftrainingarplInsGrid" />
+									</p:commandButton>									
+								</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{detailsoftrainingarplUI.dataModel}" filteredValue="#{detailsoftrainingarplUI.detailsOfTrainingArplfilteredList}" id="detailsoftrainingarplList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+           						              					<p:column headerText="#{lang['toDate']}">  
+                        			<h:outputText value="#{rowVar.toDate}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['companyLearnersTradeTest']}">  
+                        			<h:outputText value="#{rowVar.companyLearnersTradeTest}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['createDate']}">  
+                        			<h:outputText value="#{rowVar.createDate}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['nameSkillsProvider']}">  
+                        			<h:outputText value="#{rowVar.nameSkillsProvider}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['course']}">  
+                        			<h:outputText value="#{rowVar.course}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['fromDate']}">  
+                        			<h:outputText value="#{rowVar.fromDate}" />  
+            					</p:column>      
+
+
+           						<p:column width="80">
+									<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":detailsoftrainingarplInsForm:detailsoftrainingarplInsGrid">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{detailsoftrainingarplUI.detailsoftrainingarpl}" />
+									</p:commandButton>
+									<p:spacer width="5" />
+									<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:detailsoftrainingarplList" action="#{detailsoftrainingarplUI.detailsoftrainingarplDelete}">
+										<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+										<f:setPropertyActionListener value="#{rowVar}" target="#{detailsoftrainingarplUI.detailsoftrainingarpl}" />
+									</p:commandButton>
+								</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+<!-- 
+_lang_
+-->
+</ui:composition>

@@ -1,0 +1,508 @@
+@page "/levies/{id:int}"
+@inject ILevyService LevyService
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+<!-- Sticky Top Bar with Breadcrumbs and Action Buttons -->
+<div class="sticky-top bg-white pa-4 mb-4 border-bottom elevation-1 d-flex flex-wrap justify-space-between align-center gap-3">
+    <div class="d-flex align-center gap-3">
+        <MudButton Variant="Variant.Text"
+                   StartIcon="@Icons.Material.Filled.ArrowBack"
+                   Color="Color.Default"
+                   OnClick="BackToList">
+            Back to Levy Files
+        </MudButton>
+        <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-2" />
+        <div>
+            <MudBreadcrumbs Items="_breadcrumbItems" Separator=">" Class="pa-0 ma-0" />
+            <MudText Typo="Typo.h6" Class="font-weight-bold">
+                @_file.FileName (@_file.FileRef)
+            </MudText>
+        </div>
+    </div>
+    <div class="d-flex align-center gap-2">
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Error"
+                   StartIcon="@Icons.Material.Filled.Delete"
+                   OnClick="DeleteFile">
+            Delete
+        </MudButton>
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Secondary"
+                   OnClick="BackToList">
+            Cancel
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Save"
+                   OnClick="SaveFile"
+                   Disabled="_isSaving">
+            @(_isSaving ? "Saving..." : "Save File Details")
+        </MudButton>
+    </div>
+</div>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-0">
+    @if (_loading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-6" />
+    }
+    else
+    {
+        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Color="Color.Surface">
+            <!-- TAB 1: Header Summary -->
+            <MudTabPanel Text="Header Summary" Icon="@Icons.Material.Filled.ReceiptLong">
+                <MudGrid Spacing="3">
+                    <MudItem xs="12" lg="8">
+                        <MudCard Elevation="2" Class="mb-4">
+                            <MudCardHeader>
+                                <CardHeaderAvatar>
+                                    <MudAvatar Color="Color.Primary" Variant="Variant.Filled">
+                                        <MudIcon Icon="@Icons.Material.Filled.FolderZip" />
+                                    </MudAvatar>
+                                </CardHeaderAvatar>
+                                <CardHeaderContent>
+                                    <MudText Typo="Typo.h6">SARS Electronic Data Interchange (EDI) Header</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Batch transmission metadata and financial totals</MudText>
+                                </CardHeaderContent>
+                            </MudCardHeader>
+                            <MudCardContent>
+                                <MudGrid>
+                                    <MudItem xs="12" md="6">
+                                        <MudTextField T="string" Label="Data File Name" Required="true" @bind-Value="_file.FileName" Variant="Variant.Outlined" />
+                                    </MudItem>
+                                    <MudItem xs="12" md="6">
+                                        <MudTextField T="string" Label="SARS Transmission Reference" Required="true" @bind-Value="_file.FileRef" Variant="Variant.Outlined" />
+                                    </MudItem>
+                                    <MudItem xs="12" md="6">
+                                        <MudDatePicker Label="Import Transmission Date" @bind-Date="_importDate" Variant="Variant.Outlined" DateFormat="yyyy-MM-dd" />
+                                    </MudItem>
+                                    <MudItem xs="12" md="6">
+                                        <MudSelect T="string" Label="Batch Processing Status" @bind-Value="_file.StatusCode" Variant="Variant.Outlined">
+                                            <MudSelectItem Value="@("IMPORTED")">Imported</MudSelectItem>
+                                            <MudSelectItem Value="@("PARTIAL")">Partially Reconciled</MudSelectItem>
+                                            <MudSelectItem Value="@("RECONCILED")">Fully Reconciled</MudSelectItem>
+                                        </MudSelect>
+                                    </MudItem>
+                                    <MudItem xs="12" md="6">
+                                        <MudNumericField T="int" Label="Total Line Item Records" @bind-Value="_file.TotalRecords" Variant="Variant.Outlined" Min="0" />
+                                    </MudItem>
+                                    <MudItem xs="12" md="6">
+                                        <MudNumericField T="decimal" Label="Total Batch Levy Value (ZAR)" @bind-Value="_file.TotalAmount" Variant="Variant.Outlined" Format="N2" Min="0" />
+                                    </MudItem>
+                                </MudGrid>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+
+                    <!-- Right Column: Governance -->
+                    <MudItem xs="12" lg="4">
+                        <MudCard Elevation="2" Class="mb-4">
+                            <MudCardHeader>
+                                <CardHeaderAvatar>
+                                    <MudAvatar Color="Color.Dark" Variant="Variant.Filled">
+                                        <MudIcon Icon="@Icons.Material.Filled.Security" />
+                                    </MudAvatar>
+                                </CardHeaderAvatar>
+                                <CardHeaderContent>
+                                    <MudText Typo="Typo.h6">Batch Governance</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Audit verification</MudText>
+                                </CardHeaderContent>
+                            </MudCardHeader>
+                            <MudCardContent>
+                                <div class="d-flex flex-column gap-2 text-muted">
+                                    <div class="d-flex justify-space-between">
+                                        <MudText Typo="Typo.caption">File Batch ID:</MudText>
+                                        <MudText Typo="Typo.caption" Class="fw-bold">@Id</MudText>
+                                    </div>
+                                    <div class="d-flex justify-space-between">
+                                        <MudText Typo="Typo.caption">Created At:</MudText>
+                                        <MudText Typo="Typo.caption">@(_file.CreatedAt > DateTime.MinValue ? _file.CreatedAt.ToString("yyyy-MM-dd HH:mm") : "-")</MudText>
+                                    </div>
+                                    <div class="d-flex justify-space-between">
+                                        <MudText Typo="Typo.caption">Created By:</MudText>
+                                        <MudText Typo="Typo.caption">@(!string.IsNullOrWhiteSpace(_file.CreatedBy) ? _file.CreatedBy : "-")</MudText>
+                                    </div>
+                                    <div class="d-flex justify-space-between">
+                                        <MudText Typo="Typo.caption">Modified At:</MudText>
+                                        <MudText Typo="Typo.caption">@(_file.ModifiedAt.HasValue ? _file.ModifiedAt.Value.ToString("yyyy-MM-dd HH:mm") : "-")</MudText>
+                                    </div>
+                                </div>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+                </MudGrid>
+            </MudTabPanel>
+
+            <!-- TAB 2: SARS File Line Items Grid -->
+            <MudTabPanel Text="Line Items Grid" Icon="@Icons.Material.Filled.FormatListNumbered">
+                <div class="d-flex justify-space-between align-center mb-4">
+                    <div>
+                        <MudText Typo="Typo.h6">Individual SDL Employer Line Items</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Mandatory, discretionary, administration, interest, and penalty breakdown per SDL employer account</MudText>
+                    </div>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenAddLineForm">
+                        Add Line Item
+                    </MudButton>
+                </div>
+
+                @if (_showAddLineForm)
+                {
+                    <MudCard Class="pa-4 mb-4 border-primary" Elevation="3">
+                        <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-3">Add SARS File Line Item</MudText>
+                        <MudGrid>
+                            <MudItem xs="12" md="3">
+                                <MudTextField T="string" Label="SARS SDL Number" Required="true" @bind-Value="_newLine.SdlNumber" Variant="Variant.Outlined" Placeholder="e.g. L710712345" />
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudTextField T="string" Label="Scheme Year" Required="true" @bind-Value="_newLine.SchemeYear" Variant="Variant.Outlined" Placeholder="e.g. 2026" />
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudNumericField T="decimal" Label="Mandatory Levy (20%)" @bind-Value="_newLine.MandatoryLevyAmount" Variant="Variant.Outlined" Format="N2" Min="0" />
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudNumericField T="decimal" Label="Discretionary Levy (49.5%)" @bind-Value="_newLine.DiscretionaryLevyAmount" Variant="Variant.Outlined" Format="N2" Min="0" />
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudNumericField T="decimal" Label="Admin Levy (10.5%)" @bind-Value="_newLine.AdminLevyAmount" Variant="Variant.Outlined" Format="N2" Min="0" />
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudNumericField T="decimal" Label="QCTO Levy (0.5%)" @bind-Value="_newLine.QctoLevyAmount" Variant="Variant.Outlined" Format="N2" Min="0" />
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudNumericField T="decimal" Label="Interest Amount" @bind-Value="_newLine.InterestAmount" Variant="Variant.Outlined" Format="N2" Min="0" />
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudNumericField T="decimal" Label="Penalty Amount" @bind-Value="_newLine.PenaltyAmount" Variant="Variant.Outlined" Format="N2" Min="0" />
+                            </MudItem>
+                            <MudItem xs="12" Class="d-flex justify-end gap-2">
+                                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" OnClick="CancelAddLineForm">Cancel</MudButton>
+                                <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveLineItem">Save Line Item</MudButton>
+                            </MudItem>
+                        </MudGrid>
+                    </MudCard>
+                }
+
+                <MudTable Items="_lines" Hover="true" Dense="true" Striped="true">
+                    <HeaderContent>
+                        <MudTh>SDL Number</MudTh>
+                        <MudTh>Scheme Year</MudTh>
+                        <MudTh>Mandatory (20%)</MudTh>
+                        <MudTh>Discretionary (49.5%)</MudTh>
+                        <MudTh>Admin (10.5%)</MudTh>
+                        <MudTh>Interest / Penalty</MudTh>
+                        <MudTh>Total Amount</MudTh>
+                        <MudTh>Reconciled</MudTh>
+                        <MudTh Style="text-align:right">Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="SDL Number">
+                            <span class="font-monospace fw-bold">@context.SdlNumber</span>
+                        </MudTd>
+                        <MudTd DataLabel="Scheme Year">@context.SchemeYear</MudTd>
+                        <MudTd DataLabel="Mandatory">@context.MandatoryLevyAmount.ToString("C")</MudTd>
+                        <MudTd DataLabel="Discretionary">@context.DiscretionaryLevyAmount.ToString("C")</MudTd>
+                        <MudTd DataLabel="Admin">@context.AdminLevyAmount.ToString("C")</MudTd>
+                        <MudTd DataLabel="Interest / Penalty">@((context.InterestAmount + context.PenaltyAmount).ToString("C"))</MudTd>
+                        <MudTd DataLabel="Total Amount">
+                            <MudText Typo="Typo.body2" Class="fw-bold text-success">@((context.MandatoryLevyAmount + context.DiscretionaryLevyAmount + context.AdminLevyAmount + context.QctoLevyAmount + context.InterestAmount + context.PenaltyAmount).ToString("C"))</MudText>
+                        </MudTd>
+                        <MudTd DataLabel="Reconciled">
+                            <MudChip T="string" Color="@(context.IsReconciled ? Color.Success : Color.Warning)" Size="Size.Small" Variant="Variant.Filled">
+                                @(context.IsReconciled ? "Reconciled" : "Pending")
+                            </MudChip>
+                        </MudTd>
+                        <MudTd Style="text-align:right" DataLabel="Actions">
+                            <div class="d-flex justify-end gap-1">
+                                <MudTooltip Text="@(context.IsReconciled ? "Mark as Unreconciled" : "Reconcile Line Item")">
+                                    <MudIconButton Icon="@(context.IsReconciled ? Icons.Material.Filled.Cancel : Icons.Material.Filled.CheckCircle)" Color="@(context.IsReconciled ? Color.Warning : Color.Success)" Size="Size.Small" OnClick="@(() => ToggleReconcile(context.Id))" aria-label="Toggle Reconcile" />
+                                </MudTooltip>
+                                <MudTooltip Text="Remove Line Item">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => RemoveLine(context.Id))" aria-label="Remove Line" />
+                                </MudTooltip>
+                            </div>
+                        </MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <div class="pa-4 text-center">
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">No line items imported in this batch yet.</MudText>
+                        </div>
+                    </NoRecordsContent>
+                </MudTable>
+            </MudTabPanel>
+
+            <!-- TAB 3: Employer Reconciliation -->
+            <MudTabPanel Text="Employer Reconciliation" Icon="@Icons.Material.Filled.AccountBalance">
+                <MudGrid Spacing="3">
+                    <MudItem xs="12" md="4">
+                        <MudCard Elevation="2">
+                            <MudCardHeader>
+                                <CardHeaderAvatar>
+                                    <MudAvatar Color="Color.Success" Variant="Variant.Filled">
+                                        <MudIcon Icon="@Icons.Material.Filled.PriceCheck" />
+                                    </MudAvatar>
+                                </CardHeaderAvatar>
+                                <CardHeaderContent>
+                                    <MudText Typo="Typo.h6">Mandatory Pool (20%)</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Payable to WSP claiming employers</MudText>
+                                </CardHeaderContent>
+                            </MudCardHeader>
+                            <MudCardContent>
+                                <MudText Typo="Typo.h5" Class="fw-bold text-success">@(_lines.Sum(l => l.MandatoryLevyAmount).ToString("C"))</MudText>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+
+                    <MudItem xs="12" md="4">
+                        <MudCard Elevation="2">
+                            <MudCardHeader>
+                                <CardHeaderAvatar>
+                                    <MudAvatar Color="Color.Primary" Variant="Variant.Filled">
+                                        <MudIcon Icon="@Icons.Material.Filled.AccountBalanceWallet" />
+                                    </MudAvatar>
+                                </CardHeaderAvatar>
+                                <CardHeaderContent>
+                                    <MudText Typo="Typo.h6">Discretionary Pool (49.5%)</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Allocated to DG window projects</MudText>
+                                </CardHeaderContent>
+                            </MudCardHeader>
+                            <MudCardContent>
+                                <MudText Typo="Typo.h5" Class="fw-bold text-primary">@(_lines.Sum(l => l.DiscretionaryLevyAmount).ToString("C"))</MudText>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+
+                    <MudItem xs="12" md="4">
+                        <MudCard Elevation="2">
+                            <MudCardHeader>
+                                <CardHeaderAvatar>
+                                    <MudAvatar Color="Color.Info" Variant="Variant.Filled">
+                                        <MudIcon Icon="@Icons.Material.Filled.AdminPanelSettings" />
+                                    </MudAvatar>
+                                </CardHeaderAvatar>
+                                <CardHeaderContent>
+                                    <MudText Typo="Typo.h6">Admin & Operations</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">10.5% Admin + QCTO + Penalties</MudText>
+                                </CardHeaderContent>
+                            </MudCardHeader>
+                            <MudCardContent>
+                                <MudText Typo="Typo.h5" Class="fw-bold text-info">@(_lines.Sum(l => l.AdminLevyAmount + l.QctoLevyAmount + l.InterestAmount + l.PenaltyAmount).ToString("C"))</MudText>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+
+                    <!-- Batch Reconciliation Actions -->
+                    <MudItem xs="12">
+                        <MudCard Elevation="2" Class="pa-4">
+                            <div class="d-flex flex-wrap justify-space-between align-center gap-3">
+                                <div>
+                                    <MudText Typo="Typo.h6">Reconciliation Status</MudText>
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                        @(_lines.Count(l => l.IsReconciled)) of @_lines.Count records reconciled against registered SDL employer accounts.
+                                    </MudText>
+                                    @{
+                                        int progressPct = _lines.Count > 0 ? (int)(_lines.Count(l => l.IsReconciled) * 100.0 / _lines.Count) : 0;
+                                    }
+                                    <MudProgressLinear Color="Color.Success" Value="@progressPct" Class="my-3" Style="height: 10px; border-radius: 5px;" />
+                                </div>
+                                <div>
+                                    <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.DoneAll" OnClick="ReconcileAll">
+                                        Reconcile All Line Items
+                                    </MudButton>
+                                </div>
+                            </div>
+                        </MudCard>
+                    </MudItem>
+                </MudGrid>
+            </MudTabPanel>
+        </MudTabs>
+    }
+</MudContainer>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private LevyFile _file = new();
+    private bool _loading = true;
+    private bool _isSaving = false;
+
+    private List<LevyFileLine> _lines = new();
+    private DateTime? _importDate;
+
+    // Line form
+    private bool _showAddLineForm = false;
+    private LevyFileLine _newLine = new();
+
+    private List<BreadcrumbItem> _breadcrumbItems = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+        SetupBreadcrumbs();
+        await LoadFileData();
+        _loading = false;
+    }
+
+    private void SetupBreadcrumbs()
+    {
+        _breadcrumbItems = new List<BreadcrumbItem>
+        {
+            new BreadcrumbItem("Home", href: "/"),
+            new BreadcrumbItem("SARS Levy Files", href: "/levies"),
+            new BreadcrumbItem($"Levy File #{Id}", href: null, disabled: true)
+        };
+    }
+
+    private async Task LoadFileData()
+    {
+        var f = await LevyService.GetByIdAsync(Id);
+        if (f != null)
+        {
+            _file = f;
+            _importDate = f.ImportDate;
+            _lines = await LevyService.GetLineItemsAsync(Id);
+        }
+        else
+        {
+            Snackbar.Add($"Levy File #{Id} not found.", Severity.Error);
+            NavManager.NavigateTo("/levies");
+        }
+    }
+
+    private async Task SaveFile()
+    {
+        _file.ImportDate = _importDate ?? DateTime.UtcNow;
+        _isSaving = true;
+
+        try
+        {
+            await LevyService.UpdateAsync(_file, "Admin");
+            Snackbar.Add("Levy file details updated successfully.", Severity.Success);
+            await LoadFileData();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error updating file: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task DeleteFile()
+    {
+        try
+        {
+            var deleted = await LevyService.DeleteAsync(Id, "Admin");
+            if (deleted)
+            {
+                Snackbar.Add("Levy file batch deleted successfully.", Severity.Success);
+                NavManager.NavigateTo("/levies");
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error deleting file: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void BackToList()
+    {
+        NavManager.NavigateTo("/levies");
+    }
+
+    // Line Items Management
+    private void OpenAddLineForm()
+    {
+        _newLine = new LevyFileLine
+        {
+            LevyFileId = Id,
+            SdlNumber = $"L{new Random().Next(10000000, 99999999)}",
+            SchemeYear = DateTime.UtcNow.Year.ToString(),
+            MandatoryLevyAmount = 50000m,
+            DiscretionaryLevyAmount = 123750m,
+            AdminLevyAmount = 26250m,
+            QctoLevyAmount = 1250m,
+            InterestAmount = 0m,
+            PenaltyAmount = 0m
+        };
+        _showAddLineForm = true;
+    }
+
+    private void CancelAddLineForm()
+    {
+        _showAddLineForm = false;
+    }
+
+    private async Task SaveLineItem()
+    {
+        if (string.IsNullOrWhiteSpace(_newLine.SdlNumber))
+        {
+            Snackbar.Add("SDL Number is required.", Severity.Warning);
+            return;
+        }
+
+        _newLine.LevyFileId = Id;
+
+        try
+        {
+            await LevyService.AddLineItemAsync(_newLine, "Admin");
+            Snackbar.Add("Levy line item registered successfully.", Severity.Success);
+            _showAddLineForm = false;
+            await LoadFileData();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error adding line item: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task RemoveLine(int lineId)
+    {
+        try
+        {
+            var removed = await LevyService.RemoveLineItemAsync(lineId, "Admin");
+            if (removed)
+            {
+                Snackbar.Add("Line item removed successfully.", Severity.Success);
+                await LoadFileData();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error removing line item: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task ToggleReconcile(int lineId)
+    {
+        try
+        {
+            await LevyService.ReconcileLineItemAsync(lineId, "Admin");
+            _lines = await LevyService.GetLineItemsAsync(Id);
+            Snackbar.Add("Line item reconciliation status toggled.", Severity.Info);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error reconciling line: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task ReconcileAll()
+    {
+        try
+        {
+            var count = await LevyService.ReconcileAllLinesAsync(Id, "Admin");
+            _file.StatusCode = "RECONCILED";
+            await LevyService.UpdateAsync(_file, "Admin");
+            await LoadFileData();
+            Snackbar.Add($"Successfully reconciled {count} line items across registered employers.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error reconciling all items: {ex.Message}", Severity.Error);
+        }
+    }
+}

@@ -1,0 +1,216 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<p:growl sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+		<div class="ui-g">
+			
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+						<h1>Legacy Data: Internship</h1>
+
+						<p:outputLabel value="Data Source: Internship.xlsx " />
+						<br />
+						<p:outputLabel value="Tab: Internship" />
+						<div class="EmptyBox10" />
+
+						<c:if test="#{legacyapprenticeshiptradetestUI.displayDownload}">
+							<ui:include src="/pages/includes/download_lazy.xhtml">
+								<ui:param name="file_name" value="legacyinternshipList_dataextract" />
+								<ui:param name="target" value="legacyinternshipList" />
+							</ui:include>
+							<div class="EmptyBox10" />
+						</c:if>
+
+						<p:dataTable var="rowVar" value="#{legacyinternshipUI.dataModel}" filteredValue="#{legacyinternshipUI.legacyInternshipfilteredList}" id="legacyinternshipList" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+							<p:column style="width:5%" headerText="Expand">
+								<p:rowToggler />
+							</p:column>
+							
+							<p:column headerText="DATE TIME CREATED">
+								<h:outputText value="#{rowVar.createDate}">
+									<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="NSDMD REF ID">
+								<h:outputText value="#{rowVar.id}" />
+							</p:column>
+							<p:column headerText="ID2" filterBy="#{rowVar.idTwo}">
+								<h:outputText value="#{rowVar.idTwo}" />
+							</p:column>
+							<p:column headerText="IDNo" filterBy="#{rowVar.idNo}">
+								<h:outputText value="#{rowVar.idNo}" />
+							</p:column>
+							<p:column headerText="Firstname" filterBy="#{rowVar.firstName}">
+								<h:outputText value="#{rowVar.firstName}" />
+							</p:column>
+							<p:column headerText="MiddleNames" filterBy="#{rowVar.middleNames}">
+								<h:outputText value="#{rowVar.middleNames}" />
+							</p:column>
+							<p:column headerText="Surname" filterBy="#{rowVar.surname}">
+								<h:outputText value="#{rowVar.surname}" />
+							</p:column>
+							<p:column headerText="StartDate">
+								<h:outputText value="#{rowVar.startDate}" />
+							</p:column>
+							<p:column headerText="EndDate">
+								<h:outputText value="#{rowVar.endDate}" />
+							</p:column>
+							<p:column headerText="ApplicationDate">
+								<h:outputText value="#{rowVar.applicationDate}" />
+							</p:column>
+							<p:column headerText="RegistrationDate">
+								<h:outputText value="#{rowVar.registrationDate}" />
+							</p:column>
+							<p:column headerText="CompletionDate">
+								<h:outputText value="#{rowVar.completionDate}" />
+							</p:column>
+							<p:rowExpansion>
+								<p:fieldset legend="NSDMS REF ID: #{rowVar.id}" style="margin-bottom:20px">
+									<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+									
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText  value="#{rowVar.status}" style="width:95%" disabled="true"/>
+											<p:outputLabel value="Status"  />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText  value="#{rowVar.employerSdl}" style="width:95%" disabled="true"/>
+											<p:outputLabel value="EmployerSDL"  />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText  value="#{rowVar.organisationNameLegal}" style="width:95%" disabled="true"/>
+											<p:outputLabel value="OrganisationNameLegal"  />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText  value="#{rowVar.organisationNameTrade}" style="width:95%" disabled="true"/>
+											<p:outputLabel value="OrganisationNameTrade"  />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText  value="#{rowVar.programmeType}" style="width:95%" disabled="true"/>
+											<p:outputLabel value="ProgrammeType"  />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText  value="#{rowVar.learningArea}" style="width:95%" disabled="true"/>
+											<p:outputLabel value="LearningArea"  />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText  value="#{rowVar.learningAreaOther}" style="width:95%" disabled="true"/>
+											<p:outputLabel value="LearningAreaOther"  />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText  value="#{rowVar.provider}" style="width:95%" disabled="true"/>
+											<p:outputLabel value="Provider"  />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText  value="#{rowVar.otherProvider}" style="width:95%" disabled="true"/>
+											<p:outputLabel value="OtherProvider"  />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText  value="#{rowVar.providerType}" style="width:95%" disabled="true"/>
+											<p:outputLabel value="ProviderType"  />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText  value="#{rowVar.ofoCode}" style="width:95%" disabled="true"/>
+											<p:outputLabel value="OFOCode"  />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText  value="#{rowVar.skillPriority}" style="width:95%" disabled="true"/>
+											<p:outputLabel value="SkillPriority"  />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText  value="#{rowVar.nqfLevel}" style="width:95%" disabled="true"/>
+											<p:outputLabel value="NQFLevel"  />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText  value="#{rowVar.fundingStatus}" style="width:95%" disabled="true"/>
+											<p:outputLabel value="FundingStatus"  />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText  value="#{rowVar.partnershipSDL}" style="width:95%" disabled="true"/>
+											<p:outputLabel value="PartnershipSDL"  />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText  value="#{rowVar.partnerLegalName}" style="width:95%" disabled="true"/>
+											<p:outputLabel value="partnerLegalName"  />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText  value="#{rowVar.dgTag}" style="width:95%" disabled="true"/>
+											<p:outputLabel value="DGTag"  />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText  value="#{rowVar.amount}" style="width:95%" disabled="true"/>
+											<p:outputLabel value="Amount"  />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText  value="#{rowVar.sspNeedsId}" style="width:95%" disabled="true"/>
+											<p:outputLabel value="SSPNeedsID"  />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText  value="#{rowVar.dateCreated}" style="width:95%" disabled="true"/>
+											<p:outputLabel value="DateCreated"  />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText  value="#{rowVar.dateUpdated}" style="width:95%" disabled="true"/>
+											<p:outputLabel value="DateUpdated"  />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield" rendered="fasle">
+											<p:inputText  value="#{rowVar.setmisCode}" style="width:95%" disabled="true"/>
+											<p:outputLabel value="#{lang['setmisCode']}"  />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield" rendered="fasle">
+											<p:inputText  value="#{rowVar.qctoCode}" style="width:95%" disabled="true"/>
+											<p:outputLabel value="#{lang['qctoCode']}"  />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield" rendered="fasle">
+											<p:inputText  value="#{rowVar.code}" style="width:95%" disabled="true"/>
+											<p:outputLabel value="#{lang['code']}"  />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield" rendered="fasle">
+											<p:inputText  value="#{rowVar.createDate}" style="width:95%" disabled="true"/>
+											<p:outputLabel value="#{lang['createDate']}"  />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield" rendered="fasle">
+											<p:inputText  value="#{rowVar.nlrdCode}" style="width:95%" disabled="true"/>
+											<p:outputLabel value="#{lang['nlrdCode']}"  />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield" rendered="fasle">
+											<p:inputText  value="#{rowVar.smsCode}" style="width:95%" disabled="true"/>
+											<p:outputLabel value="#{lang['smsCode']}"  />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText  value="#{rowVar.saqaId}" style="width:95%" disabled="true"/>
+											<p:outputLabel value="SAQA ID"  />
+										</h:panelGroup>
+									</p:panelGrid>
+								</p:fieldset>
+							</p:rowExpansion>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<c:if test="false">
+					<ui:include src="/pages/legacyData/reportingIncludes/legacyReporting.xhtml">
+						<ui:param name="title" value="Legacy Data: Internship"></ui:param>
+						<ui:param name="reportingBeans" value="#{legacyinternshipUI.legacyReportingBeans}"></ui:param>
+						<ui:param name="reportingMap" value="#{legacyinternshipUI.columnMap}"></ui:param>
+					</ui:include>
+				</c:if>
+			</div>
+		</div>
+
+	</ui:define>
+	<!-- 
+_lang_
+-->
+</ui:composition>

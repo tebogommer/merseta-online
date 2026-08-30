@@ -1,0 +1,84 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<p:growl sticky="false">
+				<p:autoUpdate />
+			</p:growl>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+						<h1>Legacy Data: Assessor Learnership</h1>
+
+						<p:outputLabel value="Data Source: Assessor.xlsx " />
+						<br />
+						<p:outputLabel value="Tab: Learnership " />
+						<div class="EmptyBox10" />
+
+						<c:if test="#{legacyassessorlearnershipUI.displayDownload}">
+							<ui:include src="/pages/includes/download_lazy.xhtml">
+								<ui:param name="file_name" value="legacyassessorlearnershipUIList_dataextract" />
+								<ui:param name="target" value="legacyassessorlearnershipList" />
+							</ui:include>
+						</c:if>
+
+						<p:dataTable var="rowVar" value="#{legacyassessorlearnershipUI.dataModel}" filteredValue="#{legacyassessorlearnershipUI.legacyAssessorLearnershipfilteredList}" id="legacyassessorlearnershipList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+							<p:column headerText="NSDMS REF ID">
+								<h:outputText value="#{rowVar.id}" />
+							</p:column>
+							<p:column headerText="AssessorId">
+								<h:outputText value="#{rowVar.assessorId}" />
+							</p:column>
+							<p:column headerText="AlternateIDNo">
+								<h:outputText value="#{rowVar.alternateIDNo}" />
+							</p:column>
+							<p:column headerText="Firstname">
+								<h:outputText value="#{rowVar.firstName}" />
+							</p:column>
+							<p:column headerText="MiddleNames">
+								<h:outputText value="#{rowVar.middleNames}" />
+							</p:column>
+							<p:column headerText="Surname">
+								<h:outputText value="#{rowVar.surname}" />
+							</p:column>
+							<p:column headerText="LearnershipCode">
+								<h:outputText value="#{rowVar.learnershipCode}" />
+							</p:column>
+							<p:column headerText="LshipCode">
+								<h:outputText value="#{rowVar.lshipCode}" />
+							</p:column>
+							<p:column headerText="SAQAUnitStandardID">
+								<h:outputText value="#{rowVar.saqaUnitStandardID}" />
+							</p:column>
+							<p:column headerText="AssessorRegStartDate">
+								<h:outputText value="#{rowVar.assessorRegStartDate}" />
+							</p:column>
+							<p:column headerText="AssessorFirstRegDate">
+								<h:outputText value="#{rowVar.assessorFirstRegDate}" />
+							</p:column>
+							<p:column headerText="AssessorRegEndDate">
+								<h:outputText value="#{rowVar.assessorRegEndDate}" />
+							</p:column>
+							<p:column headerText="AssessorRegNo">
+								<h:outputText value="#{rowVar.assessorRegNo}" />
+							</p:column>
+							<p:column headerText="AssessorStatusDesc">
+								<h:outputText value="#{rowVar.assessorStatusDesc}" />
+							</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+	<!-- 
+-->
+</ui:composition>

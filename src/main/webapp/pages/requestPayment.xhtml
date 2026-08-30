@@ -1,0 +1,158 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+		<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+		<p:importEnum type="haj.com.entity.enums.MoaTypeEnum" />
+		<p:growl showDetail="false" sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<ui:include src="/pages/includes/taskdiagram.xhtml" />
+				<br />
+			</div>
+		</div>
+		<h:form id="mainForm">
+			<div class="ui-g">
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+						<h1>Payment Request Information. Reference ID: #{paymentrequestUI.paymentrequest.id}</h1>
+						<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText value="#{paymentrequestUI.paymentrequest.id}" style="width:95%" disabled="true" />
+								<p:outputLabel value="Reference ID" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText value="#{paymentrequestUI.paymentrequest.createUser.firstName} #{paymentrequestUI.paymentrequest.createUser.lastName} (#{paymentrequestUI.paymentrequest.createUser.email})" style="width:95%" disabled="true">
+								</p:inputText>
+								<p:outputLabel value="User Raised Request" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText value="#{paymentrequestUI.paymentrequest.createDate}" style="width:95%" disabled="true">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</p:inputText>
+								<p:outputLabel value="Date Raised Request" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText value="#{paymentrequestUI.paymentrequest.projectImplementationPlan.interventionTypeDescription}" style="width:95%" disabled="true">
+								</p:inputText>
+								<p:outputLabel value="Deliverable" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText value="#{paymentrequestUI.paymentrequest.projectImplementationPlan.totalAwardAmount}" style="width:95%" disabled="true">
+								</p:inputText>
+								<p:outputLabel value="Amount" />
+							</h:panelGroup>
+						</p:panelGrid>
+					</div>
+					<div class="card card-w-title">
+						<h1>Company information</h1>
+						<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText value="#{paymentrequestUI.paymentrequest.company.companyName}" style="width:95%" disabled="true" />
+								<p:outputLabel value="#{lang['companyName']}" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText value="#{paymentrequestUI.paymentrequest.company.tradingName}" style="width:95%" disabled="true" />
+								<p:outputLabel value="#{lang['tradingName']}" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText value="#{paymentrequestUI.paymentrequest.company.companyRegistrationNumber}" style="width:95%" disabled="true" />
+								<p:outputLabel value="#{lang['reg.number']}" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText value="#{paymentrequestUI.paymentrequest.company.levyNumber}" style="width:95%" disabled="true" />
+								<p:outputLabel value="#{lang['levy.number']}" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText value="#{paymentrequestUI.paymentrequest.company.telNumber}" style="width:95%" disabled="true" />
+								<p:outputLabel value="#{lang['telNumber']}" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText value="#{paymentrequestUI.paymentrequest.company.faxNumber}" style="width:95%" disabled="true" rendered="#{paymentrequestUI.paymentrequest.company.faxNumber ne null and paymentrequestUI.paymentrequest.company.faxNumber.length() gt 0}" />
+								<p:inputText value="#{lang['n.a']}" style="width:95%" disabled="true" rendered="#{paymentrequestUI.paymentrequest.company.faxNumber eq null or paymentrequestUI.paymentrequest.company.faxNumber.length() eq 0}" />
+								<p:outputLabel value="#{lang['faxNumber']}" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText value="#{paymentrequestUI.paymentrequest.company.email}" style="width:95%" disabled="true" />
+								<p:outputLabel value="#{lang['email']}" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText value="#{paymentrequestUI.paymentrequest.company.sicCode.description}" style="width:95%" disabled="true" />
+								<p:outputLabel value="#{lang['sicCode']}" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText value="#{lang['n.a']}" style="width:95%" disabled="true" rendered="#{paymentrequestUI.paymentrequest.company.sicCode eq null or paymentrequestUI.paymentrequest.company.sicCode.chamber eq null}" />
+								<p:inputText value="#{paymentrequestUI.paymentrequest.company.sicCode.chamber.description}" style="width:95%" disabled="true" rendered="#{paymentrequestUI.paymentrequest.company.sicCode ne null and paymentrequestUI.paymentrequest.company.sicCode.chamber ne null}" />
+								<p:outputLabel value="#{lang['chamber']}" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText value="#{lang['n.a']}" rendered="#{paymentrequestUI.paymentrequest.company.organisationType eq null}" style="width:95%" disabled="true" />
+								<p:inputText value="#{paymentrequestUI.paymentrequest.company.organisationType.description}" rendered="#{paymentrequestUI.paymentrequest.company.organisationType ne null}" style="width:95%" disabled="true" />
+								<p:outputLabel value="#{lang['organisation.type']}" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText value="#{paymentrequestUI.paymentrequest.company.numberOfEmployees}" style="width:95%" disabled="true" />
+								<p:outputLabel value="#{lang['numberOfEmployees']}" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText value="#{lang['n.a']}" rendered="#{paymentrequestUI.paymentrequest.company.recognitionAgreement eq null}" style="width:95%" disabled="true" />
+								<p:inputText value="#{paymentrequestUI.paymentrequest.company.recognitionAgreement.yesNoName}" rendered="#{paymentrequestUI.paymentrequest.company.recognitionAgreement ne null}" style="width:95%" disabled="true" />
+								<p:outputLabel value="#{lang['recognition.agreement']}" />
+							</h:panelGroup>
+						</p:panelGrid>
+					</div>
+					<div class="card card-w-title">
+						<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{paymentrequestUI.paymentrequest.rejectionReasonText ne null and paymentrequestUI.paymentrequest.rejectionReasonText ne ''}">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText value="#{paymentrequestUI.paymentrequest.rejectionReasonText}" style="width:95%" disabled="true" />
+								<p:outputLabel value="Rejection Reason Detail" />
+							</h:panelGroup>
+						</p:panelGrid>
+						<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{paymentrequestUI.rejectedReasons ne null and paymentrequestUI.rejectedReasons.size() gt 0}">
+							<p:dataTable var="rowVarRR" value="#{paymentrequestUI.rejectedReasons}" styleClass="hiddenHeader">
+								<f:facet name="header">Rejection Reasons</f:facet>
+								<p:column headerText="Reason">
+									<p:outputLabel value="#{rowVarRR.description}" styleClass="Fs15" />
+									<br />
+									<p:outputLabel value="#{rowVarRR.howTo}" style="color: grey;" />
+								</p:column>
+							</p:dataTable>
+						</p:panelGrid>
+						<!-- Complete Task -->
+						<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+							<p:commandButton value="Approve" action="#{paymentrequestUI.finalApproveWorkflow}" icon="fa fa-check" update="@form" styleClass="max-btn green-btn" onstart="uploadStart()" ajax="false" oncomplete="uploadDone()" />
+							<p:commandButton value="Reject" icon="fa fa-times" update=":rejectReasonsForm" oncomplete="PF('rejectReasonsDlg').show()" process="@this" styleClass="max-btn red-btn" />
+						</p:panelGrid>
+					</div>
+				</div>
+			</div>
+		</h:form>
+		<p:dialog header="Reject Task Reasons" widgetVar="rejectReasonsDlg" hideEffect="clip" showEffect="clip" id="rejectReasonsDialog" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonsForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="EmptyBox10" />
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText value="#{paymentrequestUI.paymentrequest.rejectionReasonText}" style="width:95%">
+									<p:ajax />
+								</p:inputText>
+								<p:outputLabel value="Rejection Reason Detail" />
+							</h:panelGroup>
+							<div class="EmptyBox10" />
+							<p:selectManyMenu value="#{paymentrequestUI.selectedRejectionReasons}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{paymentrequestUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+							</p:selectManyMenu>
+						</div>
+					</div>
+					<p:commandButton value="Reject" action="#{paymentrequestUI.finalRejectWorkflow}" onstart="uploadStart()" ajax="false" oncomplete="uploadDone()" />
+				</div>
+			</h:form>
+		</p:dialog>
+	</ui:define>
+</ui:composition>

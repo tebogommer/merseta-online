@@ -1,0 +1,175 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+
+			<p:growl sticky="false">
+				<p:autoUpdate />
+			</p:growl>
+
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+						<h1>
+							#{lang['SARS.Employer.and.levy.details.for']}
+							<h:outputText value="#{sessionUI.sarsFiles.forMonth}">
+								<f:convertDateTime pattern="MMMM yyyy" />
+							</h:outputText>
+						</h1>
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+						<p:dataTable var="rowVar" value="#{sarsemployerdetailUI.dataModel}" filteredValue="#{sarsemployerdetailUI.sarsEmployerDetailfilteredList}" id="sarsemployerdetailList" rowKey="#{rowVar.id}" paginator="true" rows="20" paginatorPosition="bottom"
+							paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="20,30,60,100" reflow="true" lazy="true">
+							<p:column headerText="#{lang['expand.row']}" width="45">
+								<p:rowToggler rendered="#{rowVar.levies.size() gt 0}" />
+							</p:column>
+							<p:column headerText="REF ID" width="5%" rendered="#{sessionUI.admin}" exportable="false">
+								<h:outputText value="#{rowVar.id}" />
+							</p:column>
+							<p:column headerText="#{lang['sdl.number']}" width="10%" sortBy="#{rowVar.refNo}" filterBy="#{rowVar.refNo}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.refNo}" />
+							</p:column>
+							<p:column headerText="#{lang['name']}" sortBy="#{rowVar.registeredNameOfEntity}" filterBy="#{rowVar.registeredNameOfEntity}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.registeredNameOfEntity}" />
+							</p:column>
+							<p:column headerText="#{lang['tradingName']}">
+								<h:outputText value="#{rowVar.tradingName}" />
+							</p:column>
+							<p:column headerText="#{lang['companyRegistrationNumber']}" width="10%" sortBy="#{rowVar.companyRegistrationNumber}" filterBy="#{rowVar.companyRegistrationNumber}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.companyRegistrationNumber}" />
+							</p:column>
+							<p:column headerText="#{lang['trading.status']}" width="7%" sortBy="#{rowVar.tradingStatus}" filterBy="#{rowVar.tradingStatus}" filterStyle="width: 95%">  
+                        			(<h:outputText value="#{rowVar.tradingStatus}" />) <h:outputText value="#{rowVar.status}" />
+							</p:column>
+							<p:column headerText="#{lang['sic']}" width="5%" sortBy="#{rowVar.sicCode2}" filterBy="#{rowVar.sicCode2}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.sicCode2}" />
+							</p:column>
+							<p:column headerText="Employer Post Code" width="5%" sortBy="#{rowVar.employerPostCode}" filterBy="#{rowVar.employerPostCode}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.employerPostCode}" />
+							</p:column>
+							<p:column headerText="Edit" width="5%" rendered="#{sessionUI.admin}" exportable="false">
+								<p:commandButton icon="fa fa-search" title="Update Information" update=":employerDetailUpdateForm" oncomplete="PF('dlgEmployerDetailUpdate').show()">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{sarsemployerdetailUI.sarsemployerdetailUpdate}" />
+								</p:commandButton>
+							</p:column>
+							<p:rowExpansion>
+								<h4>#{lang['leviies']}</h4>
+								<p:dataTable var="rv" value="#{rowVar.levies}" id="sarslevydetailsList" rowKey="#{rv.id}" paginator="true" rows="6" paginatorPosition="bottom"
+									paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+									<p:column headerText="#{lang['arrival.date']}">
+										<h:outputText value="#{rv.arrivalDate1}">
+											<f:convertDateTime pattern="yyyy-MM-dd" />
+										</h:outputText>
+									</p:column>
+									<p:column headerText="#{lang['seta.code']}">
+										<h:outputText value="#{rv.setaCode}" />
+									</p:column>
+									<p:column headerText="#{lang['sdl.no']}">
+										<h:outputText value="#{rv.refNo}" />
+									</p:column>
+
+									<p:column headerText="#{lang['mandatory.levy']}">
+										<h:outputText value="#{rv.mandatoryLevy}" styleClass="Fright">
+											<f:convertNumber pattern="###,###,###,##0.00" />
+										</h:outputText>
+									</p:column>
+									<p:column headerText="#{lang['discretionary.levy']}">
+										<h:outputText value="#{rv.discretionaryLevy}" styleClass="Fright">
+											<f:convertNumber pattern="###,###,###,##0.00" />
+										</h:outputText>
+									</p:column>
+									<p:column headerText="#{lang['admin.levy']}">
+										<h:outputText value="#{rv.adminLevy}" styleClass="Fright">
+											<f:convertNumber pattern="###,###,###,##0.00" />
+										</h:outputText>
+									</p:column>
+
+									<p:column headerText="#{lang['interest']}">
+										<h:outputText value="#{rv.interest}" styleClass="Fright">
+											<f:convertNumber pattern="##.##" />
+										</h:outputText>
+									</p:column>
+
+									<p:column headerText="#{lang['penalty']}">
+										<h:outputText value="#{rv.penalty}" styleClass="Fright">
+											<f:convertNumber pattern="###,###,###,##0.00" />
+										</h:outputText>
+									</p:column>
+									<p:column headerText="#{lang['total']}">
+										<h:outputText value="#{rv.total}" styleClass="Fright">
+											<f:convertNumber pattern="###,###,###,##0.00" />
+										</h:outputText>
+									</p:column>
+									<p:column headerText="#{lang['scheme.year']}">
+										<h:outputText value="#{rv.schemeYear}" styleClass="Fright" />
+									</p:column>
+								</p:dataTable>
+								<br />
+							</p:rowExpansion>
+						</p:dataTable>
+
+						<c:if test="#{sessionUI.admin}">
+							<div class="EmptyBox10" />
+							<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+								<p:commandButton update="resultsPanel" icon="fa fa-plus" value="Run Check" action="#{sarsemployerdetailUI.runChecks}" onstart="uploadStart()" oncomplete="uploadDone()" >
+									<p:confirm header="#{lang['confirmation']}" message="Are you sure? this may take some time." icon="ui-icon-warning" />
+								</p:commandButton>
+								<p:commandButton icon="fa fa-plus" value="Import Failed Companies" action="#{sarsemployerdetailUI.runEmployerImport}" onstart="uploadStart()" oncomplete="uploadDone()">
+									<p:confirm header="#{lang['confirmation']}" message="Are you sure? this may take some time." icon="ui-icon-warning" />
+								</p:commandButton>
+							</p:panelGrid>
+							<p:outputPanel id="resultsPanel">
+								<p:fieldset legend="Results">
+									<p:outputLabel value="#{sarsemployerdetailUI.errorList}" escape="false" />
+								</p:fieldset>
+							</p:outputPanel>
+						</c:if>
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+			<h:form>
+				<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+				<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+			</h:form>
+		</p:confirmDialog>
+
+
+		<p:dialog position="top" header="SARS Employer Detail Update" widgetVar="dlgEmployerDetailUpdate" hideEffect="clip" showEffect="clip" id="dialogEmployerDetailUpdate" modal="true" closable="true" width="50%" responsive="true">
+			<h:form id="employerDetailUpdateForm">
+				<h2>Update Employer Information</h2>
+				<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="refNoUpdate" value="#{sarsemployerdetailUI.sarsemployerdetailUpdate.refNo}" style="width:95%" required="true" />
+						<p:outputLabel for="refNoUpdate" value="#{lang['sdl.number']}" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="registeredNameOfEntityUpdate" value="#{sarsemployerdetailUI.sarsemployerdetailUpdate.registeredNameOfEntity}" style="width:95%" required="true" />
+						<p:outputLabel for="registeredNameOfEntityUpdate" value="#{lang['name']}" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="tradingNameUpdate" value="#{sarsemployerdetailUI.sarsemployerdetailUpdate.tradingName}" style="width:95%" required="true" />
+						<p:outputLabel for="tradingNameUpdate" value="#{lang['tradingName']}" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="companyRegistrationNumberUpdate" value="#{sarsemployerdetailUI.sarsemployerdetailUpdate.companyRegistrationNumber}" style="width:95%" required="true" />
+						<p:outputLabel for="companyRegistrationNumberUpdate" value="#{lang['companyRegistrationNumber']}" />
+					</h:panelGroup>
+					
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="employerPostCodeUpdate" value="#{sarsemployerdetailUI.sarsemployerdetailUpdate.employerPostCode}" style="width:95%" required="true" />
+						<p:outputLabel for="employerPostCodeUpdate" value="Employer Post Code" />
+					</h:panelGroup>
+				</p:panelGrid>
+				<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+					<p:commandButton update="@form :mainForm" icon="fa fa-database" value="Update" action="#{sarsemployerdetailUI.updateEntry}" process="employerDetailUpdateForm" onstart="uploadStart()" oncomplete="uploadDone()" />
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+	</ui:define>
+
+</ui:composition>

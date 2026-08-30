@@ -1,0 +1,213 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+
+	<ui:define name="content">
+		<div class="ui-g">
+
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+						<h1>SARS Levy Recon by Scheme Year</h1>
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+
+						<br />
+						<p:panelGrid columns="5" style="width:100%" id="mainGrid" layout="grid" styleClass="ui-panelgrid-blank">
+							<p:outputLabel value="SARS/DHET scheme year" for="sarsDateF" styleClass="FontLight" />
+							<p:selectOneMenu id="sarsDateF" value="#{sarsLevyReconUI.sarsReconSchemeYears}" style="width: 110px !important;">
+								<f:selectItems value="#{sarsLevyReconUI.sarsYears}" var="sars" itemLabel="#{sars.year}" itemValue="#{sars.year}" />
+							</p:selectOneMenu>
+
+							<p:outputLabel value="Posting scheme year" for="glPostingDateF" styleClass="FontLight" />
+							<p:selectOneMenu id="glPostingDateF" value="#{sarsLevyReconUI.setaReconSchemeYears}" style="width: 110px !important;">
+								<f:selectItems value="#{sarsLevyReconUI.setaYears}" var="seta" itemLabel="#{seta.year}" itemValue="#{seta.year}" />
+							</p:selectOneMenu>
+
+							<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update="@form" action="#{sarsLevyReconUI.runForSchemeYears}" />
+
+						</p:panelGrid>
+
+
+						<p:fieldset rendered="#{sarsLevyReconUI.sarsLevyDetails ne null}" legend="Result">
+							<p:panelGrid style="width:50%" id="subGrid" layout="grid" styleClass="ui-panelgrid-blank" columns="2" columnClasses=",Fs16">
+
+
+								<p:outputLabel value="#{lang['mandatory.levy']}" styleClass="FontLight" />
+								<h:outputText value="#{sarsLevyReconUI.sarsLevyDetails.mandatoryLevy}" styleClass="Fright FontBold">
+									<f:convertNumber pattern="###,###,###,##0.00" />
+								</h:outputText>
+
+
+								<p:outputLabel value="#{lang['invoice.amount']}" styleClass="FontLight" />
+								<h:outputText value="#{sarsLevyReconUI.sarsLevyDetails.ts2.documentAmountD}" styleClass="Fright FontBold">
+									<f:convertNumber pattern="###,###,###,##0.00" />
+								</h:outputText>
+
+								<p:outputLabel value="#{lang['difference']}" styleClass="FontLight" />
+								<h:outputText value="#{sarsLevyReconUI.sarsLevyDetails.ts2.currentTrxAmountD}" styleClass="Fright FontBold">
+									<f:convertNumber pattern="###,###,###,##0.00" />
+								</h:outputText>
+
+
+								<p:commandButton icon="ui-icon-zoom-in" value="Detail per SDL number" id="zoomin" ajax="false" action="#{sarsLevyReconUI.detail}" />
+								<p:commandButton icon="ui-icon-bug-report" value="Exception report" id="er" update=":erFrom" action="#{sarsLevyReconUI.exceptionReport}" oncomplete="scrollToDiv()" />
+
+
+							</p:panelGrid>
+
+						</p:fieldset>
+					</h:form>
+					<div id="commandActionsDiv" style="padding-top: 50px;"></div>
+
+				</div>
+			</div>
+
+
+		</div>
+
+
+		<h:form id="erFrom">
+			<c:if test="#{sarsLevyReconUI.sarsLevyRecon ne null}">
+				<div class="ui-g" id="erReportDtl">
+					<div class="ui-g-12">
+						<span class="Fs17">Exception report per SDL Number for scheme year #{sarsLevyReconUI.sarsLevyDetails.schemeYear+1}</span> <br />
+					</div>
+					<div class="ui-g-12">
+						<div class="ui-g-12 ui-lg-6">
+							<div class="card card-w-title">
+								<span class="FontLight Fs16">Approved MG that has not been paid</span><br />
+								<h:panelGroup rendered="#{sarsLevyReconUI.sarsLevyRecon.levyList.size() gt 0}">
+
+									<div align="right">
+										<h:commandLink id="eExcel1">
+											<i class="fa fa-file-excel-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+											<p:dataExporter type="xls" target="sarsLevyReconA" fileName="Approved_MG_that_has_not_been_paid_for_#{sarsLevyReconUI.sarsLevyDetails.schemeYear+1}" />
+										</h:commandLink>
+									</div>
+									<br />
+									<div class="redRow" style="padding: 5px 5px 5px 5px; width: 280px" align="center">Entry on GP but no entry on SARS levy files</div>
+									<br />
+									<p:dataTable var="rv1" value="#{sarsLevyReconUI.sarsLevyRecon.levyList}" id="sarsLevyReconA" rowKey="#{rv1.sdlnumber}" reflow="true" rowStyleClass="#{rv1.css}">
+										<p:column headerText="#{lang['sdl.number']}">
+											<h:outputText value="#{rv1.sdlnumber}" />
+										</p:column>
+										<p:column headerText="#{lang['status']}">
+											<h:outputText value="#{rv1.status}" />
+										</p:column>
+										<p:column width="30">
+											<p:commandButton icon="ui-icon-zoom-in" title="View Data on GP" rendered="#{rv1.css ne null}" id="zin" style="background-color: #888 !important;" oncomplete="PF('gpTranDlg').show()" action="#{sarsLevyReconUI.gpTrans}" update=":dpForm">
+												<f:setPropertyActionListener value="#{rv1}" target="#{sarsLevyReconUI.sarsLevyReconGP}" />
+											</p:commandButton>
+											<p:tooltip for="zin" position="left" />
+										</p:column>
+									</p:dataTable>
+
+								</h:panelGroup>
+							</div>
+						</div>
+						<div class="ui-g-12 ui-lg-6">
+							<div class="card card-w-title">
+								<span class="FontLight Fs16">Payments that has no approved MG for scheme year</span><br />
+								<h:panelGroup rendered="#{sarsLevyReconUI.sarsLevyRecon.invList.size() gt 0}">
+									<div align="right">
+										<h:commandLink id="eExcel2">
+											<i class="fa fa-file-excel-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+											<p:dataExporter type="xls" target="sarsLevyReconB" fileName="Payments_that_has_no_approved_MG_for_year_#{sarsLevyReconUI.sarsLevyDetails.schemeYear+1}" />
+										</h:commandLink>
+									</div>
+									<br />
+									<p:dataTable var="rv2" value="#{sarsLevyReconUI.sarsLevyRecon.invList}" id="sarsLevyReconB" rowKey="#{rv2.sdlnumber}" reflow="true">
+										<p:column headerText="#{lang['sdl.number']}">
+											<h:outputText value="#{rv2.sdlnumber}" />
+										</p:column>
+										<p:column headerText="#{lang['status']}">
+											<h:outputText value="#{rv2.tamount}" styleClass="Fright">
+												<f:convertNumber pattern="###,###,###,##0.00" />
+											</h:outputText>
+										</p:column>
+
+									</p:dataTable>
+								</h:panelGroup>
+							</div>
+						</div>
+
+
+					</div>
+
+				</div>
+			</c:if>
+
+
+		</h:form>
+
+		<p:dialog widgetVar="gpTranDlg" header="Entry on GP but no entry on SARS levy files" modal="true" responsive="true" width="80%">
+			<h:form id="dpForm">
+				<h1>#{sarsLevyReconUI.sarsLevyReconGP.sdlnumber}- #{sarsLevyReconUI.vendor.name}</h1>
+				<h:outputText value="Class ID:" styleClass="Fs20 FontLight" />
+				<p:spacer width="15" />
+				<h:outputText value="#{sarsLevyReconUI.vendor.classKey.id}" styleClass="Fs20 FontBold" />
+				<h:panelGroup rendered="#{sarsLevyReconUI.gpSummary.size() gt 0}">
+					<div align="right">
+						<h:outputText value=" Total:" styleClass="Fs20 FontLight" />
+						<p:spacer width="15" />
+						<h:outputText value="#{sarsLevyReconUI.total}" styleClass="Fs20 FontBold">
+							<f:convertNumber pattern="###,###,###,###,##0.00" />
+						</h:outputText>
+						<br />
+						<br />
+					</div>
+				</h:panelGroup>
+				<p:dataTable value="#{sarsLevyReconUI.gpSummary}" var="gp" rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+					rowsPerPageTemplate="5,10,15,20,25" reflow="true" rendered="#{sarsLevyReconUI.gpSummary.size() gt 0}">
+
+					<p:column headerText="Transaction Date">
+						<h:outputText value=" #{gp.tranDate}" />
+
+					</p:column>
+
+
+
+					<p:column headerText="Batch" width="15%">
+						<h:outputText value=" #{gp.batchKey.id}" /> - <h:outputText value=" #{gp.batchKey.source}" />
+					</p:column>
+
+					<p:column headerText="State" width="8%">
+						<h:outputText value=" #{gp.transactionState}" />
+					</p:column>
+
+					<p:column headerText="Document Amount" width="15%">
+						<h:outputText value="#{gp.documentAmount.value}" styleClass="Fright">
+							<f:convertNumber pattern="###,###,###,###,##0.00" />
+						</h:outputText>
+					</p:column>
+
+
+				</p:dataTable>
+				<div align="center">
+					<p:outputLabel rendered="#{sarsLevyReconUI.gpSummary.size() lt 1}" value="No transactions on GP" styleClass="Fs20 FontLight" />
+					<br />
+				</div>
+			</h:form>
+		</p:dialog>
+
+		<script type="text/javascript">
+//<![CDATA[            
+
+
+	
+	function scrollToDiv() {
+
+		setTimeout(function() {
+			$('html,body').animate({
+				scrollTop : $('#commandActionsDiv').offset().top
+			}, 1000);
+		}, 0);
+	}
+	
+//]]>		  
+</script>
+
+	</ui:define>
+
+</ui:composition>

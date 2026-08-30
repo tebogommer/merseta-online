@@ -1,0 +1,41 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui">
+	<p:dialog header="Accept Code Of Conduct" widgetVar="codeOfConductDialog" hideEffect="clip" showEffect="clip" id="codeOfConductDialog" appendTo="@(body)" modal="true" closable="false" width="80%" height="30vh" responsive="true">
+		<h:form>
+			<br />
+			<p:panelGrid columns="1" style="width:100%">
+				<h:outputText value="Declaration For Initial Application With merSETA" styleClass="FontBold Fs15" />
+				<p>I, the undersigned, confirm that I am authorised by this organisation to submit the Skills Development Provider application. I declare that to the best of my knowledge, the information contained herein, is accurate and up to date.</p>
+				<div class="EmptyBox20"></div>
+				<p:panel header="#{lang['accept.code.of.conduct']}" style="text-align:center">
+					<h:form id="cocForm">
+						<p:panelGrid columns="6" id="pgAccept" style="width:100%">
+
+							<h:outputText value="#{lang['name']}:" styleClass="FontBold Fs15" />
+							<h:outputText value="#{sdpreaccreditationUI.trainingProviderUser.firstName} #{sdpreaccreditationUI.trainingProviderUser.lastName}" />
+
+							<h:outputText value="#{lang['date']}:" styleClass="FontBold Fs15" />
+
+							<h:outputText value="#{sdpreaccreditationUI.selectTrainingProviderApplication.codeOfConductAcceptDate}">
+								<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+							</h:outputText>
+
+							<h:outputText value="#{lang['accept']}:" styleClass="FontBold Fs15" />
+							<p:selectBooleanCheckbox style="width:100%" id="cbAccept" value="#{sdpreaccreditationUI.selectTrainingProviderApplication.codeOfConductAccepted}">
+								<p:ajax></p:ajax>
+							</p:selectBooleanCheckbox>
+
+						</p:panelGrid>
+					</h:form>
+				</p:panel>
+			</p:panelGrid>
+			<br />
+			<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+				<p:commandButton onstart="uploadStart()" value="Submit" action="#{sdpreaccreditationUI.requestReAccreditation}" update="@form" icon="fa fa-save" title="Re-Registration" />
+				<p:commandButton onstart="uploadStart()" value="Cancel" action="#{sdpreaccreditationUI.closeResubmissionDlg}" update="@form" icon="fa fa-times" title="Cancel" />
+			</p:panelGrid>
+
+		</h:form>
+	</p:dialog>
+
+
+</ui:composition>

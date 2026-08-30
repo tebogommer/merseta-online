@@ -1,0 +1,38 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+						<h1>ExceptionsTable</h1>
+						
+						<p:commandButton value="Generate Report"  action="#{exceptionstableUI.runGeneration}" update="@form"/>
+						
+						<ui:include src="/pages/includes/download_lazy.xhtml">
+							<ui:param name="file_name" value="SETMIS_Exceptions_Report" />
+							<ui:param name="target" value="exceptionstableList" />
+						</ui:include>
+
+						<p:dataTable var="rowVar" value="#{exceptionstableUI.dataModel}" filteredValue="#{exceptionstableUI.exceptionsTablefilteredList}" id="exceptionstableList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+							<p:column headerText="Error Message">
+								<h:outputText value="#{rowVar.exception}" />
+							</p:column>
+							<p:column headerText="Date Generated">
+								<h:outputText value="#{rowVar.createDate}" />
+							</p:column>
+							<p:column headerText="Target Key">
+								<h:outputText value="#{rowVar.targetKey}" />
+							</p:column>
+							<p:column headerText="Target Class">
+								<h:outputText value="#{rowVar.targetClass}" />
+							</p:column>
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+</ui:composition>

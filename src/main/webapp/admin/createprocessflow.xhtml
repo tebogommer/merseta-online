@@ -1,0 +1,108 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<style>
+</style>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>#{lang['processRoles']}</h1>
+					<h:form id="processrolesInsForm">
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="#{lang['hostingCompany']}" styleClass="gray" />
+							</div>
+							<div>
+								<p:autoComplete id="hostCompanyAutoComplete" value="#{createprocessflowUI.hostingCompany}" completeMethod="#{hostingCompanyEmployeesUI.completeHostingCompany}" converter="HostingCompanyConvertor" var="rv" itemLabel="#{rv.companyName}" itemValue="#{rv}" forceSelection="true" dropdown="true"
+									minQueryLength="1" maxResults="10" required="true" requiredMessage="#{lang['select.host.company']}">
+									<p:ajax event="itemSelect" update="@form" process="@this" listener="#{createprocessflowUI.findCurrentProcesses}" />
+								</p:autoComplete>
+							</div>
+						</h:panelGroup>
+						<div class="EmptyBox15"></div>
+						<c:if test="#{createprocessflowUI.root ne null}">
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="#{lang['expand.all']}" styleClass="gray" />
+									<p:spacer width="20"></p:spacer>
+									<p:selectBooleanCheckbox value="#{createprocessflowUI.expandAll}">
+										<p:ajax update="processRole" event="change" listener="#{createprocessflowUI.findCurrentProcesses}"></p:ajax>
+									</p:selectBooleanCheckbox>
+								</div>
+							</h:panelGroup>
+							<div class="EmptyBox10"></div>
+
+							<p:tree value="#{createprocessflowUI.root}" var="doc" selectionMode="single" selection="#{createprocessflowUI.selectedNode}" id="processRole" style="width: 95%">
+
+								<p:treeNode icon="fa fa-address-book-o">
+									<h:outputText value="#{doc}" />
+								</p:treeNode>
+								<p:treeNode type="HostingCompanyProcess" collapsedIcon="fa fa-building" expandedIcon="fa fa-building-o">
+									<h:outputText value="#{lang[doc.workflowProcess.registrationName]}" />
+								</p:treeNode>
+								<p:treeNode type="HostingCompanyProcessChild" collapsedIcon="fa fa-building" expandedIcon="fa fa-building-o">
+									<h:outputText value="#{doc.note}" />
+								</p:treeNode>
+								<p:treeNode type="RoleHeading" icon="fa fa-address-book-o">
+									<h:outputText value="#{doc}" />
+								</p:treeNode>
+								<p:treeNode type="ProcessRoles" icon="fa fa-user-o">
+									<h:outputText value="#{doc.roles.description} (#{doc.roleOrder})" />
+								</p:treeNode>
+								<p:treeNode type="HostingCompanyEmployees">
+									<h:outputText value="#{doc.users.firstName} #{doc.users.lastName}" />
+								</p:treeNode>
+							</p:tree>
+
+						</c:if>
+						<div class="EmptyBox15"></div>
+						<h:panelGroup>
+							<p:commandButton value="#{lang['create.new.process']}" oncomplete="PF('NewProcess').show()" action="#{createprocessflowUI.prepProcess}" icon="ui-icon-plus"></p:commandButton>
+						</h:panelGroup>
+					</h:form>
+				</div>
+			</div>
+
+			<p:dialog header="#{lang['new.company.process']}" width="50%" widgetVar="NewProcess" resizable="false" hideEffect="clip" showEffect="clip" id="dialogProcessRoles" appendTo="@(body)" modal="true">
+				<p:ajax event="close" update="processrolesInsForm" listener="#{createprocessflowUI.findCurrentProcesses}" />
+				<h:form id="ProcessRolesForm">
+					<p:panelGrid columns="1" style="width:100%" id="configdocInsGrid" layout="grid" styleClass="ui-panelgrid-blank">
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText id="reportToRole" value="#{createprocessflowUI.hostingCompanyProcess.note}" style="width:95%" required="true" requiredMessage="#{lang['process.title.is.required']}" />
+							<p:outputLabel value="#{lang['new.process']}" for="reportToRole" />
+						</h:panelGroup>
+					</p:panelGrid>
+					<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update="ProcessRolesForm :processrolesInsForm" action="#{createprocessflowUI.saveProcess}" />
+				</h:form>
+			</p:dialog>
+
+		</div>
+
+		<script>
+
+  $( document ).ready(function() {
+	    console.log( "ready!" );
+	    /* changeColor(); */
+	    
+	});
+
+  function changeColor() {
+	  	$('[data-nodetype="HostingCompany"]').children().css( {"background-color": "#FF5E0A !important", "color": "white"}  );
+	    $('[data-nodetype="HostingCompany"]  .ui-tree-toggler').css( "color", "white" );
+	    $('[data-nodetype="HostingCompanyProcess"]').children().css( {"background-color": "#20D90A", "color": "white"} );
+	    $('[data-nodetype="HostingCompanyProcess"]  .ui-tree-toggler').css( "color", "white" );
+	    $('[data-nodetype="ProcessRoles"]').children().css( {"background-color": "#0056F6", "color": "white"} );
+	    $('[data-nodetype="ProcessRoles"]  .ui-tree-toggler').css( "color", "white" );
+	    $('[data-nodetype="HostingCompanyEmployees"]').children().css( {"background-color": "#52C98B", "color": "white"} );
+	    $('[data-nodetype="HostingCompanyEmployees"]  .ui-tree-toggler').css( "color", "white" );
+	}
+  </script>
+	</ui:define>
+
+</ui:composition>
+<!-- <p:ajax event="select" listener="#{orderListView.onSelect}" update="msgs" />
+					<p:ajax event="unselect" listener="#{orderListView.onUnselect}" update="msgs" />
+					<p:ajax event="reorder" listener="#{orderListView.onReorder}" update="msgs" /> -->

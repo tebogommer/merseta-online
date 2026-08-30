@@ -1,0 +1,37 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card">
+					<h1>Frequently Asked Questions</h1>
+					<h:form id="mainForm">
+
+						<p:dataTable id="faq" value="#{frequentlyaskedquestionsUI.frequentlyaskedquestionsActiveList}" var="rowVar" reflow="true" expandableRowGroups="true" sortBy="#{rowVar.questionSection}">
+							<p:headerRow>
+								<p:column colspan="1">
+									<h:outputText value="#{rowVar.questionSection}" escape="false" />
+								</p:column>
+							</p:headerRow>
+							<p:column>
+								<h:outputText value="#{rowVar.questionAsked}" style="font-weight: bold" escape="false" />
+								<p>
+									<h:outputText value="#{rowVar.questionAnswer}" escape="false" />
+								</p>
+							</p:column>
+						</p:dataTable>
+						<script>
+	$( document ).ready(function() {
+		
+		$(PrimeFaces.escapeClientId('mainForm:faq')).find('a').each(function() {
+			this.click();
+		});
+		$('.ui-state-default[role="columnheader"]').css( {"display": "none"} );
+	});
+	</script>
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+</ui:composition>

@@ -1,0 +1,115 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui" xmlns:pe="http://primefaces.org/ui/extensions"
+	xmlns:p="http://primefaces.org/ui">
+
+
+
+	<p:dataTable var="rv" value="#{uploadDocUI.docs}" filteredValue="#{uploadDocUI.docsfiltered}" emptyMessage="#{lang['no.records.found']}" id="resultTable" rowKey="#{rv.id}" reflow="true" style="width 100%" rendered="#{uploadDocUI.docs.size() gt 0}">
+		<f:facet name="header">#{lang['documents']}</f:facet>
+		<p:column id="columnOne" headerText="#{lang['expand.row']}" width="45" exportable="false">
+			<p:rowToggler id="rowTogglerOne" rendered="#{rv.docVerions.size()>0}" />
+		</p:column>
+		<p:column headerText="#{lang['version']}" width="50">
+			<h:outputText value="#{rv.versionNo}" />
+		</p:column>
+
+		<p:column headerText="#{lang['owner']}" sortBy="#{rv.users.lastName}">
+			<h:outputText value="#{rv.users.firstName} #{rv.users.lastName}" />
+		</p:column>
+
+		<p:column headerText="#{lang['date.added']}" sortBy="#{rv.createDate}">
+			<h:outputText value="#{rv.createDate}">
+				<f:convertDateTime pattern="dd MMMM yyyy (HH:mm:ss)" />
+			</h:outputText>
+		</p:column>
+
+		<p:column headerText="#{lang['original.file.name']}" sortBy="#{rv.originalFname}">
+			<h:outputText value="#{rv.originalFname}" />
+		</p:column>
+
+		<p:column id="columnTwo" width="180" exportable="false">
+			<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlb">
+				<f:setPropertyActionListener value="#{rv}" target="#{uploadDocUI.doc}" />
+			</p:commandButton>
+			<p:tooltip for="dlb" value="#{lang['download.the.file']}" position="left"/>
+			<p:spacer width="5" />
+			<p:commandButton icon="fa fa-bars " id="dhist" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList">
+				<f:setPropertyActionListener value="#{rv}" target="#{uploadDocUI.doc}" />
+			</p:commandButton>
+			<p:tooltip for="dhist" value="#{lang['document.tracker']}" position="left"/>
+
+			<h:panelGroup id="panelGroupThree" rendered="#{rv.note ne null and rv.note.length() gt 0}">
+				<p:spacer width="5" />
+				<p:commandButton icon="fa fa-comment-o " id="dnote" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+					<f:setPropertyActionListener value="#{rv}" target="#{uploadDocUI.doc}" />
+				</p:commandButton>
+				<p:tooltip for="dnote" value="#{lang['view.note']}" position="left"/>
+			</h:panelGroup>
+			<h:panelGroup id="panelGroupFour" rendered="#{rv.extension.toLowerCase() eq 'pdf' or rv.extension.toLowerCase() eq 'png' or rv.extension.toLowerCase() eq 'jpg' or rv.extension.toLowerCase() eq 'jpeg' or rv.extension.toLowerCase() eq 'gif'}">
+				<p:spacer width="5" />
+				<p:commandButton icon="fa fa-eye " id="viewerButton" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+					<f:setPropertyActionListener value="#{rv}" target="#{uploadDocUI.doc}" />
+				</p:commandButton>
+				<p:tooltip for="viewerButton" value="#{lang['view.document']} " position="left"/>
+			</h:panelGroup>
+
+		</p:column>
+
+		<p:rowExpansion id="rowExpansionOne">
+			<h:dataTable var="rv1" value="#{rv.docVerions}">
+				<h:column>
+					<f:facet name="header">#{lang['original.file.name']}</f:facet>
+					<h:outputText value="#{rv1.originalFname}" />
+				</h:column>
+
+				<h:column>
+					<f:facet name="header">#{lang['version']}</f:facet>
+					<h:outputText value="#{rv1.versionNo}" />
+				</h:column>
+
+				<h:column>
+					<f:facet name="header">#{lang['owner']}</f:facet>
+					<h:outputText value="#{rv1.users.firstName} #{rv1.users.lastName}" />
+				</h:column>
+
+				<h:column>
+					<f:facet name="header">#{lang['date.added']}</f:facet>
+					<h:outputText value="#{rv1.createDate}">
+						<f:convertDateTime pattern="dd MMMM yyyy (HH:mm:ss)" />
+					</h:outputText>
+				</h:column>
+
+				<h:column>
+					<f:facet name="header">#{lang['notes']}</f:facet>
+					<p:outputPanel rendered="#{rv1.note ne null}" style="overflow-y:scroll; overflow-x:hidden; height:50px; width: 130px;">
+						<h:outputText id="note" value="#{rv1.note}" />
+					</p:outputPanel>
+				</h:column>
+
+				<h:column id="columnFive">
+					<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlb1">
+						<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+					</p:commandButton>
+					<p:tooltip for="dlb1" value="#{lang['download.version']} " />
+
+					<h:panelGroup id="panelGroupFive" rendered="#{rv1.note ne null}">
+						<p:spacer width="5" />
+						<p:commandButton icon="fa fa-comment-o " id="dnote1" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+							<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+						</p:commandButton>
+						<p:tooltip for="dnote1" value="#{lang['view.note']}" />
+					</h:panelGroup>
+
+					<h:panelGroup id="panelGroupSix" rendered="#{rv1.extension.toLowerCase() eq 'pdf'}">
+						<p:spacer width="5" />
+						<p:commandButton icon="fa fa-eye " id="viewerButton" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+							<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+						</p:commandButton>
+						<p:tooltip for="viewerButton" value="#{lang['view.document']}" />
+					</h:panelGroup>
+				</h:column>
+			</h:dataTable>
+		</p:rowExpansion>
+	</p:dataTable>
+
+
+</ui:composition>

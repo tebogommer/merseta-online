@@ -1,0 +1,1344 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.5.1.final using JasperReports Library version 6.5.1  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="MerSETAReport" pageWidth="595" pageHeight="842" columnWidth="555" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="227f5bc1-ceb6-4071-93be-3b78810a09e9">
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="MersetaDataAdapter.xml"/>
+	<property name="ireport.callouts">
+		<![CDATA[callouts.2.fg=0,0,0\ncallouts.1.fg=0,0,0\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\ncallouts.2.text=<---- merSETAReport_Employees_Signature.jasper Subreport\ncallouts.2.bg=255,255,0\ncallouts.1.text=<---- merSETAReport_SDF_signature.jasper Subreport\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\ncallouts.1.bounds=624,1303,306,28\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\ncallouts.2.bounds=610,1431,340,30\ncallouts.1.bg=255,255,0\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n]]>
+	</property>
+	<style name="Table_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Table_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Table_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Table 1_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Table 1_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="Table 1_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+			<topPen lineWidth="0.5" lineColor="#000000"/>
+			<leftPen lineWidth="0.5" lineColor="#000000"/>
+			<bottomPen lineWidth="0.5" lineColor="#000000"/>
+			<rightPen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<parameter name="company_id" class="java.lang.Long"/>
+	<parameter name="logo" class="java.awt.Image"/>
+	<parameter name="backround_image" class="java.awt.Image"/>
+	<parameter name="merseta_sdf_signaturs" class="java.lang.String"/>
+	<parameter name="merseta_employees_signaturs" class="java.lang.String"/>
+	<queryString language="SQL">
+		<![CDATA[SELECT company.company_name AS companyName,company.trading_name AS tradingName,
+company.tel_number AS CcompanyTelNum,company.fax_number AS companyFaxNum,
+company.email AS companyEmail,company.levy_number AS companyLavyNumber,
+company.levy_number_additional AS companyLevyNumAdditional,
+company.company_guid AS barcode,
+company.number_of_employees AS NumOfEmp, merseta.chamber.description AS chamberDesc,
+
+/*Company Address Information*/
+company_address.address_line_1 AS companyAddressLine1,company_address.address_line_2 AS companyAddressLine2,
+company_address.address_line_3 AS companyAddressLine3,company_address.address_line_4 AS companyAddressLine4,company_address.postcode AS companyPoscode,
+company_address_town.description AS companyAddressTown,
+
+postal_address.address_line_1 AS postalAddressLine1,postal_address.address_line_2 AS postalAddressLine2,
+postal_address.address_line_3 AS postalAddressLine3,postal_address.address_line_4 AS postalAddressLine4,postal_address.postcode AS postalPoscode,
+postal_address_town.description AS postalAddressTown,
+
+/*Company Banking Details*/
+banking_details.bank_acc_number AS companyAccountNum,banking_details.branch_code AS companyBranchCode,
+bank.description AS companyBankName,
+
+/*Company SDF(s) Information*/
+users.first_name AS SDFFirstName,users.last_name AS SDFLastName,users.nationality_id AS SDFNationalId,
+users.passport_number AS SDFPassportNumber,users.rsa_id_number AS SDFRSAID,users.cell_number AS SDFCellNumber,
+users.email AS SDFEmail, users.fax_number AS SDFFaxNum,users.tel_number AS SDFTellNumber,
+
+sic_code.nlrd_code AS NLRDCode,sic_code.qcto_code AS QCTOCode,sic_code.setmis_code AS SETMISCode,
+sic_code.description AS SICDescription,sic_code.code AS SICCode,
+
+sdf_type.description AS SDFType
+
+/*Company*/
+FROM merseta.company AS company
+
+LEFT JOIN  merseta.sdf_company AS sdf_company
+ON company.id=sdf_company.company_id
+
+LEFT JOIN  merseta.sdf_type AS sdf_type
+ON sdf_type.id=sdf_company.sdf_type_id
+
+/*Company Address*/
+LEFT JOIN merseta.address AS company_address
+ON company_address.id=company.residential_address_id
+
+LEFT JOIN merseta.towns AS company_address_town
+ON company_address_town.id=company_address.town_id
+
+LEFT JOIN merseta.address AS postal_address
+ON postal_address.id=company.postal_address_id
+
+LEFT JOIN merseta.towns AS postal_address_town
+ON postal_address_town.id=postal_address.town_id
+
+/*Company Banking Deatils*/
+LEFT JOIN merseta.banking_details AS banking_details
+ON banking_details.company_id=company.id
+
+/*Bank and Banking details Join(for company)*/
+LEFT JOIN merseta.bank AS bank
+ON bank.id=banking_details.bank_id
+
+/*Company Chamber Information*/
+LEFT JOIN merseta.chamber AS chamber
+ON chamber.id=company.chamber_id
+
+/*user and SDF company Join*/
+LEFT JOIN merseta.users AS users
+ON users.id = sdf_company.sdf_id
+
+/*Company SIC Code Information*/
+LEFT JOIN merseta.sic_code AS sic_code
+ON sic_code.id=company.sic_code_id
+
+/*User equity information*/
+LEFT JOIN merseta.equity AS equity
+ON equity.id=users.equity_id
+
+WHERE company.id=$P{company_id}]]>
+	</queryString>
+	<field name="companyName" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="companyName"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="company"/>
+	</field>
+	<field name="tradingName" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="tradingName"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="company"/>
+	</field>
+	<field name="CcompanyTelNum" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="CcompanyTelNum"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="company"/>
+	</field>
+	<field name="companyFaxNum" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="companyFaxNum"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="company"/>
+	</field>
+	<field name="companyEmail" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="companyEmail"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="company"/>
+	</field>
+	<field name="companyLavyNumber" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="companyLavyNumber"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="company"/>
+	</field>
+	<field name="companyLevyNumAdditional" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="companyLevyNumAdditional"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="company"/>
+	</field>
+	<field name="barcode" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="barcode"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="company"/>
+	</field>
+	<field name="NumOfEmp" class="java.lang.Integer">
+		<property name="com.jaspersoft.studio.field.label" value="NumOfEmp"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="company"/>
+	</field>
+	<field name="chamberDesc" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="chamberDesc"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="chamber"/>
+	</field>
+	<field name="companyAddressLine1" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="companyAddressLine1"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="companyAddressLine2" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="companyAddressLine2"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="companyAddressLine3" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="companyAddressLine3"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="companyAddressLine4" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="companyAddressLine4"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="companyPoscode" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="companyPoscode"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="companyAddressTown" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="companyAddressTown"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="towns"/>
+	</field>
+	<field name="postalAddressLine1" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="postalAddressLine1"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="postalAddressLine2" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="postalAddressLine2"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="postalAddressLine3" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="postalAddressLine3"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="postalAddressLine4" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="postalAddressLine4"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="postalPoscode" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="postalPoscode"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="postalAddressTown" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="postalAddressTown"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="towns"/>
+	</field>
+	<field name="companyAccountNum" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="companyAccountNum"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="banking_details"/>
+	</field>
+	<field name="companyBranchCode" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="companyBranchCode"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="banking_details"/>
+	</field>
+	<field name="companyBankName" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="companyBankName"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="bank"/>
+	</field>
+	<field name="SDFFirstName" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="SDFFirstName"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="users"/>
+	</field>
+	<field name="SDFLastName" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="SDFLastName"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="users"/>
+	</field>
+	<field name="SDFNationalId" class="java.lang.Long">
+		<property name="com.jaspersoft.studio.field.label" value="SDFNationalId"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="users"/>
+	</field>
+	<field name="SDFPassportNumber" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="SDFPassportNumber"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="users"/>
+	</field>
+	<field name="SDFRSAID" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="SDFRSAID"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="users"/>
+	</field>
+	<field name="SDFCellNumber" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="SDFCellNumber"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="users"/>
+	</field>
+	<field name="SDFEmail" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="SDFEmail"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="users"/>
+	</field>
+	<field name="SDFFaxNum" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="SDFFaxNum"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="users"/>
+	</field>
+	<field name="SDFTellNumber" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="SDFTellNumber"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="users"/>
+	</field>
+	<field name="NLRDCode" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="NLRDCode"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="sic_code"/>
+	</field>
+	<field name="QCTOCode" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="QCTOCode"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="sic_code"/>
+	</field>
+	<field name="SETMISCode" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="SETMISCode"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="sic_code"/>
+	</field>
+	<field name="SICDescription" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="SICDescription"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="sic_code"/>
+	</field>
+	<field name="SICCode" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="SICCode"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="sic_code"/>
+	</field>
+	<field name="SDFType" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="SDFType"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="sdf_type"/>
+	</field>
+	<group name="Group4">
+		<groupFooter>
+			<band height="555">
+				<staticText>
+					<reportElement x="0" y="116" width="555" height="40" uuid="d6c70f84-dbb3-4ee9-ac85-add215aac4e8"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Left">
+						<font size="14" isBold="true"/>
+						<paragraph firstLineIndent="3" leftIndent="3"/>
+					</textElement>
+					<text><![CDATA[We, the undersigned, hereby confirm that to the best of our knowledge the information provided is correct.]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="0" y="156" width="555" height="115" uuid="57303078-08c0-4125-b3f5-6e5a241be1f5"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font size="13" isBold="false"/>
+						<paragraph firstLineIndent="1" leftIndent="5" rightIndent="5"/>
+					</textElement>
+					<text><![CDATA[Employers with more than 50 employees must consult on the process of nominating the Skills Development Facilitator (SDF) and developing the Workplace Skills Plan (WSP). These employers must establish an in-company forum for consultation. However, where a workplace is unionised, trade union or management structures shall fulfill this function. In addition, a trade union (or employee representative of a Training Committee, where there is no trade union) signature is required to verify that consultation on the appointment of the SDF and development of this WSP has taken place]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Opaque" x="1" y="73" width="553" height="30" backcolor="#DCDCDC" uuid="89cf12b8-05b5-45a6-8dab-9243efded4ca"/>
+					<box>
+						<pen lineWidth="0.5"/>
+						<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="14" isBold="true"/>
+						<paragraph lineSpacing="AtLeast"/>
+					</textElement>
+					<text><![CDATA[SIGNATURES]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Transparent" x="0" y="101" width="554" height="13" backcolor="#6CCFF0" uuid="163d7f64-4cb1-4664-9ee8-34a9d24e5fc5"/>
+					<text><![CDATA[]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Transparent" x="1" y="271" width="554" height="13" backcolor="#6CCFF0" uuid="315a8991-e8b8-4839-b71b-4409b9956438"/>
+					<text><![CDATA[]]></text>
+				</staticText>
+				<textField isBlankWhenNull="true">
+					<reportElement mode="Transparent" x="0" y="40" width="277" height="20" backcolor="#DCDCDC" uuid="d285ff98-bf25-4cb9-8d34-ac7c83a66de5"/>
+					<box>
+						<pen lineWidth="0.5" lineStyle="Dashed"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font size="12"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA[" Company name : "+$F{companyName}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement mode="Transparent" x="277" y="40" width="277" height="20" backcolor="#DCDCDC" uuid="88c8b8bf-6af1-4e8e-9b12-718c22d06334"/>
+					<box>
+						<pen lineWidth="0.5" lineStyle="Dashed"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font size="12"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA[" Levy number :  "+$F{companyLavyNumber}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement mode="Transparent" x="0" y="61" width="554" height="13" backcolor="#6CCFF0" uuid="1e01c3ac-ab0f-4569-887e-4d32bb2a1728"/>
+					<text><![CDATA[]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="1" y="17" width="549" height="20" uuid="9c7c0b46-bd23-4480-a7e9-6553764378fd"/>
+					<textElement textAlignment="Right" verticalAlignment="Bottom">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[SKILLS DEVELOMENT FACILITATOR REGISTRATION FORM ]]></text>
+				</staticText>
+				<break>
+					<reportElement x="0" y="9" width="100" height="1" uuid="29652694-da87-4c3d-bbaf-3da57e045f3c"/>
+				</break>
+				<subreport>
+					<reportElement x="-20" y="284" width="594" height="124" uuid="8ee0b366-2805-458a-9024-18ca0c3536ca"/>
+					<subreportParameter name="company_id">
+						<subreportParameterExpression><![CDATA[$P{company_id}]]></subreportParameterExpression>
+					</subreportParameter>
+					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					<subreportExpression><![CDATA[$P{merseta_sdf_signaturs}]]></subreportExpression>
+				</subreport>
+				<subreport>
+					<reportElement x="-20" y="411" width="594" height="129" uuid="7ab236ab-8479-46b8-b0d7-893c1716a04a"/>
+					<subreportParameter name="company_id">
+						<subreportParameterExpression><![CDATA[$P{company_id}]]></subreportParameterExpression>
+					</subreportParameter>
+					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					<subreportExpression><![CDATA[$P{merseta_employees_signaturs}]]></subreportExpression>
+				</subreport>
+			</band>
+		</groupFooter>
+	</group>
+	<group name="Group2"/>
+	<group name="Group3"/>
+	<group name="Group1" isStartNewColumn="true">
+		<groupHeader>
+			<band height="629">
+				<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+				<property name="com.jaspersoft.studio.layout" value="com.jaspersoft.studio.editor.layout.FreeLayout"/>
+				<staticText>
+					<reportElement mode="Opaque" x="0" y="17" width="555" height="30" backcolor="#DCDCDC" uuid="99e25c3b-b984-4e7b-8a64-80b200290d95"/>
+					<box>
+						<pen lineWidth="0.5"/>
+						<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="14" isBold="true"/>
+						<paragraph lineSpacing="AtLeast"/>
+					</textElement>
+					<text><![CDATA[COMPANY ADMINISTRATIVE DETAILS]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Opaque" x="2" y="62" width="181" height="20" backcolor="#DCDCDC" uuid="a2fe3332-fd40-4252-b401-bf602f506bdd"/>
+					<box>
+						<pen lineWidth="0.5"/>
+						<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font size="12" isBold="true"/>
+						<paragraph lineSpacing="1_1_2" firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<text><![CDATA[COMPANY NAME]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Opaque" x="2" y="82" width="181" height="20" backcolor="#DCDCDC" uuid="72ce04f9-0a97-4520-8b09-48c14cfab06f"/>
+					<box>
+						<pen lineWidth="0.5"/>
+						<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font size="12" isBold="true"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<text><![CDATA[TRADING NAME]]></text>
+				</staticText>
+				<textField isBlankWhenNull="true">
+					<reportElement x="183" y="82" width="371" height="20" uuid="220e33ba-348e-49fb-a2c9-5b5d0f0bd3a9"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font size="12"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{tradingName}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="183" y="102" width="371" height="20" uuid="5aa07231-ebb4-4abe-950e-ed99e0bbcde5"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font size="12"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{companyAddressLine1}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="183" y="122" width="371" height="20" uuid="b3c0cb05-76ef-48e7-9818-3d1504663f8c"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font size="12"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{companyAddressLine2}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="183" y="142" width="371" height="20" uuid="49be2965-1365-4d59-8fb3-6a32d1e8f448"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font size="12"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{companyAddressLine3}]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement mode="Opaque" x="2" y="202" width="181" height="100" backcolor="#DCDCDC" uuid="b465bd8f-e7e4-4618-bc57-700b8cf8b847"/>
+					<graphicElement>
+						<pen lineWidth="0.5" lineStyle="Solid"/>
+					</graphicElement>
+				</rectangle>
+				<textField isBlankWhenNull="true">
+					<reportElement x="183" y="202" width="371" height="20" uuid="c56b11d9-07fe-422e-8bf7-cee3675ac33b"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font size="12"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{postalAddressLine1}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="183" y="222" width="371" height="20" uuid="884a08d8-51a6-4b87-a826-1fe6ab702463"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font size="12"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{postalAddressLine2}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="183" y="242" width="371" height="20" uuid="ff62576d-27f4-47de-aadd-8341c9782974"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font size="12"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{postalAddressLine3}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement mode="Opaque" x="5" y="242" width="153" height="20" backcolor="#DCDCDC" uuid="f8cb9f02-55d1-4cda-93a4-c4c685f182d4"/>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font size="12" isBold="true"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<text><![CDATA[POSTAL ADDRESS]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Opaque" x="2" y="302" width="181" height="20" backcolor="#DCDCDC" uuid="442ea04f-dbe5-4fd4-97d7-4789fc955ebb"/>
+					<box>
+						<pen lineWidth="0.5"/>
+						<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font size="12" isBold="true"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<text><![CDATA[TELEPHONE NUMBER]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Opaque" x="2" y="322" width="181" height="20" backcolor="#DCDCDC" uuid="f41b64f4-b902-4a65-88f2-3164f83cfc9a"/>
+					<box>
+						<pen lineWidth="0.5"/>
+						<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font size="12" isBold="true"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<text><![CDATA[FAX NUMBER]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Opaque" x="2" y="342" width="181" height="20" backcolor="#DCDCDC" uuid="282c2933-b146-44e2-8051-46046ee378bb"/>
+					<box>
+						<pen lineWidth="0.5"/>
+						<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font size="12" isBold="true"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<text><![CDATA[EMAIL ADDRESS]]></text>
+				</staticText>
+				<textField isBlankWhenNull="true">
+					<reportElement x="183" y="342" width="371" height="20" uuid="cb14847c-378f-465b-956a-c30d8bbd8085"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font size="12"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{companyEmail}]]></textFieldExpression>
+				</textField>
+				<rectangle>
+					<reportElement x="2" y="102" width="181" height="100" backcolor="#DCDCDC" uuid="7d172b66-dede-4883-b994-fab19b16ddca"/>
+					<graphicElement>
+						<pen lineWidth="0.5" lineStyle="Solid"/>
+					</graphicElement>
+				</rectangle>
+				<staticText>
+					<reportElement x="3" y="142" width="161" height="20" backcolor="#DCDCDC" uuid="32f5cf48-f01f-4877-ac79-dbcf8a7eabc6"/>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font size="12" isBold="true"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<text><![CDATA[PHYSICAL ADDRESS]]></text>
+				</staticText>
+				<textField isBlankWhenNull="true">
+					<reportElement x="180" y="408" width="374" height="20" uuid="70aff072-0668-4630-ae0f-e02949740708"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font size="12"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{companyLavyNumber}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement mode="Opaque" x="1" y="408" width="179" height="20" backcolor="#DCDCDC" uuid="d06d5fc8-da4e-4ea3-aadd-a54244b9ce11"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font size="12" isBold="true"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<text><![CDATA[LEVY NUMBER]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Opaque" x="1" y="378" width="553" height="30" backcolor="#DCDCDC" uuid="d59c89d5-cb31-4411-907b-46c4582c4cf0"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="14" isBold="true"/>
+					</textElement>
+					<text><![CDATA[SARS LEVY REGISTRATION NUMBER/S]]></text>
+				</staticText>
+				<textField isBlankWhenNull="true">
+					<reportElement x="183" y="302" width="371" height="20" uuid="c92527af-498d-4a2b-8908-2fc4214fb7fc"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font size="12"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{CcompanyTelNum}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="183" y="322" width="371" height="20" uuid="5393901c-ac8d-4720-ac54-a96020e9b8bc"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font size="12"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{companyFaxNum}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="183" y="62" width="371" height="20" uuid="a59bda81-3621-47ed-8b16-0653dd4f1517"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font size="12"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{companyName}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement mode="Opaque" x="1" y="443" width="555" height="30" backcolor="#DCDCDC" uuid="73383a06-5ba3-4dc9-83ef-2c82b3bdacdf"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="14" isBold="true"/>
+					</textElement>
+					<text><![CDATA[SETA AFFILIATION:  MERSETA (17)]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Opaque" x="1" y="473" width="181" height="20" backcolor="#DCDCDC" uuid="617e9c99-7781-44ab-bca7-8d46caa1f3f3"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font size="12" isBold="true"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<text><![CDATA[CHAMBER]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Opaque" x="1" y="493" width="181" height="20" backcolor="#DCDCDC" uuid="35bc3899-be0d-4b44-a115-0be94ec95711"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font size="12" isBold="true"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<text><![CDATA[SIC CODE]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Opaque" x="1" y="513" width="181" height="20" backcolor="#DCDCDC" uuid="22a23e7e-959c-4219-aa58-6f48dc3ebc70"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement textAlignment="Left" verticalAlignment="Middle">
+						<font size="12" isBold="true"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<text><![CDATA[COMPANY EMPLOYEE TOTAL]]></text>
+				</staticText>
+				<textField isBlankWhenNull="true">
+					<reportElement x="182" y="473" width="374" height="20" uuid="a4d254c4-e9f1-4adc-a962-caf0952ff35c"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font size="12" isBold="false"/>
+						<paragraph lineSpacing="Single" firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{chamberDesc}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="182" y="493" width="374" height="20" uuid="4ed74802-9e1f-4cfa-b856-99d061711982"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font size="12"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{SICDescription}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="182" y="513" width="374" height="20" uuid="947727b1-ec25-4fc3-b1b8-980aa26924c1"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font size="12"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{NumOfEmp}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement mode="Transparent" x="1" y="2" width="553" height="13" backcolor="#6CCFF0" uuid="edafb5b3-a3d0-4e83-8287-73137eaf08a0"/>
+					<text><![CDATA[]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Transparent" x="0" y="47" width="553" height="13" backcolor="#6CCFF0" uuid="2b0f4a42-c029-4872-aa25-16ef628bcb34"/>
+					<text><![CDATA[]]></text>
+				</staticText>
+				<textField isBlankWhenNull="true">
+					<reportElement x="183" y="162" width="371" height="20" uuid="f36b6c67-46e1-4888-bad1-672662104fa0"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font size="12"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{companyAddressTown}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="183" y="262" width="371" height="20" uuid="7c975006-0e61-48be-91aa-64c4e9132b89"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font size="12"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{postalAddressTown}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement mode="Transparent" x="2" y="362" width="553" height="13" backcolor="#6CCFF0" uuid="90a3b8b1-a5bb-4dd5-b48f-d35f8cf97a10"/>
+					<text><![CDATA[]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Transparent" x="1" y="429" width="553" height="13" backcolor="#6CCFF0" uuid="f0fb2422-d30a-41a8-9ab3-79cbf6e5e6f8"/>
+					<text><![CDATA[]]></text>
+				</staticText>
+				<break>
+					<reportElement x="0" y="625" width="100" height="1" uuid="35d06d49-0778-493e-93e1-278b4590041e"/>
+				</break>
+				<textField isBlankWhenNull="true">
+					<reportElement x="183" y="182" width="371" height="20" uuid="411ad14c-6c9d-428f-a419-a91e7034d442"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font size="12"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{companyPoscode}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="183" y="282" width="371" height="20" uuid="57decb76-9379-4948-b4ff-2d4c6bd982ef"/>
+					<box>
+						<topPen lineWidth="0.5"/>
+						<leftPen lineWidth="0.5"/>
+						<bottomPen lineWidth="0.5"/>
+						<rightPen lineWidth="0.5"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font size="12"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{postalPoscode}]]></textFieldExpression>
+				</textField>
+			</band>
+			<band height="88">
+				<staticText>
+					<reportElement mode="Opaque" x="0" y="62" width="555" height="25" backcolor="#DCDCDC" uuid="a8bdb9bc-b04b-4fbf-8d6d-1492a2baf7fa"/>
+					<box>
+						<pen lineWidth="0.5"/>
+						<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="14" isBold="true"/>
+						<paragraph lineSpacing="AtLeast"/>
+					</textElement>
+					<text><![CDATA[SKILLS DEVELOPMENT FACILITATOR DETAILS]]></text>
+				</staticText>
+				<staticText>
+					<reportElement mode="Transparent" x="0" y="49" width="554" height="13" backcolor="#6CCFF0" uuid="e00c5f9b-2a7b-4737-92ff-fc34156a32ba"/>
+					<text><![CDATA[]]></text>
+				</staticText>
+				<textField isBlankWhenNull="true">
+					<reportElement x="277" y="28" width="278" height="20" uuid="7f96e6c5-b736-4e15-9082-89118bede4a2"/>
+					<box>
+						<pen lineWidth="0.5" lineStyle="Dashed"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font size="12"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA[" Levy number :  "+$F{companyLavyNumber}]]></textFieldExpression>
+				</textField>
+				<textField isBlankWhenNull="true">
+					<reportElement x="0" y="28" width="277" height="20" uuid="9733f70d-e78c-4aff-80aa-ffe484c006bf"/>
+					<box>
+						<pen lineWidth="0.5" lineStyle="Dashed"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font size="12"/>
+						<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+					</textElement>
+					<textFieldExpression><![CDATA[" Company name : "+$F{companyName}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="1" y="7" width="549" height="20" uuid="0e420084-333a-4dc4-a89e-0accfb2d5c2d"/>
+					<textElement textAlignment="Right" verticalAlignment="Bottom">
+						<font size="8"/>
+					</textElement>
+					<text><![CDATA[SKILLS DEVELOMENT FACILITATOR REGISTRATION FORM ]]></text>
+				</staticText>
+			</band>
+		</groupHeader>
+	</group>
+	<group name="Group5"/>
+	<group name="Group6"/>
+	<group name="Group7"/>
+	<background>
+		<band height="802" splitType="Stretch">
+			<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+			<image scaleImage="FillFrame" hAlign="Right" vAlign="Bottom">
+				<reportElement x="220" y="130" width="331" height="509" uuid="25965336-2bdf-4f91-9cdc-05cbfa7c0236"/>
+				<imageExpression><![CDATA[$P{backround_image}]]></imageExpression>
+			</image>
+		</band>
+	</background>
+	<title>
+		<band height="101" splitType="Stretch">
+			<image scaleImage="FillFrame" hAlign="Center" vAlign="Middle" onErrorType="Blank">
+				<reportElement mode="Transparent" x="-1" y="1" width="91" height="88" backcolor="#DCDCDC" uuid="1c73f8ba-a32d-451c-a473-552a16c6cc75"/>
+				<box>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<imageExpression><![CDATA[$P{logo}]]></imageExpression>
+			</image>
+			<rectangle>
+				<reportElement x="100" y="87" width="453" height="1" backcolor="#CC851F" uuid="90612062-99f3-4149-aa91-778f4e6ec6c6"/>
+				<graphicElement>
+					<pen lineColor="#CC851F"/>
+				</graphicElement>
+			</rectangle>
+			<staticText>
+				<reportElement mode="Transparent" x="100" y="60" width="454" height="25" backcolor="#FFFFFF" uuid="35c7f2f5-fc59-4a4d-8024-834813f0797d"/>
+				<box>
+					<pen lineWidth="0.5" lineStyle="Solid" lineColor="#FFFFFF"/>
+					<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.0" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Bottom">
+					<font size="15" isBold="true" pdfFontName="Helvetica-Bold"/>
+					<paragraph firstLineIndent="0"/>
+				</textElement>
+				<text><![CDATA[SKILLS DEVELOPMENT FACILITATOR REGISTRATION FORM]]></text>
+			</staticText>
+		</band>
+	</title>
+	<detail>
+		<band height="143">
+			<property name="com.jaspersoft.studio.unit.height" value="pixel"/>
+			<property name="com.jaspersoft.studio.layout" value="com.jaspersoft.studio.editor.layout.FreeLayout"/>
+			<staticText>
+				<reportElement mode="Opaque" x="0" y="15" width="181" height="20" backcolor="#DCDCDC" uuid="6c3a2980-8c71-455d-9346-ce41d45abd2c"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font size="12" isBold="true"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[FULL NAME]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement x="181" y="15" width="374" height="20" uuid="d206f276-1f7e-4927-ae91-e319f0a06e88"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font size="12"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{SDFFirstName}+" "+$F{SDFLastName}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="181" y="35" width="374" height="20" uuid="75109b62-2a58-4331-943a-c39cd7da6c28"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font size="12" isBold="false"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{SDFRSAID}==null|| $F{SDFRSAID}.equals("") ?($F{SDFPassportNumber}):($F{SDFRSAID})]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement mode="Opaque" x="0" y="55" width="181" height="20" backcolor="#DCDCDC" uuid="0c1f7e0a-2434-4d5e-8ea6-1c73a4ceb131"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font size="12" isBold="true"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[TELEPHONE NUMBER]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="0" y="75" width="181" height="20" backcolor="#DCDCDC" uuid="b02931b0-99b3-4ed8-812d-1777ac60d237"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font size="12" isBold="true"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[FAX NUMBER]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Opaque" x="0" y="95" width="181" height="20" backcolor="#DCDCDC" uuid="ea6aeb02-3685-4154-a5c5-98340210bea6"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font size="12" isBold="true"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[EMAIL ADDRESS]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement x="181" y="95" width="374" height="20" uuid="b20dbeba-1a5c-4922-ad74-1a27eb8e5153"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font size="12"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{SDFEmail}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement mode="Opaque" x="0" y="115" width="219" height="20" backcolor="#DCDCDC" uuid="ee2e7a60-6cd2-4802-be0e-26478062a1c2"/>
+				<box>
+					<pen lineWidth="0.5"/>
+					<topPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<leftPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<bottomPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+					<rightPen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font size="12" isBold="true"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[RELATIONSHIP TO COMPANY]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement x="219" y="115" width="336" height="20" uuid="1ab50aa3-6b2e-430a-acc4-d55214b099f2"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font size="12"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{SDFType}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="181" y="55" width="374" height="20" uuid="680a9810-6e1c-4e0c-b9d5-3bc09bfb0b38"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font size="12"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{SDFTellNumber}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement x="181" y="75" width="374" height="20" uuid="626f67ef-9aec-49d4-85a6-5b5851c9b012"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font size="12"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{SDFFaxNum}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement mode="Transparent" x="1" y="0" width="553" height="13" backcolor="#6CCFF0" uuid="b51517c2-4b49-470d-a993-4562c81b3f5b"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<staticText>
+				<reportElement mode="Transparent" x="0" y="136" width="554" height="6" backcolor="#6CCFF0" uuid="b0ca23e9-49f0-4105-a6fa-3810a4eb6747"/>
+				<text><![CDATA[]]></text>
+			</staticText>
+			<textField isBlankWhenNull="true">
+				<reportElement mode="Opaque" x="0" y="35" width="181" height="20" backcolor="#DCDCDC" uuid="4eacf730-b653-47bb-9ede-b084eb4a56f9"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font size="12" isBold="true"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{SDFRSAID}==null|| $F{SDFRSAID}.equals("") ?("PASSPORT NUMBER"):("IDENTITY NUMBER")]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+	<pageFooter>
+		<band height="49" splitType="Stretch">
+			<property name="com.jaspersoft.studio.layout" value="com.jaspersoft.studio.editor.layout.FreeLayout"/>
+			<staticText>
+				<reportElement x="46" y="1" width="117" height="15" forecolor="#404040" uuid="c168c10f-a982-4edb-b881-a8fa3592bda1"/>
+				<box>
+					<topPen lineWidth="0.5" lineColor="#505050"/>
+					<leftPen lineWidth="0.5" lineColor="#505050"/>
+					<bottomPen lineWidth="0.5" lineColor="#505050"/>
+					<rightPen lineWidth="0.5" lineColor="#505050"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[Document Title]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="46" y="16" width="117" height="15" forecolor="#404040" uuid="ddb9d0b5-80d8-43c4-9708-73762d66f859"/>
+				<box>
+					<topPen lineWidth="0.5" lineColor="#505050"/>
+					<leftPen lineWidth="0.5" lineColor="#505050"/>
+					<bottomPen lineWidth="0.5" lineColor="#505050"/>
+					<rightPen lineWidth="0.5" lineColor="#505050"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[Page Number]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="301" y="16" width="117" height="15" forecolor="#404040" uuid="a22bc7ae-fb80-4321-afb2-48fa3bdd2560"/>
+				<box>
+					<topPen lineWidth="0.5" lineColor="#505050"/>
+					<leftPen lineWidth="0.5" lineColor="#505050"/>
+					<bottomPen lineWidth="0.5" lineColor="#505050"/>
+					<rightPen lineWidth="0.5" lineColor="#505050"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[Date & Time Compiled]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="46" y="31" width="117" height="16" forecolor="#404040" uuid="eff8ca41-2434-4c34-ac1f-17043cbc93cc"/>
+				<box>
+					<topPen lineWidth="0.5" lineColor="#505050"/>
+					<leftPen lineWidth="0.5" lineColor="#505050"/>
+					<bottomPen lineWidth="0.5" lineColor="#505050"/>
+					<rightPen lineWidth="0.5" lineColor="#505050"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[Document Number]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="301" y="31" width="117" height="16" forecolor="#404040" uuid="b1c3e7af-5d9f-4cb2-9b72-f55cddb54447"/>
+				<box>
+					<topPen lineWidth="0.5" lineColor="#505050"/>
+					<leftPen lineWidth="0.5" lineColor="#505050"/>
+					<bottomPen lineWidth="0.5" lineColor="#505050"/>
+					<rightPen lineWidth="0.5" lineColor="#505050"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[Access]]></text>
+			</staticText>
+			<textField>
+				<reportElement mode="Opaque" x="163" y="16" width="138" height="15" forecolor="#404040" uuid="8547cd38-8f98-4ebc-97e7-fc4b576ad85c"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Page " + $V{PAGE_NUMBER}+ " of  " + $V{PAGE_NUMBER}]]></textFieldExpression>
+			</textField>
+			<textField pattern="dd MMMMM yyyy H:mm:ss">
+				<reportElement x="418" y="16" width="137" height="15" forecolor="#404040" uuid="6ea3b05b-6c02-4d4e-8549-6e4269182e3a"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement>
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="0" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="163" y="1" width="392" height="15" forecolor="#404040" uuid="86b5d31c-d46d-45df-956d-b1d0c839a380"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle" markup="html">
+					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[<b>merSETA Skills Facilitation Registration Form</b>]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="163" y="31" width="138" height="16" forecolor="#404040" uuid="62645364-f93f-450a-bade-da3343268ad8"/>
+				<box>
+					<topPen lineWidth="0.5" lineColor="#505050"/>
+					<leftPen lineWidth="0.5" lineColor="#505050"/>
+					<bottomPen lineWidth="0.5" lineColor="#505050"/>
+					<rightPen lineWidth="0.5" lineColor="#505050"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA["CSD-FM-002"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="418" y="31" width="137" height="16" forecolor="#404040" uuid="a5f47fa8-e1cc-4d94-8c82-731cebfc70e5"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Controlled"]]></textFieldExpression>
+			</textField>
+			<frame>
+				<reportElement x="0" y="1" width="46" height="46" uuid="a7594a96-926b-4c10-856f-af889a543203"/>
+				<box>
+					<pen lineColor="#404040"/>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<componentElement>
+					<reportElement x="1" y="2" width="44" height="44" uuid="ee5ddd46-d7ec-4c4e-9850-0728c66e85e9"/>
+					<jr:QRCode xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
+						<jr:codeExpression><![CDATA[$F{barcode}]]></jr:codeExpression>
+					</jr:QRCode>
+				</componentElement>
+			</frame>
+		</band>
+	</pageFooter>
+</jasperReport>

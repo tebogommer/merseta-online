@@ -1,0 +1,258 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:pt="http://xmlns.jcp.org/jsf/passthrough">
+
+	<ui:include src="/pages/includes/download_lazy.xhtml">
+		<ui:param name="file_name" value="Dg Allocation" />
+		<ui:param name="target" value="#{id}" />
+	</ui:include>
+	<style>
+.ui-datatable-summaryrow {
+	background-color: #216AB5 !important;
+	display: !important;
+}
+
+.ui-sticky {
+	margin-top: 75px;
+}
+</style>
+	<p:dataTable var="dgallo" rows="#{allocations.size()}" emptyMessage="#{lang['no.records.found']}" value="#{allocations}" id="#{id}" expandableRowGroups="true" sortBy="#{dgallo.dgAllocationParent.id}" stickyHeader="true">
+		<p:headerRow>
+
+			<p:column colspan="4">
+				<h:outputText value="#{dgallo.mandatoryGrant.wsp.company.companyNameDisplay}" />
+			</p:column>
+			<p:column colspan="2">
+				<p:outputLabel value="Categorization:"></p:outputLabel>
+				<p:spacer width="10"></p:spacer>
+				<h:outputText value="#{dgallo.dgAllocationParent.companyCategorization}" />
+			</p:column>
+			<p:column colspan="2" groupRow="true" rendered="true">
+				<p:outputLabel value="DG Levy"></p:outputLabel>
+				<p:spacer width="10"></p:spacer>
+				<p:outputLabel value="#{dgallo.dgAllocationParent.dgLevyAmount}">
+					<f:convertNumber type="currency" currencySymbol="R" />
+				</p:outputLabel>
+			</p:column>
+			<p:column colspan="2" groupRow="true" rendered="true">
+				<p:outputLabel value="Available Amount"></p:outputLabel>
+				<p:spacer width="10"></p:spacer>
+				<p:outputLabel value="#{dgallo.availableAmount}">
+					<f:convertNumber type="currency" currencySymbol="R" />
+				</p:outputLabel>
+			</p:column>
+			<p:column colspan="2" groupRow="true" rendered="true">
+				<p:outputLabel value="Partial Funding Amount"></p:outputLabel>
+				<p:spacer width="10"></p:spacer>
+				<p:outputLabel value="#{dgallo.dgAllocationParent.availableCoFundingAmount}">
+					<f:convertNumber type="currency" currencySymbol="R" />
+				</p:outputLabel>
+			</p:column>
+			<p:column colspan="2" groupRow="true">
+				<p:outputLabel value="Total"></p:outputLabel>
+				<p:spacer width="10"></p:spacer>
+				<p:outputLabel value="#{dgallo.availableAmount + dgallo.dgAllocationParent.availableCoFundingAmount}">
+					<f:convertNumber type="currency" currencySymbol="R" />
+				</p:outputLabel>
+			</p:column>
+
+			<p:column colspan="1" rendered="#{not showInput}"></p:column>
+			<p:column colspan="1" rendered="#{showInput}">
+				<p:commandLink style="color: white;" process="@this" action="#{dgallocationUI.findAllocationReasons}" update="rejectReasonChildForm2" oncomplete="PF('rejectChildReason2').show()">
+					<f:setPropertyActionListener value="#{dgallo.dgAllocationParent}" target="#{dgallocationUI.dgAllocationParent}" />
+					<i class="fa fa-search"></i> View Changes
+					</p:commandLink>
+			</p:column>
+			<p:column colspan="1" rendered="#{showInput}">
+				<center>
+					<p:commandLink style="color: white;" process="@this" action="#{dgallocationUI.approveAllocation}" update="skill4" rendered="#{dgallo.dgAllocationParent.allocationStatusEnum eq AllocationStatusEnum.Rejected and not dgallo.dgAllocationParent.dontAllocate}">
+						<f:setPropertyActionListener value="#{dgallo.dgAllocationParent}" target="#{dgallocationUI.dgAllocationParent}" />
+						<i class="fa fa-check"></i> Approve Allocation
+					</p:commandLink>
+					<p:commandLink style="color: white;" process="@this" oncomplete="PF('rejectReason').show()" update="rejectReasonForm" rendered="#{(dgallo.dgAllocationParent.allocationStatusEnum eq  null or dgallo.dgAllocationParent.allocationStatusEnum eq AllocationStatusEnum.Approved) and not dgallo.dgAllocationParent.dontAllocate}">
+						<f:setPropertyActionListener value="#{dgallo.dgAllocationParent}" target="#{dgallocationUI.dgAllocationParent}" />
+						<i class="fa fa-times"></i> Reject Allocation
+					</p:commandLink>
+				</center>
+			</p:column>
+		</p:headerRow>
+		<p:columnGroup type="header">
+			<p:row>
+				<p:column colspan="7" headerText="Learner Information" />
+				<p:column colspan="4" headerText="Full Allocation" />
+				<p:column colspan="2" headerText="Partial Allocation" />
+				<p:column colspan="3" headerText="Total Allocation" rendered="#{showInput}" />
+				<p:column colspan="2" headerText="Total Allocation" rendered="#{not showInput}" />
+			</p:row>
+			<p:row>
+				<p:column colspan="1" headerText="Requested Intervention" />
+				<p:column colspan="1" headerText="Recommended Intervention" />
+				<p:column colspan="1" headerText="Ofo Code" />
+				<p:column colspan="1" headerText="Requested Learners" />
+				<p:column colspan="1" headerText="Recommended Learners" />
+				<p:column colspan="1" headerText="Awarded Learners" />
+				<p:column colspan="1" headerText="Partial Funding Awarded Learners" />
+
+
+				<p:column colspan="1" headerText="Requested Amount" />
+				<p:column colspan="1" headerText="Recommended Amount" />
+				<p:column colspan="1" headerText="Award Amount" />
+				<p:column colspan="1" headerText="Balance" />
+
+				<p:column colspan="1" headerText="Partial Funding Award Amount" />
+				<p:column colspan="1" headerText="Partial Funding Balance" />
+
+				<p:column colspan="1" headerText="Disabled Grant Amount" />
+				<p:column colspan="1" headerText="Total Awarded" />
+				<p:column colspan="1" width="40" headerText="Approve" rendered="#{showInput}" />
+
+			</p:row>
+		</p:columnGroup>
+
+		<p:column headerText="Company" style="display: none !important;" exportable="true">
+			<p:outputLabel value="#{dgallo.mandatoryGrant.wsp.company.companyNameDisplay}"></p:outputLabel>
+		</p:column>
+
+		<p:column headerText="DG Levy (49.5%)" style="display: none !important;" exportable="true">
+			<p:outputLabel value="#{dgallo.dgAllocationParent.dgLevyAmount}"></p:outputLabel>
+		</p:column>
+
+		<p:column headerText="Requested Intervention">
+			<p:outputLabel value="#{dgallo.mandatoryGrant.interventionType.description}"></p:outputLabel>
+		</p:column>
+
+		<p:column headerText="Recommended Intervention">
+			<p:outputLabel value="#{dgallo.interventionType.description}"></p:outputLabel>
+		</p:column>
+
+		<p:column headerText="Ofo Code">
+			<p:outputLabel value="#{dgallo.mandatoryGrant.ofoCodes.ofoDescription}"></p:outputLabel>
+		</p:column>
+
+		<p:column headerText="Requested Learners">
+			<p:outputLabel value="#{dgallo.totalLearners}" rendered="#{dgallo.changeAllocationLearners eq null}"></p:outputLabel>
+			<p:outputLabel value="#{dgallo.initialLearners} -&gt; #{dgallo.changeAllocationLearners}" rendered="#{dgallo.changeAllocationLearners ne null}"></p:outputLabel>
+		</p:column>
+
+		<p:column headerText="Recommended Learners">
+			<p:outputLabel value="#{dgallo.numberOfLearners}"></p:outputLabel>
+		</p:column>
+
+		<p:column headerText="Awarded Learners">
+			<p:outputLabel value="#{dgallo.maxPossibleLearners}"></p:outputLabel>
+		</p:column>
+
+		<p:column headerText="Partial Funding Awarded Learners">
+			<p:outputLabel value="#{dgallo.coFundingLearnersAwarded}"></p:outputLabel>
+		</p:column>
+
+		<p:column headerText="Requested Amount">
+			<p:outputLabel value="#{dgallo.requestedAmount}">
+				<f:convertNumber type="currency" currencySymbol="R" />
+			</p:outputLabel>
+		</p:column>
+
+		<p:column headerText="Recommended Amount">
+			<p:outputLabel value="#{dgallo.recommendedAmount}">
+				<f:convertNumber type="currency" currencySymbol="R" />
+			</p:outputLabel>
+		</p:column>
+
+		<p:column headerText="Award Amount">
+			<p:outputLabel value="#{dgallo.awardAmount}" styleClass="FontBold" style="color: #5ecf80" rendered="#{dgallo.awardAmount gt 0}">
+				<f:convertNumber type="currency" currencySymbol="R" />
+			</p:outputLabel>
+			<p:outputLabel value="#{dgallo.awardAmount}" styleClass="FontBold" rendered="#{dgallo.awardAmount lt 0.1}">
+				<f:convertNumber type="currency" currencySymbol="R" />
+			</p:outputLabel>
+		</p:column>
+
+		<p:column headerText="Balance">
+			<p:outputLabel value="#{dgallo.balanceRemaining}">
+				<f:convertNumber type="currency" currencySymbol="R" />
+			</p:outputLabel>
+		</p:column>
+
+		<p:column headerText="Partial Funding Award Amount" styleClass="FontBold">
+			<p:outputLabel value="#{dgallo.coFundingAwardAmount}" styleClass="FontBold" style="color: #f7941e" rendered="#{dgallo.coFundingAwardAmount gt 0}">
+				<f:convertNumber type="currency" currencySymbol="R" />
+			</p:outputLabel>
+			<p:outputLabel value="#{dgallo.coFundingAwardAmount}" styleClass="FontBold" rendered="#{dgallo.coFundingAwardAmount lt 0.1}">
+				<f:convertNumber type="currency" currencySymbol="R" />
+			</p:outputLabel>
+		</p:column>
+
+		<p:column headerText="Partial Funding Balance">
+			<p:outputLabel value="#{dgallo.remainingCoFundingGrantAmount}">
+				<f:convertNumber type="currency" currencySymbol="R" />
+			</p:outputLabel>
+		</p:column>
+
+		<p:column headerText="Disabled Grant Amount">
+			<p:outputLabel value="#{dgallo.disabledGrantAmount}">
+				<f:convertNumber type="currency" currencySymbol="R" />
+			</p:outputLabel>
+		</p:column>
+
+		<p:column headerText="Total Awarded" styleClass="FontBold">
+			<p:outputLabel value="#{dgallo.totalAwardAmount}" styleClass="FontBold" style="color: #5ecf80" rendered="#{dgallo.totalAwardAmount gt 0}">
+				<f:convertNumber type="currency" currencySymbol="R" />
+			</p:outputLabel>
+			<p:outputLabel value="#{dgallo.totalAwardAmount}" styleClass="FontBold" rendered="#{dgallo.totalAwardAmount lt 0.1}">
+				<f:convertNumber type="currency" currencySymbol="R" />
+			</p:outputLabel>
+		</p:column>
+
+		<p:column headerText="#{lang['RAG']}" width="37" exportable="false" rendered="false">
+			<h:graphicImage value="/resources/hls/images/red.svg" rendered="#{dgallo.awardAmount.doubleValue() eq 0 and dgallo.coFundingAwardAmount.doubleValue() eq 0}" width="40" styleClass="animated pulse infinite" />
+			<h:graphicImage value="/resources/hls/images/amber.svg" rendered="#{dgallo.coFundingAwardAmount.doubleValue() ne 0}" width="35" />
+			<h:graphicImage value="/resources/hls/images/green.svg" rendered="#{dgallo.awardAmount.doubleValue() ne 0 and dgallo.coFundingAwardAmount.doubleValue() eq 0}" width="30" />
+		</p:column>
+		<p:column headerText="#{lang['approve']}" width="40" exportable="false" rendered="#{showInput}">
+			<center>
+				<p:commandButton icon="fa fa-check" action="#{dgallocationUI.approveAllocationLineItem}" update="skill4" process="@this" title="Approve Allocation" rendered="#{dgallo.allocationStatusEnum eq AllocationStatusEnum.Rejected and not dgallo.dgAllocationParent.dontAllocate}">
+					<f:setPropertyActionListener value="#{dgallo}" target="#{dgallocationUI.allocation}" />
+				</p:commandButton>
+
+				<p:commandButton icon="fa fa-times" action="#{dgallocationUI.rejectAllocationLineItem}" update="skill4" process="@this" title="Reject Allocation" rendered="#{(dgallo.allocationStatusEnum eq  null or dgallo.allocationStatusEnum eq AllocationStatusEnum.Approved) and not dgallo.dgAllocationParent.dontAllocate}">
+					<f:setPropertyActionListener value="#{dgallo}" target="#{dgallocationUI.allocation}" />
+				</p:commandButton>
+			</center>
+		</p:column>
+		<p:summaryRow listener="#{dgallocationUI.onSummaryRow}">
+			<p:column colspan="6"></p:column>
+			<p:column colspan="1">
+				<h:outputText value="Total:" />
+			</p:column>
+			<p:column colspan="1">
+				<p:outputLabel value="#{dgallocationUI.totalRequestedAmount}">
+
+					<f:convertNumber type="currency" currencySymbol="R" />
+				</p:outputLabel>
+			</p:column>
+			<p:column colspan="1" style="text-align:right"></p:column>
+			<p:column>
+				<p:outputLabel value="#{dgallocationUI.totalAwardAmount}">
+
+					<f:convertNumber type="currency" currencySymbol="R" />
+				</p:outputLabel>
+			</p:column>
+			<p:column colspan="1" style="text-align:right">
+			</p:column>
+			<p:column colspan="1" style="text-align:right">
+				<p:outputLabel value="#{dgallocationUI.totalAwardAmountCofund}">
+
+					<f:convertNumber type="currency" currencySymbol="R" />
+				</p:outputLabel>
+			</p:column>
+			<p:column colspan="2" style="text-align:right">
+			</p:column>
+			<p:column>
+				<p:outputLabel value="#{dgallocationUI.total}">
+
+					<f:convertNumber type="currency" currencySymbol="R" />
+				</p:outputLabel>
+			</p:column>
+			<p:column rendered="#{showInput}">
+			</p:column>
+		</p:summaryRow>
+	</p:dataTable>
+</ui:composition>

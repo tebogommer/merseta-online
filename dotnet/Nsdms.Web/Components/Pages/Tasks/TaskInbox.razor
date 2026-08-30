@@ -1,0 +1,239 @@
+@page "/tasks"
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@inject IWorkflowEngineService WorkflowService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>Universal Task Inbox - MerSETA NSDMS</PageTitle>
+
+<div class="tasks-inbox-page">
+    <!-- Sticky Header Top Bar -->
+    <header class="d-flex justify-space-between align-center mb-6 pa-4 rounded-lg elevation-2" style="background-color: #1e3a8a; color: #ffffff;">
+        <div>
+            <h1 class="font-weight-bold" style="font-size: 1.5rem; color: #ffffff; margin: 0;">Universal Task Inbox</h1>
+            <p style="color: #e0e7ff; margin: 4px 0 0 0; font-size: 0.875rem;">
+                Cross-Module Workflow Orchestration &bull; Pending Approvals &amp; SLA Tracking
+            </p>
+        </div>
+        <div class="d-flex align-center gap-2">
+            <span class="px-3 py-1 rounded" style="background-color: #0f172a; color: #ffffff; font-size: 0.8125rem; font-weight: 700;">
+                @_filteredTasks.Count Pending Task(s)
+            </span>
+        </div>
+    </header>
+
+    <!-- Filters & Search Toolbar -->
+    <div class="mud-paper mud-elevation-1 pa-4 rounded-lg mb-4" style="background-color: #ffffff;">
+        <MudGrid Spacing="2" Class="align-center">
+            <MudItem xs="12" sm="6" md="4">
+                <MudTextField @bind-Value="_searchString" 
+                              Placeholder="Search task title, process or entity..." 
+                              Adornment="Adornment.Start" 
+                              AdornmentIcon="@Icons.Material.Filled.Search" 
+                              Variant="Variant.Outlined" 
+                              Dense="true" 
+                              Immediate="true" />
+            </MudItem>
+            <MudItem xs="6" sm="3" md="2">
+                <MudSelect T="string" @bind-Value="_statusFilter" Label="Task Status" Variant="Variant.Outlined" Dense="true">
+                    <MudSelectItem Value="@("All")">All Statuses</MudSelectItem>
+                    <MudSelectItem Value="@("Open")">Open</MudSelectItem>
+                    <MudSelectItem Value="@("Claimed")">Claimed</MudSelectItem>
+                    <MudSelectItem Value="@("Completed")">Completed</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="6" sm="3" md="2">
+                <MudSelect T="string" @bind-Value="_priorityFilter" Label="Priority" Variant="Variant.Outlined" Dense="true">
+                    <MudSelectItem Value="@("All")">All Priorities</MudSelectItem>
+                    <MudSelectItem Value="@("High")">High</MudSelectItem>
+                    <MudSelectItem Value="@("Normal")">Normal</MudSelectItem>
+                    <MudSelectItem Value="@("Low")">Low</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" sm="12" md="4" Class="d-flex justify-end gap-2">
+                <MudButton Variant="Variant.Outlined" 
+                           Color="Color.Primary" 
+                           StartIcon="@Icons.Material.Filled.Refresh" 
+                           OnClick="LoadTasksAsync">
+                    Refresh
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+    </div>
+
+    <!-- Tasks DataGrid -->
+    <div class="mud-paper mud-elevation-2 rounded-lg" style="background-color: #ffffff; overflow: hidden;">
+        @if (_loading)
+        {
+            <div class="pa-8 text-center">
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                <p class="mt-2 text-muted">Loading workflow tasks...</p>
+            </div>
+        }
+        else if (!_filteredTasks.Any())
+        {
+            <div class="pa-8 text-center">
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircleOutline" Size="Size.Large" Style="color: #059669;" />
+                <h3 class="mt-2" style="font-size: 1.125rem; color: #0f172a;">All Caught Up!</h3>
+                <p style="color: #64748b; font-size: 0.875rem;">No pending tasks require your action at this time.</p>
+            </div>
+        }
+        else
+        {
+            <MudTable T="WorkflowTask"
+                      Items="@_filteredTasks" 
+                      Dense="false" 
+                      Hover="true" 
+                      Elevation="0" 
+                      Outlined="false"
+                      RowClass="cursor-pointer"
+                      OnRowClick="@(args => NavigateToTask(args.Item))">
+                <HeaderContent>
+                    <MudTh>Process / Title</MudTh>
+                    <MudTh>Assigned Role</MudTh>
+                    <MudTh>Priority</MudTh>
+                    <MudTh>Due Date</MudTh>
+                    <MudTh>Status</MudTh>
+                    <MudTh Style="text-align: right;">Action</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Process / Title">
+                        <div class="d-flex flex-column">
+                            <span style="font-weight: 700; color: #1e40af; font-size: 0.9375rem;">
+                                @context.TaskTitle
+                            </span>
+                            <span style="font-size: 0.8125rem; color: #475569; margin-top: 2px;">
+                                @context.TaskDescription
+                            </span>
+                        </div>
+                    </MudTd>
+                    <MudTd DataLabel="Assigned Role">
+                        <span class="px-2 py-1 rounded" style="background-color: #f1f5f9; color: #334155; font-size: 0.8125rem; font-weight: 600;">
+                            @(context.AssignedGroupRole ?? "Any Reviewer")
+                        </span>
+                        @if (!string.IsNullOrEmpty(context.AssignedUserName))
+                        {
+                            <div style="font-size: 0.75rem; color: #64748b; margin-top: 2px;">
+                                Claimed by: @context.AssignedUserName
+                            </div>
+                        }
+                    </MudTd>
+                    <MudTd DataLabel="Priority">
+                        @if (context.Priority == "High" || context.Priority == "Urgent")
+                        {
+                            <span class="px-2 py-0.5 rounded" style="background-color: #fee2e2; color: #991b1b; font-size: 0.75rem; font-weight: 700;">
+                                High
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="px-2 py-0.5 rounded" style="background-color: #f1f5f9; color: #475569; font-size: 0.75rem; font-weight: 600;">
+                                Normal
+                            </span>
+                        }
+                    </MudTd>
+                    <MudTd DataLabel="Due Date">
+                        <span style="font-size: 0.8125rem; color: #334155; font-weight: 600;">
+                            @context.DueDate.ToString("dd MMM yyyy")
+                        </span>
+                    </MudTd>
+                    <MudTd DataLabel="Status">
+                        @if (context.TaskStatus == "Open")
+                        {
+                            <span class="px-2 py-0.5 rounded" style="background-color: #e0e7ff; color: #3730a3; font-size: 0.75rem; font-weight: 700;">
+                                Open
+                            </span>
+                        }
+                        else if (context.TaskStatus == "Claimed")
+                        {
+                            <span class="px-2 py-0.5 rounded" style="background-color: #fef3c7; color: #92400e; font-size: 0.75rem; font-weight: 700;">
+                                In Progress
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="px-2 py-0.5 rounded" style="background-color: #d1fae5; color: #065f46; font-size: 0.75rem; font-weight: 700;">
+                                Completed
+                            </span>
+                        }
+                    </MudTd>
+                    <MudTd DataLabel="Action" Style="text-align: right;">
+                        <div class="d-flex justify-end gap-1">
+                            @if (context.TaskStatus == "Open")
+                            {
+                                <MudButton Variant="Variant.Outlined" 
+                                           Color="Color.Primary" 
+                                           Size="Size.Small"
+                                           StartIcon="@Icons.Material.Filled.PersonAdd"
+                                           OnClick="@((e) => ClaimTaskAsync(context))">
+                                    Claim
+                                </MudButton>
+                            }
+                            <MudButton Variant="Variant.Filled" 
+                                       Color="Color.Primary" 
+                                       Size="Size.Small"
+                                       EndIcon="@Icons.Material.Filled.ArrowForward"
+                                       OnClick="@((e) => NavigateToTask(context))">
+                                Review
+                            </MudButton>
+                        </div>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+    </div>
+</div>
+
+@code {
+    private List<WorkflowTask> _tasks = new();
+    private bool _loading = true;
+    private string _searchString = string.Empty;
+    private string _statusFilter = "All";
+    private string _priorityFilter = "All";
+
+    private List<WorkflowTask> _filteredTasks => _tasks
+        .Where(t => _statusFilter == "All" || t.TaskStatus.Equals(_statusFilter, StringComparison.OrdinalIgnoreCase))
+        .Where(t => _priorityFilter == "All" || t.Priority.Equals(_priorityFilter, StringComparison.OrdinalIgnoreCase))
+        .Where(t => string.IsNullOrWhiteSpace(_searchString) 
+                    || t.TaskTitle.Contains(_searchString, StringComparison.OrdinalIgnoreCase) 
+                    || (t.TaskDescription ?? "").Contains(_searchString, StringComparison.OrdinalIgnoreCase)
+                    || (t.AssignedGroupRole ?? "").Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+        .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTasksAsync();
+    }
+
+    private async Task LoadTasksAsync()
+    {
+        _loading = true;
+        try
+        {
+            _tasks = await WorkflowService.GetUserTasksAsync();
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private async Task ClaimTaskAsync(WorkflowTask task)
+    {
+        var updated = await WorkflowService.ClaimTaskAsync(task.Id, "admin@merseta.org.za", "Administrator");
+        if (updated != null)
+        {
+            Snackbar.Add("Task claimed successfully.", Severity.Success);
+            await LoadTasksAsync();
+        }
+    }
+
+    private void NavigateToTask(WorkflowTask task)
+    {
+        if (!string.IsNullOrEmpty(task.TargetRoute))
+        {
+            Navigation.NavigateTo(task.TargetRoute);
+        }
+    }
+}

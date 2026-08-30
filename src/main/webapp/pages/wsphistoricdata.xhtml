@@ -1,0 +1,169 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:c="http://java.sun.com/jsp/jstl/core"
+                template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+			
+			<h:panelGroup rendered="false">
+				<div class="card card-w-title">
+					<h1>WspHistoricData</h1>
+					<h:form id="wsphistoricdataInsForm">
+						<p:growl sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						
+						<p:panelGrid columns="1" style="width:100%" id="wsphistoricdataInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+       						         							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="organistaionNameTrade" value="#{wsphistoricdataUI.wsphistoricdata.organistaionNameTrade}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['organistaionNameTrade']}" for="organistaionNameTrade"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="organisationNameLegal" value="#{wsphistoricdataUI.wsphistoricdata.organisationNameLegal}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['organisationNameLegal']}" for="organisationNameLegal"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="grantNameRevised" value="#{wsphistoricdataUI.wsphistoricdata.grantNameRevised}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['grantNameRevised']}" for="grantNameRevised"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="wspStatusEnum" value="#{wsphistoricdataUI.wsphistoricdata.wspStatusEnum}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['wspStatusEnum']}" for="wspStatusEnum"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="finalStatus" value="#{wsphistoricdataUI.wsphistoricdata.finalStatus}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['finalStatus']}" for="finalStatus"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="referenceNo" value="#{wsphistoricdataUI.wsphistoricdata.referenceNo}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['referenceNo']}" for="referenceNo"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="levyYear" value="#{wsphistoricdataUI.wsphistoricdata.levyYear}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['levyYear']}" for="levyYear"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="code" value="#{wsphistoricdataUI.wsphistoricdata.code}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['code']}" for="code"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="smsCode" value="#{wsphistoricdataUI.wsphistoricdata.smsCode}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['smsCode']}" for="smsCode"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="createDate" value="#{wsphistoricdataUI.wsphistoricdata.createDate}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['createDate']}" for="createDate"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="qctoCode" value="#{wsphistoricdataUI.wsphistoricdata.qctoCode}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['qctoCode']}" for="qctoCode"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="setmisCode" value="#{wsphistoricdataUI.wsphistoricdata.setmisCode}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['setmisCode']}" for="setmisCode"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="nlrdCode" value="#{wsphistoricdataUI.wsphistoricdata.nlrdCode}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['nlrdCode']}" for="nlrdCode"/>
+     							</h:panelGroup>  
+
+
+        					    <p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+									<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:wsphistoricdataList :wsphistoricdataInsForm:wsphistoricdataInsGrid" action="#{wsphistoricdataUI.wsphistoricdataInsert}" />
+									<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="wsphistoricdataInsGrid" process="@this" action="#{wsphistoricdataUI.prepareNew}">
+										<p:resetInput target="wsphistoricdataInsGrid" />
+									</p:commandButton>									
+								</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</h:panelGroup>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Wsp Historic Data</h1>
+					<h:form id="mainForm">
+						<ui:include src="/pages/includes/download_lazy.xhtml">
+							<ui:param name="file_name" value="wsphistoricdataList" />
+							<ui:param name="target" value="wsphistoricdataList" />
+						</ui:include>
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+						<p:dataTable var="rowVar" value="#{wsphistoricdataUI.dataModel}" filteredValue="#{wsphistoricdataUI.wspHistoricDatafilteredList}" id="wsphistoricdataList" rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,15,20,25,50,100,150,200,250" reflow="true" lazy="true">
+
+           						<p:column headerText="Organistaion Name Trade" filterBy="#{rowVar.organistaionNameTrade}" sortBy="#{rowVar.organistaionNameTrade}">  
+                        			<h:outputText value="#{rowVar.organistaionNameTrade}" />  
+            					</p:column>  
+            					    
+              					<p:column headerText="Organisation Name Legal" sortBy="#{rowVar.organisationNameLegal}" filterBy="#{rowVar.organisationNameLegal}">  
+                        			<h:outputText value="#{rowVar.organisationNameLegal}" />  
+            					</p:column>      
+            					
+              					<p:column headerText="Grant Name Revised" sortBy="#{rowVar.grantNameRevised}" filterBy="#{rowVar.grantNameRevised}">  
+                        			<h:outputText value="#{rowVar.grantNameRevised}" />  
+            					</p:column>      
+              					  
+              					<p:column headerText="#{lang['levy.number']}" sortBy="#{rowVar.referenceNo}" filterBy="#{rowVar.referenceNo}">  
+                        			<h:outputText value="#{rowVar.referenceNo}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['fin.year']}" sortBy="#{rowVar.levyYear}" filterBy="#{rowVar.levyYear}">  
+                        			<h:outputText value="#{rowVar.levyYear}" />  
+            					</p:column> 
+            					
+            					<p:column headerText="Wsp Status" sortBy="#{rowVar.wspStatusEnum}">  
+                        			<h:outputText value="#{rowVar.wspStatusEnum}" />  
+            					</p:column>      
+              					<p:column headerText="Final Status"  sortBy="#{rowVar.wspStatusEnum}">  
+                        			<h:outputText value="#{rowVar.finalStatus}" />  
+            					</p:column>         
+              					    
+              					<p:column headerText="#{lang['createDate']}" rendered="false">  
+                        			<h:outputText value="#{rowVar.createDate}" />  
+            					</p:column>      
+              					
+
+           						<p:column width="80" exportable="false" rendered="false">
+									<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":wsphistoricdataInsForm:wsphistoricdataInsGrid">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{wsphistoricdataUI.wsphistoricdata}" />
+									</p:commandButton>
+									<p:spacer width="5" />
+									<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:wsphistoricdataList" action="#{wsphistoricdataUI.wsphistoricdataDelete}">
+										<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+										<f:setPropertyActionListener value="#{rowVar}" target="#{wsphistoricdataUI.wsphistoricdata}" />
+									</p:commandButton>
+								</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+<!-- 
+organistaionNameTrade = organistaionNameTrade
+organisationNameLegal = organisationNameLegal
+grantNameRevised = grantNameRevised
+wspStatusEnum = wspStatusEnum
+finalStatus = finalStatus
+referenceNo = referenceNo
+levyYear = levyYear
+code = code
+smsCode = smsCode
+createDate = createDate
+qctoCode = qctoCode
+setmisCode = setmisCode
+nlrdCode = nlrdCode
+
+-->
+</ui:composition>

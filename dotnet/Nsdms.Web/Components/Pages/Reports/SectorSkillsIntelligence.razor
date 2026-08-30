@@ -1,0 +1,237 @@
+@page "/reports/bi"
+@page "/reports/ssp"
+@inject IAnalyticsService AnalyticsService
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+<div class="d-flex justify-space-between align-center mb-4">
+    <div>
+        <MudText Typo="Typo.h5" Class="font-weight-bold">Executive Skills Intelligence &amp; BI Dashboard</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">Sector Skills Plan (SSP) analytics, chamber distribution, demographic equity indicators, and provincial delivery performance</MudText>
+    </div>
+    <div class="d-flex gap-2">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadData">
+            Refresh Analytics
+        </MudButton>
+    </div>
+</div>
+
+<!-- Executive Financial & Delivery KPI Cards -->
+<MudGrid Class="mb-4" Spacing="3">
+    <MudItem xs="12" sm="6" md="3">
+        <MudCard Elevation="2">
+            <MudCardContent Class="d-flex align-center gap-3">
+                <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Large">
+                    <MudIcon Icon="@Icons.Material.Filled.AccountBalance" />
+                </MudAvatar>
+                <div>
+                    <MudText Typo="Typo.h6" Class="fw-bold">@_totalCommitted.ToString("C0")</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Total Committed Grant Value</MudText>
+                </div>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="3">
+        <MudCard Elevation="2">
+            <MudCardContent Class="d-flex align-center gap-3">
+                <MudAvatar Color="Color.Success" Variant="Variant.Filled" Size="Size.Large">
+                    <MudIcon Icon="@Icons.Material.Filled.Payments" />
+                </MudAvatar>
+                <div>
+                    <MudText Typo="Typo.h6" Class="fw-bold text-success">@_totalDisbursed.ToString("C0")</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Tranche Disbursements Paid</MudText>
+                </div>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="3">
+        <MudCard Elevation="2">
+            <MudCardContent Class="d-flex align-center gap-3">
+                <MudAvatar Color="Color.Info" Variant="Variant.Filled" Size="Size.Large">
+                    <MudIcon Icon="@Icons.Material.Filled.Savings" />
+                </MudAvatar>
+                <div>
+                    <MudText Typo="Typo.h6" Class="fw-bold text-info">@_totalRebates.ToString("C0")</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Mandatory 20% Rebates Paid</MudText>
+                </div>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="3">
+        <MudCard Elevation="2">
+            <MudCardContent Class="d-flex align-center gap-3">
+                <MudAvatar Color="Color.Warning" Variant="Variant.Filled" Size="Size.Large">
+                    <MudIcon Icon="@Icons.Material.Filled.School" />
+                </MudAvatar>
+                <div>
+                    <MudText Typo="Typo.h5" Class="fw-bold text-warning">@_provincialMetrics.Sum(p => p.ActiveLearnerCount)</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Active Learners in System</MudText>
+                </div>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+@if (_loading)
+{
+    <div class="d-flex justify-center pa-12">
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+    </div>
+}
+else
+{
+    <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Color="Color.Primary">
+        <!-- TAB 1: Chamber Matrix -->
+        <MudTabPanel Text="Chamber Distribution" Icon="@Icons.Material.Filled.Factory">
+            <div class="pa-4">
+                <MudText Typo="Typo.h6" Class="mb-3">Manufacturing &amp; Engineering Chamber Matrix</MudText>
+                <MudTable Items="_chamberMetrics" Hover="true" Striped="true" Elevation="0" Outlined="true">
+                    <HeaderContent>
+                        <MudTh>Chamber Sector</MudTh>
+                        <MudTh>Registered Employers</MudTh>
+                        <MudTh>Trained Learners</MudTh>
+                        <MudTh>Planned Training Budget</MudTh>
+                        <MudTh>Disbursed Grants</MudTh>
+                        <MudTh>Funding Execution</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd Class="fw-bold">@context.ChamberName</MudTd>
+                        <MudTd>@context.EmployerCount</MudTd>
+                        <MudTd>@context.LearnerCount</MudTd>
+                        <MudTd>@context.PlannedTrainingBudget.ToString("C")</MudTd>
+                        <MudTd Class="text-success fw-bold">@context.DisbursedGrantsAmount.ToString("C")</MudTd>
+                        <MudTd>
+                            @{
+                                var pct = context.PlannedTrainingBudget > 0 ? (int)((context.DisbursedGrantsAmount * 100) / context.PlannedTrainingBudget) : 25;
+                            }
+                            <div class="d-flex align-center gap-2" style="min-width: 120px;">
+                                <MudProgressLinear Color="Color.Success" Value="@Math.Min(100, pct)" Size="Size.Small" Class="rounded" />
+                                <span class="small fw-bold">@pct%</span>
+                            </div>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </div>
+        </MudTabPanel>
+
+        <!-- TAB 2: Equity Demographics -->
+        <MudTabPanel Text="Demographic Equity" Icon="@Icons.Material.Filled.PieChart">
+            <div class="pa-4">
+                <MudText Typo="Typo.h6" Class="mb-3">Learner Demographic Equity Indicators</MudText>
+                <MudGrid Spacing="3">
+                    @foreach (var eq in _equityMetrics)
+                    {
+                        <MudItem xs="12" sm="6" md="3">
+                            <MudCard Elevation="1" Outlined="true">
+                                <MudCardContent>
+                                    <div class="d-flex justify-space-between align-center mb-2">
+                                        <MudText Typo="Typo.subtitle1" Class="fw-bold">@eq.DemographicGroup</MudText>
+                                        <MudChip T="string" Color="Color.Primary" Size="Size.Small">@eq.Percentage%</MudChip>
+                                    </div>
+                                    <MudText Typo="Typo.h5" Class="fw-bold text-primary">@eq.TotalLearners</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Total Enrolled Learners</MudText>
+                                    <MudProgressLinear Color="Color.Primary" Value="@((int)eq.Percentage)" Size="Size.Small" Class="mt-2 rounded" />
+                                </MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                    }
+                </MudGrid>
+            </div>
+        </MudTabPanel>
+
+        <!-- TAB 3: Provincial Delivery -->
+        <MudTabPanel Text="Provincial Footprint" Icon="@Icons.Material.Filled.Map">
+            <div class="pa-4">
+                <MudText Typo="Typo.h6" Class="mb-3">9-Province National Delivery Footprint</MudText>
+                <MudTable Items="_provincialMetrics" Hover="true" Striped="true" Elevation="0" Outlined="true">
+                    <HeaderContent>
+                        <MudTh>Province</MudTh>
+                        <MudTh>Code</MudTh>
+                        <MudTh>Employers</MudTh>
+                        <MudTh>Accredited Providers</MudTh>
+                        <MudTh>Active Learners</MudTh>
+                        <MudTh>Certified (Trade Tests)</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd Class="fw-bold">@context.ProvinceName</MudTd>
+                        <MudTd><span class="font-monospace small">@context.ProvinceCode</span></MudTd>
+                        <MudTd>@context.EmployerCount</MudTd>
+                        <MudTd>@context.ProviderCount</MudTd>
+                        <MudTd Class="text-primary fw-semibold">@context.ActiveLearnerCount</MudTd>
+                        <MudTd Class="text-success fw-bold">@context.CertifiedCount</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </div>
+        </MudTabPanel>
+
+        <!-- TAB 4: Scarce Skills Demand -->
+        <MudTabPanel Text="Scarce Skills &amp; OFO Demand" Icon="@Icons.Material.Filled.TrendingUp">
+            <div class="pa-4">
+                <MudText Typo="Typo.h6" Class="mb-3">Sector Skills Plan (SSP) Top Scarce &amp; Critical Occupations</MudText>
+                <MudTable Items="_scarceSkills" Hover="true" Striped="true" Elevation="0" Outlined="true">
+                    <HeaderContent>
+                        <MudTh>OFO Code</MudTh>
+                        <MudTh>Occupation Title</MudTh>
+                        <MudTh>Chamber Sector</MudTh>
+                        <MudTh>Reported Industry Need</MudTh>
+                        <MudTh>Active Training Supply</MudTh>
+                        <MudTh>Skills Gap Deficit</MudTh>
+                        <MudTh>Priority Intervention</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd><span class="font-monospace fw-bold">@context.OfoCode</span></MudTd>
+                        <MudTd Class="fw-semibold">@context.OccupationTitle</MudTd>
+                        <MudTd>@context.ChamberName</MudTd>
+                        <MudTd Class="fw-bold">@context.ReportedNeedCount</MudTd>
+                        <MudTd Class="text-info fw-bold">@context.EnrolledTrainingCount</MudTd>
+                        <MudTd>
+                            <span class="text-error fw-bold">@(context.ReportedNeedCount - context.EnrolledTrainingCount)</span>
+                        </MudTd>
+                        <MudTd>
+                            <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Outlined">
+                                @context.InterventionsRequired
+                            </MudChip>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </div>
+        </MudTabPanel>
+    </MudTabs>
+}
+
+@code {
+    private bool _loading = true;
+    private decimal _totalCommitted;
+    private decimal _totalDisbursed;
+    private decimal _totalRebates;
+
+    private List<SspChamberMetricDto> _chamberMetrics = new();
+    private List<SspEquityMetricDto> _equityMetrics = new();
+    private List<SspProvincialMetricDto> _provincialMetrics = new();
+    private List<SspScarceSkillDto> _scarceSkills = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _loading = true;
+        var fin = await AnalyticsService.GetFinancialOverviewAsync();
+        _totalCommitted = fin.TotalCommitted;
+        _totalDisbursed = fin.TotalDisbursed;
+        _totalRebates = fin.TotalRebates;
+
+        _chamberMetrics = await AnalyticsService.GetSspChamberMetricsAsync();
+        _equityMetrics = await AnalyticsService.GetSspEquityMetricsAsync();
+        _provincialMetrics = await AnalyticsService.GetSspProvincialMetricsAsync();
+        _scarceSkills = await AnalyticsService.GetSspScarceSkillsAsync();
+
+        _loading = false;
+        Snackbar.Add("Executive Skills BI Analytics refreshed.", Severity.Info);
+    }
+}

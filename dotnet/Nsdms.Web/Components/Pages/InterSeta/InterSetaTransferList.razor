@@ -1,0 +1,329 @@
+@page "/inter-seta-transfers"
+@inject IFinanceService FinanceService
+@inject IOrganisationService OrgService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+<div class="d-flex justify-space-between align-center mb-4">
+    <div>
+        <MudText Typo="Typo.h5" Class="font-weight-bold">Inter-SETA Transfers</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">Management of incoming and outgoing employer chamber transfers, levy fund migrations, and DHET Ministerial approvals</MudText>
+    </div>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.SwapHoriz" OnClick="OpenCreateModal">
+        Initiate Transfer
+    </MudButton>
+</div>
+
+<!-- Summary Metrics -->
+<MudGrid Class="mb-4" Spacing="3">
+    <MudItem xs="12" sm="6" md="3">
+        <MudCard Elevation="2">
+            <MudCardContent Class="d-flex align-center gap-3">
+                <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Large">
+                    <MudIcon Icon="@Icons.Material.Filled.CompareArrows" />
+                </MudAvatar>
+                <div>
+                    <MudText Typo="Typo.h5" Class="fw-bold">@_transfers.Count</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Total Transfer Requests</MudText>
+                </div>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="3">
+        <MudCard Elevation="2">
+            <MudCardContent Class="d-flex align-center gap-3">
+                <MudAvatar Color="Color.Success" Variant="Variant.Filled" Size="Size.Large">
+                    <MudIcon Icon="@Icons.Material.Filled.CallReceived" />
+                </MudAvatar>
+                <div>
+                    <MudText Typo="Typo.h6" Class="fw-bold text-success">@(_transfers.Where(t => t.TransferType == "Incoming").Sum(t => t.TransferAmount).ToString("C0"))</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Incoming Levies Value</MudText>
+                </div>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="3">
+        <MudCard Elevation="2">
+            <MudCardContent Class="d-flex align-center gap-3">
+                <MudAvatar Color="Color.Error" Variant="Variant.Filled" Size="Size.Large">
+                    <MudIcon Icon="@Icons.Material.Filled.CallMade" />
+                </MudAvatar>
+                <div>
+                    <MudText Typo="Typo.h6" Class="fw-bold text-error">@(_transfers.Where(t => t.TransferType == "Outgoing").Sum(t => t.TransferAmount).ToString("C0"))</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Outgoing Levies Value</MudText>
+                </div>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+    <MudItem xs="12" sm="6" md="3">
+        <MudCard Elevation="2">
+            <MudCardContent Class="d-flex align-center gap-3">
+                <MudAvatar Color="Color.Warning" Variant="Variant.Filled" Size="Size.Large">
+                    <MudIcon Icon="@Icons.Material.Filled.PendingActions" />
+                </MudAvatar>
+                <div>
+                    <MudText Typo="Typo.h5" Class="fw-bold text-warning">@(_transfers.Count(t => t.TransferStatusCode == "Initiated" || t.TransferStatusCode == "Documents Verified"))</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Awaiting Executive Signoff</MudText>
+                </div>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+<MudPaper Elevation="1" Class="pa-4 mb-4">
+    <!-- Filter bar -->
+    <div class="d-flex flex-wrap gap-4 align-center justify-space-between mb-3">
+        <div class="d-flex align-center gap-3 flex-grow-1" style="max-width: 600px;">
+            <MudTextField @bind-Value="_searchString"
+                          Placeholder="Search by Employer Name, SDL, Other SETA Code..."
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          IconSize="Size.Medium"
+                          Class="mt-0"
+                          Immediate="true"
+                          Clearable="true" />
+        </div>
+        <div class="d-flex align-center gap-2">
+            <MudChipSet T="string" @bind-SelectedValue="_typeFilter" SelectionMode="SelectionMode.SingleSelection">
+                <MudChip T="string" Value="@("All")" Color="Color.Default" Variant="@(_typeFilter == "All" ? Variant.Filled : Variant.Outlined)">All</MudChip>
+                <MudChip T="string" Value="@("Incoming")" Color="Color.Success" Variant="@(_typeFilter == "Incoming" ? Variant.Filled : Variant.Outlined)">Incoming</MudChip>
+                <MudChip T="string" Value="@("Outgoing")" Color="Color.Error" Variant="@(_typeFilter == "Outgoing" ? Variant.Filled : Variant.Outlined)">Outgoing</MudChip>
+            </MudChipSet>
+        </div>
+    </div>
+
+    @if (_loading)
+    {
+        <div class="d-flex justify-center pa-8">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+        </div>
+    }
+    else
+    {
+        <MudTable T="InterSetaTransfer" Items="@FilteredTransfers" Hover="true" Striped="true" Elevation="0">
+            <HeaderContent>
+                <MudTh>Transfer Direction</MudTh>
+                <MudTh>Employer / SDL</MudTh>
+                <MudTh>Counterpart SETA</MudTh>
+                <MudTh>Effective Date</MudTh>
+                <MudTh>Levy Fund Transfer</MudTh>
+                <MudTh>DHET / SETA Ref</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh Style="text-align: right;">Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Direction">
+                    <MudChip T="string" Color="@(context.TransferType == "Incoming" ? Color.Success : Color.Error)" Size="Size.Small" Variant="Variant.Outlined"
+                             Icon="@(context.TransferType == "Incoming" ? Icons.Material.Filled.ArrowDownward : Icons.Material.Filled.ArrowUpward)">
+                        @context.TransferType
+                    </MudChip>
+                </MudTd>
+                <MudTd DataLabel="Employer">
+                    <div>
+                        <div class="fw-semibold">@(context.Organisation?.CompanyName ?? "Organisation")</div>
+                        <div class="text-muted small">SDL: @(context.Organisation?.SdlNumber ?? "N/A")</div>
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="Counterpart SETA">
+                    <div>
+                        <span class="fw-bold">@context.OtherSetaCode</span>
+                        <div class="small text-muted">@context.OtherSetaName</div>
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="Effective Date">@context.EffectiveDate.ToString("yyyy-MM-dd")</MudTd>
+                <MudTd DataLabel="Transfer Amount">
+                    <span class="fw-bold">@context.TransferAmount.ToString("C")</span>
+                </MudTd>
+                <MudTd DataLabel="Reference">
+                    <div class="small font-monospace">@(context.DhetReferenceNumber ?? context.SetaApprovalReference ?? "Pending DHET")</div>
+                </MudTd>
+                <MudTd DataLabel="Status">
+                    <MudChip T="string" Color="@GetStatusColor(context.TransferStatusCode)" Size="Size.Small" Variant="Variant.Filled">
+                        @context.TransferStatusCode
+                    </MudChip>
+                </MudTd>
+                <MudTd DataLabel="Actions" Style="text-align: right;">
+                    <div class="d-flex justify-end gap-1">
+                        @if (context.TransferStatusCode == "Initiated")
+                        {
+                            <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Filled.Verified" OnClick="@(() => ApproveTransfer(context.Id))">
+                                Executive Signoff
+                            </MudButton>
+                        }
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteTransfer(context.Id))" aria-label="Delete Record" />
+                    </div>
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <div class="pa-8 text-center text-muted">
+                    <MudIcon Icon="@Icons.Material.Filled.SyncAlt" Size="Size.Large" Class="mb-2" />
+                    <MudText Typo="Typo.body1">No Inter-SETA transfers found matching search criteria.</MudText>
+                </div>
+            </NoRecordsContent>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
+            </PagerContent>
+        </MudTable>
+    }
+</MudPaper>
+
+<!-- Create Transfer Modal -->
+<MudDialog @bind-Visible="_showCreateDialog" Options="_dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            <MudIcon Icon="@Icons.Material.Filled.SwapHoriz" Class="mr-2" /> Initiate Inter-SETA Transfer
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudSelect T="int" @bind-Value="_newTransfer.OrganisationId" Label="Employer / Organisation" Variant="Variant.Outlined" Class="mb-3" Required="true">
+            @foreach (var org in _organisations)
+            {
+                <MudSelectItem Value="@org.Id">@org.CompanyName (@org.SdlNumber)</MudSelectItem>
+            }
+        </MudSelect>
+
+        <MudSelect T="string" @bind-Value="_newTransfer.TransferType" Label="Transfer Direction" Variant="Variant.Outlined" Class="mb-3">
+            <MudSelectItem Value="@("Incoming")">Incoming (To MerSETA)</MudSelectItem>
+            <MudSelectItem Value="@("Outgoing")">Outgoing (To Other SETA)</MudSelectItem>
+        </MudSelect>
+
+        <MudSelect T="string" @bind-Value="_newTransfer.OtherSetaCode" Label="Counterpart SETA" Variant="Variant.Outlined" Class="mb-3" Required="true">
+            <MudSelectItem Value="@("CHIETA")">CHIETA - Chemical Industries SETA</MudSelectItem>
+            <MudSelectItem Value="@("EWSETA")">EWSETA - Energy & Water SETA</MudSelectItem>
+            <MudSelectItem Value="@("TETA")">TETA - Transport Education Training Authority</MudSelectItem>
+            <MudSelectItem Value="@("SERVICES")">SERVICES SETA</MudSelectItem>
+            <MudSelectItem Value="@("W&RSETA")">W&RSETA - Wholesale and Retail SETA</MudSelectItem>
+            <MudSelectItem Value="@("INSETA")">INSETA - Insurance SETA</MudSelectItem>
+            <MudSelectItem Value="@("BANKSETA")">BANKSETA - Banking SETA</MudSelectItem>
+        </MudSelect>
+
+        <MudNumericField T="decimal" @bind-Value="_newTransfer.TransferAmount" Label="Accumulated Unspent Levy Transfer Amount (ZAR)" Variant="Variant.Outlined" Class="mb-3" />
+        <MudDatePicker @bind-Date="_effectiveDate" Label="Effective Transfer Date" Variant="Variant.Outlined" Class="mb-3" />
+        <MudTextField @bind-Value="_newTransfer.TransferReason" Label="Reason for Chamber / SIC Code Migration" Variant="Variant.Outlined" Lines="2" Required="true" Class="mb-3" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showCreateDialog = false)">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveTransfer">Submit Transfer</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private List<InterSetaTransfer> _transfers = new();
+    private List<Organisation> _organisations = new();
+    private bool _loading = true;
+    private string _searchString = "";
+    private string _typeFilter = "All";
+
+    private bool _showCreateDialog = false;
+    private InterSetaTransfer _newTransfer = new();
+    private DateTime? _effectiveDate = DateTime.Today;
+
+    private readonly DialogOptions _dialogOptions = new() { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true };
+
+    protected override async Task OnInitializedAsync()
+    {
+        _organisations = await OrgService.GetAllAsync();
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _loading = true;
+        _transfers = await FinanceService.GetInterSetaTransfersAsync();
+        _loading = false;
+    }
+
+    private void OpenCreateModal()
+    {
+        _newTransfer = new InterSetaTransfer
+        {
+            OrganisationId = _organisations.FirstOrDefault()?.Id ?? 1,
+            TransferType = "Incoming",
+            OtherSetaCode = "CHIETA",
+            OtherSetaName = "Chemical Industries Education and Training Authority",
+            TransferReason = "Chamber reclassification per updated core business activities.",
+            TransferAmount = 250000.00m,
+            EffectiveDate = DateTime.Today,
+            TransferStatusCode = "Initiated"
+        };
+        _effectiveDate = DateTime.Today;
+        _showCreateDialog = true;
+    }
+
+    private async Task SaveTransfer()
+    {
+        _newTransfer.EffectiveDate = _effectiveDate ?? DateTime.Today;
+        _newTransfer.OtherSetaName = GetSetaFullName(_newTransfer.OtherSetaCode);
+
+        await FinanceService.SaveInterSetaTransferAsync(_newTransfer, "Admin");
+        Snackbar.Add("Inter-SETA transfer initiated successfully with audit log.", Severity.Success);
+        _showCreateDialog = false;
+        await LoadData();
+    }
+
+    private async Task ApproveTransfer(int id)
+    {
+        var dhetRef = $"DHET-TRF-{DateTime.UtcNow:yyyy}-{id:D4}";
+        await FinanceService.ApproveInterSetaTransferAsync(id, "CEO / Executive", dhetRef);
+        Snackbar.Add($"Transfer approved by CEO. DHET Ref: {dhetRef}.", Severity.Success);
+        await LoadData();
+    }
+
+    private async Task DeleteTransfer(int id)
+    {
+        var deleted = await FinanceService.DeleteInterSetaTransferAsync(id, "Admin");
+        if (deleted)
+        {
+            Snackbar.Add("Inter-SETA transfer record deleted.", Severity.Success);
+            await LoadData();
+        }
+    }
+
+    private IEnumerable<InterSetaTransfer> FilteredTransfers
+    {
+        get
+        {
+            var query = _transfers.AsEnumerable();
+
+            if (_typeFilter != "All")
+            {
+                query = query.Where(t => string.Equals(t.TransferType, _typeFilter, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (!string.IsNullOrWhiteSpace(_searchString))
+            {
+                var s = _searchString.Trim();
+                query = query.Where(t =>
+                    (t.OtherSetaCode != null && t.OtherSetaCode.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    (t.OtherSetaName != null && t.OtherSetaName.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    (t.Organisation?.CompanyName != null && t.Organisation.CompanyName.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    (t.Organisation?.SdlNumber != null && t.Organisation.SdlNumber.Contains(s, StringComparison.OrdinalIgnoreCase)));
+            }
+
+            return query;
+        }
+    }
+
+    private string GetSetaFullName(string code) => code switch
+    {
+        "CHIETA" => "Chemical Industries Education and Training Authority",
+        "EWSETA" => "Energy & Water Sector Education Training Authority",
+        "TETA" => "Transport Education Training Authority",
+        "SERVICES" => "Services Sector Education and Training Authority",
+        "W&RSETA" => "Wholesale and Retail Sector Education and Training Authority",
+        "INSETA" => "Insurance Sector Education and Training Authority",
+        "BANKSETA" => "Banking Sector Education and Training Authority",
+        _ => code
+    };
+
+    private Color GetStatusColor(string status) => status switch
+    {
+        "Approved by CEO" => Color.Success,
+        "Transferred" => Color.Info,
+        "Documents Verified" => Color.Primary,
+        "Initiated" => Color.Warning,
+        "Rejected" => Color.Error,
+        _ => Color.Default
+    };
+}

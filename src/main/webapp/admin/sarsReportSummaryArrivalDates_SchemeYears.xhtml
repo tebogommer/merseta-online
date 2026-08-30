@@ -1,0 +1,127 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+    <ui:define name="content">
+        <div class="ui-g">
+            <div class="ui-g-12">
+                <div class="card card-w-title">
+                    <p:growl showDetail="false" sticky="false">
+                        <p:autoUpdate />
+                    </p:growl>
+                    <h:form id="mainForm">
+                        <p:tabView id="tabView" activeIndex="0">
+                            <p:ajax event="tabChange" update="@form"/>
+                            <p:tab id="sarsMultiSchemeYearSummaryMI" title="Arrival Date and Multiple Scheme Years Summary">
+                                <h1>SARS Levy Report by Arrival Date and Multiple Scheme Years Selection</h1>
+                                <p:outputLabel value="Please be advised: Report may take some time to process and generate due to the amount of data."/>
+                                <p:panelGrid layout="grid" id="actionGrid" columns="4">
+                                    <p:outputLabel value="From Scheme Year Selection:" styleClass="FontBold" />
+                                    <p:selectOneMenu id="fromyearSelection" value="#{sarsReportingUI.fromSchemeYear}" >
+                                        <p:ajax />
+                                        <f:selectItems value="#{sarsReportingUI.distinctSchemeYearList}" />
+                                    </p:selectOneMenu>
+                                    <p:outputLabel value="To Scheme Year Selection:" styleClass="FontBold" />
+                                    <p:selectOneMenu id="toyearSelection" value="#{sarsReportingUI.toSchemeYear}" >
+                                        <p:ajax />
+                                        <f:selectItems value="#{sarsReportingUI.distinctSchemeYearList}" />
+                                    </p:selectOneMenu>
+                                    <p:outputLabel value="From Date Selection:" styleClass="FontBold" />
+                                    <p:calendar value="#{sarsReportingUI.fromDateSelection}" pattern="#{autoCompleteUI.CALENDER_PATTERN}" navigator="true" readonlyInput="true" mask="true" />
+                                    <p:outputLabel value="To Date Selection:" styleClass="FontBold" />
+                                    <p:calendar value="#{sarsReportingUI.toDateSelection}" pattern="#{autoCompleteUI.CALENDER_PATTERN}" navigator="true" readonlyInput="true" mask="true" />
+                                    <p:commandButton id="genMultiScheYearSummaryBtn" value="Generate Report"
+                                                     action="#{sarsReportingUI.generateLevyDetailOverMultipleSchemeYearsAndArriDates}"
+                                                     update=":mainForm :schemeYearSummaryForm" />
+                                </p:panelGrid>
+                                <p:blockUI block="actionGrid" trigger="genMultiScheYearSummaryBtn" />
+                            </p:tab>
+                        </p:tabView>
+                    </h:form>
+                </div>
+            </div>
+            <div class="ui-g-12">
+                <h:form id="schemeYearSummaryForm">
+                    <p:outputPanel id="schemeYearSummaryFormPanel" rendered="#{sarsReportingUI.reportGeneratedWithoutError}">
+                        <div class="card card-w-title">
+                            <div align="right">
+                                <h:commandLink id="eExcel">
+                                    <i class="fa fa-file-excel-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+                                    <p:dataExporter type="xls" target="resultsTable" fileName="SARS_Report_Download" />
+                                </h:commandLink>
+                                <h:commandLink id="ePdf" rendered="false">
+                                    <i class="fa fa-file-pdf-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+                                    <p:dataExporter type="pdf" target="resultsTable" fileName="SARS_Report_Download" />
+                                </h:commandLink>
+                                <h:commandLink id="eCsv">
+                                    <i class="fa fa-file-text-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+                                    <p:dataExporter type="csv" target="resultsTable" fileName="SARS_Report_Download" />
+                                </h:commandLink>
+                                <h:commandLink id="eXml">
+                                    <i class="fa fa-file-code-o fa-2x" aria-hidden="true" style="color: #6A6A6A !important;"></i>
+                                    <p:dataExporter type="xml" target="resultsTable" fileName="SARS_Report_Download" />
+                                </h:commandLink>
+                                <p:tooltip for="eExcel" value="#{lang['export.search.results.to.excel']}" position="left" />
+                                <p:tooltip for="ePdf" value="#{lang['export.search.results.to.pdf']}" position="left" />
+                                <p:tooltip for="eCsv" value="#{lang['export.search.results.as.a.csv']}" position="left" />
+                                <p:tooltip for="eXml" value="#{lang['export.search.results.as.a.xml']}" position="left" />
+                            </div>
+                            <div class="EmptyBox10"/>
+
+                            <p:dataTable var="rv" value="#{sarsReportingUI.sarsLevyReportResults}" id="resultsTable" rowKey="#{rowVar.id}" reflow="true" rendered="#{sarsReportingUI.sarsLevyReportResults.size() gt 0}" paginator="true" rows="20" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+                                         paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="20,25,50,100,150,200" >
+
+                                <p:column headerText="Entity ID" filterBy="#{rv.description}">
+                                    <h:outputText value="#{rv.description}">
+                                    </h:outputText>
+                                </p:column>
+                                <p:column headerText="Entity Name">
+                                    <h:outputText value="#{rv.additionalInformation}">
+                                    </h:outputText>
+                                </p:column>
+                                <p:column headerText="From Scheme Year Selection" style="display:none">
+                                    <h:outputText value="#{sarsReportingUI.fromSchemeYear}">
+                                    </h:outputText>
+                                </p:column>
+                                <p:column headerText="To Scheme Year Selection" style="display:none">
+                                    <h:outputText value="#{sarsReportingUI.toSchemeYear}">
+                                    </h:outputText>
+                                </p:column>
+                                <p:column headerText="#{lang['mandatory.levy']}">
+                                    <h:outputText value="#{rv.mandatoryLevy}" styleClass="Fright">
+                                        <f:convertNumber pattern="###,###,###,##0.00" />
+                                    </h:outputText>
+                                </p:column>
+                                <p:column headerText="#{lang['discretionary.levy']}">
+                                    <h:outputText value="#{rv.discretionaryLevy}" styleClass="Fright">
+                                        <f:convertNumber pattern="###,###,###,##0.00" />
+                                    </h:outputText>
+                                </p:column>
+                                <p:column headerText="#{lang['admin.levy']}">
+                                    <h:outputText value="#{rv.adminLevy}" styleClass="Fright">
+                                        <f:convertNumber pattern="###,###,###,##0.00" />
+                                    </h:outputText>
+                                </p:column>
+
+                                <p:column headerText="#{lang['interest']}">
+                                    <h:outputText value="#{rv.interest}" styleClass="Fright">
+                                        <f:convertNumber pattern="###,###,###,##0.00" />
+                                    </h:outputText>
+                                </p:column>
+
+                                <p:column headerText="#{lang['penalty']}">
+                                    <h:outputText value="#{rv.penalty}" styleClass="Fright">
+                                        <f:convertNumber pattern="###,###,###,##0.00" />
+                                    </h:outputText>
+                                </p:column>
+                                <p:column headerText="#{lang['total']}">
+                                    <h:outputText value="#{rv.total}" styleClass="Fright">
+                                        <f:convertNumber pattern="###,###,###,##0.00" />
+                                    </h:outputText>
+                                </p:column>
+                            </p:dataTable>
+                        </div>
+                    </p:outputPanel>
+                </h:form>
+            </div>
+        </div>
+    </ui:define>
+</ui:composition>

@@ -1,0 +1,2177 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml" xmlns:pt="http://xmlns.jcp.org/jsf/passthrough" xmlns:o="http://omnifaces.org/ui">
+	<ui:define name="content">
+		<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum"></p:importEnum>
+		<p:importEnum type="haj.com.entity.enums.WspStatusEnum" />
+		<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+		<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+		<p:importEnum type="haj.com.entity.enums.IdPassportEnum" var="idPassportEnum"></p:importEnum>
+		<ui:param name="enableAddContactAndSDF" value="true" />
+
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+						<p:commandButton id="confYes" value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+						<p:commandButton id="confNo" value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+					</p:confirmDialog>
+					<h1>#{lang['available.companies']}</h1>
+					<h:form id="mainForm">
+						
+						<p:tooltip position="left"></p:tooltip>
+						<p:dataTable var="rowVar" value="#{companyinfoUI.tpDataModel}" id="companyList" rowKey="#{rowVar.id}" paginator="true" rows="6" selectionMode="single" selection="#{companyinfoUI.selectTrainingProviderApplication}" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+							paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+							<p:ajax event="rowSelect" listener="#{companyinfoUI.onRowSelectNonSeta}" update="companyForm" />
+							<p:column headerText="#{lang['companyName']}">
+								<h:outputText value="#{rowVar.company.companyName}" />
+							</p:column>
+							<p:column headerText="#{lang['sdl.number']}">
+								<h:outputText value="#{rowVar.company.levyNumber}" />
+							</p:column>
+							<p:column headerText="#{lang['email']}">
+								<h:outputText value="#{rowVar.company.email}" />
+							</p:column>
+							<p:column headerText="#{lang['status']}">
+								<h:outputText value="#{lang[rowVar.company.companyStatus.registrationName]}" />
+							</p:column>
+
+							<p:column headerText="Size of Company" width="10%">
+								<h:outputText value="#{rowVar.company.sizeOfCompany.detailDescription}" escape="false" />
+							</p:column>
+
+							<p:column headerText="#{lang['levy.paying']}" width="110" style="text-align:center">
+								<p:outputPanel rendered="#{rowVar.company.nonLevyPaying}">
+									<i class="fa fa-times fa-3x red" aria-hidden="true"></i>
+								</p:outputPanel>
+								<p:outputPanel rendered="#{not rowVar.company.nonLevyPaying}">
+									<i class="fa fa-check fa-3x green" aria-hidden="true"></i>
+								</p:outputPanel>
+							</p:column>
+
+							<p:column headerText="#{lang['locked.unlocked']}" width="55">
+								<center>
+									<p:outputPanel rendered="#{rowVar.company.locked}">
+										<i class="fa fa-lock Fs30" aria-hidden="true"></i>
+									</p:outputPanel>
+									<p:outputPanel rendered="#{not rowVar.company.locked}">
+										<i class="fa fa-unlock Fs30" aria-hidden="true"></i>
+									</p:outputPanel>
+								</center>
+							</p:column>
+							<p:column headerText="Barcode" width="400" rendered="false">
+								<p:barcode value="#{rowVar.company.companyGuid}" type="code39" />
+							</p:column>
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<h:form id="companyForm">
+					<p:remoteCommand name="updateInfo" action="#{companyinfoUI.onTabChange}"></p:remoteCommand>
+					<c:if test="#{companyinfoUI.selectTrainingProviderApplication ne null}">
+						<div class="card card-w-title">
+							<h1>#{companyinfoUI.sdfCompany.company.companyName} #{lang['details']}</h1>
+
+							<p:commandLink styleClass="Fright" action="#{companyinfoUI.unlock}" process="@this" update="@form mainForm" rendered="#{companyinfoUI.sdfCompany.company.locked and companyinfoUI.sdfCompany.company.companyStatus eq CompanyStatusEnum.Active}">
+								<i class="fa fa-unlock Fs30 black" aria-hidden="true"></i>
+								<i class="Fs30 black" style="font-style: normal;">#{lang['unlock.company.details']}</i>
+							</p:commandLink>
+
+							<p:commandLink styleClass="Fright" action="#{companyinfoUI.lock}" update="@form mainForm" rendered="#{not companyinfoUI.sdfCompany.company.locked and companyinfoUI.sdfCompany.company.companyStatus eq CompanyStatusEnum.Active}" process="@this">
+								<i class="fa fa-lock Fs30 black" aria-hidden="true"></i>
+								<i class="Fs30 black" style="font-style: normal;">#{lang['lock.company.details']}</i>
+							</p:commandLink>
+
+							<br />
+							<p:outputLabel escape="false" value="#{lang['company.maintenance']}" class="Fs13 gray"></p:outputLabel>
+							<p:tabView id="tabView" activeIndex="#{companyinfoUI.index}">
+
+								<p:ajax event="tabChange" listener="#{companyinfoUI.onNonMerSetaCompanyTabChange}" update="@form"></p:ajax>
+
+								<p:tab title="#{lang['company.information']}" id="companyInfo">
+									
+									<p:panelGrid columns="2" style="opacity: 1 !important; color: black; width:100%" id="companyInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+										<h:panelGroup>
+											<div>
+												<p:outputLabel value="#{lang['relationship.to.company']}" for="relationship" styleClass="gray" />
+											</div>
+											<div>
+												<p:selectOneMenu disabled="#{companyinfoUI.selectTrainingProviderApplication.company.locked}" id="relationship" value="#{companyinfoUI.selectTrainingProviderApplication.relationshipToCompany}" style="opacity: 1 !important; color: black; width:75%" converter="RelationshipToCompanyConvertor" required="true">
+													<p:ajax />
+													<c:if test="#{companyinfoUI.selectTrainingProviderApplication.relationshipToCompany eq null}">
+														<f:selectItem itemLabel="---#{lang['select.one']}---" itemValue="" noSelectionOption="true" />
+													</c:if>
+
+													<c:if test="#{companyinfoUI.selectTrainingProviderApplication.relationshipToCompany ne null}">
+														<f:selectItem itemLabel="#{companyinfoUI.selectTrainingProviderApplication.relationshipToCompany.description}" itemValue="#{companyinfoUI.selectTrainingProviderApplication.relationshipToCompany}" />
+													</c:if>
+
+													<f:selectItems value="#{selectItemsUI.relationshipToCompany}" var="rv" itemLabel="#{rv.description}" />
+												</p:selectOneMenu>
+											</div>
+										</h:panelGroup>
+
+										<h:panelGroup>
+											<div>
+												<p:outputLabel value="#{lang['scope.of.responsibility']}" for="scope" styleClass="gray" />
+											</div>
+											<div>
+												<p:selectOneMenu disabled="#{companyinfoUI.selectTrainingProviderApplication.company.locked}" id="scope" value="#{companyinfoUI.selectTrainingProviderApplication.scopeOfResponsibility}" style="opacity: 1 !important; color: black; width:75%" converter="ScopeOfResponsibilityConvertor" required="true">
+													<p:ajax />
+													<c:if test="#{companyinfoUI.selectTrainingProviderApplication.scopeOfResponsibility eq null}">
+														<f:selectItem itemLabel="---#{lang['select.one']}---" itemValue="" noSelectionOption="true" />
+													</c:if>
+													<c:if test="#{companyinfoUI.selectTrainingProviderApplication.scopeOfResponsibility ne null}">
+														<f:selectItem itemLabel="#{companyinfoUI.selectTrainingProviderApplication.scopeOfResponsibility.description}" itemValue="#{companyinfoUI.selectTrainingProviderApplication.scopeOfResponsibility}" />
+													</c:if>
+
+													<f:selectItems value="#{selectItemsUI.scopeOfResponsibility}" var="rv" itemLabel="#{rv.description}" />
+												</p:selectOneMenu>
+											</div>
+										</h:panelGroup>
+
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText disabled="#{companyinfoUI.selectTrainingProviderApplication.company.locked}" id="companyName" value="#{companyinfoUI.selectTrainingProviderApplication.company.companyName}" style="opacity: 1 !important; color: black; width:95%" required="true" requiredMessage="#{lang['enter.the.company.name']}">
+												<o:validator validatorId="javax.faces.Length" minimum="0" maximum="70" message="#{lang['company.name.length.error']}" />
+											</p:inputText>
+											<p:outputLabel value="#{lang['companyName']}" for="companyName" />
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText disabled="#{companyinfoUI.selectTrainingProviderApplication.company.locked}" id="tradingName" value="#{companyinfoUI.selectTrainingProviderApplication.company.tradingName}" style="opacity: 1 !important; color: black; width:95%" required="true" requiredMessage="#{lang['enter.the.trading.name']}">
+												<o:validator validatorId="javax.faces.Length" minimum="0" maximum="70" message="#{lang['company.tradename.length.error']}" />
+											</p:inputText>
+											<p:outputLabel value="#{lang['tradingName']}" for="tradingName" />
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText disabled="#{companyinfoUI.selectTrainingProviderApplication.company.locked}" id="telNumber" value="#{companyinfoUI.selectTrainingProviderApplication.company.telNumber}" style="opacity: 1 !important; color: black; width:95%" required="true" requiredMessage="#{lang['enter.the.tel.number']}">
+												<o:validator validatorId="javax.faces.Length" minimum="0" maximum="20" message="#{lang['user.tellnumber.length']}" />
+											</p:inputText>
+											<p:outputLabel value="#{lang['telNumber']}" for="telNumber" />
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText disabled="#{companyinfoUI.selectTrainingProviderApplication.company.locked}" id="faxNumber" value="#{companyinfoUI.selectTrainingProviderApplication.company.faxNumber}" style="opacity: 1 !important; color: black; width:95%">
+												<o:validator validatorId="javax.faces.Length" minimum="0" maximum="20" message="#{lang['user.faxnumber.length']}" />
+											</p:inputText>
+											<p:outputLabel value="#{lang['faxNumber']}" for="faxNumber" />
+										</h:panelGroup>
+
+										<p:fieldset legend="#{lang['residentialAddress']}" style="margin-top: 20px">
+											<p:panelGrid columns="1" style="width : 95%" styleClass="ui-panelgrid-blank" id="addrPcode">
+												<h:panelGroup styleClass="md-inputfield">
+													<p:inputText disabled="#{companyinfoUI.selectTrainingProviderApplication.company.locked}" id="addr1" value="#{companyinfoUI.selectTrainingProviderApplication.company.residentialAddress.addressLine1}" style="opacity: 1 !important; color: black; width:95%" required="true" requiredMessage="#{lang['enter.residential.address']}">
+														<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['residentialAddress.lineone.length.error']}" />
+													</p:inputText>
+													<p:outputLabel value="#{lang['address.line.1']}" for="addr1" />
+												</h:panelGroup>
+												<h:panelGroup styleClass="md-inputfield">
+													<p:inputText disabled="#{companyinfoUI.selectTrainingProviderApplication.company.locked}" id="addr2" style="opacity: 1 !important; color: black; width:95%" value="#{companyinfoUI.selectTrainingProviderApplication.company.residentialAddress.addressLine2}">
+														<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['residentialAddress.linetwo.length.error']}" />
+													</p:inputText>
+													<p:outputLabel value="#{lang['address.line.2']}" for="addr2" />
+												</h:panelGroup>
+												<h:panelGroup styleClass="md-inputfield">
+													<p:inputText disabled="#{companyinfoUI.selectTrainingProviderApplication.company.locked}" id="addr3" style="opacity: 1 !important; color: black; width:95%" value="#{companyinfoUI.selectTrainingProviderApplication.company.residentialAddress.addressLine3}">
+														<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['residentialAddress.linethree.length.error']}" />
+													</p:inputText>
+													<p:outputLabel value="#{lang['address.line.3']}" for="addr3" />
+												</h:panelGroup>
+
+
+												<h:panelGroup>
+													<div>
+														<h:outputLabel value="#{lang['town']}" for="town" />
+													</div>
+													<div>
+														<p:autoComplete id="town" value="#{companyinfoUI.selectTrainingProviderApplication.company.residentialAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true"
+															requiredMessage="#{lang['please.select.a.town']}" disabled="#{companyinfoUI.selectTrainingProviderApplication.company.locked}">
+															<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+														</p:autoComplete>
+													</div>
+												</h:panelGroup>
+
+												<h:panelGroup styleClass="md-inputfield">
+													<p:inputText disabled="#{companyinfoUI.selectTrainingProviderApplication.company.locked}" id="pcode" style="opacity: 1 !important; color: black; width:95%" value="#{companyinfoUI.selectTrainingProviderApplication.company.residentialAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}">
+														<o:validator validatorId="javax.faces.Length" minimum="0" maximum="4" message="#{lang['residentialAddress.code.length.error']}" />
+													</p:inputText>
+													<p:outputLabel value="#{lang['post.code']}" for="pcode" />
+												</h:panelGroup>
+
+												<h:panelGroup>
+													<div>
+														<h:outputLabel value="#{lang['municipality']}" for="MunicipalityID" />
+													</div>
+													<div>
+														<p:autoComplete disabled="#{companyinfoUI.selectTrainingProviderApplication.company.locked}" id="MunicipalityID" value="#{companyinfoUI.selectTrainingProviderApplication.company.residentialAddress.municipality}" completeMethod="#{sdfDetailUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityDesc}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true" minQueryLength="3"
+															maxResults="10" inputstyle="opacity: 1 !important; color: black; width: 95%" style="opacity: 1 !important; color: black; width: 95%" required="true" requiredMessage="#{lang['select.municipality']}">
+															<p:column headerText="#{lang['province']}" style="white-space: nowrap">#{rv.province.provinceDesc}</p:column>
+															<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">#{rv.municipalityDesc}</p:column>
+														</p:autoComplete>
+													</div>
+												</h:panelGroup>
+
+												<h:panelGroup styleClass="md-inputfield">
+													<div class="EmptyBox40"></div>
+												</h:panelGroup>
+											</p:panelGrid>
+										</p:fieldset>
+
+										<p:fieldset legend="#{lang['postalAddress']}" style="margin-top: 20px">
+											<p:panelGrid columns="1" style="width : 95%" styleClass="ui-panelgrid-blank" id="postalAddress">
+												<h:panelGroup styleClass="md-inputfield" rendered="#{not companyinfoUI.copyAddress}">
+													<p:inputText disabled="#{companyinfoUI.selectTrainingProviderApplication.company.locked}" id="postalAddressaddr1" value="#{companyinfoUI.selectTrainingProviderApplication.company.postalAddress.addressLine1}" style="opacity: 1 !important; color: black; width:95%" required="true" requiredMessage="#{lang['enter.postal.address']}">
+														<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['postalAddress.lineone.length.error']}" />
+													</p:inputText>
+													<p:outputLabel value="#{lang['address.line.1']}" for="postalAddressaddr1" />
+												</h:panelGroup>
+												<h:panelGroup styleClass="md-inputfield" rendered="#{not companyinfoUI.copyAddress}">
+													<p:inputText disabled="#{companyinfoUI.selectTrainingProviderApplication.company.locked}" id="postalAddressaddr2" style="opacity: 1 !important; color: black; width:95%" value="#{companyinfoUI.selectTrainingProviderApplication.company.postalAddress.addressLine2}">
+														<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['postalAddress.linetwo.length.error']}" />
+													</p:inputText>
+													<p:outputLabel value="#{lang['address.line.2']}" for="postalAddressaddr2" />
+												</h:panelGroup>
+												<h:panelGroup styleClass="md-inputfield" rendered="#{not companyinfoUI.copyAddress}">
+													<p:inputText disabled="#{companyinfoUI.selectTrainingProviderApplication.company.locked}" id="postalAddressaddr3" style="opacity: 1 !important; color: black; width:95%" value="#{companyinfoUI.selectTrainingProviderApplication.company.postalAddress.addressLine3}">
+														<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['postalAddress.linethree.length.error']}" />
+													</p:inputText>
+													<p:outputLabel value="#{lang['address.line.3']}" for="postalAddressaddr3" />
+												</h:panelGroup>
+
+												<h:panelGroup rendered="#{not companyinfoUI.copyAddress}">
+													<div>
+														<h:outputLabel value="#{lang['town']}" for="townPostal" />
+													</div>
+													<div>
+														<p:autoComplete id="townPostal" value="#{companyinfoUI.selectTrainingProviderApplication.company.postalAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true"
+															requiredMessage="#{lang['please.select.a.town']}" disabled="#{companyinfoUI.selectTrainingProviderApplication.company.locked}">
+															<p:column headerText="#{lang['town']}" style="white-space: nowrap">
+													#{rv.description}
+												</p:column>
+														</p:autoComplete>
+													</div>
+												</h:panelGroup>
+
+												<h:panelGroup styleClass="md-inputfield" rendered="#{not companyinfoUI.copyAddress}">
+													<p:inputText disabled="#{companyinfoUI.selectTrainingProviderApplication.company.locked}" id="postalAddressPcode" style="opacity: 1 !important; color: black; width:95%" value="#{companyinfoUI.selectTrainingProviderApplication.company.postalAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}">
+														<o:validator validatorId="javax.faces.Length" minimum="0" maximum="4" message="#{lang['postalAddress.code.length.error']}" />
+													</p:inputText>
+													<p:outputLabel value="#{lang['post.code']}" for="postalAddressPcode" />
+												</h:panelGroup>
+
+												<h:panelGroup rendered="#{not companyinfoUI.copyAddress}">
+													<div>
+														<h:outputLabel value="#{lang['municipality']}" for="postalAddressMunicipalityID" />
+													</div>
+													<div>
+														<p:autoComplete disabled="#{companyinfoUI.selectTrainingProviderApplication.company.locked}" id="postalAddressMunicipalityID" value="#{companyinfoUI.selectTrainingProviderApplication.company.postalAddress.municipality}" completeMethod="#{sdfDetailUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityProvince}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true" minQueryLength="3"
+															maxResults="10" inputstyle="opacity: 1 !important; color: black; width: 95%" style="opacity: 1 !important; color: black; width: 95%" required="true" requiredMessage="#{lang['select.municipality']}">
+															<p:column headerText="#{lang['province']}" style="white-space: nowrap">#{rv.province.provinceDesc}</p:column>
+															<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">#{rv.municipalityDesc}</p:column>
+														</p:autoComplete>
+													</div>
+												</h:panelGroup>
+
+												<h:panelGroup>
+													<div>
+														<p:outputLabel value="#{lang['same.as.my.address']}" styleClass="FontLight" />
+													</div>
+													<div>
+														<p:selectBooleanCheckbox disabled="#{companyinfoUI.selectTrainingProviderApplication.company.locked}" value="#{companyinfoUI.copyAddress}">
+															<p:ajax update=":companyForm:tabView:postalAddress" listener="#{companyinfoUI.clearPostal}" />
+														</p:selectBooleanCheckbox>
+													</div>
+												</h:panelGroup>
+											</p:panelGrid>
+										</p:fieldset>
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText disabled="#{companyinfoUI.selectTrainingProviderApplication.company.locked}" id="companyRegistrationNumber" value="#{companyinfoUI.selectTrainingProviderApplication.company.companyRegistrationNumber}" style="opacity: 1 !important; color: black; width:95%" required="true" requiredMessage="#{lang['enter.company.registration.number']}">
+												<o:validator validatorId="javax.faces.Length" minimum="0" maximum="20" message="#{lang['company.reg.length.error']}" />
+											</p:inputText>
+											<p:outputLabel value="#{lang['companyRegistrationNumber']}" for="companyRegistrationNumber" />
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText disabled="#{companyinfoUI.selectTrainingProviderApplication.company.locked}" id="email" value="#{companyinfoUI.selectTrainingProviderApplication.company.email}" style="opacity: 1 !important; color: black; width:95%" required="true" requiredMessage="#{lang['enter.email.address']}">
+												<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['user.email.length']}" />
+											</p:inputText>
+											<p:outputLabel value="#{lang['email']}" for="email" />
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield" rendered="#{not companyinfoUI.selectTrainingProviderApplication.company.nonLevyPaying}">
+											<p:inputText disabled="true" id="levyNumber" value="#{companyinfoUI.selectTrainingProviderApplication.company.levyNumber}" style="opacity: 1 !important; color: black; width:95%" required="true" requiredMessage="#{lang['enter.levy.number']}">
+												<o:validator validatorId="javax.faces.Length" minimum="0" maximum="10" message="#{lang['company.sdl.length.error']}" />
+											</p:inputText>
+											<p:outputLabel value="#{lang['levyNumber']}" for="levyNumber" />
+										</h:panelGroup>
+
+
+										<h:panelGroup>
+											<div style="margin-top: -20px !important;">
+												<p:outputLabel value="#{lang['organisation.type']}" for="organisationType" styleClass="gray Fs12" style="margin-left:5px" />
+											</div>
+											<div>
+												<p:selectOneMenu disabled="#{companyinfoUI.selectTrainingProviderApplication.company.locked}" id="organisationType" value="#{companyinfoUI.selectTrainingProviderApplication.company.organisationType}" converter="OrganisationTypeConvertor" style="opacity: 1 !important; color: black; width:95%" required="true" requiredMessage="Select: Organisation Type">
+													<f:selectItem itemLabel="-- #{lang['select.one']} --" noSelectionOption="true" />
+													<f:selectItems value="#{sdfDetailUI.organisationTypeList}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+												</p:selectOneMenu>
+											</div>
+										</h:panelGroup>
+
+
+										<h:panelGroup>
+											<div style="margin-top: -20px !important;">
+												<p:outputLabel value="#{lang['sicCode']}" for="sicCodeNew" styleClass="gray Fs12" style="margin-left:5px">
+												</p:outputLabel>
+											</div>
+											<div>
+												<p:autoComplete disabled="#{companyinfoUI.selectTrainingProviderApplication.company.locked}" id="sicCodeNew" value="#{companyinfoUI.selectTrainingProviderApplication.company.sicCode}" style="opacity: 1 !important; color: black; width: 95%" completeMethod="#{autoCompleteUI.completeSIC}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SICCodeConvertor" dropdown="true" minQueryLength="1"
+													maxResults="10" inputStyle="opacity: 1 !important; color: black;" required="true" requiredMessage="#{lang['select.sic.code']}">
+													<p:ajax update="chambers" event="itemSelect"></p:ajax>
+													<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+													<p:column headerText="#{lang['description']}" style="white-space: nowrap">#{rv.description}</p:column>
+												</p:autoComplete>
+
+											</div>
+										</h:panelGroup>
+
+										<h:panelGroup id="chambers">
+											<div style="margin-top: -20px !important;">
+												<p:outputLabel value="#{lang['chamber']}" for="chamber" styleClass="gray Fs12" style="margin-left:5px" />
+											</div>
+											<div>
+												<p:selectOneMenu disabled="true" id="chamber" value="#{companyinfoUI.selectTrainingProviderApplication.company.sicCode.chamber}" converter="ChamberConvertor" style="opacity: 1 !important; color: black; width:95%">
+													<f:selectItem itemLabel="-- #{lang['select.one']} --" noSelectionOption="true" />
+													<f:selectItems value="#{sdfDetailUI.chambers}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+												</p:selectOneMenu>
+											</div>
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:calendar disabled="#{companyinfoUI.selectTrainingProviderApplication.company.locked}" mask="true" showOn="button" value="#{companyinfoUI.selectTrainingProviderApplication.company.financialYearStartDate}" pattern="#{autoCompleteUI.CALENDER_PATTERN}" style="opacity: 1 !important; color: black;"></p:calendar>
+											<p:outputLabel value="#{lang['financial.year.start']}" for="levyNumber" />
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:calendar disabled="#{companyinfoUI.selectTrainingProviderApplication.company.locked}" mask="true" showOn="button" value="#{companyinfoUI.selectTrainingProviderApplication.company.financialYearEndDate}" pattern="#{autoCompleteUI.CALENDER_PATTERN}" style="opacity: 1 !important; color: black;"></p:calendar>
+											<p:outputLabel value="#{lang['financial.year.end']}" for="levyNumber" />
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText disabled="#{companyinfoUI.selectTrainingProviderApplication.company.locked}" id="numberOfEmployees" value="#{companyinfoUI.selectTrainingProviderApplication.company.numberOfEmployees}" style="opacity: 1 !important; color: black; width:95%" required="true" requiredMessage="#{lang['enter.number.of.employees']}" pt:data-tooltip="Please provide total number of employees including linked companies">
+												<o:validator validatorId="javax.faces.Length" minimum="1" maximum="10" message="#{lang['numberof.employees.length.error']}" />
+											</p:inputText>
+											<p:outputLabel value="#{lang['numberOfEmployees']}" for="numberOfEmployees" />
+										</h:panelGroup>
+
+										<h:panelGroup>
+											<div>
+												<p:outputLabel value="#{lang['training.committee.in.place']}" styleClass="gray" />
+												<p:spacer width="20"></p:spacer>
+												<p:selectBooleanCheckbox value="#{companyinfoUI.selectTrainingProviderApplication.company.trainingCommitteeInPlace}" disabled="#{companyinfoUI.selectTrainingProviderApplication.company.locked}">
+												</p:selectBooleanCheckbox>
+											</div>
+										</h:panelGroup>
+
+										<h:panelGroup>
+											<div>
+												<p:outputLabel value="#{lang['does.a.recognition.agreement.exist.between.the.organisation.and.labour.unions']}?" for="recAgr" />
+											</div>
+											<div>
+												<p:selectOneRadio value="#{companyinfoUI.selectTrainingProviderApplication.company.recognitionAgreement}" converter="YesNoLookupConvertor" columns="2" layout="grid" id="recAgr" required="true" requiredMessage="Recognition Agreement is required" disabled="#{companyinfoUI.selectTrainingProviderApplication.company.locked}">
+													<p:ajax update="majUnion"></p:ajax>
+													<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+												</p:selectOneRadio>
+											</div>
+										</h:panelGroup>
+
+										<p:outputPanel id="majUnion">
+											<h:panelGroup rendered="#{companyinfoUI.selectTrainingProviderApplication.company.recognitionAgreement.yesNoName.toLowerCase() eq 'yes'}">
+												<div>
+													<p:outputLabel value="#{lang['majority.union']}?" for="union" />
+												</div>
+												<div>
+													<p:selectOneMenu disabled="#{companyinfoUI.selectTrainingProviderApplication.company.locked}" id="union" converter="OrganisedLabourUnionConvertor" style="opacity: 1 !important; color: black; width:95%" required="true" value="#{companyinfoUI.selectTrainingProviderApplication.company.majorityUnion}">
+														<f:selectItem itemLabel="-- #{lang['select.one']} --" noSelectionOption="true" />
+														<f:selectItems value="#{selectItemsUI.selectItemsOrganisedLabourUnion}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+													</p:selectOneMenu>
+												</div>
+											</h:panelGroup>
+										</p:outputPanel>
+
+										<p:commandButton id="submitt" value="#{lang['submit']}" rendered="#{not companyinfoUI.selectTrainingProviderApplication.company.locked}" update="@form mainForm" icon="fa fa-check" styleClass="green-btn flat Fs18" style="height: 50px;" process="@form" oncomplete="if (args &amp;&amp; !args.validationFailed) PF('dlgCompanyChangeReason').show()">
+										</p:commandButton>
+
+									</p:panelGrid>
+									
+								</p:tab>
+								
+								
+								
+								<!-- Contact Person  Tab -->
+								<p:tab title="#{lang['contact.persons']}" id="cotactPersonTab">
+									<ui:param name="showCompanyTable" value="false" />
+									<!--New Contact person button -->
+									<p:commandButton immediate="true" rendered="#{not companyinfoUI.sdfCompany.company.locked}" value="#{lang['add.contact.person']}" styleClass="flat" icon="fa fa-plus" oncomplete="PF('dlgChangeReason').show()" id="btnNewContactPerson" action="#{companyUsersUI.resolveUsers}" update="usersInsForm @form">
+										<f:setPropertyActionListener for="btnNewContactPerson" value="PF('dlgContact').show()" target="#{companyinfoUI.redirectionPage}" />
+									</p:commandButton>
+
+									<br />
+									<br />
+									<p:dataTable id="contactPersonTable" var="rowVar" value="#{companyinfoUI.companyUsers}" rendered="#{companyinfoUI.companyUsers.size() gt 0}" rowKey="#{rowVar.id}" paginator="true" rows="5" emptyMessage="#{lang['no.records.found']}" paginatorPosition="bottom"
+										paginatorTemplate="#{lang['page']} {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+										<p:column headerText="#{lang['expand.row']}" width="45">
+											<p:rowToggler></p:rowToggler>
+										</p:column>
+										<p:column headerText="#{lang['contact.person']}">
+											<p:outputLabel value="#{rowVar.user.firstName} #{rowVar.user.lastName}"></p:outputLabel>
+										</p:column>
+										<p:column headerText="#{lang['rsapassport.number']}">
+											<p:outputLabel value="#{rowVar.user.rsaIDNumber}" rendered="#{rowVar.user.rsaIDNumber.length() > 0}"></p:outputLabel>
+											<p:outputLabel value="#{rowVar.user.passportNumber}" rendered="#{rowVar.user.passportNumber.length() > 0}"></p:outputLabel>
+										</p:column>
+
+										<p:column headerText="#{lang['email']}">
+											<p:outputLabel value="#{rowVar.user.email}"></p:outputLabel>
+										</p:column>
+										<p:column headerText="#{lang['contact.person.type']}">
+											<p:outputLabel value="#{lang[rowVar.companyUserType.type]}" rendered="#{rowVar.companyUserType ne null}"></p:outputLabel>
+											<p:outputLabel value="#{rowVar.position.description}" rendered="#{rowVar.position ne null}"></p:outputLabel>
+										</p:column>
+
+										<p:column headerText="#{lang['approval.status']}">
+											<p:outputLabel value="#{rowVar.approvalStatus.friendlyName}"></p:outputLabel>
+										</p:column>
+
+										<p:column headerText="Confirmation Status" width="110" style="text-align:center">
+											<p:outputPanel rendered="#{rowVar.user.emailConfirmDate eq null}">
+												<i class="fa fa-times fa-3x red" aria-hidden="true"></i>
+											</p:outputPanel>
+											<p:outputPanel rendered="#{rowVar.user.emailConfirmDate ne null}">
+												<i class="fa fa-check fa-3x green" aria-hidden="true"></i>
+											</p:outputPanel>
+										</p:column>
+										<p:column width="10%" rendered="#{not companyinfoUI.sdfCompany.company.locked}">
+											<p:commandButton immediate="true" icon="fa fa-database" title="#{lang['update']}" update="usersInsForm @form" action="#{companyUsersUI.prepForUpdate}" oncomplete="PF('dlgChangeReason').show()" rendered="#{rowVar.approvalStatus ne ApprovalEnum.PendingApproval}">
+												<f:setPropertyActionListener value="#{rowVar}" target="#{companyUsersUI.companyUser}" />
+												<f:setPropertyActionListener value="#{companyinfoUI.sdfCompany.company}" target="#{companyUsersUI.selectedCompany.company}" />
+												<f:setPropertyActionListener value="PF('dlgContact').show()" target="#{companyinfoUI.redirectionPage}" />
+											</p:commandButton>
+
+											<p:spacer width="5" />
+
+											<p:commandButton actionListener="#{companyinfoUI.companyUsersInfo()}" icon="fa fa-trash-o" title="#{lang['delete']}" update="@form contactPersonTable" process="@this" oncomplete="PF('dlgDelContactPersonCR').show()" rendered="#{rowVar.approvalStatus ne ApprovalEnum.PendingApproval}">
+												<f:setPropertyActionListener value="#{rowVar}" target="#{companyUsersUI.companyUser}" />
+												<f:setPropertyActionListener value="#{companyinfoUI.sdfCompany.company}" target="#{companyUsersUI.selectedCompany.company}" />
+											</p:commandButton>
+
+										</p:column>
+
+										<p:rowExpansion>
+											<p:panelGrid columns="3" style="width:100%" id="s" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+												<h:panelGroup>
+													<h:outputText value="#{lang['contact.person']}" styleClass="Fs12 FontLight" />
+													<br />
+													<h:outputText value="#{rowVar.user.firstName} #{rowVar.user.lastName}" />
+												</h:panelGroup>
+												<h:panelGroup>
+													<h:outputText value="#{lang['email']}" styleClass="Fs12 FontLight" />
+													<br />
+													<h:outputText value="#{rowVar.user.email}" />
+												</h:panelGroup>
+
+												<h:panelGroup>
+													<h:outputText value="#{lang['tel.number']}" styleClass="Fs12 FontLight" />
+													<br />
+													<h:outputText value="#{rowVar.user.telNumber}" />
+
+												</h:panelGroup>
+												<h:panelGroup>
+													<h:outputText value="#{lang['cell.number']}" styleClass="Fs12 FontLight" />
+													<br />
+													<h:outputText value="#{rowVar.user.cellNumber}" />
+												</h:panelGroup>
+
+												<h:panelGroup>
+													<h:outputText value="#{lang['fax.number']}" styleClass="Fs12 FontLight" />
+													<br />
+													<h:outputText value="#{rowVar.user.faxNumber}" />
+												</h:panelGroup>
+												<h:panelGroup>
+													<h:outputText value="#{lang['work.contact.number']}" styleClass="Fs12 FontLight" />
+													<br />
+													<h:outputText value="#{rowVar.user.workContactNumber}" />
+												</h:panelGroup>
+
+
+												<h:panelGroup>
+													<h:outputText value="#{lang['user.responsibility']}" styleClass="Fs12 FontLight" />
+													<br />
+													<ul>
+														<p:repeat var="rv1" value="#{rowVar.selectedResponsibilities}">
+															<li>#{rv1.userResponsibility.description}</li>
+														</p:repeat>
+													</ul>
+												</h:panelGroup>
+
+											</p:panelGrid>
+											<p:panelGrid columns="2" style="width:100%" id="sa" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="false">
+												<p:fieldset legend="#{lang['residentialAddress']}">
+													<p:panelGrid columns="2" style="width : 95%" styleClass="ui-panelgrid-blank" id="addrPcode">
+														<h:panelGroup>
+															<p:outputLabel value="#{lang['address.line.1']}" for="addr1" styleClass="Fs12 FontLight" />
+															<br />
+															<p:outputLabel id="addr1" value="#{rowVar.user.residentialAddress.addressLine1}" style="width:95%; opacity:1 !important" required="true" requiredMessage="#{lang['enter.residential.address']}" />
+															<br />
+															<p:outputLabel value="#{lang['address.line.2']}" for="addr2" styleClass="Fs12 FontLight" />
+															<br />
+															<p:outputLabel value="#{lang['n.a']}" style="width:95%; opacity:1 !important" rendered="#{rowVar.user.residentialAddress.addressLine2 eq null or rowVar.user.residentialAddress.addressLine2.length() eq 0}" />
+															<p:outputLabel id="addr2" style="width:95%; opacity:1 !important" value="#{rowVar.user.residentialAddress.addressLine2}" rendered="#{rowVar.user.residentialAddress.addressLine2 ne null and rowVar.user.residentialAddress.addressLine2.length() gt 0}" />
+														</h:panelGroup>
+														<h:panelGroup>
+															<p:outputLabel value="#{lang['address.line.3']}" for="addr3" styleClass="Fs12 FontLight" />
+															<br />
+															<p:outputLabel id="addr3" style="width:95%; opacity:1 !important" value="#{rowVar.user.residentialAddress.addressLine3}" rendered="#{rowVar.user.residentialAddress.addressLine3 ne null and rowVar.user.residentialAddress.addressLine3.length() gt 0}" />
+															<p:outputLabel value="#{lang['n.a']}" style="width:95%; opacity:1 !important" rendered="#{rowVar.user.residentialAddress.addressLine3 eq null or rowVar.user.residentialAddress.addressLine3.length() eq 0}" />
+															<br />
+															<p:outputLabel value="#{lang['address.line.4']}" for="addr4" styleClass="Fs12 FontLight" />
+															<br />
+															<p:outputLabel id="addr4" style="width:95%; opacity:1 !important" value="#{rowVar.user.residentialAddress.addressLine4}" rendered="#{rowVar.user.residentialAddress.addressLine4 ne null and rowVar.user.residentialAddress.addressLine4.length() gt 0}" />
+															<p:outputLabel value="#{lang['n.a']}" style="width:95%; opacity:1 !important" rendered="#{rowVar.user.residentialAddress.addressLine4 eq null or rowVar.user.residentialAddress.addressLine4.length() eq 0}" />
+														</h:panelGroup>
+														<h:panelGroup>
+															<p:outputLabel value="#{lang['post.code']}" for="pcode" styleClass="Fs12 FontLight" />
+															<br />
+															<p:outputLabel id="pcode" style="width:95%; opacity:1 !important" value="#{rowVar.user.residentialAddress.postcode}" rendered="#{rowVar.user.residentialAddress.postcode ne null and rowVar.user.residentialAddress.postcode.length() gt 0}" />
+															<p:outputLabel value="#{lang['n.a']}" style="width:95%; opacity:1 !important" rendered="#{rowVar.user.residentialAddress.postcode eq null or rowVar.user.residentialAddress.postcode.length() eq 0}" />
+															<br />
+															<h:outputLabel value="#{lang['municipality']}" for="MunicipalityID" styleClass="Fs12 FontLight" />
+															<br />
+															<p:outputLabel id="MunicipalityID" style="width:95%; opacity:1 !important" value="#{rowVar.user.residentialAddress.municipality.municipalityDesc}" />
+														</h:panelGroup>
+
+														<h:panelGroup>
+															<div class="EmptyBox40"></div>
+														</h:panelGroup>
+													</p:panelGrid>
+												</p:fieldset>
+
+												<p:fieldset legend="#{lang['postalAddress']}">
+													<p:panelGrid columns="2" style="width : 95%" styleClass="ui-panelgrid-blank" id="postalAddress">
+														<h:panelGroup>
+															<p:outputLabel value="#{lang['address.line.1']}" for="postalAddressaddr1" styleClass="Fs12 FontLight" />
+															<br />
+															<p:outputLabel id="postalAddressaddr1" value="#{rowVar.user.postalAddress.addressLine1}" style="width:95%; opacity:1 !important" required="true" requiredMessage="#{lang['enter.postal.address']}" />
+															<br />
+															<p:outputLabel value="#{lang['address.line.2']}" for="postalAddressaddr2" styleClass="Fs12 FontLight" />
+															<br />
+															<p:outputLabel id="postalAddressaddr2" style="width:95%; opacity:1 !important" value="#{rowVar.user.postalAddress.addressLine2}" />
+															<p:outputLabel value="#{lang['n.a']}" style="width:95%; opacity:1 !important" rendered="#{rowVar.user.postalAddress.addressLine2 eq null or rowVar.user.postalAddress.addressLine2.length() eq 0}" />
+														</h:panelGroup>
+														<h:panelGroup>
+															<p:outputLabel value="#{lang['address.line.3']}" for="postalAddressaddr3" styleClass="Fs12 FontLight" />
+															<br />
+															<p:outputLabel id="postalAddressaddr3" style="width:95%; opacity:1 !important" value="#{rowVar.user.postalAddress.addressLine3}" />
+															<p:outputLabel value="#{lang['n.a']}" style="width:95%; opacity:1 !important" rendered="#{rowVar.user.postalAddress.addressLine3 eq null or rowVar.user.postalAddress.addressLine3.length() eq 0}" />
+															<br />
+															<p:outputLabel value="#{lang['address.line.4']}" for="postalAddressaddr4" styleClass="Fs12 FontLight" />
+															<br />
+															<p:outputLabel id="postalAddressaddr4" style="width:95%; opacity:1 !important" value="#{rowVar.user.postalAddress.addressLine4}" />
+															<p:outputLabel value="#{lang['n.a']}" style="width:95%; opacity:1 !important" rendered="#{rowVar.user.postalAddress.addressLine4 eq null or rowVar.user.postalAddress.addressLine4.length() eq 0}" />
+														</h:panelGroup>
+														<h:panelGroup>
+															<p:outputLabel value="#{lang['post.code']}" for="postalAddressPcode" styleClass="Fs12 FontLight" />
+															<br />
+															<p:outputLabel id="postalAddressPcode" style="width:95%; opacity:1 !important" value="#{rowVar.user.postalAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}" />
+															<p:outputLabel value="#{lang['n.a']}" style="width:95%; opacity:1 !important" rendered="#{rowVar.user.postalAddress.postcode eq null or rowVar.user.postalAddress.postcode.length() eq 0}" />
+															<br />
+															<h:outputLabel value="#{lang['municipality']}" for="postalAddressMunicipalityID" styleClass="Fs12 FontLight" />
+															<br />
+															<p:outputLabel id="postalAddressMunicipalityID" style="width:95%; opacity:1 !important" value="#{rowVar.user.postalAddress.municipality.municipalityDesc}" />
+														</h:panelGroup>
+
+														<h:panelGroup>
+															<div>
+																<p:outputLabel value="#{lang['same.as.my.address']}" styleClass="Fs12 FontLight" />
+															</div>
+															<div>
+																<p:selectBooleanCheckbox value="#{rowVar.user.postalAddress.sameAddress}" disabled="true">
+																</p:selectBooleanCheckbox>
+															</div>
+														</h:panelGroup>
+													</p:panelGrid>
+												</p:fieldset>
+											</p:panelGrid>
+										</p:rowExpansion>
+									</p:dataTable>
+								</p:tab>
+
+								<p:tab id="sdfMan" title="#{lang['sdf.management']}">
+
+									<p:outputPanel id="sdfTable" rendered="#{companyinfoUI.usersDataModel ne null}">
+										<p:commandButton immediate="true" rendered="#{not companyinfoUI.sdfCompany.company.locked}" value="#{lang['add.sdf']}" styleClass="flat" icon="fa fa-plus" action="#{sdfcompanyUI.prepNewSDF}" oncomplete="PF('dlgChangeReason').show()" id="btnNewSDF" update="dialogSDF">
+											<f:setPropertyActionListener for="btnNewSDF" value="#{companyinfoUI.sdfCompany.company}" target="#{sdfcompanyUI.companysdf.company}" />
+											<f:setPropertyActionListener for="btnNewContactPerson" value="PF('dlgSdf').show()" target="#{companyinfoUI.redirectionPage}" />
+										</p:commandButton>
+
+
+										<br />
+										<br />
+										<p:dataTable var="rowVar" value="#{companyinfoUI.usersDataModel}" id="userList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}" paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25"
+											reflow="true" lazy="true">
+
+											<p:column headerText="#{lang['first.name']}">
+												<h:outputText value="#{rowVar.sdf.firstName}" />
+											</p:column>
+
+											<p:column headerText="#{lang['surname']}">
+												<h:outputText value="#{rowVar.sdf.lastName}" />
+											</p:column>
+
+											<p:column headerText="#{lang['rsapassport.number']}">
+												<p:outputLabel value="#{rowVar.sdf.rsaIDNumber}" rendered="#{rowVar.sdf.rsaIDNumber.length() > 0}"></p:outputLabel>
+												<p:outputLabel value="#{rowVar.sdf.passportNumber}" rendered="#{rowVar.sdf.passportNumber.length() > 0}"></p:outputLabel>
+											</p:column>
+
+											<p:column headerText="#{lang['email']}">
+												<h:outputText value="#{rowVar.sdf.email}" />
+											</p:column>
+
+
+
+											<p:column headerText="#{lang['sdf.type']}">
+												<h:outputText value="#{rowVar.sdfType.description}" />
+											</p:column>
+
+											<p:column headerText="#{lang['approval.status']}">
+												<h:outputText value="#{rowVar.approvalStatus}" />
+											</p:column>
+
+											<p:column headerText="Confirmation Status" width="110" style="text-align:center">
+												<p:outputPanel rendered="#{rowVar.sdf.emailConfirmDate eq null}">
+													<i class="fa fa-times fa-3x red" aria-hidden="true"></i>
+												</p:outputPanel>
+												<p:outputPanel rendered="#{rowVar.sdf.emailConfirmDate ne null}">
+													<i class="fa fa-check fa-3x green" aria-hidden="true"></i>
+												</p:outputPanel>
+											</p:column>
+
+											<p:column width="10%" rendered="#{not companyinfoUI.sdfCompany.company.locked}">
+												<p:commandButton immediate="true" rendered="#{rowVar.sdfType.code ne 'PRM' and rowVar.approvalStatus ne ApprovalEnum.PendingApproval}" icon="fa fa-database" title="#{lang['update']}" update=":sdfForm" action="#{sdfcompanyUI.prepUpdate()}" oncomplete="PF('dlgChangeReason').show()">
+													<f:setPropertyActionListener value="#{rowVar.sdf}" target="#{sdfcompanyUI.newSDF}" />
+													<f:setPropertyActionListener value="#{rowVar.sdfType}" target="#{sdfcompanyUI.sdfType}" />
+													<f:setPropertyActionListener value="#{rowVar.company}" target="#{sdfcompanyUI.companysdf.company}" />
+													<f:setPropertyActionListener for="btnNewContactPerson" value="PF('dlgSdf').show()" target="#{companyinfoUI.redirectionPage}" />
+												</p:commandButton>
+
+												<p:spacer width="5" />
+
+												<p:commandButton rendered="#{rowVar.approvalStatus ne ApprovalEnum.PendingApproval}" actionListener="#{companyinfoUI.companyUsersInfo()}" icon="fa fa-trash-o" title="#{lang['delete']}" update="@form" process="@this" oncomplete="PF('dlgDelSDFCR').show()">
+													<f:setPropertyActionListener value="#{rowVar}" target="#{sdfcompanyUI.companysdf}" />
+												</p:commandButton>
+											</p:column>
+
+										</p:dataTable>
+									</p:outputPanel>
+								</p:tab>
+							
+
+								<p:tab id="siteSme" rendered="#{not sessionUI.hideETQA}" title="Mentor Management">
+									<p:outputPanel id="siteSmePanel">
+										<p:commandButton icon="fa fa-plus" value="Add Mentor" immediate="true" update=":siteSmeForm" oncomplete="PF('dlgAddSiteSme').show()" rendered="#{not companyinfoUI.sdfCompany.company.locked}" action="#{sitessmeUI.prepNewSmeUser}">
+											<f:setPropertyActionListener value="#{companyinfoUI.selectTrainingProviderApplication.company}" target="#{sitessmeUI.company}" />
+											<f:setPropertyActionListener value="PF('dlgAddSiteSme').show()" target="#{companyinfoUI.redirectionPage}" />
+										</p:commandButton>
+										<br />
+										<br />
+										<p:dataTable var="rowVarSme" value="#{companyinfoUI.allSmeDataModel}" rowKey="#{rowVarSme.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+											<p:ajax event="rowToggle" listener="#{companyinfoUI.listenerMethod(rowVarSme)}" />
+											<p:column style="width:7%" headerText="#{lang['expand.row']}">
+												<p:rowToggler />
+											</p:column>
+
+											<p:column headerText="Site Name" sortBy="#{rowVarSme.sites}">
+												<p:outputLabel value="#{rowVarSme.sites.companyName}" rendered="#{rowVarSme.sites ne null}" />
+												<p:outputLabel value="#{rowVarSme.company.companyName}" rendered="#{rowVarSme.sites eq null}" />
+											</p:column>
+											<p:column headerText="Address">
+												<p:outputLabel value="#{rowVarSme.sites.registeredAddress.addressLine1}" rendered="#{rowVarSme.sites ne null}" />
+												<p:outputLabel value="#{rowVarSme.company.residentialAddress.addressLine1}" rendered="#{rowVarSme.company.residentialAddress ne null}" />
+												<br />
+												<p:outputLabel value="#{rowVarSme.sites.registeredAddress.addressLine2}" rendered="#{rowVarSme.sites ne null}" />
+												<p:outputLabel value="#{rowVarSme.company.residentialAddress.addressLine2}" rendered="#{rowVarSme.company.residentialAddress ne null}" />
+												<br />
+												<p:outputLabel value="#{rowVarSme.sites.registeredAddress.addressLine3}" rendered="#{rowVarSme.sites ne null}" />
+												<p:outputLabel value="#{rowVarSme.company.residentialAddress.addressLine3}" rendered="#{rowVarSme.company.residentialAddress ne null}" />
+												<br />
+												<p:outputLabel value="#{rowVarSme.sites.registeredAddress.town.description}" rendered="#{rowVarSme.sites ne null}" />
+												<p:outputLabel value="#{rowVarSme.company.residentialAddress.town.description}" rendered="#{rowVarSme.company.residentialAddress ne null}" />
+												<br />
+											</p:column>
+											<p:column headerText="First Name" filterBy="#{rowVarSme.firstName}">
+												<p:outputLabel style="width:95%; opacity:1 !important;" value="#{rowVarSme.firstName}" />
+											</p:column>
+											<p:column headerText="Last Name" filterBy="#{rowVarSme.lastName}">
+												<p:outputLabel style="width:95%; opacity:1 !important;" value="#{rowVarSme.lastName}" />
+											</p:column>
+											<p:column headerText="Identity Number" filterBy="#{rowVarSme.identityNumber}">
+												<p:outputLabel style="width:95%; opacity:1 !important;" value="#{rowVarSme.identityNumber}" />
+											</p:column>
+											<p:column headerText="Passport  Number" filterBy="#{rowVarSme.passportNumber}">
+												<p:outputLabel style="width:95%; opacity:1 !important;" value="#{rowVarSme.passportNumber}" />
+											</p:column>
+											<p:column headerText="Active" sortBy="#{rowVarSme.active}" rendered="false">
+												<p:selectBooleanCheckbox value="#{rowVarSme.active}" disabled="true" />
+											</p:column>
+											<p:column headerText="Status" sortBy="{rowVarSme.status}">
+												<p:outputLabel value="#{rowVarSme.status.friendlyName}" />
+											</p:column>
+
+											<p:column headerText="Approval Date" sortBy="#{rowVarSme.approvedDate}">
+												<p:outputLabel value="#{rowVarSme.approvedDate}">
+													<f:convertDateTime pattern="dd MMMM yyyy" />
+												</p:outputLabel>
+											</p:column>
+
+											<p:column width="80" headerText="View">
+												<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":siteSmeUpdateForms" oncomplete="PF('dlgSmeChangeReason').show()" action="#{sitessmeUI.prepUpdatemeQualification}" rendered="#{!rowVarSme.lockSme}">
+													<f:setPropertyActionListener value="#{rowVarSme}" target="#{sitessmeUI.sitessmeupdate}" />
+												</p:commandButton>
+												<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":siteSmeUpdateForms" oncomplete="if (args &amp;&amp; !args.validationFailed)  PF('dlgDeleteReason').show()" rendered="#{!rowVarSme.lockSme}" action="#{sitessmeUI.prepUpdatemeQualification}">
+
+													<f:setPropertyActionListener value="#{rowVarSme}" target="#{sitessmeUI.sitessmeupdate}" />
+												</p:commandButton>
+											</p:column>
+											<p:rowExpansion>
+												<p:outputPanel>
+													<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+														<p:dataTable id="smeQualificationDt" value="#{rowVarSme.smeQualificationsList}" var="rvql" rowKey="#{rvql.id}" paginator="true" paginatorPosition="bottom" rows="5" reflow="true">
+															<p:column headerText="SAQA ID" style="width:8%">
+																<p:outputLabel value="#{rvql.qualification.code}" />
+															</p:column>
+															<p:column headerText="Qualification">
+																<p:outputLabel value="#{rvql.qualification.description}" />
+															</p:column>
+
+															<p:column headerText="#{lang['nqf.level']}">
+																<h:outputText value="#{rvql.qualification.nqflevel.description}" />
+															</p:column>
+
+															<p:column headerText="#{lang['status']}">
+																<h:outputText value="#{rvql.status.friendlyName}" />
+															</p:column>
+
+															<p:column headerText="Approval/Reject Date">
+																<h:outputText value="#{rvql.approvedDate}">
+																	<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+																</h:outputText>
+															</p:column>
+
+															<p:column headerText="Reject Reasons">
+																<h:outputText value="#{rvql.reason}" />
+															</p:column>
+
+														</p:dataTable>
+
+														<p:dataTable value="#{companyinfoUI.docs}" var="rv1" emptyMessage="#{lang['no.records.found']}" paginator="true" paginatorPosition="bottom" rowKey="#{rv1.id}" rows="5" reflow="true">
+															<p:column headerText="#{lang['type']}" width="18%">
+																#{rv1.configDoc.name}
+																<p:outputLabel rendered="#{rv1.configDoc.name eq null}" value="Certified Copy of Trade Test/Qualification"></p:outputLabel>
+															</p:column>
+															<p:column headerText="#{lang['original.file.name']}" priority="4">
+																<p:outputLabel value="#{rv1.originalFname}"></p:outputLabel>
+															</p:column>
+															<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+															<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+																<h:outputText value="#{rv1.createDate}">
+																	<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+																</h:outputText>
+															</p:column>
+															<p:column headerText="#{lang['version']}" width="10%" priority="4">
+																<h:outputText value="#{rv1.versionNo}">
+																</h:outputText>
+															</p:column>
+
+															<p:column width="120" headerText="View">
+																<p:commandButton immediate="true" process="@this" ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlb" rendered="#{rv1.id ne null}">
+																	<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+																</p:commandButton>
+
+																<p:spacer width="5" />
+																<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+																	<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+																</p:commandButton>
+
+																<p:spacer width="5" />
+																<p:commandButton icon="fa fa-bars " id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update="@form" rendered="#{rv1.id ne null}">
+																	<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+																</p:commandButton>
+
+															</p:column>
+														</p:dataTable>
+													</p:panelGrid>
+												</p:outputPanel>
+											</p:rowExpansion>
+										</p:dataTable>
+									</p:outputPanel>
+								</p:tab>
+								<p:tab id="workplaceApprovalTab" rendered="#{not sessionUI.hideETQA}" title="Workplace Approval Details">
+									<p:outputPanel id="workplaceApprovalPanel">
+										<p:commandButton id="newWpaBtn" icon="fa fa-plus" value="Request New WPA" immediate="true" update=":wpaForm" oncomplete="PF('dlgAddWpa').show()" rendered="#{not companyinfoUI.sdfCompany.company.locked}" action="#{companyinfoUI.prepWorkplaceApprovalRequest}" />
+										<br />
+										<br />
+
+										<ui:include src="/pages/includes/download_lazy.xhtml">
+											<ui:param name="file_name" value="WorkPlaceApprovalData" />
+											<ui:param name="target" value="workPlaceApprovalData" />
+										</ui:include>
+										<p:dataTable id="workPlaceApprovalData" var="rvwpa" value="#{companyinfoUI.allWorkPlaceApprovalDataModel}" rowKey="#{rvwpa.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+											<p:column style="width:7%" headerText="#{lang['expand.row']}">
+												<p:rowToggler />
+											</p:column>
+											<p:column headerText="Site" sortBy="#{rvwpa.sites}">
+												<p:outputLabel value="#{rvwpa.sites.companyName}" rendered="#{rvwpa.sites ne null}" />
+												<p:outputLabel value="#{rvwpa.company.companyName}" rendered="#{rvwpa.sites eq null}" />
+											</p:column>
+											<p:column headerText="Address">
+												<p:outputLabel value="#{rvwpa.sites.registeredAddress.addressLine1}" rendered="#{rvwpa.sites ne null}" />
+												<p:outputLabel value="#{rvwpa.company.residentialAddress.addressLine1}" rendered="#{rvwpa.company.residentialAddress ne null}" />
+												<br />
+												<p:outputLabel value="#{rvwpa.sites.registeredAddress.addressLine2}" rendered="#{rvwpa.sites ne null}" />
+												<p:outputLabel value="#{rvwpa.company.residentialAddress.addressLine2}" rendered="#{rvwpa.company.residentialAddress ne null}" />
+												<br />
+												<p:outputLabel value="#{rvwpa.sites.registeredAddress.addressLine3}" rendered="#{rvwpa.sites ne null}" />
+												<p:outputLabel value="#{rvwpa.company.residentialAddress.addressLine3}" rendered="#{rvwpa.company.residentialAddress ne null}" />
+												<br />
+												<p:outputLabel value="#{rvwpa.sites.registeredAddress.town.description}" rendered="#{rvwpa.sites ne null}" />
+												<p:outputLabel value="#{rvwpa.company.residentialAddress.town.description}" rendered="#{rvwpa.company.residentialAddress ne null}" />
+												<br />
+											</p:column>
+											<p:column headerText="Qualification/Trade Code">
+												<p:outputLabel value="#{rvwpa.qualification.code}" rendered="#{rvwpa.qualification.code ne null}" />
+												<p:outputLabel value="#{rvwpa.ofoCodes.ofoCodeParent}" rendered="#{rvwpa.ofoCodes ne null}" />
+											</p:column>
+
+											<p:column headerText="Qualification/Trade Title">
+												<p:outputLabel value=" #{rvwpa.qualification.description}" rendered="#{rvwpa.qualification ne null}" />
+												<p:outputLabel value=" #{rvwpa.ofoCodes.description}" rendered="#{rvwpa.ofoCodes ne null}" />
+
+											</p:column>
+
+											<p:column headerText="Status" sortBy="#{rvwpa.approvalEnum}">
+												<p:outputLabel value="#{rvwpa.approvalEnum.friendlyName}" />
+											</p:column>
+
+											<p:column headerText="#{lang['approval.date']}" sortBy="#{rvwpa.approvalDate}">
+												<h:outputText value="#{rvwpa.approvalDate}" rendered="#{rvwpa.approvalDate ne null}">
+													<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+												</h:outputText>
+												<p:outputLabel value="#{lang['N/A']}" rendered="#{rvwpa.approvalDate eq null}" />
+											</p:column>
+
+											<p:column headerText="#{lang['wpa.num']}" rendered="true">
+												<p:outputLabel value=" #{rvwpa.workPlaceApprovalNumber}" rendered="#{rvwpa.workPlaceApprovalNumber ne null}" />
+											</p:column>
+
+											<p:rowExpansion>
+												<p:outputPanel>
+													<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+														<p:dataTable id="skillsList" value="#{rvwpa.skillsProgramlist}" var="rvql2" rowKey="#{rvql2.id}" paginator="true" paginatorPosition="bottom" rows="5" reflow="true">
+															<p:column headerText="Programme ID" style="width:8%">
+																<p:outputLabel value="#{rvql2.programmeID}" />
+															</p:column>
+															<p:column headerText="Description" style="width:8%">
+																<p:outputLabel value="#{rvql2.description}" />
+															</p:column>
+															<p:column headerText="Qualification ID" style="width:8%">
+																<p:outputLabel value="#{rvql2.qualification.codeString}" />
+															</p:column>
+															<p:column headerText="Qualification Title" style="width:8%">
+																<p:outputLabel value="#{rvql2.qualification.description}" />
+															</p:column>
+
+															<p:column headerText="Qualification Start Date" style="width:8%">
+																<p:outputLabel value="#{rvql2.qualification.qualregistrationstartDate}">
+																	<f:convertDateTime pattern="MM/dd/yyyy" type="date" />
+																</p:outputLabel>
+															</p:column>
+
+															<p:column headerText="Qualification End Date" style="width:8%">
+																<p:outputLabel value="#{rvql2.qualification.qualregistrationendDate}">
+																	<f:convertDateTime pattern="MM/dd/yyyy" type="date" />
+																</p:outputLabel>
+															</p:column>
+														</p:dataTable>
+													</p:panelGrid>
+												</p:outputPanel>
+											</p:rowExpansion>
+
+										</p:dataTable>
+									</p:outputPanel>
+								</p:tab>
+							</p:tabView>
+						</div>
+					</c:if>
+				</h:form>
+			</div>
+		</div>
+
+		<p:dialog closeOnEscape="true" header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true" dynamic="true">
+			<h:form id="uploadForm">
+				<h:panelGroup id="uploadGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{sdfUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{companyinfoUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span>
+										<br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{companyinfoUI.storeNewFileAndCreateTask}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update="companyForm" multiple="false" fileLimit="1" sizeLimit="#{sdfUI.maxFileSize}"
+										allowTypes="/(\.|\/)(gif|jpe?g|png|pdf|docx|txt)$/" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog closeOnEscape="true" header="#{lang['training.comittee']}" width="75%" widgetVar="dlgtrainingComittee" resizable="false" hideEffect="clip" showEffect="clip" id="dialogtrainingComittee" appendTo="@(body)" modal="true">
+
+			<h:form id="trainingComitteeForm">
+
+				<p:fieldset legend="#{bankingdetailsUI.company.companyName} #{lang['training.comittee']}">
+
+					<p:panelGrid columns="2" style="width:100%" id="trainingcomitteeInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText id="email" value="#{trainingcomitteeUI.trainingcomittee.email}" maxlength="#{companyUsersUI.MAX_EMAIL_SIZE}" style="width:95%" required="true" requiredMessage="#{lang['provide.email']}">
+								<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['user.email.length']}" />
+							</p:inputText>
+							<p:outputLabel value="#{lang['email']}" for="email" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText id="rsaIDNumber" value="#{trainingcomitteeUI.trainingcomittee.rsaIDNumber}" maxlength="#{trainingcomitteeUI.MAX_RSA_ID_NUMBER}" style="width:95%" />
+							<p:outputLabel value="#{lang['rsa.id.number']}" for="rsaIDNumber" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText id="passportNumber" value="#{trainingcomitteeUI.trainingcomittee.passportNumber}" maxlength="#{trainingcomitteeUI.MAX_PASSPORT_NUMBER}" style="width:95%">
+								<o:validator validatorId="javax.faces.Length" minimum="0" maximum="20" message="#{lang['user.passport.length']} " />
+							</p:inputText>
+							<p:outputLabel value="#{lang['passport.number']}" for="passportNumber" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText id="firstName" value="#{trainingcomitteeUI.trainingcomittee.firstName}" maxlength="#{trainingcomitteeUI.MAX_FIRST_NAME_SIZE}" style="width:95%" required="true" requiredMessage="#{lang['provide.first.name']}">
+								<o:validator validatorId="javax.faces.Length" minimum="0" maximum="26" message="#{lang['user.name.length']}" />
+							</p:inputText>
+							<p:outputLabel value="#{lang['first.name']}" for="firstName" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText id="lastName" value="#{trainingcomitteeUI.trainingcomittee.lastName}" maxlength="#{trainingcomitteeUI.MAX_LAST_NAME_SIZE}" style="width:95%" required="true" requiredMessage="#{lang['provide.last.name']}">
+								<o:validator validatorId="javax.faces.Length" minimum="0" maximum="45" message="#{lang['user.lastname.length']}" />
+							</p:inputText>
+							<p:outputLabel value="#{lang['last.name']}" for="lastName" />
+						</h:panelGroup>
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="#{lang['gender']}" for="gender" />
+							</div>
+							<div>
+								<p:selectOneMenu id="gender" value="#{trainingcomitteeUI.trainingcomittee.gender}" converter="GenderConvertor" style="width:75%" required="true" requiredMessage="#{lang['select.gender']}">
+									<p:ajax />
+									<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+									<f:selectItems value="#{selectItemsUI.selectItemsGender}" var="rv" itemLabel="#{rv.genderName}" itemValue="#{rv}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputMask id="telNumber" mask="#{trainingcomitteeUI.TELPHONE_FORMAT}" value="#{trainingcomitteeUI.trainingcomittee.telNumber}" style="width: 90%" label="telNumber" required="true" requiredMessage="#{lang['provide.tell.number']}">
+								<o:validator validatorId="javax.faces.Length" minimum="0" maximum="20" message="#{lang['user.tellnumber.length']}" />
+							</p:inputMask>
+							<p:outputLabel value="#{lang['telNumber']}" for="telNumber" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputMask id="cellNumber" mask="#{trainingcomitteeUI.CELLPHONE_FORMAT}" value="#{trainingcomitteeUI.trainingcomittee.cellNumber}" style="width:95%" required="false" requiredMessage="#{lang['provide.cell.number']}">
+								<o:validator validatorId="javax.faces.Length" minimum="0" maximum="20" message="#{lang['user.cellnumber.length']}" />
+							</p:inputMask>
+							<p:outputLabel value="#{lang['cell.number']}" for="cellNumber" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText id="faxNumber" validatorMessage="#{lang['user.faxnumber.length']}" value="#{trainingcomitteeUI.trainingcomittee.faxNumber}" style="width:95%" maxlength="#{trainingcomitteeUI.MAX_FAX_NUMBER}">
+							</p:inputText>
+							<p:outputLabel value="#{lang['fax.number']}" for="faxNumber" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield" rendered="false">
+							<p:inputText id="unionName" value="#{trainingcomitteeUI.trainingcomittee.unionName}" style="width:95%" required="true" requiredMessage="#{lang['provide.union.name']}">
+								<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['trainingcomittee.unionName.length']}" />
+							</p:inputText>
+							<p:outputLabel value="#{lang['union.name']}" for="unionName" />
+						</h:panelGroup>
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="#{lang['union.name']}" for="unionSelection" />
+							</div>
+							<div>
+								<p:selectOneMenu id="unionSelection" value="#{trainingcomitteeUI.trainingcomittee.union}" converter="OrganisedLabourUnionConvertor" style="width:75%" required="true" requiredMessage="#{lang['provide.union.name']}">
+									<p:ajax />
+									<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+									<f:selectItems value="#{selectItemsUI.organisedLabourUnion}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="#{lang['title']}" for="title" />
+							</div>
+							<div>
+								<p:selectOneMenu id="title" value="#{trainingcomitteeUI.trainingcomittee.title}" converter="TitleConvertor" style="width:75%" required="true" requiredMessage="#{lang['select.title']}">
+									<p:ajax />
+									<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+									<f:selectItems value="#{selectItemsUI.selectItemsTitles}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="#{lang['equity']}" for="equity" />
+							</div>
+							<div>
+								<p:selectOneMenu id="equity" value="#{trainingcomitteeUI.trainingcomittee.equity}" converter="EquityConvertor" style="width:75%" required="true" requiredMessage="#{lang['select.equity']}">
+									<p:ajax />
+									<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+									<f:selectItems value="#{selectItemsUI.selectItemsEquity}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+						<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+							<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update="trainingComitteeForm " action="#{trainingcomitteeUI.createTrainingComAndCreateTask}" onstart="uploadStart()"/>
+						</p:panelGrid>
+					</p:panelGrid>
+				</p:fieldset>
+			</h:form>
+			<br />
+		</p:dialog>
+
+		<p:dialog closeOnEscape="true" header="#{lang['sites']}" width="75%" widgetVar="dlgSites" resizable="false" hideEffect="clip" showEffect="clip" id="dialogSites" appendTo="@(body)" modal="true">
+			<h:form id="sitesInsForm">
+				<p:growl showDetail="false" sticky="false">
+					<p:autoUpdate />
+				</p:growl>
+				<ui:include src="/pages/includes/tabinfo.xhtml">
+					<ui:param name="showInfoCircle" value="false" />
+					<ui:param name="cssClass" value="secondaryText Fs15" />
+					<ui:param name="helpTxt" value="Site Name should use a physical location of site as name i.e. Benoni" />
+				</ui:include>
+				<br />
+				<br />
+
+				<p:panelGrid columns="2" style="width:100%" id="sitesInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="companyName" value="#{sitesUI.sites.companyName}" style="width:95%">
+						</p:inputText>
+						<p:outputLabel value="#{lang['site.name']}" for="companyName" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputMask id="telNumber" mask="#{trainingcomitteeUI.TELPHONE_FORMAT}" value="#{sitesUI.sites.telNumber}" style="width:95%" required="true">
+						</p:inputMask>
+						<p:outputLabel value="#{lang['telNumber']}" for="telNumber" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="faxNumber" validatorMessage="#{lang['user.faxnumber.length']}" value="#{sitesUI.sites.faxNumber}" maxlength="#{trainingcomitteeUI.MAX_FAX_NUMBER}" style="width:95%">
+						</p:inputText>
+						<p:outputLabel value="#{lang['faxNumber']}" for="faxNumber" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputNumber id="numberOfEmployees" value="#{sitesUI.sites.numberOfEmployees}" inputStyle="width:95%" maxValue="#{sitesUI.totalSiteNumber}" decimalPlaces="0" required="true"></p:inputNumber>
+						<p:outputLabel value="#{lang['numberOfEmployees']}" for="numberOfEmployees" />
+					</h:panelGroup>
+
+				</p:panelGrid>
+				<p:fieldset legend="Physical Address" style="margin-top: 20px">
+					<p:panelGrid columns="1" style="width : 95%" styleClass="ui-panelgrid-blank" id="postalAddress">
+						<h:panelGroup styleClass="md-inputfield" rendered="#{not sdfcompanyUI.copyAddress}">
+							<p:inputText id="postalAddressaddr1" maxlength="#{trainingcomitteeUI.MAX_ADDRESS_LINE_SIZE}" value="#{sitesUI.sites.registeredAddress.addressLine1}" style="width:95%" required="true" requiredMessage="#{lang['address.line.1.required']}">
+							</p:inputText>
+							<p:outputLabel value="#{lang['address.line.1']}" for="postalAddressaddr1" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield" rendered="#{not sdfcompanyUI.copyAddress}">
+							<p:inputText id="postalAddressaddr2" maxlength="#{trainingcomitteeUI.MAX_ADDRESS_LINE_SIZE}" style="width:95%" value="#{sitesUI.sites.registeredAddress.addressLine2}">
+							</p:inputText>
+							<p:outputLabel value="#{lang['address.line.2']}" for="postalAddressaddr2" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield" rendered="#{not sdfcompanyUI.copyAddress}">
+							<p:inputText id="postalAddressaddr3" maxlength="#{trainingcomitteeUI.MAX_ADDRESS_LINE_SIZE}" style="width:95%" value="#{sitesUI.sites.registeredAddress.addressLine3}">
+							</p:inputText>
+							<p:outputLabel value="#{lang['address.line.3']}" for="postalAddressaddr3" />
+						</h:panelGroup>
+
+						<h:panelGroup>
+							<div>
+								<h:outputLabel value="#{lang['town']}" for="theTown" />
+							</div>
+							<div>
+								<p:autoComplete id="theTown" value="#{sitesUI.sites.registeredAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true" requiredMessage="#{lang['please.select.a.town']}">
+
+									<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+								</p:autoComplete>
+							</div>
+						</h:panelGroup>
+
+
+						<h:panelGroup styleClass="md-inputfield" rendered="#{not sdfcompanyUI.copyAddress}">
+							<p:inputText id="postalAddressPcode" maxlength="#{trainingcomitteeUI.MAX_ADDRESS_CODE_SIZE}" style="width:95%" value="#{sitesUI.sites.registeredAddress.postcode}" required="true" requiredMessage="#{lang['postal.address.error']}">
+							</p:inputText>
+							<p:outputLabel value="#{lang['post.code']}" for="postalAddressPcode" />
+						</h:panelGroup>
+
+						<h:panelGroup>
+							<div>
+								<h:outputLabel value="#{lang['town']}" for="town" />
+							</div>
+							<div>
+								<p:autoComplete id="town" value="#{sitesUI.sites.registeredAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true" requiredMessage="#{lang['please.select.a.town']}">
+									<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+								</p:autoComplete>
+							</div>
+						</h:panelGroup>
+
+						<h:panelGroup rendered="#{not sdfcompanyUI.copyAddress}">
+							<div>
+								<h:outputLabel value="#{lang['municipality']}" for="postalAddressMunicipalityID" />
+							</div>
+							<div>
+								<p:autoComplete id="postalAddressMunicipalityID" value="#{sitesUI.sites.registeredAddress.municipality}" completeMethod="#{sdfcompanyUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityProvince}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true" minQueryLength="3" maxResults="10" required="true"
+									requiredMessage="#{lang['select.municipality']}">
+									<p:column headerText="#{lang['province']}" style="white-space: nowrap">
+								#{rv.province.provinceDesc}
+							</p:column>
+									<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">
+								#{rv.municipalityDesc}
+							</p:column>
+								</p:autoComplete>
+							</div>
+						</h:panelGroup>
+					</p:panelGrid>
+				</p:fieldset>
+				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+					<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":sitesInsForm:sitesInsGrid" action="#{sitesUI.createSiteAndCreateTask}" oncomplete="PF('dlgSites').hide(), updateInfo()" />
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog closeOnEscape="true" header="#{lang['link.new.company']}" width="75%" widgetVar="dlglinkCompany" resizable="false" hideEffect="clip" showEffect="clip" id="dialoglinkCompany" appendTo="@(body)" modal="true" position="top">
+			<h:form id="linkCompanyInsForm">
+
+				<c:if test="#{!linkedcompanyUI.company.doneSearch}">
+					<p:importEnum type="haj.com.entity.enums.CompanyRegOrSDLEnum" var="regSDL"></p:importEnum>
+					<p:fieldset id="searchREGSDL" legend="#{lang['enter.Reg.number.or.SDL.number']}">
+
+						<p:panelGrid>
+							<h:panelGroup id="searchNGO">
+								<p:outputLabel value="#{lang['non.levy.paying']}" styleClass="gray" />
+								<p:spacer width="20"></p:spacer>
+								<p:selectBooleanCheckbox id="nonLevyPay" value="#{searchCompanyUI.searchNGO}">
+									<p:ajax update="@form" event="change" listener="#{searchCompanyUI.returnNonLevyPaying}"></p:ajax>
+								</p:selectBooleanCheckbox>
+								<br />
+								<p:outputLabel id="levyPay" value="#{lang['levy.paying.entity']}" styleClass="gray" />
+								<p:spacer width="20"></p:spacer>
+								<p:selectBooleanCheckbox value="#{searchCompanyUI.searchLevyPaying}">
+									<p:ajax update="@form" event="change"></p:ajax>
+								</p:selectBooleanCheckbox>
+							</h:panelGroup>
+						</p:panelGrid>
+
+						<p:panelGrid id="searchCompanyPnl" style="width:50%" columns="3" styleClass="ui-panelgrid-blank form-group" rendered="#{searchCompanyUI.searchLevyPaying}" layout="grid">
+
+							<p:selectOneRadio value="#{searchCompanyUI.companyRegOrSDLEnum}" columns="1" layout="responsive" rendered="#{!searchCompanyUI.searchNGO}">
+								<p:ajax update="searchCompanyPnl " />
+								<f:selectItems value="#{enumUI.companyRegOrSDLEnumDD}" var="idpassEnum" itemLabel="#{idpassEnum}" itemValue="#{idpassEnum}" />
+							</p:selectOneRadio>
+
+							<h:panelGroup id="regNumInput" styleClass="md-inputfield" rendered="#{searchCompanyUI.companyRegOrSDLEnum eq regSDL.REG}">
+								<p:inputMask id="regNumCriteria" mask="#{searchCompanyUI.companyRegistrationNumberFormat}" value="#{searchCompanyUI.criteria}" style="width:95%" requiredMessage="#{lang['enter.reg.number']}" required="true" />
+								<p:outputLabel value="#{lang['registration.number']}" for="regNumCriteria" />
+							</h:panelGroup>
+
+							<h:panelGroup id="sdlNumInput" styleClass="md-inputfield" rendered="#{searchCompanyUI.companyRegOrSDLEnum eq regSDL.SDLNumber and !searchCompanyUI.searchNGO}">
+								<p:inputMask id="sdlNumCriteria" mask="#{searchCompanyUI.companyLevyNumberFormat}" value="#{searchCompanyUI.criteria}" style="width:95%" requiredMessage="#{lang['enter.sdl.number']}" required="true" />
+								<p:outputLabel value="#{lang['sdl.number']}" for="sdlNumCriteria" />
+							</h:panelGroup>
+
+							<p:commandButton id="idSearch" icon="fa fa-search" value="Submit" process="searchCompanyPnl" actionListener="#{searchCompanyUI.find}" update="@form" rendered="#{searchCompanyUI.companyRegOrSDLEnum eq regSDL.REG or searchCompanyUI.searchNGO}" />
+							<p:commandButton id="idSearch2" icon="fa fa-search" value="Submit" process="searchCompanyPnl" actionListener="#{searchCompanyUI.findBySDL}" update="@form" rendered="#{searchCompanyUI.companyRegOrSDLEnum eq regSDL.SDLNumber and !searchCompanyUI.searchNGO}" />
+						</p:panelGrid>
+
+					</p:fieldset>
+
+
+				</c:if>
+				<c:if test="#{linkedcompanyUI.company.doneSearch}">
+					<h1>#{lang['company.info']}</h1>
+					<div align="right">
+						<p:commandButton immediate="true" icon="fa fa-remove" action="#{linkedcompanyUI.changeNull}" id="close" update="@form" rendered="#{linkedcompanyUI.company.doneSearch}" />
+						<p:tooltip for="close" position="left" value="#{lang['close']}" />
+					</div>
+					<p:panelGrid columns="2" style="width:100%" id="companyInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText maxlength="#{linkedcompanyUI.MAX_COMPANY_NAME_SIZE}" id="companyName" value="#{linkedcompanyUI.company.companyName}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.company.name']}" />
+							<p:outputLabel value="#{lang['companyName']}" for="companyName" />
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText maxlength="#{linkedcompanyUI.MAX_COMPANY_TRADE_NAME_SIZE}" id="tradingName" value="#{linkedcompanyUI.company.tradingName}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.trading.name']}" />
+							<p:outputLabel value="#{lang['tradingName']}" for="tradingName" />
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputMask mask="#{linkedcompanyUI.TELPHONE_FORMAT}" id="telNumber" value="#{linkedcompanyUI.company.telNumber}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.tel.number']}" />
+							<p:outputLabel value="#{lang['telNumber']}" for="telNumber" />
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputMask mask="#{linkedcompanyUI.FAX_NUMBER_FORMAT}" validatorMessage="#{lang['user.faxnumber.length']}" maxlength="#{trainingcomitteeUI.MAX_FAX_NUMBER}" id="faxNumber" value="#{linkedcompanyUI.company.faxNumber}" style="width:95%">
+
+							</p:inputMask>
+							<p:outputLabel value="#{lang['faxNumber']}" for="faxNumber" />
+						</h:panelGroup>
+
+						<p:fieldset legend="#{lang['residentialAddress']}" style="margin-top: 20px">
+							<p:panelGrid columns="1" style="width : 95%" styleClass="ui-panelgrid-blank" id="addrPcode">
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText maxlength="#{linkedcompanyUI.MAX_ADDRESS_LINE_SIZE}" id="addr1" value="#{linkedcompanyUI.company.residentialAddress.addressLine1}" style="width:95%" required="true" requiredMessage="#{lang['enter.residential.address']}" />
+									<p:outputLabel value="#{lang['address.line.1']}" for="addr1" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText maxlength="#{linkedcompanyUI.MAX_ADDRESS_LINE_SIZE}" id="addr2" style="width:95%" value="#{linkedcompanyUI.company.residentialAddress.addressLine2}" />
+									<p:outputLabel value="#{lang['address.line.2']}" for="addr2" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText maxlength="#{linkedcompanyUI.MAX_ADDRESS_LINE_SIZE}" id="addr3" style="width:95%" value="#{linkedcompanyUI.company.residentialAddress.addressLine3}" />
+									<p:outputLabel value="#{lang['address.line.3']}" for="addr3" />
+								</h:panelGroup>
+
+								<h:panelGroup>
+									<div>
+										<h:outputLabel value="#{lang['town']}" for="towna" />
+									</div>
+									<div>
+										<p:autoComplete id="towna" value="#{linkedcompanyUI.company.residentialAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true"
+											requiredMessage="#{lang['please.select.a.town']}">
+											<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+										</p:autoComplete>
+									</div>
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText maxlength="#{linkedcompanyUI.MAX_ADDRESS_CODE_SIZE}" id="pcode" style="width:95%" value="#{linkedcompanyUI.company.residentialAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}" />
+									<p:outputLabel value="#{lang['post.code']}" for="pcode" />
+								</h:panelGroup>
+
+								<h:panelGroup>
+									<div>
+										<h:outputLabel value="#{lang['municipality']}" for="MunicipalityID" />
+									</div>
+									<div>
+										<p:autoComplete id="MunicipalityID" value="#{linkedcompanyUI.company.residentialAddress.municipality}" completeMethod="#{linkedcompanyUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityProvince}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%"
+											required="true" requiredMessage="#{lang['select.municipality']}">
+											<p:column headerText="#{lang['province']}" style="white-space: nowrap">
+								#{rv.province.provinceDesc}
+							</p:column>
+											<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">
+								#{rv.municipalityDesc}
+							</p:column>
+										</p:autoComplete>
+									</div>
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield">
+									<div class="EmptyBox40"></div>
+								</h:panelGroup>
+							</p:panelGrid>
+						</p:fieldset>
+
+						<p:fieldset legend="#{lang['postalAddress']}" style="margin-top: 20px">
+							<p:panelGrid columns="1" style="width : 95%" styleClass="ui-panelgrid-blank" id="postalAddress">
+								<h:panelGroup styleClass="md-inputfield" rendered="#{not linkedcompanyUI.copyAddress}">
+									<p:inputText maxlength="#{linkedcompanyUI.MAX_ADDRESS_LINE_SIZE}" id="postalAddressaddr1" value="#{linkedcompanyUI.company.postalAddress.addressLine1}" style="width:95%" required="true" requiredMessage="#{lang['enter.postal.address']}" />
+									<p:outputLabel value="#{lang['address.line.1']}" for="postalAddressaddr1" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield" rendered="#{not linkedcompanyUI.copyAddress}">
+									<p:inputText maxlength="#{linkedcompanyUI.MAX_ADDRESS_LINE_SIZE}" id="postalAddressaddr2" style="width:95%" value="#{linkedcompanyUI.company.postalAddress.addressLine2}" />
+									<p:outputLabel value="#{lang['address.line.2']}" for="postalAddressaddr2" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield" rendered="#{not linkedcompanyUI.copyAddress}">
+									<p:inputText maxlength="#{linkedcompanyUI.MAX_ADDRESS_LINE_SIZE}" id="postalAddressaddr3" style="width:95%" value="#{linkedcompanyUI.company.postalAddress.addressLine3}" />
+									<p:outputLabel value="#{lang['address.line.3']}" for="postalAddressaddr3" />
+								</h:panelGroup>
+
+								<h:panelGroup rendered="#{not linkedcompanyUI.copyAddress}">
+									<div>
+										<h:outputLabel value="#{lang['town']}" for="posttown" />
+									</div>
+									<div>
+										<p:autoComplete id="posttown" value="#{linkedcompanyUI.company.postalAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true"
+											requiredMessage="#{lang['please.select.a.town']}">
+											<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+										</p:autoComplete>
+									</div>
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield" rendered="#{not linkedcompanyUI.copyAddress}">
+									<p:inputText maxlength="#{linkedcompanyUI.MAX_ADDRESS_CODE_SIZE}" id="postalAddressPcode" style="width:95%" value="#{linkedcompanyUI.company.postalAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}" />
+									<p:outputLabel value="#{lang['post.code']}" for="postalAddressPcode" />
+								</h:panelGroup>
+
+								<h:panelGroup rendered="#{not linkedcompanyUI.copyAddress}">
+									<div>
+										<h:outputLabel value="#{lang['municipality']}" for="postalAddressMunicipalityID" />
+									</div>
+									<div>
+										<p:autoComplete id="postalAddressMunicipalityID" value="#{linkedcompanyUI.company.postalAddress.municipality}" completeMethod="#{linkedcompanyUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityProvince}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%"
+											required="true" requiredMessage="#{lang['select.municipality']}">
+											<p:column headerText="#{lang['province']}" style="white-space: nowrap">
+								#{rv.province.provinceDesc}
+							</p:column>
+											<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">
+								#{rv.municipalityDesc}
+							</p:column>
+										</p:autoComplete>
+									</div>
+								</h:panelGroup>
+
+								<h:panelGroup>
+									<div>
+										<p:outputLabel value="#{lang['same.as.my.address']}" styleClass="FontLight" />
+									</div>
+									<div>
+										<p:selectBooleanCheckbox value="#{linkedcompanyUI.copyAddress}">
+											<p:ajax update=":linkCompanyInsForm:postalAddress" listener="#{linkedcompanyUI.clearPostal}" />
+										</p:selectBooleanCheckbox>
+									</div>
+								</h:panelGroup>
+							</p:panelGrid>
+						</p:fieldset>
+
+						<h:panelGroup styleClass="md-inputfield" rendered="#{not linkedcompanyUI.company.nonLevyPaying}">
+							<p:inputMask mask="#{linkedcompanyUI.companyRegistrationNumberFormat}" id="companyRegistrationNumber" value="#{linkedcompanyUI.company.companyRegistrationNumber}" style="width:95%" required="true" requiredMessage="#{lang['enter.company.registration.number']}" />
+							<p:outputLabel value="#{lang['companyRegistrationNumber']}" for="companyRegistrationNumber" />
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield" rendered="#{linkedcompanyUI.company.nonLevyPaying}">
+							<p:inputMask id="companyRegistrationNumbera" value="#{linkedcompanyUI.company.companyRegistrationNumber}" style="width:95%" required="true" requiredMessage="#{lang['enter.company.registration.number']}" />
+							<p:outputLabel value="#{lang['companyRegistrationNumber']}" for="companyRegistrationNumbera" />
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText maxlength="#{linkedcompanyUI.MAX_EMAIL_SIZE}" id="email" value="#{linkedcompanyUI.company.email}" style="width:95%" required="true" requiredMessage="#{lang['enter.email.address']}" />
+							<p:outputLabel value="#{lang['email']}" for="email" />
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield" rendered="#{not linkedcompanyUI.company.nonLevyPaying}">
+							<p:inputMask disabled="true" mask="#{linkedcompanyUI.companyLevyNumberFormat}" id="levyNumber" value="#{linkedcompanyUI.company.levyNumber}" style="width:95%" required="true" requiredMessage="#{lang['enter.levy.number']}" />
+							<p:outputLabel value="#{lang['levyNumber']}" for="levyNumber" />
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText maxlength="#{linkedcompanyUI.MAX_NUMBER_OF_EMPLOYEES_SIZE}" id="numberOfEmployees" value="#{linkedcompanyUI.company.numberOfEmployees}" style="width:95%" required="true" requiredMessage="#{lang['enter.number.of.employees']}" />
+							<p:outputLabel value="#{lang['numberOfEmployees']}" for="numberOfEmployees" />
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield" rendered="false">
+							<p:inputText id="sicCode" value="#{linkedcompanyUI.company.sicCode}" style="width:95%" required="true" requiredMessage="#{lang['enter.sic.code']}" />
+							<p:outputLabel value="#{lang['sicCode']}" for="sicCode" />
+						</h:panelGroup>
+
+						<h:panelGroup>
+							<div style="margin-top: -20px !important;">
+								<p:outputLabel value="#{lang['sicCode']}" for="sicCodeNew" styleClass="gray Fs12" style="margin-left:5px">
+								</p:outputLabel>
+							</div>
+							<div>
+								<p:autoComplete id="sicCodeNew" value="#{linkedcompanyUI.company.sicCode}" style="width: 95%" completeMethod="#{autoCompleteUI.completeSIC}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SICCodeConvertor" dropdown="true" minQueryLength="1" maxResults="10">
+									<p:ajax update="chambers" event="itemSelect"></p:ajax>
+									<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+									<p:column headerText="#{lang['description']}" style="white-space: nowrap">#{rv.description}</p:column>
+								</p:autoComplete>
+
+							</div>
+						</h:panelGroup>
+
+						<h:panelGroup id="chambers">
+							<div style="margin-top: -20px !important;">
+								<p:outputLabel value="#{lang['chamber']}" for="chamber" styleClass="gray Fs12" style="margin-left:5px" />
+							</div>
+							<div>
+								<p:selectOneMenu disabled="true" id="chamber" value="#{linkedcompanyUI.company.sicCode.chamber}" converter="ChamberConvertor" style="width:95%" required="true" requiredMessage="#{lang['select.a.chamber']}">
+									<f:selectItem itemLabel="-- #{lang['select.one']} --" noSelectionOption="true" />
+									<f:selectItems value="#{selectItemsUI.chambers}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+
+
+					</p:panelGrid>
+
+					<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+						<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" action="#{linkedcompanyUI.updateCompanyManagement}" oncomplete="PF('dlglinkCompany').hide()">
+						</p:commandButton>
+					</p:panelGrid>
+				</c:if>
+			</h:form>
+		</p:dialog>
+
+		<!-- Contact person Dialog -->
+		<p:dialog closeOnEscape="true" header="#{lang['contact.persons']}" widgetVar="dlgContact" resizable="false" hideEffect="clip" showEffect="clip" id="contactPerson" width="80%" height="85vh" responsive="true" modal="true" position="top">
+			<h:form id="usersInsForm">
+				<ui:include src="/pages/includes/companyManagementUsers.xhtml">
+					<ui:param name="showCompanyTable" value="false" />
+				</ui:include>
+			</h:form>
+			<p:ajax immediate="true" event="close" update=":companyForm" listener="#{companyinfoUI.companyUsersInfo}" />
+		</p:dialog>
+
+		<!-- ChangeReason Dialog -->
+		<p:dialog closeOnEscape="true" header="#{lang['change.reason']}" widgetVar="dlgChangeReason" resizable="false" hideEffect="clip" showEffect="clip" width="60%" height="45vh" responsive="true" modal="true" position="center">
+			<h:form id="changeReasonForm">
+				<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank">
+					<p:panel>
+						<h:panelGrid columns="2" style="width: 100%">
+							<p:outputLabel value="#{lang['notes']}:" for="note" />
+							<p:inputTextarea id="note" value="#{companyinfoUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+								<p:ajax />
+							</p:inputTextarea>
+						</h:panelGrid>
+
+						<div class="TexAlCenter">
+							<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span>
+							<br />
+						</div>
+						<p:fileUpload onstart="uploadStart()" fileUploadListener="#{companyinfoUI.redirect}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update="companyForm" multiple="false" fileLimit="1" sizeLimit="#{sdfUI.maxFileSize}" allowTypes="/(\.|\/)(gif|jpe?g|png|pdf|docx|txt)$/"
+							immediate="false" auto="true" />
+					</p:panel>
+				</p:panelGrid>
+			</h:form>
+			<p:ajax immediate="true" event="close" update=":companyForm mainForm:companyList" />
+			<p:ajax event="open" listener="#{companyinfoUI.prepChangeDoc}" update="changeReasonForm" />
+		</p:dialog>
+
+		<p:dialog closeOnEscape="true" header="#{lang['change.reason']}" widgetVar="dlgChangeReasonText" resizable="false" hideEffect="clip" showEffect="clip" width="60%" height="45vh" responsive="true" modal="true" position="center">
+			<h:form id="changeReasonFormTEXT">
+				<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank">
+					<p:textEditor widgetVar="editor2" value="#{companyinfoUI.changeReason.description}" height="200" rendered="true" requiredMessage="#{lang['enter.change.reason']}" style="margin-bottom:5px" placeholder="#{lang['enter.change.reason']}">
+						<f:facet name="toolbar">
+							<span class="ql-formats">
+								<button class="ql-bold"></button>
+								<button class="ql-italic"></button>
+								<button class="ql-underline"></button>
+								<button class="ql-strike"></button>
+							</span>
+							<span class="ql-formats">
+								<select class="ql-font"></select>
+								<select class="ql-size"></select>
+							</span>
+						</f:facet>
+					</p:textEditor>
+					<p:commandButton immediate="false"  value="#{lang['submit']}" styleClass="flat" icon="fa fa-plus" action="#{companyinfoUI.doChange}">
+					</p:commandButton>
+				</p:panelGrid>
+			</h:form>
+			<p:ajax immediate="true" event="close" update=":companyForm mainForm:companyList" />
+			<p:ajax event="open" listener="#{companyinfoUI.clearChangeReason()}" update="changeReasonFormTEXT" />
+		</p:dialog>
+
+		<!-- Delete Training Committee ChangeReason Dialog -->
+		<p:dialog closeOnEscape="true" header="#{lang['change.reason']}" widgetVar="dlgDelTCChangeReason" resizable="false" hideEffect="clip" showEffect="clip" width="60%" height="45vh" responsive="true" modal="true" position="center">
+			<h:form id="tcChangeReasonFormTEXT">
+				<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank">
+					<p:textEditor widgetVar="editor2" value="#{companyinfoUI.changeReason.description}" height="200" rendered="true" requiredMessage="#{lang['enter.change.reason']}" style="margin-bottom:5px" placeholder="#{lang['enter.change.reason']}">
+						<f:facet name="toolbar">
+							<span class="ql-formats">
+								<button class="ql-bold"></button>
+								<button class="ql-italic"></button>
+								<button class="ql-underline"></button>
+								<button class="ql-strike"></button>
+							</span>
+							<span class="ql-formats">
+								<select class="ql-font"></select>
+								<select class="ql-size"></select>
+							</span>
+						</f:facet>
+					</p:textEditor>
+					<p:commandButton immediate="false" value="#{lang['submit']}" styleClass="flat" icon="fa fa-plus" action="#{companyinfoUI.createTrainingCommitteeDelTask}" onstart="uploadStart()">
+					</p:commandButton>
+				</p:panelGrid>
+			</h:form>
+			<p:ajax immediate="true" event="close" update=":companyForm mainForm:companyList" />
+			<p:ajax event="open" listener="#{companyinfoUI.clearChangeReason()}" update="tcChangeReasonFormTEXT" />
+		</p:dialog>
+
+		<!--Company Info ChangeReason Dialog -->
+		<p:dialog closeOnEscape="true" header="#{lang['change.reason']}" widgetVar="dlgCompanyChangeReason" resizable="false" hideEffect="clip" showEffect="clip" width="60%" height="45vh" responsive="true" modal="true" position="center">
+			<h:form id="companyChangeReasonForm">
+				<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank">
+					<p:panel>
+						<h:panelGrid columns="2" style="width: 100%">
+							<p:outputLabel value="#{lang['notes']}:" for="note" />
+							<p:inputTextarea id="note" value="#{companyinfoUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+								<p:ajax />
+							</p:inputTextarea>
+						</h:panelGrid>
+
+						<div class="TexAlCenter">
+							<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span>
+							<br />
+						</div>
+						<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone(), PF('dlgCompanyChangeReason').hide()" fileUploadListener="#{companyinfoUI.updateNonSetaCompayAndCreateTask}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update="@form mainForm" multiple="false" fileLimit="1" sizeLimit="#{sdfUI.maxFileSize}"
+							allowTypes="/(\.|\/)(gif|jpe?g|png|pdf|docx|txt)$/" immediate="false" auto="true" />
+					</p:panel>
+				</p:panelGrid>
+			</h:form>
+			<p:ajax immediate="true" event="close" update=":companyForm" />
+			<p:ajax event="open" listener="#{companyinfoUI.prepChangeDoc}" update="companyChangeReasonForm" />
+		</p:dialog>
+
+
+
+		<!--Delete Contact Person ChangeReason Dialog -->
+		<p:dialog closeOnEscape="true" header="#{lang['change.reason']}" widgetVar="dlgDelContactPersonCR" resizable="false" hideEffect="clip" showEffect="clip" width="60%" height="45vh" responsive="true" modal="true" position="center">
+			<h:form id="delContactChangeReasonForm">
+				<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank">
+					<p:panel>
+						<h:panelGrid columns="2" style="width: 100%">
+							<p:outputLabel value="#{lang['notes']}:" for="note" />
+							<p:inputTextarea id="note" value="#{companyinfoUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+								<p:ajax />
+							</p:inputTextarea>
+						</h:panelGrid>
+
+						<div class="TexAlCenter">
+							<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span>
+							<br />
+						</div>
+						<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone(),  createDeleteCompanyUserTask()" fileUploadListener="#{companyinfoUI.storeChangeNewFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update="@form mainForm" multiple="false" fileLimit="1" sizeLimit="#{sdfUI.maxFileSize}"
+							allowTypes="/(\.|\/)(gif|jpe?g|png|pdf|docx|txt)$/" immediate="false" auto="true" />
+					</p:panel>
+				</p:panelGrid>
+				<p:remoteCommand update="@form mainForm" name="createDeleteCompanyUserTask" action="#{companyUsersUI.createDeleteCompanyUserTask}" oncomplete="PF('dlgDelContactPersonCR').hide()"></p:remoteCommand>
+
+			</h:form>
+			<p:ajax immediate="true" event="close" update=":companyForm" />
+			<p:ajax event="open" listener="#{companyinfoUI.prepChangeDoc}" update="delContactChangeReasonForm" />
+			<p:ajax immediate="true" event="close" update=":companyForm" listener="#{companyinfoUI.companyUsersInfo}" />
+		</p:dialog>
+
+
+
+		<!--Delete SDF ChangeReason Dialog -->
+		<p:dialog closeOnEscape="true" header="#{lang['change.reason']}" widgetVar="dlgDelSDFCR" resizable="false" hideEffect="clip" showEffect="clip" width="60%" height="45vh" responsive="true" modal="true" position="center">
+			<h:form id="delSDFReasonForm">
+				<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank">
+					<p:panel>
+						<h:panelGrid columns="2" style="width: 100%">
+							<p:outputLabel value="#{lang['notes']}:" for="note" />
+							<p:inputTextarea id="note" value="#{companyinfoUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+								<p:ajax />
+							</p:inputTextarea>
+						</h:panelGrid>
+
+						<div class="TexAlCenter">
+							<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span>
+							<br />
+						</div>
+						<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone(),  createDeleteCompanyUserTask()" fileUploadListener="#{companyinfoUI.storeChangeNewFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update="@form mainForm" multiple="false" fileLimit="1" sizeLimit="#{sdfUI.maxFileSize}"
+							allowTypes="/(\.|\/)(gif|jpe?g|png|pdf|docx|txt)$/" immediate="false" auto="true" />
+					</p:panel>
+				</p:panelGrid>
+				<p:remoteCommand update="@form mainForm" name="createDeleteCompanyUserTask" action="#{sdfcompanyUI.createDeleteSDFTask}" oncomplete="PF('dlgDelSDFCR').hide()"></p:remoteCommand>
+
+			</h:form>
+			<p:ajax immediate="true" event="close" update=":companyForm" />
+			<p:ajax event="open" listener="#{companyinfoUI.prepChangeDoc}" update="delSDFReasonForm" />
+			<p:ajax immediate="true" event="close" update=":companyForm" listener="#{companyinfoUI.companyUsersInfo}" />
+		</p:dialog>
+
+		<!--Delete Linked  ChangeReason Dialog -->
+		<p:dialog closeOnEscape="true" header="#{lang['change.reason']}" widgetVar="dlgDeLinkedCompCR" resizable="false" hideEffect="clip" showEffect="clip" width="60%" height="45vh" responsive="true" modal="true" position="center">
+			<h:form id="delLinkedCompReasonForm">
+				<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank">
+					<p:panel>
+						<h:panelGrid columns="2" style="width: 100%">
+							<p:outputLabel value="#{lang['notes']}:" for="note" />
+							<p:inputTextarea id="note" value="#{companyinfoUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+								<p:ajax />
+							</p:inputTextarea>
+						</h:panelGrid>
+
+						<div class="TexAlCenter">
+							<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span>
+							<br />
+						</div>
+						<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone(),  createDeleteCompanyUserTask()" fileUploadListener="#{companyinfoUI.storeChangeNewFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update="@form mainForm" multiple="false" fileLimit="1" sizeLimit="#{sdfUI.maxFileSize}"
+							allowTypes="/(\.|\/)(gif|jpe?g|png|pdf|docx|txt)$/" immediate="false" auto="true" />
+					</p:panel>
+				</p:panelGrid>
+				<p:remoteCommand update="@form mainForm" name="createDeleteCompanyUserTask" action="#{linkedcompanyUI.createDeleteCompTast}" oncomplete="PF('dlgDeLinkedCompCR').hide()"></p:remoteCommand>
+			</h:form>
+			<p:ajax immediate="true" event="close" update=":companyForm" />
+			<p:ajax event="open" listener="#{companyinfoUI.prepChangeDoc}" update="delLinkedCompReasonForm" />
+		</p:dialog>
+
+		<!-- SDF Dialog -->
+		<p:dialog closeOnEscape="true" header="#{lang['other.sdf']}" widgetVar="dlgSdf" resizable="false" hideEffect="clip" showEffect="clip" id="dialogSDF" width="80%" height="85vh" responsive="true" modal="true" position="top">
+			<ui:include src="/pages/sdf/includes/ortherSDF.xhtml" />
+			<p:ajax immediate="true" event="close" update=":companyForm" listener="#{companyinfoUI.companyUsersInfo}" />
+		</p:dialog>
+
+		<p:dialog header="Reject Reasons" widgetVar="rejectChildReason" hideEffect="clip" showEffect="clip" id="dialogRejectChildReason" appendTo="@(body)" modal="true" closable="true" width="75%" height="60vh" responsive="true" closeOnEscape="true">
+			<h:form id="rejectReasonChildForm">
+				<p:dataTable var="rowVar" value="#{companyinfoUI.rejectReasonsChild}" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+					<p:column headerText="Create Date">
+						<p:outputLabel value="#{rowVar.createDate}">
+							<f:convertDateTime pattern="dd MMMM yyyy" />
+						</p:outputLabel>
+					</p:column>
+					<p:column headerText="Reason for Rejection">
+						<p:outputLabel value="#{rowVar.rejectReasons.description}"></p:outputLabel>
+					</p:column>
+					<p:column headerText="Additional Information">
+						<p:outputLabel value="#{rowVar.additionalInformation}"></p:outputLabel>
+					</p:column>
+					<p:column headerText="How to fix">
+						<p:outputLabel value="#{rowVar.rejectReasons.howTo}"></p:outputLabel>
+					</p:column>
+				</p:dataTable>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="Request Payment" widgetVar="dlgRequestPayment" hideEffect="clip" showEffect="clip" id="dlgRequestPayment" appendTo="@(body)" modal="true" closable="true" height="30vh" responsive="true" closeOnEscape="true">
+			<h:form id="requestPaymentForm">
+
+				<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank">
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:calendar id="paymentMonth" value="#{activecontractsUI.activeContractDetail.paymentMonth}" inputStyle="width:95%" pattern="MMMMM yyyy" navigator="true" required="true">
+							<p:ajax event="dateSelect"></p:ajax>
+						</p:calendar>
+						<p:outputLabel value="#{lang['payment.month']}" for="paymentMonth" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="payments" value="#{activecontractsUI.activeContractDetail.payments}" style="width:95%">
+							<p:ajax></p:ajax>
+						</p:inputText>
+						<p:outputLabel value="#{lang['payments']}" for="payments" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="noofterminations" value="#{activecontractsUI.activeContractDetail.noofterminations}" style="width:95%">
+							<p:ajax></p:ajax>
+						</p:inputText>
+						<p:outputLabel value="#{lang['noofterminations']}" for="noofterminations" />
+					</h:panelGroup>
+				</p:panelGrid>
+				<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{activecontractsUI.storeFileDetail}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update="@form companyForm" multiple="false" fileLimit="1" allowTypes="/(\.|\/)(gif|jpe?g|png|pdf|docx|txt)$/" immediate="false"
+					auto="true" />
+			</h:form>
+		</p:dialog>
+
+		<p:dialog closeOnEscape="true" position="top" header="New Mentor Details" width="75%" height="50%" widgetVar="dlgAddSiteSme" resizable="false" hideEffect="clip" showEffect="clip" id="dialogAddSiteSme" appendTo="@(body)" modal="true">
+			<h:form id="siteSmeForm">
+				<p:outputPanel id="userSearchPanel" rendered="#{!sitessmeUI.smeUser.doneSearch}">
+					<p:fieldset id="searchRsaIdOrPassport" legend="Enter In RSA ID or Passport Number">
+						<p:panelGrid id="searchRsaIdOrPassportPnl" columns="3" styleClass="ui-panelgrid-blank form-group">
+							<p:selectOneRadio id="passNumID" value="#{sitessmeUI.idpassport}" columns="1" layout="responsive">
+								<p:ajax update="userSearchPanel" />
+								<f:selectItems value="#{enumUI.idPassportEnumDD}" var="idpassEnum" itemLabel="#{idpassEnum}" itemValue="#{idpassEnum}" />
+							</p:selectOneRadio>
+							<h:panelGroup id="rsaIDInput" styleClass="md-inputfield" rendered="#{sitessmeUI.idpassport eq idPassportEnum.RsaId}">
+								<p:inputText id="rsaIdCriteria" maxlength="#{sitessmeUI.MAX_RSA_ID_NUMBER}" value="#{sitessmeUI.idnumber}" style="width:95%" requiredMessage="#{lang['rsa.id.number']} " required="false">
+								</p:inputText>
+								<p:outputLabel value="#{lang['rsa.id.number']}" for="rsaIdCriteria" />
+							</h:panelGroup>
+							<h:panelGroup id="passportNumInput" styleClass="md-inputfield" rendered="#{sitessmeUI.idpassport eq idPassportEnum.Passport}">
+								<p:inputText validatorMessage="#{lang['user.passport.length']}" id="passportNumCriteria" maxlength="#{sitessmeUI.MAX_PASSPORT_NUMBER}" value="#{sitessmeUI.passportNumber}" style="width:95%" requiredMessage="#{lang['passport.number']}" required="false">
+								</p:inputText>
+								<h:message for="passportNumCriteria" />
+								<p:outputLabel value="#{lang['passport.number']}" for="passportNumCriteria" />
+							</h:panelGroup>
+							<p:commandButton id="idPassBtn" icon="fa fa-search" value="Submit" process="searchRsaIdOrPassport" actionListener="#{sitessmeUI.searchForUser}" update="siteSmeForm" rendered="#{sitessmeUI.idpassport ne null}" />
+						</p:panelGrid>
+					</p:fieldset>
+				</p:outputPanel>
+				<p:outputPanel id="userInformationPanel" rendered="#{sitessmeUI.smeUser.doneSearch}">
+					<p:tabView id="tabViewInsert">
+						<p:tab title="Mentor Information">
+							<p:fieldset id="smeUserInfomation" legend="Provide Mentor Information">
+								<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%">
+									<c:if test="#{sitessmeUI.companyHasSites}">
+										<h:panelGroup styleClass="md-inputfield" rendered="#{!sitessmeUI.sitessme.useCompanyAddress}">
+											<p:autoComplete style="width:100%" inputStyle="width:100%" id="unitStandardAuto" value="#{sitessmeUI.sitessme.sites}" completeMethod="#{sitessmeUI.completeSites}" var="rv" itemLabel="#{rv.companyName}" itemValue="#{rv}" forceSelection="true" converter="SitesConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+												<p:ajax event="itemSelect" />
+											</p:autoComplete>
+											<p:outputLabel value="Select #{lang['sites']}" for="unitStandardAuto" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield" rendered="#{!sitessmeUI.sitessme.useCompanyAddress}">
+										</h:panelGroup>
+										<h:panelGroup>
+											<p:outputLabel value="Use Company Address:" style="color:grey" />
+											<p:spacer width="5" />
+											<p:selectBooleanCheckbox value="#{sitessmeUI.sitessme.useCompanyAddress}">
+												<p:ajax update="smeUserInfomation" />
+											</p:selectBooleanCheckbox>
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+										</h:panelGroup>
+									</c:if>
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText style="width:95%; opacity:1 !important;" value="#{sitessmeUI.sitessme.firstName}" disabled="#{sitessmeUI.smeUser.id ne null}">
+											<p:ajax />
+										</p:inputText>
+										<p:outputLabel value="First Name" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText style="width:95%; opacity:1 !important;" value="#{sitessmeUI.sitessme.lastName}" disabled="#{sitessmeUI.smeUser.id ne null}">
+											<p:ajax />
+										</p:inputText>
+										<p:outputLabel value="Last Name" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield" rendered="#{sitessmeUI.idpassport eq idPassportEnum.RsaId}">
+										<p:inputText style="width:95%; opacity:1 !important;" value="#{sitessmeUI.sitessme.identityNumber}" disabled="true" />
+										<p:outputLabel value="#{lang['rsa.id.number']}" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield" rendered="#{sitessmeUI.idpassport eq idPassportEnum.Passport}">
+										<p:inputText style="width:95%; opacity:1 !important;" value="#{sitessmeUI.sitessme.passportNumber}" disabled="true" />
+										<p:outputLabel value="#{lang['passport.number']}" />
+									</h:panelGroup>
+								</p:panelGrid>
+								<h:panelGroup id="docListUsers" rendered="#{sitessmeUI.sitessme.docs.size() gt 0}">
+									<br />
+									<span class="FontBold">
+										<i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+										#{lang['please.upload.the.following.compulsory.documents']}
+									</span>
+									<br />
+									<div class="ui-g dashboard">
+										<div class="ui-g-12">
+											<p:repeat var="rcu" value="#{sitessmeUI.sitessme.docs}" varStatus="x">
+												<div class="ui-g-12 ui-md-6 ui-lg-3">
+													<div class="ui-g card colorbox #{rcu.originalFname eq null ? 'colorbox-5' : 'colorbox-1'}">
+														<div class="ui-g-4">
+															<i class="material-icons">#{rcu.originalFname eq null ? 'cloud_upload' : 'check_circle'}</i>
+														</div>
+														<div class="ui-g-8">
+															<span class="colorbox-name">#{rcu.configDoc.name}</span>
+															<span class="colorbox-count">
+																<p:commandButton icon="fa fa-download" id="cbDownload" rendered="#{rcu.originalFname ne null}" action="#{sitessmeUI.download(rcu)}" ajax="false" value="#{lang['download']}" immediate="true" process="@parent">
+																	<p:ajax onevent="oneventFunction" />
+																</p:commandButton>
+																<p:commandButton value="#{rc.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" styleClass="#{rcu.originalFname eq null ? 'red-btn' : 'green-btn'} flat" process="@this" oncomplete="PF('dlgUploadUser').show()" update=":uploadFormUser">
+																	<f:setPropertyActionListener value="#{rcu}" target="#{sitessmeUI.doc}" />
+																</p:commandButton>
+															</span>
+														</div>
+													</div>
+												</div>
+											</p:repeat>
+										</div>
+									</div>
+								</h:panelGroup>
+							</p:fieldset>
+						</p:tab>
+						<p:tab title="Mentor Qualifications">
+							<p:fieldset id="smeQualificationsList" legend="Provide Qualifications">
+								<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%">
+									<h:panelGroup>
+										<div>
+											<p:outputLabel value="#{lang['qualification']}" for="qualificationAuto"></p:outputLabel>
+										</div>
+										<div>
+											<p:autoComplete style="width:100%" inputStyle="width:50%" id="qualificationAuto" value="#{sitessmeUI.smeQualifications.qualification}" completeMethod="#{assesorModiratorUI.completeQualification}" var="rvq" itemLabel="#{rvq.description}" itemValue="#{rvq}" forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+
+
+												<p:column headerText="SAQA ID" style="white-space: nowrap">#{rvq.code}</p:column>
+												<p:column headerText="#{lang['description']}" style="white-space: nowrap">#{rvq.description}</p:column>
+												<p:column headerText="NQF Level" style="white-space: nowrap">#{rvq.nqflevelg2description}</p:column>
+												<p:ajax event="itemSelect" update="smeQualificationsList" />
+											</p:autoComplete>
+										</div>
+									</h:panelGroup>
+									<h:panelGroup id="docListQualifications" rendered="#{sitessmeUI.smeQualifications.docs.size() gt 0}">
+										<br />
+										<span class="FontBold">
+											<i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+											#{lang['please.upload.the.following.compulsory.documents']}
+										</span>
+										<br />
+										<div class="ui-g dashboard">
+											<div class="ui-g-12">
+												<p:repeat var="rc" value="#{sitessmeUI.smeQualifications.docs}" varStatus="x">
+													<div class="ui-g-12 ui-md-6 ui-lg-3">
+														<div class="ui-g card colorbox #{rc.originalFname eq null ? 'colorbox-5' : 'colorbox-1'}">
+															<div class="ui-g-4">
+																<i class="material-icons">#{rc.originalFname eq null ? 'cloud_upload' : 'check_circle'}</i>
+															</div>
+															<div class="ui-g-8">
+																<span class="colorbox-name">Certified Copy of Trade Test/Qualification</span>
+																<span class="colorbox-count">
+																	<p:commandButton icon="fa fa-download" id="cbDownload1" rendered="#{rc.originalFname ne null}" action="#{sitessmeUI.download(rc)}" ajax="false" value="#{lang['download']}" immediate="true" process="@parent">
+																		<p:ajax onevent="oneventFunction" />
+																	</p:commandButton>
+																	<p:commandButton value="#{rc.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" styleClass="#{rc.originalFname eq null ? 'red-btn' : 'green-btn'} flat" process="@this" oncomplete="PF('dlgQualificationDocument').show()" update=":qualificationFormUser">
+																		<f:setPropertyActionListener value="#{rc}" target="#{sitessmeUI.doc}" />
+																	</p:commandButton>
+																</span>
+															</div>
+														</div>
+													</div>
+												</p:repeat>
+											</div>
+										</div>
+									</h:panelGroup>
+									<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%">
+										<p:commandButton icon="fa fa-plus" value="Add Qualification" update="smeQualificationsList" action="#{sitessmeUI.addSmeQualificationToList}" />
+										<p:commandButton icon="ui-icon-clear-all" value="Clear Qualification" update="smeQualificationsList" action="#{sitessmeUI.prepNewSmeQualification}" />
+									</p:panelGrid>
+								</p:panelGrid>
+								<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%">
+									<p:dataTable var="rowVarsmeq" value="#{sitessmeUI.sitessme.smeQualificationsList}" rowKey="#{rowVarsmeq.id}" paginator="true" rows="3" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" reflow="true">
+										<p:column headerText="Qualification">
+											<p:outputLabel value="(#{rowVarsmeq.qualification.code})" />
+											<p:outputLabel value="#{rowVarsmeq.qualification.description}" />
+										</p:column>
+										<p:column width="7%">
+											<p:commandButton icon="fa fa-trash-o" update="@form" action="#{sitessmeUI.removeFromList}">
+												<f:setPropertyActionListener value="#{rowVarsmeq}" target="#{sitessmeUI.smeQualifications}" />
+											</p:commandButton>
+										</p:column>
+									</p:dataTable>
+								</p:panelGrid>
+							</p:fieldset>
+							<div class="EmptyBox10" />
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%">
+								<p:commandButton icon="ui-icon-save" value="Complete Task" action="#{sitessmeUI.createUpdateSmeEntry}" update="@form :companyForm:tabView:siteSmePanel" />
+								<p:commandButton icon="ui-icon-clear-all" value="Clear" update="@form" action="#{sitessmeUI.prepareNew}" />
+							</p:panelGrid>
+						</p:tab>
+					</p:tabView>
+				</p:outputPanel>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog closeOnEscape="true" position="top" header="Request New WPA" width="75%" widgetVar="dlgAddWpa" resizable="false" hideEffect="clip" showEffect="clip" id="dialogAddWpa" appendTo="@(body)" modal="true">
+			<h:form id="wpaForm">
+
+				<c:if test="#{companyinfoUI.sitesList.size() ne 0}">
+					<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%">
+						<h:panelGroup styleClass="md-inputfield" rendered="#{!companyinfoUI.useCompanyAsSite}">
+							<p:autoComplete style="width:100%" inputStyle="width:100%" id="siteForWpa" value="#{companyinfoUI.selectedSite}" completeMethod="#{companyinfoUI.completeSites}" var="rv" itemLabel="#{rv.companyName}" itemValue="#{rv}" forceSelection="true" converter="SitesConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+								<p:ajax event="itemSelect" />
+							</p:autoComplete>
+							<p:outputLabel value="Select #{lang['sites']}" for="siteForWpa" />
+						</h:panelGroup>
+						<h:panelGroup>
+							<p:outputLabel value="Use Company Address:" style="color:grey" />
+							<p:spacer width="5" />
+							<p:selectBooleanCheckbox value="#{companyinfoUI.useCompanyAsSite}">
+								<p:ajax update="wpaForm" />
+							</p:selectBooleanCheckbox>
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+						</h:panelGroup>
+					</p:panelGrid>
+				</c:if>
+				<!-- Abaility to select which type: either ofo code or qualification -->
+				<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%">
+					<p:outputLabel value="Select what type of workplace approval is required: " />
+					<p:selectOneRadio id="selectWhichSection" value="#{companyinfoUI.byQualification}">
+						<f:selectItem itemLabel="Qualification" itemValue="true" />
+						<f:selectItem itemLabel="Trade" itemValue="false" />
+						<p:ajax update="wpaForm" />
+					</p:selectOneRadio>
+					<c:if test="#{companyinfoUI.byQualification}">
+						<h:panelGroup class="md-inputfield" style="margin-top:19px;">
+							<p:autoComplete style="width:100%" inputStyle="width:50%" id="qualificationSelection" value="#{companyinfoUI.qualification}" completeMethod="#{assesorModiratorUI.findMersetaWPAQualificationAutocompleteVersionTwo}" var="rvq" itemLabel="#{rvq.description}" itemValue="#{rvq}" forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+
+
+								<p:column headerText="SAQA ID" style="white-space: nowrap">#{rvq.code}</p:column>
+								<p:column headerText="#{lang['description']}" style="white-space: nowrap">#{rvq.description}</p:column>
+								<p:column headerText="NQF Level" style="white-space: nowrap">#{rvq.nqflevelg2description}</p:column>
+								<p:ajax event="itemSelect" update="@form" />
+							</p:autoComplete>
+							<p:outputLabel value="#{lang['qualification']}" for="qualificationSelection"></p:outputLabel>
+						</h:panelGroup>
+					</c:if>
+					<c:if test="#{!companyinfoUI.byQualification}">
+						<h:panelGroup class="md-inputfield" style="margin-top:19px;">
+							<p:autoComplete id="ofoCode" value="#{companyinfoUI.ofoCodes}" completeMethod="#{autoCompleteUI.completeOfoCodesTradeWpa}" var="rv" itemLabel="#{rv.ofoDescription}" itemValue="#{rv}" forceSelection="true" converter="OfoCodesConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="opacity: 1 !important; color: black; width: 95%"
+								style="opacity: 1 !important; color: black; width: 95%" required="true" requiredMessage="#{lang['select.ofo.code']}">
+								<p:column headerText="OfoCodes" style="white-space: nowrap">#{rv.ofoCodeParent}</p:column>
+								<p:column headerText="Description" style="white-space: nowrap">#{rv.description}</p:column>
+								<p:ajax event="itemSelect" />
+							</p:autoComplete>
+							<p:outputLabel value="Trade" for="ofoCode" />
+						</h:panelGroup>
+					</c:if>
+					<p:commandButton value="Submit" action="#{companyinfoUI.createNewWorkPlaceApproval}" update="wpaForm companyForm" />
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUploadUser" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOADUser" width="80%" responsive="true" modal="true">
+			<h:form id="uploadFormUser">
+				<h:panelGroup id="uploadGroupUser">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{sitessmeUI.doc.configDoc eq null ? 'Certified Copy of Trade Test/Qualification' : sitessmeUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{sitessmeUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span>
+										<br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{sitessmeUI.storeNewFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update="uploadFormUser :siteSmeForm" multiple="false" fileLimit="1" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgQualificationDocument" resizable="false" hideEffect="clip" showEffect="clip" id="docQualificationUpload" width="80%" responsive="true" modal="true">
+			<h:form id="qualificationFormUser">
+				<h:panelGroup id="qualificationGroupUser">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{sitessmeUI.doc.configDoc eq null ? 'Certified Copy of Trade Test/Qualification' : sitessmeUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{sitessmeUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span>
+										<br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{sitessmeUI.storeNewFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update="uploadFormUser :siteSmeForm:tabViewInsert:smeQualificationsList :siteSmeUpdateForms:tabViewInsert:smeQualificationsList"
+										multiple="false" fileLimit="1" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog closeOnEscape="true" position="top" header="Update Mentor Details" width="75%" height="50%" widgetVar="dlgUpdateSiteSme" resizable="false" hideEffect="clip" showEffect="clip" id="dialogUpdateSiteSme" appendTo="@(body)" modal="true">
+			<h:form id="siteSmeUpdateForms">
+				<p:outputPanel id="userInformationPanels">
+					<p:tabView id="tabViewInsert">
+						<p:tab title="Mentor Information">
+							<p:fieldset id="smeUserInfomations" legend="Provide Mentor Information">
+								<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%">
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText style="width:95%; opacity:1 !important;" value="#{sitessmeUI.sitessmeupdate.firstName}" disabled="true">
+											<p:ajax />
+										</p:inputText>
+										<p:outputLabel value="First Name" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText style="width:95%; opacity:1 !important;" value="#{sitessmeUI.sitessmeupdate.lastName}" disabled="true">
+											<p:ajax />
+										</p:inputText>
+										<p:outputLabel value="Last Name" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield" rendered="#{sitessmeUI.sitessmeupdate.identityNumber ne null}">
+										<p:inputText style="width:95%; opacity:1 !important;" value="#{sitessmeUI.sitessmeupdate.identityNumber}" disabled="true" />
+										<p:outputLabel value="#{lang['rsa.id.number']}" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield" rendered="#{sitessmeUI.sitessmeupdate.passportNumber ne null}">
+										<p:inputText style="width:95%; opacity:1 !important;" value="#{sitessmeUI.sitessmeupdate.passportNumber}" disabled="true" />
+										<p:outputLabel value="#{lang['passport.number']}" />
+									</h:panelGroup>
+								</p:panelGrid>
+								<h:panelGroup id="docListUsers" rendered="#{sitessmeUI.sitessmeupdate.docs.size() gt 0}">
+									<br />
+									<span class="FontBold">
+										<i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+										Please upload documents if there are any changes to your personal details and/or CV
+									</span>
+									<br />
+									<div class="ui-g dashboard">
+										<div class="ui-g-12">
+											<p:repeat var="rcu" value="#{sitessmeUI.sitessmeupdate.docs}" varStatus="x">
+												<div class="ui-g-12 ui-md-6 ui-lg-3">
+													<div class="ui-g card colorbox #{rcu.originalFname eq null ? 'colorbox-5' : 'colorbox-1'}">
+														<div class="ui-g-4">
+															<i class="material-icons">#{rcu.originalFname eq null ? 'cloud_upload' : 'check_circle'}</i>
+														</div>
+														<div class="ui-g-8">
+															<span class="colorbox-name">#{rcu.configDoc.name}</span>
+															<span class="colorbox-count">
+																<p:commandButton icon="fa fa-download" id="cbDownload" rendered="#{rcu.originalFname ne null}" action="#{sitessmeUI.download(rcu)}" ajax="false" value="#{lang['download']}" immediate="true" process="@parent">
+																	<p:ajax onevent="oneventFunction" />
+																</p:commandButton>
+																<p:commandButton value="#{rc.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" styleClass="#{rcu.originalFname eq null ? 'red-btn' : 'green-btn'} flat" process="@this" oncomplete="PF('dlgUploadUser').show()" update=":uploadFormUser">
+																	<f:setPropertyActionListener value="#{rcu}" target="#{sitessmeUI.doc}" />
+																</p:commandButton>
+															</span>
+														</div>
+													</div>
+												</div>
+											</p:repeat>
+										</div>
+									</div>
+								</h:panelGroup>
+							</p:fieldset>
+						</p:tab>
+						<p:tab title="Mentor Qualifications">
+							<p:fieldset id="smeQualificationsList" legend="Provide Qualifications">
+								<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%">
+									<h:panelGroup>
+										<div>
+											<p:outputLabel value="#{lang['qualification']}" for="qualificationAuto"></p:outputLabel>
+										</div>
+										<div>
+											<p:autoComplete style="width:100%" inputStyle="width:50%" id="qualificationAuto" value="#{sitessmeUI.smeQualifications.qualification}" completeMethod="#{assesorModiratorUI.completeQualification}" var="rvq" itemLabel="#{rvq.description}" itemValue="#{rvq}" forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+												<p:column headerText="SAQA ID" style="white-space: nowrap">#{rvq.code}</p:column>
+												<p:column headerText="#{lang['description']}" style="white-space: nowrap">#{rvq.description}</p:column>
+												<p:column headerText="NQF Level" style="white-space: nowrap">#{rvq.nqflevelg2description}</p:column>
+												<p:ajax event="itemSelect" update="smeQualificationsList" />
+											</p:autoComplete>
+										</div>
+									</h:panelGroup>
+									<h:panelGroup id="docListQualifications" rendered="#{sitessmeUI.smeQualifications.docs.size() gt 0}">
+										<br />
+										<span class="FontBold">
+											<i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+											#{lang['please.upload.the.following.compulsory.documents']}
+										</span>
+										<br />
+										<div class="ui-g dashboard">
+											<div class="ui-g-12">
+												<p:repeat var="rc" value="#{sitessmeUI.smeQualifications.docs}" varStatus="x">
+													<div class="ui-g-12 ui-md-6 ui-lg-3">
+														<div class="ui-g card colorbox #{rc.originalFname eq null ? 'colorbox-5' : 'colorbox-1'}">
+															<div class="ui-g-4">
+																<i class="material-icons">#{rc.originalFname eq null ? 'cloud_upload' : 'check_circle'}</i>
+															</div>
+															<div class="ui-g-8">
+																<span class="colorbox-name">Certified Copy of Trade Test/Qualification</span>
+																<span class="colorbox-count">
+																	<p:commandButton icon="fa fa-download" id="cbDownload1" rendered="#{rc.originalFname ne null}" action="#{sitessmeUI.download(rc)}" ajax="false" value="#{lang['download']}" immediate="true" process="@parent">
+																		<p:ajax onevent="oneventFunction" />
+																	</p:commandButton>
+																	<p:commandButton value="#{rc.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" styleClass="#{rc.originalFname eq null ? 'red-btn' : 'green-btn'} flat" process="@this" oncomplete="PF('dlgQualificationDocument').show()" update=":qualificationFormUser">
+																		<f:setPropertyActionListener value="#{rc}" target="#{sitessmeUI.doc}" />
+																	</p:commandButton>
+																</span>
+															</div>
+														</div>
+													</div>
+												</p:repeat>
+											</div>
+										</div>
+									</h:panelGroup>
+									<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%">
+										<p:commandButton icon="fa fa-plus" value="Add Qualification" update="smeQualificationsList" action="#{sitessmeUI.updateSmeQualificationToList}" />
+										<p:commandButton icon="ui-icon-clear-all" value="Clear Qualification" update="smeQualificationsList" action="#{sitessmeUI.prepUpdatemeQualification}" />
+									</p:panelGrid>
+								</p:panelGrid>
+								<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%">
+									<p:dataTable var="rowVarsmeq" value="#{sitessmeUI.sitessmeupdate.smeQualificationsList}" rowKey="#{rowVarsmeq.id}" paginator="true" rows="3" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" reflow="true">
+										<p:column headerText="Qualification">
+											<p:outputLabel value="(#{rowVarsmeq.qualification.code}) #{rowVarsmeq.qualification.description}" />
+
+
+										</p:column>
+										<p:column width="7%">
+											<p:commandButton icon="fa fa-trash-o" update="@form" action="#{sitessmeUI.removeFromUpdateList}" disabled="#{rowVarsmeq.status eq ApprovalEnum.Approved}">
+												<f:setPropertyActionListener value="#{rowVarsmeq}" target="#{sitessmeUI.smeQualifications}" />
+											</p:commandButton>
+										</p:column>
+									</p:dataTable>
+								</p:panelGrid>
+							</p:fieldset>
+							<div class="EmptyBox10" />
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%">
+								<p:commandButton icon="ui-icon-save" value="Update" action="#{sitessmeUI.updateSmeEntry}" update="@form companyForm" />
+								<p:commandButton icon="ui-icon-clear-all" value="Clear" update="@form" action="#{sitessmeUI.prepareNewUpdate}" />
+							</p:panelGrid>
+						</p:tab>
+					</p:tabView>
+				</p:outputPanel>
+			</h:form>
+		</p:dialog>
+
+		<!--SME Info ChangeReason Dialog -->
+		<p:dialog closeOnEscape="true" header="#{lang['change.reason']}" widgetVar="dlgSmeChangeReason" resizable="false" hideEffect="clip" showEffect="clip" width="60%" height="45vh" responsive="true" modal="true" position="center">
+			<h:form id="smeChangeReasonForms">
+				<p:outputPanel id="userSearchPanels">
+					<p:fieldset id="searchRsaIdOrPassports1" legend="Enter Change Reason">
+						<p:textEditor widgetVar="txtChange1" id="txtChange1" rendered="true" requiredMessage="Provide Delete reason" value="#{sitessmeUI.sitessmeupdate.reason}" height="100" style="margin-bottom:10px">
+							<p:ajax></p:ajax>
+						</p:textEditor>
+						<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank">
+							<p:commandButton icon="fa fa-save" value="#{lang['submit']}" title="#{lang['submit']}" update="smeChangeReasonForms" oncomplete="PF('dlgUpdateSiteSme').show(), PF('dlgSmeChangeReason').hide()">
+								<f:setPropertyActionListener value="PF('dlgUpdateSiteSme').show()" target="#{companyinfoUI.redirectionPage}" />
+							</p:commandButton>
+						</p:panelGrid>
+					</p:fieldset>
+				</p:outputPanel>
+			</h:form>
+			<p:ajax immediate="true" event="close" update="smeChangeReasonForms" />
+			<p:ajax event="open" listener="#{companyinfoUI.prepChangeDoc}" update="smeChangeReasonForms" />
+		</p:dialog>
+
+		<!-- ChangeReason Dialog -->
+		<p:dialog closeOnEscape="true" header="Remove Profile" widgetVar="dlgDeleteReason" resizable="false" hideEffect="clip" showEffect="clip" width="60%" height="45vh" responsive="true" modal="true" position="center">
+			<h:form id="deleteReasonForm">
+				<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank">
+					<p:fieldset legend="Provide Delete Reason *">
+						<p:textEditor widgetVar="txtChange" id="txtChange" rendered="true" requiredMessage="Provide Delete reason" value="#{sitessmeUI.sitessmeupdate.reason}" height="100" style="margin-bottom:10px">
+							<p:ajax></p:ajax>
+						</p:textEditor>
+					</p:fieldset>
+					<p:commandButton update="@form companyForm" value="#{lang['submit']}" icon="ui-icon-save" action="#{sitessmeUI.sitessmeCreateDeleteWorkflow}" onstart="uploadStart()" oncomplete="uploadDone();PF('dlgDeleteReason').hide()">
+						<f:setPropertyActionListener value="PF('dlgDeleteReason').hide()" target="#{companyinfoUI.redirectionPage}" />
+					</p:commandButton>
+				</p:panelGrid>
+			</h:form>
+			<p:ajax immediate="true" event="close" update="deleteReasonForm" />
+			<p:ajax event="open" listener="#{companyinfoUI.prepChangeDoc}" update="smeChangeReasonForms" />
+		</p:dialog>
+
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+	</ui:define>
+</ui:composition>

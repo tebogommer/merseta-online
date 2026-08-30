@@ -1,0 +1,122 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="head">
+
+
+		<script src="#{request.contextPath}/js/highcharts.js" />
+		<script src="#{request.contextPath}/js/highcharts-3d.js" />
+		<script src="#{request.contextPath}/js/exporting.js" />
+	</ui:define>
+
+	<ui:define name="content">
+		<div class="ui-g">
+
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="uploadForm">
+						<h1>#{lang['inter.seta.transfer.out']}</h1>
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:panelGrid layout="grid" columns="2" styleClass="ui-panelgrid-blank">
+							<p:outputLabel value="To SETA Number - #{afterLevyImportReportJoiningAndLeavingCompaniesUI.schemeYear}" />
+							<p:inputText>
+							</p:inputText>
+							<p:outputLabel value="Employer Number - #{afterLevyImportReportJoiningAndLeavingCompaniesUI.schemeYear}" />
+							<p:inputText>
+							</p:inputText>
+							<p:outputLabel value="#{lang['scheme.year']}:" />
+							<p:selectOneMenu id="sarsDateF" value="#{levyanalysisbychamberUI.dateSelected}" style="width: 110px !important;">
+								<f:selectItems value="#{sarsLevyReconUI.sarsYears}" var="sars" itemLabel="#{sars.year}" itemValue="#{sars.year}" />
+							</p:selectOneMenu>
+							<p:outputLabel value="Transfer Date???? - #{afterLevyImportReportJoiningAndLeavingCompaniesUI.schemeYear}" />
+							<p:inputText>
+							</p:inputText>
+							<p:outputLabel value="?????" />
+							<p:selectManyCheckbox id="grid" value="#{checkboxView.selectedCities}" layout="grid" columns="3">
+								<f:selectItems value="hello" var="city" itemLabel="#{city}" itemValue="#{city}" />
+								<f:selectItem itemLabel="Mandatory" itemValue="Wii U" />
+								<f:selectItem itemLabel="Discretionary" itemValue="Wii U" />
+								<f:selectItem itemLabel="Admin" itemValue="Wii U" />
+								<f:selectItem itemLabel="QCTO" itemValue="Wii U" />
+								<f:selectItem itemLabel="Penalty" itemValue="Wii U" />
+								<f:selectItem itemLabel="Interest" itemValue="Wii U" />
+								
+							</p:selectManyCheckbox>
+
+
+							<p:commandButton value="#{lang['submit']}" action="#{afterLevyImportReportJoiningAndLeavingCompaniesUI.populateBean}" update="@form" />
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+
+
+		<h:form id="chartForm">
+
+
+
+
+
+			<script type="text/javascript">
+//<![CDATA[
+ 
+	function test() {
+		    alert('ready');
+	}
+	
+	function doChart () {
+
+		 Highcharts.setOptions({
+			    colors: ['#4D2600', '#999372', '#C5913E', '#C57901', '#F0C070', '#8B592E', '#1E4B88', '#767776', '#87C6E1']
+			});
+		
+		Highcharts.chart('container', {
+		    chart: {
+		        type: 'column'
+		    },
+		    title: {
+		        text: '#{sarsReportsUI.sarsEmployerDetail.registeredNameOfEntity}'
+		    },
+		    xAxis: {
+		        categories: ['Summary Totals']
+		    },
+		    credits: {
+		        enabled: false
+		    },
+		    series: [{
+		        name: 'Mandatory',
+		        data: [#{sarsReportsUI.totals.mandatoryLevy}]
+		    },
+		    {
+		        name: 'Discretionary',
+		        data: [#{sarsReportsUI.totals.discretionaryLevy}]
+		    },
+		    {
+		        name: 'Admin',
+		        data: [ #{sarsReportsUI.totals.adminLevy}]
+		    },
+		    {
+		        name: 'Interest',
+		        data: [#{sarsReportsUI.totals.interest}]
+		    },
+		    {
+		        name: 'Penalties',
+		        data: [  #{sarsReportsUI.totals.penalty}]
+		    }
+		    ]
+		});
+	 
+	 }; / end of $(function ()  /		 
+
+//]]>		  
+</script>
+
+
+
+		</h:form>
+	</ui:define>
+
+</ui:composition>

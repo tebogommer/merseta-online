@@ -1,0 +1,132 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Historical Interseta Transfers</h1>
+					<h:form id="historicalintersetatransfersInsForm">
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:panelGrid columns="1" style="width:100%" id="historicalintersetatransfersInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="refNo" value="#{historicalintersetatransfersUI.historicalintersetatransfers.refNo}" style="width:95%" />
+								<p:outputLabel value="#{lang['refNo']}" for="refNo" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="seta" value="#{historicalintersetatransfersUI.historicalintersetatransfers.seta}" style="width:95%" />
+								<p:outputLabel value="#{lang['seta']}" for="seta" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="transactionType" value="#{historicalintersetatransfersUI.historicalintersetatransfers.transactionType}" style="width:95%" />
+								<p:outputLabel value="#{lang['transactionType']}" for="transactionType" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="trnsfrNo" value="#{historicalintersetatransfersUI.historicalintersetatransfers.trnsfrNo}" style="width:95%" />
+								<p:outputLabel value="#{lang['trnsfrNo']}" for="trnsfrNo" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="setaName" value="#{historicalintersetatransfersUI.historicalintersetatransfers.setaName}" style="width:95%" />
+								<p:outputLabel value="#{lang['setaName']}" for="setaName" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="transactionDate" value="#{historicalintersetatransfersUI.historicalintersetatransfers.transactionDate}" style="width:95%" />
+								<p:outputLabel value="#{lang['transactionDate']}" for="transactionDate" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="grantType" value="#{historicalintersetatransfersUI.historicalintersetatransfers.grantType}" style="width:95%" />
+								<p:outputLabel value="#{lang['grantType']}" for="grantType" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="amount" value="#{historicalintersetatransfersUI.historicalintersetatransfers.amount}" style="width:95%" />
+								<p:outputLabel value="#{lang['amount']}" for="amount" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="mersetaSchemeYear" value="#{historicalintersetatransfersUI.historicalintersetatransfers.mersetaSchemeYear}" style="width:95%" />
+								<p:outputLabel value="#{lang['mersetaSchemeYear']}" for="mersetaSchemeYear" />
+							</h:panelGroup>
+
+
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:historicalintersetatransfersList :historicalintersetatransfersInsForm:historicalintersetatransfersInsGrid" action="#{historicalintersetatransfersUI.historicalintersetatransfersInsert}" />
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="historicalintersetatransfersInsGrid" process="@this" action="#{historicalintersetatransfersUI.prepareNew}">
+									<p:resetInput target="historicalintersetatransfersInsGrid" />
+								</p:commandButton>
+							</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{historicalintersetatransfersUI.dataModel}" filteredValue="#{historicalintersetatransfersUI.historicalIntersetaTransfersfilteredList}" id="historicalintersetatransfersList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['refNo']}">
+								<h:outputText value="#{rowVar.refNo}" />
+							</p:column>
+							<p:column headerText="#{lang['seta']}">
+								<h:outputText value="#{rowVar.seta}" />
+							</p:column>
+							<p:column headerText="#{lang['transactionType']}">
+								<h:outputText value="#{rowVar.transactionType}" />
+							</p:column>
+							<p:column headerText="#{lang['trnsfrNo']}">
+								<h:outputText value="#{rowVar.trnsfrNo}" />
+							</p:column>
+							<p:column headerText="#{lang['setaName']}">
+								<h:outputText value="#{rowVar.setaName}" />
+							</p:column>
+							<p:column headerText="#{lang['transactionDate']}">
+								<h:outputText value="#{rowVar.transactionDate}" />
+							</p:column>
+							<p:column headerText="#{lang['grantType']}">
+								<h:outputText value="#{rowVar.grantType}" />
+							</p:column>
+							<p:column headerText="#{lang['amount']}">
+								<h:outputText value="#{rowVar.amount}" />
+							</p:column>
+							<p:column headerText="#{lang['mersetaSchemeYear']}">
+								<h:outputText value="#{rowVar.mersetaSchemeYear}" />
+							</p:column>
+
+
+							<p:column width="80">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":historicalintersetatransfersInsForm:historicalintersetatransfersInsGrid">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{historicalintersetatransfersUI.historicalintersetatransfers}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:historicalintersetatransfersList" action="#{historicalintersetatransfersUI.historicalintersetatransfersDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{historicalintersetatransfersUI.historicalintersetatransfers}" />
+								</p:commandButton>
+							</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+	<!-- 
+refNo = refNo
+seta = seta
+transactionType = transactionType
+trnsfrNo = trnsfrNo
+setaName = setaName
+transactionDate = transactionDate
+grantType = grantType
+amount = amount
+mersetaSchemeYear = mersetaSchemeYear
+
+-->
+</ui:composition>

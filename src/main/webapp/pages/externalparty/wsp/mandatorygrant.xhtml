@@ -1,0 +1,163 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<h:panelGroup id="mandatoryGrantGroup">
+		<h:form id="mandatoryGrantForm">
+			<p:remoteCommand update="tabView:mandatoryGrantTableForm tabView:mandatoryGrantForm" id="updateMandatory" name="updateMandatory" process="@this"></p:remoteCommand>
+			<p:fieldset legend="#{lang['employed.training']}" rendered="#{initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.Draft}">
+
+				<p:panelGrid columns="2" style="width:100%" id="discretionaryGrantGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:autoComplete id="ofoCode" value="#{discretionarygrantUI.mandatoryGrant.ofoCodes}" completeMethod="#{autoCompleteUI.completeOfoCodes}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="OfoCodesConvertor" dropdown="true" minQueryLength="3"
+							maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true" requiredMessage="#{lang['select.ofo.code']}">
+							<p:column headerText="OfoCodes" style="white-space: nowrap">#{rv.ofoCodeParent}</p:column>
+							<p:column headerText="Description" style="white-space: nowrap">#{rv.description}</p:column>
+						</p:autoComplete>
+						<p:outputLabel value="#{lang['ofo.code']}" for="ofoCode" />
+					</h:panelGroup>
+					
+					<h:panelGroup styleClass="md-inputfield" >
+						<p:autoComplete id="muni" value="#{discretionarygrantUI.mandatoryGrant.municipality}" completeMethod="#{autoCompleteUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityProvince}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true" minQueryLength="3"
+							maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%" required="true" requiredMessage="#{lang['select.ofo.code']}">
+							<p:ajax event="itemSelect" />
+							<p:column headerText="Municipality" style="white-space: nowrap">#{rv.municipalityProvince}</p:column>
+						</p:autoComplete>
+						<p:outputLabel value="#{lang['municipality']}" for="muni" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputNumber minValue="0" value="#{discretionarygrantUI.mandatoryGrant.amount}" decimalPlaces="0" inputStyle="width: 95%">
+							<p:ajax update="tabView:mandatoryGrantForm:dataForm tabView:mandatoryGrantForm:dataForm2" process="@this"></p:ajax>
+						</p:inputNumber>
+						<p:outputLabel value="#{lang['numberOfEmployees']}"></p:outputLabel>
+					</h:panelGroup>
+
+				</p:panelGrid>
+				<ui:include src="/pages/externalparty/wsp/includes/totalbreakdown.xhtml" />
+
+			</p:fieldset>
+		</h:form>
+
+		<h:form id="mandatoryGrantTableForm">
+			<h2>#{lang['employed.training']}</h2>
+			<p:dataTable var="rowVar" value="#{discretionarygrantUI.mandatoryGrants}" id="employeesimportList" rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+				paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,15,20,25,50,100" reflow="true">
+				<p:column headerText="#{lang['expand.row']}" width="45">
+					<p:rowToggler></p:rowToggler>
+				</p:column>
+				<p:column headerText="#{lang['ofo.code']}">
+					<p:outputLabel value="#{rowVar.ofoCodes.ofoCodeParent} - #{rowVar.ofoCodes.description}" style="width:95%" rendered="#{rowVar.ofoCodes ne null}" />
+				</p:column>
+				<p:column headerText="#{lang['quantity']}">
+					<p:outputLabel value="#{rowVar.amount}" style="width:95%" />
+				</p:column>
+
+				<p:column width="80" rendered="#{initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.Draft}">
+					<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":tabView:mandatoryGrantForm" process="@this">
+						<f:setPropertyActionListener value="#{rowVar}" target="#{discretionarygrantUI.mandatoryGrant}" />
+					</p:commandButton>
+					<p:spacer width="3" />
+					<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update="@form" process="@this" action="#{discretionarygrantUI.deleteMandatory}">
+						<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure.you.want.to.delete.employed.training']}" icon="ui-icon-warning" />
+						<f:setPropertyActionListener value="#{rowVar}" target="#{discretionarygrantUI.mandatoryGrant}" />
+					</p:commandButton>
+				</p:column>
+				<p:rowExpansion>
+					<p:panelGrid columns="1" style="width:100%" id="s" layout="grid" styleClass="ui-panelgrid-blank form-group">
+						<p:fieldset legend="#{lang['number.of.employees.ages']}">
+							<p:panelGrid columns="4" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+								<h:outputText value="8-24" />
+								<p:inputNumber minValue="0" value="#{rowVar.employeeAge18}" decimalPlaces="0" disabled="true" />
+								<h:outputText value=" 25-34" />
+								<p:inputNumber minValue="0" value="#{rowVar.employeeAge25}" decimalPlaces="0" disabled="true" />
+								<h:outputText value=" 35-44" />
+								<p:inputNumber minValue="0" value="#{rowVar.employeeAge35}" decimalPlaces="0" disabled="true" />
+								<h:outputText value=" 45-54" />
+								<p:inputNumber minValue="0" value="#{rowVar.employeeAge45}" decimalPlaces="0" disabled="true" />
+								<h:outputText value=" 55-64" />
+								<p:inputNumber minValue="0" value="#{rowVar.employeeAge55}" decimalPlaces="0" disabled="true" />
+								<h:outputText value=" >65" />
+								<p:inputNumber minValue="0" decimalPlaces="0" disabled="true" value="#{rowVar.employeeAge65}" />
+							</p:panelGrid>
+						</p:fieldset>
+
+					</p:panelGrid>
+
+					<p:panelGrid columns="2" style="width:100%" id="discretionaryGrantGrid3" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+						<p:fieldset legend="#{lang['number.of.females']}">
+							<p:panelGrid columns="4" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+								<p:outputLabel value="#{lang['african.females']}"></p:outputLabel>
+								<p:inputNumber minValue="0" disabled="true" value="#{rowVar.africanFemale}" decimalPlaces="0" inputStyle="width: 95%">
+								</p:inputNumber>
+								<p:outputLabel value="#{lang['coloured.females']}"></p:outputLabel>
+								<p:inputNumber minValue="0" disabled="true" value="#{rowVar.colouredFemale}" decimalPlaces="0" inputStyle="width: 95%">
+								</p:inputNumber>
+								<p:outputLabel value="#{lang['indian.females']}"></p:outputLabel>
+								<p:inputNumber minValue="0" disabled="true" value="#{rowVar.indianFemale}" decimalPlaces="0" inputStyle="width: 95%">
+								</p:inputNumber>
+								<p:outputLabel value="#{lang['white.females']}"></p:outputLabel>
+								<p:inputNumber minValue="0" disabled="true" value="#{rowVar.whiteFemale}" decimalPlaces="0" inputStyle="width: 95%">
+								</p:inputNumber>
+							</p:panelGrid>
+						</p:fieldset>
+
+						<p:fieldset legend="#{lang['number.of.males']}">
+							<p:panelGrid columns="4" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+								<p:outputLabel value="#{lang['african.males']}"></p:outputLabel>
+								<p:inputNumber minValue="0" disabled="true" value="#{rowVar.africanMale}" decimalPlaces="0" inputStyle="width: 95%">
+								</p:inputNumber>
+								<p:outputLabel value="#{lang['coloured.males']}"></p:outputLabel>
+								<p:inputNumber minValue="0" disabled="true" value="#{rowVar.colouredMale}" decimalPlaces="0" inputStyle="width: 95%">
+								</p:inputNumber>
+								<p:outputLabel value="#{lang['indian.males']}"></p:outputLabel>
+								<p:inputNumber minValue="0" disabled="true" value="#{rowVar.indianMale}" decimalPlaces="0" inputStyle="width: 95%">
+								</p:inputNumber>
+								<p:outputLabel value="#{lang['white.males']}"></p:outputLabel>
+								<p:inputNumber minValue="0" disabled="true" value="#{rowVar.whiteMale}" decimalPlaces="0" inputStyle="width: 95%">
+								</p:inputNumber>
+							</p:panelGrid>
+						</p:fieldset>
+
+					</p:panelGrid>
+
+					<p:panelGrid columns="1" style="width:100%" id="discretionaryGrantGrid4" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+						<p:fieldset legend="#{lang['number.of.disabled']}">
+							<p:panelGrid columns="6" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+								<p:outputLabel value="#{lang['african.females.disabled']}"></p:outputLabel>
+								<p:inputNumber minValue="0" disabled="true" value="#{rowVar.africanFemaleDisability}" decimalPlaces="0" inputStyle="width: 95%">
+								</p:inputNumber>
+								<p:outputLabel value="#{lang['coloured.females.disabled']}"></p:outputLabel>
+								<p:inputNumber minValue="0" disabled="true" value="#{rowVar.colouredFemaleDisability}" decimalPlaces="0" inputStyle="width: 95%">
+								</p:inputNumber>
+								<p:outputLabel value="#{lang['indian.females.disabled']}"></p:outputLabel>
+								<p:inputNumber minValue="0" disabled="true" value="#{rowVar.indianFemaleDisability}" decimalPlaces="0" inputStyle="width: 95%">
+								</p:inputNumber>
+								<p:outputLabel value="#{lang['white.females.disabled']}"></p:outputLabel>
+								<p:inputNumber minValue="0" disabled="true" value="#{rowVar.whiteFemaleDisability}" decimalPlaces="0" inputStyle="width: 95%">
+								</p:inputNumber>
+								<p:outputLabel value="#{lang['african.males.disabled']}"></p:outputLabel>
+								<p:inputNumber minValue="0" disabled="true" value="#{rowVar.africanMaleDisability}" decimalPlaces="0" inputStyle="width: 95%">
+								</p:inputNumber>
+								<p:outputLabel value="#{lang['coloured.males.disabled']}"></p:outputLabel>
+								<p:inputNumber minValue="0" disabled="true" value="#{rowVar.colouredMaleDisability}" decimalPlaces="0" inputStyle="width: 95%">
+								</p:inputNumber>
+								<p:outputLabel value="#{lang['indian.males.disabled']}"></p:outputLabel>
+								<p:inputNumber minValue="0" disabled="true" value="#{rowVar.indianMaleDisability}" decimalPlaces="0" inputStyle="width: 95%">
+								</p:inputNumber>
+								<p:outputLabel value="#{lang['white.males.disabled']}"></p:outputLabel>
+								<p:inputNumber minValue="0" disabled="true" value="#{rowVar.whiteMaleDisability}" decimalPlaces="0" inputStyle="width: 95%">
+								</p:inputNumber>
+							</p:panelGrid>
+						</p:fieldset>
+					</p:panelGrid>
+				</p:rowExpansion>
+
+			</p:dataTable>
+			<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+				<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+				<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+			</p:confirmDialog>
+		</h:form>
+	</h:panelGroup>
+</ui:composition>

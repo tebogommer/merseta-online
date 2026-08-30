@@ -1,0 +1,859 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+	<p:dialog header="Transfer Learner" widgetVar="dlgTransferLearner" resizable="false" hideEffect="clip" showEffect="clip" id="transferLearner" width="40%" responsive="true" modal="true" dynamic="true">
+		<h:form id="transferLearnerForm">
+			<p:panelGrid columns="2" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup>
+					<div>
+						<p:outputLabel value="Requested by which entity" for="requestedBy" />
+					</div>
+					<div>
+						<p:selectOneMenu id="requestedBy" value="#{learnersUI.companyLearnersTransfer.transferRequestType}" style="width:100%" required="true" disabled="#{sessionUI.learner}">
+							<p:ajax />
+							<f:selectItem itemLabel="#{lang['select.one']}" itemValue="" noSelectionOption="true" />
+							<f:selectItems value="#{enumUI.transferRequestTypeEnumDD}" />
+						</p:selectOneMenu>
+					</div>
+				</h:panelGroup>
+				<h:panelGroup>
+					<div>
+						<p:outputLabel value="Transfer Request Type" for="transferType" />
+					</div>
+					<div>
+						<p:selectOneMenu id="transferType" value="#{learnersUI.companyLearnersTransfer.learnerTransferType}" style="width:100%" required="true">
+							<p:ajax />
+							<f:selectItem itemLabel="#{lang['select.one']}" itemValue="" noSelectionOption="true" />
+							<f:selectItems value="#{enumUI.learnerTransferTypeEnumDD}" />
+						</p:selectOneMenu>
+					</div>
+				</h:panelGroup>
+
+			</p:panelGrid>
+			<br />
+			<p:panelGrid columns="1" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup styleClass="md-inputfield" style="width:100%;">
+					<br />
+					<p:autoComplete style="width:100%" id="company" value="#{learnersUI.companyLearnersTransfer.transferToCompany}" required="true" requiredMessage="Select Company" completeMethod="#{autoCompleteUI.completeCompany}" var="rv" itemLabel="#{rv.companyNameDisplay}" itemValue="#{rv}"
+						forceSelection="true" converter="CompanyConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+						<p:column headerText="#{lang['companyName']}" style="white-space: nowrap">#{rv.companyName}</p:column>
+						<p:column headerText="#{lang['entity.id']}" style="white-space: nowrap">#{rv.levyNumber}</p:column>
+						<p:ajax event="itemSelect" />
+					</p:autoComplete>
+					<p:outputLabel value="#{lang['company']}" for="company" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield">
+					<h3 class="first">Transfer Reason</h3>
+					<p:textEditor widgetVar="editor2" value="#{learnersUI.companyLearnersTransfer.transferReason}" height="100" style="margin-bottom:10px" placeholder="Enter transfer reason" requiredMessage="Enter transfer reason" required="true">
+						<f:facet name="toolbar">
+							<span class="ql-formats">
+								<button class="ql-bold"></button>
+								<button class="ql-italic"></button>
+								<button class="ql-underline"></button>
+								<button class="ql-strike"></button>
+							</span>
+							<span class="ql-formats"> <select class="ql-font"></select> <select class="ql-size"></select>
+							</span>
+						</f:facet>
+						<p:ajax />
+					</p:textEditor>
+				</h:panelGroup>
+			</p:panelGrid>
+
+			<p:commandButton ajax="true" value="#{lang['submit']}" process="@this" icon="fa fa-check" styleClass="flat green-btn Fs18" style="height: 50px;" action="#{learnersUI.requestTransfer}" update="mainForm" onstart="uploadStart()" />
+		</h:form>
+	</p:dialog>
+
+	<p:dialog header="Lost Time" widgetVar="dlgLostTime" resizable="false" hideEffect="clip" showEffect="clip" id="LostTime" width="30%" height="400" responsive="true" modal="true" dynamic="true">
+		<h:form id="lostTimeForm">
+			<p:panelGrid columns="1" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+				<h:panelGroup>
+					<div>
+						<p:outputLabel value="Reason for Lost Time" for="lostTime" />
+					</div>
+					<div>
+						<p:selectOneMenu id="lostTime" value="#{learnersUI.companyLearnersLostTime.lostTimeReason}" style="width:100%" required="false">
+							<p:ajax update="pgDates" />
+							<f:selectItem itemLabel="#{lang['select.one']}" itemValue="" noSelectionOption="true" />
+							<f:selectItems value="#{enumUI.lostTimeReasonDD}" />
+						</p:selectOneMenu>
+					</div>
+				</h:panelGroup>
+			</p:panelGrid>
+			<br />
+
+			<p:panelGrid id="pgDates" columns="2" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+				<h:panelGroup styleClass="md-inputfield" rendered="#{learnersUI.companyLearnersLostTime.lostTimeReason ne null}" style="width:100%">
+					<p:datePicker focusOnSelect="true" id="from" value="#{learnersUI.companyLearnersLostTime.lostTimeStartDate}" pattern="#{autoCompleteUI.CALENDER_PATTERN}" style="width:100%" inputStyle="width:85%" showIcon="true" required="false" />
+					<p:outputLabel style="margin:-5px" value="The Date Lost Time Started" for="from" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield" rendered="#{learnersUI.companyLearnersLostTime.lostTimeReason ne null}" style="width:100%">
+					<p:datePicker focusOnSelect="true" id="to" value="#{learnersUI.companyLearnersLostTime.lostTimeEndDate}" style="width:100%" inputStyle="width:85%" pattern="#{autoCompleteUI.CALENDER_PATTERN}" showIcon="true" required="false" />
+					<p:outputLabel style="margin:-5px" value="The Date Lost Time Ended" for="to" />
+				</h:panelGroup>
+
+			</p:panelGrid>
+			<br />
+			<p:commandButton value="#{lang['submit']}" icon="fa fa-check" styleClass="flat" action="#{learnersUI.requestLostTime}" update="mainForm" onstart="uploadStart()" />
+		</h:form>
+	</p:dialog>
+
+	<p:dialog header="Learner Agreement Termination" widgetVar="dlgTermination" resizable="false" hideEffect="clip" showEffect="clip" id="Termination" width="30%" height="300" responsive="true" modal="true" dynamic="true">
+
+		<h:form id="TerminationForm">
+			<br />
+			<br />
+			<p:panelGrid columns="1" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+				<h:panelGroup styleClass="md-inputfield" style="width:100%">
+					<p:datePicker focusOnSelect="true" showOnFocus="true" id="glPostingDate" value="#{learnersUI.companyLearnersTermination.lastWorkingDayOfLearner}" pattern="#{autoCompleteUI.CALENDER_PATTERN}" showIcon="true" required="false" />
+					<p:outputLabel style="margin:-5px" value="Last Working Day of Learner" for="glPostingDate" />
+				</h:panelGroup>
+
+				<h:panelGroup>
+					<div>
+						<p:outputLabel value="Termination Type" for="terminationType" />
+					</div>
+					<div>
+						<p:selectOneMenu rendered="#{learnersUI.learnerRequest eq null or !learnersUI.learnerRequest}" id="terminationType" value="#{learnersUI.companyLearnersTermination.terminationTypeEnum}" style="width:100%" required="false" requiredMessage="Select Termination Type">
+							<p:ajax />
+							<f:selectItem itemLabel="#{lang['select.one']}" itemValue="" noSelectionOption="true" />
+							<f:selectItems value="#{enumUI.terminationTypeEnumNotSystemDD}" />
+						</p:selectOneMenu>
+
+						<p:selectOneMenu rendered="#{learnersUI.learnerRequest}" id="terminationTypeLr" value="#{learnersUI.companyLearnersTermination.terminationTypeEnum}" style="width:100%" required="false" requiredMessage="Select Termination Type">
+							<p:ajax />
+							<f:selectItem itemLabel="#{lang['select.one']}" itemValue="" noSelectionOption="true" />
+							<f:selectItems value="#{enumUI.terminationTypeEnumForLearner}" />
+						</p:selectOneMenu>
+					</div>
+				</h:panelGroup>
+
+			</p:panelGrid>
+			<br />
+			<p:commandButton value="#{lang['submit']}" icon="fa fa-check" styleClass="flat" action="#{learnersUI.requestTermination}" update="mainForm" onstart="uploadStart()" />
+
+		</h:form>
+
+	</p:dialog>
+
+	<p:dialog header="Learner Application Withdrawal" widgetVar="dlgLearnerApplicationWithdrawal" resizable="false" hideEffect="clip" showEffect="clip" id="dlgLearnerApplicationWithdrawalForm" width="30%" height="300" responsive="true" modal="true" dynamic="true">
+
+		<h:form id="dlgLearnerApplicationWithdrawal">
+
+			<p:fieldset legend="Confirmation">
+				<p:panelGrid columns="1" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<b>Are you sure you want to withdraw this learner</b>
+				</p:panelGrid>
+			</p:fieldset>
+			<br />
+			<p:commandButton value="#{lang['submit']}" icon="fa fa-check" styleClass="flat" action="#{learnersUI.requestWithdrawal}" update="mainForm" />
+
+		</h:form>
+
+	</p:dialog>
+
+
+	<p:dialog header="Change To Agreement" widgetVar="dlgChange" resizable="false" hideEffect="clip" showEffect="clip" id="change" width="60%" height="500" responsive="true" modal="true" dynamic="true">
+
+		<h:form id="changeForm">
+			<p:fieldset rendered="#{learnersUI.companyLearners.qualification ne null}" legend="Current Qualification">
+				<p:panelGrid columns="4" style="width:100%">
+					<h:panelGroup>
+						<b>Qualification Code:</b> #{learnersUI.companyLearners.qualification.code}
+					</h:panelGroup>
+					<h:panelGroup>
+						<b>Qualification Title:</b> #{learnersUI.companyLearners.qualification.description}
+					</h:panelGroup>
+				</p:panelGrid>
+			</p:fieldset>
+			<p:fieldset rendered="#{learnersUI.companyLearners.nonCredidBearingDescription ne null}" legend="Non Credit Bearing Description">
+				<p:panelGrid columns="1" style="width:100%">
+					<h:panelGroup>
+							#{learnersUI.companyLearners.nonCredidBearingDescription}
+						</h:panelGroup>
+				</p:panelGrid>
+			</p:fieldset>
+			<p:fieldset rendered="#{learnersUI.companyLearners.skillsProgram ne null}" legend="Current Skills Program">
+				<p:panelGrid columns="4" style="width:100%">
+					<h:panelGroup>
+						<b>Programme ID:</b> #{learnersUI.companyLearners.skillsProgram.programmeID}
+					</h:panelGroup>
+					<h:panelGroup>
+						<b>Skills Program Title:</b> #{learnersUI.companyLearners.skillsProgram.description}
+					</h:panelGroup>
+				</p:panelGrid>
+			</p:fieldset>
+			<p:fieldset rendered="#{learnersUI.companyLearners.unitStandard ne null}" legend="Current Unit Standard">
+				<p:panelGrid columns="4" style="width:100%">
+					<h:panelGroup>
+						<b>Unit Standard Code:</b> #{learnersUI.companyLearners.unitStandard.code}
+					</h:panelGroup>
+					<h:panelGroup>
+						<b>Unit Standard Title:</b> #{learnersUI.companyLearners.unitStandard.title}
+					</h:panelGroup>
+				</p:panelGrid>
+			</p:fieldset>
+			<p:fieldset rendered="#{learnersUI.companyLearners.skillsSet ne null}" legend="Current Skills Set">
+				<p:panelGrid columns="4" style="width:100%">
+					<h:panelGroup>
+						<b>Programme ID:</b> #{learnersUI.companyLearners.skillsSet.programmeID}
+					</h:panelGroup>
+					<h:panelGroup>
+						<b>Skills Set Title:</b> #{learnersUI.companyLearners.skillsSet.description}
+					</h:panelGroup>
+				</p:panelGrid>
+			</p:fieldset>
+
+			<br />
+			<p:fieldset legend="Change Details">
+				<p:panelGrid columns="1" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+					<h:panelGroup>
+						<div>
+							<p:outputLabel style="color:#977949" value="What do you want to change" for="learnerChangeTypeEnum" />
+							<br /> <br />
+						</div>
+						<div>
+							<p:selectOneMenu id="learnerChangeTypeEnum" value="#{learnersUI.companyLearnersChange.learnerChangeTypeEnum}" style="width:100%" required="true">
+								<p:ajax update="changeForm" />
+								<f:selectItem itemLabel="#{lang['select.one']}" itemValue="" noSelectionOption="true" />
+								<f:selectItems value="#{learnersUI.learnerChangeTypeEnumDD}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+
+					<p:panelGrid rendered="#{learnersUI.companyLearnersChange.learnerChangeTypeEnum eq LearnerChangeTypeEnum.ChangeCommencementDate}" id="pgDateDetails" columns="2" style="width:100%;margin-top:20px" layout="grid" styleClass="ui-panelgrid-blank form-group">
+						<h:panelGroup styleClass="md-inputfield" rendered="#{learnersUI.companyLearnersChange.learnerChangeTypeEnum eq LearnerChangeTypeEnum.ChangeCommencementDate}" style="width:100%">
+							<p:datePicker inputStyle="width:80%" style="width:80%" readonlyInput="true" focusOnSelect="true" id="glPostingDate" value="#{learnersUI.companyLearnersChange.commencmentDate}" maxdate="#{learnersUI.companyLearners.completionDate}" mindate="#{learnersUI.now}"
+								pattern="#{autoCompleteUI.CALENDER_PATTERN}" showIcon="true" required="false">
+								<p:ajax event="dateSelect" listener="#{learnersUI.calculateEndDate}" update="pgComenceDate" />
+							</p:datePicker>
+							<p:outputLabel style="margin:-5px" value="Change Commencement Date" for="glPostingDate" />
+						</h:panelGroup>
+
+						<h:panelGroup id="pgComenceDate" styleClass="md-inputfield" rendered="#{learnersUI.companyLearnersChange.learnerChangeTypeEnum eq LearnerChangeTypeEnum.ChangeCommencementDate or learnersUI.companyLearnersChange.completionDate ne null}">
+							<p:calendar inputStyle="width:80%" id="comenceDate" value="#{learnersUI.companyLearnersChange.completionDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" disabled="true" readonlyInput="true">
+								<p:ajax />
+							</p:calendar>
+							<p:outputLabel value="Completion Date" for="comenceDate" />
+						</h:panelGroup>
+					</p:panelGrid>
+
+					<h:panelGroup styleClass="md-inputfield" rendered="#{learnersUI.companyLearnersChange.learnerChangeTypeEnum eq LearnerChangeTypeEnum.ChangeOfProgramQalification and 
+					learnersUI.companyLearners.qualification ne null and learnersUI.companyLearners.unitStandard eq null}"
+						style="margin-top: 19px">
+						<p:autoComplete required="true" requiredMessage="#{lang['saqa.id']} Required" id="highestQualTitle" value="#{learnersUI.companyLearnersChange.qualification}" completeMethod="#{autoCompleteUI.completeQualBeforeLastEnrolmentDateAndTrade}" var="rv" itemLabel="#{rv.saqaQualification}"
+							itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 100%; opacity:1 !important;" style="width: 100%">
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+							<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+							<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+							<p:ajax event="itemSelect"></p:ajax>
+						</p:autoComplete>
+						<p:outputLabel value="#{lang['saqa.id']}" for="highestQualTitle" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield" rendered="#{learnersUI.companyLearnersChange.learnerChangeTypeEnum eq LearnerChangeTypeEnum.ChangeOfProgramTrade and 
+					learnersUI.companyLearners.qualification ne null and learnersUI.companyLearners.unitStandard eq null}" style="margin-top: 19px">
+						<p:autoComplete required="true" requiredMessage="#{lang['saqa.id']} Required" id="trade" value="#{learnersUI.companyLearnersChange.qualification}" completeMethod="#{autoCompleteUI.completeQualificationEnrolmentDateAndIsTrade}" var="rv" itemLabel="#{rv.saqaQualification}" itemValue="#{rv}"
+							forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 100%; opacity:1 !important;" style="width: 100%">
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+							<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+							<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+							<p:ajax event="itemSelect"></p:ajax>
+						</p:autoComplete>
+						<p:outputLabel value="#{lang['saqa.id']}" for="trade" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield" rendered="#{learnersUI.companyLearnersChange.learnerChangeTypeEnum eq LearnerChangeTypeEnum.ChangeOfProgramQalification and 
+					learnersUI.companyLearners.skillsProgram ne null}" style="margin-top: 19px">
+						<p:autoComplete required="true" requiredMessage="Skills Program Selection Required" id="skillsProgram" value="#{learnersUI.companyLearnersChange.skillsProgram}" completeMethod="#{autoCompleteUI.completeSkillsProgram}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}"
+							forceSelection="true" converter="SkillsProgramConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 100%; opacity:1 !important;" style="width: 100%">
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+							<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+						</p:autoComplete>
+						<p:outputLabel value="Skills Program" for="skillsProgram" />
+					</h:panelGroup>
+
+					<h:panelGroup id="pgUsUqal" styleClass="md-inputfield" rendered="#{learnersUI.companyLearnersChange.learnerChangeTypeEnum eq LearnerChangeTypeEnum.ChangeOfProgramQalification and learnersUI.companyLearners.unitStandard ne null}" style="margin-top: 19px">
+
+						<h:panelGroup styleClass="md-inputfield" style="margin-top: 19px">
+							<p:autoComplete required="true" requiredMessage="#{lang['unit.standard']} Required" id="unitStandard" value="#{learnersUI.companyLearnersChange.unitStandard}" completeMethod="#{autoCompleteUI.completeUnitStandards}" var="rv" itemLabel="#{rv.title}" itemValue="#{rv}" forceSelection="true"
+								converter="UnitStandardsConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 100%; opacity:1 !important;" style="width: 100%">
+								<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+								<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.title}</p:column>
+								<p:ajax event="itemSelect" update="pgUsUqal"></p:ajax>
+							</p:autoComplete>
+							<p:outputLabel value="#{lang['unit.standard']}" for="unitStandard" />
+						</h:panelGroup>
+
+						<h:panelGroup rendered="#{learnersUI.companyLearnersChange.unitStandard ne null}" styleClass="md-inputfield" style="margin-top: 40px">
+							<p:autoComplete required="true" requiredMessage="#{lang['saqa.id']} Required" id="usQual" value="#{learnersUI.companyLearnersChange.qualification}" completeMethod="#{learnersUI.completeUnitStandartQualification}" var="rv" itemLabel="#{rv.saqaQualification}" itemValue="#{rv}"
+								forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 100%; opacity:1 !important;" style="width: 100%">
+								<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+								<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+								<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+								<p:ajax event="itemSelect"></p:ajax>
+							</p:autoComplete>
+							<p:outputLabel value="#{lang['saqa.id']}" for="trade" />
+						</h:panelGroup>
+
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield" rendered="#{learnersUI.companyLearnersChange.learnerChangeTypeEnum eq LearnerChangeTypeEnum.ChangeOfProgramQalification and learnersUI.companyLearners.skillsSet ne null}" style="margin-top: 19px">
+						<p:autoComplete required="true" requiredMessage="Skills Set Required" id="skillsSet" value="#{learnersUI.companyLearnersChange.skillsSet}" completeMethod="#{autoCompleteUI.completeSkillsSet}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true"
+							converter="SkillsSetConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 100%; opacity:1 !important;" style="width: 100%">
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+							<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+						</p:autoComplete>
+						<p:outputLabel value="Skills Set" for="skillsSet" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield" style="margin-top: 19px" rendered="#{learnersUI.companyLearnersChange.learnerChangeTypeEnum eq LearnerChangeTypeEnum.ChangeNonCreditBearingTitle}">
+						<p:inputText id="nonCredidBearingDescription" value="#{learnersUI.companyLearnersChange.nonCredidBearingDescription}" style="width:95%" required="true" requiredMessage="Provide Non-Credit Bearing Description">
+							<p:ajax />
+						</p:inputText>
+						<p:outputLabel value="Non Credit Bearing Title:" for="nonCredidBearingDescription" />
+					</h:panelGroup>
+
+				</p:panelGrid>
+				<br />
+			</p:fieldset>
+			<br />
+			<p:commandButton value="#{lang['submit']}" immediate="true" icon="fa fa-check" styleClass="flat" onstart="uploadStart()" action="#{learnersUI.requestChange}" update="mainForm" />
+
+		</h:form>
+
+	</p:dialog>
+
+
+	<p:dialog position="top" header="Application for Trade Test" widgetVar="dlgTradeTestVTwo" resizable="false" hideEffect="clip" showEffect="clip" id="tradeTestVTwo" appendTo="@(body)" modal="true" width="70%" height="80vh" responsive="true" dynamic="true">
+		<h:form id="tradeTestVersionTwoForm">
+			<p:fieldset legend="Test Information">
+				<p:panelGrid columns="2" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group" id="mainInfoGrid">
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="lrd" value="#{learnersUI.companyLearnersTradeTest.learnerReadinessDate}" style="width:95%" disabled="true">
+							<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+						</p:inputText>
+						<p:outputLabel value="Learner Readiness Date" for="lrd" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText value="(#{learnersUI.companyLearnersTradeTest.qualification.codeString}) #{learnersUI.companyLearnersTradeTest.qualification.description}" style="width:95%" disabled="true" />
+						<p:outputLabel value="Trade test applying for (trade title):" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield" rendered="#{learnersUI.companyLearnersTradeTest.designatedTradeLevel ne null}">
+						<p:inputText value="#{learnersUI.companyLearnersTradeTest.designatedTradeLevel.description}" style="width:95%" disabled="true" />
+						<p:outputLabel value="Level For Trade Test:" />
+					</h:panelGroup>
+					<p:spacer rendered="#{learnersUI.companyLearnersTradeTest.attemptedTradeTest ne null}" />
+					<h:panelGroup rendered="#{learnersUI.companyLearnersTradeTest.attemptedTradeTest ne null}">
+						<div>
+							<p:outputLabel value="Have you attempted a trade test previously?" styleClass="gray" for="attemptTradeTest" />
+						</div>
+						<div>
+							<p:selectOneMenu id="attemptTradeTest" value="#{learnersUI.companyLearnersTradeTest.attemptedTradeTest}" style="width:95%" required="true" disabled="true">
+								<p:ajax update="@form"></p:ajax>
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{enumUI.yesNoEnumDD}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield" rendered="#{learnersUI.companyLearnersTradeTest.attemptedTradeTest eq YesNoEnum.Yes}">
+						<p:calendar inputStyle="width:90%" id="preAttDateasd" value="#{learnersUI.companyLearnersTradeTest.previousAttemptDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" readonlyInput="true" required="true" disabled="true" />
+						<p:outputLabel value="Previous Attempt Date" for="preAttDateasd" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield" rendered="#{learnersUI.companyLearnersTradeTest.attemptedTradeTest eq YesNoEnum.Yes}">
+						<p:autoComplete style="width:95%" id="preTestCenterasd" value="#{learnersUI.companyLearnersTradeTest.previousTrainingCenter}" completeMethod="#{learnersUI.findCompaniesAssignedToQualification}" var="rv" itemLabel="#{rv.companyNameDisplay}" itemValue="#{rv}" forceSelection="true"
+							converter="CompanyConvertor" dropdown="true" maxResults="10" required="true" disabled="true">
+							<p:column headerText="#{lang['companyName']}" style="white-space: nowrap">#{rv.companyName}</p:column>
+							<p:column headerText="#{lang['entity.id']}" style="white-space: nowrap">#{rv.levyNumber}</p:column>
+						</p:autoComplete>
+						<p:outputLabel value="Previous Test Center" for="preTestCenterasd" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield" rendered="#{learnersUI.companyLearnersTradeTest.attemptedTradeTest eq YesNoEnum.Yes}">
+						<p:inputNumber value="#{learnersUI.companyLearnersTradeTest.attemptNumber}" maxValue="3" minValue="1" id="preAttDateasdasd" decimalPlaces="0" inputStyle="width:95%" required="true" disabled="true"></p:inputNumber>
+						<p:outputLabel value="Number of Previous Attempts" for="preAttDateasdasd" />
+					</h:panelGroup>
+				</p:panelGrid>
+
+				<p:panelGrid columns="1" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group" id="designatedTradeLevelPanel" rendered="#{learnersUI.designatedTradeLevelList.size() ne 0}">
+					<p:outputLabel value="Designated Trade" />
+					<p:dataTable var="rvDtl" value="#{learnersUI.designatedTradeLevelList}" rowKey="#{rvDtl.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+						rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+						<f:facet name="header">Levels</f:facet>
+						<p:column headerText="#{lang['description']}">
+							<h:outputText value="#{rvDtl.description}" />
+						</p:column>
+						<p:column headerText="Completion Order Number" rendered="#{!learnersUI.selectedNewDesignatedTradeLevel}">
+							<h:outputText value="#{rvDtl.level}" />
+						</p:column>
+						<p:column headerText="Change Level" rendered="#{learnersUI.selectedNewDesignatedTradeLevel}">
+							<p:commandButton rendered="#{rvDtl.canSelected}" icon="fa fa-check" process="@this" value="Select Level" update=":tradeTestVersionTwoForm:mainInfoGrid" action="#{learnersUI.setDesigantedTradeLevel}" onstart="uploadStart()" oncomplete="uploadDone()">
+								<f:setPropertyActionListener value="#{rvDtl}" target="#{learnersUI.selectedDesignatedTradeLevel}" />
+							</p:commandButton>
+						</p:column>
+					</p:dataTable>
+				</p:panelGrid>
+			</p:fieldset>
+			<p:fieldset legend="Preferred Trade Test Centre">
+				<p:panelGrid columns="1" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<h:panelGroup styleClass="md-inputfield" rendered="#{learnersUI.avalibleTradeTestCenters gt 0}">
+						<p:autoComplete id="company" style="width:95%" value="#{learnersUI.companyLearnersTradeTest.trainingProviderApplication}" completeMethod="#{learnersUI.findProviderApplicationsAssignedToQualification}" var="rv" itemLabel="#{rv.company.companyNameDisplay}" itemValue="#{rv}" forceSelection="true"
+							converter="TrainingProviderApplicationConvertor" dropdown="true" minQueryLength="0" maxResults="10" required="true">
+							<p:column headerText="#{lang['companyName']}" style="white-space: nowrap">#{rv.company.companyName}</p:column>
+							<p:column headerText="#{lang['entity.id']}" style="white-space: nowrap">#{rv.company.levyNumber}</p:column>
+							<p:ajax event="itemSelect" update="@form" listener="#{learnersUI.setTradeTestCenterAndRegionCheck}" />
+						</p:autoComplete>
+						<p:outputLabel value="Preferred Trade Test Centre (#{learnersUI.avalibleTradeTestCenters} Center(s) Avalaible) " for="company" />
+					</h:panelGroup>
+					<h:panelGroup rendered="#{learnersUI.avalibleTradeTestCenters eq 0}">
+						<p:outputLabel value="#{learnersUI.avalibleTradeTestCenters} Avalable Test Centers, unable to proceed." />
+					</h:panelGroup>
+					<h:panelGroup rendered="#{learnersUI.companyLearnersTradeTest.preferredTrainingCenter ne null and learnersUI.companyLearnersTradeTest.preferredTrainingCenter.id ne null}">
+						<p:tabView>
+							<p:tab title="Trade Test Centre Information">
+								<ui:include src="/pages/includes/fullCompanyInformation.xhtml">
+									<ui:param name="company" value="#{learnersUI.companyLearnersTradeTest.preferredTrainingCenter}" />
+									<ui:param name="CELLPHONE_FORMAT" value="#{autoCompleteUICELLPHONE_FORMAT}" />
+									<ui:param name="FAX_NUMBER_FORMAT" value="#{autoCompleteUIFAX_NUMBER_FORMAT}" />
+									<ui:param name="TELPHONE_FORMAT" value="#{autoCompleteUITELPHONE_FORMAT}" />
+								</ui:include> 
+							</p:tab>
+							<p:tab title="Trade Test Centre Addresses">
+								<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+									<c:if test="#{learnersUI.companyLearnersTradeTest.preferredTrainingCenter.residentialAddress ne null}">
+										<ui:include src="/pages/includes/addressInformation.xhtml">
+											<ui:param name="header" value="#{lang['residentialAddress']}" />
+											<ui:param name="address" value="#{learnersUI.companyLearnersTradeTest.preferredTrainingCenter.residentialAddress}" />
+										</ui:include>
+									</c:if>
+									<c:if test="#{learnersUI.companyLearnersTradeTest.preferredTrainingCenter.postalAddress ne null}">
+										<ui:include src="/pages/includes/addressInformation.xhtml">
+											<ui:param name="header" value="#{lang['postalAddress']}" />
+											<ui:param name="address" value="#{learnersUI.companyLearnersTradeTest.preferredTrainingCenter.postalAddress}" />
+										</ui:include>
+									</c:if>
+								</p:panelGrid>
+							</p:tab>
+						</p:tabView>
+					</h:panelGroup>
+				</p:panelGrid>
+			</p:fieldset>
+
+
+			<div class="EmptyBox10" />
+			<p:commandButton rendered="#{learnersUI.displayLastInfo}" value="#{lang['submit']}" icon="fa fa-check" styleClass="flat" action="#{learnersUI.requestTradeTestApplication}" update="@form :mainForm" onstart="uploadStart()" oncomplete="uploadDone()" />
+		</h:form>
+	</p:dialog>
+
+
+	<p:dialog header="Application for Trade Test" widgetVar="dlgTradeTest" resizable="false" hideEffect="clip" showEffect="clip" id="tradeTest" width="60%" height="300" responsive="true" modal="true" dynamic="true">
+		<div>
+			<h:form id="tradeTestForm">
+
+				<p:panelGrid columns="2" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<h:panelGroup styleClass="md-inputfield">
+						<p:autoComplete id="company" style="width:95%" value="#{learnersUI.companyLearnersTradeTest.preferredTrainingCenter}" completeMethod="#{autoCompleteUI.completeCompany}" var="rv" itemLabel="#{rv.companyNameDisplay}" itemValue="#{rv}" forceSelection="true" converter="CompanyConvertor"
+							dropdown="true" minQueryLength="3" maxResults="10" required="true">
+							<p:column headerText="#{lang['companyName']}" style="white-space: nowrap">#{rv.companyName}</p:column>
+							<p:column headerText="#{lang['entity.id']}" style="white-space: nowrap">#{rv.levyNumber}</p:column>
+							<p:ajax update="@form" event="itemSelect" listener="#{learnersUI.checkIfTradeTestCenterIsAccredited}"></p:ajax>
+						</p:autoComplete>
+						<p:outputLabel value="Preferred Trade Test Centre" for="company" />
+					</h:panelGroup>
+
+
+					<h:panelGroup styleClass="md-inputfield" rendered="#{!learnersUI.companyLearnersTradeTest.cbmtQualification}" style="width:100%">
+						<p:datePicker focusOnSelect="true" id="lrd" value="#{learnersUI.companyLearnersTradeTest.learnerReadinessDate}" mindate="#{learnersUI.readyDateForTradeTestMinium}" pattern="#{autoCompleteUI.CALENDER_PATTERN}" showIcon="true" required="true" />
+						<p:outputLabel value="Learner Readiness Date" for="lrd" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield" rendered="#{learnersUI.companyLearnersTradeTest.cbmtQualification}" style="width:100%">
+						<p:datePicker focusOnSelect="true" id="lrdCbmt" value="#{learnersUI.companyLearnersTradeTest.learnerReadinessDate}" mindate="#{learnersUI.readyDateForTradeTestMinium}" pattern="#{autoCompleteUI.CALENDER_PATTERN}" showIcon="true" required="true" />
+						<p:outputLabel value="Learner Readiness Date" for="lrdCbmt" />
+					</h:panelGroup>
+
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="Foundational Learning Competence" styleClass="gray" for="gguage" />
+						</div>
+						<div>
+							<p:selectOneMenu id="gguage" value="#{learnersUI.companyLearnersTradeTest.flc}" style="width:95%" required="true">
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{enumUI.yesNoEnumDD}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="Have you attempted a trade test previously?" styleClass="gray" for="attemptTradeTest" />
+						</div>
+						<div>
+							<p:selectOneMenu id="attemptTradeTest" value="#{learnersUI.companyLearnersTradeTest.attemptedTradeTest}" style="width:95%" required="true">
+								<p:ajax update="previousInformation"></p:ajax>
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{enumUI.yesNoEnumDD}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+
+				</p:panelGrid>
+				<p:panelGrid columns="2" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group" id="previousInformation">
+
+					<h:panelGroup styleClass="md-inputfield" rendered="#{learnersUI.companyLearnersTradeTest.attemptedTradeTest eq YesNoEnum.Yes}" style="width:100%">
+						<p:datePicker focusOnSelect="true" id="preAttDate" value="#{learnersUI.companyLearnersTradeTest.previousAttemptDate}" pattern="#{autoCompleteUI.CALENDER_PATTERN}" showIcon="true" required="true" />
+						<p:outputLabel value="Previous Attempt Date" for="preAttDate" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield" rendered="#{learnersUI.companyLearnersTradeTest.attemptedTradeTest eq YesNoEnum.Yes}">
+						<p:autoComplete style="width:95%" id="preTestCenter" value="#{learnersUI.companyLearnersTradeTest.previousTrainingCenter}" completeMethod="#{autoCompleteUI.completeCompany}" var="rv" itemLabel="#{rv.companyNameDisplay}" itemValue="#{rv}" forceSelection="true" converter="CompanyConvertor"
+							dropdown="true" minQueryLength="3" maxResults="10" required="true">
+							<p:column headerText="#{lang['companyName']}" style="white-space: nowrap">#{rv.companyName}</p:column>
+							<p:column headerText="#{lang['entity.id']}" style="white-space: nowrap">#{rv.levyNumber}</p:column>
+						</p:autoComplete>
+						<p:outputLabel value="Previous Test Center" for="preTestCenter" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield" rendered="#{learnersUI.companyLearnersTradeTest.attemptedTradeTest eq YesNoEnum.Yes}">
+						<p:inputNumber value="#{learnersUI.companyLearnersTradeTest.attemptNumber}" decimalPlaces="0" inputStyle="width:95%" required="true"></p:inputNumber>
+						<p:outputLabel value="Number of Attempts" for="preAttDate" />
+					</h:panelGroup>
+
+				</p:panelGrid>
+				<p:commandButton value="#{lang['submit']}" icon="fa fa-check" styleClass="flat" action="#{learnersUI.requestTradeTestApplication}" update="mainForm" oncomplete="PF('dlgTradeTest').hide()" />
+			</h:form>
+		</div>
+
+	</p:dialog>
+
+	<p:dialog header="Accredited Company(s)" widgetVar="accreCompanyForQualDialog" resizable="false" hideEffect="clip" showEffect="clip" id="accreCompanyForQualDialog" width="80%" responsive="true" modal="true" dynamic="true">
+		<h:form>
+			<ui:include src="/pages/includes/tabinfo.xhtml">
+				<ui:param name="showInfoCircle" value="true" />
+				<ui:param name="cssClass" value="secondaryText Fs15" />
+				<ui:param name="helpTxt" value="#{learnersUI.accreditedQuallMssg}" />
+			</ui:include>
+			<p:dataTable var="rowVar" value="#{learnersUI.qualAccredetedCompanyDataModel}" id="accreCompanyList" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+				paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+				<p:column headerText="#{lang['company.name']}" filterBy="#{rowVar.company.companyName}" sortBy="#{rowVar.company.companyName}" filterStyle="width: 95%">
+					<h:outputText value="#{rowVar.company.companyName}" />
+				</p:column>
+				<p:column headerText="#{lang['tradingName']}" filterBy="#{rowVar.company.tradingName}" sortBy="#{rowVar.company.tradingName}" filterStyle="width: 95%">
+					<h:outputText value="#{rowVar.company.tradingName}" />
+				</p:column>
+				<p:column headerText="#{lang['entity.id']}" filterBy="#{rowVar.company.levyNumber}" sortBy="#{rowVar.company.levyNumber}" filterStyle="width: 95%" width="10%">
+					<h:outputText value="#{rowVar.company.levyNumber}" />
+				</p:column>
+
+				<p:column headerText="#{lang['tel.number']}">
+					<h:outputText value="#{rowVar.company.telNumber}" />
+				</p:column>
+				<p:column headerText="#{lang['email']}">
+					<h:outputText value="#{rowVar.company.email}" />
+				</p:column>
+				<p:column headerText="#{lang['address.line.1']}">
+					<h:outputText value="#{rowVar.company.residentialAddress.addressLine1}" />
+				</p:column>
+				<p:column headerText="#{lang['address.line.2']}">
+					<h:outputText value="#{rowVar.company.residentialAddress.addressLine2}" />
+				</p:column>
+				<p:column headerText="#{lang['address.line.3']}">
+					<h:outputText value="#{rowVar.company.residentialAddress.addressLine3}" />
+				</p:column>
+				<p:column headerText="Poastal Code">
+					<h:outputText value="#{rowVar.company.residentialAddress.postcode}" />
+				</p:column>
+
+
+				<p:column width="45" headerText="Select" exportable="false">
+					<p:commandButton icon="fa fa-check" oncomplete="PF('accreCompanyForQualDialog').hide()" action="#{learnersUI.prepPreferredTrainingCenter}" title="Select Company" update="tradeTestForm">
+						<f:setPropertyActionListener value="#{rowVar}" target="#{learnersUI.selectedCompanyQualification}" />
+					</p:commandButton>
+				</p:column>
+
+			</p:dataTable>
+
+		</h:form>
+
+	</p:dialog>
+	<p:dialog header="Recognition of Prior Learning Trade Test" widgetVar="dlgTradeTestRPL" resizable="false" hideEffect="clip" showEffect="clip" id="tradeTestRPL" width="60%" responsive="true" modal="true" dynamic="true">
+
+		<h:form id="tradeTestFormRPL">
+
+			<p:panelGrid columns="2" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup styleClass="md-inputfield">
+					<p:autoComplete id="company" style="width:95%" value="#{learnersUI.companyLearnersTradeTest.preferredTrainingCenter}" completeMethod="#{autoCompleteUI.completeCompany}" var="rv" itemLabel="#{rv.companyNameDisplay}" itemValue="#{rv}" forceSelection="true" converter="CompanyConvertor"
+						dropdown="true" minQueryLength="3" maxResults="10" required="true">
+						<p:column headerText="#{lang['companyName']}" style="white-space: nowrap">#{rv.companyName}</p:column>
+						<p:column headerText="#{lang['entity.id']}" style="white-space: nowrap">#{rv.levyNumber}</p:column>
+					</p:autoComplete>
+					<p:outputLabel value="Preferred Trade Test Centre" for="company" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:calendar id="lrd" inputStyle="width:90%" value="#{learnersUI.companyLearnersTradeTest.learnerReadinessDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" readonlyInput="true" required="true" />
+					<p:outputLabel value="Learner Readiness Date" for="lrd" />
+				</h:panelGroup>
+
+				<h:panelGroup>
+					<div>
+						<p:outputLabel value="Foundational Learning Competence" styleClass="gray" for="gguage" />
+					</div>
+					<div>
+						<p:selectOneMenu id="gguage" value="#{learnersUI.companyLearnersTradeTest.flc}" style="width:95%" required="true">
+							<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+							<f:selectItems value="#{enumUI.yesNoEnumDD}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+						</p:selectOneMenu>
+					</div>
+				</h:panelGroup>
+				<h:panelGroup>
+					<div>
+						<p:outputLabel value="Have you attempted a trade test previously?" styleClass="gray" for="attemptTradeTest" />
+					</div>
+					<div>
+						<p:selectOneMenu id="attemptTradeTest" value="#{learnersUI.companyLearnersTradeTest.attemptedTradeTest}" style="width:95%" required="true">
+							<p:ajax update="previousInformation"></p:ajax>
+							<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+							<f:selectItems value="#{enumUI.yesNoEnumDD}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+						</p:selectOneMenu>
+					</div>
+				</h:panelGroup>
+
+			</p:panelGrid>
+			<p:panelGrid columns="1" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group" id="previousInformation">
+
+				<h:panelGroup styleClass="md-inputfield" rendered="#{learnersUI.companyLearnersTradeTest.attemptedTradeTest eq YesNoEnum.Yes}">
+					<p:calendar inputStyle="width:90%" id="preAttDate" value="#{learnersUI.companyLearnersTradeTest.previousAttemptDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" readonlyInput="true" required="true" />
+					<p:outputLabel value="Previous Attempt Date" for="preAttDate" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield" rendered="#{learnersUI.companyLearnersTradeTest.attemptedTradeTest eq YesNoEnum.Yes}">
+					<p:autoComplete style="width:95%" id="preTestCenter" value="#{learnersUI.companyLearnersTradeTest.previousTrainingCenter}" completeMethod="#{autoCompleteUI.completeCompany}" var="rv" itemLabel="#{rv.companyNameDisplay}" itemValue="#{rv}" forceSelection="true" converter="CompanyConvertor"
+						dropdown="true" minQueryLength="3" maxResults="10" required="true">
+						<p:column headerText="#{lang['companyName']}" style="white-space: nowrap">#{rv.companyName}</p:column>
+						<p:column headerText="#{lang['entity.id']}" style="white-space: nowrap">#{rv.levyNumber}</p:column>
+					</p:autoComplete>
+					<p:outputLabel value="Previous Test Center" for="preTestCenter" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield" rendered="#{learnersUI.companyLearnersTradeTest.attemptedTradeTest eq YesNoEnum.Yes}">
+					<p:inputNumber value="#{learnersUI.companyLearnersTradeTest.attemptNumber}" decimalPlaces="0" inputStyle="width:95%" required="true"></p:inputNumber>
+					<p:outputLabel value="Number of Attempts" for="preAttDate" />
+				</h:panelGroup>
+
+			</p:panelGrid>
+			<p:commandButton value="#{lang['submit']}" icon="fa fa-check" styleClass="flat" action="#{learnersUI.requestARPLTradeTestApplication}" update="mainForm" oncomplete="PF('dlgTradeTestRPL').hide()" />
+
+		</h:form>
+
+	</p:dialog>
+
+	<p:dialog widgetVar="dlgVerificationRequest" resizable="false" hideEffect="clip" showEffect="clip" id="VerificationRequest" responsive="true" modal="true" dynamic="true" closable="false">
+		<h:form id="verificationRequestForm">
+
+			<ui:include src="/pages/includes/tabinfo.xhtml">
+				<ui:param name="showInfoCircle" value="false" />
+				<ui:param name="cssClass" value="Fs20 FontBold" />
+				<ui:param name="helpTxt" value="Are you sure you want to request the verification for #{learnersUI.selectedCompany.companyNameDisplay}?" />
+			</ui:include>
+
+			<br />
+			<br />
+
+			<p:panelGrid columns="2" style="width:100%; text-align: center" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<p:commandButton value="#{lang['submit']}" icon="fa fa-check" styleClass="flat green-btn Fs18" style="height: 50px;" action="#{learnersUI.requestVerification}" update="mainForm" oncomplete="PF('dlgVerificationRequest').hide()" />
+				<p:commandButton value="Cancel" icon="fa fa-times" styleClass="flat red-btn Fs18" style="height: 50px;" update="mainForm" oncomplete="PF('dlgVerificationRequest').hide()" />
+			</p:panelGrid>
+
+		</h:form>
+	</p:dialog>
+
+	<p:dialog widgetVar="dlgVerificationRequestLearner" resizable="false" hideEffect="clip" showEffect="clip" id="VerificationRequest1" responsive="true" modal="true" dynamic="true" closable="false">
+		<h:form id="verificationRequestForm1">
+
+			<ui:include src="/pages/includes/tabinfo.xhtml">
+				<ui:param name="showInfoCircle" value="false" />
+				<ui:param name="cssClass" value="Fs20 FontBold" />
+				<ui:param name="helpTxt" value="Are you sure you want to add Assessment Results for #{learnersUI.companyLearners.user.firstName} #{learnersUI.companyLearners.user.lastName} in company #{learnersUI.selectedCompany.companyNameDisplay}?" />
+			</ui:include>
+
+			<p:panelGrid columns="2" style="width:100%; text-align: center" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<p:selectOneRadio id="passNumID" value="#{learnersUI.generateAddEnum}" columns="2" layout="responsive" required="true" requiredMessage="Please select if you wish to generate certificate or add certificate details">
+					<p:ajax update="@form" />
+					<f:selectItems value="#{enumUI.generateAddEnumDD}" var="idpassEnum" itemLabel="#{idpassEnum}" itemValue="#{idpassEnum}" />
+				</p:selectOneRadio>
+			</p:panelGrid>
+			<br />
+
+			<p:panelGrid columns="2" style="width:100%; text-align: center" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<p:commandButton value="#{lang['submit']}" icon="fa fa-check" styleClass="flat green-btn Fs18" style="height: 50px;" action="#{learnersUI.requestVerificationLearnerByEmployee}" update="mainForm" oncomplete="PF('dlgVerificationRequestLearner').hide()" />
+				<p:commandButton value="Cancel" process="@this" icon="fa fa-times" styleClass="flat red-btn Fs18" style="height: 50px;" update="mainForm" oncomplete="PF('dlgVerificationRequestLearner').hide()" />
+			</p:panelGrid>
+
+		</h:form>
+	</p:dialog>
+
+	<p:dialog header="Completion of non-merSETA qualifications" widgetVar="dlgNonSETA" resizable="false" hideEffect="clip" showEffect="clip" id="NonSETA" width="30%" responsive="true" modal="true" dynamic="true">
+		<h:form id="NonSETAForm">
+			<p:panelGrid columns="1" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+				<h:panelGroup styleClass="md-inputfield">
+					<p:autoComplete style="width:95%" id="preTestCenter" value="#{learnersUI.nonSetaQualificationsCompletion.trainingProvider}" completeMethod="#{autoCompleteUI.completeCompany}" var="rv" itemLabel="#{rv.companyNameDisplay}" itemValue="#{rv}" forceSelection="true" converter="CompanyConvertor"
+						dropdown="true" minQueryLength="3" maxResults="10" required="true">
+						<p:column headerText="#{lang['companyName']}" style="white-space: nowrap">#{rv.companyName}</p:column>
+						<p:column headerText="#{lang['entity.id']}" style="white-space: nowrap">#{rv.levyNumber}</p:column>
+					</p:autoComplete>
+					<p:outputLabel value="Training Provider" for="preTestCenter" />
+				</h:panelGroup>
+
+			</p:panelGrid>
+			<p:commandButton value="#{lang['submit']}" icon="fa fa-check" styleClass="flat" action="#{learnersUI.requestNonSetaQualificationsCompletion	}" update="mainForm" oncomplete="PF('dlgNonSETA').hide()" />
+		</h:form>
+	</p:dialog>
+
+	<p:dialog header="Completion of non-merSETA qualifications" widgetVar="dlgNonSETA1" resizable="false" hideEffect="clip" showEffect="clip" id="NonSETA1" width="30%" responsive="true" modal="true" dynamic="true">
+		<h:form id="NonSETAForm1">
+			<p:panelGrid columns="1" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<ui:include src="/pages/tp/includes/company.xhtml">
+					<ui:param name="title" value="Employer Information" />
+					<ui:param name="company" value="#{learnersUI.selectedCompany}" />
+				</ui:include>
+			</p:panelGrid>
+			<p:commandButton value="#{lang['submit']}" icon="fa fa-check" styleClass="flat" action="#{learnersUI.requestNonSetaQualificationsCompletion	}" update="mainForm" oncomplete="PF('dlgNonSETA1').hide()" />
+		</h:form>
+	</p:dialog>
+
+	<p:dialog header="#{lang['completion.letter']}" widgetVar="dlgCompletionLetter" resizable="false" hideEffect="clip" showEffect="clip" id="NonSETACompletionLetter" width="30%" responsive="true" modal="true" dynamic="true">
+		<h:form id="NonCompletionLetter">
+			<p:panelGrid columns="1" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<ui:include src="/pages/tp/includes/company.xhtml">
+					<ui:param name="title" value="Employer Information" />
+					<ui:param name="company" value="#{learnersUI.selectedCompany}" />
+				</ui:include>
+			</p:panelGrid>
+			<p:commandButton value="#{lang['submit']}" icon="fa fa-check" styleClass="flat" action="#{learnersUI.requestCompletionLetter}" update="mainForm" oncomplete="PF('dlgCompletionLetter').hide()" />
+		</h:form>
+	</p:dialog>
+
+	<p:dialog header="Create Workplace Approval for Company" widgetVar="wpaCompanyForQualDialog" resizable="false" hideEffect="clip" showEffect="clip" id="wpaCompanyForQualDialog" width="20%" responsive="true" modal="true" dynamic="true">
+		<h:form id="wpaForms1">
+			<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+				<h:outputText value="#{learnersUI.workplaceApprovalMsg}" />
+			</p:panelGrid>
+
+			<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+				<p:commandButton value="#{lang['submit']}" icon="fa fa-check" styleClass="flat green-btn Fs18" actionListener="#{learnersUI.createWorkplaceApproval}" update="@form" />
+				<p:commandButton value="#{lang['cancel']}" icon="fa fa-times" styleClass="flat red-btn Fs18" actionListener="#{learnersUI.cancelWorkplaceApproval}" process="@this" update="@form" />
+			</p:panelGrid>
+		</h:form>
+	</p:dialog>
+
+	<p:dialog position="top" header="Recognition of Prior Learning Trade Test" widgetVar="dlgTradeTestRPLcl" resizable="false" hideEffect="clip" showEffect="clip" id="tradeTestRPLcl" width="60%" responsive="true" modal="true" dynamic="true">
+		<h:form id="tradeTestFormRPLcl">
+			<p:panelGrid columns="1" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{viewCreateArplUI.validationFailed}">
+				<h1>Validation Exception</h1>
+				<p:outputLabel style="color:red" value="Reason: #{viewCreateArplUI.validationErrors}" />
+				<div class="EmptyBox10" />
+			</p:panelGrid>
+
+			<p:panelGrid columns="2" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+				<h:panelGroup class="md-inputfield">
+					<p:autoComplete style="width:95%" required="true" requiredMessage="Provide Qualification" id="qualificationSelection" value="#{viewCreateArplUI.companyLearnersTradeTest.qualification}" completeMethod="#{autoCompleteUI.completeQualificationTrade}" var="rvq" itemLabel="#{rvq.description}"
+						itemValue="#{rvq}" forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10" disabled="true">
+						<p:column headerText="SAQA ID" style="white-space: nowrap">#{rvq.code}</p:column>
+						<p:column headerText="#{lang['description']}" style="white-space: nowrap">#{rvq.description}</p:column>
+						<p:column headerText="NQF Level" style="white-space: nowrap">#{rvq.nqflevelg2description}</p:column>
+						<p:ajax event="itemSelect" update="@form" listener="#{viewCreateArplUI.companyLearnersTradeTestApplicationCheck}" />
+					</p:autoComplete>
+					<p:outputLabel value="#{lang['qualification']}" for="qualificationSelection"></p:outputLabel>
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield" rendered="#{viewCreateArplUI.displayTradeTestCenter and viewCreateArplUI.avalibleTradeTestCenters gt 0}">
+					<p:autoComplete id="company" style="width:95%" value="#{viewCreateArplUI.companyLearnersTradeTest.preferredTrainingCenter}" completeMethod="#{viewCreateArplUI.findCompaniesAssignedToQualification}" var="rv" itemLabel="#{rv.companyNameDisplay}" itemValue="#{rv}" forceSelection="true"
+						converter="CompanyConvertor" dropdown="true" minQueryLength="0" maxResults="10" required="true">
+						<p:column headerText="#{lang['companyName']}" style="white-space: nowrap">#{rv.companyName}</p:column>
+						<p:column headerText="#{lang['entity.id']}" style="white-space: nowrap">#{rv.levyNumber}</p:column>
+						<p:ajax event="itemSelect" update="@form" listener="#{viewCreateArplUI.checkRegion}" />
+					</p:autoComplete>
+					<p:outputLabel value="Preferred Trade Test Centre (#{viewCreateArplUI.avalibleTradeTestCenters} Center(s) Avalaible) " for="company" />
+				</h:panelGroup>
+
+				<h:panelGroup rendered="#{viewCreateArplUI.displayTradeTestCenter and viewCreateArplUI.avalibleTradeTestCenters eq 0}">
+					<p:outputLabel value="#{viewCreateArplUI.avalibleTradeTestCenters} Avalable Test Centers, unable to proceed." />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield" rendered="false">
+					<p:calendar id="lrd" inputStyle="width:95%" value="#{viewCreateArplUI.companyLearnersTradeTest.learnerReadinessDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" readonlyInput="true" required="true" />
+					<p:outputLabel value="Learner Readiness Date" for="lrd" />
+				</h:panelGroup>
+
+				<h:panelGroup rendered="#{viewCreateArplUI.displayLastInfo and false}">
+					<div>
+						<p:outputLabel value="Foundational Learning Competence" styleClass="gray" for="gguage" />
+					</div>
+					<div>
+						<p:selectOneMenu id="gguage" value="#{viewCreateArplUI.companyLearnersTradeTest.flc}" style="width:95%" required="true">
+							<p:ajax />
+							<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+							<f:selectItems value="#{enumUI.yesNoEnumDD}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+						</p:selectOneMenu>
+					</div>
+				</h:panelGroup>
+
+				<h:panelGroup rendered="#{viewCreateArplUI.displayLastInfo}">
+					<div>
+						<p:outputLabel value="Have you attempted a trade test previously?" styleClass="gray" for="attemptTradeTest" />
+					</div>
+					<div>
+						<p:selectOneMenu id="attemptTradeTest" value="#{viewCreateArplUI.companyLearnersTradeTest.attemptedTradeTest}" style="width:95%" required="true" disabled="true">
+							<p:ajax update="@form"></p:ajax>
+							<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+							<f:selectItems value="#{enumUI.yesNoEnumDD}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+						</p:selectOneMenu>
+					</div>
+				</h:panelGroup>
+			</p:panelGrid>
+			<p:panelGrid columns="2" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group" id="previousInformationOne" rendered="#{viewCreateArplUI.displayLastInfo}">
+				<h:panelGroup styleClass="md-inputfield" rendered="#{!viewCreateArplUI.check and viewCreateArplUI.companyLearnersTradeTest.attemptedTradeTest eq YesNoEnum.Yes}">
+					<p:calendar inputStyle="width:90%" id="preAttDateasd" value="#{viewCreateArplUI.companyLearnersTradeTest.previousAttemptDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" readonlyInput="true" required="true" disabled="true" />
+					<p:outputLabel value="Previous Attempt Date" for="preAttDateasd" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield" rendered="#{!viewCreateArplUI.check and viewCreateArplUI.companyLearnersTradeTest.attemptedTradeTest eq YesNoEnum.Yes}">
+					<p:autoComplete style="width:95%" id="preTestCenterasd" value="#{viewCreateArplUI.companyLearnersTradeTest.previousTrainingCenter}" completeMethod="#{viewCreateArplUI.findCompaniesAssignedToQualification}" var="rv" itemLabel="#{rv.companyNameDisplay}" itemValue="#{rv}" forceSelection="true"
+						converter="CompanyConvertor" dropdown="true" maxResults="10" required="true" disabled="true">
+						<p:column headerText="#{lang['companyName']}" style="white-space: nowrap">#{rv.companyName}</p:column>
+						<p:column headerText="#{lang['entity.id']}" style="white-space: nowrap">#{rv.levyNumber}</p:column>
+					</p:autoComplete>
+					<p:outputLabel value="Previous Test Center" for="preTestCenterasd" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield" rendered="#{!viewCreateArplUI.check and viewCreateArplUI.companyLearnersTradeTest.attemptedTradeTest eq YesNoEnum.Yes}">
+					<p:inputNumber value="#{viewCreateArplUI.companyLearnersTradeTest.attemptNumber}" maxValue="3" minValue="1" id="preAttDateasdasd" decimalPlaces="0" inputStyle="width:95%" required="true" disabled="true"></p:inputNumber>
+					<p:outputLabel value="Number of Previous Attempts" for="preAttDateasdasd" />
+				</h:panelGroup>
+			</p:panelGrid>
+			<p:panelGrid columns="1" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group" id="previousInformation">
+				<h:panelGroup styleClass="md-inputfield" rendered="#{viewCreateArplUI.check eq true}">
+					<p:calendar inputStyle="width:90%" id="preAttDate" value="#{viewCreateArplUI.companyLearnersTradeTest.previousAttemptDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" readonlyInput="true" required="true" disabled="true" />
+					<p:outputLabel value="Previous Attempt Date" for="preAttDate" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield" rendered="#{viewCreateArplUI.check eq true}">
+					<p:autoComplete style="width:95%" id="preTestCenter" value="#{viewCreateArplUI.companyLearnersTradeTest.previousTrainingCenter}" completeMethod="#{viewCreateArplUI.findCompaniesAssignedToQualification}" var="rv" itemLabel="#{rv.companyNameDisplay}" itemValue="#{rv}" forceSelection="true"
+						converter="CompanyConvertor" dropdown="true" maxResults="10" required="true" disabled="true">
+						<p:column headerText="#{lang['companyName']}" style="white-space: nowrap">#{rv.companyName}</p:column>
+						<p:column headerText="#{lang['entity.id']}" style="white-space: nowrap">#{rv.levyNumber}</p:column>
+					</p:autoComplete>
+					<p:outputLabel value="Previous Test Center" for="preTestCenter" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield" rendered="#{viewCreateArplUI.check eq true}">
+					<p:inputNumber value="#{viewCreateArplUI.companyLearnersTradeTest.attemptNumber}" decimalPlaces="0" inputStyle="width:95%" maxValue="3" minValue="1" required="true" disabled="true"></p:inputNumber>
+					<p:outputLabel value="Number of Previous Attempts" for="preAttDate" />
+				</h:panelGroup>
+			</p:panelGrid>
+			<p:commandButton rendered="#{viewCreateArplUI.displayLastInfo}" process="tradeTestFormRPLcl" value="#{lang['submit']}" icon="fa fa-check" styleClass="flat" action="#{viewCreateArplUI.requestARPLTradeTestApplication}" update="@form :mainForm" onstart="uploadStart()" oncomplete="uploadDone()" />
+		</h:form>
+
+	</p:dialog>
+
+</ui:composition>

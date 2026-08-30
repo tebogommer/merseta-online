@@ -1,0 +1,214 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+
+		<p:importEnum type="haj.com.entity.enums.WspStatusEnum"></p:importEnum>
+		<p:importEnum type="haj.com.entity.enums.WSPSearchType"></p:importEnum>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card">
+					<h1>Mandatory Grant Historical Data</h1>
+					<h:form id="mainForm">
+						<p:fieldset legend="Select Search Type">
+							<p:panelGrid columns="2" style="width:100%" id="gpSearchType" layout="grid" styleClass="ui-panelgrid-blank form-group">
+								<h:panelGroup rendered="true">
+									<p:outputLabel value="Select Search Type" for="searchType" />
+									<br />
+									<p:selectOneMenu required="true" id="searchType" value="#{wspHistoryReportUI.searchType}" requiredMessage="Select Search Type" style="width:100%">
+										<f:selectItem itemLabel="---#{lang['select.one']}---" itemValue="" noSelectionOption="true" />
+										<f:selectItems value="#{enumUI.wspSearchTypeDD}" var="rv" itemLabel="#{searchType}" itemValue="#{rv}" />
+										<p:ajax update="@form" listener="#{wspHistoryReportUI.clearSearchData()}" />
+									</p:selectOneMenu>
+								</h:panelGroup>
+							</p:panelGrid>
+						</p:fieldset>
+						<p:fieldset legend="Search Mandatory Grant Historical Data By Company" rendered="#{wspHistoryReportUI.searchType==WSPSearchType.searchByCompany}">
+							<br />
+							<p:panelGrid columns="2" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group">
+								<h:panelGroup styleClass="md-inputfield" style="width:100%;">
+									<br />
+									<p:autoComplete style="width:100%;" id="company" value="#{wspHistoryReportUI.company}" completeMethod="#{autoCompleteUI.completeCompany}" var="rv" itemLabel="#{rv.companyNameDisplay}" itemValue="#{rv}" forceSelection="true" converter="CompanyConvertor" dropdown="true" minQueryLength="3"
+										maxResults="10">
+										<p:column headerText="#{lang['companyName']}" style="white-space: nowrap">#{rv.companyName}</p:column>
+										<p:column headerText="#{lang['entity.id']}" style="white-space: nowrap">#{rv.levyNumber}</p:column>
+									</p:autoComplete>
+									<p:outputLabel value="#{lang['company']}" for="company" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield">
+									<p:commandButton value="#{lang['submit']}" icon="ui-icon-search" update="@form" action="#{wspHistoryReportUI.wspHistoryData()}" />
+									<p:spacer width="10"></p:spacer>
+									<p:commandButton value="#{lang['clear']}" icon="fa fa-recycle" update="@form" action="#{wspHistoryReportUI.clearWSPSearchHistory()}" />
+								</h:panelGroup>
+							</p:panelGrid>
+						</p:fieldset>
+
+						<p:fieldset legend="Search Mandatory Grant Historical Data By Financial Year" rendered="#{wspHistoryReportUI.searchType==WSPSearchType.searchByFinancialYear}">
+							<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+
+								<h:panelGroup>
+									<p:outputLabel for="year" value="Select DHET Scheme Year Year"></p:outputLabel>
+									<br />
+									<p:selectOneMenu id="year" value="#{wspHistoryReportUI.selectedYear}" style="width:100%">
+										<f:selectItem itemLabel="---Select One---" itemValue="" noSelectionOption="true" />
+										<f:selectItems value="#{wspHistoryReportUI.financialYears}" />
+										<p:ajax></p:ajax>
+									</p:selectOneMenu>
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield">
+									<p:commandButton value="#{lang['submit']}" icon="ui-icon-search" update="@form" action="#{wspHistoryReportUI.wspHistoryData()}" />
+									<p:spacer width="10"></p:spacer>
+									<p:commandButton value="#{lang['clear']}" icon="fa fa-recycle" update="@form" action="#{wspHistoryReportUI.clearWSPSearchHistory()}" />
+								</h:panelGroup>
+							</p:panelGrid>
+						</p:fieldset>
+
+						<p:fieldset legend="Search Mandatory Grant Historical Data By DHET Scheme Year Years" rendered="#{wspHistoryReportUI.searchType==WSPSearchType.searchByYearRange}">
+							<br />
+							<p:panelGrid columns="3" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+
+								<h:panelGroup>
+									<p:outputLabel for="startYear" value="Select Start DHET Scheme Year"></p:outputLabel>
+									<br />
+									<p:selectOneMenu id="startYear" value="#{wspHistoryReportUI.fromYear}" style="width:100%">
+										<f:selectItem itemLabel="---Select One---" itemValue="" noSelectionOption="true" />
+										<f:selectItems value="#{wspHistoryReportUI.financialYears}" />
+										<p:ajax></p:ajax>
+									</p:selectOneMenu>
+								</h:panelGroup>
+
+								<h:panelGroup>
+									<p:outputLabel for="endYear" value="Select End DHET Scheme Year"></p:outputLabel>
+									<br />
+									<p:selectOneMenu id="endYear" value="#{wspHistoryReportUI.toYear}" style="width:100%">
+										<f:selectItem itemLabel="---Select One---" itemValue="" noSelectionOption="true" />
+										<f:selectItems value="#{wspHistoryReportUI.financialYears}" />
+										<p:ajax></p:ajax>
+									</p:selectOneMenu>
+								</h:panelGroup>
+
+
+								<h:panelGroup styleClass="md-inputfield">
+									<p:commandButton value="#{lang['submit']}" icon="ui-icon-search" update="@form" action="#{wspHistoryReportUI.wspHistoryData()}" />
+									<p:spacer width="10"></p:spacer>
+									<p:commandButton value="#{lang['clear']}" icon="fa fa-recycle" update="@form" action="#{wspHistoryReportUI.clearWSPSearchHistory()}" />
+								</h:panelGroup>
+							</p:panelGrid>
+
+						</p:fieldset>
+						<br />
+						<p:fieldset rendered="#{wspHistoryReportUI.searchType==WSPSearchType.searchByYearRange}" legend="Mandatory Grant Historical Data From #{wspHistoryReportUI.fromYear eq null ? '?' : wspHistoryReportUI.fromYear} To #{wspHistoryReportUI.toYear eq null ? '?' : wspHistoryReportUI.toYear}">
+							<ui:include src="/pages/includes/download_lazy.xhtml">
+								<ui:param name="file_name" value="WSP_List" />
+								<ui:param name="target" value="wspByRangeTable" />
+							</ui:include>
+
+							<p:dataTable var="wsp" value="#{wspHistoryReportUI.dataModel}" paginator="true" rows="10" paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {CurrentPageReport} {NextPageLink} {LastPageLink}" rowsPerPageTemplate="10,15,20,25,30,35,40,45,50,100,150,200,250"
+								id="wspByRangeTable" lazy="true" paginatorPosition="bottom">
+
+								<p:column headerText="Company Name" sortBy="#{wsp.companyName}">
+									<h:outputText value="#{wsp.companyName}" />
+								</p:column>
+
+								<p:column headerText="Levy Number" sortBy="#{wsp.levyNumber}">
+									<h:outputText value="#{wsp.levyNumber}" />
+								</p:column>
+
+								<p:column headerText="DHET Scheme Year / Grant Year" sortBy="#{wsp.finYear}">
+									<h:outputText value="#{wsp.finYear}" />
+								</p:column>
+
+								<p:column headerText="Grant Type" sortBy="#{wsp.grantType}">
+									<h:outputText value="#{wsp.grantType}" />
+									<h:outputText rendered="#{wsp.grantType eq null}" value="N/A" />
+								</p:column>
+
+								<p:column headerText="Status" sortBy="#{wsp.status}">
+									<h:outputText value="#{wsp.status}" />
+								</p:column>
+
+							</p:dataTable>
+						</p:fieldset>
+						<br />
+						<p:fieldset rendered="#{wspHistoryReportUI.searchType==WSPSearchType.searchByFinancialYear  and wspHistoryReportUI.selectedYear ne null}" legend="Mandatory Grant Historical Data For Financial Year: #{wspHistoryReportUI.selectedYear}">
+							<ui:include src="/pages/includes/download_lazy.xhtml">
+								<ui:param name="file_name" value="WSP_List" />
+								<ui:param name="target" value="finYearTable" />
+							</ui:include>
+
+							<p:dataTable var="wsp" value="#{wspHistoryReportUI.dataModel}" paginator="true" rows="10" paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {CurrentPageReport} {NextPageLink} {LastPageLink}" rowsPerPageTemplate="10,15,20,25,30,35,40,45,50,100,150,200,250"
+								id="finYearTable" lazy="true" paginatorPosition="bottom">
+
+								<p:column headerText="Company Name" sortBy="#{wsp.companyName}">
+									<h:outputText value="#{wsp.companyName}" />
+								</p:column>
+
+								<p:column headerText="Levy Number" sortBy="#{wsp.levyNumber}">
+									<h:outputText value="#{wsp.levyNumber}" />
+								</p:column>
+
+								<p:column headerText="DHET Scheme Year / Grant Year" sortBy="#{wsp.finYear}">
+									<h:outputText value="#{wsp.finYear}" />
+								</p:column>
+
+								<p:column headerText="Grant Type" sortBy="#{wsp.grantType}">
+									<h:outputText value="#{wsp.grantType}" />
+									<h:outputText rendered="#{wsp.grantType eq null}" value="N/A" />
+								</p:column>
+
+								<p:column headerText="Status" sortBy="#{wsp.status}">
+									<h:outputText value="#{wsp.status}" />
+								</p:column>
+
+							</p:dataTable>
+
+
+
+
+						</p:fieldset>
+
+						<br />
+
+						<p:fieldset legend="Mandatory Grant Historical Data" rendered="#{wspHistoryReportUI.searchType==WSPSearchType.searchByCompany}">
+							<ui:include src="/pages/includes/download_lazy.xhtml">
+								<ui:param name="file_name" value="WSP_List" />
+								<ui:param name="target" value="wspList" />
+							</ui:include>
+
+							<p:dataTable var="wsp" value="#{wspHistoryReportUI.dataModel}" paginator="true" rows="10" paginatorTemplate="{RowsPerPageDropdown} {FirstPageLink} {PreviousPageLink} {CurrentPageReport} {NextPageLink} {LastPageLink}" rowsPerPageTemplate="10,15,20,25,30,35,40,45,50,100,150,200,250"
+								id="wspList" lazy="true" paginatorPosition="bottom">
+
+								<p:column headerText="Company Name" sortBy="#{wsp.companyName}">
+									<h:outputText value="#{wsp.companyName}" />
+								</p:column>
+
+								<p:column headerText="Levy Number" sortBy="#{wsp.levyNumber}">
+									<h:outputText value="#{wsp.levyNumber}" />
+								</p:column>
+
+								<p:column headerText="DHET Scheme Year / Grant Year" sortBy="#{wsp.finYear}">
+									<h:outputText value="#{wsp.finYear}" />
+								</p:column>
+
+								<p:column headerText="Grant Type" sortBy="#{wsp.grantType}">
+									<h:outputText value="#{wsp.grantType}" />
+									<h:outputText rendered="#{wsp.grantType eq null}" value="N/A" />
+								</p:column>
+
+								<p:column headerText="Status" sortBy="#{wsp.status}">
+									<h:outputText value="#{wsp.status}" />
+								</p:column>
+
+							</p:dataTable>
+						</p:fieldset>
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+	</ui:define>
+
+</ui:composition>

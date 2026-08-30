@@ -1,0 +1,143 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                template="/WEB-INF/template.xhtml"
+                xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+    <ui:define name="content">
+    	
+	   <p:importEnum type="haj.com.entity.enums.YesNoEnum"></p:importEnum>
+        <div class="ui-g">
+            <div class="ui-g-12">
+                <div class="card">
+                <h:form id="mainForm">
+                	<p:growl showDetail="false" sticky="false">
+						<p:autoUpdate />
+					</p:growl>
+                    <h1>Agreement Termination Investigation</h1>
+						<ui:include src="/pages/includes/filterGuide.xhtml" />	
+						<ui:include src="/pages/includes/download_lazy.xhtml">
+								<ui:param name="file_name" value="Learner Termination Application" />
+								<ui:param name="target" value="LearnerTerminationList" />
+						 </ui:include>
+	                     <p:dataTable var="var" id="LearnerTerminationList" value="#{companylearnersterminationUI.investigatorDataModel}" rowKey="#{var.id}" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,20,30,40,50,60,70,80,90,100" reflow="true" lazy="true">
+	                     
+	                    	<p:column style="width:50px" headerText="View Details" exportable="false">
+					            <p:rowToggler />
+					        </p:column>
+						    
+						    <p:column headerText="Name" filterBy="#{var.companyLearners.user.firstName}" sortBy="#{var.companyLearners.user.firstName}">
+						        <h:outputText value="#{var.companyLearners.user.firstName}" />
+						    </p:column>
+						 
+						    <p:column headerText="Surname" filterBy="#{var.companyLearners.user.lastName}" sortBy="#{var.companyLearners.user.lastName}">
+						        <h:outputText value="#{var.companyLearners.user.lastName}" />
+						    </p:column>
+						      <p:column headerText="ID Number" filterBy="#{var.companyLearners.user.rsaIDNumber}" sortBy="#{var.companyLearners.user.rsaIDNumber}">
+						        <h:outputText  value="#{var.companyLearners.user.rsaIDNumber}" />
+						         <h:outputText rendered="#{var.companyLearners.user.rsaIDNumber.length() lt 1}"  value="N/A" />
+						    </p:column>
+						    
+						     <p:column headerText="Passport Number" filterBy="#{var.companyLearners.user.rsaIDNumber}" sortBy="#{var.companyLearners.user.rsaIDNumber}">
+						        <h:outputText  value="#{var.companyLearners.user.passportNumber}" />
+						        <h:outputText rendered="#{var.companyLearners.user.passportNumber.length() lt 1}"  value="N/A" />
+						    </p:column>
+					         
+					         <p:column headerText="#{lang['status']}">
+								 <h:outputText value="#{var.status.friendlyName}" />
+					         </p:column>
+						   
+					    	<p:rowExpansion id="tableExpansion">
+					    		
+								<div class="ui-g-12">
+									<div class="card card-w-title">
+					    			    <h1>Learner Details</h1>
+						    			<ui:include src="/pages/tp/includes/learner_termination_learner_details_display.xhtml">
+												<ui:param name="companylearnerstermination" value="#{var}" />
+												<ui:param name="disableInvestigationDate" value="false" />
+									    </ui:include>
+								    </div>
+								  </div>
+						    	<br/>
+								<div class="ui-g-12">
+									<div class="card card-w-title">
+										<h1>Learner Registration Documents</h1>
+										<ui:include src="/pages/tp/includes/companylearnerdocs.xhtml">
+											<ui:param name="companyLearners" value="#{var.companyLearners}" />
+										</ui:include>
+									</div>
+								</div>
+					    		<br/>
+					    		<div class="ui-g-12">
+									<div class="card card-w-title">
+					    			    <h1>Workflow Documents</h1>
+						    			<ui:include src="/pages/includes/documents_info_display.xhtml">
+												<ui:param name="docs" value="#{var.docs}" />
+									    </ui:include>
+								    </div>
+								  </div>
+						    	<br/>
+						    						    		
+					    		<c:if test="#{var.trainingProviderApplication eq null}">
+									<div class="ui-g-12">
+										<ui:include src="/pages/tp/includes/company.xhtml">
+											<ui:param name="title" value="Provider Information" />
+											<ui:param name="company" value="#{var.companyLearners.company}" />
+										</ui:include>
+									</div>
+								</c:if>
+								
+								<c:if test="#{var.trainingProviderApplication ne null}">
+									<div class="ui-g-12">
+										<div class="card card-w-title">
+											<h1>#{lang['sdp']} Details</h1>
+											<ui:include src="/pages/includes/sdp_info_display.xhtml">
+												<ui:param name="trainingProvider" value="#{var.trainingProviderApplication}" />
+											</ui:include>
+										</div>
+									</div>
+								</c:if>
+								
+								 <p:commandButton onstart="uploadStart()" oncomplete="uploadDone()" rendered="true" value="#{lang['complete.task']}" icon="ui-icon-save" update="tableExpansion" action="#{companylearnersterminationUI.completeInvestigation}" style="height: 50px;" styleClass="flat green-btn Fs18">
+									<f:setPropertyActionListener value="#{var}" target="#{companylearnersterminationUI.companylearnerstermination}" />
+								</p:commandButton>
+								
+					    	</p:rowExpansion>
+						</p:dataTable>
+						<br/>
+						
+                  </h:form>
+                </div>
+            </div>
+        </div>
+        
+        <ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+		<p:dialog header="Reject Reasons" widgetVar="rejectReason" hideEffect="clip" showEffect="clip" id="dialogRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{companylearnersterminationUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:100%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{companylearnersterminationUI.oneSideRejectReasons}" var="rv" itemValue="#{rv}" />
+
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+
+							</p:selectManyMenu>
+							
+						</div>
+					</div>
+					<p:commandButton onstart="uploadStart()" oncomplete="uploadDone();PF('rejectReason').hide()" update="mainForm"  value="Reject" action="#{companylearnersterminationUI.etqaCompanyLearnersFinalRejection}">
+					</p:commandButton>
+				</div>
+			</h:form>
+		</p:dialog>
+    </ui:define>
+
+</ui:composition>

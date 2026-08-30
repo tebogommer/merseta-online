@@ -1,0 +1,299 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Stakeholder Relations</h1>
+					<p:importEnum type="haj.com.entity.enums.RelationTypeEnum"></p:importEnum>
+					<h:form id="stakeholderrelationsInsForm">
+						<p:growl sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:panelGrid columns="1" style="width:100%" id="stakeholderrelationsInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="description" value="#{stakeholderrelationsUI.stakeholderrelations.description}" style="width:95%" />
+								<p:outputLabel value="#{lang['description']}" for="description" />
+							</h:panelGroup>
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="Realtion Type" for="relationType" />
+								</div>
+								<div>
+									<p:selectOneMenu id="relationType" value="#{stakeholderrelationsUI.stakeholderrelations.relationTypeEnum}" style="width:75%" required="true">
+										<p:ajax />
+										<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+										<f:selectItems value="#{enumUI.relationTypeEnumDD}" />
+									</p:selectOneMenu>
+								</div>
+							</h:panelGroup>
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:stakeholderrelationsList :stakeholderrelationsInsForm:stakeholderrelationsInsGrid docForm" action="#{stakeholderrelationsUI.stakeholderrelationsInsert}" />
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="stakeholderrelationsInsGrid docForm" process="@this" action="#{stakeholderrelationsUI.prepareNew}">
+									<p:resetInput target="stakeholderrelationsInsGrid" />
+								</p:commandButton>
+							</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+						<p:dataTable var="rowVar" value="#{stakeholderrelationsUI.dataModel}" filteredValue="#{stakeholderrelationsUI.stakeholderRelationsfilteredList}" id="stakeholderrelationsList" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+							rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+							<p:column style="width:7%" headerText="#{lang['expand.row']}">
+								<p:rowToggler rendered="#{rowVar.relationTypeEnum eq RelationTypeEnum.Survey}" />
+							</p:column>
+							<p:column headerText="#{lang['description']}" filterBy="#{rowVar.description}">
+								<h:outputText value="#{rowVar.description}" />
+							</p:column>
+							<p:column headerText="Relation Type" sortBy="#{rowVar.relationTypeEnum}">
+								<h:outputText value="#{rowVar.relationTypeEnum.friendlyName}" />
+							</p:column>
+							<p:column headerText="#{lang['action']}" width="120">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":stakeholderrelationsInsForm:stakeholderrelationsInsGrid">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{stakeholderrelationsUI.stakeholderrelations}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:stakeholderrelationsList docForm" action="#{stakeholderrelationsUI.stakeholderrelationsDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{stakeholderrelationsUI.stakeholderrelations}" />
+								</p:commandButton>
+								<p:spacer width="5" rendered="#{rowVar.relationTypeEnum eq RelationTypeEnum.Survey}" />
+								<p:commandButton icon="fa fa-plus" title="#{lang['add.question']}" update="stakeholderrelationssurveyInsForm docForm" action="#{stakeholderrelationsUI.prepNewStakeholderRelationsSurvey}" rendered="#{rowVar.relationTypeEnum eq RelationTypeEnum.Survey}">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{stakeholderrelationsUI.stakeholderrelations}" />
+								</p:commandButton>
+								<p:spacer width="5" rendered="#{rowVar.relationTypeEnum eq RelationTypeEnum.NewsLetter}" />
+								<p:commandButton icon="fa fa-cloud-upload" title="#{lang['view.upload.documents']}" action="#{stakeholderrelationsUI.viewDoucments}" update="docForm" rendered="#{rowVar.relationTypeEnum eq RelationTypeEnum.NewsLetter}">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{stakeholderrelationsUI.stakeholderrelationsDocSelection}" />
+								</p:commandButton>
+								<p:spacer width="5" rendered="#{rowVar.relationTypeEnum eq RelationTypeEnum.Notice}" />
+								<p:commandButton icon="fa fa-envelope" title="#{lang['send.notice']}" action="#{stakeholderrelationsUI.sendNotification}" update="@form" rendered="#{rowVar.relationTypeEnum eq RelationTypeEnum.Notice}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{stakeholderrelationsUI.stakeholderrelations}" />
+								</p:commandButton>
+							</p:column>
+							<p:rowExpansion>
+								<p:outputPanel rendered="#{rowVar.relationTypeEnum eq RelationTypeEnum.Survey}">
+									<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+										<p:dataTable id="surveyQuestionsDT" value="#{rowVar.stakeholderRelationsSurveyList}" var="rvq" rowKey="#{rvq.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10" reflow="true">
+											<f:facet name="header">
+											#{lang['questions.assigned.to']} #{rowVar.description}
+											</f:facet>
+											<p:column headerText="#{lang['description']}" sortBy="#{rvq.description}">
+												<h:outputText value="#{rvq.description}" />
+											</p:column>
+											<p:column headerText="#{lang['action']}" width="120">
+												<p:commandButton icon="fa fa-database" title="#{lang['update']}" update="stakeholderrelationssurveyUpdForm" oncomplete="PF('dlgUpdQuestion').show()">
+													<f:setPropertyActionListener value="#{rvq}" target="#{stakeholderrelationsUI.stakeholderrelationssurvey}" />
+												</p:commandButton>
+												<p:spacer width="5" />
+												<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:stakeholderrelationsList" action="#{stakeholderrelationsUI.stakeholderrelationssurveyDelete}">
+													<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+													<f:setPropertyActionListener value="#{rvq}" target="#{stakeholderrelationsUI.stakeholderrelationssurvey}" />
+												</p:commandButton>
+											</p:column>
+										</p:dataTable>
+									</p:panelGrid>
+								</p:outputPanel>
+							</p:rowExpansion>
+						</p:dataTable>
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<h:form id="docForm">
+					<c:if test="#{stakeholderrelationsUI.showDocForm}">
+						<div class="ui-g">
+							<div class="ui-g-12">
+								<div class="card">
+									<h1 class="BigTopic TexAlCenter">
+										<h:outputText value="#{stakeholderrelationsUI.stakeholderrelations.description}" />
+									</h1>
+									<div class="ui-g">
+										<div class="ui-g-12 ui-md-6 ui-lg-6">
+											<p:outputLabel value="#{lang['document.note']}:" />
+											<p:outputLabel value="#{stakeholderrelationsUI.doc.note}" />
+											<br />
+											<p:inputTextarea id="note" value="#{stakeholderrelationsUI.doc.note}" style="width:100%" rows="6" cols="33">
+												<p:ajax />
+											</p:inputTextarea>
+										</div>
+										<div class="ui-g-12 ui-md-6 ui-lg-6">
+											<p:fileUpload style="width:100%" id="fileUploadOne" onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{stakeholderrelationsUI.safeFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="Select file" fileLimitMessage="File to big to upload" update="@form" multiple="false" fileLimit="1" immediate="false" auto="true" />
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div class="ui-g">
+							<div class="ui-g-12">
+								<div class="card card-w-title">
+									<p:dataTable var="rv" value="#{stakeholderrelationsUI.docs}" filteredValue="#{stakeholderrelationsUI.docsfiltered}" id="resultTable" rowKey="#{rv.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate=" {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25"
+										reflow="true" style="width 100%" rendered="#{stakeholderrelationsUI.docs.size() gt 0}">
+										<f:facet name="header">#{stakeholderrelationsUI.stakeholderrelations.description}'s Document</f:facet>
+										<p:column id="columnOne" exportable="false" headerText="#{lang['expand.row']}" width="45">
+											<p:rowToggler rendered="#{rv.docVerions.size()>0}" />
+										</p:column>
+										<p:column headerText="#{lang['version']}" width="10%">
+											<h:outputText value="#{rv.versionNo}" />
+										</p:column>
+
+										<p:column headerText="#{lang['owner']}" style="width:20%">
+											<h:outputText value="#{rv.users.firstName} #{rv.users.lastName}" />
+										</p:column>
+
+										<p:column headerText="#{lang['date.added']}">
+											<h:outputText value="#{rv.createDate}">
+												<f:convertDateTime pattern="dd MMMM yyyy (HH:mm:ss)" />
+											</h:outputText>
+										</p:column>
+
+
+										<p:column headerText="#{lang['original.file.name']}" style="width:30%">
+											<h:outputText value="#{rv.originalFname}" />
+										</p:column>
+
+										<p:column headerText="#{lang['extension']}" style="width:6%">
+											<h:outputText value="#{rv.extension}" />
+										</p:column>
+
+										<p:column headerText="#{lang['action']}" id="columnTwo" width="9%" exportable="false">
+											<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlb">
+												<f:setPropertyActionListener value="#{rv}" target="#{uploadDocUI.doc}" />
+												<p:tooltip for="dlb" value="#{lang['download.the.file']}" position="" />
+											</p:commandButton>
+
+											<p:spacer width="5" />
+											<p:commandButton icon="fa fa-bars " id="dhist" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList">
+												<f:setPropertyActionListener value="#{rv}" target="#{uploadDocUI.doc}" />
+												<p:tooltip for="dhist" value="#{lang['document.tracker']}" position="" />
+											</p:commandButton>
+
+											<h:panelGroup id="panelGroupFour" rendered="#{rv.note ne null}">
+												<p:spacer width="5" />
+												<p:commandButton icon="fa fa-comment-o " id="dnote" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+													<f:setPropertyActionListener value="#{rv}" target="#{uploadDocUI.doc}" />
+												</p:commandButton>
+												<p:tooltip for="dnote" value="#{lang['view.note']} " />
+											</h:panelGroup>
+											<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv.extension.toLowerCase() eq 'pdf' or rv.extension.toLowerCase() eq 'png' or rv.extension.toLowerCase() eq 'jpg' or rv.extension.toLowerCase() eq 'jpeg' or rv.extension.toLowerCase() eq 'gif'}">
+												<p:spacer width="5" />
+												<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+													<f:setPropertyActionListener value="#{rv}" target="#{uploadDocUI.doc}" />
+													<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+												</p:commandButton>
+											</h:panelGroup>
+										</p:column>
+
+										<p:rowExpansion>
+											<h:dataTable var="rv1" value="#{rv.docVerions}">
+												<h:column>
+													<f:facet name="header">#{lang['original.file.name']}</f:facet>
+													<h:outputText value="#{rv1.originalFname}" />
+												</h:column>
+
+												<h:column>
+													<f:facet name="header">#{lang['version']}</f:facet>
+													<h:outputText value="#{rv1.versionNo}" />
+												</h:column>
+
+												<h:column>
+													<f:facet name="header">#{lang['owner']}</f:facet>
+													<h:outputText value="#{rv1.users.firstName} #{rv1.users.lastName}" />
+												</h:column>
+
+												<h:column>
+													<f:facet name="header">#{lang['date.added']}</f:facet>
+													<h:outputText value="#{rv1.createDate}">
+														<f:convertDateTime pattern="dd MMMM yyyy (HH:mm:ss)" />
+													</h:outputText>
+												</h:column>
+
+												<h:column id="columnFour">
+													<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlb1" title="#{lang['download.version']}">
+														<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+													</p:commandButton>
+													<p:tooltip for="dlb1" value="#{lang['download']}" />
+
+													<h:panelGroup id="panelGroupTwo" rendered="#{rv1.note ne null}">
+														<p:spacer width="5" />
+														<p:commandButton icon="fa fa-comment-o " id="dnote1" update=":noteForm:notePanel" oncomplete="PF('noteDialog').show()" title="View Note">
+															<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+														</p:commandButton>
+														<p:tooltip for="dnote1" value="#{lang['note']}" />
+													</h:panelGroup>
+
+													<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+														<p:spacer width="5" />
+														<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocsHistory" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+															<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+															<p:tooltip for="viewerButtonUserDocsHistory" value="#{lang['view.document']} " position="left" />
+														</p:commandButton>
+													</h:panelGroup>
+												</h:column>
+											</h:dataTable>
+										</p:rowExpansion>
+									</p:dataTable>
+								</div>
+							</div>
+						</div>
+					</c:if>
+				</h:form>
+			</div>
+		</div>
+
+		<p:dialog header="#{lang['add.question']}" widgetVar="dlgQuestion" resizable="false" hideEffect="clip" showEffect="clip" id="dlgQuestionID" width="30%" responsive="true" modal="true" dynamic="true">
+			<h:form id="stakeholderrelationssurveyInsForm">
+				<p:panelGrid columns="1" style="width:100%" id="stakeholderrelationssurveyInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText required="true" requiredMessage="#{lang['provide.description.before.proceeding']}" id="description" value="#{stakeholderrelationsUI.stakeholderrelationssurvey.description}" style="width:95%" />
+						<p:outputLabel value="#{lang['description']}" for="description" />
+					</h:panelGroup>
+					<p:panelGrid columns="1" styleClass="ui-panelgrid-blank">
+						<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update="mainForm" action="#{stakeholderrelationsUI.stakeholderrelationssurveyInsert}" />
+					</p:panelGrid>
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="#{lang['update.question']}" widgetVar="dlgUpdQuestion" resizable="false" hideEffect="clip" showEffect="clip" id="dlgUpdQuestionID" width="30%" responsive="true" modal="true" dynamic="true">
+			<h:form id="stakeholderrelationssurveyUpdForm">
+				<p:panelGrid columns="1" style="width:100%" id="stakeholderrelationssurveyInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText required="true" requiredMessage="#{lang['provide.description.before.proceeding']}" id="descriptionUpd" value="#{stakeholderrelationsUI.stakeholderrelationssurvey.description}" style="width:95%" />
+						<p:outputLabel value="#{lang['description']}" for="descriptionUpd" />
+					</h:panelGroup>
+					<p:panelGrid columns="1" styleClass="ui-panelgrid-blank">
+						<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update="mainForm" action="#{stakeholderrelationsUI.stakeholderrelationssurveyUpdate}" oncomplete="PF('dlgUpdQuestion').hide()" />
+					</p:panelGrid>
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="#{lang['document.note']}" width="50%" widgetVar="noteDialogOld" resizable="false" hideEffect="clip" showEffect="clip" id="dialogNoteOld" modal="true">
+			<h:form id="noteFormOld">
+				<p:panelGrid styleClass="ui-panelgrid-blank form-group" layout="grid" columns="1" style="width:100%">
+					<p:outputPanel id="notePanel" style="overflow-y:scroll; overflow-x:scroll;">
+						<p:outputLabel rendered="#{hostingCompanyTemplatesUI.tdoc ne null}" value="#{hostingCompanyTemplatesUI.tdoc.note}" />
+					</p:outputPanel>
+					<div class="EmptyBox10" />
+					<f:facet name="footer">
+						<center>
+							<p:commandButton id="Closetemplate" icon="fa fa-close " type="button" onclick="PF('noteDialog').hide()" value="#{lang['close']}" />
+						</center>
+					</f:facet>
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+
+	</ui:define>
+
+</ui:composition>

@@ -1,0 +1,666 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:l="http://www.lapis.com/jsf/exporter" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<style>
+div.ui-treenode-children {
+	padding-left: 0px !important
+}
+
+tr {
+	
+}
+
+.smallCol {
+	width: 20%;
+}
+
+.largeCol {
+	width: 80%;
+}
+
+#processrolesInsForm:demoprocessRole .ui-tree.ui-tree-horizontal .ui-tree-toggler {
+	visibility: hidden;
+}
+
+div#processrolesInsForm\:demoHostingCompanyProcessContext, div#processrolesInsForm\:demoHostingCompanyEmployeesContext, div#processrolesInsForm\:demoProcessRolesContext, div#processrolesInsForm\:demoHostingContext
+	{
+	display: block !important;
+	opacity: 1 !important;
+	z-index: 100 !important;
+}
+
+body .ui-state-disabled {
+	opacity: 1;
+}
+
+.no-padding {
+	padding: 0px !important;
+}
+
+.ex-info {
+	height: 60px;
+	height: 60px;
+	overflow-y: scroll;
+	font-size: 12px !important;
+	color: #666 !important;
+}
+
+#processrolesInsForm:processRole2 tr td {
+	border-color: inherit;
+	border-width: 1px;
+	border-style: solid;
+}
+</style>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>#{lang['processRoles']}</h1>
+					<h:form id="processrolesInsForm">
+						<p:importEnum type="haj.com.entity.enums.ConfigDocProcessEnum"></p:importEnum>
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="#{lang['hostingCompany']}" styleClass="gray" />
+							</div>
+							<div>
+								<p:autoComplete id="hostCompanyAutoComplete" value="#{processrolesUI.hostingCompany}" completeMethod="#{hostingCompanyEmployeesUI.completeHostingCompany}" converter="HostingCompanyConvertor" var="rv" itemLabel="#{rv.companyName}" itemValue="#{rv}" forceSelection="true" dropdown="true" minQueryLength="1" maxResults="10" required="true" requiredMessage="#{lang['select.host.company']}">
+									<p:ajax event="itemSelect" update="@form" process="@this" listener="#{processrolesUI.findCurrentProcesses}" />
+								</p:autoComplete>
+							</div>
+						</h:panelGroup>
+
+						<div class="EmptyBox15"></div>
+						<c:if test="#{processrolesUI.root ne null}">
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="#{lang['expand.all']}" styleClass="gray" />
+									<p:spacer width="20"></p:spacer>
+									<p:selectBooleanCheckbox value="#{processrolesUI.expandAll}">
+										<p:ajax update="processRole" event="change" listener="#{processrolesUI.findCurrentProcesses}"></p:ajax>
+									</p:selectBooleanCheckbox>
+								</div>
+							</h:panelGroup>
+							<div class="EmptyBox10"></div>
+							<p:commandButton value="Export Workflows" ajax="false">
+								<l:dataExporter postProcessor="#{processexportUI.postProcessXLS}" source="processRole2" fileType="excel" fileName="MersetaWorkflows" />
+							</p:commandButton>
+							<p:treeTable style="display: none" value="#{processrolesUI.tableRoot}" var="document" selectionMode="single" selection="#{processrolesUI.selectedNode}" orientation="horizontal" id="processRole2">
+								<p:column headerText="Name">
+									<h:outputText value="#{document.name}" />
+								</p:column>
+								<p:column headerText="Permission">
+									<h:outputText value="#{document.size}" />
+								</p:column>
+								<p:column headerText="SLA">
+									<h:outputText value="#{document.type}" />
+								</p:column>
+							</p:treeTable>
+							<div class="EmptyBox5"></div>
+							<p:tree value="#{processrolesUI.root}" var="doc" selectionMode="single" selection="#{processrolesUI.selectedNode}" orientation="horizontal" id="processRole">
+
+								<p:treeNode expandedIcon="ui-icon-folder-open" collapsedIcon="ui-icon-folder-collapsed">
+									<h:outputText value="#{doc.name}" />
+								</p:treeNode>
+								<p:treeNode type="HostingCompany">
+									<h:outputText value="#{doc.companyName}" />
+								</p:treeNode>
+								<p:treeNode type="HostingCompanyProcess">
+									<h:outputText value="#{lang[doc.workflowProcess.registrationName]}" />
+								</p:treeNode>
+								<p:treeNode type="HostingCompanyProcessLast">
+									<h:outputText value="#{lang[doc.workflowProcess.registrationName]}" />
+								</p:treeNode>
+								<p:treeNode type="HostingCompanyProcessChild">
+									<h:outputText value="#{doc.note}" />
+								</p:treeNode>
+								<p:treeNode type="HostingCompanyProcessChildLast">
+									<h:outputText value="#{doc.note}" />
+								</p:treeNode>
+								<p:treeNode type="ProcessRoles">
+									<h:outputText value="#{doc.roles.description} (#{doc.rolePermission.friendlyName}) (SLA #{doc.numberOfDays != null ? doc.numberOfDays : 5})" />
+								</p:treeNode>
+								<p:treeNode type="ProcessRolesCompany">
+									<h:outputText value="#{lang[doc.companyUserType.type]} (#{doc.rolePermission.friendlyName})  (SLA #{doc.numberOfDays != null ? doc.numberOfDays : 5})" />
+								</p:treeNode>
+								<p:treeNode type="HostingCompanyEmployees">
+									<h:outputText value="#{doc.users.firstName} #{doc.users.lastName}" />
+								</p:treeNode>
+								<p:treeNode type="NONE">
+								</p:treeNode>
+							</p:tree>
+
+							<p:contextMenu for="processRole" nodeType="HostingCompany">
+								<p:menuitem value="#{lang['add.new.process']}" actionListener="#{processrolesUI.displaySelectedSingle}" icon="ui-icon-assignment" update="@form" />
+							</p:contextMenu>
+
+							<p:contextMenu for="processRole" nodeType="ProcessRoles">
+								<p:menuitem value="#{lang['remove.role']}" actionListener="#{processrolesUI.removeProcessRole}" icon="ui-icon-trash" update="@form">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+								</p:menuitem>
+								<p:menuitem value="#{lang['add.new.user']}" actionListener="#{processrolesUI.displaySelectedSingle}" icon="ui-icon-person" update="@form" />
+							</p:contextMenu>
+
+							<p:contextMenu for="processRole" nodeType="ProcessRolesCompany">
+								<p:menuitem value="#{lang['remove.role']}" actionListener="#{processrolesUI.removeProcessRole}" icon="ui-icon-trash" update="@form">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+								</p:menuitem>
+							</p:contextMenu>
+
+							<p:contextMenu for="processRole" nodeType="HostingCompanyProcess">
+								<p:menuitem value="#{lang['add.new.role']}" actionListener="#{processrolesUI.displaySelectedSingle}" icon="ui-icon-class" update="@form" />
+							</p:contextMenu>
+
+							<p:contextMenu for="processRole" nodeType="HostingCompanyProcessLast">
+								<p:menuitem value="#{lang['add.new.process']}" actionListener="#{processrolesUI.prepProcess}" icon="ui-icon-plus" update="@form" oncomplete="PF('NewProcess').show()" />
+								<p:menuitem value="#{lang['add.new.role']}" actionListener="#{processrolesUI.displaySelectedSingle}" icon="ui-icon-class" update="@form" />
+							</p:contextMenu>
+
+							<p:contextMenu for="processRole" nodeType="HostingCompanyProcessChild">
+								<p:menuitem value="#{lang['add.new.role']}" actionListener="#{processrolesUI.displaySelectedSingle}" icon="ui-icon-class" update="@form" />
+							</p:contextMenu>
+
+							<p:contextMenu for="processRole" nodeType="HostingCompanyProcessChildLast">
+								<p:menuitem value="#{lang['add.new.role']}" actionListener="#{processrolesUI.displaySelectedSingle}" icon="ui-icon-class" update="@form" />
+								<p:menuitem value="#{lang['add.new.process']}" actionListener="#{processrolesUI.prepProcess}" icon="ui-icon-plus" update="@form" oncomplete="PF('NewProcess').show()" />
+								<p:menuitem value="#{lang['remove.process']}" actionListener="#{processrolesUI.removeProcess}" icon="ui-icon-trash" update="@form">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+								</p:menuitem>
+							</p:contextMenu>
+
+							<p:contextMenu for="processRole" nodeType="HostingCompanyEmployees">
+								<p:menuitem value="#{lang['remove.user']}" actionListener="#{processrolesUI.removeUserRole}" icon="ui-icon-trash" update="@form">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+								</p:menuitem>
+							</p:contextMenu>
+
+
+							<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+								<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+								<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+							</p:confirmDialog>
+
+							<div class="EmptyBox10"></div>
+
+							<h1>#{lang['how.to.use']}</h1>
+							<div>
+								<p:spacer width="5px"></p:spacer>
+								<span class="gray">
+									<i class="fa fa-info-circle"></i>
+									<p:spacer width="5px"></p:spacer>
+									#{lang['right.click.on.any.color.node.to.display.the.appropriate.menu']}
+								</span>
+							</div>
+							<p:tree value="#{processrolesUI.demoRoot}" var="doc" orientation="horizontal" id="demoprocessRole">
+
+								<p:treeNode expandedIcon="ui-icon-folder-open" collapsedIcon="ui-icon-folder-collapsed">
+									<h:outputText value="#{doc.name}" />
+								</p:treeNode>
+
+								<p:treeNode type="HostingCompanyDemo">
+									<h:outputText value="#{doc}" />
+								</p:treeNode>
+								<p:treeNode type="HostingCompanyProcessDemo">
+									<h:outputText value="#{doc}" />
+								</p:treeNode>
+								<p:treeNode type="ProcessRolesDemo">
+									<h:outputText value="#{doc} (Role Permission)" />
+								</p:treeNode>
+								<p:treeNode type="HostingCompanyEmployeesDemo">
+									<h:outputText value="#{doc}" />
+								</p:treeNode>
+							</p:tree>
+
+							<p:contextMenu for="demoprocessRole" nodeType="HostingCompanyDemo" id="demoHostingContext">
+								<p:menuitem value="#{lang['add.new.process']}" icon="ui-icon-assignment" disabled="true" />
+								<p:menuitem styleClass="ex-info" value="#{lang['click.here.to.add.a.new.process.to.the.SETA']}" disabled="true" />
+							</p:contextMenu>
+
+							<p:contextMenu for="demoprocessRole" nodeType="ProcessRoles" id="demoProcessRolesContext">
+								<p:menuitem value="#{lang['remove.role']}" icon="ui-icon-trash" disabled="true" />
+								<p:menuitem styleClass="ex-info" value="#{lang['click.here.to.add.remove.the.role.if.no.users.are.assigned']}" disabled="true" />
+								<p:menuitem value="#{lang['add.new.user']}" icon="ui-icon-person" disabled="true" />
+								<p:menuitem styleClass="ex-info" value="#{lang['click.here.to.add.a.new.user.to.the.role']}" disabled="true" />
+							</p:contextMenu>
+
+							<p:contextMenu for="demoprocessRole" nodeType="HostingCompanyProcess" id="demoHostingCompanyProcessContext">
+								<p:menuitem value="#{lang['add.new.role']}" icon="ui-icon-class" disabled="true" />
+								<p:menuitem styleClass="ex-info" value="#{lang['click.here.to.add.a.new.role.to.the.process']}" disabled="true" />
+							</p:contextMenu>
+
+							<p:contextMenu for="demoprocessRole" nodeType="HostingCompanyEmployees" id="demoHostingCompanyEmployeesContext">
+								<p:menuitem value="#{lang['remove.user']}" icon="ui-icon-trash" disabled="true" />
+								<p:menuitem styleClass="ex-info" value="#{lang['click.here.to.remove.the.user.from.the.role']}" disabled="true" />
+							</p:contextMenu>
+						</c:if>
+					</h:form>
+				</div>
+			</div>
+
+		</div>
+		<p:dialog header="#{lang['new.company.process']}" width="50%" widgetVar="HostingCompany" resizable="false" hideEffect="clip" showEffect="clip" id="dialogHostingCompany" appendTo="@(body)" modal="true" draggable="false">
+
+			<h:form id="HostingCompanyForm">
+				<p:panelGrid columns="1" style="width:100%" id="configdocInsGrid" layout="grid" styleClass="ui-panelgrid-blank">
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="#{lang['process']}" for="proc" styleClass="gray" />
+						</div>
+						<div>
+							<p:selectOneMenu id="proc" value="#{processrolesUI.hostingCompanyProcess.workflowProcess}" style="width:75%" required="true" requiredMessage="#{lang['select.process']}">
+								<p:ajax />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" itemValue="" noSelectionOption="true" />
+								<f:selectItems value="#{processrolesUI.workFlowProcessNoDuplicates}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+				</p:panelGrid>
+				<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update="HostingCompanyForm :processrolesInsForm" action="#{processrolesUI.processInsert}" />
+			</h:form>
+
+		</p:dialog>
+
+		<p:dialog header="#{lang['new.process.role']}" width="50%" widgetVar="HostingCompanyProcess" resizable="false" hideEffect="clip" showEffect="clip" id="dialogHostingCompanyProcess" appendTo="@(body)" modal="true" draggable="false">
+
+			<p:ajax event="close" update="processrolesInsForm HostingCompanyProcessForm" listener="#{processrolesUI.findCurrentProcesses}" />
+
+			<h:form id="HostingCompanyProcessForm">
+				<p:outputPanel id="HostingCompanyProcessOutput">
+
+					<div>
+						<p:outputLabel value="#{lang['assign.task.to']} " styleClass="gray" />
+						<p:outputLabel value="#{lang[processrolesUI.hostingCompanyProcess.workflowProcess.type]}" styleClass="gray" />
+						<p:spacer width="20"></p:spacer>
+						<p:selectBooleanCheckbox value="#{processrolesUI.companyRole}">
+							<p:ajax update="HostingCompanyProcessOutput" event="change"></p:ajax>
+						</p:selectBooleanCheckbox>
+					</div>
+
+					<p:panelGrid columns="1" style="width:100%" id="configdocInsGrid" layout="grid" styleClass="ui-panelgrid-blank" rendered="#{not processrolesUI.companyRole}">
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="#{lang['roles']}" for="proc" styleClass="gray" />
+							</div>
+							<div>
+								<p:selectOneMenu id="proc" value="#{processrolesUI.processroles.roles}" style="width:75%" required="true" requiredMessage="#{lang['please.select.a.role']}" converter="RolesConvertor">
+									<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+									<f:selectItems value="#{processrolesUI.roles}" var="rv" itemLabel="#{rv.description}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="Next Task Role" for="tkrole" styleClass="gray" />
+							</div>
+							<div>
+								<p:selectOneMenu id="tkrole" value="#{processrolesUI.processroles.nextTaskRole}" style="width:75%" required="false" placeholder="Next Role In Process" requiredMessage="#{lang['please.select.a.role']}" converter="RolesConvertor">
+									<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+									<f:selectItems value="#{processrolesUI.roles}" var="rvs" itemLabel="#{rvs.description}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+						<h:panelGroup rendered="#{processrolesUI.hostingCompanyProcess.workflowProcess ne ConfigDocProcessEnum.WSP}">
+							<div>
+								<p:outputLabel value="#{lang['permission']}" for="permission" styleClass="gray" />
+							</div>
+							<div>
+								<p:selectOneMenu id="permission" value="#{processrolesUI.processroles.rolePermission}" style="width:75%" required="true" requiredMessage="#{lang['select.permission']}">
+									<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+									<f:selectItems value="#{enumUI.userPermissionEnumDD}" var="rv" itemLabel="#{rv.description}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+						<h:panelGroup rendered="#{processrolesUI.hostingCompanyProcess.workflowProcess eq ConfigDocProcessEnum.WSP}">
+							<div>
+								<p:outputLabel value="#{lang['permission']}" for="permissionApproval" styleClass="gray" />
+							</div>
+							<div>
+								<p:selectOneMenu id="permissionApproval" value="#{processrolesUI.processroles.rolePermission}" style="width:75%" required="true" requiredMessage="#{lang['select.permission']}">
+									<f:selectItems value="#{enumUI.userPermissionApprovalEnumDD}" var="rv" itemLabel="#{rv.description}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputNumber id="daysToAction" decimalPlaces="0" value="#{processrolesUI.processroles.numberOfDays}"></p:inputNumber>
+							<p:outputLabel value="Days to action" for="daysToAction" />
+						</h:panelGroup>
+						<h:panelGroup>
+							<ui:include src="/pages/includes/tabinfo.xhtml">
+								<ui:param name="showInfoCircle" value="false" />
+								<ui:param name="cssClass" value="Fs12 secondaryText" />
+								<ui:param name="helpTxt" value="Possible Tags: #{processrolesUI.hostingCompanyProcess.workflowProcess.taskTags}" />
+							</ui:include>
+						</h:panelGroup>
+
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputTextarea id="reportToRole" value="#{processrolesUI.processroles.note}" style="width:95%" />
+							<p:outputLabel value="#{lang['task.description']}" for="reportToRole" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputTextarea id="reportToRolec" value="#{processrolesUI.processroles.rejectMessage}" style="width:95%" />
+							<p:outputLabel value="#{lang['task.reject.description']}" for="reportToRolec" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText id="targetClass" value="#{processrolesUI.processroles.targetClass}" style="width:95%" />
+							<p:outputLabel value="Class to check task creation" for="targetClass" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText id="targetMethod" value="#{processrolesUI.processroles.targetMethod}" style="width:95%" />
+							<p:outputLabel value="Method to check task creation" for="targetMethod" />
+						</h:panelGroup>
+					</p:panelGrid>
+
+					<p:panelGrid columns="1" style="width:100%" id="configdocInsGrida" layout="grid" styleClass="ui-panelgrid-blank" rendered="#{processrolesUI.companyRole}">
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="#{lang['permission']}" for="proc" styleClass="gray" />
+							</div>
+							<div>
+								<p:selectOneMenu id="permissiona" value="#{processrolesUI.processroles.rolePermission}" style="width:75%" required="true" requiredMessage="#{lang['select.permission']}">
+									<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+									<f:selectItems value="#{enumUI.userPermissionEnumDD}" var="rv" itemLabel="#{rv.description}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="Next Task Role" for="nextrole" styleClass="gray" />
+							</div>
+							<div>
+								<p:selectOneMenu id="nextrole" value="#{processrolesUI.processroles.nextTaskRole}" style="width:75%" required="false" placeholder="Next Role In Process" requiredMessage="#{lang['please.select.a.role']}" converter="RolesConvertor">
+									<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+									<f:selectItems value="#{processrolesUI.roles}" var="rvs" itemLabel="#{rvs.description}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputNumber id="daysToAction2" decimalPlaces="0" value="#{processrolesUI.processroles.numberOfDays}"></p:inputNumber>
+							<p:outputLabel value="Days to action" for="daysToAction2" />
+						</h:panelGroup>
+						<h:panelGroup>
+							<ui:include src="/pages/includes/tabinfo.xhtml">
+								<ui:param name="showInfoCircle" value="false" />
+								<ui:param name="cssClass" value="Fs12 secondaryText" />
+								<ui:param name="helpTxt" value="Possible Tags: #{processrolesUI.hostingCompanyProcess.workflowProcess.taskTags}" />
+							</ui:include>
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputTextarea id="reportToRolea" value="#{processrolesUI.processroles.note}" style="width:95%" />
+							<p:outputLabel value="#{lang['task.description']}" for="reportToRolea" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputTextarea id="reportToRoleb" value="#{processrolesUI.processroles.rejectMessage}" style="width:95%" />
+							<p:outputLabel value="#{lang['task.reject.description']}" for="reportToRoleb" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText id="targetClass2" value="#{processrolesUI.processroles.targetClass}" style="width:95%" />
+							<p:outputLabel value="Class to check task creation" for="targetClass2" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText id="targetMethod2" value="#{processrolesUI.processroles.targetMethod}" style="width:95%" />
+							<p:outputLabel value="Method to check task creation" for="targetMethod2" />
+						</h:panelGroup>
+						<h:panelGroup>
+							<div class="EmptyBox30"></div>
+						</h:panelGroup>
+					</p:panelGrid>
+
+					<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update="HostingCompanyProcessForm :processrolesInsForm" action="#{processrolesUI.processrolesInsert}" rendered="#{processrolesUI.roles.size() > 0}" />
+					<p:commandButton value="#{lang['clear']}" icon="ui-icon-save" update="HostingCompanyProcessForm" action="#{processrolesUI.clearProcessRole}" rendered="#{processrolesUI.roles.size() > 0}" />
+				</p:outputPanel>
+				<div class="EmptyBox10"></div>
+
+				<p:orderList value="#{processrolesUI.processrolesList}" var="theme" itemValue="#{theme}" converter="ProcessRolesConvertor" controlsLocation="left" responsive="true" rendered="#{processrolesUI.processrolesList ne null}">
+					<f:facet name="caption">#{lang['current.roles']}</f:facet>
+
+					<p:ajax event="reorder" listener="#{processrolesUI.onReorder}" />
+					<p:ajax event="select" listener="#{processrolesUI.processrolesSelect}" update="HostingCompanyProcessOutput" />
+					<p:ajax event="unselect" listener="#{processrolesUI.processrolesUnSelect}" update="HostingCompanyProcessOutput" />
+
+					<p:column>
+						<h:outputText value="#{theme.roles.description} (#{theme.rolePermission.friendlyName})" rendered="#{theme.companyUserType eq null}" />
+						<h:outputText value="#{lang[theme.companyUserType.type]} (#{theme.rolePermission.friendlyName})" rendered="#{theme.companyUserType ne null}" />
+					</p:column>
+				</p:orderList>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="#{lang['new.role.user']}" width="50%" widgetVar="ProcessRoles" resizable="false" hideEffect="clip" showEffect="clip" id="dialogProcessRoles" appendTo="@(body)" modal="true">
+			<h:form id="ProcessRolesForm">
+				<p:panelGrid columns="1" style="width:100%" id="configdocInsGrid" layout="grid" styleClass="ui-panelgrid-blank">
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="#{lang['hc.employees']}" for="proc" styleClass="gray" />
+						</div>
+						<div>
+							<p:selectOneMenu id="proc" value="#{processrolesUI.hostinCompanyEmployee}" style="width:75%" required="true" requiredMessage="#{lang['please.select.the.hosting.company.employees']}" converter="HostingCompanyEmployeesConvertor">
+								<p:ajax />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{processrolesUI.hostingCompanyEmployees}" var="rv" itemLabel="#{rv.users.firstName} #{rv.users.lastName}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+				</p:panelGrid>
+				<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update="ProcessRolesForm :processrolesInsForm" action="#{processrolesUI.usersInsert}" />
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="#{lang['new.company.process']}" width="50%" widgetVar="NewProcess" resizable="false" hideEffect="clip" showEffect="clip" id="dialogNewProcess" appendTo="@(body)" modal="true">
+			<p:ajax event="close" update="processrolesInsForm" listener="#{processrolesUI.findCurrentProcesses}" />
+			<h:form id="NewProcessForm">
+				<p:panelGrid columns="1" style="width:100%" id="configdocInsGrid" layout="grid" styleClass="ui-panelgrid-blank">
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="reportToRole" value="#{processrolesUI.hostingCompanyProcess.note}" style="width:95%" required="true" requiredMessage="#{lang['process.title.is.required']}" />
+						<p:outputLabel value="#{lang['new.process']}" for="reportToRole" />
+					</h:panelGroup>
+				</p:panelGrid>
+				<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update="NewProcessForm :processrolesInsForm" action="#{processrolesUI.saveProcess}" />
+			</h:form>
+		</p:dialog>
+
+		<script>
+			$(document).ready(function() {
+				console.log("ready!");
+				/* changeColor(); */
+			});
+
+			function changeColor() {
+				$('[data-nodetype="HostingCompany"]').children().css({
+					"background-color" : "#572b00 !important",
+					"color" : "white"
+				});
+				$('[data-nodetype="HostingCompany"]  .ui-tree-toggler').css(
+						"color", "white");
+				$('[data-nodetype="HostingCompanyProcess"]').children().css({
+					"background-color" : "#7d7008",
+					"color" : "white"
+				});
+				$('[data-nodetype="HostingCompanyProcess"]  .ui-tree-toggler')
+						.css("color", "white");
+				$('[data-nodetype="HostingCompanyProcessLast"]').children()
+						.css({
+							"background-color" : "#7d7008",
+							"color" : "white"
+						});
+				$(
+						'[data-nodetype="HostingCompanyProcessLast"]  .ui-tree-toggler')
+						.css("color", "white");
+				$('[data-nodetype="HostingCompanyProcessChild"]').children()
+						.css({
+							"background-color" : "#666666",
+							"color" : "white"
+						});
+				$(
+						'[data-nodetype="HostingCompanyProcessChild"]  .ui-tree-toggler')
+						.css("color", "white");
+				$('[data-nodetype="HostingCompanyProcessChildLast"]')
+						.children().css({
+							"background-color" : "#004B9B",
+							"color" : "white"
+						});
+				$(
+						'[data-nodetype="HostingCompanyProcessChildLast"]  .ui-tree-toggler')
+						.css("color", "white");
+				$('[data-nodetype="ProcessRoles"]').children().css({
+					"background-color" : "#cc851f",
+					"color" : "white"
+				});
+				$('[data-nodetype="ProcessRoles"]  .ui-tree-toggler').css(
+						"color", "white");
+				$('[data-nodetype="ProcessRolesCompany"]').children().css({
+					"background-color" : "#cc851f",
+					"color" : "white"
+				});
+				$('[data-nodetype="ProcessRolesCompany"]  .ui-tree-toggler')
+						.css("color", "white");
+				$('[data-nodetype="HostingCompanyEmployees"]').children().css({
+					"background-color" : "#ee3124",
+					"color" : "white"
+				});
+				$('[data-nodetype="HostingCompanyEmployees"]  .ui-tree-toggler')
+						.css("color", "white");
+				removeToggle();
+			}
+
+			function removeToggle() {
+				$('[data-nodetype="HostingCompanyDemo"] .ui-treenode-content')
+						.css({
+							"background-color" : "#572b00 !important",
+							"color" : "white",
+							"padding-left" : "15px",
+							"margin-left" : "90px"
+						});
+				$('[data-nodetype="HostingCompanyDemo"]  .ui-tree-toggler')
+						.css("display", "none");
+				$(
+						'[data-nodetype="HostingCompanyProcessDemo"] .ui-treenode-content')
+						.css({
+							"background-color" : "#7D7008",
+							"color" : "white",
+							"padding-left" : "15px",
+							"margin-left" : "90px"
+						});
+				$(
+						'[data-nodetype="HostingCompanyProcessDemo"]  .ui-tree-toggler')
+						.css("display", "none");
+				$(
+						'[data-nodetype="HostingCompanyProcessLastDemo"].ui-treenode-content')
+						.css({
+							"background-color" : "#7D7008",
+							"color" : "white",
+							"padding-left" : "15px",
+							"margin-left" : "90px"
+						});
+				$(
+						'[data-nodetype="HostingCompanyProcessLastDemo"]  .ui-tree-toggler')
+						.css("display", "none");
+				$(
+						'[data-nodetype="HostingCompanyProcessChildDemo"] .ui-treenode-content')
+						.css({
+							"background-color" : "#666666",
+							"color" : "white",
+							"padding-left" : "15px",
+							"margin-left" : "90px"
+						});
+				$(
+						'[data-nodetype="HostingCompanyProcessChildDemo"]  .ui-tree-toggler')
+						.css("display", "none");
+				$(
+						'[data-nodetype="HostingCompanyProcessChildLastDemo"] .ui-treenode-content')
+						.css({
+							"background-color" : "#cc8500",
+							"color" : "white",
+							"padding-left" : "15px",
+							"margin-left" : "90px"
+						});
+				$(
+						'[data-nodetype="HostingCompanyProcessChildLastDemo"]  .ui-tree-toggler')
+						.css("display", "none");
+				$('[data-nodetype="ProcessRolesDemo"] .ui-treenode-content')
+						.css({
+							"background-color" : "#CC851F",
+							"color" : "white",
+							"padding-left" : "15px",
+							"margin-left" : "90px"
+						});
+				$('[data-nodetype="ProcessRolesDemo"]  .ui-tree-toggler').css(
+						"display", "none");
+				$(
+						'[data-nodetype="HostingCompanyEmployeesDemo"] .ui-treenode-content')
+						.css({
+							"background-color" : "#ee3124",
+							"color" : "white",
+							"padding-left" : "15px",
+							"margin-left" : "90px"
+						});
+				$(
+						'[data-nodetype="HostingCompanyEmployeesDemo"]  .ui-tree-toggler')
+						.css("display", "none");
+
+				var tree = $('[id="processrolesInsForm:demoprocessRole"]');
+				tree.css("padding-bottom", "200px");
+
+				var node = $('[data-nodetype="HostingCompanyDemo"]');
+				$(
+						PrimeFaces
+								.escapeClientId('processrolesInsForm:demoHostingContext'))
+						.css({
+							top : node.height() + 10 + 'px',
+							left : node.position().left + node.width() + 'px',
+							display : "block !important"
+						}).show();
+
+				node
+						.prepend($(PrimeFaces
+								.escapeClientId('processrolesInsForm:demoHostingContext')));
+
+				node = $('[data-nodetype="HostingCompanyProcessDemo"]');
+				$(
+						PrimeFaces
+								.escapeClientId('processrolesInsForm:demoHostingCompanyProcessContext'))
+						.css({
+							top : node.height() + 10 + 'px',
+							left : node.position().left + node.width() + 'px'
+						}).show();
+				node
+						.prepend($(PrimeFaces
+								.escapeClientId('processrolesInsForm:demoHostingCompanyProcessContext')));
+
+				node = $('[data-nodetype="ProcessRolesDemo"]');
+				$(
+						PrimeFaces
+								.escapeClientId('processrolesInsForm:demoProcessRolesContext'))
+						.css({
+							top : node.height() + 10 + 'px',
+							left : node.position().left + node.width() + 'px'
+						}).show();
+
+				node
+						.prepend($(PrimeFaces
+								.escapeClientId('processrolesInsForm:demoProcessRolesContext')));
+
+				node = $('[data-nodetype="HostingCompanyEmployeesDemo"]');
+				$(
+						PrimeFaces
+								.escapeClientId('processrolesInsForm:demoHostingCompanyEmployeesContext'))
+						.css({
+							top : node.height() + 10 + 'px',
+							left : node.position().left + node.width() + 'px'
+						}).show();
+				node
+						.prepend($(PrimeFaces
+								.escapeClientId('processrolesInsForm:demoHostingCompanyEmployeesContext')));
+			}
+		</script>
+	</ui:define>
+	<!--
+	 left: 449px;
+	    top: 293px;
+	    z-index: 1002;
+	    display: block; -->
+
+</ui:composition>
+<!-- <p:ajax event="select" listener="#{orderListView.onSelect}" update="msgs" />
+					<p:ajax event="unselect" listener="#{orderListView.onUnselect}" update="msgs" />
+					<p:ajax event="reorder" listener="#{orderListView.onReorder}" update="msgs" /> -->

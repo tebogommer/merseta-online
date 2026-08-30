@@ -1,0 +1,435 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<h:form id="learnersInsForm">
+			<div class="ui-g">
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+						<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+						<p:importEnum type="haj.com.entity.enums.YesNoEnum" />
+						<h1>Site Visit Report Form</h1>
+
+
+						<p:fieldset legend="Purpose of visit" style="margin-top: 20px">
+
+							<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" id="pov">
+
+								<h:panelGroup>
+									<div>
+										<p:outputLabel value="Purpose of visit " for="purposeOfSiteVisit" />
+									</div>
+									<div>
+										<p:selectOneMenu id="purposeOfSiteVisit" value="#{workplacemonitoringUI.workplacemonitoring.purposeOfSiteVisit}" converter="PurposeOfSiteVisitConvertor" style="width:75%" required="true">
+											<p:ajax update="pov"></p:ajax>
+											<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+											<f:selectItems value="#{selectItemsUI.purposeOfSiteVisit}" var="il" itemLabel="#{il.description}" />
+										</p:selectOneMenu>
+									</div>
+								</h:panelGroup>
+
+								<h:panelGroup rendered="#{workplacemonitoringUI.workplacemonitoring.purposeOfSiteVisit.askForSupportingReason}">
+									<div>
+										<p:outputLabel value="Support Provided " for="purposeOFSiteVisitSupport" />
+									</div>
+									<div>
+										<p:selectOneMenu id="purposeOFSiteVisitSupport" value="#{workplacemonitoringUI.workplacemonitoring.purposeOfSiteVisitSupport}" converter="PurposeOfSiteVisitSupportConvertor" style="width:75%" required="true">
+											<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+											<f:selectItems value="#{selectItemsUI.purposeOfSiteVisitSupport}" var="il" itemLabel="#{il.description}" />
+										</p:selectOneMenu>
+									</div>
+								</h:panelGroup>
+
+							</p:panelGrid>
+
+						</p:fieldset>
+
+						<div class="EmptyBox10" />
+
+						<ui:include src="/pages/tp/includes/company.xhtml">
+							<ui:param name="title" value="Organisational Details" />
+							<ui:param name="company" value="#{currentinfo}" />
+						</ui:include>
+					</div>
+				</div>
+				<div class="ui-g-12">
+					<div class="card">
+						<p:fieldset legend="Learner Induction" id="learnerInduction">
+							<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+								<h:panelGroup styleClass="md-inputfield">
+
+									<p:autoComplete id="highestQualTitle" value="#{workplacemonitoringUI.learnerInduction.qualification}" completeMethod="#{autoCompleteUI.completeQualification}" var="rv" itemLabel="#{rv.saqaQualification}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;"
+										style="width: 95%" disabled="true">
+
+										<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+										<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+										<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+
+									</p:autoComplete>
+
+									<p:outputLabel value="#{lang['saqa.id']}" for="highestQualTitle" />
+
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield">
+
+									<p:inputNumber id="numberOFAttendees" inputStyle="width:95%" value="#{workplacemonitoringUI.learnerInduction.numberofAttendees}"></p:inputNumber>
+
+									<p:outputLabel value="Number Of Attendees" for="numberOFAttendees"></p:outputLabel>
+
+								</h:panelGroup>
+								
+								
+								addInduction
+								
+							</p:panelGrid>
+
+							<p:dataTable value="" var="rv1" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+								<p:column headerText="SAQA ID">
+									<p:outputLabel value="" />
+								</p:column>
+								<p:column headerText="Qualification Title">
+									<p:outputLabel value="" />
+								</p:column>
+								<p:column headerText="Number Of Attendees">
+									<p:outputLabel value="" />
+								</p:column>
+							</p:dataTable>
+						</p:fieldset>
+					</div>
+				</div>
+				<div class="ui-g-12">
+					<div class="card">
+						<p:fieldset legend="Learner Monitoring Survey" id="learnerMonitoringSurvey">
+							<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+								<h:panelGroup>
+									<p:outputLabel value="Did the /learner receive the toolbox with the relevanttools?" />
+
+									<p:selectOneRadio style="float:right;" columns="2" layout="grid">
+										<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+									</p:selectOneRadio>
+								</h:panelGroup>
+								<h:panelGroup>
+									<p:outputLabel value="Is the learner exposed to all the training requirements as per the log book or trainingschedule?" />
+
+									<p:selectOneRadio style="float:right;" columns="2" layout="grid">
+										<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+									</p:selectOneRadio>
+								</h:panelGroup>
+								<h:panelGroup>
+									<p:outputLabel value="Is the learner satisfied with the training?" />
+									<p:selectOneRadio style="float:right;" columns="2" layout="grid">
+										<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+									</p:selectOneRadio>
+								</h:panelGroup>
+								<h:panelGroup>
+								</h:panelGroup>
+								<h:panelGroup>
+									<p:outputLabel value="Does the learner have access to a qualified mentor?" />
+									<p:selectOneRadio style="float:right;" columns="2" layout="grid">
+										<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+									</p:selectOneRadio>
+								</h:panelGroup>
+								<h:panelGroup>
+									<p:outputLabel value="Does the learner have access to a TVET college or Training Provider?" />
+									<p:selectOneRadio style="float:right;" columns="2" layout="grid">
+										<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+									</p:selectOneRadio>
+								</h:panelGroup>
+								<h:panelGroup>
+									<p:outputLabel value="Is the Learner in possession of N1/N2 relevant certificate or equivalent?" />
+									<p:selectOneRadio style="float:right;" columns="2" layout="grid">
+										<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+									</p:selectOneRadio>
+								</h:panelGroup>
+								<h:panelGroup>
+									<p:outputLabel value="Is the Learner receiving relevant minimum wages/ allowances according to prescribed Bargaining Council wages?" />
+									<p:selectOneRadio style="float:right;" columns="2" layout="grid">
+										<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+									</p:selectOneRadio>
+								</h:panelGroup>
+								<h:panelGroup>
+									<p:outputLabel value="required tools, equipment, consumables applicable to the trade/qualification available to the learner?" />
+									<p:selectOneRadio style="float:right;" columns="2" layout="grid">
+										<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+									</p:selectOneRadio>
+								</h:panelGroup>
+								<h:panelGroup>
+									<p:outputLabel value="Was all the required PPE issued to each learner?" />
+									<p:selectOneRadio style="float:right;" columns="2" layout="grid">
+										<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+									</p:selectOneRadio>
+								</h:panelGroup>
+								<h:panelGroup>
+									<p:outputLabel value="Is the training of the learner/s on track and will the learner/s complete their training in the training period as indicated per the relevant contract/agreement?" />
+									<p:selectOneRadio style="float:right;" columns="2" layout="grid">
+										<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+									</p:selectOneRadio>
+								</h:panelGroup>
+								<h:panelGroup>
+									<p:outputLabel value="Will it be necessary/required to extend any of the contract/agreement periods of learner/s?" />
+									<p:selectOneRadio style="float:right;" columns="2" layout="grid">
+										<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+									</p:selectOneRadio>
+								</h:panelGroup>
+							</p:panelGrid>
+						</p:fieldset>
+					</div>
+				</div>
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+						<p:fieldset legend="Discretionary grant monitoring" id="discretionaryGrantMonitoring">
+							<p:dataTable var="rowVar" value="#{trainingprovidermonitoringUI.auditorMonitorReviewDataModelList}" id="auditormonitorreviewList" rowKey="#{rowVar.id}" reflow="true" sortBy="#{rowVar.section}">
+
+								<p:column headerText="Accreditation Criteria">
+									<h:outputText value="#{rowVar.accreditationCriteria}" />
+								</p:column>
+
+								<p:column headerText="Evidence Requirements">
+									<h:outputText value="#{rowVar.evidenceRequirements}" escape="false" />
+								</p:column>
+
+								<p:column headerText="Evidence Required" width="200">
+									<p:selectOneRadio id="evidenceRequired" value="#{rowVar.evidenceRequired}" layout="grid" columns="2" required="true" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit}">
+										<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+									</p:selectOneRadio>
+								</p:column>
+
+								<p:column headerText="Upload Evidence" width="40">
+									<p:commandButton rendered="#{rowVar.docs.size() eq 0 and rowVar.evidenceRequired eq YesNoEnum.Yes and (sessionUI.task.processRole eq null or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload)}" icon="fa fa-upload" id="uploadUserDocs"
+										styleClass="#{rv1.originalFname eq null ? 'red-btn' : ''} flat" process="@this" oncomplete="PF('dlgUpload').show()" update=":uploadForm">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{trainingprovidermonitoringUI.auditorMonitorReview}" />
+									</p:commandButton>
+									<p:tooltip for="uploadUserDocs" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+								</p:column>
+
+							</p:dataTable>
+						</p:fieldset>
+					</div>
+				</div>
+
+				<p:selectOneRadio columns="2" layout="grid">
+					<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+				</p:selectOneRadio>
+				<div class="ui-g-12">
+					<div class="card">
+
+						<p:fieldset legend="Discretionary grant monitoring (System must fetch all active DG funded projects and list) " id="discretionaryGrantMonitoringTable">
+							<p:dataTable value="" var="rv1" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+								<p:column headerText="DG Year / Tag">
+									<h:panelGroup styleClass="md-inputfield" width="90%">
+										<p:inputText id="dgYearTag" value="" required="true" requiredMessage="" />
+										<p:outputLabel for="dgYearTag" />
+									</h:panelGroup>
+								</p:column>
+								<p:column headerText="Tranche Payment being claimed **">
+									<h:panelGroup styleClass="md-inputfield" width="90%">
+										<p:inputText id="tranchePayment" value="" required="true" requiredMessage="" />
+										<p:outputLabel for="tranchePayment" />
+									</h:panelGroup>
+								</p:column>
+								<p:column headerText="Learning Programme Title">
+									<h:panelGroup styleClass="md-inputfield" width="90%">
+										<p:inputText id="LearningProgrammeTitle" value="" required="true" requiredMessage="" />
+										<p:outputLabel for="LearningProgrammeTitle" />
+									</h:panelGroup>
+								</p:column>
+								<p:column headerText="Agreement/ Addendum Allocation (number of learners">
+									<h:panelGroup styleClass="md-inputfield" width="90%">
+										<p:inputText id="addendumAllocation" value="" required="true" requiredMessage="" />
+										<p:outputLabel for="addendumAllocation" />
+									</h:panelGroup>
+								</p:column>
+								<p:column headerText="No. of learners Registered/Started">
+									<h:panelGroup styleClass="md-inputfield" width="90%">
+										<p:inputText id="NolearnersStarted" value="" required="true" requiredMessage="" />
+										<p:outputLabel for="NolearnersStarted" />
+									</h:panelGroup>
+								</p:column>
+								<p:column headerText="No of learners Progressed">
+									<h:panelGroup styleClass="md-inputfield" width="90%">
+										<p:inputText id="NolearnersProgressed" value="" required="true" requiredMessage="" />
+										<p:outputLabel for="NolearnersProgressed" />
+									</h:panelGroup>
+								</p:column>
+								<p:column headerText="No of learners Completed">
+									<h:panelGroup styleClass="md-inputfield" width="90%">
+										<p:inputText id="NolearnersCompleted" value="" required="true" requiredMessage="" />
+										<p:outputLabel for="NolearnersCompleted" />
+									</h:panelGroup>
+								</p:column>
+								<p:column headerText="Keep MOA active (Yes / No)***">
+									<p:selectOneRadio columns="2" layout="grid">
+										<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+									</p:selectOneRadio>
+								</p:column>
+
+
+
+							</p:dataTable>
+						</p:fieldset>
+						<br />
+						<br />
+						<span>**Where a tranche payment is being claimed, the relevant supporting documentation should then become a required document that must be uploaded – need a tab Documents Required </span>
+						<br />
+						<br />
+						<span>*** If it is recommended that the MOA should be terminated or closed out without payment i.e. No is selected, CLO must provide reasons for the recommendation. The reasons that can be selected include:</span>
+						<br />
+						<br />
+						<ul>
+							<li type="circle">Company is no longer operating/trading</li>
+							<li type="circle">Company not responding to notices sent</li>
+							<li type="circle">Non-registration of learner (s)</li>
+							<li type="circle">Insufficient progress – learner will not complete training</li>
+							<li type="circle">Learner(s) agreement(s) terminated</li>
+
+						</ul>
+					</div>
+				</div>
+				<div class="ui-g-12">
+					<div class="card">
+						<p:fieldset legend="DISCRETIONARY GRANT COMPLIANCE SURVEY " id="grantComplianceSurvey">
+							<span></span>
+							<div>
+								<ul>
+									<li type="1">
+										Insufficient support/response from the organisation
+										<p:selectOneRadio style="float:right;" columns="2" layout="grid">
+											<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+										</p:selectOneRadio>
+									</li>
+									<br />
+									<br />
+									<li type="1">
+										Organisation not responding to date request for monitoring to take place
+										<p:selectOneRadio style="float:right;" columns="2" layout="grid">
+											<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+										</p:selectOneRadio>
+									</li>
+									<br />
+									<br />
+									<li type="1">
+										Organisation not complying to implementation plan
+										<p:selectOneRadio style="float:right;" columns="2" layout="grid">
+											<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+										</p:selectOneRadio>
+									</li>
+									<br />
+									<br />
+									<li type="1">
+										Learner (s) not on track with training
+										<p:selectOneRadio style="float:right;" columns="2" layout="grid">
+											<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+										</p:selectOneRadio>
+									</li>
+									<br />
+									<br />
+									<li type="1">
+										Mentor has left and has not been replaced
+										<p:selectOneRadio style="float:right;" columns="2" layout="grid">
+											<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+										</p:selectOneRadio>
+									</li>
+								</ul>
+							</div>
+						</p:fieldset>
+					</div>
+				</div>
+				<div class="ui-g-12">
+					<div class="card">
+						<p:fieldset legend="ACTION PLAN TO IMPROVE COMPANY CATEGORY (the system would have flagged that there is a risk for a categorization downgrade &amp; if that is the case, then this would become compulsory to complete" id="improveCompanyCategory">
+							<span></span>
+							<div>
+								<ul>
+									<li type="1">
+										Entity not Paying levies
+										<p:selectOneRadio style="float:right;" columns="2" layout="grid">
+											<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+										</p:selectOneRadio>
+									</li>
+									<br />
+									<br />
+									<li type="1">
+										No Submission of WSP &amp; ATR
+										<p:selectOneRadio style="float:right;" columns="2" layout="grid">
+											<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+										</p:selectOneRadio>
+									</li>
+									<br />
+									<br />
+									<li type="1">
+										% Learners Employed below required level for category
+										<p:selectOneRadio style="float:right;" columns="2" layout="grid">
+											<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+										</p:selectOneRadio>
+									</li>
+									<br />
+									<br />
+									<li type="1">
+										% Learners Pass Rate below required level for category
+										<p:selectOneRadio style="float:right;" columns="2" layout="grid">
+											<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+										</p:selectOneRadio>
+									</li>
+									<br />
+									<br />
+									<li type="1">
+										Training Committee
+										<p:selectOneRadio style="float:right;" columns="2" layout="grid">
+											<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+										</p:selectOneRadio>
+									</li>
+								</ul>
+							</div>
+						</p:fieldset>
+					</div>
+				</div>
+				<div class="ui-g-12">
+					<div class="card">
+						<p:fieldset legend="MITIGATION PLAN" id="mitigationPlanTable">
+							<p:dataTable value="" var="rv1" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+								<p:column headerText="Date submitted">
+									<h:panelGroup styleClass="md-inputfield" width="90%">
+										<p:inputText id="dateSubmitted" value="" required="true" requiredMessage="" />
+										<p:outputLabel for="dateSubmitted" />
+									</h:panelGroup>
+								</p:column>
+								<p:column headerText="Non-compliance issue">
+									<h:panelGroup styleClass="md-inputfield" width="90%">
+										<p:inputText id="nonComplianceIssue" value="" required="true" requiredMessage="" />
+										<p:outputLabel for="nonComplianceIssue" />
+									</h:panelGroup>
+								</p:column>
+								<p:column headerText="Action Plan">
+									<h:panelGroup styleClass="md-inputfield" width="90%">
+										<p:inputText id="actionPlan" value="" required="true" requiredMessage="" />
+										<p:outputLabel for="actionPlan" />
+									</h:panelGroup>
+								</p:column>
+								<p:column headerText="Due date">
+									<h:panelGroup styleClass="md-inputfield" width="90%">
+										<p:inputText id="dueDate" value="" required="true" requiredMessage="" />
+										<p:outputLabel for="dueDate" />
+									</h:panelGroup>
+								</p:column>
+
+								<p:column headerText="Responsible">
+									<h:panelGroup styleClass="md-inputfield" width="90%">
+										<p:inputText id="responsible" value="" required="true" requiredMessage="" />
+										<p:outputLabel for="responsible" />
+									</h:panelGroup>
+								</p:column>
+								<p:column headerText="Status">
+									<h:panelGroup styleClass="md-inputfield" width="90%">
+										<p:inputText id="status" value="" required="true" requiredMessage="" />
+										<p:outputLabel for="status" />
+									</h:panelGroup>
+								</p:column>
+							</p:dataTable>
+						</p:fieldset>
+					</div>
+				</div>
+			</div>
+		</h:form>
+	</ui:define>
+</ui:composition>

@@ -1,0 +1,123 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml"
+                xmlns:h="http://java.sun.com/jsf/html"
+                xmlns:f="http://java.sun.com/jsf/core"
+                xmlns:ui="http://java.sun.com/jsf/facelets"
+                xmlns:p="http://primefaces.org/ui"
+                xmlns:c="http://java.sun.com/jsp/jstl/core"
+                template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>WorkPlaceApprovalToolList</h1>
+					<h:form id="workplaceapprovaltoollistInsForm">
+						<p:growl sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						
+						<p:panelGrid columns="1" style="width:100%" id="workplaceapprovaltoollistInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+       						         							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="workPlaceApproval" value="#{workplaceapprovaltoollistUI.workplaceapprovaltoollist.workPlaceApproval}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['workPlaceApproval']}" for="workPlaceApproval"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="docList" value="#{workplaceapprovaltoollistUI.workplaceapprovaltoollist.docList}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['docList']}" for="docList"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="skillsProgram" value="#{workplaceapprovaltoollistUI.workplaceapprovaltoollist.skillsProgram}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['skillsProgram']}" for="skillsProgram"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="accept" value="#{workplaceapprovaltoollistUI.workplaceapprovaltoollist.accept}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['accept']}" for="accept"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="acceptEnum" value="#{workplaceapprovaltoollistUI.workplaceapprovaltoollist.acceptEnum}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['acceptEnum']}" for="acceptEnum"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="createDate" value="#{workplaceapprovaltoollistUI.workplaceapprovaltoollist.createDate}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['createDate']}" for="createDate"/>
+     							</h:panelGroup>  
+     							<h:panelGroup styleClass="md-inputfield">  
+       								<p:inputText id="softDelete" value="#{workplaceapprovaltoollistUI.workplaceapprovaltoollist.softDelete}" style="width:95%"/>
+      	 							<p:outputLabel value="#{lang['softDelete']}" for="softDelete"/>
+     							</h:panelGroup>  
+
+
+        					    <p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+									<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:workplaceapprovaltoollistList :workplaceapprovaltoollistInsForm:workplaceapprovaltoollistInsGrid" action="#{workplaceapprovaltoollistUI.workplaceapprovaltoollistInsert}" />
+									<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="workplaceapprovaltoollistInsGrid" process="@this" action="#{workplaceapprovaltoollistUI.prepareNew}">
+										<p:resetInput target="workplaceapprovaltoollistInsGrid" />
+									</p:commandButton>									
+								</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{workplaceapprovaltoollistUI.dataModel}" filteredValue="#{workplaceapprovaltoollistUI.workPlaceApprovalToolListfilteredList}" id="workplaceapprovaltoollistList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+           						              					<p:column headerText="#{lang['workPlaceApproval']}">  
+                        			<h:outputText value="#{rowVar.workPlaceApproval}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['docList']}">  
+                        			<h:outputText value="#{rowVar.docList}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['skillsProgram']}">  
+                        			<h:outputText value="#{rowVar.skillsProgram}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['accept']}">  
+                        			<h:outputText value="#{rowVar.accept}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['acceptEnum']}">  
+                        			<h:outputText value="#{rowVar.acceptEnum}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['createDate']}">  
+                        			<h:outputText value="#{rowVar.createDate}" />  
+            					</p:column>      
+              					<p:column headerText="#{lang['softDelete']}">  
+                        			<h:outputText value="#{rowVar.softDelete}" />  
+            					</p:column>      
+
+
+           						<p:column width="80">
+									<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":workplaceapprovaltoollistInsForm:workplaceapprovaltoollistInsGrid">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{workplaceapprovaltoollistUI.workplaceapprovaltoollist}" />
+									</p:commandButton>
+									<p:spacer width="5" />
+									<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:workplaceapprovaltoollistList" action="#{workplaceapprovaltoollistUI.workplaceapprovaltoollistDelete}">
+										<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+										<f:setPropertyActionListener value="#{rowVar}" target="#{workplaceapprovaltoollistUI.workplaceapprovaltoollist}" />
+									</p:commandButton>
+								</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+<!-- 
+workPlaceApproval = workPlaceApproval
+docList = docList
+skillsProgram = skillsProgram
+accept = accept
+acceptEnum = acceptEnum
+createDate = createDate
+softDelete = softDelete
+
+-->
+</ui:composition>

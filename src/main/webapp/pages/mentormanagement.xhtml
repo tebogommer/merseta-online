@@ -1,0 +1,362 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml"
+	xmlns:pt="http://xmlns.jcp.org/jsf/passthrough" xmlns:o="http://omnifaces.org/ui">
+	<ui:define name="content">
+		<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum"></p:importEnum>
+		<p:importEnum type="haj.com.entity.enums.WspStatusEnum" />
+		<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+		<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+		<p:importEnum type="haj.com.entity.enums.IdPassportEnum" var="idPassportEnum"></p:importEnum>
+		<ui:param name="enableAddContactAndSDF" value="true" />
+
+		<p:growl showDetail="false" sticky="false" id="msg">
+			<p:autoUpdate />
+		</p:growl>
+
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card">
+					<h:form id="siteSmePanelForm">
+
+
+						<p:tooltip position="left" />
+						<h2>Search Mentor Applications</h2>
+						<c:if test="false">
+							<ui:include src="/pages/includes/download_lazy_with_page.xhtml">
+								<ui:param name="file_name" value="Mentor_Details" />
+								<ui:param name="target" value="MentorList" />
+							</ui:include>
+						</c:if>
+						<p:dataTable id="MentorList" var="rowVarSme" value="#{mentorManagementUI.allSmeDataModelLimited}" rowKey="#{rowVarSme.id}" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+							<p:ajax event="rowToggle" listener="#{mentorManagementUI.listenerMethod(rowVarSme)}" />
+
+							<p:column style="width:4%" headerText="#{lang['expand.row']}" rendered="false" exportable="false">
+								<p:rowToggler />
+							</p:column>
+
+							<p:column headerText="Company Name" sortBy="#{rowVarSme.company.companyName}" filterBy="#{rowVarSme.company.companyName}">
+								<p:outputLabel value="#{rowVarSme.company.companyName}"/>
+							</p:column>
+
+							<p:column headerText="Trading Name " sortBy="#{rowVarSme.company.tradingName}" filterBy="#{rowVarSme.company.tradingName}">
+								<p:outputLabel value="#{rowVarSme.company.tradingName}"/>
+							</p:column>
+
+							<p:column headerText="Entity ID  " sortBy="#{rowVarSme.company.levyNumber}" filterBy="#{rowVarSme.company.levyNumber}">
+								<p:outputLabel value="#{rowVarSme.company.levyNumber}"/>
+							</p:column>
+
+							<p:column headerText="Site Name">
+								<p:outputLabel value="#{rowVarSme.sites.companyName}" rendered="#{rowVarSme.sites ne null}" />
+								<p:outputLabel value="#{rowVarSme.company.companyName}" rendered="#{rowVarSme.sites eq null}" />
+							</p:column>
+
+							<p:column headerText="First Name" filterBy="#{rowVarSme.firstName}" sortBy="#{rowVarSme.firstName}">
+								<p:outputLabel style="width:95%; opacity:1 !important;" value="#{rowVarSme.firstName}" />
+							</p:column>
+
+							<p:column headerText="Last Name" filterBy="#{rowVarSme.lastName}" sortBy="#{rowVarSme.lastName}">
+								<p:outputLabel style="width:95%; opacity:1 !important;" value="#{rowVarSme.lastName}" />
+							</p:column>
+
+							<p:column headerText="Identity/Passport Number">
+								<p:outputLabel style="width:95%; opacity:1 !important;" value="#{rowVarSme.identityNumber}" />
+								<p:outputLabel style="width:95%; opacity:1 !important;" value="#{rowVarSme.passportNumber}" />
+							</p:column>
+
+							<p:column headerText="Qualification/Trade" sortBy="#{rowVarSme.active}" rendered="false">
+								<p:outputLabel value="#{rowVarSme.qualification.description}" rendered="#{rowVarSme.qualification ne null}" />
+							</p:column>
+
+							<p:column headerText="Approval Date">
+								<p:outputLabel value="#{rowVarSme.approvedDate}">
+									<f:convertDateTime pattern="dd MMMM yyyy" />
+								</p:outputLabel>
+							</p:column>
+
+							<p:column headerText="Status">
+								<p:outputLabel value="#{rowVarSme.status.friendlyName}" />
+							</p:column>
+
+							<p:column headerText="View" exportable="false">
+								<p:commandButton icon="fa fa-database" update=":siteSmePanelForm:mentorInformationPanel" action="#{mentorManagementUI.selectSiteSme}">
+									<f:setPropertyActionListener value="#{rowVarSme}" target="#{mentorManagementUI.sitesSme}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+
+						<div class="EmptyBox10" />
+
+						<p:outputPanel id="mentorInformationPanel">
+							<p:fieldset legend="Mentor: #{mentorManagementUI.sitesSme.firstName} #{mentorManagementUI.sitesSme.lastName} Information" rendered="#{mentorManagementUI.sitesSme ne null and mentorManagementUI.sitesSme.id ne null}">
+								<p:commandButton update=":siteSmePanelForm:mentorInformationPanel" value="Close" icon="fa fa-times" action="#{mentorManagementUI.deselectSme}" />
+								<div class="EmptyBox10" />
+
+								<p:dataTable id="smeQualificationDt" value="#{mentorManagementUI.sitesSme.smeQualificationsList}" var="rvql" rowKey="#{rvql.id}" paginator="true" paginatorPosition="bottom" rows="5" reflow="true">
+
+									<p:column headerText="SAQA ID" style="width:8%">
+										<p:outputLabel value="#{rvql.qualification.code}" />
+									</p:column>
+
+									<p:column headerText="Qualification">
+										<p:outputLabel value="#{rvql.qualification.description}" />
+									</p:column>
+
+									<p:column headerText="#{lang['nqf.level']}">
+										<h:outputText value="#{rvql.qualification.nqflevel.description}" />
+									</p:column>
+
+									<p:column headerText="#{lang['status']}">
+										<h:outputText value="#{rvql.status.friendlyName}" />
+									</p:column>
+
+									<p:column headerText="Approval/Reject Date">
+										<h:outputText value="#{rvql.approvedDate}">
+											<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+										</h:outputText>
+									</p:column>
+
+									<p:column headerText="Reject Reasons">
+										<h:outputText value="#{rvql.reason}" />
+									</p:column>
+
+								</p:dataTable>
+
+								<div class="EmptyBox10" />
+
+								<p:dataTable value="#{mentorManagementUI.docs}" var="rv1" emptyMessage="#{lang['no.records.found']}" paginator="true" paginatorPosition="bottom" rowKey="#{rv1.id}" rows="5" reflow="true">
+									<p:column headerText="#{lang['type']}" width="18%">
+									#{rv1.configDoc.name}
+									<p:outputLabel rendered="#{rv1.configDoc.name eq null}" value="Certified Copy of Trade Test/Qualification"></p:outputLabel>
+									</p:column>
+
+									<p:column headerText="#{lang['original.file.name']}" priority="4">
+										<p:outputLabel value="#{rv1.originalFname}"></p:outputLabel>
+									</p:column>
+
+									<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+
+									<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+										<h:outputText value="#{rv1.createDate}">
+											<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+										</h:outputText>
+									</p:column>
+
+									<p:column headerText="#{lang['version']}" width="10%" priority="4">
+										<h:outputText value="#{rv1.versionNo}">
+										</h:outputText>
+									</p:column>
+
+									<p:column width="120" headerText="View">
+										<p:commandButton immediate="true" process="@this" ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlb" rendered="#{rv1.id ne null}">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:spacer width="5" />
+										<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:spacer width="5" />
+										<p:commandButton icon="fa fa-bars " id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update="@form" rendered="#{rv1.id ne null}">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+									</p:column>
+								</p:dataTable>
+							</p:fieldset>
+						</p:outputPanel>
+
+					</h:form>
+					<br />
+					<h:form id="detailInfoForm">
+						<p:tabView rendered="#{mentorManagementUI.sitesSme != null}">
+							<p:tab title="Mentor Information">
+								<p:fieldset legend="#{lang['user.info']}" id="userInfoFs">
+									<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{mentorManagementUI.sitesSme.firstName}" />
+											<p:outputLabel value="#{lang['name']}" />
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{mentorManagementUI.sitesSme.lastName}" />
+											<p:outputLabel value="#{lang['surname']}" />
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield" rendered="#{mentorManagementUI.sitesSme.identityNumber ne null}">
+											<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{mentorManagementUI.sitesSme.identityNumber}" rendered="#{mentorManagementUI.sitesSme.identityNumber ne null}" />
+											<p:outputLabel value="#{lang['rsa.id.number']}" rendered="#{mentorManagementUI.sitesSme.identityNumber ne null}" />
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield" rendered="#{mentorManagementUI.sitesSme.passportNumber ne null}">
+											<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{mentorManagementUI.sitesSme.passportNumber}" rendered="#{mentorManagementUI.sitesSme.passportNumber ne null}" />
+											<p:outputLabel value="#{lang['passport.number']}" rendered="#{mentorManagementUI.sitesSme.passportNumber ne null}" />
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield" rendered="#{mentorManagementUI.sitesSme.smeType ne null}">
+											<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{mentorManagementUI.sitesSme.smeType.friendlyName}" rendered="#{mentorManagementUI.sitesSme.smeType.friendlyName ne null}" />
+											<p:outputLabel value="#{lang['type']}" rendered="#{mentorManagementUI.sitesSme.smeType.friendlyName ne null}" />
+										</h:panelGroup>
+
+									</p:panelGrid>
+								</p:fieldset>
+								<br />
+								<p:dataTable value="#{mentorManagementUI.docs}" var="rv1" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv1.id}" paginator="true" paginatorPosition="bottom" rows="5" reflow="true">
+									<p:column headerText="#{lang['type']}" width="18%">#{rv1.extension} </p:column>
+									<p:column headerText="#{lang['original.file.name']}" priority="4">
+										<p:outputLabel value="#{rv1.originalFname}" styleClass="Fs12"></p:outputLabel>
+									</p:column>
+									<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+									<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+										<h:outputText value="#{rv1.createDate}">
+											<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+										</h:outputText>
+									</p:column>
+									<p:column headerText="#{lang['version']}" width="10%" priority="4">
+										<h:outputText value="#{rv1.versionNo}">
+										</h:outputText>
+									</p:column>
+
+									<p:column width="50">
+										<p:commandButton immediate="true" process="@this" ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlb" rendered="#{rv1.id ne null}">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+									</p:column>
+								</p:dataTable>
+							</p:tab>
+
+							<p:tab title="Qualification/Trade">
+								<p:fieldset legend="#{lang['qualification']}" id="qualInfoFs">
+									<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+
+										<p:dataTable id="smeQualificationDt" value="#{mentorManagementUI.smeQualificationsList}" var="rvql" rowKey="#{rvql.id}" paginator="true" paginatorPosition="bottom" rows="5" reflow="true">
+											<p:column headerText="SAQA ID" style="width:8%">
+												<p:outputLabel value="#{rvql.qualification.code}" />
+											</p:column>
+											<p:column headerText="Qualification">
+												<p:outputLabel value="#{rvql.qualification.description}" />
+											</p:column>
+											<p:column headerText="#{lang['nqf.level']}">
+												<h:outputText value="#{rvql.qualification.nqflevel.description}" />
+											</p:column>
+										</p:dataTable>
+									</p:panelGrid>
+								</p:fieldset>
+
+							</p:tab>
+
+							<p:tab title="Site Details" rendered="true">
+								<p:fieldset legend="#{lang['sites']}" id="siteInfoFs">
+									<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+
+										<h:panelGroup styleClass="md-inputfield">
+
+											<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{mentorManagementUI.sitesSme.sites.companyName}" rendered="#{mentorManagementUI.sitesSme.sites ne null}" />
+											<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{mentorManagementUI.sitesSme.company.companyName}" rendered="#{mentorManagementUI.sitesSme.sites eq null}" />
+											<p:outputLabel value="Site's Name" />
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{mentorManagementUI.sitesSme.sites.email}" rendered="#{mentorManagementUI.sitesSme.sites ne null}" />
+											<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{mentorManagementUI.sitesSme.company.email}" rendered="#{mentorManagementUI.sitesSme.sites eq null}" />
+											<p:outputLabel value="#{lang['email']}" />
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{mentorManagementUI.sitesSme.sites.companyName}" rendered="#{mentorManagementUI.sitesSme.sites ne null}" />
+											<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{mentorManagementUI.sitesSme.company.tradingName}" rendered="#{mentorManagementUI.sitesSme.sites eq null}" />
+											<p:outputLabel value="Trading Name" />
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{mentorManagementUI.sitesSme.sites.levyNumber}" rendered="#{mentorManagementUI.sitesSme.sites ne null}" />
+											<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" value="#{mentorManagementUI.sitesSme.company.levyNumber}" rendered="#{mentorManagementUI.sitesSme.sites eq null}" />
+											<p:outputLabel value="Entity ID " />
+										</h:panelGroup>
+									</p:panelGrid>
+								</p:fieldset>
+							</p:tab>
+						</p:tabView>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card">
+					<h:form id="siteQualificationForm">
+						<h2>Search Mentor Application: Qualification</h2>
+						<p:panelGrid columns="1" style="width:100%" id="filterdownloadGrid" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{sessionUI.employee or sessionUI.activeUser.admin}">
+							<p:commandButton icon="fa fa-download" value="Download Report" ajax="false" action="#{mentorManagementUI.downloadSmeQualReport}" />
+						</p:panelGrid>
+						<ui:include src="/pages/includes/download_lazy_with_page.xhtml">
+							<ui:param name="file_name" value="Mentor_Qualifications_List" />
+							<ui:param name="target" value="smeQualificationsList" />
+						</ui:include>
+						<p:dataTable id="smeQualificationsList" var="rvSmeQ" value="#{mentorManagementUI.allSmeQualificationsDataModel}" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10" reflow="true" lazy="true">
+							
+							<p:column headerText="Company Name" sortBy="#{rvSmeQ.sitesSme.company.companyName}" filterBy="#{rvSmeQ.sitesSme.company.companyName}">
+								<p:outputLabel value="#{rvSmeQ.sitesSme.company.companyName}" rendered="#{rvSmeQ.sitesSme.sites eq null}" />
+							</p:column>
+
+							<p:column headerText="Trading Name " sortBy="#{rvSmeQ.sitesSme.company.tradingName}" filterBy="#{rvSmeQ.sitesSme.company.tradingName}">
+								<p:outputLabel value="#{rvSmeQ.sitesSme.company.tradingName}" rendered="#{rvSmeQ.sitesSme.sites eq null}" />
+							</p:column>
+
+							<p:column headerText="Entity ID  " sortBy="#{rvSmeQ.sitesSme.company.levyNumber}" filterBy="#{rvSmeQ.sitesSme.company.levyNumber}">
+								<p:outputLabel value="#{rvSmeQ.sitesSme.company.levyNumber}" rendered="#{rvSmeQ.sitesSme.sites eq null}" />
+							</p:column>
+
+							<p:column headerText="Site Name">
+								<p:outputLabel value="#{rvSmeQ.sitesSme.sites.companyName}" rendered="#{rvSmeQ.sitesSme.sites ne null}" />
+								<p:outputLabel value="#{rvSmeQ.sitesSme.company.companyName}" rendered="#{rvSmeQ.sitesSme.sites eq null}" />
+							</p:column>
+							
+							<p:column headerText="First Name" filterBy="#{rvSmeQ.sitesSme.firstName}" sortBy="#{rvSmeQ.sitesSme.firstName}">
+								<p:outputLabel style="width:95%; opacity:1 !important;" value="#{rvSmeQ.sitesSme.firstName}" />
+							</p:column>
+
+							<p:column headerText="Last Name" filterBy="#{rvSmeQ.sitesSme.lastName}" sortBy="#{rvSmeQ.sitesSme.lastName}">
+								<p:outputLabel style="width:95%; opacity:1 !important;" value="#{rvSmeQ.sitesSme.lastName}" />
+							</p:column>
+
+							<p:column headerText="Identity/Passport Number">
+								<p:outputLabel style="width:95%; opacity:1 !important;" value="#{rvSmeQ.sitesSme.identityNumber}" />
+								<p:outputLabel style="width:95%; opacity:1 !important;" value="#{rvSmeQ.sitesSme.passportNumber}" />
+							</p:column>
+							
+							<p:column headerText="Application Status">
+								<p:outputLabel value="#{rvSmeQ.sitesSme.status.friendlyName}" />
+							</p:column>
+							
+							<p:column headerText="SAQA ID" style="width:8%">
+								<p:outputLabel value="#{rvSmeQ.qualification.code}" />
+							</p:column>
+
+							<p:column headerText="Qualification">
+								<p:outputLabel value="#{rvSmeQ.qualification.description}" />
+							</p:column>
+
+							<p:column headerText="#{lang['nqf.level']}">
+								<h:outputText value="#{rvSmeQ.qualification.nqflevel.description}" />
+							</p:column>
+
+							<p:column headerText="Qualification #{lang['status']}" sortBy="#{rvSmeQ.status}">
+								<h:outputText value="#{rvSmeQ.status.friendlyName}" />
+							</p:column>
+
+							<p:column headerText="Approval/Reject Date">
+								<h:outputText value="#{rvSmeQ.approvedDate}">
+									<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+								</h:outputText>
+							</p:column>
+
+							<p:column headerText="Reject Reasons">
+								<h:outputText value="#{rvSmeQ.reason}" />
+							</p:column>
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+		</div>
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+	</ui:define>
+</ui:composition>

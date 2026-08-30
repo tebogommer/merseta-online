@@ -1,0 +1,114 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>On Screen Help</h1>
+					<h:form id="onscreenhelpInsForm">
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:panelGrid columns="1" style="width:100%" id="onscreenhelpInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+							<h:panelGroup>
+								<p:outputLabel value="Screen" for="screen" />
+								<p:spacer width="10" />
+								<p:outputLabel id="screen" value="#{onscreenhelpUI.onscreenhelp.screen}" style="width:95%" styleClass="FontBold Fs16" />
+
+							</h:panelGroup>
+							<h:panelGroup>
+
+								<p:textEditor id="helpText" value="#{onscreenhelpUI.onscreenhelp.helpText}" style="width:95%" placeholder="Help Text" height="100" />
+
+							</h:panelGroup>
+							<h:panelGroup>
+
+								<p:outputLabel value="#{lang['active']}" for="active" />
+								<p:spacer width="10" />
+								<p:selectBooleanCheckbox id="active" value="#{onscreenhelpUI.onscreenhelp.active}" />
+							</h:panelGroup>
+
+
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:onscreenhelpList :onscreenhelpInsForm:onscreenhelpInsGrid" action="#{onscreenhelpUI.onscreenhelpInsert}" />
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="onscreenhelpInsGrid" process="@this" action="#{onscreenhelpUI.prepareNew}">
+									<p:resetInput target="onscreenhelpInsGrid" />
+								</p:commandButton>
+							</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+
+
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{onscreenhelpUI.dataModel}" filteredValue="#{onscreenhelpUI.onScreenHelpfilteredList}" id="onscreenhelpList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+
+							<p:column headerText="Screen" sortBy="#{rowVar.screen}" filterBy="#{rowVar.screen}" filterStyle="width: 98%" width="30%">
+								<h:outputText value="#{rowVar.screen}" />
+							</p:column>
+							<p:column headerText="Help Text">
+								<h:outputText value="#{rowVar.helpText}" escape="false" />
+							</p:column>
+							<p:column headerText="#{lang['active']}" width="40">
+								<div align="center">
+									<p:selectBooleanCheckbox value="#{rowVar.active}" disabled="true" />
+								</div>
+							</p:column>
+
+
+							<p:column width="80">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":onscreenhelpInsForm:onscreenhelpInsGrid">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{onscreenhelpUI.onscreenhelp}" />
+								</p:commandButton>
+								<p:spacer width="5" rendered="false" />
+
+								<p:commandButton id="phelp" oncomplete="PF('dlgGenHelpDemo').show()" update=":genHelpFormDemo" rendered="#{rowVar.helpText ne null}" icon="ui-icon-info-outline" title="Preview help ">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{onscreenhelpUI.onscreenhelp}" />
+								</p:commandButton>
+								<p:tooltip for="phelp" position="left" />
+							</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+		<p:dialog modal="true" widgetVar="dlgGenHelpDemo" resizable="false" dynamic="true" responsive="true" minHeight="300" header="Information" width="70%">
+			<div class="ui-g">
+				<div class="ui-g-12">
+
+					<h:form id="genHelpFormDemo">
+						<div align="left">
+							<h:outputText value="#{onscreenhelpUI.onscreenhelp.helpText}" escape="false" rendered="#{onscreenhelpUI.onscreenhelp.helpText ne null}" style="text-align: justify;text-justify: inter-word" />
+
+
+						</div>
+					</h:form>
+				</div>
+			</div>
+		</p:dialog>
+
+
+	</ui:define>
+	<!-- 
+createDate = createDate
+screen = screen
+helpText = helpText
+active = active
+
+-->
+</ui:composition>

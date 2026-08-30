@@ -1,0 +1,244 @@
+@page "/people"
+@inject IPersonService PersonService
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+<div class="d-flex justify-space-between align-center mb-4">
+    <div>
+        <MudText Typo="Typo.h5" Class="font-weight-bold">People & Demographics Registry</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">Centralized identity, demographic, and contact registry for learners, assessors, and SDFs</MudText>
+    </div>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd" OnClick="CreateNewPerson">
+        New Person
+    </MudButton>
+</div>
+
+<MudPaper Class="pa-4 mb-4" Elevation="1">
+    <div class="d-flex flex-wrap gap-4 align-center justify-space-between mb-3">
+        <div class="d-flex align-center gap-3 flex-grow-1" style="max-width: 600px;">
+            <MudTextField @bind-Value="_searchString"
+                          Placeholder="Search by Name, RSA ID, Passport, Email, Phone..."
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          IconSize="Size.Medium"
+                          Class="mt-0"
+                          Immediate="true"
+                          Clearable="true" />
+        </div>
+        <div class="d-flex align-center gap-2">
+            <MudChipSet T="string" @bind-SelectedValue="_statusFilter" SelectionMode="SelectionMode.SingleSelection">
+                <MudChip T="string" Value="@("All")" Color="Color.Default" Variant="@(_statusFilter == "All" ? Variant.Filled : Variant.Outlined)">All</MudChip>
+                <MudChip T="string" Value="@("Active")" Color="Color.Success" Variant="@(_statusFilter == "Active" ? Variant.Filled : Variant.Outlined)">Active Only</MudChip>
+                <MudChip T="string" Value="@("Inactive")" Color="Color.Error" Variant="@(_statusFilter == "Inactive" ? Variant.Filled : Variant.Outlined)">Inactive</MudChip>
+            </MudChipSet>
+        </div>
+    </div>
+
+    @if (_loading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+    }
+    else
+    {
+        <MudTable Items="@FilteredPeople"
+                  Hover="true"
+                  Dense="true"
+                  Striped="true"
+                  Breakpoint="Breakpoint.Sm"
+                  OnRowClick="@((TableRowClickEventArgs<Person> e) => OpenDetail(e.Item != null ? e.Item.Id : 0))"
+                  T="Person">
+            <HeaderContent>
+                <MudTh>Full Name</MudTh>
+                <MudTh>RSA ID / Passport</MudTh>
+                <MudTh>Gender</MudTh>
+                <MudTh>Date of Birth</MudTh>
+                <MudTh>Contact (Email / Cell)</MudTh>
+                <MudTh>Province</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh Style="text-align:right">Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Full Name">
+                    <div class="d-flex align-center gap-2">
+                        <MudAvatar Color="Color.Primary" Size="Size.Small">
+                            @GetInitials(context)
+                        </MudAvatar>
+                        <div>
+                            <MudText Typo="Typo.body2" Class="fw-bold">
+                                @(!string.IsNullOrWhiteSpace(context.Title) ? $"{context.Title} " : "")@context.FirstName @context.LastName
+                            </MudText>
+                            @if (!string.IsNullOrWhiteSpace(context.MiddleName))
+                            {
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">Middle: @context.MiddleName</MudText>
+                            }
+                        </div>
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="RSA ID / Passport">
+                    @if (!string.IsNullOrWhiteSpace(context.RsaIdNumber))
+                    {
+                        <div class="d-flex align-center gap-1">
+                            <MudIcon Icon="@Icons.Material.Filled.Badge" Size="Size.Small" Color="Color.Info" />
+                            <MudText Typo="Typo.body2" Class="font-monospace">@context.RsaIdNumber</MudText>
+                        </div>
+                    }
+                    else if (!string.IsNullOrWhiteSpace(context.PassportNumber))
+                    {
+                        <div class="d-flex align-center gap-1">
+                            <MudIcon Icon="@Icons.Material.Filled.Public" Size="Size.Small" Color="Color.Secondary" />
+                            <MudText Typo="Typo.body2">@context.PassportNumber</MudText>
+                        </div>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Not provided</MudText>
+                    }
+                </MudTd>
+                <MudTd DataLabel="Gender">
+                    @if (!string.IsNullOrWhiteSpace(context.Gender))
+                    {
+                        <span>@context.Gender</span>
+                    }
+                    else if (!string.IsNullOrWhiteSpace(context.GenderCode))
+                    {
+                        <span>@context.GenderCode</span>
+                    }
+                    else
+                    {
+                        <span class="text-muted">-</span>
+                    }
+                </MudTd>
+                <MudTd DataLabel="Date of Birth">
+                    @(context.DateOfBirth.HasValue ? context.DateOfBirth.Value.ToString("yyyy-MM-dd") : "-")
+                </MudTd>
+                <MudTd DataLabel="Contact">
+                    <div>
+                        @if (!string.IsNullOrWhiteSpace(context.Email))
+                        {
+                            <div class="d-flex align-center gap-1">
+                                <MudIcon Icon="@Icons.Material.Filled.Email" Size="Size.Small" Color="Color.Default" />
+                                <MudText Typo="Typo.caption">@context.Email</MudText>
+                            </div>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(context.CellNumber) || !string.IsNullOrWhiteSpace(context.PhoneNumber))
+                        {
+                            <div class="d-flex align-center gap-1">
+                                <MudIcon Icon="@Icons.Material.Filled.Phone" Size="Size.Small" Color="Color.Default" />
+                                <MudText Typo="Typo.caption">@(!string.IsNullOrWhiteSpace(context.CellNumber) ? context.CellNumber : context.PhoneNumber)</MudText>
+                            </div>
+                        }
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="Province">
+                    @(string.IsNullOrWhiteSpace(context.ProvinceCode) ? "-" : context.ProvinceCode)
+                </MudTd>
+                <MudTd DataLabel="Status">
+                    <MudChip T="string" Color="@(context.IsActive ? Color.Success : Color.Error)" Size="Size.Small" Variant="Variant.Filled">
+                        @(context.IsActive ? "Active" : "Inactive")
+                    </MudChip>
+                </MudTd>
+                <MudTd Style="text-align:right" DataLabel="Actions">
+                    <div class="d-flex justify-end gap-1">
+                        <MudTooltip Text="View & Edit Record">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" OnClick="@(() => OpenDetail(context.Id))" aria-label="Edit Person" />
+                        </MudTooltip>
+                        <MudTooltip Text="Delete Record">
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeletePerson(context.Id, $"{context.FirstName} {context.LastName}"))" aria-label="Delete Person" />
+                        </MudTooltip>
+                    </div>
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <div class="pa-4 text-center">
+                    <MudText Typo="Typo.body1" Color="Color.Secondary">No person records found matching the criteria.</MudText>
+                </div>
+            </NoRecordsContent>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
+            </PagerContent>
+        </MudTable>
+    }
+</MudPaper>
+
+@code {
+    private List<Person> _people = new();
+    private string _searchString = string.Empty;
+    private string _statusFilter = "All";
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _loading = true;
+        _people = await PersonService.GetAllAsync();
+        _loading = false;
+    }
+
+    private IEnumerable<Person> FilteredPeople
+    {
+        get
+        {
+            var query = _people.AsEnumerable();
+
+            if (_statusFilter == "Active")
+            {
+                query = query.Where(p => p.IsActive);
+            }
+            else if (_statusFilter == "Inactive")
+            {
+                query = query.Where(p => !p.IsActive);
+            }
+
+            if (!string.IsNullOrWhiteSpace(_searchString))
+            {
+                var s = _searchString.Trim();
+                query = query.Where(p =>
+                    (p.FirstName != null && p.FirstName.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    (p.LastName != null && p.LastName.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    (p.RsaIdNumber != null && p.RsaIdNumber.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    (p.PassportNumber != null && p.PassportNumber.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    (p.Email != null && p.Email.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    (p.CellNumber != null && p.CellNumber.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    (p.PhoneNumber != null && p.PhoneNumber.Contains(s, StringComparison.OrdinalIgnoreCase)));
+            }
+
+            return query;
+        }
+    }
+
+    private string GetInitials(Person person)
+    {
+        var first = !string.IsNullOrWhiteSpace(person.FirstName) ? person.FirstName[0].ToString().ToUpper() : "";
+        var last = !string.IsNullOrWhiteSpace(person.LastName) ? person.LastName[0].ToString().ToUpper() : "";
+        return $"{first}{last}";
+    }
+
+    private void OpenDetail(int id)
+    {
+        NavManager.NavigateTo($"/people/{id}");
+    }
+
+    private void CreateNewPerson()
+    {
+        NavManager.NavigateTo("/people/create");
+    }
+
+    private async Task DeletePerson(int id, string name)
+    {
+        var deleted = await PersonService.DeleteAsync(id, "Admin");
+        if (deleted)
+        {
+            Snackbar.Add($"Person '{name}' deleted successfully with audit confirmation.", Severity.Success);
+            await LoadData();
+        }
+        else
+        {
+            Snackbar.Add("Could not delete the specified person record.", Severity.Error);
+        }
+    }
+}

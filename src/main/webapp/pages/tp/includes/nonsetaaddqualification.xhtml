@@ -1,0 +1,281 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<h:panelGroup id="pgResubmissionQualDetails">
+
+		<p:fieldset legend="#{lang['qualifications']}">
+			<p:panelGrid columns="2" id="pgAddQual" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup>
+					<div>
+						<p:outputLabel rendered="true" value="#{lang['qualification']}"></p:outputLabel>
+					</div>
+					<div>
+
+						<!-- Non-merSETA Qualification-->
+						<p:autoComplete rendered="#{sdpextensionofscopeUI.selectTrainingProviderApplication.accreditationApplicationTypeEnum eq AccreditationApplicationTypeEnum.Non_MerSETA_Focused_Provider}" style="width: 100%" id="nonSetaQualificationAuto" value="#{sdpextensionofscopeUI.qualification}"
+							completeMethod="#{autoCompleteUI.findNonMersetaQualificationAutocompleteWithNoTrades}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+							<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+							<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+						</p:autoComplete>
+
+						<!-- QCTO Skills Development Provider-->
+						<p:autoComplete rendered="#{sdpextensionofscopeUI.selectTrainingProviderApplication.accreditationApplicationTypeEnum eq AccreditationApplicationTypeEnum.QCTOSkillsDevelopmentProvider}" style="width: 100%" id="nonSetaQualificationSelectionProvider" value="#{sdpextensionofscopeUI.qualification}"
+							completeMethod="#{autoCompleteUI.completeQualificationAutocompleteExcludingTrades}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+							<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+							<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+						</p:autoComplete>
+
+						<!-- QCTO Qualification-->
+						<p:autoComplete rendered="#{sdpextensionofscopeUI.selectTrainingProviderApplication.accreditationApplicationTypeEnum eq AccreditationApplicationTypeEnum.QCTOTradeTestCentre}" style="width: 100%" id="nonSetaQualificationSelection" value="#{sdpextensionofscopeUI.qualification}"
+							completeMethod="#{autoCompleteUI.completeNonMerSETAQualificationWithTrades}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+							<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+							<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+						</p:autoComplete>
+					</div>
+				</h:panelGroup>
+				<p:commandButton value="#{lang['add.qualification']}" update="mainForm" process="@this pgAddQual" icon="ui-icon-plus" iconPos="right" styleClass="flat" action="#{sdpextensionofscopeUI.addNonSetaExOfScopeQualification}" />
+			</p:panelGrid>
+			<p:dataList value="#{sdpextensionofscopeUI.companyQualifications}" var="qual" rendered="#{sdpextensionofscopeUI.companyQualifications.size() gt 0}">
+				<p:outputLabel value="#{qual.qualification.description}"></p:outputLabel>
+				<p:commandLink id="ajaxs" update="mainForm" process="@this" action="#{sdpextensionofscopeUI.removeCompanyQualification}">
+					<span class="fa fa-times Fs12 grey"></span>
+					<f:setPropertyActionListener value="#{qual}" target="#{sdpextensionofscopeUI.companyQualification}" />
+				</p:commandLink>
+			</p:dataList>
+		</p:fieldset>
+		
+		<p:fieldset legend="#{lang['skills.programme']}" rendered="#{sdpextensionofscopeUI.selectTrainingProviderApplication.accreditationApplicationTypeEnum ne AccreditationApplicationTypeEnum.QCTOTradeTestCentre}">
+			<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup styleClass="md-inputfield" id="pgSkillsP2" rendered="true">
+				
+					<!-- QCTO Skills Development Provider-->
+					<p:autoComplete rendered="#{sdpextensionofscopeUI.selectTrainingProviderApplication.accreditationApplicationTypeEnum eq AccreditationApplicationTypeEnum.QCTOSkillsDevelopmentProvider}" required="false" id="nonSetaTpSkillsProgram" value="#{sdpextensionofscopeUI.skillsProgram}" completeMethod="#{autoCompleteUI.completeSkillsProgramLinkedToMerseta}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SkillsProgramConvertor" dropdown="true"
+						minQueryLength="3" maxResults="10" inputStyle="width: 100%; opacity:1 !important;" style="width: 100%">
+						<p:ajax event="itemSelect" />
+						<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+						<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+					</p:autoComplete>
+					<p:outputLabel value="Skills Programme" for="pgSkillsP2" styleClass="gray" />
+					
+					<!-- Non-merSETA Qualification-->
+					<p:autoComplete rendered="#{sdpextensionofscopeUI.selectTrainingProviderApplication.accreditationApplicationTypeEnum eq AccreditationApplicationTypeEnum.Non_MerSETA_Focused_Provider}" required="false" id="pgSkillsQCTO" value="#{sdpextensionofscopeUI.skillsProgram}" completeMethod="#{autoCompleteUI.completeSkillsProgramNotLinkedToEtqa}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SkillsProgramConvertor" dropdown="true"
+						minQueryLength="3" maxResults="10" inputStyle="width: 100%; opacity:1 !important;" style="width: 100%">
+						<p:ajax event="itemSelect" />
+						<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+						<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+					</p:autoComplete>
+					<p:outputLabel value="Skills Programme" for="pgSkillsQCTO" styleClass="gray" />
+				</h:panelGroup>
+				<p:commandButton value="#{lang['add.skills.program']}" update="mainForm:pgResubmissionQualDetails" process="@this" icon="ui-icon-plus" iconPos="right" styleClass="flat" action="#{sdpextensionofscopeUI.addNonSetaExtOfScopeSkillsPrg()}" />
+			</p:panelGrid>
+
+			<p:dataList value="#{sdpextensionofscopeUI.tpSkillsProgramList}" var="sp" rendered="#{sdpextensionofscopeUI.tpSkillsProgramList.size() gt 0}">
+				<p:outputLabel value="#{sp.skillsProgram.description}"></p:outputLabel>
+				<p:commandLink id="ajaxs" update="mainForm" process="@this" disabled="#{sp.cannotRemove}" action="#{sdpextensionofscopeUI.removeTpSkillsProgram}">
+					<span class="fa fa-times Fs12 grey"></span>
+					<f:setPropertyActionListener value="#{sp}" target="#{sdpextensionofscopeUI.tpSkillsProgramme}" />
+				</p:commandLink>
+			</p:dataList>
+
+		</p:fieldset>
+
+		<p:fieldset legend="#{lang['skills.set']}"
+			rendered="#{sdpextensionofscopeUI.selectTrainingProviderApplication.accreditationApplicationTypeEnum ne AccreditationApplicationTypeEnum.QCTOTradeTestCentre}">
+			<p:panelGrid columns="2" id="pgSS" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup>
+					<div>
+						<p:outputLabel value="Skills Set" />
+					</div>
+					<div>
+					
+						<!-- QCTO Skills Development Provider-->
+						<p:autoComplete rendered="#{sdpextensionofscopeUI.selectTrainingProviderApplication.accreditationApplicationTypeEnum eq AccreditationApplicationTypeEnum.QCTOSkillsDevelopmentProvider}" required="false" id="skillssetQCTOSelect" value="#{sdpextensionofscopeUI.skillsSet}" completeMethod="#{autoCompleteUI.completeSkillsSetLinkedToMerseta}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SkillsSetConvertor" dropdown="true" minQueryLength="3"
+							maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 100%">
+							<p:ajax event="itemSelect" update="mainForm:pgResubmissionQualDetails" />
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+							<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+						</p:autoComplete>
+					
+						<!-- Non-merSETA Qualification-->
+						<p:autoComplete rendered="#{sdpextensionofscopeUI.selectTrainingProviderApplication.accreditationApplicationTypeEnum eq AccreditationApplicationTypeEnum.Non_MerSETA_Focused_Provider}" required="false" id="skillsSet" value="#{sdpextensionofscopeUI.skillsSet}" completeMethod="#{autoCompleteUI.completeSkillsSetNotLinkedToSeta}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SkillsSetConvertor" dropdown="true" minQueryLength="3"
+							maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 100%">
+							<p:ajax event="itemSelect" update="mainForm:pgResubmissionQualDetails" />
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+							<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+						</p:autoComplete>
+					</div>
+				</h:panelGroup>
+				<p:commandButton style="float:left;" value="#{lang['add.skills.set']}" update="mainForm:pgResubmissionQualDetails" process="@this pgSS" icon="ui-icon-plus" iconPos="right" styleClass="flat Fright" action="#{sdpextensionofscopeUI.addNonSetaSkillsSetToList}" />
+			</p:panelGrid>
+
+			<p:dataList value="#{sdpextensionofscopeUI.tpSkillsSetList}" var="ss" rendered="#{sdpextensionofscopeUI.tpSkillsSetList.size() gt 0}">
+				<p:outputLabel value="#{ss.skillsSet.description}"></p:outputLabel>
+				<p:commandLink id="ajaxs" update="mainForm" process="@this" disabled="#{ss.cannotRemove}" action="#{sdpextensionofscopeUI.removeTpSkillsSet}">
+					<span class="fa fa-times Fs12 grey"></span>
+					<f:setPropertyActionListener value="#{ss}" target="#{sdpextensionofscopeUI.tpSkillsSet}" />
+				</p:commandLink>
+			</p:dataList>
+		</p:fieldset>
+		<br />
+		<p:fieldset legend="#{lang['unit.standards']}" rendered="#{sdpextensionofscopeUI.selectTrainingProviderApplication.accreditationApplicationTypeEnum ne AccreditationApplicationTypeEnum.QCTOTradeTestCentre}">
+			<p:panelGrid columns="2" id="pgAddUS" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup>
+					<div>
+						<p:outputLabel value="#{lang['unit.standard']}"></p:outputLabel>
+					</div>
+					<div>
+						<!-- QCTO Skills Development Provider-->
+						<p:autoComplete rendered="#{sdpextensionofscopeUI.selectTrainingProviderApplication.accreditationApplicationTypeEnum eq AccreditationApplicationTypeEnum.QCTOSkillsDevelopmentProvider}" style="width: 100%" id="companyUnitStandardsAutoQCTO" value="#{sdpextensionofscopeUI.unitStandard}" completeMethod="#{autoCompleteUI.completeUnitStandardsBeforeLastEnrolmentDate}" var="rv" itemLabel="#{rv.title}" itemValue="#{rv}" forceSelection="true"
+							converter="UnitStandardsConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+							<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.title}</p:column>
+							<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqf}</p:column>
+							<p:ajax event="itemSelect" listener="#{sdpextensionofscopeUI.usQualificationValidation}" update="mainForm:pgResubmissionQualDetails" />
+						</p:autoComplete>
+						
+						<!-- Non-merSETA Qualification-->
+						<p:autoComplete rendered="#{sdpextensionofscopeUI.selectTrainingProviderApplication.accreditationApplicationTypeEnum eq AccreditationApplicationTypeEnum.Non_MerSETA_Focused_Provider}" style="width: 100%" id="companyUnitStandardsAuto" value="#{sdpextensionofscopeUI.unitStandard}" completeMethod="#{autoCompleteUI.completeUnitStandardsBeforeLastEnrolmentDate}" var="rv" itemLabel="#{rv.title}" itemValue="#{rv}" forceSelection="true"
+							converter="UnitStandardsConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+							<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.title}</p:column>
+							<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqf}</p:column>
+							<p:ajax event="itemSelect" listener="#{sdpextensionofscopeUI.usQualificationValidation}" update="mainForm:pgResubmissionQualDetails" />
+						</p:autoComplete>
+					</div>
+				</h:panelGroup>
+				<p:commandButton style="float:left;" value="#{lang['add.unit.standard']}" process="pgAddUS" update="mainForm:pgResubmissionQualDetails" icon="ui-icon-plus" iconPos="right" styleClass="flat Fright" action="#{sdpextensionofscopeUI.addNonSetaUnitStandardsToList}" />
+			</p:panelGrid>
+			<p:dataList value="#{sdpextensionofscopeUI.companyUnitStandards}" var="us" rendered="#{sdpextensionofscopeUI.companyUnitStandards.size() gt 0}">
+				<p:outputLabel value="#{us.unitStandard.title}"></p:outputLabel>
+				<p:commandLink id="ajaxs" update="mainForm" process="@this" disabled="#{su.cannotRemove}" action="#{sdpextensionofscopeUI.removeTpUnitStandards}">
+					<span class="fa fa-times Fs12 grey"></span>
+					<f:setPropertyActionListener value="#{us}" target="#{sdpextensionofscopeUI.companyUnitStandard}" />
+				</p:commandLink>
+			</p:dataList>
+		</p:fieldset>
+		<p:panelGrid columns="1" style="width:95%" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="true">
+			<p:commandButton value="#{lang['continue']}" update="mainForm" icon="ui-icon-fast-forward" iconPos="right" action="#{sdpextensionofscopeUI.doneQualificationDetails}" />
+		</p:panelGrid>
+		<br />
+		<h:panelGroup rendered="#{sdpextensionofscopeUI.doneQualification}">
+			<span class="FontBold"> <i class="fa fa-exclamation-circle" aria-hidden="true"></i> #{lang['please.upload.the.following.compulsory.documents']}
+			</span>
+		</h:panelGroup>
+
+		<p:outputPanel id="pgSupDocs" layout="gride" rendered="#{sdpextensionofscopeUI.doneQualification}">
+			<div class="ui-g dashboard">
+				<div class="ui-g-12">
+					<!-- Qualification(s) Supporting Document -->
+					<h:panelGroup rendered="#{sdpextensionofscopeUI.companyQualifications.size() gt 0}" style="width:100%">
+						<div class="ui-g-12 ui-md-6 ui-lg-3">
+							<div class="ui-g card colorbox #{!sdpextensionofscopeUI.qualUplaoaded ? 'colorbox-1' : 'colorbox-5'}">
+								<div class="ui-g-4">
+									<i class="material-icons">#{!sdpextensionofscopeUI.qualUplaoaded ? 'cloud_upload' : 'check_circle'}</i>
+								</div>
+								<div class="ui-g-8">
+									<span class="colorbox-name">Qualification(s) Supporting Document</span> <span class="colorbox-count"> <p:commandButton icon="fa fa-download" rendered="#{sdpextensionofscopeUI.qualUplaoaded and false}" action="#{sdpextensionofscopeUI.downloadQualSupportingDoc()}" ajax="false"
+											value="#{lang['download']}" immediate="true" process="@parent">
+											<p:ajax onevent="oneventFunction" />
+										</p:commandButton> <p:spacer width="10"></p:spacer> <p:commandButton value="#{!sdpextensionofscopeUI.qualUplaoaded ? lang['click.to.upload'] : lang['re.upload']}" styleClass="#{!sdpextensionofscopeUI.qualUplaoaded ? 'red-btn' : 'green-btn'} flat" process="@this"
+											oncomplete="PF('dlgUploadAddSupportingDoc').show()" update="@form">
+											<f:setPropertyActionListener value="Qualifications" target="#{sdpextensionofscopeUI.docFor}" />
+										</p:commandButton>
+									</span>
+								</div>
+							</div>
+						</div>
+					</h:panelGroup>
+
+					<!-- Unit Standard(s) Supporting Document-->
+					<h:panelGroup rendered="#{sdpextensionofscopeUI.companyUnitStandards.size() gt 0}" style="width:100%">
+						<div class="ui-g-12 ui-md-6 ui-lg-3">
+							<div class="ui-g card colorbox #{!sdpextensionofscopeUI.usUplaoaded ? 'colorbox-1' : 'colorbox-5'}">
+								<div class="ui-g-4">
+									<i class="material-icons">#{!sdpextensionofscopeUI.usUplaoaded ? 'cloud_upload' : 'check_circle'}</i>
+								</div>
+								<div class="ui-g-8">
+									<span class="colorbox-name">Unit Standard(s) Supporting Document</span> <span class="colorbox-count"> <p:commandButton icon="fa fa-download" rendered="#{sdpextensionofscopeUI.qualUplaoaded and false}" action="#{sdpextensionofscopeUI.downloadUSSupportingDoc()}" ajax="false"
+											value="#{lang['download']}" immediate="true" process="@parent">
+											<p:ajax onevent="oneventFunction" />
+										</p:commandButton> <p:spacer width="10"></p:spacer> <p:commandButton value="#{!sdpextensionofscopeUI.usUplaoaded ? lang['click.to.upload'] : lang['re.upload']}" styleClass="#{!sdpextensionofscopeUI.usUplaoaded ? 'red-btn' : 'green-btn'} flat" process="@this"
+											oncomplete="PF('dlgUploadAddSupportingDoc').show()" update="@form">
+											<f:setPropertyActionListener value="Unit Standards" target="#{sdpextensionofscopeUI.docFor}" />
+										</p:commandButton>
+									</span>
+								</div>
+							</div>
+						</div>
+					</h:panelGroup>
+
+					<!-- Skills Programme(s) Supporting Document-->
+					<h:panelGroup rendered="#{sdpextensionofscopeUI.tpSkillsProgramList.size() gt 0}" style="width:100%">
+						<div class="ui-g-12 ui-md-6 ui-lg-3">
+							<div class="ui-g card colorbox #{!sdpextensionofscopeUI.spUplaoaded ? 'colorbox-1' : 'colorbox-5'}">
+								<div class="ui-g-4">
+									<i class="material-icons">#{!sdpextensionofscopeUI.spUplaoaded ? 'cloud_upload' : 'check_circle'}</i>
+								</div>
+								<div class="ui-g-8">
+									<span class="colorbox-name">Skills Programme(s) Supporting Document</span> <span class="colorbox-count"> <p:commandButton icon="fa fa-download" rendered="#{sdpextensionofscopeUI.qualUplaoaded and false}" action="#{sdpextensionofscopeUI.downloadSkillsProgSupportingDoc()}" ajax="false"
+											value="#{lang['download']}" immediate="true" process="@parent">
+											<p:ajax onevent="oneventFunction" />
+										</p:commandButton> <p:spacer width="10"></p:spacer> <p:commandButton value="#{!sdpextensionofscopeUI.spUplaoaded  ? lang['click.to.upload'] : lang['re.upload']}" styleClass="#{!sdpextensionofscopeUI.spUplaoaded  ? 'red-btn' : 'green-btn'} flat" process="@this"
+											oncomplete="PF('dlgUploadAddSupportingDoc').show()" update="@form">
+											<f:setPropertyActionListener value="Skills Programme" target="#{sdpextensionofscopeUI.docFor}" />
+										</p:commandButton>
+									</span>
+								</div>
+							</div>
+						</div>
+					</h:panelGroup>
+
+					<!-- Skills Set(s) Supporting Document-->
+					<h:panelGroup rendered="#{sdpextensionofscopeUI.tpSkillsSetList.size() gt 0}" style="width:100%">
+						<div class="ui-g-12 ui-md-6 ui-lg-3">
+							<div class="ui-g card colorbox #{!sdpextensionofscopeUI.ssUplaoaded ? 'colorbox-1' : 'colorbox-5'}">
+								<div class="ui-g-4">
+									<i class="material-icons">#{!tsdpextensionofscopeUI.ssUplaoaded ? 'cloud_upload' : 'check_circle'}</i>
+								</div>
+								<div class="ui-g-8">
+									<span class="colorbox-name">Skills Set(s) Supporting Document</span> <span class="colorbox-count"> <p:commandButton icon="fa fa-download" rendered="#{sdpextensionofscopeUI.qualUplaoaded and false}" action="#{sdpextensionofscopeUI.downloadSkillsSetSupportingDoc()}" ajax="false"
+											value="#{lang['download']}" immediate="true" process="@parent">
+											<p:ajax onevent="oneventFunction" />
+										</p:commandButton> <p:spacer width="10"></p:spacer> <p:commandButton value="#{!sdpextensionofscopeUI.ssUplaoaded  ? lang['click.to.upload'] : lang['re.upload']}" styleClass="#{!sdpextensionofscopeUI.ssUplaoaded  ? 'red-btn' : 'green-btn'} flat" process="@this"
+											oncomplete="PF('dlgUploadAddSupportingDoc').show()" update="@form">
+											<f:setPropertyActionListener value="Skills Set" target="#{sdpextensionofscopeUI.docFor}" />
+										</p:commandButton>
+									</span>
+								</div>
+							</div>
+						</div>
+					</h:panelGroup>
+				</div>
+			</div>
+		</p:outputPanel>
+
+		<p:panelGrid columns="1" style="width:100%" rendered="#{sdpextensionofscopeUI.doneQualification}">
+			<h:outputText value="Declaration For Application With merSETA" styleClass="FontBold Fs15" />
+			<p>I, the undersigned, confirm that I am authorised by this organisation to submit the Skills Development Provider application. I declare that to the best of my knowledge, the information contained herein, is accurate and up to date.</p>
+			<div class="EmptyBox20"></div>
+			<p:panel header="#{lang['accept.code.of.conduct']}" style="text-align:center">
+				<h:form id="cocForm">
+					<p:panelGrid columns="6" id="pgAccept" style="width:100%">
+
+						<h:outputText value="#{lang['name']}:" styleClass="FontBold Fs15" />
+						<h:outputText value="#{sdpextensionofscopeUI.selectTrainingProviderApplication.users.firstName} #{sdpextensionofscopeUI.selectTrainingProviderApplication.users.lastName}" />
+
+						<h:outputText value="#{lang['accept']}:" styleClass="FontBold Fs15" />
+						<p:selectBooleanCheckbox style="width:100%" id="cbAccept" value="#{sdpextensionofscopeUI.selectTrainingProviderApplication.codeOfConductAccepted}">
+							<p:ajax></p:ajax>
+						</p:selectBooleanCheckbox>
+
+					</p:panelGrid>
+				</h:form>
+			</p:panel>
+		</p:panelGrid>
+
+	</h:panelGroup>
+
+
+
+</ui:composition>

@@ -1,0 +1,169 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui">
+
+	<p:commandButton title="#{lang['close']}" update="@form" icon="fa fa-times" styleClass="Fright" process="@this" rendered="false">
+		<f:setPropertyActionListener value="#{null}" target="#{companyUsersUI.companyUsers}" />
+	</p:commandButton>
+
+	<h4>#{companyUsersUI.selectedCompany.company.companyName} #{lang['contact.persons']}</h4>
+	<p:growl showDetail="false" sticky="false">
+		<p:autoUpdate />
+	</p:growl>
+
+
+	<div class="EmptyBox20"></div>
+	<c:if
+		test="#{(companyUsersUI.companyUser eq null or !companyUsersUI.companyUser.user.doneSearch) and (companyUsersUI.companyUser.user eq null) and (sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Edit or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload or enableAddContactAndSDF)}">
+		<ui:include src="/pages/includes/searchUserPassportOrID.xhtml" />
+	</c:if>
+	<h:panelGroup id="panelPersonDetails" rendered="#{companyUsersUI.companyUser.user.doneSearch or companyUsersUI.companyUser ne null}">
+		<p:fieldset legend="#{lang['contact.person.details']}" rendered="#{companyUsersUI.companyUser ne null}">
+			<p:panelGrid columns="2" style="width:100%" id="usersInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{companyUsersUI.companyUser ne null}">
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText id="firstName" value="#{companyUsersUI.companyUser.user.firstName}" maxlength="#{companyUsersUI.MAX_FIRST_NAME_SIZE}" style="width:95%" required="true" requiredMessage="#{lang['enter.your.name']}">
+						<p:ajax></p:ajax>
+					</p:inputText>
+					<p:outputLabel value="#{lang['first.name']}" for="firstName" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText id="lastName" value="#{companyUsersUI.companyUser.user.lastName}" maxlength="#{companyUsersUI.MAX_LAST_NAME_SIZE}" style="width:95%" required="true" requiredMessage="#{lang['enter.your.last.name']}">
+						<p:ajax></p:ajax>
+					</p:inputText>
+					<p:outputLabel value="#{lang['surname']}" for="lastName" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputText id="email" value="#{companyUsersUI.companyUser.user.email}" style="width:95%" maxlength="#{companyUsersUI.MAX_EMAIL_SIZE}" required="true" requiredMessage="#{lang['enter.your.email.address']}">
+						<p:ajax></p:ajax>
+					</p:inputText>
+					<p:outputLabel value="#{lang['email']}" for="email" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield" rendered="#{companyUsersUI.companyUser.user.rsaIDNumber.length() gt 0}">
+					<p:inputText id="idNumber" value="#{companyUsersUI.companyUser.user.rsaIDNumber}" maxlength="#{companyUsersUI.MAX_PASSPORT_NUMBER}" style="width:95%" disabled="true" required="true" />
+					<p:outputLabel value="#{lang['rsa.id.number']}" for="idNumber" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield" rendered="#{companyUsersUI.companyUser.user.passportNumber.length() gt 0}">
+					<p:inputText id="passportNumber" value="#{companyUsersUI.companyUser.user.passportNumber}" disabled="true" maxlength="#{ccompanyUsersUI.MAX_PASSPORT_NUMBER}" style="width:95%" required="true">
+					</p:inputText>
+					<p:outputLabel value="#{lang['passport.number']}" for="passportNumber" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputMask id="telNumber" mask="#{companyUsersUI.TELPHONE_FORMAT}" value="#{companyUsersUI.companyUser.user.telNumber}" style="width: 90%" label="telNumber" required="false" requiredMessage="#{lang['provide.tell.number']}">
+					</p:inputMask>
+					<p:outputLabel value="#{lang['tel.number']}" for="telNumber" />
+				</h:panelGroup>
+				<h:panelGroup styleClass="md-inputfield">
+					<p:inputMask id="cellNumber" mask="#{companyUsersUI.CELLPHONE_FORMAT}" value="#{companyUsersUI.companyUser.user.cellNumber}" style="width: 90%" label="cellNumber" required="false" requiredMessage="#{lang['provide.mobile.number']}">
+					</p:inputMask>
+					<p:outputLabel value="#{lang['cell.number']}" for="cellNumber" />
+				</h:panelGroup>
+
+				<h:panelGroup>
+					<div>
+						<p:outputLabel value="#{lang['contact.person.type']}" for="proc" styleClass="gray" />
+					</div>
+					<div>
+						<p:selectOneMenu id="proc" value="#{companyUsersUI.companyUser.position}" style="width:95%" required="true" requiredMessage="Select contact person position" converter="CompanyUserPositionConvertor">
+							<c:if test="#{companyUsersUI.companyUser ne null}">
+								<f:selectItem var="rv" itemLabel="#{companyUsersUI.companyUser.position.description}" itemValue="#{companyUsersUI.companyUser.position}" />
+							</c:if>
+							<c:if test="#{companyUsersUI.companyUser eq null or companyUsersUI.companyUser.position eq null}">
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+							</c:if>
+							<f:selectItems value="#{companyUsersUI.selectItemsCompanyUserPosition}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+						</p:selectOneMenu>
+					</div>
+				</h:panelGroup>
+
+
+				<p:panelGrid layout="grid" columns="2">
+					<p:outputLabel value="No User Responsibility" />
+					<p:selectBooleanCheckbox id="noResponsibility" value="#{companyUsersUI.companyUser.noResponsibility}">
+						<p:ajax update="userResP" />
+					</p:selectBooleanCheckbox>
+				</p:panelGrid>
+
+				<p:outputPanel id="userResP">
+					<h:panelGroup rendered="#{not companyUsersUI.companyUser.noResponsibility}">
+						<div>
+							<p:outputLabel value="#{lang['user.responsibility']}" for="userRes" styleClass="gray" />
+						</div>
+						<div>
+							<p:selectManyMenu id="userRes" value="#{companyUsersUI.selectedResponsibilities}" converter="UserResponsibilityConvertor" required="true" requiredMessage="Select contact person responsibility" var="t" filter="true" filterMatchMode="contains" showCheckbox="true" style="width:95%;">
+								<f:selectItems value="#{selectItemsUI.selectItemsUserResponsibility}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+								<p:column>
+									<h:outputText value="#{t.description}" />
+								</p:column>
+							</p:selectManyMenu>
+						</div>
+					</h:panelGroup>
+				</p:outputPanel>
+
+				<p:panelGrid layout="grid" columns="2">
+					<p:outputLabel value="#{lang['add.training.comittee']}" />
+					<p:selectBooleanCheckbox id="addTrainingComittee" value="#{companyUsersUI.addSdfToTrainingCommitte}">
+						<p:ajax />
+					</p:selectBooleanCheckbox>
+				</p:panelGrid>
+
+
+			</p:panelGrid>
+
+			<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+				<p:outputPanel id="userErrorsVal">
+					<p:fieldset rendered="#{companyUsersUI.validiationErrors ne null and companyUsersUI.validiationErrors ne ''}">
+						<p:outputLabel escape="false" value="#{companyUsersUI.validiationErrors}" />
+					</p:fieldset>
+				</p:outputPanel>
+			</p:panelGrid>
+
+			<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" rendered="#{companyUsersUI.companyUser ne null}">
+				<p:commandButton id="submitCC" value="#{lang['submit']}" icon="ui-icon-save" update="@form" action="#{companyUsersUI.createWithRegAndCreateTask}" />
+				<p:commandButton id="clearCC" value="#{lang['clear']}" icon="ui-icon-clear-all" update="@form" process="@this" action="#{companyUsersUI.prepUsers}">
+					<p:resetInput target="usersInsGrid" />
+				</p:commandButton>
+			</p:panelGrid>
+
+		</p:fieldset>
+	</h:panelGroup>
+
+	<h:panelGroup styleClass="md-inputfield">
+		<div class="EmptyBox40"></div>
+	</h:panelGroup>
+
+	<p:dataTable id="companyUserTableInfo" rendered="#{companyUsersUI.companyUsers ne null and companyUsersUI.companyUsers.size() gt 0 and showCompanyTable}" var="rowVar" value="#{companyUsersUI.companyUsers}" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+		emptyMessage="#{lang['no.records.found']}" paginatorTemplate="#{lang['page']} {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+		<p:column headerText="#{lang['name']}">
+			<p:outputLabel value="#{rowVar.user.firstName} #{rowVar.user.lastName}"></p:outputLabel>
+		</p:column>
+
+		<p:column headerText="#{lang['email']}">
+			<p:outputLabel value="#{rowVar.user.email}"></p:outputLabel>
+		</p:column>
+
+		<p:column headerText="#{lang['user.responsibility']}">
+			<ul>
+				<p:repeat var="rv1" value="#{rowVar.selectedResponsibilities}">
+					<li>#{rv1.userResponsibility.description}</li>
+				</p:repeat>
+			</ul>
+		</p:column>
+
+		<p:column headerText="#{lang['contact.person.type']}">
+			<p:outputLabel value="#{lang[rowVar.companyUserType.type]}" rendered="#{rowVar.companyUserType ne null}"></p:outputLabel>
+			<p:outputLabel value="#{rowVar.position.description}" rendered="#{rowVar.position ne null}"></p:outputLabel>
+		</p:column>
+
+		<p:column width="8%" rendered="#{showButtons}">
+			<p:commandButton icon="fa fa-database" title="#{lang['update']}" update="@form companyUserTableInfo" process="@this" action="#{companyUsersUI.prepForUpdate}">
+				<f:setPropertyActionListener value="#{rowVar}" target="#{companyUsersUI.companyUser}" />
+			</p:commandButton>
+			<p:spacer width="5" />
+
+			<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update="@form" action="#{companyUsersUI.delteCompanyUser}" process="@this">
+				<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+				<f:setPropertyActionListener value="#{rowVar}" target="#{companyUsersUI.companyUser}" />
+			</p:commandButton>
+
+		</p:column>
+	</p:dataTable>
+</ui:composition>

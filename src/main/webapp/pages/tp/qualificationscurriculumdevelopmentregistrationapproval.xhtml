@@ -1,0 +1,168 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+		<div class="ui-g">
+			<p:importEnum type="haj.com.entity.enums.PivotNonPivotEnum" />
+			<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+			<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+			<p:importEnum type="haj.com.entity.enums.NewExistingLearnershipEnum" />
+			<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+			<div class="ui-g-12">
+				<h:form id="mainForm">
+					<p:growl showDetail="false" sticky="false">
+						<p:autoUpdate />
+					</p:growl>
+					
+					
+					<c:if test="#{qualificationsCurriculumDevelopmentUI.qualificationscurriculumdevelopment ne null}">
+						<div class="ui-g">
+							<div class="ui-g-12">
+								<div class="card card-w-title">
+									<ui:include src="/pages/includes/qualificationsCurriculumDevelopment.xhtml" />
+									<div class="EmptyBox10" />
+									<c:if test="#{qualificationsCurriculumDevelopmentUI.qualificationscurriculumdevelopment.status eq ApprovalEnum.Rejected and qualificationsCurriculumDevelopmentUI.rejectReason.size() ne 0}">
+										<p:dataTable var="rowVar" value="#{qualificationsCurriculumDevelopmentUI.rejectReason}" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+										
+											<p:column headerText="Reason for Rejection">
+												<p:outputLabel value="#{rowVar.description}"></p:outputLabel>
+											</p:column>	
+										</p:dataTable>
+									</c:if>
+								
+									<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve}">
+										<p:commandButton value="#{lang['approve']}" icon="ui-icon-save" update="@form" action="#{qualificationsCurriculumDevelopmentUI.approveQualificationsCurriculumDevelopment}" styleClass="flat green-btn Fs18" style="height: 50px;">
+										</p:commandButton>
+										<p:commandButton value="#{lang['reject.task']}" icon="ui-icon-circle-close" update="@form" oncomplete="PF('rejectTaskReasonsDlg').show()" process="@this" styleClass="flat red-btn Fs18" style="height: 50px;">
+										</p:commandButton>
+									</p:panelGrid>
+
+									<p:panelGrid columns="3" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalUploadApproval}">
+										<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" update="@form" action="#{qualificationsCurriculumDevelopmentUI.finalApproveQualificationsCurriculumDevelopment}" styleClass="flat green-btn Fs18" style="height: 50px;">
+										</p:commandButton>
+										<p:commandButton value="#{lang['reject.task']}" icon="ui-icon-circle-close" update="@form" oncomplete="PF('rejectTaskReasonsDlg').show()" process="@this" styleClass="flat Fs18" style="height: 50px;">
+										</p:commandButton>
+										<p:commandButton value="Reject Qualification" icon="ui-icon-circle-close" update="@form" oncomplete="PF('finalRejectReasonsDlg').show()" process="@this" styleClass="flat red-btn Fs18" style="height: 50px;">
+										</p:commandButton>
+									</p:panelGrid>
+
+									<p:panelGrid columns="3" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission ne null and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Approve and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalApproval and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalUploadApproval and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Upload}">
+										<p:commandButton value="#{lang['approve']}" icon="ui-icon-save" update="@form" action="#{qualificationsCurriculumDevelopmentUI.completeQualificationsCurriculumDevelopment}" styleClass="flat green-btn Fs18" style="height: 50px;">
+										</p:commandButton>
+										<p:commandButton value="#{lang['reject.task']}" icon="ui-icon-circle-close" update="@form" oncomplete="PF('rejectTaskReasonsDlg').show()" process="@this" styleClass="flat Fs18" style="height: 50px;" rendered="#{qualificationsCurriculumDevelopmentUI.qualificationscurriculumdevelopment.status ne ApprovalEnum.Rejected}">
+										</p:commandButton>
+										<p:commandButton value="#{lang['reject.task']}" icon="ui-icon-circle-close" update="@form" oncomplete="PF('rejectDlg').show()" process="@this" styleClass="flat Fs18" style="height: 50px;" rendered="#{qualificationsCurriculumDevelopmentUI.qualificationscurriculumdevelopment.status eq ApprovalEnum.Rejected}">
+										</p:commandButton>
+										<p:commandButton value="Reject Qualification" icon="ui-icon-circle-close" update="@form" oncomplete="PF('finalRejectReasonsDlg').show()" process="@this" styleClass="flat red-btn Fs18" style="height: 50px;">
+										</p:commandButton>
+									</p:panelGrid>
+									
+									<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission ne null and sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload}">
+										<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" update="@form" action="#{qualificationsCurriculumDevelopmentUI.completeUploadQualificationsCurriculumDevelopment}" styleClass="flat green-btn Fs18" style="height: 50px;">
+										</p:commandButton>																			
+									</p:panelGrid>
+									
+									<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq null}">
+										<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" update="@form" action="#{qualificationsCurriculumDevelopmentUI.reSubmitQualificationsCurriculumDevelopment}" styleClass="flat green-btn Fs18" style="height: 50px;">
+										</p:commandButton>																			
+									</p:panelGrid>
+								</div>
+							</div>
+						</div>
+					</c:if>
+				</h:form>
+			</div>
+			<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+			<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true">
+				<h:form id="uploadForm">
+					<h:panelGroup id="uploadGroup">
+						<div class="ui-g">
+							<div class="ui-g-12">
+								<div class="card">
+									<h1 style="font-weight: bold; font-size: 25px;">#{learnershipDevelopementUI.doc.configDoc.name}</h1>
+									<p:panel>
+										<h:panelGrid columns="2" style="width: 100%">
+											<p:outputLabel value="#{lang['notes']}:" for="note" />
+											<p:inputTextarea id="note" value="#{qualificationsCurriculumDevelopmentUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+												<p:ajax />
+											</p:inputTextarea>
+										</h:panelGrid>
+
+										<div class="TexAlCenter">
+											<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span>
+											<br />
+										</div>
+										<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{qualificationsCurriculumDevelopmentUI.storeNewFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update=":mainForm" multiple="false" fileLimit="1" allowTypes="/(\.|\/)(gif|jpe?g|png|pdf|docx|txt)$/"
+											immediate="false" auto="true" />
+									</p:panel>
+									<div class="EmptyBox10" />
+								</div>
+							</div>
+						</div>
+					</h:panelGroup>
+				</h:form>
+			</p:dialog>
+			
+			<p:dialog header="Reject Task Reasons" widgetVar="rejectTaskReasonsDlg" hideEffect="clip" showEffect="clip" id="dialogTaskRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+				<h:form id="rejectTaskReasonForm">
+					<!-- Final Reject Reasons -->
+					<div class="ui-fluid">
+						<div class="ui-g">
+							<div class="ui-g-12">
+								<p:selectManyMenu value="#{qualificationsCurriculumDevelopmentUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+									<f:selectItems value="#{qualificationsCurriculumDevelopmentUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+									<p:column>
+										<h:outputText value="#{t.description}" />
+										<br />
+										<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+									</p:column>
+								</p:selectManyMenu>
+							</div>
+						</div>
+						<p:commandButton value="Reject Task" action="#{qualificationsCurriculumDevelopmentUI.rejectQualificationsCurriculumDevelopment}" update="@form" />
+					</div>
+				</h:form>
+			</p:dialog>
+
+			<p:dialog header="Reject Reasons" widgetVar="finalRejectReasonsDlg" hideEffect="clip" showEffect="clip" id="dialogFinalRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+				<h:form id="finalRejectReasonForm">
+					<!-- Final Reject Reasons -->
+					<div class="ui-fluid">
+						<div class="ui-g">
+							<div class="ui-g-12">
+								<p:selectManyMenu value="#{qualificationsCurriculumDevelopmentUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+									<f:selectItems value="#{qualificationsCurriculumDevelopmentUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+									<p:column>
+										<h:outputText value="#{t.description}" />
+										<br />
+										<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+									</p:column>
+								</p:selectManyMenu>
+							</div>
+						</div>
+						<p:commandButton value="Final Reject" action="#{qualificationsCurriculumDevelopmentUI.finalRejectQualificationsCurriculumDevelopment}" update="@form" />
+					</div>
+				</h:form>
+			</p:dialog>
+			
+			<p:dialog header="Reject Reasons" widgetVar="rejectDlg" hideEffect="clip" showEffect="clip" id="dialogRejectRea" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+				<h:form id="reasonForm1">
+					<!-- Final Reject Reasons -->
+					<div class="ui-fluid">
+						<div class="ui-g">
+							<div class="ui-g-12">
+								<p:selectManyMenu value="#{qualificationsCurriculumDevelopmentUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+									<f:selectItems value="#{qualificationsCurriculumDevelopmentUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+									<p:column>
+										<h:outputText value="#{t.description}" />
+										<br />
+										<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+									</p:column>
+								</p:selectManyMenu>
+							</div>
+						</div>
+						<p:commandButton value="Reject Application" action="#{qualificationsCurriculumDevelopmentUI.rejectQualificationsCurriculumDevelopmentToApplicant}" update="@form" />
+					</div>
+				</h:form>
+			</p:dialog>
+		</div>
+	</ui:define>
+</ui:composition>

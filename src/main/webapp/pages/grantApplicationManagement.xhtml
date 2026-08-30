@@ -1,0 +1,361 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum"></p:importEnum>
+		<p:importEnum type="haj.com.entity.enums.UsersStatusEnum" />
+		<p:importEnum type="haj.com.entity.enums.WspTypeEnum" />
+		<p:growl showDetail="false" sticky="false" id="msg">
+			<p:autoUpdate />
+		</p:growl>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Grant Application Management</h1>
+					<h:form id="mainForm">
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+						<p:dataTable var="rowVar" value="#{grantApplicationManagementUI.dataModelComapny}" id="companyList" rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20,40" reflow="true" lazy="true">
+							<p:column headerText="#{lang['company.name']}" filterBy="#{rowVar.companyName}" sortBy="#{rowVar.companyName}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.companyName}" />
+							</p:column>
+							<p:column headerText="#{lang['tradingName']}" filterBy="#{rowVar.tradingName}" sortBy="#{rowVar.tradingName}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.tradingName}" />
+							</p:column>
+							<p:column headerText="#{lang['entity.id']}" filterBy="#{rowVar.levyNumber}" sortBy="#{rowVar.levyNumber}" filterStyle="width: 95%" width="10%">
+								<h:outputText value="#{rowVar.levyNumber}" />
+							</p:column>
+							<p:column headerText="#{lang['status']}" sortBy="#{rowVar.companyStatus}" width="10%">
+								<h:outputText value="#{lang[rowVar.companyStatus.registrationName]}" />
+							</p:column>
+							<p:column width="10%" headerText="View/Edit">
+								<div align="center">
+									<p:commandButton style="margin:2px;" icon="fa fa-search" title="View Company WSP" action="#{grantApplicationManagementUI.selectCompany}" update=":companyWspOutputPanel">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{grantApplicationManagementUI.selectedCompany}" />
+									</p:commandButton>
+								</div>
+							</p:column>
+						</p:dataTable>
+					</h:form>
+				</div>
+
+				<p:outputPanel id="companyWspOutputPanel">
+					<c:if test="#{grantApplicationManagementUI.companySelected}">
+						<div class="card card-w-title">
+							<h:form id="companyWspMainForm">
+
+								<h2>#{grantApplicationManagementUI.selectedCompany.companyName} (#{grantApplicationManagementUI.selectedCompany.levyNumber}) Grant Applications</h2>
+
+								<c:if test="#{grantApplicationManagementUI.companyWspList.size() eq 0}">
+									<div class="EmptyBox10" />
+									<h3>No Grant Applications Assigned To #{grantApplicationManagementUI.selectedCompany.companyName} (#{grantApplicationManagementUI.selectedCompany.levyNumber})</h3>
+								</c:if>
+
+								<div class="EmptyBox10" />
+								<p:fieldset legend="Actions" rendered="#{grantApplicationManagementUI.selectedCompany ne null}" >
+									<p:panelGrid columns="1" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group">
+										<p:commandButton icon="fa fa-plus" value="Generate Legacy Linked Company Grant Application For 2019" action="#{grantApplicationManagementUI.prepareLinkedCompanyWsp}" update="@form :linkedWspCompanyForm"  />
+									</p:panelGrid>
+								</p:fieldset>
+								<div class="EmptyBox10" />
+
+								<p:dataTable id="wspDT" var="rowVarGrantApp" rendered="#{grantApplicationManagementUI.companyWspList ne null and grantApplicationManagementUI.companyWspList.size() ne 0  and !grantApplicationManagementUI.displayValidiationCheck}" value="#{grantApplicationManagementUI.companyWspList}"
+									rowKey="#{rowVarGrantApp.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}" paginatorTemplate="#{lang['page']} {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+									rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+									<f:facet name="header">#{grantApplicationManagementUI.selectedCompany.companyName}'s Grant Applications</f:facet>
+									<p:column headerText="#{lang['expand.row']}" width="45">
+										<p:rowToggler></p:rowToggler>
+									</p:column>
+									<p:column headerText="NSDMS REF #{lang['id']}" width="8%">
+										<p:outputLabel value="#{rowVarGrantApp.id}"></p:outputLabel>
+									</p:column>
+									<p:column headerText="#{lang['fin.year']}" width="8%">
+										<p:outputLabel value="#{rowVarGrantApp.finYear}">
+										</p:outputLabel>
+									</p:column>
+									<p:column headerText="Application Type" rendered="true">
+										<p:outputLabel value="Mandatory and Discretionary" rendered="#{rowVarGrantApp.wspType eq WspTypeEnum.Both}">
+										</p:outputLabel>
+										<p:outputLabel value="#{rowVarGrantApp.wspType.friendlyName}" rendered="#{rowVarGrantApp.wspType ne WspTypeEnum.Both}">
+										</p:outputLabel>
+									</p:column>
+									<p:column headerText="#{lang['status']}" rendered="true">
+										<p:outputLabel value="#{rowVarGrantApp.wspStatusEnum.friendlyName}">
+										</p:outputLabel>
+										<p:outputLabel rendered="#{rowVarGrantApp.wspStatusEnum.friendlyName eq 'Rejected'}" value=" - #{rowVarGrantApp.rejectionReasons}">
+										</p:outputLabel>
+									</p:column>
+									<p:column headerText="#{lang['decision.date']}">
+										<p:outputLabel value="#{rowVarGrantApp.approvedDate}" rendered="#{rowVarGrantApp.wspStatusEnum.friendlyName eq 'Rejected' or rowVarGrantApp.wspStatusEnum.friendlyName eq 'Approved'}">
+											<f:convertDateTime pattern="dd MMMM yyyy" />
+										</p:outputLabel>
+									</p:column>
+									<p:column headerText="Barcode" width="400" rendered="false">
+										<p:barcode value="#{rowVarGrantApp.wspGuid}" type="code39" />
+									</p:column>
+									<p:column headerText="Applied for extension" style="text-align:center">
+										<p:outputPanel rendered="#{rowVarGrantApp.extensionRequests.size() eq 0}">
+											<i class="fa fa-times fa-3x red" aria-hidden="true"></i>
+										</p:outputPanel>
+										<p:outputPanel rendered="#{rowVarGrantApp.extensionRequests.size() gt 0}">
+											<i class="fa fa-check fa-3x green" aria-hidden="true"></i>
+										</p:outputPanel>
+									</p:column>
+									<p:column headerText="DG Verification Status" rendered="true" exportable="false">
+										<p:outputLabel value="#{rowVarGrantApp.dgVerificationStatus.friendlyName}" rendered="#{rowVarGrantApp.dgVerificationStatus ne null}"></p:outputLabel>
+										<p:outputLabel rendered="#{rowVarGrantApp.dgVerification.status.friendlyName eq 'Rejected'}" value=" - #{rowVarGrantApp.dgVerification.dgVerificationRejectionReasons}">
+										</p:outputLabel>
+										<p:outputLabel value="N/A" rendered="#{rowVarGrantApp.dgVerificationStatus eq null}">
+										</p:outputLabel>
+									</p:column>
+									<p:column width="8%" headerText="View/Edit" exportable="false">
+										<p:commandButton rendered="#{rowVarGrantApp.wspType ne WspTypeEnum.IntersetaTransferMandGrant}" icon="fa fa-download" style="margin:2px;" action="#{grantApplicationManagementUI.downloadGrantApplication}" ajax="false" title="Download Grant Application" immediate="true">
+											<f:setPropertyActionListener value="#{rowVarGrantApp}" target="#{grantApplicationManagementUI.selectedWsp}" />
+										</p:commandButton>
+									</p:column>
+									<p:rowExpansion>
+										<p:fieldset legend="Extension Requests" toggleable="true" toggleSpeed="500">
+											<p:dataTable var="rowVarER" value="#{rowVarGrantApp.extensionRequests}" reflow="true">
+												<p:column headerText="#{lang['createDate']}">
+													<h:outputText value="#{rowVarER.createDate}">
+														<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+													</h:outputText>
+												</p:column>
+												<p:column headerText="#{lang['entity.id']}" rendered="false">
+													<h:outputText value="#{rowVarER.company.levyNumber}" rendered="#{rowVarER.wsp eq null}" />
+													<h:outputText value="#{rowVarER.wsp.company.levyNumber}" />
+												</p:column>
+												<p:column headerText="#{lang['company']}">
+													<h:outputText value="#{rowVarER.company.companyName}" rendered="#{rowVarER.wsp eq null}" />
+													<h:outputText value="#{rowVarER.wsp.company.companyName}" />
+												</p:column>
+												<p:column headerText="#{lang['fin.year']}">
+													<h:outputText value="Awaiting assignment" rendered="#{rowVarER.wsp eq null}" />
+													<h:outputText value="#{rowVarER.wsp.finYear}" />
+												</p:column>
+												<p:column headerText="#{lang['applicant.details']}">
+													<h:outputText value="#{rowVarER.user.firstName} #{rowVarER.user.lastName}" />
+												</p:column>
+												<p:column headerText="#{lang['status']}">
+													<h:outputText value="#{rowVarER.status}" />
+												</p:column>
+												<p:column headerText="#{lang['submission.date']}">
+													<h:outputText value="#{rowVarER.newSubmissionDate}">
+														<f:convertDateTime pattern="dd MMMM yyyy" />
+													</h:outputText>
+												</p:column>
+												<p:column headerText="#{lang['reasonForExtension']}" exportable="false">
+													<h:outputText value="#{rowVarER.reasonForExtension}" escape="false" />
+												</p:column>
+												<p:column headerText="#{lang['reasonForExtension']}" style="display: none">
+													<h:outputText value="#{rowVarER.reasonForExtensionJsoep}" escape="false" />
+												</p:column>
+											</p:dataTable>
+										</p:fieldset>
+									</p:rowExpansion>
+								</p:dataTable>
+
+								<c:if test="#{grantApplicationManagementUI.previousCompanyFound}">
+
+									<div class="EmptyBox10" />
+									<div class="EmptyBox10" />
+									<h2>Previous Transacting Company: #{grantApplicationManagementUI.previousCompany.companyName} (#{grantApplicationManagementUI.previousCompany.levyNumber}) Grant Applications</h2>
+
+									<c:if test="#{grantApplicationManagementUI.previousCompanyWspList.size() eq 0}">
+										<div class="EmptyBox10" />
+										<h3>No Grant Applications Assigned To Previous Transacting Company: #{grantApplicationManagementUI.previousCompany.companyName} (#{grantApplicationManagementUI.previousCompany.levyNumber})</h3>
+									</c:if>
+
+									<p:dataTable id="wspPcDT" var="rowVarGrantAppPc" rendered="#{grantApplicationManagementUI.previousCompanyWspList ne null and grantApplicationManagementUI.previousCompanyWspList.size() ne 0}" value="#{grantApplicationManagementUI.previousCompanyWspList}" rowKey="#{rowVarGrantAppPc.id}"
+										paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}" paginatorTemplate="#{lang['page']} {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25"
+										reflow="true">
+										<f:facet name="header">#{grantApplicationManagementUI.previousCompany.companyName}'s Grant Applications</f:facet>
+										<p:column headerText="#{lang['expand.row']}" width="45">
+											<p:rowToggler></p:rowToggler>
+										</p:column>
+										<p:column headerText="NSDMS REF #{lang['id']}" width="8%">
+											<p:outputLabel value="#{rowVarGrantAppPc.id}"></p:outputLabel>
+										</p:column>
+										<p:column headerText="#{lang['fin.year']}" width="8%">
+											<p:outputLabel value="#{rowVarGrantAppPc.finYear}">
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="Application Type" rendered="true">
+											<p:outputLabel value="Mandatory and Discretionary" rendered="#{rowVarGrantAppPc.wspType eq WspTypeEnum.Both}">
+											</p:outputLabel>
+											<p:outputLabel value="#{rowVarGrantAppPc.wspType.friendlyName}" rendered="#{rowVarGrantAppPc.wspType ne WspTypeEnum.Both}">
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="#{lang['status']}" rendered="true">
+											<p:outputLabel value="#{rowVarGrantAppPc.wspStatusEnum.friendlyName}">
+											</p:outputLabel>
+											<p:outputLabel rendered="#{rowVarGrantAppPc.wspStatusEnum.friendlyName eq 'Rejected'}" value=" - #{rowVarGrantAppPc.rejectionReasons}">
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="#{lang['decision.date']}">
+											<p:outputLabel value="#{rowVarGrantAppPc.approvedDate}" rendered="#{rowVarGrantAppPc.wspStatusEnum.friendlyName eq 'Rejected' or rowVarGrantAppPc.wspStatusEnum.friendlyName eq 'Approved'}">
+												<f:convertDateTime pattern="dd MMMM yyyy" />
+											</p:outputLabel>
+											<p:outputLabel value="N/A" rendered="#{rowVarGrantAppPc.wspStatusEnum.friendlyName ne 'Rejected' and rowVar.wspStatusEnum.friendlyName ne 'Approved'}" />
+										</p:column>
+										<p:column headerText="Barcode" width="400" rendered="false">
+											<p:barcode value="#{rowVarGrantAppPc.wspGuid}" type="code39" />
+										</p:column>
+										<p:column headerText="Applied for extension" style="text-align:center">
+											<p:outputPanel rendered="#{rowVarGrantAppPc.extensionRequests.size() eq 0}">
+												<i class="fa fa-times fa-3x red" aria-hidden="true"></i>
+											</p:outputPanel>
+											<p:outputPanel rendered="#{rowVarGrantAppPc.extensionRequests.size() gt 0}">
+												<i class="fa fa-check fa-3x green" aria-hidden="true"></i>
+											</p:outputPanel>
+										</p:column>
+										<p:column headerText="DG Verification Status" rendered="true" exportable="false">
+											<p:outputLabel value="#{rowVarGrantAppPc.dgVerificationStatus.friendlyName}" rendered="#{rowVarGrantAppPc.dgVerificationStatus ne null}"></p:outputLabel>
+											<p:outputLabel rendered="#{rowVarGrantAppPc.dgVerification.status.friendlyName eq 'Rejected'}" value=" - #{rowVarGrantAppPc.dgVerification.dgVerificationRejectionReasons}">
+											</p:outputLabel>
+											<p:outputLabel value="N/A" rendered="#{rowVarGrantAppPc.dgVerificationStatus eq null}">
+											</p:outputLabel>
+										</p:column>
+										<p:column width="8%" headerText="View/Edit" exportable="false">
+											<p:commandButton rendered="#{rowVarGrantAppPc.wspType ne WspTypeEnum.IntersetaTransferMandGrant}" icon="fa fa-download" style="margin:2px;" action="#{grantApplicationManagementUI.downloadGrantApplication}" ajax="false" title="Download Grant Application" immediate="true">
+												<f:setPropertyActionListener value="#{rowVarGrantAppPc}" target="#{grantApplicationManagementUI.selectedWsp}" />
+											</p:commandButton>
+										</p:column>
+										<p:rowExpansion>
+											<p:fieldset legend="Extension Requests" toggleable="true" toggleSpeed="500">
+												<p:outputPanel rendered="#{rowVarGrantAppPc.extensionRequests.size() eq 0}">
+													<p:outputLabel value="No Extension Requests Found" />
+												</p:outputPanel>
+												<p:dataTable rendered="#{rowVarGrantAppPc.extensionRequests.size() ne 0}" var="rowVarERPc" value="#{rowVarGrantAppPc.extensionRequests}" reflow="true">
+													<p:column headerText="#{lang['createDate']}">
+														<h:outputText value="#{rowVarERPc.createDate}">
+															<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+														</h:outputText>
+													</p:column>
+													<p:column headerText="#{lang['entity.id']}" rendered="false">
+														<h:outputText value="#{rowVarERPc.company.levyNumber}" rendered="#{rowVarERPc.wsp eq null}" />
+														<h:outputText value="#{rowVarERPc.wsp.company.levyNumber}" />
+													</p:column>
+													<p:column headerText="#{lang['company']}">
+														<h:outputText value="#{rowVarERPc.company.companyName}" rendered="#{rowVarERPc.wsp eq null}" />
+														<h:outputText value="#{rowVarERPc.wsp.company.companyName}" />
+													</p:column>
+													<p:column headerText="#{lang['fin.year']}">
+														<h:outputText value="Awaiting assignment" rendered="#{rowVarERPc.wsp eq null}" />
+														<h:outputText value="#{rowVarERPc.wsp.finYear}" />
+													</p:column>
+													<p:column headerText="#{lang['applicant.details']}">
+														<h:outputText value="#{rowVarERPc.user.firstName} #{rowVarERPc.user.lastName}" />
+													</p:column>
+													<p:column headerText="#{lang['status']}">
+														<h:outputText value="#{rowVarERPc.status}" />
+													</p:column>
+													<p:column headerText="#{lang['submission.date']}">
+														<h:outputText value="#{rowVarERPc.newSubmissionDate}">
+															<f:convertDateTime pattern="dd MMMM yyyy" />
+														</h:outputText>
+													</p:column>
+													<p:column headerText="#{lang['reasonForExtension']}" exportable="false">
+														<h:outputText value="#{rowVarERPc.reasonForExtension}" escape="false" />
+													</p:column>
+													<p:column headerText="#{lang['reasonForExtension']}" style="display: none">
+														<h:outputText value="#{rowVarERPc.reasonForExtensionJsoep}" escape="false" />
+													</p:column>
+												</p:dataTable>
+											</p:fieldset>
+										</p:rowExpansion>
+									</p:dataTable>
+								</c:if>
+							</h:form>
+						</div>
+					</c:if>
+				</p:outputPanel>
+			</div>
+		</div>
+
+		<p:dialog id="dialogLinkedCompanyWsp" position="top" widgetVar="dlgLinkedCompanyWsp" header="Legacy Linked Company Grant Application For #{grantApplicationManagementUI.selectedCompany.levyNumber}" modal="true" width="50%" dynamic="true">
+			<h:form id="linkedWspCompanyForm">
+				<p:panelGrid columns="2" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group" >
+					<p:outputLabel value="#{lang['financial.year']}" />
+					<p:outputLabel value="#{grantApplicationManagementUI.newWsp.finYear}" />
+					<p:outputLabel value="#{lang['wsp.application.type']}"></p:outputLabel>
+					<p:outputLabel value="#{grantApplicationManagementUI.newWsp.wspType.friendlyName}" />
+				</p:panelGrid>
+				
+				<div class="EmptyBox10" />
+				<h4> Required Documents </h4>
+				<div class="ui-g dashboard">
+					<p:repeat var="rc" value="#{grantApplicationManagementUI.newWsp.docs}" varStatus="x">
+						<div class="ui-g-12">
+							<div class="ui-g card colorbox #{rc.originalFname eq null ? 'colorbox-5' : 'colorbox-1'}">
+								<div class="ui-g-4">
+									<i class="material-icons">#{rc.originalFname eq null ? 'cloud_upload' : 'check_circle'}</i>
+								</div>
+								<div class="ui-g-8">
+									<span class="colorbox-name">#{rc.configDoc.name}</span>
+									<br/>
+									<span class="colorbox-count">
+										<p:commandButton icon="fa fa-download" id="cbDownload" rendered="#{rc.originalFname ne null}" action="#{sdfUI.download(rc)}" ajax="false" value="#{lang['download']}" immediate="true" process="@parent">
+											<p:ajax onevent="oneventFunction" />
+										</p:commandButton>
+										<p:spacer width="5" rendered="#{rc.originalFname ne null}"></p:spacer>
+										<p:tooltip for="cbDownload" value="#{lang['download']} #{rc.originalFname}" position="left" rendered="#{rc.originalFname ne null}" />
+										<p:commandButton id="uploadCID" value="#{rc.originalFname eq null ? lang['click.to.upload'] :  lang['re.upload'] }" styleClass="#{rc.originalFname eq null ? 'red-btn' : 'green-btn'} flat" process="@this" oncomplete="PF('dlgUploadDoc').show()" update="uploadDocForm">
+											<f:setPropertyActionListener value="#{rc}" target="#{grantApplicationManagementUI.doc}" />
+										</p:commandButton>
+									</span>
+								</div>
+							</div>
+						</div>
+					</p:repeat>
+				</div>
+				<div class="EmptyBox10" />
+				<p:panelGrid columns="2" style="width:100%; text-align: center" layout="grid" styleClass="ui-panelgrid-blank form-group" >
+					<p:commandButton value="#{lang['create']}" styleClass="flat Fs18" icon="fa fa-plus" style="height: 50px;" action="#{grantApplicationManagementUI.initiateLinkedCompanyWsp}" update=":linkedWspCompanyForm :companyWspOutputPanel">
+						<p:confirm header="Confirmation" message="Are you sure?" icon="fa fa-exclamation-triangle" />
+					</p:commandButton>
+					<p:commandButton value="#{lang['close']}" styleClass="flat Fs18"  icon="fa fa-times" style="height: 50px;" oncomplete="PF('dlgLinkedCompanyWsp').hide()" update=":companyWspOutputPanel" action="#{grantApplicationManagementUI.closeLinkedCompanyWsp}">
+					</p:commandButton>
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+		
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUploadDoc" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOADUser" width="80%" responsive="true" modal="true">
+			<h:form id="uploadDocForm">
+				<h:panelGroup id="uploadGroupUser">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{grantApplicationManagementUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="noteUser" />
+										<p:inputTextarea id="noteUser" value="#{grantApplicationManagementUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span>
+										<br />
+									</div>
+									<p:fileUpload id="uploadDoc" onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{grantApplicationManagementUI.uploadDocMemory}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update=":linkedWspCompanyForm" multiple="false" fileLimit="1" sizeLimit="#{grantApplicationManagementUI.maxFileSize}"
+										allowTypes="/(\.|\/)(gif|jpe?g|png|pdf|docx|txt)$/" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+			<h:form>
+				<p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="fa fa-check" />
+				<p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="fa fa-times" />
+			</h:form>
+		</p:confirmDialog>
+
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+	</ui:define>
+</ui:composition>

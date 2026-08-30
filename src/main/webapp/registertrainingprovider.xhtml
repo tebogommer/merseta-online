@@ -1,0 +1,108 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/templatenotloggedin.xhtml">
+
+	<ui:define name="content">
+		<p:importEnum type="haj.com.entity.enums.CompanyRegOrSDLEnum" var="regSDL"></p:importEnum>
+		<p:importEnum type="haj.com.entity.enums.AccreditationApplicationTypeEnum"></p:importEnum>
+		<p:importEnum type="haj.com.entity.enums.YesNoEnum"></p:importEnum>
+		<p:importEnum type="haj.com.entity.enums.SDPApplicationType"></p:importEnum>
+		<p:growl showDetail="false" sticky="false" escape="false">
+			<p:autoUpdate />
+		</p:growl>
+		<div class="ui-g">
+			<div class="ui-g-12">
+
+				<h:form id="companyInsForm">
+					<p:growl showDetail="false" sticky="false" escape="false">
+						<p:autoUpdate />
+					</p:growl>
+					<ui:include src="/pages/includes/personaldetailstrainingprovider.xhtml" />
+					<div class="card card-w-title" style="margin-top: 0px">
+						<p:panelGrid style="width:100%" columns="1" styleClass="ui-panelgrid-blank" id="validiationErrorsPanel"
+							rendered="#{(trainingproviderUI.unitStandards.size() gt 0 or trainingproviderUI.qualificationList.size() gt 0  or  trainingproviderUI.skillsProgramList.size() gt 0  or  trainingproviderUI.skillsSetList.size() gt 0) and (trainingproviderUI.doneQualification) and trainingproviderUI.validiationErrors ne null and trainingproviderUI.validiationErrors ne ''}">
+							<p:fieldset>
+								<p:outputLabel escape="false" value="#{trainingproviderUI.validiationErrors}" />
+							</p:fieldset>
+						</p:panelGrid>
+						<p:panelGrid style="width:100%" columns="2" styleClass="ui-panelgrid-blank" id="submitPanel">
+							<p:commandButton value="#{lang['submit']}" onstart="uploadStart()" oncomplete="uploadDone()" icon="ui-icon-save" update="companyInsForm" action="#{trainingproviderUI.createtrainingprovider}" process="@this"
+								rendered="#{(trainingproviderUI.unitStandards.size() gt 0 or trainingproviderUI.qualificationList.size() gt 0  or  trainingproviderUI.skillsProgramList.size() gt 0  or  trainingproviderUI.skillsSetList.size() gt 0) and (trainingproviderUI.doneQualification)}" />
+							<p:commandButton value="#{lang['back.to.login']}" icon="ui-icon-arrow-back" action="login.jsf?faces-redirect=true" immediate="true" resetValues="true">
+								<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure.you.want.to.go.login.page']}" icon="ui-icon-warning" />
+							</p:commandButton>
+						</p:panelGrid>
+					</div>
+				</h:form>
+
+			</div>
+		</div>
+
+
+
+
+
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true">
+			<h:form id="uploadForm">
+				<h:panelGroup id="uploadGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{trainingproviderUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{trainingproviderUI.doc.note}" autoResize="false" rows="1" style="width: 100%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{trainingproviderUI.storeFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}"
+										update=":companyInsForm:companyGrid1" multiple="false" fileLimit="1" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUploadUser" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOADUser" width="80%" responsive="true" modal="true">
+			<h:form id="uploadFormUser">
+				<h:panelGroup id="uploadGroupUser">
+					<h3>#{trainingproviderUI.doc.configDoc.name}</h3>
+					<br />
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="#{lang['notes']}:" for="note" />
+						</div>
+						<div>
+							<p:inputTextarea id="note" value="#{trainingproviderUI.doc.note}" autoResize="false" rows="1" style="width: 100%">
+								<p:ajax />
+							</p:inputTextarea>
+						</div>
+					</h:panelGroup>
+					<br />
+					<span class="Fleft Fs13 gray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span>
+					<br />
+					<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{trainingproviderUI.storeFileUser}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}"
+						update=":companyInsForm:docListUser" multiple="false" fileLimit="1" immediate="false" auto="true" />
+					<div class="EmptyBox10" />
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+			<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+			<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+		</p:confirmDialog>
+
+	</ui:define>
+
+</ui:composition>
+
+<!-- 
+<ui:include src="/pages/includes/trainingproviderapplicationwazird.xhtml" /> -->

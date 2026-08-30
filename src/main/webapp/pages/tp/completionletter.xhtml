@@ -1,0 +1,492 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<ui:include src="/pages/includes/taskdiagram.xhtml" />
+				<br />
+				<ui:include src="/pages/includes/tabinfo.xhtml">
+					<ui:param name="showInfoCircle" value="true" />
+					<ui:param name="cssClass" value="secondaryText Fs15" />
+					<ui:param name="helpTxt" value="#{lang['The.system.will.auto-fill.based.selections']}" />
+				</ui:include>
+			</div>
+		</div>
+		<h:form id="learnersInsForm">
+			<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+			<p:importEnum type="haj.com.entity.enums.LearnerTransferTypeEnum" />
+			<p:importEnum type="haj.com.entity.enums.PivotNonPivotEnum" />
+			<p:importEnum type="haj.com.entity.enums.YesNoEnum" />
+			<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+			<p:growl>
+				<p:autoUpdate></p:autoUpdate>
+			</p:growl>
+			<div class="ui-g">
+
+				<div class="ui-g-12 ui-md-6">
+					<div class="card card-w-title">
+						<h1>Employer Details</h1>
+						<ui:include src="/pages/tp/includes/company.xhtml">
+							<ui:param name="title" value="Employer Information" />
+							<ui:param name="company" value="#{completionletterUI.completionletter.company}" />
+						</ui:include>
+					</div>
+				</div>
+
+				<div class="ui-g-12 ui-md-6">
+					<div class="card card-w-title">
+						<h1>#{lang['sdp.details']}</h1>
+						<ui:include src="/pages/tp/includes/company.xhtml">
+							<ui:param name="title" value="Provider Information" />
+							<ui:param name="company" value="#{completionletterUI.completionletter.trainingProvider}" />
+						</ui:include>
+					</div>
+				</div>
+				
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+						<p:fieldset legend="Learner Details" >
+							<ui:include src="/pages/includes/user_info_display.xhtml">
+								<ui:param name="user" value="#{completionletterUI.completionletter.companyLearners.user}" />
+							</ui:include>
+						</p:fieldset>
+						<BR />
+						<p:fieldset legend="Learner #{lang['documents']}" id="userDocss" rendered="#{completionletterUI.completionletter.companyLearners.docs.size() gt 0}">
+							<p:dataTable value="#{completionletterUI.completionletter.companyLearners.docs}" var="rv1" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+								<p:column headerText="#{lang['type']}" width="20%">#{rv1.configDoc.name}</p:column>
+								<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+								<p:column headerText="#{lang['uploaded']}" width="15%">
+									<h:outputText value="#{rv1.createDate}">
+										<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="#{lang['version']}" width="15%">
+									<h:outputText value="#{rv1.versionNo}">
+									</h:outputText>
+								</p:column>
+								<p:column width="180" headerText="#{lang['view.edit']}">
+									<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocss" rendered="#{rv1.id ne null}" process="@this" immediate="true">
+										<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="dlbUserDocss" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+									<p:spacer width="5" rendered="#{rv1.id ne null}" />
+									<p:commandButton process="@this" icon="fa fa-bars " id="dhistUserDocss" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}">
+										<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="dhistUserDocss" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+									<!-- only with permission to upload can upload a new version -->
+									<p:commandButton rendered="false" icon="fa fa-upload" id="uploadUserDocss" styleClass="#{rv1.originalFname eq null ? 'red-btn' : ''} flat"
+										process="@this" oncomplete="PF('dlgUpload').show()" update=":uploadForm">
+										<f:setPropertyActionListener value="#{rv1}" target="#{completionletterUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="uploadUserDocss" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+									<h:panelGroup id="panelGroupThreeUserDocss" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+										<p:spacer width="5" />
+										<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+									</h:panelGroup>
+									<h:panelGroup id="panelGroupFourUserDocss" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+										<p:spacer width="5" />
+										<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocss" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}" process="@this">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="viewerButtonUserDocss" value="#{lang['view.document']} " position="left" />
+									</h:panelGroup>
+								</p:column>
+							</p:dataTable>
+						</p:fieldset>
+						<BR />
+						<p:fieldset legend="Qualification Details" rendered="true" id="learnerSet">
+
+							<p:panelGrid columns="2" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group">
+								<h:panelGroup styleClass="md-inputfield" >
+									<p:inputText id="intType" value="#{completionletterUI.completionletter.companyLearners.interventionType.description}" style="width:95%" disabled="true"/>
+									<p:outputLabel value="#{lang['intervention.type']} " for="intType" />
+								</h:panelGroup>
+								
+								<h:panelGroup styleClass="md-inputfield" >
+									<p:inputText id="piv" value="#{completionletterUI.completionletter.companyLearners.interventionType.pivotNonPivot.friendlyName}" style="width:95%" disabled="true"/>
+									<p:outputLabel value="#{lang['pivotal.non.pivotal.trainig']}"  for="piv" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield" >
+									<p:inputText id="nqf" value="#{completionletterUI.completionletter.companyLearners.nqfAligned.yesNoName}" style="width:95%" disabled="true"/>
+									<p:outputLabel value="#{lang['nqf.aligned']}"  for="nqf" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield" style="margin-top: 19px" rendered="#{completionletterUI.completionletter.companyLearners.qualification ne null}">
+									<p:autoComplete id="highestQualTitle" value="#{completionletterUI.completionletter.companyLearners.qualification}" 
+													disabled="true" completeMethod="#{autoCompleteUI.completeQualification}" var="rv" itemLabel="#{rv.saqaQualification}" itemValue="#{rv}" 
+													forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10" style="width: 95%">
+										<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+										<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+										<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+									</p:autoComplete>
+									<p:outputLabel value="#{lang['saqa.id']}" for="highestQualTitle" />
+								</h:panelGroup>
+								
+								<h:panelGroup styleClass="md-inputfield">
+									<p:calendar id="commDate" value="#{completionletterUI.completionletter.companyLearners.commencementDate}" disabled="true" required="true" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" inputStyle="width:93%" requiredMessage="Select Commencement Date">
+										
+									</p:calendar>
+									<p:outputLabel value="Commencement Date" for="commDate" styleClass="gray" />
+								</h:panelGroup>
+		
+								<h:panelGroup id="pcompletionDate" styleClass="md-inputfield" rendered="false">
+									<p:calendar disabled="true" id="completionRegDate" value="#{completionletterUI.completionletter.companyLearners.completionDate}" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" required="true" inputStyle="width:95%" requiredMessage="Select Completion Date">
+									</p:calendar>
+									<p:outputLabel value="Completion Date" for="completionRegDate" styleClass="gray" />
+								</h:panelGroup>
+								
+								<h:panelGroup styleClass="md-inputfield" rendered="#{completionletterUI.completionletter.companyLearners.qualification ne null}">
+									<p:calendar id="startsEndDate" value="#{completionletterUI.completionletter.companyLearners.qualification.qualregistrationstartDate}" 
+									disabled="true" required="true" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" inputStyle="width:93%" requiredMessage="Select Commencement Date"
+									rendered="#{completionletterUI.completionletter.companyLearners.qualification ne null}">
+										
+									</p:calendar>
+									<p:outputLabel value="Qualification Start Date of Registration" for="startsEndDate" styleClass="gray" />
+								</h:panelGroup>
+		
+								<h:panelGroup id="endsDate" styleClass="md-inputfield" rendered="#{completionletterUI.completionletter.companyLearners.qualification ne null}">
+									<p:calendar disabled="true" id="completionRegStartDate" value="#{completionletterUI.completionletter.companyLearners.qualification.qualregistrationendDate}" 
+									pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" required="true" inputStyle="width:95%" requiredMessage="Select Completion Date"
+									rendered="#{completionletterUI.completionletter.companyLearners.qualification ne null}">
+									</p:calendar>
+									<p:outputLabel value="Qualification End Date of Registration" for="completionRegStartDate" styleClass="gray" />
+								</h:panelGroup>
+
+							
+
+
+						
+
+								<h:panelGroup styleClass="md-inputfield" style="margin-top: 19px" rendered="#{completionletterUI.completionletter.companyLearners.interventionType.id eq 38}">
+									<p:autoComplete id="skillsSet" value="#{completionletterUI.completionletter.companyLearners.skillsSet}" completeMethod="#{autoCompleteUI.completeSkillsSetNONMERSETA}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SkillsSetConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;"
+										style="width: 95%" disabled="true">
+										<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+										<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+									</p:autoComplete>
+									<p:outputLabel value="Skills Set" for="skillsSet" />
+								</h:panelGroup>
+
+
+								<h:panelGroup styleClass="md-inputfield" style="margin-top: 19px" rendered="#{completionletterUI.completionletter.companyLearners.interventionType.id eq 37}">
+									<p:autoComplete id="skillsProgram" value="#{completionletterUI.completionletter.companyLearners.skillsProgram}" completeMethod="#{autoCompleteUI.completeNonMERSETASkillsProgram}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SkillsProgramConvertor" dropdown="true" minQueryLength="3" maxResults="10"
+										inputStyle="width: 50%; opacity:1 !important;" style="width: 95%" disabled="true">
+										<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+										<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+									</p:autoComplete>
+									<p:outputLabel value="Skills Program" for="skillsProgram" />
+								</h:panelGroup>
+
+							
+							
+									<h:panelGroup styleClass="md-inputfield" style="margin-top: 19px" rendered="#{completionletterUI.completionletter.companyLearners.interventionType.id eq 28}">
+										<p:autoComplete id="unitStandard" value="#{completionletterUI.completionletter.companyLearners.unitStandard}" completeMethod="#{autoCompleteUI.completeUnitStandards}" var="rv" itemLabel="#{rv.title}" itemValue="#{rv}" forceSelection="true" converter="UnitStandardsConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%"
+											required="true" requiredMessage="Select Unit Standarts" disabled="true">
+											<p:ajax event="itemSelect"  update="@form" />
+											<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+											<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.title}</p:column>
+										</p:autoComplete>
+										<p:outputLabel value="#{lang['unit.standard']}" for="unitStandard" styleClass="gray" />
+									</h:panelGroup>
+									
+									<h:panelGroup styleClass="md-inputfield" rendered="#{completionletterUI.completionletter.companyLearners.interventionType.id eq 28}">
+										<p:calendar id="usregistrationstartDate" value="#{completionletterUI.completionletter.companyLearners.unitStandard.usregistrationstartDate}" disabled="true" required="true" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" inputStyle="width:93%" requiredMessage="Select Commencement Date">
+											
+										</p:calendar>
+										<p:outputLabel value="Registration Start Date" for="usregistrationstartDate" styleClass="gray" />
+									</h:panelGroup>
+			
+									<h:panelGroup styleClass="md-inputfield" rendered="#{completionletterUI.completionletter.companyLearners.interventionType.id eq 28}">
+										<p:calendar disabled="true" id="usregistrationendDate" value="#{completionletterUI.completionletter.companyLearners.unitStandard.usregistrationendDate}" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" required="true" inputStyle="width:95%" requiredMessage="Select Completion Date">
+										</p:calendar>
+										<p:outputLabel value="Registration End Date" for="usregistrationendDate" styleClass="gray" />
+									</h:panelGroup>
+
+							</p:panelGrid>
+							
+						</p:fieldset>
+						<br />
+						<p:fieldset legend="Completion Date">
+							<p:panelGrid columns="2" style="width:100%" id="reviewDateEntryGrid" layout="grid" styleClass="ui-panelgrid-blank" rendered="#{!workplaceapprovalUI.disableForOfficeUse}">
+								
+								<h:panelGroup rendered="false">
+									<div>
+										<p:outputLabel value="Select Final Assessment Date: " for="assessment" />
+									</div>
+									<div>
+										<p:calendar id="assessment" disabled="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve}" required="true" requiredMessage="Provide: Moderation Date Before Proceeding" 
+													value="#{completionletterUI.completionletter.assessmentDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true">
+											<p:ajax event="dateSelect" />
+										</p:calendar>
+									</div>
+								</h:panelGroup>
+								
+								<h:panelGroup rendered="false">
+									<div>
+										<p:outputLabel value="Select Moderation Date: " for="moderation" />
+									</div>
+									<div>
+										<p:calendar id="moderation" disabled="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve}" required="true" requiredMessage="Provide: Moderation Date Before Proceeding" 
+													value="#{completionletterUI.completionletter.moderationDate}" mindate="#{workplaceapprovalUI.today}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true">
+											<p:ajax event="dateSelect" />
+										</p:calendar>
+									</div>
+								</h:panelGroup>
+								
+								<h:panelGroup>
+									<div>
+										<p:outputLabel value="Select Achievement/Completion Date: " for="achievement" />
+									</div>
+									<div>
+										<p:calendar id="achievement" mindate="#{completionletterUI.completionletter.companyLearners.approvalDate}" disabled="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve}" required="true" requiredMessage="Provide: Moderation Date Before Proceeding" 
+													value="#{completionletterUI.completionletter.achievementDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true">
+											<p:ajax event="dateSelect" />
+										</p:calendar>
+									</div>
+								</h:panelGroup>
+								
+								<h:panelGroup rendered="false">
+									<div>
+										<p:outputLabel value="Outcome of Moderation" for="outcome" />
+									</div>
+									<div>
+										<p:selectOneMenu id="outcome" required="true" requiredMessage="Please Select Competence" value="#{completionletterUI.completionletter.competenceEnum}" style="width:95%"
+													disabled="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve}" >
+											<p:ajax />
+											<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+											<f:selectItems value="#{enumUI.competenceEnumDD}" />
+										</p:selectOneMenu>
+									</div>
+								</h:panelGroup>	
+								
+							</p:panelGrid>					
+							
+							<p:commandButton process="@this" update="@form" value="Set Date" action="#{completionletterUI.setReviewDateForApproval}" rendered="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalApproval and  sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Approve}">
+							</p:commandButton>
+						</p:fieldset>
+					
+						<p:fieldset legend="Qualification Details" rendered="false">
+							<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							
+								<h:panelGroup styleClass="md-inputfield" >
+									<p:inputText id="codequali" value="#{completionletterUI.completionletter.companyLearners.qualification.codeString}" style="width:95%" />
+									<p:outputLabel value="#{lang['code']}" for="codequali" />
+								</h:panelGroup>
+								
+								<h:panelGroup styleClass="md-inputfield" >
+									<p:inputText id="descriptionquali" value="#{completionletterUI.completionletter.companyLearners.qualification.description}" style="width:95%" />
+									<p:outputLabel value="#{lang['description']}" for="descriptionquali" />
+								</h:panelGroup>
+							</p:panelGrid>
+							
+						</p:fieldset>
+					
+						
+						<br />
+						
+						<p:fieldset legend="Reject Reasons" rendered="#{completionletterUI.completionletter.status eq ApprovalEnum.Rejected}">
+							
+							<p:dataTable var="rowVar" value="#{completionletterUI.rejectReason}" rowKey="#{rowVar.id}" 
+											paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" 
+											rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+								<p:column headerText="Create Date">
+									<p:outputLabel value="#{rowVar.createDate}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</p:outputLabel>
+								</p:column>
+								<p:column headerText="Reason for Rejection">
+									<p:outputLabel value="#{rowVar.description}"></p:outputLabel>
+								</p:column>
+							</p:dataTable>
+						</p:fieldset>
+					
+						
+					</div>
+				</div>
+								
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+						<p:outputPanel id="learnerRegUploadForm" style="width: 100%">
+							<h:panelGroup id="docList">
+								<div class="ui-g dashboard">
+									<div class="ui-g-12">
+										<p:fieldset legend="#{lang['documents']}" id="userDocs" rendered="#{completionletterUI.completionletter.docs.size() gt 0}">
+											<p:dataTable value="#{completionletterUI.completionletter.docs}" var="rv1" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+												<p:column headerText="#{lang['type']}" width="20%">#{rv1.configDoc.name}</p:column>
+												<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+												<p:column headerText="#{lang['uploaded']}" width="15%">
+													<h:outputText value="#{rv1.createDate}">
+														<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+													</h:outputText>
+												</p:column>
+												<p:column headerText="#{lang['version']}" width="15%">
+													<h:outputText value="#{rv1.versionNo}">
+													</h:outputText>
+												</p:column>
+												<p:column width="180" headerText="#{lang['view.edit']}">
+													<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}" process="@this" immediate="true">
+														<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+													</p:commandButton>
+													<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+													<p:spacer width="5" rendered="#{rv1.id ne null}" />
+													<p:commandButton process="@this" icon="fa fa-bars " id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}">
+														<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+													</p:commandButton>
+													<p:tooltip for="dhistUserDocs" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+													<!-- only with permission to upload can upload a new version -->
+													<p:commandButton rendered="#{(sessionUI.task.processRole eq null or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload)}" icon="fa fa-upload" id="uploadUserDocs" styleClass="#{rv1.originalFname eq null ? 'red-btn' : ''} flat"
+														process="@this" oncomplete="PF('dlgUpload').show()" update=":uploadForm">
+														<f:setPropertyActionListener value="#{rv1}" target="#{completionletterUI.doc}" />
+													</p:commandButton>
+													<p:tooltip for="uploadUserDocs" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+													<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+														<p:spacer width="5" />
+														<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+															<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+														</p:commandButton>
+														<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+													</h:panelGroup>
+													<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+														<p:spacer width="5" />
+														<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}" process="@this">
+															<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+														</p:commandButton>
+														<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+													</h:panelGroup>
+												</p:column>
+											</p:dataTable>
+										</p:fieldset>
+									</div>
+								</div>
+							</h:panelGroup>
+						</p:outputPanel>
+					</div>
+				</div>
+
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+
+						<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve}">
+							<p:commandButton value="#{lang['approve']}" icon="ui-icon-save" update="@form" action="#{completionletterUI.approveWorkflow}" styleClass="flat green-btn Fs18" style="height: 50px;">
+							</p:commandButton>
+							<p:commandButton value="#{lang['reject.task']}" icon="fa fa-times" update="@form" oncomplete="PF('rejectReason').show()" styleClass="flat red-btn Fs18" style="height: 50px;" process="@this">
+							</p:commandButton>
+						</p:panelGrid>
+
+						<p:panelGrid columns="3" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval}">
+							<p:commandButton value="#{lang['approve']}" icon="ui-icon-save" update="@form" action="#{completionletterUI.finalApproveWorkflow}" styleClass="flat green-btn Fs18" style="height: 50px;">
+							</p:commandButton>
+							<p:commandButton value="#{lang['reject.task']}" icon="fa fa-times" update="@form" oncomplete="PF('rejectReason').show()" styleClass="flat Fs18" style="height: 50px;" process="@this">
+							</p:commandButton>
+							<p:commandButton value="#{lang['final.rejection']}" icon="fa fa-times" update="@form" oncomplete="PF('rejectReasonFinal').show()" styleClass="flat red-btn Fs18" style="height: 50px;" process="@this">
+							</p:commandButton>	
+						</p:panelGrid>
+
+						<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalEdit}">
+							<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" update="@form" action="#{completionletterUI.completeWorkflow}" 
+											styleClass="flat green-btn Fs18" style="height: 50px;" process="@form" rendered="#{completionletterUI.completionletter.achievementDate ne null}">
+							</p:commandButton>
+						</p:panelGrid>
+
+
+					</div>
+				</div>
+
+			</div>
+		</h:form>
+
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true" dynamic="true">
+
+			<h:form id="uploadForm">
+
+				<h:panelGroup id="uploadGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{completionletterUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{completionletterUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span>
+										<br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{completionletterUI.storeFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update="learnersInsForm:learnerRegUploadForm" multiple="false" fileLimit="1" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+
+			</h:form>
+
+		</p:dialog>
+		
+		
+		<p:dialog header="Reject Reasons" widgetVar="rejectReason" hideEffect="clip" showEffect="clip" id="dialogRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{completionletterUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{completionletterUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+
+							</p:selectManyMenu>
+							
+							<br />
+							<br />
+						</div>
+					</div>
+					<p:commandButton oncomplete="PF('rejectReason').hide()" update="learnersInsForm"  value="Reject" action="#{completionletterUI.rejectWorkflow}"   >
+					</p:commandButton>
+				</div>
+			</h:form>
+		</p:dialog>
+		
+		<p:dialog header="Reject Reasons" widgetVar="rejectReasonFinal" hideEffect="clip" showEffect="clip" id="dialogRejectReasonFinal" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonFormFinal">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{completionletterUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{completionletterUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+
+							</p:selectManyMenu>
+							
+							<br />
+							<br />
+						</div>
+					</div>
+					<p:commandButton oncomplete="PF('rejectReasonFinal').hide()" update="learnersInsForm"  value="Reject" action="#{completionletterUI.finalRejectWorkflow}"   >
+					</p:commandButton>
+				</div>
+			</h:form>
+		</p:dialog>
+
+	</ui:define>
+
+</ui:composition>

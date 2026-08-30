@@ -1,0 +1,154 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui">
+
+	<ui:define name="content">
+		
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card">
+					<h1>Address Change Details</h1>
+					<h:form id="mainForm">
+						<p:growl showDetail="false" sticky="false" globalOnly="true">
+							<p:autoUpdate />
+						</p:growl>
+						
+						<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+							<p:fieldset legend="#{lang['change.reason']}" toggleable="true" collapsed="false">
+								<p:dataTable value="#{addresschangeUI.providedChangeReason.docs}" id="BankDocs" var="rv1" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv1.id}">
+									<p:column headerText="#{lang['original.file.name']}" priority="4">
+										<p:outputLabel value="#{rv1.originalFname}" styleClass="Fs12"></p:outputLabel>
+									</p:column>
+									<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+									<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+										<h:outputText value="#{rv1.createDate}">
+											<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+										</h:outputText>
+									</p:column>
+									<p:column headerText="#{lang['version']}" width="10%" priority="4">
+										<h:outputText value="#{rv1.versionNo}">
+										</h:outputText>
+									</p:column>
+									<p:column headerText="#{lang['original.required']}" rendered="#{bankingdetailsUI.bankingdetails.areOriginalRequired}">
+										<center>
+											<h:panelGroup rendered="#{rv1.configDoc.originalRequired}" styleClass="green">
+												<i class="fa fa-files-o fa-3x" aria-hidden="true"></i>
+											</h:panelGroup>
+											<h:panelGroup rendered="#{not rv1.configDoc.originalRequired}" styleClass="red">
+												<i class="fa fa-times fa-3x" aria-hidden="true"></i>
+											</h:panelGroup>
+										</center>
+									</p:column>
+									<p:column width="180">
+										<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlb" rendered="#{rv1.id ne null}" immediate="true">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="dlb" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+					
+					
+										<p:spacer width="5" rendered="#{rv1.id ne null}" />
+										<p:commandButton icon="fa fa-bars " id="dhist" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}" process="@this">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+					
+										<p:tooltip for="dhist" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+										<h:panelGroup id="panelGroupThree" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+											<p:spacer width="5" />
+											<p:commandButton icon="fa fa-comment-o" id="dnote" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel" process="@this">
+												<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+											</p:commandButton>
+											<p:tooltip for="dnote" value="#{lang['view.note']}" position="left" />
+										</h:panelGroup>
+										
+										<h:panelGroup id="panelGroupFour" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+											<p:spacer width="5" />
+											<p:commandButton icon="fa fa-eye " id="viewerButton" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}" process="@this">
+												<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+											</p:commandButton>
+											<p:tooltip for="viewerButton" value="#{lang['view.document']} " position="left" />
+										</h:panelGroup>
+									</p:column>
+								</p:dataTable>
+							</p:fieldset>
+						</p:panelGrid>
+						
+						<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank" rendered="true">
+							<p:fieldset legend="#{lang['assessor.mod']}">
+								<h:panelGrid id="gpUserInfoPG" style="width:100%">
+									<ui:include src="/pages/includes/user_info_display.xhtml">
+										<ui:param name="user" value="#{addresschangeUI.user}" />
+									</ui:include>
+								</h:panelGrid>
+							</p:fieldset>
+						</p:panelGrid>
+						 <p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank" rendered="true">
+						 	
+						 	<p:panel header="#{lang['residentialAddress']}">
+						 		 <p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank" rendered="true">
+							 		<ui:include src="/pages/includes/address_Info_display.xhtml">
+										<ui:param name="header" value="Previous Physical Address" />
+										<ui:param name="address" value="#{addresschangeUI.residentialAddressHist}" />
+									</ui:include>
+									
+									<ui:include src="/pages/includes/address_Info_display.xhtml">
+										<ui:param name="header" value="Current Physical Address" />
+										<ui:param name="address" value="#{addresschangeUI.residentialAddress}" />
+									</ui:include>
+								</p:panelGrid>
+						 	</p:panel>
+						 	
+						 	
+						 	<p:panel header="#{lang['postal.address']}">
+						 		 <p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank" rendered="true">
+							 		<ui:include src="/pages/includes/address_Info_display.xhtml">
+										<ui:param name="header" value="Previous Postal Address" />
+										<ui:param name="address" value="#{addresschangeUI.postalAddressHist}" />
+									</ui:include>
+									
+									<ui:include src="/pages/includes/address_Info_display.xhtml">
+										<ui:param name="header" value="Current Post Address" />
+										<ui:param name="address" value="#{addresschangeUI.postalAddress}" />
+									</ui:include>
+								</p:panelGrid>
+						 	</p:panel>
+						 </p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+		</div>
+		<div class="card">
+			<h:form>
+				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="text-align: center" layout="grid">
+					<p:commandButton id="approveTask" onstart="uploadStart()" value="#{lang['approve.task']}" icon="ui-icon-save" update="@form" action="#{addresschangeUI.approveAddressUpdateTask}" styleClass="flat green-btn Fs18" style="height: 50px;"></p:commandButton>
+					
+					<p:commandButton id="rejectTask"  value="#{lang['reject.task']}" icon="ui-icon-clear-all" update="@form"  oncomplete="PF('finalRejectReason').show()" process="@this" styleClass="flat red-btn Fs18" style="height: 50px;">
+					</p:commandButton>
+				</p:panelGrid>
+			</h:form>
+		</div>
+		
+		<p:dialog header="Reject Reasons" widgetVar="finalRejectReason" hideEffect="clip" showEffect="clip" id="finalRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="reasonFormTwo">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{addresschangeUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="false" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{addresschangeUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+	
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+	
+							</p:selectManyMenu>
+							
+							<br />
+							<br />
+						</div>
+					</div>
+					<p:commandButton value="#{lang['reject']}"  onstart="uploadStart()" action="#{addresschangeUI.rejectAddressUpdateTask}"/>
+				</div>
+			</h:form>
+		</p:dialog>
+	<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+	</ui:define>
+</ui:composition>

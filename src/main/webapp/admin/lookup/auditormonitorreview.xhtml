@@ -1,0 +1,148 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+	    <p:importEnum type="haj.com.entity.enums.ConfigDocProcessEnum"></p:importEnum>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Auditor Monitor Review</h1>
+					<h:form id="auditormonitorreviewInsForm">
+						<p:growl sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:panelGrid columns="1" style="width:100%" id="auditormonitorreviewInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="Section" value="#{auditormonitorreviewUI.auditormonitorreview.section}" style="width:100%" >
+									<p:ajax />
+								</p:inputText>
+								<p:outputLabel value="Section" for="Section" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="accreditationCriteria" value="#{auditormonitorreviewUI.auditormonitorreview.accreditationCriteria}" style="width:100%">
+									<p:ajax />
+								</p:inputText>
+								<p:outputLabel value="Accreditation Criteria" for="accreditationCriteria" />
+							</h:panelGroup>
+							<h:panelGroup>
+								<p:outputLabel value="Evidence Requirements" for="evidenceRequirements" />
+								<br />
+								<p:textEditor id="evidenceRequirements" value="#{auditormonitorreviewUI.auditormonitorreview.evidenceRequirements}" style="width:100%">
+									<p:ajax />
+								</p:textEditor>
+
+							</h:panelGroup>
+							
+
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="For Process" for="configDoc" />
+								</div>
+								<div>
+									<p:selectOneMenu id="configDoc" value="#{auditormonitorreviewUI.auditormonitorreview.forProcess}" style="width:75%" required="true">
+										<p:ajax update="@form"/>
+										<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+										<f:selectItems value="#{enumUI.processEnumDD}" />
+									</p:selectOneMenu>
+								</div>
+							</h:panelGroup>
+							<p:panelGrid columns="2" style="width:100%" id="auditormonitorreviewInsGrid1" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							
+								<h:panelGroup id="typeofApp" rendered="#{auditormonitorreviewUI.auditormonitorreview.forProcess  eq ConfigDocProcessEnum.TP}">
+									<div>
+										<p:outputLabel value="For Type of Application" for="sipsas"></p:outputLabel>
+									</div>
+									<div>
+										<p:selectOneMenu style="width:100%" id="sipsas" value="#{auditormonitorreviewUI.auditormonitorreview.tpAccreditationApplicationType}">
+										   <p:ajax />
+											<f:selectItem itemLabel="---Select One---" noSelectionOption="true" />
+											<f:selectItems value="#{enumUI.accreditationApplicationTypeEnumDD}" />
+										</p:selectOneMenu>
+									</div>
+								</h:panelGroup>
+									<h:panelGroup id="tpImprovement" styleClass="md-inputfield" style="margin-top: 0px"  rendered="#{auditormonitorreviewUI.auditormonitorreview.forProcess  eq ConfigDocProcessEnum.TP}">
+										<br/>
+										<p:autoComplete required="false" id="AreaForImprovement" value="#{auditormonitorreviewUI.auditormonitorreview.areaForImprovement}" completeMethod="#{autoCompleteUI.completeAreaForImprovement}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="AreaForImprovementConvertor" dropdown="true" minQueryLength="3"
+											maxResults="10" inputStyle="width: 100%; opacity:1 !important;" style="width: 100%">
+											<p:ajax event="itemSelect" update="@form" />
+											<p:column headerText="#{lang['description']}" style="white-space: nowrap">#{rv.description}</p:column>
+										</p:autoComplete>
+										<p:outputLabel value="Area For Improvement" for="AreaForImprovement" />
+									</h:panelGroup>
+							</p:panelGrid>
+	
+								<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+									<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:auditormonitorreviewList :auditormonitorreviewInsForm:auditormonitorreviewInsGrid" action="#{auditormonitorreviewUI.auditormonitorreviewInsert}" />
+									<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="auditormonitorreviewInsGrid" process="@this" action="#{auditormonitorreviewUI.prepareNew}">
+										<p:resetInput target="auditormonitorreviewInsGrid" />
+									</p:commandButton>
+								</p:panelGrid>
+								
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{auditormonitorreviewUI.dataModel}" filteredValue="#{auditormonitorreviewUI.auditorMonitorReviewfilteredList}" id="auditormonitorreviewList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+							rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true" sortBy="#{rowVar.section}">
+							<p:column headerText="Section" groupRow="true" width="50">
+								<h:outputText value="#{rowVar.section}" />
+							</p:column>
+							<p:column headerText="ID" groupRow="true"  sortBy="#{rowVar.id}" rendered="true">
+								<h:outputText value="#{rowVar.id}" />
+							</p:column>
+							<p:column headerText="Accreditation Criteria" groupRow="true" filterBy="#{rowVar.accreditationCriteria}" sortBy="#{rowVar.accreditationCriteria}">
+								<h:outputText value="#{rowVar.accreditationCriteria}" />
+							</p:column>
+							<p:column headerText="Evidence Requirements" sortBy="#{rowVar.evidenceRequirements}" filterBy="#{rowVar.evidenceRequirements}">
+								<h:outputText value="#{rowVar.evidenceRequirements}" escape="false" />
+							</p:column>
+							<p:column headerText="For Process">
+								<h:outputText value="#{lang[rowVar.forProcess.friendlyName]}" escape="false" />
+							</p:column>
+							
+							<p:column headerText="Area For Improvement">
+								<h:outputText value="#{rowVar.areaForImprovement.description}" escape="false" />
+							</p:column>
+							
+							<p:column headerText="For Type Of Application" sortBy="#{rowVar.tpAccreditationApplicationType.friendlyName}" filterBy="#{rowVar.tpAccreditationApplicationType.friendlyName}">
+								<h:outputText value="#{rowVar.tpAccreditationApplicationType.friendlyName}" escape="false" />
+							</p:column>
+
+							<p:column width="80">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":auditormonitorreviewInsForm:auditormonitorreviewInsGrid">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{auditormonitorreviewUI.auditormonitorreview}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:auditormonitorreviewList" action="#{auditormonitorreviewUI.auditormonitorreviewDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{auditormonitorreviewUI.auditormonitorreview}" />
+								</p:commandButton>
+							</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+	<!-- 
+evidenceRequirements = evidenceRequirements
+accreditationCriteria = accreditationCriteria
+code = code
+createDate = createDate
+setmisCode = setmisCode
+qctoCode = qctoCode
+nlrdCode = nlrdCode
+smsCode = smsCode
+
+-->
+</ui:composition>

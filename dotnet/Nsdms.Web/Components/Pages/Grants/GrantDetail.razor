@@ -1,0 +1,590 @@
+@page "/grants/{id:int}"
+@page "/grants/create"
+@using Nsdms.Web.Components.Shared
+@inject IGrantService GrantService
+@inject IOrganisationService OrgService
+@inject LookupService LookupService
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+<!-- Sticky Top Bar with Breadcrumbs and Action Buttons -->
+<div class="sticky-top bg-white pa-4 mb-4 border-bottom elevation-1 d-flex flex-wrap justify-space-between align-center gap-3">
+    <div class="d-flex align-center gap-3">
+        <MudButton Variant="Variant.Text"
+                   StartIcon="@Icons.Material.Filled.ArrowBack"
+                   Color="Color.Default"
+                   OnClick="BackToList">
+            Back to Grants
+        </MudButton>
+        <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-2" />
+        <div>
+            <MudBreadcrumbs Items="_breadcrumbItems" Separator=">" Class="pa-0 ma-0" />
+            <MudText Typo="Typo.h6" Class="font-weight-bold">
+                @(Id == 0 ? "New Discretionary Grant Application" : $"{_grant.ApplicationNumber} - {_grant.ProjectTitle}")
+            </MudText>
+        </div>
+    </div>
+    <div class="d-flex align-center gap-2">
+        @if (Id > 0)
+        {
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Error"
+                       StartIcon="@Icons.Material.Filled.Delete"
+                       OnClick="DeleteGrant">
+                Delete
+            </MudButton>
+        }
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Secondary"
+                   OnClick="BackToList">
+            Cancel
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Save"
+                   OnClick="SaveGrant"
+                   Disabled="_isSaving">
+            @(_isSaving ? "Saving..." : "Save Application")
+        </MudButton>
+    </div>
+</div>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-0">
+    @if (Id > 0)
+    {
+        <!-- Action Bridge for Workflow Transitions -->
+        <WorkflowActionBridge ProcessCode="DG" 
+                              EntityId="@Id" 
+                              EntityTitle="@_grant.ProjectTitle" 
+                              EntityRef="@_grant.ApplicationNumber" 
+                              OnStatusChanged="OnWorkflowStatusChanged" />
+    }
+
+    @if (_loading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-6" />
+    }
+    else
+    {
+        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Color="Color.Surface">
+            <!-- TAB 1: Application Details -->
+            <MudTabPanel Text="Application Details" Icon="@Icons.Material.Filled.AssignmentTurnedIn">
+                <MudForm @ref="_form" @bind-IsValid="_isValid">
+                    <MudGrid Spacing="3">
+                        <MudItem xs="12" lg="8">
+                            <MudCard Elevation="2" Class="mb-4">
+                                <MudCardHeader>
+                                    <CardHeaderAvatar>
+                                        <MudAvatar Color="Color.Primary" Variant="Variant.Filled">
+                                            <MudIcon Icon="@Icons.Material.Filled.AccountBalanceWallet" />
+                                        </MudAvatar>
+                                    </CardHeaderAvatar>
+                                    <CardHeaderContent>
+                                        <MudText Typo="Typo.h6">Grant Project Specification</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Applicant organisation, project title, intervention scope, and funding requests</MudText>
+                                    </CardHeaderContent>
+                                </MudCardHeader>
+                                <MudCardContent>
+                                    <MudGrid>
+                                        <MudItem xs="12" md="6">
+                                            <MudSelect T="int" Label="Applying Organisation / Employer" Required="true" RequiredError="Organisation is mandatory" @bind-Value="_grant.OrganisationId" Variant="Variant.Outlined">
+                                                @foreach (var org in _organisations)
+                                                {
+                                                    <MudSelectItem Value="@org.Id">@org.CompanyName (@org.SdlNumber)</MudSelectItem>
+                                                }
+                                            </MudSelect>
+                                        </MudItem>
+                                        <MudItem xs="12" md="6">
+                                            <MudTextField T="string"
+                                                          Label="Application Number"
+                                                          Required="true"
+                                                          RequiredError="Application Number is mandatory"
+                                                          @bind-Value="_grant.ApplicationNumber"
+                                                          Variant="Variant.Outlined" />
+                                        </MudItem>
+                                        <MudItem xs="12">
+                                            <MudTextField T="string"
+                                                          Label="Project Title / Initiative Name"
+                                                          Required="true"
+                                                          RequiredError="Project Title is mandatory"
+                                                          @bind-Value="_grant.ProjectTitle"
+                                                          Variant="Variant.Outlined"
+                                                          Placeholder="e.g. Advanced CNC Machining & Robotics Apprenticeship Project" />
+                                        </MudItem>
+                                        <MudItem xs="12" md="6">
+                                            <MudSelect T="string" Label="Discretionary Grant Type" @bind-Value="_grant.GrantTypeCode" Variant="Variant.Outlined">
+                                                @foreach (var gt in _grantTypes)
+                                                {
+                                                    <MudSelectItem Value="@gt.Code">@gt.Name (@gt.Code)</MudSelectItem>
+                                                }
+                                            </MudSelect>
+                                        </MudItem>
+                                        <MudItem xs="12" md="6">
+                                            <MudSelect T="string" Label="Application Status" @bind-Value="_grant.StatusCode" Variant="Variant.Outlined">
+                                                <MudSelectItem Value="@("DRAFT")">Draft</MudSelectItem>
+                                                <MudSelectItem Value="@("SUBMITTED")">Submitted</MudSelectItem>
+                                                <MudSelectItem Value="@("EVALUATING")">Evaluating</MudSelectItem>
+                                                <MudSelectItem Value="@("PENDING_COMMITTEE")">Pending Committee</MudSelectItem>
+                                                <MudSelectItem Value="@("APPROVED")">Approved</MudSelectItem>
+                                                <MudSelectItem Value="@("REJECTED")">Rejected</MudSelectItem>
+                                            </MudSelect>
+                                        </MudItem>
+                                        <MudItem xs="12" md="6">
+                                            <MudNumericField T="decimal"
+                                                             Label="Requested Funding Amount (ZAR)"
+                                                             Required="true"
+                                                             @bind-Value="_grant.RequestedAmount"
+                                                             Variant="Variant.Outlined"
+                                                             Format="N2"
+                                                             Min="0" />
+                                        </MudItem>
+                                        <MudItem xs="12" md="6">
+                                            <MudNumericField T="decimal?"
+                                                             Label="Approved Funding Allocation (ZAR)"
+                                                             @bind-Value="_grant.ApprovedAmount"
+                                                             Variant="Variant.Outlined"
+                                                             Format="N2"
+                                                             Min="0" />
+                                        </MudItem>
+                                        <MudItem xs="12" md="6">
+                                            <MudDatePicker Label="Application Date" @bind-Date="_appDate" Variant="Variant.Outlined" DateFormat="yyyy-MM-dd" />
+                                        </MudItem>
+                                    </MudGrid>
+                                </MudCardContent>
+                            </MudCard>
+                        </MudItem>
+
+                        <!-- Right Column: Governance -->
+                        <MudItem xs="12" lg="4">
+                            <MudCard Elevation="2" Class="mb-4">
+                                <MudCardHeader>
+                                    <CardHeaderAvatar>
+                                        <MudAvatar Color="Color.Dark" Variant="Variant.Filled">
+                                            <MudIcon Icon="@Icons.Material.Filled.Security" />
+                                        </MudAvatar>
+                                    </CardHeaderAvatar>
+                                    <CardHeaderContent>
+                                        <MudText Typo="Typo.h6">Audit Trail &amp; Governance</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Record governance</MudText>
+                                    </CardHeaderContent>
+                                </MudCardHeader>
+                                <MudCardContent>
+                                    <div class="d-flex flex-column gap-2 text-muted">
+                                        <div class="d-flex justify-space-between">
+                                            <MudText Typo="Typo.caption">Grant Application ID:</MudText>
+                                            <MudText Typo="Typo.caption" Class="fw-bold">@(Id > 0 ? Id.ToString() : "Draft")</MudText>
+                                        </div>
+                                        <div class="d-flex justify-space-between">
+                                            <MudText Typo="Typo.caption">Created At:</MudText>
+                                            <MudText Typo="Typo.caption">@(_grant.CreatedAt > DateTime.MinValue ? _grant.CreatedAt.ToString("yyyy-MM-dd HH:mm") : "-")</MudText>
+                                        </div>
+                                        <div class="d-flex justify-space-between">
+                                            <MudText Typo="Typo.caption">Created By:</MudText>
+                                            <MudText Typo="Typo.caption">@(!string.IsNullOrWhiteSpace(_grant.CreatedBy) ? _grant.CreatedBy : "-")</MudText>
+                                        </div>
+                                        <div class="d-flex justify-space-between">
+                                            <MudText Typo="Typo.caption">Modified At:</MudText>
+                                            <MudText Typo="Typo.caption">@(_grant.ModifiedAt.HasValue ? _grant.ModifiedAt.Value.ToString("yyyy-MM-dd HH:mm") : "-")</MudText>
+                                        </div>
+                                    </div>
+                                </MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                    </MudGrid>
+                </MudForm>
+            </MudTabPanel>
+
+            <!-- TAB 2: Funding Window -->
+            <MudTabPanel Text="Funding Window" Icon="@Icons.Material.Filled.EventNote">
+                <MudCard Elevation="2" Class="mb-4">
+                    <MudCardHeader>
+                        <CardHeaderAvatar>
+                            <MudAvatar Color="Color.Info" Variant="Variant.Filled">
+                                <MudIcon Icon="@Icons.Material.Filled.CalendarMonth" />
+                            </MudAvatar>
+                        </CardHeaderAvatar>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">Associated Discretionary Funding Window</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Select and review strategic funding window deadlines and budget envelopes</MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudGrid>
+                            <MudItem xs="12" md="6">
+                                <MudSelect T="int?" Label="Assigned Funding Window" @bind-Value="_grant.FundingWindowId" Variant="Variant.Outlined" Clearable="true">
+                                    <MudSelectItem Value="@((int?)null)">-- No Window Assigned / Direct Application --</MudSelectItem>
+                                    @foreach (var fw in _fundingWindows)
+                                    {
+                                        <MudSelectItem Value="@((int?)fw.Id)">@fw.WindowName (FY @fw.FinYear - @fw.TotalAvailableBudget.ToString("C"))</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </MudItem>
+                        </MudGrid>
+
+                        @if (_grant.FundingWindowId.HasValue)
+                        {
+                            var selectedWindow = _fundingWindows.FirstOrDefault(w => w.Id == _grant.FundingWindowId.Value);
+                            if (selectedWindow != null)
+                            {
+                                <MudPaper Elevation="0" Class="pa-4 mt-4 mud-background-gray rounded">
+                                    <MudGrid>
+                                        <MudItem xs="12" md="4">
+                                            <MudText Typo="Typo.caption" Class="text-muted">Window Name:</MudText>
+                                            <MudText Typo="Typo.body2" Class="fw-bold">@selectedWindow.WindowName</MudText>
+                                        </MudItem>
+                                        <MudItem xs="12" md="2">
+                                            <MudText Typo="Typo.caption" Class="text-muted">Financial Year:</MudText>
+                                            <MudText Typo="Typo.body2">@selectedWindow.FinYear</MudText>
+                                        </MudItem>
+                                        <MudItem xs="12" md="3">
+                                            <MudText Typo="Typo.caption" Class="text-muted">Window Dates:</MudText>
+                                            <MudText Typo="Typo.body2">@selectedWindow.OpeningDate.ToString("yyyy-MM-dd") to @selectedWindow.ClosingDate.ToString("yyyy-MM-dd")</MudText>
+                                        </MudItem>
+                                        <MudItem xs="12" md="3">
+                                            <MudText Typo="Typo.caption" Class="text-muted">Total Available Budget Envelope:</MudText>
+                                            <MudText Typo="Typo.body2" Class="fw-bold text-success">@selectedWindow.TotalAvailableBudget.ToString("C")</MudText>
+                                        </MudItem>
+                                    </MudGrid>
+                                </MudPaper>
+                            }
+                        }
+                    </MudCardContent>
+                </MudCard>
+            </MudTabPanel>
+
+            <!-- TAB 3: Project Budget -->
+            <MudTabPanel Text="Project Budget" Icon="@Icons.Material.Filled.AttachMoney">
+                <div class="d-flex justify-space-between align-center mb-4">
+                    <div>
+                        <MudText Typo="Typo.h6">Project Cost Breakdown &amp; Line-Item Budget</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Itemized project expenditures, stipends, tuition, equipment, and administrative costs</MudText>
+                    </div>
+                    @if (Id > 0)
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenAddBudgetForm">
+                            Add Budget Line
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <MudAlert Severity="Severity.Info" Dense="true">Save the grant application first to enter budget line items.</MudAlert>
+                    }
+                </div>
+
+                @if (_showAddBudgetForm)
+                {
+                    <MudCard Class="pa-4 mb-4 border-primary" Elevation="3">
+                        <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-3">Add Budget Line Item</MudText>
+                        <MudGrid>
+                            <MudItem xs="12" md="4">
+                                <MudSelect T="string" Label="Expense Category" Required="true" @bind-Value="_newBudget.ExpenseCategory" Variant="Variant.Outlined">
+                                    <MudSelectItem Value="@("Learner Allowances / Stipends")">Learner Allowances / Stipends</MudSelectItem>
+                                    <MudSelectItem Value="@("Tuition / Institutional Fees")">Tuition / Institutional Fees</MudSelectItem>
+                                    <MudSelectItem Value="@("Training Material & Consumables")">Training Material &amp; Consumables</MudSelectItem>
+                                    <MudSelectItem Value="@("PPE & Toolkits")">PPE &amp; Toolkits</MudSelectItem>
+                                    <MudSelectItem Value="@("Assessor / Moderator Fees")">Assessor / Moderator Fees</MudSelectItem>
+                                    <MudSelectItem Value="@("Project Administration")">Project Administration</MudSelectItem>
+                                </MudSelect>
+                            </MudItem>
+                            <MudItem xs="12" md="8">
+                                <MudTextField T="string" Label="Line Item Description" @bind-Value="_newBudget.Description" Variant="Variant.Outlined" Placeholder="e.g. Monthly stipend for 20 welding apprentices over 12 months" />
+                            </MudItem>
+                            <MudItem xs="12" md="4">
+                                <MudNumericField T="decimal" Label="Unit Cost (ZAR)" Required="true" @bind-Value="_newBudget.UnitCost" Variant="Variant.Outlined" Format="N2" Min="0" />
+                            </MudItem>
+                            <MudItem xs="12" md="4">
+                                <MudNumericField T="int" Label="Quantity / Units" Required="true" @bind-Value="_newBudget.Quantity" Variant="Variant.Outlined" Min="1" />
+                            </MudItem>
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string" Label="Total Line Cost" ReadOnly="true" Value="@((_newBudget.UnitCost * _newBudget.Quantity).ToString("C"))" Variant="Variant.Outlined" />
+                            </MudItem>
+                            <MudItem xs="12" Class="d-flex justify-end gap-2">
+                                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" OnClick="CancelAddBudgetForm">Cancel</MudButton>
+                                <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveBudgetLine">Save Budget Item</MudButton>
+                            </MudItem>
+                        </MudGrid>
+                    </MudCard>
+                }
+
+                <MudTable Items="_budgets" Hover="true" Dense="true" Striped="true" Class="mb-4">
+                    <HeaderContent>
+                        <MudTh>Expense Category</MudTh>
+                        <MudTh>Description</MudTh>
+                        <MudTh>Unit Cost</MudTh>
+                        <MudTh>Quantity</MudTh>
+                        <MudTh>Total Cost</MudTh>
+                        <MudTh Style="text-align:right">Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Expense Category">
+                            <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">@context.ExpenseCategory</MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Description">@(!string.IsNullOrWhiteSpace(context.Description) ? context.Description : "-")</MudTd>
+                        <MudTd DataLabel="Unit Cost">@context.UnitCost.ToString("C")</MudTd>
+                        <MudTd DataLabel="Quantity">@context.Quantity</MudTd>
+                        <MudTd DataLabel="Total Cost">
+                            <MudText Typo="Typo.body2" Class="fw-bold text-success">@context.TotalCost.ToString("C")</MudText>
+                        </MudTd>
+                        <MudTd Style="text-align:right" DataLabel="Actions">
+                            <MudTooltip Text="Remove Budget Item">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => RemoveBudgetLine(context.Id))" aria-label="Remove Budget Item" />
+                            </MudTooltip>
+                        </MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <div class="pa-4 text-center">
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">No budget line items registered yet.</MudText>
+                        </div>
+                    </NoRecordsContent>
+                </MudTable>
+
+                <!-- Budget Reconciliation Summary Card -->
+                <MudCard Elevation="1" Class="mud-background-gray">
+                    <MudCardContent>
+                        <div class="d-flex justify-space-between align-center">
+                            <div>
+                                <MudText Typo="Typo.subtitle2" Class="text-muted">Total Line-Items Cost:</MudText>
+                                <MudText Typo="Typo.h6" Class="fw-bold">@(_budgets.Sum(b => b.TotalCost).ToString("C"))</MudText>
+                            </div>
+                            <div>
+                                <MudText Typo="Typo.subtitle2" Class="text-muted">Total Application Requested Amount:</MudText>
+                                <MudText Typo="Typo.h6" Class="fw-bold text-primary">@_grant.RequestedAmount.ToString("C")</MudText>
+                            </div>
+                            <div>
+                                <MudText Typo="Typo.subtitle2" Class="text-muted">Approved Allocation:</MudText>
+                                <MudText Typo="Typo.h6" Class="fw-bold text-success">@(_grant.ApprovedAmount.HasValue ? _grant.ApprovedAmount.Value.ToString("C") : "Pending")</MudText>
+                            </div>
+                        </div>
+                    </MudCardContent>
+                </MudCard>
+            </MudTabPanel>
+
+            <!-- TAB 4: Evidence Vault -->
+            @if (Id > 0)
+            {
+                <MudTabPanel Text="Evidence Vault" Icon="@Icons.Material.Filled.FolderZip">
+                    <DocumentVault TargetEntityName="GrantApplication" TargetEntityId="@Id" />
+                </MudTabPanel>
+
+                <!-- TAB 5: Workflow History -->
+                <MudTabPanel Text="Workflow History" Icon="@Icons.Material.Filled.History">
+                    <WorkflowTimeline ProcessCode="DG" EntityId="@Id" />
+                </MudTabPanel>
+            }
+        </MudTabs>
+    }
+</MudContainer>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private GrantApplication _grant = new();
+    private MudForm? _form;
+    private bool _isValid;
+    private bool _loading = true;
+    private bool _isSaving = false;
+
+    private List<Organisation> _organisations = new();
+    private List<LookupItemDto> _grantTypes = new();
+    private List<GrantFundingWindow> _fundingWindows = new();
+    private List<GrantProjectBudget> _budgets = new();
+
+    private DateTime? _appDate;
+
+    // Budget form
+    private bool _showAddBudgetForm = false;
+    private GrantProjectBudget _newBudget = new();
+
+    private List<BreadcrumbItem> _breadcrumbItems = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+        SetupBreadcrumbs();
+
+        // Sequential lookup loading
+        _grantTypes = await LookupService.GetLookupItemsAsync("GrantTypeType");
+        _fundingWindows = await GrantService.GetFundingWindowsAsync();
+        _organisations = await OrgService.GetAllAsync();
+
+        if (Id > 0)
+        {
+            await LoadGrantData();
+        }
+        else
+        {
+            _grant = new GrantApplication
+            {
+                OrganisationId = _organisations.FirstOrDefault()?.Id ?? 0,
+                ApplicationNumber = $"DG-{DateTime.UtcNow.Year}-{new Random().Next(10000, 99999)}",
+                GrantTypeCode = "PIVOTAL",
+                StatusCode = "DRAFT",
+                RequestedAmount = 1500000m,
+                ApplicationDate = DateTime.Today
+            };
+            _appDate = DateTime.Today;
+        }
+
+        _loading = false;
+    }
+
+    private void SetupBreadcrumbs()
+    {
+        _breadcrumbItems = new List<BreadcrumbItem>
+        {
+            new BreadcrumbItem("Home", href: "/"),
+            new BreadcrumbItem("Discretionary Grants", href: "/grants"),
+            new BreadcrumbItem(Id == 0 ? "Create" : $"Grant #{Id}", href: null, disabled: true)
+        };
+    }
+
+    private async Task LoadGrantData()
+    {
+        var g = await GrantService.GetByIdAsync(Id);
+        if (g != null)
+        {
+            _grant = g;
+            _appDate = g.ApplicationDate;
+            _budgets = await GrantService.GetProjectBudgetsAsync(Id);
+        }
+        else
+        {
+            Snackbar.Add($"Grant Application #{Id} not found.", Severity.Error);
+            NavManager.NavigateTo("/grants");
+        }
+    }
+
+    private async Task OnWorkflowStatusChanged(string newStatus)
+    {
+        await LoadGrantData();
+        StateHasChanged();
+    }
+
+    private async Task SaveGrant()
+    {
+        if (string.IsNullOrWhiteSpace(_grant.ApplicationNumber) || string.IsNullOrWhiteSpace(_grant.ProjectTitle))
+        {
+            Snackbar.Add("Application Number and Project Title are required.", Severity.Warning);
+            return;
+        }
+
+        if (_grant.OrganisationId <= 0)
+        {
+            Snackbar.Add("Host Organisation is required.", Severity.Warning);
+            return;
+        }
+
+        _grant.ApplicationDate = _appDate ?? DateTime.Today;
+
+        _isSaving = true;
+        try
+        {
+            var saved = await GrantService.SaveAsync(_grant, "Admin");
+            Snackbar.Add($"Grant Application '{saved.ApplicationNumber}' saved successfully with audit log.", Severity.Success);
+
+            if (Id == 0)
+            {
+                NavManager.NavigateTo($"/grants/{saved.Id}");
+            }
+            else
+            {
+                await LoadGrantData();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving grant application: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task DeleteGrant()
+    {
+        if (Id <= 0) return;
+
+        try
+        {
+            var deleted = await GrantService.DeleteAsync(Id, "Admin");
+            if (deleted)
+            {
+                Snackbar.Add("Grant Application deleted successfully.", Severity.Success);
+                NavManager.NavigateTo("/grants");
+            }
+            else
+            {
+                Snackbar.Add("Could not delete grant application.", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error deleting record: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void BackToList()
+    {
+        NavManager.NavigateTo("/grants");
+    }
+
+    // Budget Management
+    private void OpenAddBudgetForm()
+    {
+        _newBudget = new GrantProjectBudget
+        {
+            GrantApplicationId = Id,
+            ExpenseCategory = "Learner Allowances / Stipends",
+            UnitCost = 4500m,
+            Quantity = 12
+        };
+        _showAddBudgetForm = true;
+    }
+
+    private void CancelAddBudgetForm()
+    {
+        _showAddBudgetForm = false;
+    }
+
+    private async Task SaveBudgetLine()
+    {
+        if (string.IsNullOrWhiteSpace(_newBudget.ExpenseCategory))
+        {
+            Snackbar.Add("Expense Category is required.", Severity.Warning);
+            return;
+        }
+
+        _newBudget.GrantApplicationId = Id;
+
+        try
+        {
+            await GrantService.AddProjectBudgetAsync(_newBudget, "Admin");
+            Snackbar.Add("Budget line item added successfully.", Severity.Success);
+            _showAddBudgetForm = false;
+            _budgets = await GrantService.GetProjectBudgetsAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error adding budget item: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task RemoveBudgetLine(int budgetId)
+    {
+        try
+        {
+            var removed = await GrantService.RemoveProjectBudgetAsync(budgetId, "Admin");
+            if (removed)
+            {
+                Snackbar.Add("Budget line item removed.", Severity.Success);
+                _budgets = await GrantService.GetProjectBudgetsAsync(Id);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error removing budget item: {ex.Message}", Severity.Error);
+        }
+    }
+}

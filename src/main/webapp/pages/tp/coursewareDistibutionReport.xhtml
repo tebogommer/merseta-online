@@ -1,0 +1,86 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+	<ui:define name="content">
+		<style>
+.borderless .ui-datalist-content {
+	border: none;
+}
+
+.error {
+	background-color: #F44336 !important;
+	color: white !important;
+	font-weight: bold;
+}
+</style>
+		<div class="ui-g">
+
+			<div class="ui-g-12">
+				<p:growl showDetail="false" sticky="false">
+					<p:autoUpdate />
+				</p:growl>
+				<div class="card card-w-title">
+					<h1>Courseware Distribution Information</h1>
+					<p:tooltip position="left"></p:tooltip>
+					<h:form id="mainForm">
+						<ui:include src="/pages/includes/download_lazy.xhtml">
+							<ui:param name="file_name" value="Courseware_Distibution_List" />
+							<ui:param name="target" value="coursewaredistibutionList" />
+						</ui:include>
+						<br />
+						<p:dataTable var="rowVar" value="#{coursewaredistibutionUI.rejectedcoursewareDistibutionReport}" filteredValue="#{coursewaredistibutionUI.coursewareDistibutionfilteredList}" id="coursewaredistibutionList" rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,15,20,25,50,100" reflow="true" sortBy="#{rowVar.approvalEnum}" lazy="true">
+
+							<p:column headerText="Company Name" filterBy="#{rowVar.company.companyName}">
+								<h:outputText value="#{rowVar.company.companyName}" />
+							</p:column>
+
+							<p:column headerText="Trading Name" filterBy="#{rowVar.company.tradingName}">
+								<h:outputText value="#{rowVar.company.tradingName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['entity.id']}" filterBy="#{rowVar.company.levyNumber}">
+								<h:outputText value="#{rowVar.company.levyNumber}" />
+							</p:column>
+
+							<p:column headerText="First Name">
+								<h:outputText value="#{rowVar.user.firstName}" />
+							</p:column>
+
+							<p:column headerText="Last Name" filterBy="#{rowVar.user.lastName}">
+								<h:outputText value="#{rowVar.user.lastName}" />
+							</p:column>
+
+							<p:column headerText="Module Title" filterBy="#{rowVar.modules.moduleTitle}">
+								<h:outputText value="#{rowVar.modules.moduleTitle}" />
+							</p:column>
+							<p:column headerText="Module Reference" filterBy="#{rowVar.modules.moduleRef}">
+								<h:outputText value="#{rowVar.modules.moduleRef}" />
+							</p:column>
+							<p:column headerText="Module Topic">
+								<h:outputText value="#{rowVar.modules.moduleTopic}" />
+							</p:column>
+							<p:column headerText="Application Status" filterBy="#{rowVar.approvalEnum.friendlyName}">
+								<h:outputText value="#{rowVar.approvalEnum.friendlyName}" />
+							</p:column>
+							<p:column sortBy="#{rowVar.approvalDate}" headerText="Approval Date">
+								<p:outputLabel  value="#{rowVar.approvalDate}">
+									<f:convertDateTime pattern="dd MMMM yyyy" />
+								</p:outputLabel>
+							</p:column>
+
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+				
+			<c:if test="#{sessionUI.user.coursewareDistroSub}">
+				<ui:include src="/pages/includes/coursewaredistreportinclude.xhtml">
+				</ui:include>
+			</c:if>
+				
+			
+		</div>
+
+	</ui:define>
+
+</ui:composition>

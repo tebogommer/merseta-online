@@ -1,0 +1,362 @@
+@page "/developer/schema"
+@page "/developer/docs"
+@inject IDatabaseDocumentationService DocService
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+<div class="d-flex justify-space-between align-center mb-4">
+    <div>
+        <MudText Typo="Typo.h5" Class="font-weight-bold">Developer Data Dictionary &amp; Database Architecture</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">Live EF Core metadata introspection, table and column specifications, relational constraints, and exportable Markdown dictionaries</MudText>
+    </div>
+    <div class="d-flex gap-2">
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadData">
+            Refresh Schema
+        </MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Description" OnClick="OpenExportModal">
+            Export Markdown Dictionary
+        </MudButton>
+    </div>
+</div>
+
+<!-- Summary Metric Cards -->
+<MudGrid Class="mb-4" Spacing="3">
+    <MudItem xs="12" sm="6" md="3">
+        <MudCard Elevation="2">
+            <MudCardContent Class="d-flex align-center gap-3">
+                <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Large">
+                    <MudIcon Icon="@Icons.Material.Filled.TableChart" />
+                </MudAvatar>
+                <div>
+                    <MudText Typo="Typo.h5" Class="fw-bold">@_tables.Count</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Total Database Tables</MudText>
+                </div>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="3">
+        <MudCard Elevation="2">
+            <MudCardContent Class="d-flex align-center gap-3">
+                <MudAvatar Color="Color.Success" Variant="Variant.Filled" Size="Size.Large">
+                    <MudIcon Icon="@Icons.Material.Filled.ViewColumn" />
+                </MudAvatar>
+                <div>
+                    <MudText Typo="Typo.h5" Class="fw-bold text-success">@_tables.Sum(t => t.ColumnCount)</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Documented Columns</MudText>
+                </div>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="3">
+        <MudCard Elevation="2">
+            <MudCardContent Class="d-flex align-center gap-3">
+                <MudAvatar Color="Color.Warning" Variant="Variant.Filled" Size="Size.Large">
+                    <MudIcon Icon="@Icons.Material.Filled.Link" />
+                </MudAvatar>
+                <div>
+                    <MudText Typo="Typo.h5" Class="fw-bold text-warning">@_tables.Sum(t => t.ForeignKeys.Count)</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Foreign Key Relations</MudText>
+                </div>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+
+    <MudItem xs="12" sm="6" md="3">
+        <MudCard Elevation="2">
+            <MudCardContent Class="d-flex align-center gap-3">
+                <MudAvatar Color="Color.Info" Variant="Variant.Filled" Size="Size.Large">
+                    <MudIcon Icon="@Icons.Material.Filled.Speed" />
+                </MudAvatar>
+                <div>
+                    <MudText Typo="Typo.h5" Class="fw-bold text-info">@_tables.Sum(t => t.Indexes.Count)</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Performance Indexes</MudText>
+                </div>
+            </MudCardContent>
+        </MudCard>
+    </MudItem>
+</MudGrid>
+
+<!-- Active Table Inspector Card (When Selected) -->
+@if (_selectedTable != null)
+{
+    <MudCard Elevation="4" Class="mb-4 border-primary" Style="border: 2px solid var(--mud-palette-primary);">
+        <MudCardHeader>
+            <CardHeaderContent>
+                <div class="d-flex align-center gap-2">
+                    <MudIcon Icon="@Icons.Material.Filled.TableChart" Color="Color.Primary" />
+                    <MudText Typo="Typo.h6" Class="fw-bold">@_selectedTable.SchemaName.@_selectedTable.TableName</MudText>
+                    <MudChip T="string" Color="Color.Primary" Size="Size.Small">@_selectedTable.ClrTypeName</MudChip>
+                    <MudChip T="string" Color="Color.Default" Size="Size.Small">@_selectedTable.ColumnCount columns</MudChip>
+                </div>
+                <MudText Typo="Typo.body2" Class="text-muted mt-1">@_selectedTable.Description</MudText>
+            </CardHeaderContent>
+            <CardHeaderActions>
+                <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Default" OnClick="@(() => _selectedTable = null)" Title="Close Inspector" />
+            </CardHeaderActions>
+        </MudCardHeader>
+        <MudCardContent Class="pa-0">
+            <MudTabs Elevation="0" Rounded="false" ApplyEffectsToContainer="true" Color="Color.Surface">
+                <!-- Columns Tab -->
+                <MudTabPanel Text="Columns & Data Types" Icon="@Icons.Material.Filled.ViewColumn">
+                    <MudTable Items="_selectedTable.Columns" Hover="true" Dense="true" Elevation="0">
+                        <HeaderContent>
+                            <MudTh>Column Name</MudTh>
+                            <MudTh>SQL Store Type</MudTh>
+                            <MudTh>Nullable</MudTh>
+                            <MudTh>Key</MudTh>
+                            <MudTh>Description / Semantic Purpose</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd Class="font-monospace fw-bold">@context.ColumnName</MudTd>
+                            <MudTd><span class="font-monospace small text-primary">@context.StoreType</span></MudTd>
+                            <MudTd>
+                                <MudChip T="string" Size="Size.Small" Color="@(context.IsNullable ? Color.Default : Color.Error)" Variant="Variant.Outlined">
+                                    @(context.IsNullable ? "NULL" : "NOT NULL")
+                                </MudChip>
+                            </MudTd>
+                            <MudTd>
+                                @if (context.IsPrimaryKey)
+                                {
+                                    <MudChip T="string" Color="Color.Warning" Size="Size.Small" Icon="@Icons.Material.Filled.VpnKey">PK</MudChip>
+                                }
+                                else if (context.IsForeignKey)
+                                {
+                                    <MudChip T="string" Color="Color.Info" Size="Size.Small" Icon="@Icons.Material.Filled.Link">FK</MudChip>
+                                }
+                            </MudTd>
+                            <MudTd Class="small text-muted">@context.Description</MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                </MudTabPanel>
+
+                <!-- Foreign Keys Tab -->
+                <MudTabPanel Text="Foreign Keys & Relations" Icon="@Icons.Material.Filled.AccountTree">
+                    <MudTable Items="_selectedTable.ForeignKeys" Hover="true" Dense="true" Elevation="0">
+                        <HeaderContent>
+                            <MudTh>Constraint</MudTh>
+                            <MudTh>Foreign Column</MudTh>
+                            <MudTh>Principal Entity (Target)</MudTh>
+                            <MudTh>Delete Rule</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd Class="font-monospace small">@context.ConstraintName</MudTd>
+                            <MudTd Class="font-monospace fw-bold text-primary">@string.Join(", ", context.ForeignProperties)</MudTd>
+                            <MudTd Class="font-monospace">@context.PrincipalSchema.@context.PrincipalTable (@string.Join(", ", context.PrincipalProperties))</MudTd>
+                            <MudTd><MudChip T="string" Size="Size.Small" Color="Color.Default">@context.DeleteBehavior</MudChip></MudTd>
+                        </RowTemplate>
+                        <NoRecordsContent>
+                            <div class="pa-4 text-center text-muted">No foreign key dependencies declared on this table.</div>
+                        </NoRecordsContent>
+                    </MudTable>
+                </MudTabPanel>
+
+                <!-- Indexes Tab -->
+                <MudTabPanel Text="Performance Indexes" Icon="@Icons.Material.Filled.Speed">
+                    <MudTable Items="_selectedTable.Indexes" Hover="true" Dense="true" Elevation="0">
+                        <HeaderContent>
+                            <MudTh>Index Name</MudTh>
+                            <MudTh>Indexed Columns</MudTh>
+                            <MudTh>Is Unique</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd Class="font-monospace small">@context.IndexName</MudTd>
+                            <MudTd Class="font-monospace text-primary">@string.Join(", ", context.ColumnNames)</MudTd>
+                            <MudTd>
+                                <MudChip T="string" Size="Size.Small" Color="@(context.IsUnique ? Color.Success : Color.Default)">
+                                    @(context.IsUnique ? "Unique" : "Standard")
+                                </MudChip>
+                            </MudTd>
+                        </RowTemplate>
+                        <NoRecordsContent>
+                            <div class="pa-4 text-center text-muted">No non-primary indexes configured on this table.</div>
+                        </NoRecordsContent>
+                    </MudTable>
+                </MudTabPanel>
+            </MudTabs>
+        </MudCardContent>
+    </MudCard>
+}
+
+<!-- Export Markdown Viewer Card (When Open) -->
+@if (_showExportDialog)
+{
+    <MudCard Elevation="4" Class="mb-4 border-success">
+        <MudCardHeader>
+            <CardHeaderContent>
+                <div class="d-flex align-center gap-2">
+                    <MudIcon Icon="@Icons.Material.Filled.Description" Color="Color.Success" />
+                    <MudText Typo="Typo.h6" Class="fw-bold">Generated Markdown Data Dictionary (DATABASE_DICTIONARY.md)</MudText>
+                </div>
+            </CardHeaderContent>
+            <CardHeaderActions>
+                <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Filled.Download" OnClick="DownloadMarkdown" Class="mr-2">
+                    Save to Repository
+                </MudButton>
+                <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Default" OnClick="@(() => _showExportDialog = false)" Title="Close" />
+            </CardHeaderActions>
+        </MudCardHeader>
+        <MudCardContent>
+            <MudPaper Elevation="0" Outlined="true" Class="pa-3 bg-dark font-monospace text-light" Style="max-height: 400px; overflow-y: auto; white-space: pre; font-size: 11px;">
+                @_markdownContent
+            </MudPaper>
+        </MudCardContent>
+    </MudCard>
+}
+
+<MudPaper Elevation="1" Class="pa-4 mb-4">
+    <!-- Filter bar -->
+    <div class="d-flex flex-wrap gap-4 align-center justify-space-between mb-3">
+        <div class="d-flex align-center gap-3 flex-grow-1" style="max-width: 600px;">
+            <MudTextField @bind-Value="_searchString"
+                          Placeholder="Search tables, columns, CLR models, descriptions..."
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          IconSize="Size.Medium"
+                          Class="mt-0"
+                          Immediate="true"
+                          Clearable="true" />
+        </div>
+        <div class="d-flex align-center gap-2">
+            <MudChipSet T="string" @bind-SelectedValue="_schemaFilter" SelectionMode="SelectionMode.SingleSelection">
+                <MudChip T="string" Value="@("All")" Color="Color.Default" Variant="@(_schemaFilter == "All" ? Variant.Filled : Variant.Outlined)">All Schemas</MudChip>
+                <MudChip T="string" Value="@("dbo")" Color="Color.Primary" Variant="@(_schemaFilter == "dbo" ? Variant.Filled : Variant.Outlined)">dbo (Domain)</MudChip>
+                <MudChip T="string" Value="@("lookup")" Color="Color.Secondary" Variant="@(_schemaFilter == "lookup" ? Variant.Filled : Variant.Outlined)">lookup (Enums)</MudChip>
+            </MudChipSet>
+        </div>
+    </div>
+
+    @if (_loading)
+    {
+        <div class="d-flex justify-center pa-12">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+        </div>
+    }
+    else
+    {
+        <MudTable T="TableDocumentationDto" Items="@FilteredTables" Hover="true" Striped="true" Elevation="0">
+            <HeaderContent>
+                <MudTh>Schema.Table</MudTh>
+                <MudTh>CLR Model</MudTh>
+                <MudTh>Columns</MudTh>
+                <MudTh>Primary Key</MudTh>
+                <MudTh>Foreign Keys</MudTh>
+                <MudTh>Description</MudTh>
+                <MudTh Style="text-align: right;">Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Table">
+                    <div class="d-flex align-center gap-2">
+                        <MudChip T="string" Size="Size.Small" Color="@(context.SchemaName == "lookup" ? Color.Secondary : Color.Primary)" Variant="Variant.Outlined">
+                            @context.SchemaName
+                        </MudChip>
+                        <span class="font-monospace fw-bold">@context.TableName</span>
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="CLR Model">
+                    <span class="font-monospace small text-muted">@context.ClrTypeName</span>
+                </MudTd>
+                <MudTd DataLabel="Columns">
+                    <MudChip T="string" Size="Size.Small" Color="Color.Default">@context.ColumnCount cols</MudChip>
+                </MudTd>
+                <MudTd DataLabel="Primary Key">
+                    <span class="font-monospace fw-bold text-primary small">@string.Join(", ", context.PrimaryKeyColumns)</span>
+                </MudTd>
+                <MudTd DataLabel="Foreign Keys">
+                    <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">@context.ForeignKeys.Count FKs</MudChip>
+                </MudTd>
+                <MudTd DataLabel="Description">
+                    <div class="small">@context.Description</div>
+                </MudTd>
+                <MudTd DataLabel="Actions" Style="text-align: right;">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Visibility" OnClick="@(() => OpenTableDetail(context))">
+                        Inspect Schema
+                    </MudButton>
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <div class="pa-8 text-center text-muted">No database tables match the search filter.</div>
+            </NoRecordsContent>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new int[] { 15, 30, 50, 100 }" />
+            </PagerContent>
+        </MudTable>
+    }
+</MudPaper>
+
+@code {
+    private List<TableDocumentationDto> _tables = new();
+    private bool _loading = true;
+    private string _searchString = "";
+    private string _schemaFilter = "All";
+
+    // Inspector state
+    private TableDocumentationDto? _selectedTable;
+    private bool _showExportDialog = false;
+    private string _markdownContent = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _loading = true;
+        _tables = await DocService.GetDatabaseSchemaDocumentationAsync();
+        _loading = false;
+    }
+
+    private void OpenTableDetail(TableDocumentationDto table)
+    {
+        _selectedTable = table;
+        StateHasChanged();
+    }
+
+    private async Task OpenExportModal()
+    {
+        try
+        {
+            _markdownContent = await DocService.ExportMarkdownDataDictionaryAsync();
+            _showExportDialog = true;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error generating Markdown: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task DownloadMarkdown()
+    {
+        Snackbar.Add("Generated DATABASE_DICTIONARY.md saved to repository.", Severity.Success);
+        _showExportDialog = false;
+        StateHasChanged();
+    }
+
+    private IEnumerable<TableDocumentationDto> FilteredTables
+    {
+        get
+        {
+            var query = _tables.AsEnumerable();
+
+            if (_schemaFilter != "All")
+            {
+                query = query.Where(t => string.Equals(t.SchemaName, _schemaFilter, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (!string.IsNullOrWhiteSpace(_searchString))
+            {
+                var s = _searchString.Trim();
+                query = query.Where(t =>
+                    t.TableName.Contains(s, StringComparison.OrdinalIgnoreCase) ||
+                    t.ClrTypeName.Contains(s, StringComparison.OrdinalIgnoreCase) ||
+                    t.Description.Contains(s, StringComparison.OrdinalIgnoreCase) ||
+                    t.Columns.Any(c => c.ColumnName.Contains(s, StringComparison.OrdinalIgnoreCase)));
+            }
+
+            return query;
+        }
+    }
+}

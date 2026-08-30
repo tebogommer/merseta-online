@@ -1,0 +1,208 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml" xmlns:o="http://omnifaces.org/ui">
+	<ui:define name="content">
+		<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum"></p:importEnum>
+		<p:importEnum type="haj.com.entity.enums.WspStatusEnum" />
+		<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>#{bankingdetailsUI.company.companyName} #{lang['banking.details']}</h1>
+					<h:form id="bankingDetailForm">
+
+						<p:fieldset legend="Current #{lang['banking.details']}">
+							<p:panelGrid columns="2" style="width:100%" id="bankingdetailsInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+								<h:panelGroup>
+									<div>
+										<p:outputLabel value="#{lang['bank.name']}" for="bank" />
+									</div>
+									<div>
+										<p:selectOneMenu id="bank" value="#{bankingdetailsUI.bankingdetails.bank}" converter="BankConvertor" style="opacity: 1 !important; color: black; width:75%" required="true" requiredMessage="#{lang['select.bank']}" disabled="true">
+											<p:ajax />
+											<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+											<f:selectItems value="#{selectItemsUI.selectItemsBank}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+										</p:selectOneMenu>
+									</div>
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="bankAccNumber" minlength="#{bankingdetailsUI.MIN_BANK_ACCOUNT_NUMBER}" maxlength="#{bankingdetailsUI.MAX_BANK_ACCOUNT_NUMBER}" value="#{bankingdetailsUI.bankingdetails.bankAccNumber}" disabled="true" style="opacity: 1 !important; color: black; width:95%" required="true" requiredMessage="#{lang['banc.acc.required']}">
+
+									</p:inputText>
+									<p:outputLabel value="#{lang['bankAccNumber']}" for="bankAccNumber" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="branchCode" minlength="#{bankingdetailsUI.MIN_BANK_BRANCH_NUMBER}" maxlength="#{bankingdetailsUI.MAX_BANK_BRANCH_NUMBER}" value="#{bankingdetailsUI.bankingdetails.branchCode}" style="opacity: 1 !important; color: black; width:95%" disabled="true" required="true" requiredMessage="#{lang['branch.code.required']}">
+
+									</p:inputText>
+									<p:outputLabel value="#{lang['branchCode']}" for="branchCode" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="bankHolder" maxlength="#{bankingdetailsUI.MAX_BANK_HOLDER}" value="#{bankingdetailsUI.bankingdetails.bankHolder}" style="opacity: 1 !important; color: black; width:95%" required="true" requiredMessage="#{lang['bank.holder.name']}" disabled="true">
+
+									</p:inputText>
+									<p:outputLabel value="#{lang['bankHolder']}" for="bankHolder" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield" rendered="false">
+									<p:inputText id="swiftCode" value="#{bankingdetailsUI.bankingdetails.swiftCode}" style="opacity: 1 !important; color: black; width:95%" disabled="true">
+
+									</p:inputText>
+									<p:outputLabel value="#{lang['swiftCode']}" for="swiftCode" />
+								</h:panelGroup>
+
+							</p:panelGrid>
+						</p:fieldset>
+
+						<br />
+						<h:panelGroup rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve}">
+							<p:outputLabel value="Are the original documents required?"></p:outputLabel>
+							<p:spacer width="20"></p:spacer>
+							<p:selectBooleanButton onLabel="Yes" offLabel="No" value="#{bankingdetailsUI.areOriginalRequired}">
+								<p:ajax update="BankDocs info" />
+							</p:selectBooleanButton>
+						</h:panelGroup>
+						<br />
+						<br />
+
+						<p:outputPanel id="info">
+							<p:outputPanel rendered="#{bankingdetailsUI.bankingdetails.areOriginalRequired ne null and not bankingdetailsUI.bankingdetails.areOriginalRequired}">
+								<ui:include src="/pages/includes/tabinfo.xhtml">
+									<ui:param name="showInfoCircle" value="false" />
+									<ui:param name="cssClass" value="red Fs15 FontBold" />
+									<ui:param name="helpTxt" value="Original Documents are not required" />
+								</ui:include>
+							</p:outputPanel>
+							<p:outputPanel rendered="#{bankingdetailsUI.bankingdetails.areOriginalRequired ne null and bankingdetailsUI.bankingdetails.areOriginalRequired}">
+								<ui:include src="/pages/includes/tabinfo.xhtml">
+									<ui:param name="showInfoCircle" value="false" />
+									<ui:param name="cssClass" value="red Fs15 FontBold" />
+									<ui:param name="helpTxt" value="Original Documents are required" />
+								</ui:include>
+							</p:outputPanel>
+						</p:outputPanel>
+						<p:dataTable value="#{bankingdetailsUI.bankingdetails.docs}" id="BankDocs" var="rv1" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv1.id}">
+							<p:column headerText="#{lang['type']}" width="18%">#{rv1.configDoc.name}</p:column>
+							<p:column headerText="#{lang['original.file.name']}" priority="4">
+								<p:outputLabel value="#{rv1.originalFname}" styleClass="Fs12"></p:outputLabel>
+							</p:column>
+							<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+							<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+								<h:outputText value="#{rv1.createDate}">
+									<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['version']}" width="10%" priority="4">
+								<h:outputText value="#{rv1.versionNo}">
+								</h:outputText>
+							</p:column>
+							<p:column headerText="#{lang['original.required']}" rendered="#{bankingdetailsUI.bankingdetails.areOriginalRequired}">
+								<center>
+									<h:panelGroup rendered="#{rv1.configDoc.originalRequired}" styleClass="green">
+										<i class="fa fa-files-o fa-3x" aria-hidden="true"></i>
+									</h:panelGroup>
+									<h:panelGroup rendered="#{not rv1.configDoc.originalRequired}" styleClass="red">
+										<i class="fa fa-times fa-3x" aria-hidden="true"></i>
+									</h:panelGroup>
+								</center>
+							</p:column>
+							<p:column width="180">
+								<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlb" rendered="#{rv1.id ne null}" immediate="true">
+									<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+								</p:commandButton>
+								<p:tooltip for="dlb" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+
+
+								<p:spacer width="5" rendered="#{rv1.id ne null}" />
+								<p:commandButton icon="fa fa-bars " id="dhist" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}" process="@this">
+									<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+								</p:commandButton>
+
+								<p:tooltip for="dhist" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+								<h:panelGroup id="panelGroupThree" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+									<p:spacer width="5" />
+									<p:commandButton icon="fa fa-comment-o" id="dnote" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel" process="@this">
+										<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="dnote" value="#{lang['view.note']}" position="left" />
+								</h:panelGroup>
+								<h:panelGroup id="panelGroupFour" rendered="#{rv1.extension.toLowerCase() eq 'pdf' and rv1.id ne null}">
+									<p:spacer width="5" />
+									<p:commandButton icon="fa fa-eye " id="viewerButton" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}" process="@this">
+										<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="viewerButton" value="#{lang['view.document']} " position="left" />
+								</h:panelGroup>
+							</p:column>
+						</p:dataTable>
+						<br />
+						<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission ne null}">
+
+							<p:commandButton value="#{lang['complete.task']}" rendered="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Approve and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalApproval}" icon="ui-icon-save" update=":bankingDetailForm" action="#{bankingdetailsUI.completeTask}" styleClass="flat green-btn Fs18" style="height: 50px;" process="@this"></p:commandButton>
+
+							<p:commandButton value="#{lang['approve.task']}" icon="ui-icon-save" update=":bankingDetailForm" action="#{bankingdetailsUI.approveTaskApproval}" styleClass="flat green-btn Fs18" style="height: 50px;" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve}" process="@this"></p:commandButton>
+
+							<p:commandButton value="#{lang['approve.task']}" icon="ui-icon-save" update=":bankingDetailForm" action="#{bankingdetailsUI.approveTask}" styleClass="flat green-btn Fs18" style="height: 50px;" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval}" process="@this"></p:commandButton>
+
+
+							<p:commandButton value="Reject Details" icon="ui-icon-clear-all" update="bankingdetailsInsGrid" action="#{bankingdetailsUI.rejectDetails}" styleClass="flat red-btn Fs18" style="height: 50px;" rendered="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Approve and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalApproval and sessionUI.task.firstInProcess}">
+							</p:commandButton>
+
+							<p:commandButton value="Reject Details" icon="ui-icon-clear-all" update="bankingdetailsInsGrid" action="#{bankingdetailsUI.rejectDetails}" styleClass="flat red-btn Fs18" style="height: 50px;" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Edit}">
+							</p:commandButton>
+
+							<p:commandButton value="Reject Details" icon="ui-icon-clear-all" update="bankingdetailsInsGrid" action="#{bankingdetailsUI.rejectDetails}" styleClass="flat red-btn Fs18" style="height: 50px;" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval}">
+							</p:commandButton>
+
+						</p:panelGrid>
+
+						<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq null}">
+
+							<p:commandButton value="#{lang['approve']}" icon="ui-icon-save" update=":bankingDetailForm" action="#{bankingdetailsUI.signOffTask}" styleClass="flat green-btn Fs18" style="height: 50px;" process="@this"></p:commandButton>
+							<p:commandButton value="Reject" icon="fa fa-times" update=":bankingDetailForm" action="#{bankingdetailsUI.rejectDetails}" styleClass="flat red-btn Fs18" style="height: 50px;"></p:commandButton>
+
+						</p:panelGrid>
+
+						<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" layout="grid" style="width:100%" id="rejectReason" rendered="#{sessionUI.task.processRole.rolePermission eq null or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Edit or sessionUI.task.firstInProcess}">
+							<p:spacer></p:spacer>
+							<h:panelGroup>
+
+								<div class="ui-g-12">
+									<p:outputLabel value="Reason For Rejection" for="userName" />
+									<br />
+
+									<p:selectManyMenu id="userName" value="#{bankingdetailsUI.selectedRejectReason}" var="t" converter="RejectReasonsConvertor" style="width:95%" scrollHeight="300" required="true" requiredMessage="Please select a reject reason" showCheckbox="true">
+										<f:selectItems value="#{bankingdetailsUI.rejectReasons}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+
+										<p:column>
+											<h:outputText value="#{t.description}" />
+											<br />
+											<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+										</p:column>
+
+									</p:selectManyMenu>
+								</div>
+								<div class="ui-g-12">
+									<p:outputLabel value="Additional Information"></p:outputLabel>
+									<br />
+									<p:inputTextarea value="#{bankingdetailsUI.rejectReasonS}" style="width: 95%"></p:inputTextarea>
+									<br />
+								</div>
+
+							</h:panelGroup>
+
+						</p:panelGrid>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+		<style>
+.ui-selectlistbox-item.ui-corner-all {
+	border: 1pt solid #eee
+}
+</style>
+
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+
+	</ui:define>
+</ui:composition>

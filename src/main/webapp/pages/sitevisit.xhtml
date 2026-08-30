@@ -1,0 +1,235 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Site Visit</h1>
+					<h:form id="extensionrequestInsForm">
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:panelGrid columns="2" style="width:100%" id="companyInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText disabled="true" id="companyName" value="#{sitevisitUI.sitevisit.company.companyName}" style="width:95%;  opacity: 1 !important; color:black !important" required="true" requiredMessage="#{lang['enter.the.company.name']}" />
+								<p:outputLabel value="#{lang['companyName']}" for="companyName" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText disabled="true" id="tradingName" value="#{sitevisitUI.sitevisit.company.tradingName}" style="width:95%;  opacity: 1 !important; color:black !important" required="true" requiredMessage="#{lang['enter.the.trading.name']}" />
+								<p:outputLabel value="#{lang['tradingName']}" for="tradingName" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText disabled="true" id="telNumber" value="#{sitevisitUI.sitevisit.company.telNumber}" style="width:95%;  opacity: 1 !important; color:black !important" required="true" requiredMessage="#{lang['enter.the.tel.number']}" />
+								<p:outputLabel value="#{lang['telNumber']}" for="telNumber" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText disabled="true" id="faxNumber" value="#{sitevisitUI.sitevisit.company.faxNumber}" style="width:95%;  opacity: 1 !important; color:black !important" />
+								<p:outputLabel value="#{lang['faxNumber']}" for="faxNumber" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText disabled="true" id="companyRegistrationNumber" value="#{sitevisitUI.sitevisit.company.companyRegistrationNumber}" style="width:95%;  opacity: 1 !important; color:black !important" required="true" requiredMessage="#{lang['enter.company.registration.number']}" />
+								<p:outputLabel value="#{lang['companyRegistrationNumber']}" for="companyRegistrationNumber" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText disabled="true" id="email" value="#{sitevisitUI.sitevisit.company.email}" style="width:95%;  opacity: 1 !important; color:black !important" required="true" requiredMessage="#{lang['enter.email.address']}" />
+								<p:outputLabel value="#{lang['email']}" for="email" />
+							</h:panelGroup>
+
+							<h:panelGroup rendered="#{sitevisitUI.sitevisit ne null}">
+								<div>
+									<p:outputLabel for="newSubmissionDate" value="Site Visit Date" />
+								</div>
+								<div>
+									<p:calendar id="newSubmissionDate" value="#{sitevisitUI.sitevisit.visitDate}" showOn="button" maxdate="#{sitevisitUI.maxDate}" disabled="#{sessionUI.task.processRole ne null}" inputStyle="width:95%;  opacity: 1 !important; color:black !important" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" />
+								</div>
+							</h:panelGroup>
+
+						</p:panelGrid>
+						<p:panelGrid columns="1" style="width:100%" id="sitevisitInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" id="docTable" rendered="#{sitevisitUI.sitevisit ne null}">
+								<p:dataTable value="#{sitevisitUI.sitevisit.docs}" var="rv1" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv1.id}">
+									<p:column headerText="#{lang['type']}" width="18%">#{rv1.configDoc.name}</p:column>
+									<p:column headerText="#{lang['original.file.name']}" priority="4">
+										<p:outputLabel value="#{rv1.originalFname}" styleClass="Fs12"></p:outputLabel>
+									</p:column>
+									<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+									<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+										<h:outputText value="#{rv1.createDate}">
+											<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+										</h:outputText>
+									</p:column>
+									<p:column headerText="#{lang['version']}" width="10%" priority="4">
+										<h:outputText value="#{rv1.versionNo}">
+										</h:outputText>
+									</p:column>
+									<p:column headerText="#{lang['original.required']}">
+										<center>
+											<h:panelGroup rendered="#{rv1.configDoc.originalRequired}" styleClass="green">
+												<i class="fa fa-files-o fa-3x" aria-hidden="true"></i>
+											</h:panelGroup>
+											<h:panelGroup rendered="#{not rv1.configDoc.originalRequired}" styleClass="red">
+												<i class="fa fa-times fa-3x" aria-hidden="true"></i>
+											</h:panelGroup>
+										</center>
+									</p:column>
+
+									<p:column width="180">
+										
+										<p:commandButton icon="fa fa-upload" id="upload" styleClass="flat" process="@this" oncomplete="PF('dlgUpload').show()" update=":uploadForm" rendered="#{sessionUI.task.processRole ne null}">
+											<f:setPropertyActionListener value="#{rv1}" target="#{sitevisitUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="upload" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+
+										<p:spacer width="5" rendered="#{sessionUI.task.processRole eq null}" />
+
+										<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlb" rendered="#{rv1.id ne null}" immediate="true">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="dlb" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+
+										<p:spacer width="5" rendered="#{rv1.id ne null}" />
+										<p:commandButton icon="fa fa-bars " id="dhist" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}" process="@this">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+
+										<p:tooltip for="dhist" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+										<h:panelGroup id="panelGroupThree" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+											<p:spacer width="5" />
+											<p:commandButton icon="fa fa-comment-o" id="dnote" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel" process="@this">
+												<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+											</p:commandButton>
+											<p:tooltip for="dnote" value="#{lang['view.note']}" position="left" />
+										</h:panelGroup>
+
+										<h:panelGroup id="panelGroupFour" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+											<p:spacer width="5" />
+											<p:commandButton icon="fa fa-eye " id="viewerButton" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}" process="@this">
+												<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+											</p:commandButton>
+											<p:tooltip for="viewerButton" value="#{lang['view.document']} " position="left" />
+										</h:panelGroup>
+									</p:column>
+
+								</p:dataTable>
+							</p:panelGrid>
+
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sitevisitUI.rt.clo.users eq sessionUI.activeUser}">
+
+								<p:commandButton value="View Rejections" icon="fa fa-times" styleClass="flat Fs18" rendered="#{sitevisitUI.rejectReasonsChild.size() gt 0}" oncomplete="PF('rejectChildReason').show()" style="height: 50px;">
+								</p:commandButton>
+
+								<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" update="@form" action="#{sitevisitUI.completeTask}" styleClass="flat green-btn Fs18" style="height: 50px;">
+								</p:commandButton>
+							</p:panelGrid>
+
+							<!-- APPROVE / REJECT -->
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sitevisitUI.rt.crm.users eq sessionUI.activeUser}">
+								<p:commandButton value="#{lang['approve']}" icon="ui-icon-save" update="@form" action="#{sitevisitUI.approveTask}" styleClass="flat green-btn Fs18" style="height: 50px;">
+								</p:commandButton>
+								<p:commandButton value="#{lang['reject.task']}" icon="ui-icon-save" update="rejectReasonForm" oncomplete="PF('rejectReason').show()" styleClass="flat red-btn Fs18" style="height: 50px;">
+								</p:commandButton>
+							</p:panelGrid>
+							
+							<!-- SUBMIT -->
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sitevisitUI.sitevisit.company ne null and sessionUI.task.processRole == null}">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update="@form" action="#{sitevisitUI.sitevisitInsertOnceRejected}" styleClass="flat green-btn Fs18" style="height: 50px;">
+								</p:commandButton>
+							</p:panelGrid>
+							
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true">
+			<h:form id="uploadForm">
+				<h:panelGroup id="uploadGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{sdfUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{sitevisitUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{sitevisitUI.storeNewFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}"
+										update=":extensionrequestInsForm:docTable" multiple="false" fileLimit="1" allowTypes="/(\.|\/)(gif|jpe?g|png|pdf|docx|txt)$/" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="Reject Reasons" widgetVar="rejectReason" hideEffect="clip" showEffect="clip" id="dialogRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{sitevisitUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:95%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{sitevisitUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+
+							</p:selectManyMenu>
+						</div>
+					</div>
+					<p:commandButton value="Reject" action="#{sitevisitUI.rejectTask}">
+					</p:commandButton>
+				</div>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="Reject Reasons" widgetVar="rejectChildReason" hideEffect="clip" showEffect="clip" id="dialogRejectChildReason" appendTo="@(body)" modal="true" closable="true" width="75%" height="60vh" responsive="true" closeOnEscape="true">
+			<h:form id="rejectReasonChildForm">
+				<p:dataTable var="rowVar" value="#{sitevisitUI.rejectReasonsChild}" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+					rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+					<p:column headerText="Create Date">
+						<p:outputLabel value="#{rowVar.createDate}">
+							<f:convertDateTime pattern="dd MMMM yyyy" />
+						</p:outputLabel>
+					</p:column>
+					<p:column headerText="Reason for Rejection">
+						<p:outputLabel value="#{rowVar.rejectReasons.description}"></p:outputLabel>
+					</p:column>
+					<p:column headerText="How to fix">
+						<p:outputLabel value="#{rowVar.rejectReasons.howTo}"></p:outputLabel>
+					</p:column>
+				</p:dataTable>
+			</h:form>
+		</p:dialog>
+
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+	</ui:define>
+
+	<!-- 
+	createDate = createDate
+	company = company
+	status = status
+	reasonForExtension = reasonForExtension
+	user = user
+-->
+
+</ui:composition>

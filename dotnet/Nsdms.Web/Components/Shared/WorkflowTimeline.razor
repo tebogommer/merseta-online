@@ -1,0 +1,103 @@
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@inject IWorkflowEngineService WorkflowService
+
+<div class="workflow-timeline pa-4 rounded-lg elevation-1" style="background-color: #ffffff; border: 1px solid #e2e8f0;">
+    <div class="d-flex align-center gap-2 mb-3">
+        <MudIcon Icon="@Icons.Material.Filled.History" Style="color: #1e40af;" Size="Size.Small" />
+        <h4 style="font-weight: 700; color: #0f172a; margin: 0; font-size: 1rem;">Workflow History &amp; Audit Trail</h4>
+    </div>
+
+    @if (_loading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-2" />
+    }
+    else if (!_historyItems.Any())
+    {
+        <p style="color: #64748b; font-size: 0.875rem; margin: 0; font-style: italic;">
+            No workflow transition events recorded yet.
+        </p>
+    }
+    else
+    {
+        <MudTimeline TimelinePosition="TimelinePosition.Start" Class="pa-0">
+            @foreach (var item in _historyItems)
+            {
+                <MudTimelineItem Color="Color.Primary" Size="Size.Small">
+                    <ItemOpposite>
+                        <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">
+                            @item.ActionDate.ToLocalTime().ToString("dd MMM yyyy HH:mm")
+                        </span>
+                    </ItemOpposite>
+                    <ItemContent>
+                        <div class="pa-2 rounded" style="background-color: #f8fafc; border: 1px solid #e2e8f0;">
+                            <div class="d-flex align-center justify-space-between gap-2">
+                                <span style="font-weight: 700; color: #1e40af; font-size: 0.875rem;">
+                                    @item.ActionName
+                                </span>
+                                <span class="px-2 py-0.5 rounded" style="background-color: #e2e8f0; color: #334155; font-size: 0.75rem; font-weight: 600;">
+                                    @(item.ToState?.StateName ?? "Advanced")
+                                </span>
+                            </div>
+                            <p style="font-size: 0.8125rem; color: #475569; margin: 2px 0 0 0;">
+                                By: <strong>@(item.ActorName ?? "System")</strong> <span style="color: #64748b;">(@(item.ActorRole ?? "User"))</span>
+                            </p>
+                            @if (!string.IsNullOrEmpty(item.Comments))
+                            {
+                                <p class="mt-1 pa-2 rounded" style="background-color: #ffffff; border-left: 3px solid #1e40af; font-size: 0.8125rem; color: #1e293b; margin-bottom: 0;">
+                                    <em>"@item.Comments"</em>
+                                </p>
+                            }
+                        </div>
+                    </ItemContent>
+                </MudTimelineItem>
+            }
+        </MudTimeline>
+    }
+</div>
+
+@code {
+    [Parameter] public string ProcessCode { get; set; } = string.Empty;
+    [Parameter] public int EntityId { get; set; }
+
+    private List<WorkflowHistory> _historyItems = new();
+    private bool _loading = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadHistoryAsync();
+    }
+
+    public async Task RefreshAsync()
+    {
+        await LoadHistoryAsync();
+        StateHasChanged();
+    }
+
+    private async Task LoadHistoryAsync()
+    {
+        if (string.IsNullOrEmpty(ProcessCode) || EntityId <= 0)
+        {
+            _loading = false;
+            return;
+        }
+
+        _loading = true;
+        try
+        {
+            var instance = await WorkflowService.GetInstanceByEntityAsync(ProcessCode, EntityId);
+            if (instance != null)
+            {
+                _historyItems = await WorkflowService.GetWorkflowHistoryAsync(instance.Id);
+            }
+            else
+            {
+                _historyItems.Clear();
+            }
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}

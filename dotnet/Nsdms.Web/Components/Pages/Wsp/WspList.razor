@@ -1,0 +1,188 @@
+@page "/wsp"
+@inject IWspService WspService
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+<div class="d-flex justify-space-between align-center mb-4">
+    <div>
+        <MudText Typo="Typo.h5" Class="font-weight-bold">WSP & Mandatory Grants</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">Annual Workplace Skills Plans (WSP), Annual Training Reports (ATR), employment equity breakdown, and mandatory levy grant claims</MudText>
+    </div>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PostAdd" OnClick="CreateNewWsp">
+        New WSP Submission
+    </MudButton>
+</div>
+
+<MudPaper Class="pa-4 mb-4" Elevation="1">
+    <div class="d-flex flex-wrap gap-4 align-center justify-space-between mb-3">
+        <div class="d-flex align-center gap-3 flex-grow-1" style="max-width: 600px;">
+            <MudTextField @bind-Value="_searchString"
+                          Placeholder="Search by Reference No, Organisation Name, SDL No, Fin Year..."
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          IconSize="Size.Medium"
+                          Class="mt-0"
+                          Immediate="true"
+                          Clearable="true" />
+        </div>
+        <div class="d-flex align-center gap-2">
+            <MudChipSet T="string" @bind-SelectedValue="_statusFilter" SelectionMode="SelectionMode.SingleSelection">
+                <MudChip T="string" Value="@("All")" Color="Color.Default" Variant="@(_statusFilter == "All" ? Variant.Filled : Variant.Outlined)">All</MudChip>
+                <MudChip T="string" Value="@("SUBMITTED")" Color="Color.Info" Variant="@(_statusFilter == "SUBMITTED" ? Variant.Filled : Variant.Outlined)">Submitted</MudChip>
+                <MudChip T="string" Value="@("APPROVED")" Color="Color.Success" Variant="@(_statusFilter == "APPROVED" ? Variant.Filled : Variant.Outlined)">Approved</MudChip>
+                <MudChip T="string" Value="@("DRAFT")" Color="Color.Warning" Variant="@(_statusFilter == "DRAFT" ? Variant.Filled : Variant.Outlined)">Draft</MudChip>
+            </MudChipSet>
+        </div>
+    </div>
+
+    @if (_loading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+    }
+    else
+    {
+        <MudTable Items="@FilteredSubmissions"
+                  Hover="true"
+                  Dense="true"
+                  Striped="true"
+                  Breakpoint="Breakpoint.Sm"
+                  OnRowClick="@((TableRowClickEventArgs<WspSubmission> e) => OpenDetail(e.Item != null ? e.Item.Id : 0))"
+                  T="WspSubmission">
+            <HeaderContent>
+                <MudTh>Reference No</MudTh>
+                <MudTh>Fin Year</MudTh>
+                <MudTh>Organisation / SDL</MudTh>
+                <MudTh>Employees</MudTh>
+                <MudTh>Planned Training Budget</MudTh>
+                <MudTh Class="d-none d-md-table-cell">Submission Date</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh Style="text-align:right">Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Reference No">
+                    <div class="d-flex align-center gap-1">
+                        <MudIcon Icon="@Icons.Material.Filled.Assignment" Size="Size.Small" Color="Color.Primary" />
+                        <MudText Typo="Typo.body2" Class="fw-bold font-monospace">@context.ReferenceNumber</MudText>
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="Fin Year">
+                    <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">@context.FinYear</MudChip>
+                </MudTd>
+                <MudTd DataLabel="Organisation / SDL">
+                    <MudText Typo="Typo.body2" Class="fw-bold">@(context.Organisation?.CompanyName ?? "Unlinked")</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">SDL: @(context.Organisation?.SdlNumber ?? "-")</MudText>
+                </MudTd>
+                <MudTd DataLabel="Employees">
+                    <MudText Typo="Typo.body2">@context.EmployeeCount.ToString("N0")</MudText>
+                </MudTd>
+                <MudTd DataLabel="Planned Training Budget">
+                    <MudText Typo="Typo.body2" Class="fw-bold text-success">@context.PlannedTrainingBudget.ToString("C")</MudText>
+                </MudTd>
+                <MudTd Class="d-none d-md-table-cell" DataLabel="Submission Date">
+                    @(context.SubmissionDate.HasValue ? context.SubmissionDate.Value.ToString("yyyy-MM-dd") : "Not submitted")
+                </MudTd>
+                <MudTd DataLabel="Status">
+                    <MudChip T="string" Color="@GetStatusColor(context.StatusCode)" Size="Size.Small" Variant="Variant.Filled">
+                        @(!string.IsNullOrWhiteSpace(context.StatusCode) ? context.StatusCode : "DRAFT")
+                    </MudChip>
+                </MudTd>
+                <MudTd Style="text-align:right" DataLabel="Actions">
+                    <div class="d-flex justify-end gap-1">
+                        <MudTooltip Text="View & Edit Submission">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" OnClick="@(() => OpenDetail(context.Id))" aria-label="Edit Record" />
+                        </MudTooltip>
+                        <MudTooltip Text="Delete Record">
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteWsp(context.Id, context.ReferenceNumber))" aria-label="Delete Record" />
+                        </MudTooltip>
+                    </div>
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <div class="pa-4 text-center">
+                    <MudText Typo="Typo.body1" Color="Color.Secondary">No WSP submissions found matching search criteria.</MudText>
+                </div>
+            </NoRecordsContent>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
+            </PagerContent>
+        </MudTable>
+    }
+</MudPaper>
+
+@code {
+    private List<WspSubmission> _submissions = new();
+    private string _searchString = string.Empty;
+    private string _statusFilter = "All";
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _loading = true;
+        _submissions = await WspService.GetAllAsync();
+        _loading = false;
+    }
+
+    private IEnumerable<WspSubmission> FilteredSubmissions
+    {
+        get
+        {
+            var query = _submissions.AsEnumerable();
+
+            if (_statusFilter != "All")
+            {
+                query = query.Where(x => string.Equals(x.StatusCode, _statusFilter, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (!string.IsNullOrWhiteSpace(_searchString))
+            {
+                var s = _searchString.Trim();
+                query = query.Where(x =>
+                    (x.ReferenceNumber != null && x.ReferenceNumber.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    (x.Organisation != null && x.Organisation.CompanyName.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    (x.Organisation != null && x.Organisation.SdlNumber.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    x.FinYear.ToString().Contains(s));
+            }
+
+            return query;
+        }
+    }
+
+    private Color GetStatusColor(string? status) => status?.ToUpperInvariant() switch
+    {
+        "APPROVED" => Color.Success,
+        "SUBMITTED" => Color.Info,
+        "REJECTED" => Color.Error,
+        "UNDER_REVIEW" => Color.Warning,
+        _ => Color.Default
+    };
+
+    private void OpenDetail(int id)
+    {
+        NavManager.NavigateTo($"/wsp/{id}");
+    }
+
+    private void CreateNewWsp()
+    {
+        NavManager.NavigateTo("/wsp/create");
+    }
+
+    private async Task DeleteWsp(int id, string refNo)
+    {
+        var deleted = await WspService.DeleteAsync(id, "Admin");
+        if (deleted)
+        {
+            Snackbar.Add($"WSP Submission '{refNo}' deleted successfully with audit trail.", Severity.Success);
+            await LoadData();
+        }
+        else
+        {
+            Snackbar.Add("Could not delete WSP submission.", Severity.Error);
+        }
+    }
+}

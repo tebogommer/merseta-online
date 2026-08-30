@@ -1,0 +1,154 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui">
+
+	<c:if test="#{trainingproviderUI.formUser.doneSearch and !trainingproviderUI.facilitatorAssessor.doneSearch  and trainingproviderUI.doneContactPerson and !trainingproviderUI.doneSMEReg}">
+		<ui:include  src="/pages/includes/searchUserPassportOrID.xhtml" />
+	</c:if>
+	
+	<p:commandButton  process="@this" value="Add Assessor/Moderator" rendered="#{trainingproviderUI.doneSMEReg}" update="@form" icon="fa fa-plus"  styleClass="flat" action="#{trainingproviderUI.resetAddFacilitatorAssessor}"  />
+	<br/>
+	
+	
+	<p:panelGrid columns="2" style="width:100%" id="avInsGrid" layout="grid" rendered="#{trainingproviderUI.facilitatorAssessor.doneSearch}" styleClass="ui-panelgrid-blank form-group">
+		
+		<h:panelGroup style="margin-top: -20px" rendered="false">
+			<div>
+				<p:outputLabel value="#{lang['designation']}" for="avDesignation" />
+			</div>
+			<div>
+				<p:selectOneMenu disabled="#{trainingproviderUI.facilitatorAssessor.designation ne null}" id="avDesignation" value="#{trainingproviderUI.facilitatorAssessor.designation}" converter="DesignationConvertor" style="width:95%" required="true" requiredMessage="#{lang['select.designation']}">
+					<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+					<f:selectItems value="#{selectItemsUI.selectedDesignation}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+					<p:ajax></p:ajax>
+				</p:selectOneMenu>
+			</div>
+		</h:panelGroup>
+		
+		<h:panelGroup>
+			<div>
+				<p:outputLabel value="Type" for="type" />
+			</div>
+			<div>
+				<p:selectOneMenu id="type" value="#{trainingproviderUI.facilitatorAssessor.assessorModType}" style="width:95%" required="true">
+					<p:ajax />
+					<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+					<f:selectItems value="#{trainingproviderUI.assessorModTypeDD}" />
+					<p:ajax event="itemSelect" update="@form" listener="#{trainingproviderUI.checkIfIsAssOrMod}"/>
+				</p:selectOneMenu>
+			</div>
+		</h:panelGroup>
+		
+		<h:panelGroup style="margin-top: -20px">
+			<div>
+				<p:outputLabel value="#{lang['title']}" for="avtitle" />
+			</div>
+			<div>
+				<p:selectOneMenu disabled="#{trainingproviderUI.facilitatorAssessor.title ne null and trainingproviderUI.facilitatorAssessor.id ne null}" id="avtitle" value="#{trainingproviderUI.facilitatorAssessor.title}" converter="TitleConvertor" style="width:95%" required="true" requiredMessage="#{lang['select.title']}">
+					<p:ajax />
+					<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+					<f:selectItems value="#{selectItemsUI.selectItemsTitles}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+				</p:selectOneMenu>
+			</div>
+		</h:panelGroup>
+		
+		<h:panelGroup styleClass="md-inputfield">
+			<br/>
+			<p:inputText id="avuserName" value="#{trainingproviderUI.facilitatorAssessor.firstName}" style="width:95%" required="true" disabled="#{(trainingproviderUI.facilitatorAssessor.existingUser or trainingproviderUI.facilitatorAssessor.regFieldsDone) and trainingproviderUI.facilitatorAssessor.id ne null}" requiredMessage="#{lang['enter.your.name']}" />
+			<p:outputLabel value="#{lang['first.name']}" for="avuserName" />
+		</h:panelGroup>
+		
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText id="avuserSurname" value="#{trainingproviderUI.facilitatorAssessor.lastName}" style="width:95%" required="true" disabled="#{(trainingproviderUI.facilitatorAssessor.existingUser or trainingproviderUI.facilitatorAssessor.regFieldsDone) and trainingproviderUI.facilitatorAssessor.id ne null}" requiredMessage="#{lang['enter.your.last.name']}" />
+			<p:outputLabel value="#{lang['surname']}" for="avuserSurname" />
+		</h:panelGroup>
+		
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputText id="avuserEmail" value="#{trainingproviderUI.facilitatorAssessor.email}" style="width:95%" required="true" disabled="#{(trainingproviderUI.facilitatorAssessor.existingUser or trainingproviderUI.facilitatorAssessor.regFieldsDone) and trainingproviderUI.facilitatorAssessor.id ne null}" requiredMessage="#{lang['enter.your.email.address']}" />
+			<p:outputLabel value="#{lang['emails']}" for="avuserEmail" />
+		</h:panelGroup>
+		
+		<h:panelGroup styleClass="md-inputfield" rendered="#{trainingproviderUI.facilitatorAssessor.rsaIDNumber.length() gt 0}">
+			<p:inputText id="avuserIdNumber" value="#{trainingproviderUI.facilitatorAssessor.rsaIDNumber}" style="width:95%" disabled="#{trainingproviderUI.facilitatorAssessor.existingUser and trainingproviderUI.facilitatorAssessor.id ne null}" />
+			<p:outputLabel value="#{lang['rsa.id.number']}" for="avuserIdNumber" />
+		</h:panelGroup>
+		
+		<h:panelGroup styleClass="md-inputfield" rendered="#{trainingproviderUI.facilitatorAssessor.passportNumber.length() gt 0}">
+			<p:inputText id="avuserPassport" value="#{trainingproviderUI.facilitatorAssessor.passportNumber}" style="width:95%" disabled="true" />
+			<p:outputLabel value="#{lang['passport.number']}" for="avuserPassport" />
+		</h:panelGroup>
+		
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputMask disabled="#{trainingproviderUI.facilitatorAssessor.cellNumber.length() gt 0}" id="avcellNumber" mask="#{profileUI.CELLPHONE_FORMAT}" value="#{trainingproviderUI.facilitatorAssessor.cellNumber}" style="width: 95%" label="cellNumber" required="true" requiredMessage="Enter mobile number">
+				<o:validator validatorId="javax.faces.Length" minimum="0" maximum="20" message="#{lang['user.cellnumber.length']}" />
+			</p:inputMask>
+			<p:outputLabel value="#{lang['mobile.number']}" for="avcellNumber" />
+		</h:panelGroup>
+
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputMask disabled="#{trainingproviderUI.facilitatorAssessor.telNumber.length() gt 0}" id="avtelNumber" mask="#{profileUI.TELPHONE_FORMAT}" value="#{trainingproviderUI.facilitatorAssessor.telNumber}" style="width: 95%" label="telNumber" required="false" requiredMessage="Enter tel number">
+				<o:validator validatorId="javax.faces.Length" minimum="0" maximum="20" message="#{lang['user.tellnumber.length']}" />
+			</p:inputMask>
+			<p:outputLabel value="#{lang['tel.number']}:" for="avtelNumber" />
+		</h:panelGroup>
+		
+		<h:panelGroup styleClass="md-inputfield">
+			<p:inputMask disabled="#{trainingproviderUI.facilitatorAssessor.faxNumber.length() gt 0}" id="avfax" mask="#{profileUI.CELLPHONE_FORMAT}" value="#{trainingproviderUI.facilitatorAssessor.faxNumber}" style="width: 95%" label="cellNumber" required="false" requiredMessage="Enter fax number">
+				
+			</p:inputMask>
+			<p:outputLabel value="#{lang['fax.number']}" for="avfax" />
+		</h:panelGroup>
+		
+		<h:panelGroup styleClass="md-inputfield">
+		</h:panelGroup>
+		
+		<h:panelGroup styleClass="md-inputfield">
+			<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update="@form avList" action="#{trainingproviderUI.addFacilitatorAssessor}" />
+			<p:spacer width="10"></p:spacer>
+			<p:commandButton value="#{lang['clear']}" icon="ui-icon-save" process="@this" update="@form avList" action="#{trainingproviderUI.clearFacilitatorAssessor}" />
+		</h:panelGroup>
+	</p:panelGrid>
+	<br/>
+	<p:dataTable var="rowVar2" value="#{trainingproviderUI.facilitatorAssessorList}" id="avList" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+		
+		<p:column headerText="Type">
+			<p:outputLabel value="#{rowVar2.assessorModType.friendlyName}"></p:outputLabel>
+		</p:column>
+		<p:column headerText="Title">
+			<p:outputLabel value="#{rowVar2.title.description}"></p:outputLabel>
+		</p:column>
+		<p:column headerText="First Name">
+			<p:outputLabel value="#{rowVar2.firstName}"></p:outputLabel>
+		</p:column>
+		<p:column headerText="Last Name">
+			<p:outputLabel value="#{rowVar2.lastName}"></p:outputLabel>
+		</p:column>
+		<p:column headerText="Identity Number">
+			<p:outputLabel value="#{rowVar2.rsaIDNumber}"></p:outputLabel>
+			<p:outputLabel value="#{rowVar2.passportNumber}"></p:outputLabel>
+		</p:column>
+		<p:column headerText="Email">
+			<p:outputLabel value="#{rowVar2.email}"></p:outputLabel>
+		</p:column>
+		<p:column headerText="Cell Number">
+			<p:outputLabel value="#{rowVar2.cellNumber}"></p:outputLabel>
+		</p:column>
+		<p:column headerText="Tel Number">
+			<p:outputLabel value="#{rowVar2.telNumber}"></p:outputLabel>
+		</p:column>
+		<p:column headerText="Fax Number">
+			<p:outputLabel value="#{rowVar2.faxNumber}"></p:outputLabel>
+		</p:column>
+		<p:column width="90">
+			<p:commandButton process="@this" update="@form" icon="fa fa-database" action="#{trainingproviderUI.prepareUpdateFacilitatorAssessor}">
+				<f:setPropertyActionListener value="#{rowVar2}" target="#{trainingproviderUI.facilitatorAssessor}" />
+			</p:commandButton>
+			<p:spacer width="5"/>
+			<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update="@form" action="#{trainingproviderUI.removeFacilitatorAssessor}" process="@this">
+				<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+				<f:setPropertyActionListener value="#{rowVar2}" target="#{trainingproviderUI.facilitatorAssessor}" />
+			</p:commandButton>
+		</p:column>
+	</p:dataTable>
+	<br/>
+	<p:commandButton id="btnDoneSME" process="@this" value="#{lang['continue']}" rendered="#{!trainingproviderUI.doneSMEReg}"  update="@form" icon="ui-icon-fast-forward" action="#{trainingproviderUI.doneSMERegContinue}" iconPos="right" styleClass="flat" />
+				
+</ui:composition>

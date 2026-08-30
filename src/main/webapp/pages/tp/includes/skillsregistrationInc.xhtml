@@ -1,0 +1,334 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+	<p:fieldset legend="Skills Programme / Skills Set Application details" id="fsSkillsInfo">
+		<p:panelGrid columns="2" style="width:100%" id="skillsregistrationInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+			<h:panelGroup>
+				<div>
+					<p:outputLabel value="#{lang['skillsType']}" for="skillsType" styleClass="gray" />
+				</div>
+				<div>
+
+					<p:selectOneMenu id="skillsType" value="#{skillsregistrationUI.skillsregistration.skillsType}" style="width:100%" required="true" requiredMessage="#{lang['please.select.a.skills.identification']}" disabled="#{skillsregistrationUI.skillsregistration.approvalEnum ne null}">
+						<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+						<f:selectItems value="#{enumUI.skillsTypeEnumDD}" var="rv" itemLabel="#{rv.description}" />
+						<p:ajax update="@form fsSkillsInfo" listener="#{skillsregistrationUI.preparRegistrationData()}"/>
+					</p:selectOneMenu>
+				</div>
+			</h:panelGroup>
+
+			<h:panelGroup>
+				<div>
+					<p:outputLabel value="How did you identify the need for this skills programme?" for="proc" styleClass="gray" />
+				</div>
+				<div>
+
+					<p:selectOneMenu id="proc" value="#{skillsregistrationUI.skillsregistration.skillsIdentification}" style="width:100%" required="true" requiredMessage="#{lang['please.select.a.skills.identification']}" converter="SkillsIdentificationConvertor" disabled="#{sessionUI.task.processRole ne null}">
+						<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+						<f:selectItems value="#{selectItemsUI.skillsIdentification}" var="rv" itemLabel="#{rv.description}" />
+						<p:ajax ></p:ajax>
+					</p:selectOneMenu>
+				</div>
+			</h:panelGroup>
+
+			<h:panelGroup styleClass="md-inputfield" >
+				<p:inputText id="researchSummary" value="#{skillsregistrationUI.skillsregistration.researchSummary}" style="width:100%;  opacity: 1 !important" disabled="#{sessionUI.task.processRole ne null}"  required="true" requiredMessage="#{lang['researchSummary']}"/>
+				<p:outputLabel value="#{lang['researchSummary']}" for="researchSummary" styleClass="gray"/>
+			</h:panelGroup>
+
+			<h:panelGroup styleClass="md-inputfield">
+				<p:inputText id="fitCareer" value="#{skillsregistrationUI.skillsregistration.fitCareer}" style="width:100%;  opacity: 1 !important" disabled="#{sessionUI.task.processRole ne null}"  required="true" requiredMessage="#{lang['fitCareer']}"/>
+				<p:outputLabel value="#{lang['fitCareer']}" for="fitCareer" styleClass="gray"/>
+			</h:panelGroup>
+
+		</p:panelGrid>
+		
+
+		<p:panelGrid columns="2" style="width:100%" id="skillsregistrationInsGrid2" layout="grid" styleClass="ui-panelgrid-blank form-group">
+			<h:panelGroup styleClass="md-inputfield">
+				<p:inputText id="proposedTitle" value="#{skillsregistrationUI.skillsregistration.proposedTitle}" style="width:100%;  opacity: 1 !important" disabled="#{sessionUI.task.processRole ne null}" required="true" requiredMessage="#{lang['proposedTitle']}"/>
+				<p:outputLabel value="#{lang['proposedTitle']}" for="proposedTitle" styleClass="gray"/>
+			</h:panelGroup>
+
+			<h:panelGroup styleClass="md-inputfield">
+				<p:inputText id="howWillAssist" value="#{skillsregistrationUI.skillsregistration.howWillAssist}" style="width:100%;  opacity: 1 !important" disabled="#{sessionUI.task.processRole ne null}" required="true" requiredMessage="#{lang['howWillAssist']}"/>
+				<p:outputLabel value="#{lang['howWillAssist']}" for="howWillAssist" styleClass="gray"/>
+			</h:panelGroup>
+			
+			<h:panelGroup styleClass="md-inputfield">
+				<p:autoComplete id="ofoCode" value="#{skillsregistrationUI.skillsregistration.ofoCodes}" completeMethod="#{autoCompleteUI.completeOfoCodes}" 
+								var="rv" itemLabel="#{rv.ofoDescription}" itemValue="#{rv}" forceSelection="true" converter="OfoCodesConvertor" dropdown="true" 
+								minQueryLength="3" maxResults="10" inputStyle="width: 100%" style="width: 100%" required="true"
+								requiredMessage="#{lang['select.ofo.code']}" disabled="#{sessionUI.task.processRole ne null}">
+					<p:column headerText="OfoCodes" style="white-space: nowrap">#{rv.ofoCodeParent}</p:column>
+					<p:column headerText="Description" style="white-space: nowrap">#{rv.description}</p:column>
+					<p:ajax event="itemSelect" />
+				</p:autoComplete>
+				<p:outputLabel value="#{lang['ofo.code']}" for="ofoCode" styleClass="gray"/>
+			</h:panelGroup>								
+		</p:panelGrid>
+	
+		<br />
+		<p:panelGrid columns="2" style="width:100%" id="skillsregistrationInsGrid4" layout="grid"  styleClass="ui-panelgrid-blank form-group"  rendered="#{sessionUI.task.processRole eq null}">
+		
+			<h:panelGroup styleClass="md-inputfield" rendered="#{skillsregistrationUI.skillsregistration.skillsType == SkillsTypeEnum.SkillsSet}">
+				<p:autoComplete rendered="true"  id="qualification" value="#{skillsregistrationUI.qualification}" inputStyle="width:100%" style="width:100%" 
+					completeMethod="#{autoCompleteUI.completeMersetaQualificationBeforeLastEnrolmentDate}" var="rv" itemLabel="#{rv.code} #{rv.description}" itemValue="#{rv}" 
+					forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="1" maxResults="10"
+					disabled="#{sessionUI.task.processRole ne null}">
+					<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+					<p:column headerText="#{lang['description']}" style="white-space: nowrap">#{rv.description}</p:column>
+					<p:column headerText="#{lang['nqf.level']}" style="white-space: nowrap">#{rv.nqflevel.description}</p:column>
+					<p:ajax event="itemSelect" listener="#{skillsregistrationUI.prepareUnitStandards}" update="skillsregistrationInsForm:skillsregistrationInsGrid3 skillsregistrationInsForm:usManyMenu qualInfoPg1" ></p:ajax>
+				</p:autoComplete>
+				<p:outputLabel value="#{lang['qualification']}" for="qualification" styleClass="gray"/>
+			</h:panelGroup>	
+			
+			<p:panelGrid columns="3" style="width:100%" id="qualInfoPg1" layout="grid"  styleClass="ui-panelgrid-blank form-group"  rendered="#{sessionUI.task.processRole eq null and skillsregistrationUI.skillsregistration.skillsType == SkillsTypeEnum.SkillsSet}">							
+				<h:panelGroup styleClass="md-inputfield" rendered="#{skillsregistrationUI.qualification.lastDateForEnrolment ne null}">
+					<p:inputText disabled="true" id="lstDateOfenrolment1" value="#{skillsregistrationUI.qualification.lastDateForEnrolment}" style="width:100%;  opacity: 1 !important; color:black !important">
+						<f:convertDateTime pattern="MM/dd/yyyy" type="date" />
+					</p:inputText>
+					<p:outputLabel value="#{lang['last.date.of.enrolment']}" for="lstDateOfenrolment1" styleClass="gray"/>
+				</h:panelGroup>	
+				
+				<h:panelGroup styleClass="md-inputfield" rendered="#{skillsregistrationUI.qualification.lastDateForEnrolment ne null}">
+					<p:inputText disabled="true" id="qualStartDate1" value="#{skillsregistrationUI.qualification.qualregistrationstartDate}" style="width:100%;  opacity: 1 !important; color:black !important">
+						<f:convertDateTime pattern="MM/dd/yyyy" type="date" />
+					</p:inputText>
+					<p:outputLabel value="Qualification Registration Start Date" for="qualStartDate1" styleClass="gray"/>
+				</h:panelGroup>	
+				
+				<h:panelGroup styleClass="md-inputfield" rendered="#{skillsregistrationUI.qualification.lastDateForEnrolment ne null}">
+					<p:inputText disabled="true" id="qualEndDate1" value="#{skillsregistrationUI.qualification.qualregistrationendDate}" style="width:100%;  opacity: 1 !important; color:black !important">
+						<f:convertDateTime pattern="MM/dd/yyyy" type="date" />
+					</p:inputText>
+					<p:outputLabel value="Qualification Registration End Date" for="qualEndDate1" styleClass="gray"/>
+				</h:panelGroup>									
+				
+			</p:panelGrid>	
+			
+			
+			<h:panelGroup styleClass="md-inputfield" rendered="#{skillsregistrationUI.skillsregistration.skillsType == SkillsTypeEnum.SkillsProgram}">
+				<p:autoComplete rendered="true"  id="qualification1" value="#{skillsregistrationUI.skillsregistration.qualification}" inputStyle="width:100%" 
+					style="width:90%" completeMethod="#{autoCompleteUI.completeMersetaQualificationBeforeLastEnrolmentDate}" var="rv" itemLabel="#{rv.code} #{rv.description}" 
+					itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="1" maxResults="10"
+					disabled="#{sessionUI.task.processRole ne null or skillsregistrationUI.disableQualification}">
+					<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+					<p:column headerText="#{lang['description']}" style="white-space: nowrap">#{rv.description}</p:column>
+					<p:column headerText="#{lang['nqf.level']}" style="white-space: nowrap">#{rv.nqflevel.description}</p:column>
+					<p:ajax event="itemSelect" listener="#{skillsregistrationUI.prepareUnitStandards}" update="skillsregistrationInsForm:skillsregistrationInsGrid3 skillsregistrationInsForm:usManyMenu qualInfoPg" ></p:ajax>
+				</p:autoComplete>
+				<p:outputLabel value="#{lang['qualification']}" for="qualification" styleClass="gray"/>
+				<p:spacer width="10"></p:spacer>
+			     <p:commandButton rendered="#{skillsregistrationUI.disableQualification}"  title="#{lang['refresh']}" value="Clear" iconPos="left" process="@this" update="unitList qualification usList @form" icon="fa fa-refresh" styleClass="flat" action="#{skillsregistrationUI.clearQualificationInfo}"/>
+				
+			</h:panelGroup>	
+			
+			<p:panelGrid columns="3" style="width:100%" id="qualInfoPg" layout="grid"  styleClass="ui-panelgrid-blank form-group"  rendered="#{sessionUI.task.processRole eq null and skillsregistrationUI.skillsregistration.skillsType == SkillsTypeEnum.SkillsProgram}">							
+				<h:panelGroup styleClass="md-inputfield" rendered="#{skillsregistrationUI.skillsregistration.qualification.lastDateForEnrolment ne null}">
+					<p:inputText disabled="true" id="lstDateOfenrolment" value="#{skillsregistrationUI.skillsregistration.qualification.lastDateForEnrolment}" style="width:100%;  opacity: 1 !important; color:black !important">
+						<f:convertDateTime pattern="MM/dd/yyyy" type="date" />
+					</p:inputText>
+					<p:outputLabel value="#{lang['last.date.of.enrolment']}" for="lstDateOfenrolment" styleClass="gray"/>
+				</h:panelGroup>	
+				
+				<h:panelGroup styleClass="md-inputfield" rendered="#{skillsregistrationUI.skillsregistration.qualification.lastDateForEnrolment ne null}">
+					<p:inputText disabled="true" id="qualStartDate" value="#{skillsregistrationUI.skillsregistration.qualification.qualregistrationstartDate}" style="width:100%;  opacity: 1 !important; color:black !important">
+						<f:convertDateTime pattern="MM/dd/yyyy" type="date" />
+					</p:inputText>
+					<p:outputLabel value="Qualification Registration Start Date" for="qualStartDate" styleClass="gray"/>
+				</h:panelGroup>	
+				
+				<h:panelGroup styleClass="md-inputfield" rendered="#{skillsregistrationUI.skillsregistration.qualification.lastDateForEnrolment ne null}">
+					<p:inputText disabled="true" id="qualEndDate" value="#{skillsregistrationUI.skillsregistration.qualification.qualregistrationendDate}" style="width:100%;  opacity: 1 !important; color:black !important">
+						<f:convertDateTime pattern="MM/dd/yyyy" type="date" />
+					</p:inputText>
+					<p:outputLabel value="Qualification Registration End Date" for="qualEndDate" styleClass="gray"/>
+				</h:panelGroup>									
+				
+			</p:panelGrid>						
+		</p:panelGrid>
+		<p:panelGrid columns="1" style="width:100%" id="skillsregistrationInsGrid3" layout="grid"  styleClass="ui-panelgrid-blank form-group" >
+			<h:panelGroup  id="pgSkillsSet" rendered="#{skillsregistrationUI.skillsregistration.skillsType == SkillsTypeEnum.SkillsSet and sessionUI.task.processRole eq null}">
+					<p:panelGrid columns="2" style="width:100%" layout="grid"  styleClass="ui-panelgrid-blank form-group" >
+					    <h:panelGroup styleClass="md-inputfield">										    	
+					    	<p:autoComplete rendered="true"  id="unitStandardAuto" value="#{skillsregistrationUI.unitStandard}" inputStyle="width:100%" 
+					    		style="width:100%" completeMethod="#{skillsregistrationUI.completeUnitStandards}" var="rv" itemLabel="#{rv.title}" 
+					    		itemValue="#{rv}" forceSelection="true" converter="UnitStandardsConvertor" dropdown="true" minQueryLength="1" maxResults="10"
+					    		disabled="#{sessionUI.task.processRole ne null}">
+					    		<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+								<p:column headerText="#{lang['description']}" style="white-space: nowrap">#{rv.title}</p:column>
+								<p:column headerText="#{lang['credits']}" style="white-space: nowrap">#{rv.unitstdnumberofcredits}</p:column>
+								<p:column headerText="#{lang['nqf.level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+								<p:ajax />
+					    	</p:autoComplete>
+					    	<p:outputLabel value="#{lang['select.unit.standards']}" for="unitStandardAuto" styleClass="gray"/>
+					    </h:panelGroup>										
+						<h:panelGroup>
+						  	 <p:commandButton value="Add" title="#{lang['add.unit.standard']}" update="skillsregistrationInsForm:unitList pgSkillsSet" icon="ui-icon-plus" iconPos="left" styleClass="flat" action="#{skillsregistrationUI.addSkillsRegistrationQualificationUnitStandardsToList}" /> 
+						</h:panelGroup>
+					</p:panelGrid>										
+			</h:panelGroup>
+			
+			<h:panelGroup id="pgSkillsProgram1" rendered="#{skillsregistrationUI.skillsregistration.skillsType == SkillsTypeEnum.SkillsProgram and sessionUI.task.processRole eq null}">
+				<p:panelGrid columns="2" style="width:100%" layout="grid"  styleClass="ui-panelgrid-blank form-group" >
+				    <h:panelGroup styleClass="md-inputfield">										    	
+				    	<p:autoComplete rendered="true"  id="unitStandardAuto1" value="#{skillsregistrationUI.unitStandard}" inputStyle="width:100%" 
+				    		style="width:100%" completeMethod="#{skillsregistrationUI.completeUnitStandards}" var="rv" itemLabel="#{rv.title}" 
+				    		itemValue="#{rv}" forceSelection="true" converter="UnitStandardsConvertor" dropdown="true" minQueryLength="1" maxResults="10"
+				    		disabled="#{sessionUI.task.processRole ne null}">
+				    		<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+							<p:column headerText="#{lang['description']}" style="white-space: nowrap">#{rv.title}</p:column>
+							<p:column headerText="#{lang['credits']}" style="white-space: nowrap">#{rv.unitstdnumberofcredits}</p:column>
+							<p:column headerText="#{lang['nqf.level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+							<p:ajax listener="#{skillsregistrationUI.clearQualificationInfo}"/>
+				    	</p:autoComplete>
+				    	<p:outputLabel value="#{lang['select.unit.standards']}" for="unitStandardAuto1" styleClass="gray"/>
+				    </h:panelGroup>										
+					<h:panelGroup>
+					  	 <p:commandButton title="#{lang['add.unit.standard']}"   value="Add" update="skillsregistrationInsForm:unitList skillsregistrationInsGrid4" icon="ui-icon-plus" iconPos="left" styleClass="flat" action="#{skillsregistrationUI.addSkillsProgrameUnitStandardToList}" /> 
+					</h:panelGroup>
+				</p:panelGrid>	
+			</h:panelGroup>
+		
+			<h:panelGroup id="pgSkillsProgram" rendered="false">
+				<!-- 
+				NOT IN USE
+				rendered="#{skillsregistrationUI.skillsregistration.skillsType == SkillsTypeEnum.SkillsProgram and sessionUI.task.processRole eq null }" -->
+				 <h:panelGroup rendered="#{skillsregistrationUI.skillsregistration.qualification ne null and skillsregistrationUI.unitstandardList.size() gt 0}">
+					 <p:outputLabel value="#{lang['select.unit.standards']}" for="usManyMenu" styleClass="gray"></p:outputLabel>
+			         <p:selectManyMenu  style="width:100%" id="usManyMenu" value="#{skillsregistrationUI.selectUnitstandardList}" converter="UnitStandardsConvertor"
+					                          var="t" filter="true" filterMatchMode="contains" showCheckbox="true">
+					     <f:selectItems value="#{skillsregistrationUI.unitstandardList}" var="rv" itemLabel="#{rv.title}" itemValue="#{rv}" />
+					 
+					     <p:column>
+					        <h:outputText value="#{t.title}" />
+					     </p:column>
+					 </p:selectManyMenu>
+				  </h:panelGroup>
+				  
+				   <h:panelGroup rendered="#{skillsregistrationUI.skillsregistration.qualification ne null and skillsregistrationUI.unitstandardList.size() eq 0}">
+					   	<p:fieldset>
+					   		<p:outputLabel value="#{lang['no.unit.standards.available.for.the.qualification']}" styleClass="gray"></p:outputLabel>
+					   	</p:fieldset>
+				   </h:panelGroup>
+				  <br/>
+				  <p:commandButton id="btnAdd" rendered="#{skillsregistrationUI.unitstandardList.size() gt 0}" title="#{lang['add.unit.standard']}" value="#{lang['add.unit.standard']}" update="skillsregistrationInsForm:unitList qualification @form" icon="ui-icon-plus" iconPos="right" styleClass="flat" action="#{skillsregistrationUI.addUnitStandardToList}" />
+
+			</h:panelGroup>
+			
+			<p:fieldset legend="Amend Title" rendered="#{sessionUI.task.processRole ne null and sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalView}" style=" font-size: 12px;border:2px solid black; font-weight:bold; width:98%">
+				<br/>
+				<h:panelGroup styleClass="md-inputfield" >
+					<p:inputText id="amTitle" value="#{skillsregistrationUI.skillsregistration.amendedTitle}" style="width:100%;  opacity: 1 !important"  required="false">
+						<p:ajax></p:ajax>
+					</p:inputText>
+					<p:outputLabel value="Title" for="amTitle" styleClass="gray"/>
+				</h:panelGroup>
+			</p:fieldset>
+			
+				<p:fieldset legend="Document(s)" rendered="#{skillsregistrationUI.registrationDocs.size()>0}">
+	    			<ui:include src="/pages/includes/documents_info_display.xhtml">
+						<ui:param name="docs" value="#{skillsregistrationUI.registrationDocs}" />
+				    </ui:include>
+	    		</p:fieldset>
+			
+			<h:panelGroup id="unitList">
+					<div><br />
+						<p:dataTable rendered="#{skillsregistrationUI.unitStandards.size() gt 0}" var="t" value="#{skillsregistrationUI.unitStandards}" id="usList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+							<p:column headerText="Qualification Code">
+								<h:outputText value="#{skillsregistrationUI.skillsregistration.qualification.code}" />
+							</p:column>												
+							<p:column headerText="Qualification Title">
+								<h:outputText value="#{skillsregistrationUI.skillsregistration.qualification.description}" />
+							</p:column>
+							
+							<p:column headerText="Unit Standard Code">
+								<h:outputText value="#{t.code}" />
+							</p:column>
+							
+							<p:column headerText="Unit Standard Title">
+								<h:outputText value="#{t.title}" />
+							</p:column>
+							
+							<p:column headerText="NQF Level">
+								<h:outputText value="#{t.nqflevelg2description}" />
+							</p:column>
+							<p:column headerText="Credits">
+								<h:outputText value="#{t.unitstdnumberofcredits}" />
+							</p:column>
+							<p:column width="40">
+								<p:commandButton title="Delete" update="skillsregistrationInsForm:unitList" icon="fa fa-trash" iconPos="right" styleClass="flat" action="#{skillsregistrationUI.removeUnitStandardFromList}" process="@this" rendered="#{skillsregistrationUI.skillsregistration.approvalEnum eq null or sessionUI.task.processRole eq null}">
+									<f:setPropertyActionListener value="#{t}" target="#{skillsregistrationUI.unitStandard}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+						
+						<p:dataTable rendered="#{skillsregistrationUI.skillsRegistrationQualificationUnitStandardsList.size() gt 0}" var="t" value="#{skillsregistrationUI.skillsRegistrationQualificationUnitStandardsList}" id="usList1" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+							<p:column headerText="Qualification Code">
+								<h:outputText value="#{t.qualification.code}" />
+							</p:column>												
+							<p:column headerText="Qualification Title">
+								<h:outputText value="#{t.qualification.description}" />
+							</p:column>
+							
+							<p:column headerText="Unit Standard Code">
+								<h:outputText value="#{t.unitStandards.code}" />
+							</p:column>
+							
+							<p:column headerText="Unit Standard Title">
+								<h:outputText value="#{t.unitStandards.title}" />
+							</p:column>
+							
+							<p:column headerText="NQF Level">
+								<h:outputText value="#{t.unitStandards.nqflevelg2description}" />
+							</p:column>
+							<p:column headerText="Credits">
+								<h:outputText value="#{t.unitStandards.unitstdnumberofcredits}" />
+							</p:column>
+							<p:column width="40">
+								<p:commandButton title="Delete" update="skillsregistrationInsForm:unitList" icon="fa fa-trash" iconPos="right" styleClass="flat" action="#{skillsregistrationUI.removeSkillsRegistrationQualificationUnitStandardsFromList}" process="@this" rendered="#{skillsregistrationUI.skillsregistration.approvalEnum eq null or sessionUI.task.processRole eq null}">
+									<f:setPropertyActionListener value="#{t}" target="#{skillsregistrationUI.skillsRegistrationQualificationUnitStandard}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+					</div>
+			</h:panelGroup>
+		</p:panelGrid>
+	</p:fieldset>
+			
+	<h:panelGroup id="skillsDocList" rendered="#{skillsregistrationUI.skillsregistration.docs.size() gt 0}">
+		<br />
+		<span class="FontBold">
+			<i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+			#{lang['please.upload.the.following.compulsory.documents']}
+		</span>
+		<br />
+		<div class="ui-g dashboard">
+			<div class="ui-g-12">
+				<p:repeat var="rc" value="#{skillsregistrationUI.skillsregistration.docs}" varStatus="x">
+					<div class="ui-g-12 ui-md-6 ui-lg-3">
+						<div class="ui-g card colorbox #{rc.originalFname eq null ? 'colorbox-5' : 'colorbox-1'}">
+							<div class="ui-g-4">
+								<i class="material-icons">#{rc.originalFname eq null ? 'cloud_upload' : 'check_circle'}</i>
+							</div>
+							<div class="ui-g-8">
+								<span class="colorbox-name">#{rc.configDoc.name}</span>
+								<span class="colorbox-count">
+
+									<p:commandButton icon="fa fa-download" id="cbDownload1" rendered="#{rc.originalFname ne null}" action="#{assesorModiratorUI.download(rc)}" ajax="false" value="#{lang['download']}" immediate="true" process="@parent">
+										<p:ajax onevent="oneventFunction" />
+									</p:commandButton>
+
+									<p:commandButton value="#{rc.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" styleClass="#{rc.originalFname eq null ? 'red-btn' : 'green-btn'} flat" process="@this" oncomplete="PF('skillsUpload').show()" update="skillsregistrationInsForm">
+										<f:setPropertyActionListener value="#{rc}" target="#{skillsregistrationUI.doc}" />
+									</p:commandButton>
+								</span>
+							</div>
+						</div>
+					</div>
+				</p:repeat>
+			</div>
+		</div>
+	</h:panelGroup>	
+</ui:composition>

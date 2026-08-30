@@ -1,0 +1,166 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:pt="http://xmlns.jcp.org/jsf/passthrough" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<style>
+.hiddenHeader thead th {
+	border: none !important;
+	background: none !important;
+}
+</style>
+	<h:panelGroup id="signoffGroup">
+		<h:form id="submitForm">
+			<p:panelGrid columns="1" style="width:100%" rendered="#{initiatewspdgUI.wsp.dgYear.finYear eq 2023}">
+				<h2>#{lang['declerations']}</h2>
+				<h3>#{lang['by.checking.below']}</h3>
+				<p>We, the undersigned, submit this information in fulfilment of this entity’s legal obligation in terms of the skills development legislation and requirements.</p>
+				<p>We declare that, to the best of our knowledge, the information contained in this Discretionary Grant Application Form is accurate and up to date.</p>
+				<p>We recognise that any inaccurate statement in this document may constitute fraud and be subject to the full penalty of the law.</p>
+				<p>
+					<a target="_blank" href="#{initiatewspdgUI.termsAndConditionsLink}" style="font-weight: bold;">MerSETA Grant Policy</a>
+				</p>
+				<p>
+					<a target="_blank" href="#{initiatewspdgUI.grantsCriteriaAndGuidelines}" style="font-weight: bold;">Grants Criteria and Guidelines</a>
+				</p>
+			</p:panelGrid>
+			<div class="EmptyBox10" />
+
+			<p:fieldset id="questionFormWspDisplay" legend="#{lang['wsp.questions']}" collapsed="false">
+				<p:panelGrid columns="1" style="width:100%" id="wspQuestionsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<h:panelGroup style="width:100%">
+						<p:outputLabel value="#{lang['indicate.planned.training.inline.employment.equity.plan.question.form']}" for="plannedTrainingInlineEEPPivitolPlan" />
+						<div class="EmptyBox10" />
+						<p:selectOneRadio  disabled="#{initiatewspUI.wsp.employmentEquityPlanInline ne null}" value="#{initiatewspUI.wsp.employmentEquityPlanInline}" required="true" id="plannedTrainingInlineEEPPivitolPlan" converter="YesNoLookupConvertor" columns="2" layout="grid">
+							<p:ajax listener="#{initiatewspUI.updateWsp}" />
+							<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+						</p:selectOneRadio>
+					</h:panelGroup>
+				</p:panelGrid>
+				<br />
+			</p:fieldset>
+
+			<div class="EmptyBox20" />
+			<p:panelGrid columns="1" style="width:100%" rendered="#{initiatewspdgUI.wsp.dgYear.finYear ne 2023}">
+				<h2>#{lang['declerations']}</h2>
+				<h3>#{lang['by.checking.below']}</h3>
+				<p>We, the undersigned, submit this information in fulfilment of this entity’s legal obligation in terms of the skills development legislation and requirements.</p>
+				<p>We declare that, to the best of our knowledge, the information contained in this Discretionary Grant Application Form is accurate and up to date.</p>
+				<p>We recognise that any inaccurate statement in this document may constitute fraud and be subject to the full penalty of the law.</p>
+				<p>
+					<a target="_blank" href="#{initiatewspdgUI.termsAndConditionsLink}" style="font-weight: bold;">MerSETA Grant Policy</a>
+				</p>
+				<p>
+					<a target="_blank" href="#{initiatewspdgUI.grantsCriteriaAndGuidelines}" style="font-weight: bold;">Grants Criteria and Guidelines</a>
+				</p>
+			</p:panelGrid>
+			<div class="EmptyBox10"></div>
+			<p:dataTable var="rv" value="#{initiatewspdgUI.wsp.wspSignoffs}" id="employeesimportList" rowKey="#{rowVar.id}" reflow="true">
+				<p:column headerText="#{lang['signed.off.by']}">
+					<p:outputLabel value="#{rv.user.firstName} #{rv.user.lastName}" />
+				</p:column>
+				<p:column headerText="#{lang['date']}">
+					<p:outputLabel value="Pending Sign Off" rendered="#{rv.signOffDate eq null}" />
+					<p:outputLabel value="#{rv.signOffDate}" rendered="#{rv.signOffDate ne null}">
+						<f:convertDateTime pattern="dd/MM/yyyy HH:MM" />
+					</p:outputLabel>
+					<c:if test="false">
+						<p:outputLabel value="#{sessionUI.now}">
+							<f:convertDateTime pattern="dd/MM/yyyy" />
+						</p:outputLabel>
+					</c:if>
+				</p:column>
+				<p:column headerText="#{lang['acknowledge']}" rendered="#{initiatewspdgUI.wsp.wspStatusEnum ne WspStatusEnum.Draft}">
+					<div>
+						<p:selectBooleanCheckbox style="width:100%" value="#{rv.accept}" disabled="#{rv.user ne sessionUI.activeUser}" rendered="#{initiatewspdgUI.wsp.wspStatusEnum eq WspStatusEnum.PendingSignOff and not rv.accept and not rv.dispute}">
+						</p:selectBooleanCheckbox>
+						<p:selectBooleanCheckbox style="width:100%" value="#{rv.accept}" disabled="true" rendered="#{initiatewspdgUI.wsp.wspStatusEnum ne WspStatusEnum.PendingSignOff or rv.accept or rv.dispute}">
+						</p:selectBooleanCheckbox>
+					</div>
+					<div>
+						<p:outputLabel value="#{lang['i.acknowledge.read.understand.terms.and.conditions']}"></p:outputLabel>
+					</div>
+				</p:column>
+				<p:column headerText="#{lang['acknowledge']}" rendered="#{initiatewspdgUI.wsp.wspStatusEnum eq WspStatusEnum.Draft}">
+					<div>
+						<p:selectBooleanCheckbox style="width:100%" value="#{rv.accept}" disabled="#{rv.user ne sessionUI.activeUser}">
+						</p:selectBooleanCheckbox>
+					</div>
+					<div>
+						<p:outputLabel value="#{lang['i.acknowledge.read.understand.terms.and.conditions']}"></p:outputLabel>
+					</div>
+				</p:column>
+			</p:dataTable>
+			<c:if test="#{initiatewspdgUI.wsp.wspStatusEnum eq WspStatusEnum.Approved and sessionUI.employee}">
+				<div class="EmptyBox20"></div>
+				<p:panelGrid columns="2" style="width:100%" id="activecontractsInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+					<h:panelGroup styleClass="md-inputfield">
+						<p:calendar id="startdate" value="#{initiatewspdgUI.activeContracts.startdate}" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" inputStyle="width:95%" />
+						<p:outputLabel value="merSETA Sign Date" for="startdate" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:calendar id="signdate" value="#{initiatewspdgUI.activeContracts.signdate}" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" inputStyle="width:95%" />
+						<p:outputLabel value="Organisation Sign Date" for="signdate" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:calendar id="endDAte" value="#{initiatewspdgUI.activeContracts.originalenddate}" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" inputStyle="width:95%" />
+						<p:outputLabel value="End Date" for="endDAte" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:calendar id="reviseddate" value="#{initiatewspdgUI.activeContracts.reviseddate}" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" inputStyle="width:95%" />
+						<p:outputLabel value="Revised End Date" for="reviseddate" />
+					</h:panelGroup>
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="Contract Status" for="contractStatus" />
+						</div>
+						<div>
+							<p:selectOneMenu id="contractStatus" value="#{initiatewspdgUI.activeContracts.contractStatusEnum}" style="width:95%" required="true">
+								<p:ajax />
+								<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+								<f:selectItems value="#{enumUI.contractStatusEnumDD}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText id="refno" value="#{initiatewspdgUI.activeContracts.refno}" style="width:95%" />
+						<p:outputLabel value="Project Reference Note" for="refno" />
+					</h:panelGroup>
+				</p:panelGrid>
+			</c:if>
+			<div class="EmptyBox20"></div>
+			<p:panelGrid columns="2" style="width:100%; text-align: center" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{initiatewspdgUI.wsp.wspStatusEnum eq WspStatusEnum.Draft and initiatewspdgUI.showSubmitButton}">
+				<p:commandButton value="Submit Discretionary Grant" icon="ui-icon-check" styleClass="green-btn max-btn" process="submitForm" action="#{initiatewspdgUI.saveWSPSignoff}" update="tabView errorsForm" ajax="false" />
+			</p:panelGrid>
+			<p:panelGrid columns="2" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{initiatewspdgUI.wsp.projectOwner ne null and (initiatewspdgUI.wsp.wspStatusEnum eq WspStatusEnum.ProjectReview and sessionUI.employee)}">
+				<h:panelGroup>
+					<div>
+						<p:outputLabel value="Recommendation" for="HoldingRoomStatusEnum" />
+					</div>
+					<div>
+						<p:selectOneMenu id="HoldingRoomStatusEnum" value="#{initiatewspdgUI.wsp.holdingRoomStatusEnum}" style="width:75%" required="true">
+							<p:ajax />
+							<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+							<f:selectItems value="#{enumUI.holdingRoomStatusEnumDD}" />
+						</p:selectOneMenu>
+					</div>
+				</h:panelGroup>
+				<p:commandButton value="Submit Recommendation" icon="ui-icon-check" styleClass="green-btn max-btn" process="submitForm" action="#{initiatewspdgUI.wspInsert}" update="tabView errorsForm" ajax="false" />
+			</p:panelGrid>
+			<p:panelGrid columns="2" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{initiatewspdgUI.wsp.wspStatusEnum eq WspStatusEnum.AwaitingContract and sessionUI.employee}">
+				<p:commandButton value="Submit" icon="ui-icon-check" styleClass="green-btn max-btn" process="submitForm" action="#{initiatewspdgUI.sendToManager}" update="tabView errorsForm" ajax="false" />
+			</p:panelGrid>
+			<p:panelGrid columns="2" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{initiatewspdgUI.wsp.wspStatusEnum eq WspStatusEnum.PendingManagerReview and sessionUI.employee}">
+				<p:commandButton value="Reject" icon="ui-icon-close" styleClass="red-btn max-btn" process="submitForm" oncomplete="PF('rejectReason').show()" update="tabView errorsForm" />
+				<p:commandButton value="Submit" icon="ui-icon-check" styleClass="green-btn max-btn" process="submitForm" action="#{initiatewspdgUI.sendToSeniorManager}" update="tabView errorsForm" ajax="false" />
+			</p:panelGrid>
+			<p:panelGrid columns="2" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{initiatewspdgUI.wsp.wspStatusEnum eq WspStatusEnum.ManagerApproved and sessionUI.employee}">
+				<p:commandButton value="Reject" icon="ui-icon-close" styleClass="red-btn max-btn" process="submitForm" oncomplete="PF('rejectReason').show()" update="tabView errorsForm" />
+				<p:commandButton value="Approve" icon="ui-icon-check" styleClass="green-btn max-btn" process="submitForm" action="#{initiatewspdgUI.sendToCEO}" update="tabView errorsForm" ajax="false" />
+			</p:panelGrid>
+			<p:panelGrid columns="2" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{initiatewspdgUI.wsp.wspStatusEnum eq WspStatusEnum.PendingCEOApproval and sessionUI.employee}">
+				<p:commandButton value="Reject" icon="ui-icon-close" styleClass="red-btn max-btn" process="submitForm" oncomplete="PF('rejectReason').show()" update="tabView errorsForm" />
+				<p:commandButton value="Final Approve" icon="ui-icon-check" styleClass="green-btn max-btn" process="submitForm" action="#{initiatewspdgUI.completeApplication}" update="tabView errorsForm" ajax="false" />
+			</p:panelGrid>
+			<p:panelGrid columns="2" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{initiatewspdgUI.wsp.wspStatusEnum eq WspStatusEnum.Approved and sessionUI.employee}">
+				<p:commandButton value="Complete Application" icon="ui-icon-check" styleClass="green-btn max-btn" process="submitForm" action="#{initiatewspdgUI.completeWorkflow}" update="tabView errorsForm" ajax="false" />
+			</p:panelGrid>
+		</h:form>
+	</h:panelGroup>
+</ui:composition>

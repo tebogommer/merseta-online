@@ -1,0 +1,177 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:pt="http://xmlns.jcp.org/jsf/passthrough">
+	<h:form id="skillsRequirementForm">
+
+		<p:fieldset id="vacanciesDetailsPastFieldSet" legend="#{lang['vacancies.details']}" rendered="#{initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.Draft and not wspSkillsRequirementsUI.disableForm}" toggleable="true" collapsed="false">
+			<p:panelGrid columns="1" style="width:100%" id="additionalInfoPast" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup style="width:100%">
+					<span class="Fs13 gray"> <i class="fa fa-info-circle" aria-hidden="true"></i> #{lang['hard.to.fill.vancany.definition']}
+					</span>
+				</h:panelGroup>
+			</p:panelGrid>
+			<p:panelGrid columns="2" style="width:100%" id="vacanciesDetailsPastGrid" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.Draft}">
+
+				<h:panelGroup style="width:100%">
+					<p:outputLabel value="Did you have any hard to fill vacancies in the past year?" for="fillVacanciesPast" />
+					<div class="EmptyBox10" />
+					<p:selectOneRadio requiredMessage="#{lang['required.message.fill.vacancies.past.year']}" disabled="#{initiatewspUI.wsp.wspStatusEnum ne WspStatusEnum.Draft or wspSkillsRequirementsUI.disableYesNo}" value="#{wspSkillsRequirementsUI.wspSkillsRequirements.yesNo}" required="true"
+						id="fillVacanciesPast" converter="YesNoLookupConvertor" columns="2" layout="grid">
+						<p:ajax update="skillsRequirementForm:vacanciesDetailsPastFieldSet" />
+						<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+					</p:selectOneRadio>
+				</h:panelGroup>
+
+				<h:panelGroup style="width:100%" rendered="#{wspSkillsRequirementsUI.wspSkillsRequirements.yesNo.yesNoName.toLowerCase() eq 'no'}">
+					<div>
+						<p:outputLabel value="#{lang['reason.no.selected.fill.vacancies']}" for="reasonFillVacanciesPast" />
+						<div class="EmptyBox10" />
+					</div>
+					<div>
+						<p:selectOneMenu requiredMessage="#{lang['required.message.reason.no.selected.fill.vacancies.past.year']}" value="#{wspSkillsRequirementsUI.wspSkillsRequirements.noHardToFillVacancies}" disabled="#{initiatewspUI.wsp.wspStatusEnum ne WspStatusEnum.Draft}" style="width:100%"
+							converter="NoHardToFillVacanciesConvertor" id="reasonFillVacanciesPast" required="true">
+							<f:selectItem itemLabel="---#{lang['select.one']}---" />
+							<f:selectItems value="#{selectItemsUI.noHardToFillVacancies}" var="selectedNoHardToFillVacancies" itemLabel="#{selectedNoHardToFillVacancies.description}" itemValue="#{selectedNoHardToFillVacancies}" />
+						</p:selectOneMenu>
+					</div>
+				</h:panelGroup>
+				<h:panelGroup style="width:100%" styleClass="md-inputfield" rendered="#{wspSkillsRequirementsUI.wspSkillsRequirements.yesNo.yesNoName.toLowerCase() eq 'yes'}">
+					<p:autoComplete requiredMessage="#{lang['required.message.ofo.code.selection']}" disabled="#{initiatewspUI.wsp.wspStatusEnum ne WspStatusEnum.Draft}" id="ofoSR" value="#{wspSkillsRequirementsUI.wspSkillsRequirements.ofoCodes}" completeMethod="#{initiatewspUI.completeOfoCodesWspByDescAndYear}" var="rv"
+						itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="OfoCodesConvertor" dropdown="true" minQueryLength="3" maxResults="10" required="true" style="width: 95%">
+						<p:ajax update="occpationCategory" event="itemSelect"></p:ajax>
+							<p:column headerText="OfoCodes" style="white-space: nowrap">#{rv.ofoCodeParent}</p:column>
+							<p:column headerText="Description" style="white-space: nowrap">#{rv.description}</p:column>
+					</p:autoComplete>
+					<p:outputLabel value="#{lang['ofo.code']}" for="ofoSR" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield" style="width:100%" rendered="#{wspSkillsRequirementsUI.wspSkillsRequirements.yesNo.yesNoName.toLowerCase() eq 'yes'} and false">
+					<p:inputText requiredMessage="Provide: Job Title" required="true" disabled="#{initiatewspUI.wsp.wspStatusEnum ne WspStatusEnum.Draft}" value="#{wspSkillsRequirementsUI.wspSkillsRequirements.jobTitle}" id="jobTitle" style="width:95%" />
+					<p:outputLabel value="OFO Job Title" for="jobTitle" />
+				</h:panelGroup>
+				<p:outputPanel id="occpationCategory">
+					<h:panelGroup styleClass="md-inputfield" style="width:100%" rendered="#{wspSkillsRequirementsUI.wspSkillsRequirements.yesNo.yesNoName.toLowerCase() eq 'yes'}">
+						<p:autoComplete rendered="#{wspSkillsRequirementsUI.wspSkillsRequirements.ofoCodes eq null or wspSkillsRequirementsUI.wspSkillsRequirements.ofoCodes.occupationCategory ne null}" requiredMessage="#{lang['required.message.ofo.occupation.category']}" id="occupationCategorySR" value="#{wspSkillsRequirementsUI.wspSkillsRequirements.ofoCodes.occupationCategory}" completeMethod="#{autoCompleteUI.completeOccupationCategory}" var="rv"
+							itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="OccupationCategoryConvertor" dropdown="true" minQueryLength="3" maxResults="10" required="true" style="width: 95%; opacity: 1 !important;" disabled="true">
+							<p:column headerText="#{lang['occupation.category']}" style="white-space: nowrap">#{rv.description}</p:column>
+						</p:autoComplete>
+						<p:outputLabel rendered="#{wspSkillsRequirementsUI.wspSkillsRequirements.ofoCodes eq null or wspSkillsRequirementsUI.wspSkillsRequirements.ofoCodes.occupationCategory ne null}" value="#{lang['ofo.occupation.category']}" for="occupationCategorySR" />
+						<p:autoComplete rendered="#{wspSkillsRequirementsUI.wspSkillsRequirements.ofoCodes.ofoCodes.occupationCategory ne null}" requiredMessage="#{lang['required.message.ofo.occupation.category']}" id="occupationCategoryParentDisplaySR" value="#{wspSkillsRequirementsUI.wspSkillsRequirements.ofoCodes.ofoCodes.occupationCategory}" completeMethod="#{autoCompleteUI.completeOccupationCategory}" var="rv"
+							itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="OccupationCategoryConvertor" dropdown="true" minQueryLength="3" maxResults="10" required="true" style="width: 95%; opacity: 1 !important;" disabled="true">
+							<p:column headerText="#{lang['occupation.category']}" style="white-space: nowrap">#{rv.description}</p:column>
+						</p:autoComplete>
+						<p:outputLabel rendered="#{wspSkillsRequirementsUI.wspSkillsRequirements.ofoCodes.ofoCodes.occupationCategory ne null}" value="#{lang['ofo.occupation.category']}" for="occupationCategoryParentDisplaySR" />
+					</h:panelGroup>
+				</p:outputPanel>
+				<h:panelGroup styleClass="md-inputfield" style="width:100%" rendered="#{wspSkillsRequirementsUI.wspSkillsRequirements.yesNo.yesNoName.toLowerCase() eq 'yes'}">
+					<p:inputText requiredMessage="#{lang['required.message.job.title.company.specification']}" value="#{wspSkillsRequirementsUI.wspSkillsRequirements.jobTitle}" required="true" disabled="#{initiatewspUI.wsp.wspStatusEnum ne WspStatusEnum.Draft}" id="jobTitleCompanySpec" style="width:95%" />
+					<p:outputLabel value="#{lang['job.title.company.specification']}" for="jobTitleCompanySpec" />
+				</h:panelGroup>
+
+
+
+				<h:panelGroup styleClass="md-inputfield" style="width:100%" rendered="#{wspSkillsRequirementsUI.wspSkillsRequirements.yesNo.yesNoName.toLowerCase() eq 'yes'}">
+					<p:inputNumber requiredMessage="#{lang['required.message.tot.number.vacancies.position']}" required="true" value="#{wspSkillsRequirementsUI.wspSkillsRequirements.totalVacancies}" id="totalVacant" inputStyle="width:95%" decimalPlaces="0" thousandSeparator="," />
+					<p:outputLabel value="#{lang['tot.number.vacancies.position']}" for="totalVacant" />
+				</h:panelGroup>
+
+				<h:panelGroup styleClass="md-inputfield" style="width:100%" rendered="#{wspSkillsRequirementsUI.wspSkillsRequirements.yesNo.yesNoName.toLowerCase() eq 'yes'}">
+					<p:inputNumber requiredMessage="#{lang['required.message.number.vacancies.fill']}" value="#{wspSkillsRequirementsUI.wspSkillsRequirements.totalVacanciesFilled}" required="true" id="totalVacantFill" inputStyle="width:95%" decimalPlaces="0" thousandSeparator="," />
+					<p:outputLabel value="#{lang['number.vacancies.fill']}" for="totalVacantFill" />
+				</h:panelGroup>
+
+				<h:panelGroup style="width:100%" rendered="#{wspSkillsRequirementsUI.wspSkillsRequirements.yesNo.yesNoName.toLowerCase() eq 'yes'}">
+					<div>
+						<p:outputLabel value="#{lang['highest.qulaification.required']}" for="highestQualificationRequired" />
+						<div class="EmptyBox10" />
+					</div>
+					<div>
+						<p:selectOneMenu requiredMessage="#{lang['required.message.highest.qulaification.required']}" value="#{wspSkillsRequirementsUI.wspSkillsRequirements.highestQualificationRequired}" disabled="#{initiatewspUI.wsp.wspStatusEnum ne WspStatusEnum.Draft}" style="width:95%"
+							converter="HighestQualificationRequiredConvertor" id="highestQualificationRequired" required="true">
+							<f:selectItems value="#{selectItemsUI.highestQualificationRequired}" var="selectedQualification" itemLabel="#{selectedQualification.description}" itemValue="#{selectedQualification}" />
+						</p:selectOneMenu>
+					</div>
+				</h:panelGroup>
+
+				<h:panelGroup style="width:100%" rendered="#{wspSkillsRequirementsUI.wspSkillsRequirements.yesNo.yesNoName.toLowerCase() eq 'yes'}">
+					<div>
+						<p:outputLabel value="#{lang['reasons.difficulties.fill.vacancy']}" for="resonDifficultVancancy" />
+						<div class="EmptyBox10" />
+					</div>
+					<div>
+						<p:selectOneMenu requiredMessage="#{lang['required.message.reasons.difficulties.fill.vacancy']}" value="#{wspSkillsRequirementsUI.wspSkillsRequirements.vacancyReasons}" disabled="#{initiatewspUI.wsp.wspStatusEnum ne WspStatusEnum.Draft}" style="width:95%" converter="VacancyReasonsConvertor"
+							id="resonDifficultVancancy" required="true">
+							<f:selectItems value="#{selectItemsUI.vacancyReasons}" var="selectedReason" itemLabel="#{selectedReason.description}" itemValue="#{selectedReason}" />
+						</p:selectOneMenu>
+					</div>
+				</h:panelGroup>
+			</p:panelGrid>
+
+			<p:panelGrid columns="3" style="width:100%" id="actionPastFeildSet" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.Draft}">
+				<p:commandButton id="addSRPast" value="#{lang['add']}" process="vacanciesDetailsPastFieldSet" action="#{wspSkillsRequirementsUI.createAndAppendToListPast}" update="@form tabView:skillsRequirementForm1" icon="fa fa-plus" />
+				<p:commandButton value="#{lang['clear']}" icon="fa fa-close" action="#{wspSkillsRequirementsUI.clearPastEntry}" update="@form" immediate="true" process="@this" />
+			</p:panelGrid>
+		</p:fieldset>
+
+		<div class="EmptyBox10" />
+
+
+	</h:form>
+	<h:form id="skillsRequirementForm1">
+
+		<br />
+		<p:panelGrid columns="1" style="width:100%" id="skillsrequirementsGrid2" layout="grid" styleClass="ui-panelgrid-blank form-group">
+			<h:panelGroup>
+			
+				
+				<p:dataTable var="wsr" value="#{wspSkillsRequirementsUI.dataModel}" id="wspList" rowKey="#{wsr.id}" paginator="true" rows="5" paginatorPosition="bottom"
+								paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25,50,100" reflow="true" lazy="true">
+					<p:column headerText="#{lang['wsp']}" rendered="false">
+						<p:outputLabel value="#{wsr.pastFutureEnum.friendlyName}" />
+					</p:column>
+					<p:column headerText="#{lang['any.vacancies']}" sortBy="#{wsr.yesNo.yesNoName}">
+						<p:outputLabel value="#{wsr.yesNo.yesNoName}" />
+					</p:column>
+					<p:column headerText="#{lang['ofo.code']}" rendered="#{not wspSkillsRequirementsUI.disableForm}"  sortBy="#{wsr.ofoCodes.description}" filterStyle="width: 95%">
+						<p:outputLabel value="#{wsr.ofoCodes.description}" rendered="#{wsr.ofoCodes ne null}" />
+					</p:column>
+					<p:column headerText="#{lang['ofo.occupation.category']}" rendered="#{not wspSkillsRequirementsUI.disableForm}" sortBy="#{wsr.ofoCodes.occupationCategory.description}" filterStyle="width: 95%">
+						<p:outputLabel value="#{wsr.ofoCodes.occupationCategory.description}" rendered="#{wsr.ofoCodes ne null and not wspSkillsRequirementsUI.disableForm}" />
+					</p:column>
+					<p:column headerText="#{lang['job.title.company.specification']}" rendered="#{not wspSkillsRequirementsUI.disableForm}" sortBy="#{wsr.jobTitle}" filterStyle="width: 95%">
+						<p:outputLabel value="#{wsr.jobTitle}" rendered="#{wsr.jobTitle ne null}" />
+					</p:column>
+					<p:column headerText="#{lang['highest.qulaification.required']}" rendered="#{not wspSkillsRequirementsUI.disableForm}"   sortBy="#{wsr.highestQualificationRequired.description}" filterStyle="width: 95%">
+						<p:outputLabel value="#{wsr.highestQualificationRequired.description}" rendered="#{wsr.highestQualificationRequired ne null and not wspSkillsRequirementsUI.disableForm}" />
+					</p:column>
+					<p:column headerText="#{lang['tot.number.vacancies.position']}" rendered="#{not wspSkillsRequirementsUI.disableForm}">
+						<p:outputLabel value="#{wsr.totalVacancies}" rendered="#{wsr.totalVacancies ne null and not wspSkillsRequirementsUI.disableForm}" />
+					</p:column>
+					<p:column headerText="#{lang['number.vacancies.fill.label']} filled for position" rendered="#{not wspSkillsRequirementsUI.disableForm}">
+						<p:outputLabel value="#{wsr.totalVacanciesFilled}" rendered="#{wsr.totalVacanciesFilled ne null and not wspSkillsRequirementsUI.disableForm}" />
+					</p:column>
+					<p:column headerText="#{lang['reasons.difficulties.fill.vacancy']}" rendered="#{not wspSkillsRequirementsUI.disableForm}">
+						<p:outputLabel value="#{wsr.vacancyReasons.description}" rendered="#{wsr.vacancyReasons ne null}" />
+					</p:column>
+
+					<p:column headerText="Reason For No Vacancy" rendered="#{wspSkillsRequirementsUI.disableForm}">
+						<p:outputLabel value="#{wsr.noHardToFillVacancies.description}" />
+					</p:column>
+
+					<p:column rendered="#{initiatewspUI.wsp.wspStatusEnum eq WspStatusEnum.Draft}" headerText="Update/Delete">
+						<p:commandButton icon="fa fa-database" title="#{lang['update']}" update="tabView:skillsRequirementForm" action="#{wspSkillsRequirementsUI.prepUpdateSkillsRequirement}" process="@this" rendered="#{not wspSkillsRequirementsUI.disableForm}">
+							<f:setPropertyActionListener value="#{wsr}" target="#{wspSkillsRequirementsUI.wspSkillsRequirements}" />
+						</p:commandButton>
+						<p:spacer width="5" rendered="#{not wspSkillsRequirementsUI.disableForm}" />
+						<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update="@form tabView:skillsRequirementForm" action="#{wspSkillsRequirementsUI.deleteWspSkillsRequirements}" process="@this">
+							<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+							<f:setPropertyActionListener value="#{wsr}" target="#{wspSkillsRequirementsUI.wspSkillsRequirements}" />
+						</p:commandButton>
+					</p:column>
+					
+				</p:dataTable>
+				
+			</h:panelGroup>
+		</p:panelGrid>
+
+	</h:form>
+</ui:composition>

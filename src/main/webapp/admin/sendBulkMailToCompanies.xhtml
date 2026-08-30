@@ -1,0 +1,102 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml" xmlns:tie="http://tiefaces.org/tiefaces"
+	xmlns:pt="http://xmlns.jcp.org/jsf/passthrough">
+
+	<ui:define name="content">
+
+
+		<style type="text/css">
+div.ui-treenode-children {
+	padding-left: 0px !important
+}
+/*.ui-treenode-content{background-color: red !important}*/
+.hsGreen { {
+	background-color: green !important;
+	color: white !important;
+}
+}
+</style>
+
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card">
+					<h1 id="headerOne">Bulk Email To Companies</h1>
+					<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum"></p:importEnum>
+					<h:form id="companyInsForm">
+
+						<p:growl sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+
+
+						<p:dataTable var="rowVar" value="#{sendBulkMailUI.dataModel}" id="avalibleSelectionCompany" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20,40" reflow="true" lazy="true">
+							<f:facet name="header"> Companies For Selection</f:facet>
+							<p:column headerText="#{lang['company.name']}" filterBy="#{rowVar.companyName}" sortBy="#{rowVar.companyName}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.companyName}" />
+							</p:column>
+							<p:column headerText="#{lang['tradingName']}" filterBy="#{rowVar.tradingName}" sortBy="#{rowVar.tradingName}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.tradingName}" />
+							</p:column>
+							<p:column headerText="#{lang['entity.id']}" filterBy="#{rowVar.levyNumber}" sortBy="#{rowVar.levyNumber}" filterStyle="width: 95%" width="10%">
+								<h:outputText value="#{rowVar.levyNumber}" />
+							</p:column>
+							<p:column rendered="false" headerText="#{lang['status']}" sortBy="#{rowVar.companyStatus}" width="10%">
+								<p:outputLabel value="#{rowVar.companyStatus.registrationName}" />
+							</p:column>
+							<p:column width="7%">
+								<p:commandButton icon="fa fa-plus" action="#{sendBulkMailUI.addCompanyToList}" update="@form">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{sendBulkMailUI.selecetdCompany}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+						<div class="EmptyBox10" />
+						<p:dataTable var="rv" value="#{sendBulkMailUI.companiesSelected}" id="selecetdCompanyList" rowKey="#{rv.id}" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20,40" reflow="true">
+							<f:facet name="header"> Companies Selected </f:facet>
+							<p:column headerText="#{lang['company.name']}" filterBy="#{rv.companyName}" sortBy="#{rv.companyName}" filterStyle="width: 95%">
+								<h:outputText value="#{rv.companyName}" />
+							</p:column>
+							<p:column headerText="#{lang['tradingName']}" filterBy="#{rv.tradingName}" sortBy="#{rv.tradingName}" filterStyle="width: 95%">
+								<h:outputText value="#{rv.tradingName}" />
+							</p:column>
+							<p:column headerText="#{lang['entity.id']}" filterBy="#{rv.levyNumber}" sortBy="#{rv.levyNumber}" filterStyle="width: 95%" width="10%">
+								<h:outputText value="#{rv.levyNumber}" />
+							</p:column>
+							<p:column rendered="false" headerText="#{lang['status']}" sortBy="#{rv.companyStatus}" width="10%">
+								<h:outputText value="#{lang[rv.companyStatus.registrationName]}" />
+							</p:column>
+							<p:column width="7%">
+								<p:commandButton icon="fa fa-minus" action="#{sendBulkMailUI.removeCompanyFromList}" update="@form">
+									<f:setPropertyActionListener value="#{rv}" target="#{sendBulkMailUI.selecetdCompany}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+
+						<br />
+						<br />
+						<br />
+
+						<p:outputLabel value="Tags that can be used: #FIRST_NAME# , #LAST_NAME# , #COMPANY_NAME# , #TRADING_NAME# , #ENTITY_ID# , #TEL_NUMBER# , #COMPANY_EMAIL#"/>
+						<br />
+						<br />
+						<h:panelGroup>
+							<p:textEditor id="helpText" value="#{sendBulkMailUI.generalMessage}" style="width:95%" placeholder="Help Text" height="400">
+								<p:ajax />
+							</p:textEditor>
+						</h:panelGroup>
+						<br />
+						<br />
+						<br />
+
+						<p:commandButton value="Send Mail" update="@form" action="#{sendBulkMailUI.sendMailToCompanies}">
+						</p:commandButton>
+
+
+					</h:form>
+
+				</div>
+			</div>
+		</div>
+	</ui:define>
+
+</ui:composition>

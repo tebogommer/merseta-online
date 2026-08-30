@@ -1,0 +1,158 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Appraisal Checklist</h1>
+					<h:form id="appraisalChecklistInsForm">
+						<p:growl showDetail="false" sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<p:panelGrid columns="1" style="width:100%" id="appraisalChecklistInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+						
+							<h:panelGroup class="md-inputfield" style="margin-top:19px;">
+								<p:autoComplete style="width:100%" inputStyle="width:50%" id="qualificationSelectionTrade" value="#{appraisalsUI.appraisals.qualification}" completeMethod="#{autoCompleteUI.completeQualificationTrade}" var="rvq" itemLabel="#{rvq.description}" itemValue="#{rvq}" forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+									<p:column headerText="SAQA ID" style="white-space: nowrap">#{rvq.code}</p:column>
+									<p:column headerText="#{lang['description']}" style="white-space: nowrap">#{rvq.description}</p:column>
+									<p:column headerText="NQF Level" style="white-space: nowrap">#{rvq.nqflevelg2description}</p:column>
+									<p:ajax event="itemSelect" update="@form" />
+								</p:autoComplete>
+								<p:outputLabel value="#{lang['trade']}" for="qualificationSelectionTrade"></p:outputLabel>
+							</h:panelGroup>
+
+							<h:panelGroup class="md-inputfield" style="margin-top:19px;" rendered="false">
+								<p:autoComplete id="ofoCode" value="#{appraisalsUI.appraisals.ofoCodes}" completeMethod="#{autoCompleteUI.completeOfoCodesTrade}" var="rv" itemLabel="#{rv.ofoDescription}" itemValue="#{rv}" forceSelection="true" converter="OfoCodesConvertor" dropdown="true" minQueryLength="3" maxResults="10"
+									inputStyle="opacity: 1 !important; color: black; width: 95%" style="opacity: 1 !important; color: black; width: 95%" required="true" requiredMessage="#{lang['select.ofo.code']}">
+									<p:column headerText="OfoCodes" style="white-space: nowrap">#{rv.ofoCodeParent}</p:column>
+									<p:column headerText="Description" style="white-space: nowrap">#{rv.description}</p:column>
+									<p:ajax event="itemSelect" />
+								</p:autoComplete>
+								<p:outputLabel value="Trade" for="ofoCode" />
+							</h:panelGroup>
+														
+							<h:panelGroup id="unitList" >
+							
+								<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+									<h:panelGroup styleClass="md-inputfield" style="margin-top: 19px">
+										<p:autoComplete id="tool" value="#{appraisalsUI.appraisalCategoryCode}"  completeMethod="#{autoCompleteUI.completeAppraisalCategoryCode}" var="rv" 
+														itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="AppraisalCategoryCodeConvertor" dropdown="true" 
+														minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+														<p:column headerText="Code" style="white-space: nowrap">#{rv.appraisalcode}</p:column>
+														<p:column headerText="Description" style="white-space: nowrap">#{rv.description}</p:column>
+														<p:column headerText="Appraisal Category" style="white-space: nowrap">#{rv.appraisalCategory.description}</p:column>
+											<p:ajax event="itemSelect" />
+										</p:autoComplete>
+										<p:outputLabel value="Category Code" for="tool" styleClass="gray" />
+									</h:panelGroup>
+									<p:commandButton title="Add Appraisal Code" update="unitList" icon="ui-icon-plus" iconPos="right" styleClass="flat" action="#{appraisalsUI.addToList}" process="unitList" />
+								</p:panelGrid>
+							
+								<div>
+									<br />
+									<p:dataTable var="t" value="#{appraisalsUI.selectedAppraisalCategoryCode}" id="usList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+										rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+										<p:column headerText="Code">
+											<h:outputText value="#{t.appraisalcode}" />										
+										</p:column>
+										<p:column headerText="Title">
+											<h:outputText value="#{t.description}" />
+										</p:column>
+										<p:column headerText="Category Description">
+											<h:outputText value="#{t.appraisalCategory.description}" />
+										</p:column>
+										<p:column width="40">
+											<p:commandButton title="Delete" update="usList" icon="fa fa-trash" iconPos="right" styleClass="flat" action="#{appraisalsUI.removeFromList}" process="@this">
+												<f:setPropertyActionListener value="#{t}" target="#{appraisalsUI.appraisalCategoryCode}" />
+											</p:commandButton>
+										</p:column>
+									</p:dataTable>
+								</div>	
+							</h:panelGroup>				
+
+
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank">
+								<p:commandButton value="#{lang['submit']}" icon="ui-icon-save" update=":mainForm:appraisalChecklistList :appraisalChecklistInsForm:appraisalChecklistInsGrid" action="#{appraisalsUI.appraisalsInsert}" />
+								<p:commandButton value="#{lang['clear']}" icon="ui-icon-clear-all" update="appraisalChecklistInsGrid" process="@this" action="#{appraisalsUI.prepareNew}">
+									<p:resetInput target="appraisalChecklistInsGrid" />
+								</p:commandButton>
+							</p:panelGrid>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h:form id="mainForm">
+
+						<p:dataTable var="rowVar" value="#{appraisalsUI.dataModel}" filteredValue="#{appraisalsUI.appraisalChecklistfilteredList}" id="appraisalChecklistList" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true"
+							lazy="true">
+							
+							<p:column headerText="#{lang['expand.row']}" width="45">
+								<p:rowToggler />
+							</p:column>				
+														
+							<p:column headerText="Trade">
+								<h:outputText value="(#{rowVar.ofoCodes.ofoCodeParent})" />
+								<h:outputText value="#{rowVar.ofoCodes.description}" />								
+							</p:column>		
+												
+							<p:column headerText="#{lang['createDate']}">
+								<h:outputText value="#{rowVar.createDate}" />
+							</p:column>
+
+							<p:column width="80">
+								<p:commandButton icon="fa fa-database" title="#{lang['update']}" update=":appraisalChecklistInsForm:appraisalChecklistInsGrid" action="#{appraisalsUI.prepCategoryList}">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{appraisalsUI.appraisals}" />
+								</p:commandButton>
+								<p:spacer width="5" />
+								<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:appraisalChecklistList" action="#{appraisalsUI.appraisalsDelete}">
+									<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+									<f:setPropertyActionListener value="#{rowVar}" target="#{appraisalsUI.appraisals}" />
+								</p:commandButton>
+							</p:column>
+							
+							<p:rowExpansion>
+								<p:dataTable value="#{rowVar.appraisalChecklist}" var="rv1" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+									
+									<p:column headerText="Category Title" width="80">
+										<h:outputText value="#{rv1.appraisalCategoryCode.appraisalCategory.description}" />
+									</p:column>
+									<p:column headerText="Category Code" width="60">
+										<h:outputText value="#{rv1.appraisalCategoryCode.appraisalcode}" />
+									</p:column>
+									<p:column headerText="Category Title" width="200">
+										<h:outputText value="#{rv1.appraisalCategoryCode.description}" />
+									</p:column>
+									<p:column width="5">
+										<p:commandButton icon="fa fa-trash-o" title="#{lang['delete']}" update=":mainForm:appraisalChecklistList" action="#{appraisalsUI.appraisalsListDelete}">
+											<p:confirm header="#{lang['confirmation']}" message="#{lang['are.you.sure']}" icon="ui-icon-warning" />
+											<f:setPropertyActionListener value="#{rv1}" target="#{appraisalsUI.appraisalChecklist}" />
+										</p:commandButton>
+									</p:column>
+								</p:dataTable>
+								
+							</p:rowExpansion>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+	<!-- 
+description = description
+createDate = createDate
+setmisCode = setmisCode
+nlrdCode = nlrdCode
+code = code
+qctoCode = qctoCode
+
+-->
+</ui:composition>

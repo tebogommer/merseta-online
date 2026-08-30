@@ -1,0 +1,176 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>#{lang['AMIC.TRAINEE.APPLICATION.FORM.FOR.IMMMEDIATE.RECOGNITION.TEST']}</h1>
+					<p:fieldset legend="#{lang['DETAILS.OF.EMPLOYER']}">
+
+						<p:panelGrid style="width:100%" columns="2" styleClass="ui-panelgrid-blank form-group" layout="grid">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="registeredCompany" value="#{entityUI.learners.nameOfRegisteredCompany}" style="width:95%" required="true" requiredMessage="" />
+
+								<p:outputLabel value="#{lang['NAME.OF.REGISTERED.COMPANY']}" for="registeredCompany" />
+							</h:panelGroup>
+							
+							<p:panelGrid columns="1" style="width : 95%" styleClass="ui-panelgrid-blank" id="postalAddress">
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="postalAddress1" value="#{sdfDetailUI.companysdf.company.residentialAddress.addressLine1}" style="width:95%" required="true" requiredMessage="#{lang['enter.residential.address']}">
+									</p:inputText>
+									<p:outputLabel value="#{lang['address.line.1']}" for="postalAddress1" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="postalAddress2" style="width:95%" value="#{sdfDetailUI.companysdf.company.residentialAddress.addressLine2}">
+									</p:inputText>
+									<p:outputLabel value="#{lang['address.line.2']}" for="postalAddress2" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_LINE_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="postalAddress3" style="width:95%" value="#{sdfDetailUI.companysdf.company.residentialAddress.addressLine3}">
+									</p:inputText>
+									<p:outputLabel value="#{lang['address.line.3']}" for="postalAddress3" />
+								</h:panelGroup>
+
+								<h:panelGroup>
+									<div>
+										<h:outputLabel value="#{lang['town']}" for="postalAddress4" />
+									</div>
+									<div>
+										<p:autoComplete id="postalAddress4" value="#{sdfDetailUI.companysdf.company.residentialAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true" requiredMessage="#{lang['please.select.a.town']}"
+											disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}">
+											<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+										</p:autoComplete>
+									</div>
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText maxlength="#{hostingCompanyProfileUI.MAX_ADDRESS_CODE_SIZE}" disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="postalAddress5" style="width:95%" value="#{sdfDetailUI.companysdf.company.residentialAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}">
+									</p:inputText>
+									<p:outputLabel value="#{lang['post.code']}" for="postalAddress5" />
+								</h:panelGroup>
+
+								<h:panelGroup>
+									<div>
+										<h:outputLabel value="#{lang['municipality']}" for="postalAddress6" />
+									</div>
+									<div>
+										<p:autoComplete disabled="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload}" id="postalAddress6" value="#{sdfDetailUI.companysdf.company.residentialAddress.municipality}" required="true" completeMethod="#{sdfDetailUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityProvince}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true" minQueryLength="3"
+											maxResults="10" inputStyle="width: 95%" style="width: 95%" requiredMessage="#{lang['select.municipality']}">
+											<p:column headerText="#{lang['province']}" style="white-space: nowrap">
+								#{rv.province.provinceDesc}
+							</p:column>
+											<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">
+								#{rv.municipalityDesc}
+							</p:column>
+										</p:autoComplete>
+									</div>
+								</h:panelGroup>
+
+
+							</p:panelGrid>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="surnameOfContact" value="#{entityUI.learners.providerDetailsContactPerson}" style="width:95%" required="true" requiredMessage="" />
+								<div />
+								<p:outputLabel value="#{lang['NAME.AND.SURNAME.OF.CONTACT.PERSON']}" for="surnameOfContact" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="designation" value="#{entityUI.learners.designationEmployer}" style="width:95%" required="true" requiredMessage="" />
+
+								<p:outputLabel value="#{lang['DESIGNATION']}" for="designation" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="emailAddress" value="#{entityUI.learners.emailAddressEmployer}" style="width:95%" required="true" requiredMessage="" />
+
+								<p:outputLabel value="#{lang['E-MAIL.ADDRESS']}" for="emailAddress" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="cellNo" value="#{entityUI.learners.cellNoEmployer}" style="width:95%" required="true" requiredMessage="" />
+
+								<p:outputLabel value="#{lang['CELL.NO']}" for="cellNo" />
+							</h:panelGroup>
+
+							<p:panelGrid style="width:100%" columns="2" styleClass="ui-panelgrid-blank form-group" layout="grid">
+								<p:outputLabel value="#{lang['SETA.NUMBER.TO.WHICH.AFFILIATED/SIC.CODE']} " />
+
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="setaNo" value="#{entityUI.learners.setaEmployer}" style="width:95%" required="true" requiredMessage="" />
+
+									<p:outputLabel value="#{lang['SETA.No']}" for="setaNo" />
+								</h:panelGroup>
+								<div />
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="sicCode" value="#{entityUI.learners.employerDetailsSIC}" style="width:95%" required="true" requiredMessage="" />
+
+									<p:outputLabel value="#{lang['sic.code']}" for="sicCode" />
+								</h:panelGroup>
+							</p:panelGrid>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="sarsLevy" value="#{entityUI.learners.sarsLevyNoEmployer}" style="width:95%" required="true" requiredMessage="" />
+
+								<p:outputLabel value="#{lang['SARS.LEVY.REGISTRATION.NUMBER']}" for="sarsLevy" />
+							</h:panelGroup>
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="telephoneNumber" value="#{entityUI.learners.telephoneNumberEmployer}" style="width:95%" required="true" requiredMessage="" />
+
+								<p:outputLabel value="#{lang['TELEPHONE.NUMBER']}" for="telephoneNumber" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="faxNumber" value="#{entityUI.learners.faxNumberEmployer}" style="width:95%" required="true" requiredMessage="" />
+
+								<p:outputLabel value="#{lang['FAX.NUMBER']}" for="faxNumber" />
+							</h:panelGroup>
+
+						</p:panelGrid>
+					</p:fieldset>
+
+
+					<p:fieldset legend="#{lang['DETAILS.OF.TRAINEE']}">
+
+						<p:panelGrid style="width:100%" columns="2" styleClass="ui-panelgrid-blank form-group" layout="grid">
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="surname" value="#{entityUI.learners.nameOfContactPersonTrainee}" style="width:95%" required="true" requiredMessage="" />
+
+								<p:outputLabel value="#{lang['FIRST.NAMES.AND.SURNAME']}" for="surname" />
+							</h:panelGroup>
+							<div />
+
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="tradeOccupation" value="#{entityUI.learners.tradeOccupation}" style="width:95%" required="true" requiredMessage="" />
+
+								<p:outputLabel value="#{lang['TRADE/OCCUPATION']}" for="tradeOccupation" />
+							</h:panelGroup>
+							<div />
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="identityNumber" value="#{entityUI.learners.traineeRsaIDNumber}" style="width:95%" required="true" requiredMessage="" />
+
+								<p:outputLabel value="#{lang['IDENTITY.NUMBER']}" for="identityNumber" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="employeeNumber" value="#{entityUI.learners.traineeContractNumber}" style="width:95%" required="true" requiredMessage="" />
+
+								<p:outputLabel value="#{lang['EMPLOYEE.NUMBER']}" for="employeeNumber" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="dateOfTraining" value="#{entityUI.learners.startingDateWithCompany}" style="width:95%" required="true" requiredMessage="" />
+
+								<p:outputLabel value="#{lang['STARTING.DATE.OF.TRAINING']}" for="dateOfTraining" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="highestQualification" value="#{entityUI.learners.highestQualification}" style="width:95%" required="true" requiredMessage="" />
+
+								<p:outputLabel value="#{lang['highest.qual.title']}" for="highestQualification" />
+							</h:panelGroup>
+
+
+						</p:panelGrid>
+					</p:fieldset>
+
+				</div>
+			</div>
+		</div>
+
+	</ui:define>
+
+</ui:composition>

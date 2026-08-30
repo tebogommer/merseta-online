@@ -1,0 +1,1461 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui"
+	template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+
+		<p:growl sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<ui:include src="/pages/includes/taskdiagram.xhtml" />
+			</div>
+		</div>
+
+		<p:importEnum type="haj.com.entity.enums.IdPassportEnum" var="idPassportEnum" />
+		<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+		<p:importEnum type="haj.com.entity.enums.LearnerTransferTypeEnum" />
+		<p:importEnum type="haj.com.entity.enums.YesNoEnum" />
+		<p:importEnum type="haj.com.entity.enums.AprlProgressEnum" />
+		<p:importEnum type="haj.com.entity.enums.EmploymentStatusEnum" />
+		<p:importEnum type="haj.com.entity.enums.EmployedUnEmployedEnum" />
+		<p:importEnum type="haj.com.entity.enums.ApprovalEnum" />
+		<p:importEnum type="haj.com.entity.enums.QualificationTypeSelectionEnum" />
+
+		<h:form id="mainForm">
+			<div class="ui-g">
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+						<h1>Workplace Monitoring Site Visit</h1>
+						<p:outputPanel id="companyInformationOP">
+							<p:fieldset legend="Current Organisational Details">
+								<ui:include src="/pages/includes/companyInformationDisplay.xhtml">
+									<ui:param name="company" value="#{workplaceMonitoringSiteVisitWorkflowUI.company}" />
+									<ui:param name="CALENDER_PATTERN" value="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</ui:include>
+							</p:fieldset>
+						</p:outputPanel>
+						<div class="EmptyBox10" />
+						<p:outputPanel id="learnerInductionOP">
+							<p:fieldset legend="Learner Induction">
+								<c:if test="#{sessionUI.task.processRole ne null and sessionUI.task.firstInProcess}">
+									<p:commandButton icon="fa fa-plus" value="Add New Learner Induction" action="#{workplaceMonitoringSiteVisitWorkflowUI.prepNewLearnerInduction}" update="learnerInductionForm" />
+									<div class="EmptyBox10" />
+								</c:if>
+								<ui:include src="/pages/includes/download_lazy.xhtml">
+									<ui:param name="file_name" value="Learner_Induction_report" />
+									<ui:param name="target" value="learnerInductionDt" />
+								</ui:include>
+								<p:dataTable var="rowVarLI" value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInductionDataModel}" id="learnerInductionDt" rowKey="#{rowVarLI.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+									paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+									<f:facet name="header">Learner Induction</f:facet>
+									<p:column headerText="#{lang['expand.row']}" width="45" exportable="false" styleClass="action-column">
+										<p:rowToggler rendered="#{rowVarLI.docs.size() gt 0}"></p:rowToggler>
+									</p:column>
+									<p:column headerText="NSDMS Generated" exportable="false" styleClass="action-column" rendered="false">
+										<p:selectBooleanCheckbox value="#{rowVarLI.systemGenerated}" disabled="true" />
+									</p:column>
+									<p:column headerText="NSDMS Generated">
+										<p:outputLabel value="System Generated" rendered="#{rowVarLI.systemGenerated}" />
+										<p:outputLabel value="Manually Generated" rendered="#{!rowVarLI.systemGenerated}" />
+									</p:column>
+									<p:column headerText="Qualification Type">
+										<p:outputLabel value="#{rowVarLI.qualificationTypeSelectionEnum.friendlyName}" />
+									</p:column>
+									<p:column headerText="Qualification ID / SAQA ID">
+										<p:outputLabel value="#{rowVarLI.learnership.code}" rendered="#{rowVarLI.learnership ne null}" />
+										<p:outputLabel value="#{rowVarLI.qualification.code}" rendered="#{rowVarLI.qualification ne null}" />
+										<p:outputLabel value="#{rowVarLI.unitStandard.code}" rendered="#{rowVarLI.unitStandard ne null}" />
+										<p:outputLabel value="#{rowVarLI.skillsProgram.programmeID}" rendered="#{rowVarLI.skillsProgram ne null}" />
+										<p:outputLabel value="#{rowVarLI.skillsSet.code}" rendered="#{rowVarLI.skillsSet ne null}" />
+										<p:outputLabel value="#{rowVarLI.nonCreditBearingIntervationTitle.code}" rendered="#{rowVarLI.nonCreditBearingIntervationTitle ne null}" />
+									</p:column>
+									<p:column headerText="Qualification Title">
+										<p:outputLabel value="#{rowVarLI.qualification.description}" rendered="#{rowVarLI.qualification ne null}" />
+										<p:outputLabel value="#{rowVarLI.unitStandard.title}" rendered="#{rowVarLI.unitStandard ne null}" />
+										<p:outputLabel value="#{rowVarLI.skillsProgram.description}" rendered="#{rowVarLI.skillsProgram ne null}" />
+										<p:outputLabel value="#{rowVarLI.skillsSet.description}" rendered="#{rowVarLI.skillsSet ne null}" />
+										<p:outputLabel value="#{rowVarLI.nonCreditBearingIntervationTitle.description}" rendered="#{rowVarLI.nonCreditBearingIntervationTitle ne null}" />
+										<p:outputLabel value="#{rowVarLI.learnership.description}" rendered="#{rowVarLI.learnership ne null}" />
+									</p:column>
+									<p:column headerText="Number Of Attendees">
+										<p:outputLabel value="#{rowVarLI.numberOfAttendees}" />
+									</p:column>
+									<p:column width="70px" styleClass="action-column" headerText="Actions" exportable="false" >
+										<p:commandButton icon="fa fa-database" title="Update Learner Induction" rendered="#{sessionUI.task.processRole ne null and sessionUI.task.firstInProcess}" update="learnerInductionForm" action="#{workplaceMonitoringSiteVisitWorkflowUI.prepUpdateLearnerInduction}">
+											<f:setPropertyActionListener value="#{rowVarLI}" target="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction}" />
+										</p:commandButton>
+										<p:spacer width="5" rendered="#{workplaceMonitoringSiteVisitWorkflowUI.canUploadAbstract}" />
+										<p:commandButton rendered="#{workplaceMonitoringSiteVisitWorkflowUI.canUploadAbstract}" icon="fa fa-upload" id="genericUploadLearnerInductionBtn" action="#{workplaceMonitoringSiteVisitWorkflowUI.prepGenericUpload}" process="@this" oncomplete="PF('dlgUploadGeneric').show()"
+											update=":uploadGenericForm">
+											<f:setPropertyActionListener value="#{rowVarLI}" target="#{workplaceMonitoringSiteVisitWorkflowUI.genericUploadObject}" />
+											<p:tooltip for="genericUploadLearnerInductionBtn" value="Upload Supporting Documents" position="left" />
+										</p:commandButton>
+										<p:spacer width="5" rendered="#{!rowVarLI.systemGenerated and (rowVarLI.docs eq null or rowVarLI.docs.size() eq 0) and sessionUI.task.processRole ne null and sessionUI.task.firstInProcess}" />
+										<p:commandButton icon="fa fa-trash" title="Delete Entry" rendered="#{!rowVarLI.systemGenerated and (rowVarLI.docs eq null or rowVarLI.docs.size() eq 0) and sessionUI.task.processRole ne null and sessionUI.task.firstInProcess}" update=":mainForm:learnerInductionOP" action="#{workplaceMonitoringSiteVisitWorkflowUI.deleteLearnerInduction}">
+											<p:confirm header="Confirmation" message="Are You Sure?" icon="fa fa-exclamation-triangle" />
+											<f:setPropertyActionListener value="#{rowVarLI}" target="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction}" />
+										</p:commandButton>
+									</p:column>
+									<p:rowExpansion>
+										<p:dataTable value="#{rowVarLI.docs}" var="rowVarLiDocList" rowKey="#{rowVarLiDocList.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+											<f:facet name="Header">Documents</f:facet>
+											<p:column headerText="#{lang['uploaded.by']}">#{rowVarLiDocList.users.firstName} #{rowVarLiDocList.users.lastName}</p:column>
+											<p:column headerText="Type">Supporting Document</p:column>
+											<p:column headerText="Orginal File Name">#{rowVarLiDocList.originalFname}</p:column>
+											<p:column headerText="#{lang['uploaded']}" width="15%">
+												<h:outputText value="#{rowVarLiDocList.createDate}">
+													<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+												</h:outputText>
+											</p:column>
+											<p:column headerText="#{lang['version']}" width="15%">
+												<h:outputText value="#{rowVarLiDocList.versionNo}">
+												</h:outputText>
+											</p:column>
+											<p:column width="180" headerText="#{lang['view.edit']}" styleClass="action-column">
+												<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" rendered="#{rowVarLiDocList.id ne null}">
+													<f:setPropertyActionListener value="#{rowVarLiDocList}" target="#{uploadDocUI.doc}" />
+													<p:tooltip value="#{lang['download.the.file']}" position="left" rendered="#{rowVarLiDocList.id ne null}" />
+												</p:commandButton>
+
+												<p:commandButton icon="fa fa-bars" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rowVarLiDocList.id ne null and sessionUI.employee}">
+													<f:setPropertyActionListener value="#{rowVarLiDocList}" target="#{uploadDocUI.doc}" />
+													<p:tooltip value="#{lang['document.tracker']}" position="left" rendered="#{rowVarLiDocList.id ne null}" />
+												</p:commandButton>
+
+												<p:commandButton rendered="#{workplaceMonitoringSiteVisitWorkflowUI.canUploadAbstract}" icon="fa fa-upload" styleClass="#{rowVarLiDocList.originalFname eq null ? 'red-btn' : ''} flat" process="@this" oncomplete="PF('dlgUploadGeneric').show()" update=":uploadGenericForm">
+													<f:setPropertyActionListener value="#{rowVarLiDocList}" target="#{workplaceMonitoringSiteVisitWorkflowUI.doc}" />
+													<f:setPropertyActionListener value="1" target="#{workplaceMonitoringSiteVisitWorkflowUI.updateIndicatoryScreen}" />
+													<p:tooltip value="#{rowVarLiDocList.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+												</p:commandButton>
+
+												<p:commandButton rendered="#{rowVarLiDocList.note ne null and rowVarLiDocList.note.length() gt 0}" icon="fa fa-comment-o" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+													<f:setPropertyActionListener value="#{rowVarLiDocList}" target="#{uploadDocUI.doc}" />
+													<p:tooltip value="#{lang['view.note']}" position="left" />
+												</p:commandButton>
+
+												<p:commandButton rendered="#{rowVarLiDocList.extension.toLowerCase() eq 'pdf' or rowVarLiDocList.extension.toLowerCase() eq 'png' or rowVarLiDocList.extension.toLowerCase() eq 'jpg' or rowVarLiDocList.extension.toLowerCase() eq 'jpeg' or rowVarLiDocList.extension.toLowerCase() eq 'gif'}"
+													icon="fa fa-eye " oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+													<f:setPropertyActionListener value="#{rowVarLiDocList}" target="#{uploadDocUI.doc}" />
+													<p:tooltip value="#{lang['view.document']} " position="left" />
+												</p:commandButton>
+											</p:column>
+										</p:dataTable>
+									</p:rowExpansion>
+								</p:dataTable>
+							</p:fieldset>
+						</p:outputPanel>
+
+						<div class="EmptyBox10" />
+
+						<p:outputPanel id="learnerMonitoringSurveyOP">
+							<p:fieldset legend="Learner Monitoring Survey">
+
+								<c:if test="#{sessionUI.task.processRole ne null and sessionUI.task.firstInProcess}">
+									<p:commandButton icon="fa fa-plus" value="Add New Learner Survey" action="#{workplaceMonitoringSiteVisitWorkflowUI.prepNewLearnerSurvey}" update="learnerMonitoringSurveyOP learnerSurveyForm" />
+									<div class="EmptyBox10" />
+								</c:if>
+
+								<ui:include src="/pages/includes/download_lazy.xhtml">
+									<ui:param name="file_name" value="learner_monitoring_Survey_Report" />
+									<ui:param name="target" value="learnerMonitoringSurveyDT" />
+								</ui:include>
+
+								<p:dataTable var="rowVarLMS" value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerSurveyDataModel}" id="learnerMonitoringSurveyDT" rowKey="#{rowVarLMS.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+									paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+									<f:facet name="header">Learner Monitoring Survey</f:facet>
+									<p:column headerText="#{lang['expand.row']}" width="45" exportable="false" styleClass="action-column">
+										<p:rowToggler rendered="#{rowVarLMS.docs.size() gt 0}"></p:rowToggler>
+									</p:column>
+									<p:column headerText="Date Captured">
+										<p:outputLabel value="#{rowVarLMS.createDate}">
+											<f:convertDateTime pattern="dd/MM/yyyy HH:mm:ss" />
+										</p:outputLabel>
+									</p:column>
+									<p:column headerText="Learner">
+										<p:outputLabel value="#{rowVarLMS.companyLearners.user.firstName} #{rowVarLMS.companyLearners.user.lastName}" />
+									</p:column>
+									<p:column headerText="Intervention Type">
+										<p:outputLabel value="#{rowVarLMS.interventionType.description}" />
+									</p:column>
+									<p:column width="8%" styleClass="action-column" headerText="Actions" exportable="false" rendered="#{sessionUI.task.processRole ne null}">
+										<p:commandButton icon="fa fa-search-plus" title="View Questions" update=":mainForm:learnerMonitoringSurveyOP" action="#{workplaceMonitoringSiteVisitWorkflowUI.viewLearnerSurveyAnswers}">
+											<f:setPropertyActionListener value="#{rowVarLMS}" target="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerSurveyView}" />
+										</p:commandButton>
+										<p:spacer width="5" rendered="#{workplaceMonitoringSiteVisitWorkflowUI.canUploadAbstract}" />
+										<p:commandButton rendered="#{workplaceMonitoringSiteVisitWorkflowUI.canUploadAbstract}" icon="fa fa-upload" action="#{workplaceMonitoringSiteVisitWorkflowUI.prepGenericUpload}" process="@this" oncomplete="PF('dlgUploadGeneric').show()" update=":uploadGenericForm">
+											<f:setPropertyActionListener value="#{rowVarLMS}" target="#{workplaceMonitoringSiteVisitWorkflowUI.genericUploadObject}" />
+											<p:tooltip value="Upload Supporting Documents" position="left" />
+										</p:commandButton>
+									</p:column>
+									<p:rowExpansion>
+										<p:dataTable value="#{rowVarLMS.docs}" var="rowVarLmsDocList" rowKey="#{rowVarLmsDocList.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+											<f:facet name="Header">Documents</f:facet>
+											<p:column headerText="#{lang['uploaded.by']}">#{rowVarLmsDocList.users.firstName} #{rowVarLmsDocList.users.lastName}</p:column>
+											<p:column headerText="Type">Supporting Document</p:column>
+											<p:column headerText="Orginal File Name">#{rowVarLmsDocList.originalFname}</p:column>
+											<p:column headerText="#{lang['uploaded']}" width="15%">
+												<h:outputText value="#{rowVarLmsDocList.createDate}">
+													<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+												</h:outputText>
+											</p:column>
+											<p:column headerText="#{lang['version']}" width="15%">
+												<h:outputText value="#{rowVarLmsDocList.versionNo}">
+												</h:outputText>
+											</p:column>
+											<p:column width="180" headerText="#{lang['view.edit']}" styleClass="action-column">
+												<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" rendered="#{rowVarLmsDocList.id ne null}">
+													<f:setPropertyActionListener value="#{rowVarLmsDocList}" target="#{uploadDocUI.doc}" />
+													<p:tooltip value="#{lang['download.the.file']}" position="left" rendered="#{rowVarLmsDocList.id ne null}" />
+												</p:commandButton>
+
+												<p:commandButton icon="fa fa-bars" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rowVarLmsDocList.id ne null and sessionUI.employee}">
+													<f:setPropertyActionListener value="#{rowVarLmsDocList}" target="#{uploadDocUI.doc}" />
+													<p:tooltip value="#{lang['document.tracker']}" position="left" rendered="#{rowVarLmsDocList.id ne null}" />
+												</p:commandButton>
+
+												<p:commandButton rendered="#{workplaceMonitoringSiteVisitWorkflowUI.canUploadAbstract}" icon="fa fa-upload" styleClass="#{rowVarLiDocList.originalFname eq null ? 'red-btn' : ''} flat" process="@this" oncomplete="PF('dlgUploadGeneric').show()" update=":uploadGenericForm">
+													<f:setPropertyActionListener value="#{rowVarLmsDocList}" target="#{workplaceMonitoringSiteVisitWorkflowUI.doc}" />
+													<f:setPropertyActionListener value="4" target="#{workplaceMonitoringSiteVisitWorkflowUI.updateIndicatoryScreen}" />
+													<p:tooltip value="#{rowVarLiDocList.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+												</p:commandButton>
+
+												<p:commandButton rendered="#{rowVarLiDocList.note ne null and rowVarLiDocList.note.length() gt 0}" icon="fa fa-comment-o" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+													<f:setPropertyActionListener value="#{rowVarLiDocList}" target="#{uploadDocUI.doc}" />
+													<p:tooltip value="#{lang['view.note']}" position="left" />
+												</p:commandButton>
+
+												<p:commandButton
+													rendered="#{rowVarLmsDocList.extension.toLowerCase() eq 'pdf' or rowVarLmsDocList.extension.toLowerCase() eq 'png' or rowVarLmsDocList.extension.toLowerCase() eq 'jpg' or rowVarLmsDocList.extension.toLowerCase() eq 'jpeg' or rowVarLmsDocList.extension.toLowerCase() eq 'gif'}"
+													icon="fa fa-eye " oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+													<f:setPropertyActionListener value="#{rowVarLmsDocList}" target="#{uploadDocUI.doc}" />
+													<p:tooltip value="#{lang['view.document']} " position="left" />
+												</p:commandButton>
+											</p:column>
+										</p:dataTable>
+									</p:rowExpansion>
+								</p:dataTable>
+
+								<c:if test="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerSurveyView ne null and workplaceMonitoringSiteVisitWorkflowUI.viewAnswers}">
+									<h3>#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerSurveyView.companyLearners.user.firstName} #{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerSurveyView.companyLearners.user.lastName} Survey Answers</h3>
+									<p:commandButton value="Close View" icon="fa fa-times" update="learnerMonitoringSurveyOP" action="#{workplaceMonitoringSiteVisitWorkflowUI.closeViewLearnerSurveyAnswers}" />
+									<div class="EmptyBox10" />
+									<ui:include src="/pages/includes/download_lazy.xhtml">
+										<ui:param name="file_name" value="Learner_Monitoring_Survey_Answers_Report" />
+										<ui:param name="target" value="learnerMonitoringSurveyAnswersDT" />
+									</ui:include>
+									<p:dataTable var="rowVarLMSA" value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerSurveyAnswersDataModel}" id="learnerMonitoringSurveyAnswersDT" rowKey="#{rowVarLMSA.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+										paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+										<f:facet name="header">Survey Answers</f:facet>
+										<p:column headerText="Question / Statement">
+											<p:outputLabel value="#{rowVarLMSA.question}" />
+										</p:column>
+										<p:column headerText="Answer">
+											<p:outputLabel value="#{rowVarLMSA.answer.friendlyName}" />
+										</p:column>
+									</p:dataTable>
+								</c:if>
+
+							</p:fieldset>
+						</p:outputPanel>
+
+						<div class="EmptyBox10" />
+
+						<p:outputPanel id="grantComplianceSurveyOP">
+							<p:fieldset legend="Discretionary Grant Compliance Survey">
+								<ui:include src="/pages/includes/download_lazy.xhtml">
+									<ui:param name="file_name" value="Discretionary_Grant_Compliance_Survey_Report" />
+									<ui:param name="target" value="grantComplianceSurveyDT" />
+								</ui:include>
+								<p:dataTable var="rowVarGCS" value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringDiscretionaryGrantComplianceSurveyDataModel}" id="grantComplianceSurveyDT" rowKey="#{rowVarLI.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+									paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+									<f:facet name="header">Discretionary Grant Compliance Survey</f:facet>
+									<p:column headerText="#{lang['expand.row']}" width="45" exportable="false" styleClass="action-column">
+										<p:rowToggler rendered="#{rowVarGCS.docs.size() gt 0}"></p:rowToggler>
+									</p:column>
+									<p:column headerText="#">
+										<p:outputLabel value="#{rowVarGCS.number}" />
+									</p:column>
+									<p:column headerText="Question/Statement">
+										<p:outputLabel value="#{rowVarGCS.question}" />
+									</p:column>
+									<p:column headerText="Answer">
+										<p:outputLabel value="#{rowVarGCS.answer.friendlyName}" rendered="#{rowVarGCS.answer ne null}" />
+										<p:outputLabel value="Not Provided" rendered="#{rowVarGCS.answer eq null}" />
+									</p:column>
+									<p:column width="8%" styleClass="action-column" headerText="Actions" exportable="false">
+										<p:commandButton icon="fa fa-database" title="Update Answer" rendered="#{sessionUI.task.processRole ne null and sessionUI.task.firstInProcess}" update="grantComplianceSurveyForm" action="#{workplaceMonitoringSiteVisitWorkflowUI.prepUpdateComplianceSurvey}">
+											<f:setPropertyActionListener value="#{rowVarGCS}" target="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringDiscretionaryGrantComplianceSurvey}" />
+										</p:commandButton>
+										<p:spacer width="5" rendered="#{workplaceMonitoringSiteVisitWorkflowUI.canUploadAbstract}" />
+										<p:commandButton rendered="#{workplaceMonitoringSiteVisitWorkflowUI.canUploadAbstract}" icon="fa fa-upload" action="#{workplaceMonitoringSiteVisitWorkflowUI.prepGenericUpload}" process="@this" oncomplete="PF('dlgUploadGeneric').show()" update=":uploadGenericForm">
+											<f:setPropertyActionListener value="#{rowVarGCS}" target="#{workplaceMonitoringSiteVisitWorkflowUI.genericUploadObject}" />
+											<p:tooltip value="Upload Supporting Documents" position="left" />
+										</p:commandButton>
+									</p:column>
+									<p:rowExpansion>
+										<p:dataTable value="#{rowVarGCS.docs}" var="rowVarGcsDocList" rowKey="#{rowVarGcsDocList.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+											<f:facet name="Header">Documents</f:facet>
+											<p:column headerText="#{lang['uploaded.by']}">#{rowVarGcsDocList.users.firstName} #{rowVarGcsDocList.users.lastName}</p:column>
+											<p:column headerText="Type">Supporting Document</p:column>
+											<p:column headerText="Orginal File Name">#{rowVarGcsDocList.originalFname}</p:column>
+											<p:column headerText="#{lang['uploaded']}" width="15%">
+												<h:outputText value="#{rowVarGcsDocList.createDate}">
+													<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+												</h:outputText>
+											</p:column>
+											<p:column headerText="#{lang['version']}" width="15%">
+												<h:outputText value="#{rowVarGcsDocList.versionNo}">
+												</h:outputText>
+											</p:column>
+											<p:column width="180" headerText="#{lang['view.edit']}" styleClass="action-column">
+												<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" rendered="#{rowVarGcsDocList.id ne null}">
+													<f:setPropertyActionListener value="#{rowVarGcsDocList}" target="#{uploadDocUI.doc}" />
+													<p:tooltip value="#{lang['download.the.file']}" position="left" rendered="#{rowVarGcsDocList.id ne null}" />
+												</p:commandButton>
+												<p:commandButton icon="fa fa-bars" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rowVarGcsDocList.id ne null and sessionUI.employee}">
+													<f:setPropertyActionListener value="#{rowVarGcsDocList}" target="#{uploadDocUI.doc}" />
+													<p:tooltip value="#{lang['document.tracker']}" position="left" rendered="#{rowVarGcsDocList.id ne null}" />
+												</p:commandButton>
+												<p:commandButton rendered="#{workplaceMonitoringSiteVisitWorkflowUI.canUploadAbstract}" icon="fa fa-upload" styleClass="#{rowVarGcsDocList.originalFname eq null ? 'red-btn' : ''} flat" process="@this" oncomplete="PF('dlgUploadGeneric').show()" update=":uploadGenericForm">
+													<f:setPropertyActionListener value="#{rowVarGcsDocList}" target="#{workplaceMonitoringSiteVisitWorkflowUI.doc}" />
+													<f:setPropertyActionListener value="1" target="#{workplaceMonitoringSiteVisitWorkflowUI.updateIndicatoryScreen}" />
+													<p:tooltip value="#{rowVarGcsDocList.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+												</p:commandButton>
+												<p:commandButton rendered="#{rowVarGcsDocList.note ne null and rowVarGcsDocList.note.length() gt 0}" icon="fa fa-comment-o" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+													<f:setPropertyActionListener value="#{rowVarGcsDocList}" target="#{uploadDocUI.doc}" />
+													<p:tooltip value="#{lang['view.note']}" position="left" />
+												</p:commandButton>
+												<p:commandButton
+													rendered="#{rowVarGcsDocList.extension.toLowerCase() eq 'pdf' or rowVarGcsDocList.extension.toLowerCase() eq 'png' or rowVarGcsDocList.extension.toLowerCase() eq 'jpg' or rowVarGcsDocList.extension.toLowerCase() eq 'jpeg' or rowVarGcsDocList.extension.toLowerCase() eq 'gif'}"
+													icon="fa fa-eye " oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+													<f:setPropertyActionListener value="#{rowVarGcsDocList}" target="#{uploadDocUI.doc}" />
+													<p:tooltip value="#{lang['view.document']} " position="left" />
+												</p:commandButton>
+											</p:column>
+										</p:dataTable>
+									</p:rowExpansion>
+								</p:dataTable>
+							</p:fieldset>
+						</p:outputPanel>
+						<div class="EmptyBox10" />
+						<p:outputPanel id="actionPlanSurveyOP">
+							<p:fieldset legend="Action Plan To Improve Company Category">
+								<ui:include src="/pages/includes/download_lazy.xhtml">
+									<ui:param name="file_name" value="Action_Plan_To_Improve_Company_Category_Report" />
+									<ui:param name="target" value="actionPlanSurveyDT" />
+								</ui:include>
+								<p:dataTable var="rowVarAPS" value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringActionPlanDataModel}" id="actionPlanSurveyDT" rowKey="#{rowVarAPS.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+									paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+									<f:facet name="header">Action Plan To Improve Company Category</f:facet>
+									<p:column headerText="#{lang['expand.row']}" width="45" exportable="false" styleClass="action-column">
+										<p:rowToggler rendered="#{rowVarAPS.docs.size() gt 0}"></p:rowToggler>
+									</p:column>
+									<p:column headerText="Criteria">
+										<p:outputLabel value="#{rowVarAPS.criteria}" />
+									</p:column>
+									<p:column headerText="Risk">
+										<p:outputLabel value="#{rowVarAPS.atRisk.friendlyName}" rendered="#{rowVarAPS.atRisk ne null}" />
+										<p:outputLabel value="Not Provided" rendered="#{rowVarAPS.atRisk eq null}" />
+									</p:column>
+									<p:column headerText="Action">
+										<p:outputLabel value="#{rowVarAPS.action}" />
+									</p:column>
+									<p:column width="100" styleClass="action-column" headerText="Actions" exportable="false" rendered="#{sessionUI.task.processRole ne null and sessionUI.task.firstInProcess}">
+										<p:commandButton icon="fa fa-database" title="Update Answer" update="actionPlanForm" action="#{workplaceMonitoringSiteVisitWorkflowUI.prepUpdateActionPlan}">
+											<f:setPropertyActionListener value="#{rowVarAPS}" target="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringActionPlan}" />
+										</p:commandButton>
+										<p:spacer width="5" rendered="#{workplaceMonitoringSiteVisitWorkflowUI.canUploadAbstract}" />
+										<p:commandButton rendered="#{workplaceMonitoringSiteVisitWorkflowUI.canUploadAbstract}" icon="fa fa-upload" action="#{workplaceMonitoringSiteVisitWorkflowUI.prepGenericUpload}" process="@this" oncomplete="PF('dlgUploadGeneric').show()" update=":uploadGenericForm">
+											<f:setPropertyActionListener value="#{rowVarAPS}" target="#{workplaceMonitoringSiteVisitWorkflowUI.genericUploadObject}" />
+											<p:tooltip value="Upload Supporting Documents" position="left" />
+										</p:commandButton>
+									</p:column>
+									<p:rowExpansion>
+										<p:dataTable value="#{rowVarAPS.docs}" var="rowVarApsDocList" rowKey="#{rowVarApsDocList.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+											<f:facet name="Header">Documents</f:facet>
+											<p:column headerText="#{lang['uploaded.by']}">#{rowVarApsDocList.users.firstName} #{rowVarApsDocList.users.lastName}</p:column>
+											<p:column headerText="Type">Supporting Document</p:column>
+											<p:column headerText="Orginal File Name">#{rowVarApsDocList.originalFname}</p:column>
+											<p:column headerText="#{lang['uploaded']}" width="15%">
+												<h:outputText value="#{rowVarApsDocList.createDate}">
+													<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+												</h:outputText>
+											</p:column>
+											<p:column headerText="#{lang['version']}" width="15%">
+												<h:outputText value="#{rowVarApsDocList.versionNo}">
+												</h:outputText>
+											</p:column>
+											<p:column width="180" headerText="#{lang['view.edit']}" styleClass="action-column">
+												<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" rendered="#{rowVarApsDocList.id ne null}">
+													<f:setPropertyActionListener value="#{rowVarApsDocList}" target="#{uploadDocUI.doc}" />
+													<p:tooltip value="#{lang['download.the.file']}" position="left" rendered="#{rowVarApsDocList.id ne null}" />
+												</p:commandButton>
+
+												<p:commandButton icon="fa fa-bars" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rowVarApsDocList.id ne null and sessionUI.employee}">
+													<f:setPropertyActionListener value="#{rowVarApsDocList}" target="#{uploadDocUI.doc}" />
+													<p:tooltip value="#{lang['document.tracker']}" position="left" rendered="#{rowVarApsDocList.id ne null}" />
+												</p:commandButton>
+
+												<p:commandButton rendered="#{workplaceMonitoringSiteVisitWorkflowUI.canUploadAbstract}" icon="fa fa-upload" styleClass="#{rowVarApsDocList.originalFname eq null ? 'red-btn' : ''} flat" process="@this" oncomplete="PF('dlgUploadGeneric').show()" update=":uploadGenericForm">
+													<f:setPropertyActionListener value="#{rowVarApsDocList}" target="#{workplaceMonitoringSiteVisitWorkflowUI.doc}" />
+													<f:setPropertyActionListener value="1" target="#{workplaceMonitoringSiteVisitWorkflowUI.updateIndicatoryScreen}" />
+													<p:tooltip value="#{rowVarApsDocList.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+												</p:commandButton>
+
+												<p:commandButton rendered="#{rowVarApsDocList.note ne null and rowVarApsDocList.note.length() gt 0}" icon="fa fa-comment-o" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+													<f:setPropertyActionListener value="#{rowVarApsDocList}" target="#{uploadDocUI.doc}" />
+													<p:tooltip value="#{lang['view.note']}" position="left" />
+												</p:commandButton>
+
+												<p:commandButton
+													rendered="#{rowVarApsDocList.extension.toLowerCase() eq 'pdf' or rowVarApsDocList.extension.toLowerCase() eq 'png' or rowVarApsDocList.extension.toLowerCase() eq 'jpg' or rowVarApsDocList.extension.toLowerCase() eq 'jpeg' or rowVarApsDocList.extension.toLowerCase() eq 'gif'}"
+													icon="fa fa-eye " oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+													<f:setPropertyActionListener value="#{rowVarApsDocList}" target="#{uploadDocUI.doc}" />
+													<p:tooltip value="#{lang['view.document']} " position="left" />
+												</p:commandButton>
+											</p:column>
+										</p:dataTable>
+									</p:rowExpansion>
+								</p:dataTable>
+							</p:fieldset>
+						</p:outputPanel>
+						<div class="EmptyBox10" />
+						<p:outputPanel id="mitigationPlanOP">
+							<p:fieldset legend="Mitigation Plan">
+								<ui:include src="/pages/includes/download_lazy.xhtml">
+									<ui:param name="file_name" value="Mitigation_Plan_Report" />
+									<ui:param name="target" value="mitigationPlanDT" />
+								</ui:include>
+								<p:dataTable var="rowVarMP" value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringMitigationPlanDataModel}" id="mitigationPlanDT" rowKey="#{rowVarMP.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+									paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+									<f:facet name="header">Mitigation Plan</f:facet>
+									<p:column headerText="#{lang['expand.row']}" width="45" exportable="false" styleClass="action-column">
+										<p:rowToggler rendered="#{rowVarMP.docs.size() gt 0}"></p:rowToggler>
+									</p:column>
+									<p:column headerText="NSDMS Generated">
+										<p:outputLabel value="System Generated" rendered="#{rowVarMP.systemGenerated}" />
+										<p:outputLabel value="Manually Generated (#{rowVarMP.createUser.firstName} #{rowVarMP.createUser.lastName})" rendered="#{!rowVarMP.systemGenerated}" />
+									</p:column>
+									<p:column headerText="Section">
+										<p:outputLabel value="Learner Monitoring Survey" rendered="#{rowVarMP.learnerSurveyAnswerLink ne null}" />
+										<p:outputLabel value="Discretionary Grant Compliance Survey" rendered="#{rowVarMP.discretionaryGrantComplianceLinkSurvey ne null}" />
+										<p:outputLabel value="N/A" rendered="#{rowVarMP.discretionaryGrantComplianceLinkSurvey eq null and rowVarMP.learnerSurveyAnswerLink eq null}" />
+									</p:column>
+									<p:column headerText="Date Submitted">
+										<p:outputLabel value="#{rowVarMP.createDate}">
+											<f:convertDateTime pattern="dd MMMM yyyy" />
+										</p:outputLabel>
+									</p:column>
+									<p:column headerText="Non-compliance Issue">
+										<p:outputLabel value="#{rowVarMP.nonComplianceIssue.friendlyName}" />
+									</p:column>
+									<p:column headerText="Action Plan">
+										<p:outputLabel value="#{rowVarMP.actionPlan}" rendered="#{rowVarMP.actionPlan ne null and rowVarMP.actionPlan ne ''}" />
+										<p:outputLabel value="Not Provided" rendered="#{rowVarMP.actionPlan eq null or rowVarMP.actionPlan eq ''}" />
+									</p:column>
+									<p:column headerText="Due Date">
+										<p:outputLabel value="#{rowVarMP.dueDate}" rendered="#{rowVarMP.dueDate ne null}">
+											<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+										</p:outputLabel>
+										<p:outputLabel value="Not Provided" rendered="#{rowVarMP.dueDate eq null}" />
+									</p:column>
+									<p:column headerText="Responsible">
+										<p:outputLabel value="#{rowVarMP.responsible}" rendered="#{rowVarMP.responsible ne null and rowVarMP.responsible ne ''}" />
+										<p:outputLabel value="Not Provided" rendered="#{rowVarMP.responsible eq null or rowVarMP.responsible eq ''}" />
+									</p:column>
+									<p:column headerText="Status">
+										<p:outputLabel value="#{rowVarMP.openClosedEnum}" />
+									</p:column>
+									<p:column width="100" styleClass="action-column" headerText="Actions" exportable="false" rendered="#{sessionUI.task.processRole ne null and sessionUI.task.firstInProcess}">
+										<p:commandButton icon="fa fa-database" title="Update Mitigation Plan" update="mitigationPlanForm" action="#{workplaceMonitoringSiteVisitWorkflowUI.prepUpdateMitigationPlan}">
+											<f:setPropertyActionListener value="#{rowVarMP}" target="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringMitigationPlan}" />
+										</p:commandButton>
+										<p:spacer width="5" rendered="#{workplaceMonitoringSiteVisitWorkflowUI.canUploadAbstract}" />
+										<p:commandButton rendered="#{workplaceMonitoringSiteVisitWorkflowUI.canUploadAbstract}" icon="fa fa-upload" action="#{workplaceMonitoringSiteVisitWorkflowUI.prepGenericUpload}" process="@this" oncomplete="PF('dlgUploadGeneric').show()" update=":uploadGenericForm">
+											<f:setPropertyActionListener value="#{rowVarMP}" target="#{workplaceMonitoringSiteVisitWorkflowUI.genericUploadObject}" />
+											<p:tooltip value="Upload Supporting Documents" position="left" />
+										</p:commandButton>
+									</p:column>
+									<p:rowExpansion>
+										<p:dataTable value="#{rowVarMP.docs}" var="rowVarMpDocList" rowKey="#{rowVarMpDocList.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+											<f:facet name="Header">Documents</f:facet>
+											<p:column headerText="#{lang['uploaded.by']}">#{rowVarMpDocList.users.firstName} #{rowVarMpDocList.users.lastName}</p:column>
+											<p:column headerText="Type">Supporting Document</p:column>
+											<p:column headerText="Orginal File Name">#{rowVarMpDocList.originalFname}</p:column>
+											<p:column headerText="#{lang['uploaded']}" width="15%">
+												<h:outputText value="#{rowVarMpDocList.createDate}">
+													<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+												</h:outputText>
+											</p:column>
+											<p:column headerText="#{lang['version']}" width="15%">
+												<h:outputText value="#{rowVarMpDocList.versionNo}">
+												</h:outputText>
+											</p:column>
+											<p:column width="180" headerText="#{lang['view.edit']}" styleClass="action-column">
+												<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" rendered="#{rowVarMpDocList.id ne null}">
+													<f:setPropertyActionListener value="#{rowVarMpDocList}" target="#{uploadDocUI.doc}" />
+													<p:tooltip value="#{lang['download.the.file']}" position="left" rendered="#{rowVarMpDocList.id ne null}" />
+												</p:commandButton>
+
+												<p:commandButton icon="fa fa-bars" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rowVarMpDocList.id ne null and sessionUI.employee}">
+													<f:setPropertyActionListener value="#{rowVarMpDocList}" target="#{uploadDocUI.doc}" />
+													<p:tooltip value="#{lang['document.tracker']}" position="left" rendered="#{rowVarMpDocList.id ne null}" />
+												</p:commandButton>
+
+												<p:commandButton rendered="#{workplaceMonitoringSiteVisitWorkflowUI.canUploadAbstract}" icon="fa fa-upload" styleClass="#{rowVarMpDocList.originalFname eq null ? 'red-btn' : ''} flat" process="@this" oncomplete="PF('dlgUploadGeneric').show()" update=":uploadGenericForm">
+													<f:setPropertyActionListener value="#{rowVarMpDocList}" target="#{workplaceMonitoringSiteVisitWorkflowUI.doc}" />
+													<f:setPropertyActionListener value="1" target="#{workplaceMonitoringSiteVisitWorkflowUI.updateIndicatoryScreen}" />
+													<p:tooltip value="#{rowVarMpDocList.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+												</p:commandButton>
+
+												<p:commandButton rendered="#{rowVarMpDocList.note ne null and rowVarMpDocList.note.length() gt 0}" icon="fa fa-comment-o" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+													<f:setPropertyActionListener value="#{rowVarMpDocList}" target="#{uploadDocUI.doc}" />
+													<p:tooltip value="#{lang['view.note']}" position="left" />
+												</p:commandButton>
+
+												<p:commandButton rendered="#{rowVarMpDocList.extension.toLowerCase() eq 'pdf' or rowVarMpDocList.extension.toLowerCase() eq 'png' or rowVarMpDocList.extension.toLowerCase() eq 'jpg' or rowVarMpDocList.extension.toLowerCase() eq 'jpeg' or rowVarMpDocList.extension.toLowerCase() eq 'gif'}"
+													icon="fa fa-eye " oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+													<f:setPropertyActionListener value="#{rowVarMpDocList}" target="#{uploadDocUI.doc}" />
+													<p:tooltip value="#{lang['view.document']} " position="left" />
+												</p:commandButton>
+											</p:column>
+										</p:dataTable>
+									</p:rowExpansion>
+								</p:dataTable>
+							</p:fieldset>
+						</p:outputPanel>
+						<div class="EmptyBox10" />
+
+						<p:outputPanel id="learnerTranchPaymentsOP">
+							<p:fieldset legend="Learner Tranche Payments">
+							
+								<p:commandButton value="Re-run Checks" icon="fa fa-repeat" process="@this" action="#{workplaceMonitoringSiteVisitWorkflowUI.rerunLearnerPaymentsChecks}" update="learnerTranchPaymentsOP" onstart="uploadStart()" oncomplete="uploadDone()" rendered="#{sessionUI.task.processRole ne null and sessionUI.task.firstInProcess}" />
+							
+								<ui:include src="/pages/includes/download_lazy.xhtml">
+									<ui:param name="file_name" value="Learner_Payments_Extract" />
+									<ui:param name="target" value="learnerPaymentsDT" />
+								</ui:include>
+								<p:dataTable var="rowVarLP" value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerPaymentsDataModel}" id="learnerPaymentsDT" rowKey="#{rowVarLP.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+									paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+									<f:facet name="header">Learner Tranche Payments</f:facet>
+									<p:column headerText="#{lang['expand.row']}" width="45" exportable="false" styleClass="action-column">
+										<p:rowToggler rendered="#{rowVarLP.docs.size() gt 0}"></p:rowToggler>
+									</p:column>
+									<p:column headerText="REF ID" >
+										<p:outputLabel value="#{rowVarLP.id}"  />
+									</p:column>
+									<p:column headerText="Payment Available" >
+										<p:outputLabel value="Yes" rendered="#{rowVarLP.paymentAvalible}" />
+										<p:outputLabel value="No" rendered="#{!rowVarLP.paymentAvalible}" />
+									</p:column>
+									<p:column headerText="Reason Not Available">
+										<p:outputLabel value="N/A" rendered="#{rowVarLP.paymentAvalible}" />
+										<p:outputLabel value="#{rowVarLP.reasonPaymentNotAvalaible}" rendered="#{!rowVarLP.paymentAvalible}" />
+									</p:column>
+									<p:column headerText="Tranche Payment" >
+										<p:outputLabel value="N/A" rendered="#{!rowVarLP.paymentAvalible}" />
+										<p:outputLabel value="#{rowVarLP.projectImplementationPlanLearners.nextTranchPayment.friendlyName}" rendered="#{rowVarLP.paymentAvalible}" />
+									</p:column>
+									<p:column headerText="Learner Full Name">
+										<p:outputLabel value="Not Assigned" rendered="#{rowVarLP.projectImplementationPlanLearners.companyLearners eq null}" />
+										<p:outputLabel value="#{rowVarLP.projectImplementationPlanLearners.companyLearners.user.firstName} #{rowVarLP.projectImplementationPlanLearners.companyLearners.user.lastName}" rendered="#{rowVarLP.projectImplementationPlanLearners.companyLearners ne null}" />
+									</p:column>
+									<p:column headerText="DG / Project Linked To">
+										<p:outputLabel value="#{rowVarLP.projectImplementationPlanLearners.projectImplementationPlan.activeContracts.refnoAuto}" />
+									</p:column>
+									<p:column headerText="Intervention Type">
+										<p:outputLabel value="#{rowVarLP.projectImplementationPlanLearners.projectImplementationPlan.interventionType.description}" />
+									</p:column>
+									<p:column headerText="Payment To Be Processed" >
+										<p:outputLabel value="N/A" rendered="#{!rowVarLP.paymentAvalible}" />
+										<p:outputLabel value="Yes" rendered="#{rowVarLP.payTranchPayment and rowVarLP.paymentAvalible}" />
+										<p:outputLabel value="No" rendered="#{!rowVarLP.payTranchPayment and rowVarLP.paymentAvalible}" />
+									</p:column>
+									<p:column width="100" styleClass="action-column" headerText="Actions" exportable="false" rendered="#{sessionUI.task.processRole ne null and sessionUI.task.firstInProcess}">
+										<p:commandButton onstart="uploadStart()" oncomplete="uploadDone()" rendered="#{rowVarLP.paymentAvalible and !rowVarLP.payTranchPayment}" icon="fa fa-check" update=":mainForm:learnerTranchPaymentsOP" title="Process Payment" action="#{workplaceMonitoringSiteVisitWorkflowUI.updateLearnerPayment}">
+											<f:setPropertyActionListener value="#{rowVarLP}" target="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerPayments}" />
+										</p:commandButton>
+										<p:commandButton onstart="uploadStart()" oncomplete="uploadDone()" rendered="#{rowVarLP.paymentAvalible and rowVarLP.payTranchPayment}" icon="fa fa-times" update=":mainForm:learnerTranchPaymentsOP" title="Ignore Payment" action="#{workplaceMonitoringSiteVisitWorkflowUI.updateLearnerPayment}">
+											<f:setPropertyActionListener value="#{rowVarLP}" target="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerPayments}" />
+										</p:commandButton>
+										<p:spacer width="5"  rendered="#{rowVarLP.paymentAvalible}" />
+										<p:commandButton rendered="#{workplaceMonitoringSiteVisitWorkflowUI.canUploadAbstract}" icon="fa fa-upload" action="#{workplaceMonitoringSiteVisitWorkflowUI.prepGenericUpload}" process="@this" oncomplete="PF('dlgUploadGeneric').show()" update=":uploadGenericForm">
+											<f:setPropertyActionListener value="#{rowVarLP}" target="#{workplaceMonitoringSiteVisitWorkflowUI.genericUploadObject}" />
+											<p:tooltip value="Upload Supporting Documents" position="left" />
+										</p:commandButton>
+									</p:column>
+									<p:rowExpansion>
+										<p:dataTable value="#{rowVarLP.docs}" var="rowVarLPDocList" rowKey="#{rowVarLPDocList.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+											<f:facet name="Header">Documents</f:facet>
+											<p:column headerText="#{lang['uploaded.by']}">#{rowVarLPDocList.users.firstName} #{rowVarLPDocList.users.lastName}</p:column>
+											<p:column headerText="Type">Supporting Document</p:column>
+											<p:column headerText="Orginal File Name">#{rowVarLPDocList.originalFname}</p:column>
+											<p:column headerText="#{lang['uploaded']}" width="15%">
+												<h:outputText value="#{rowVarLPDocList.createDate}">
+													<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+												</h:outputText>
+											</p:column>
+											<p:column headerText="#{lang['version']}" width="15%">
+												<h:outputText value="#{rowVarLPDocList.versionNo}">
+												</h:outputText>
+											</p:column>
+											<p:column width="180" headerText="#{lang['view.edit']}" styleClass="action-column">
+												<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" rendered="#{rowVarLPDocList.id ne null}">
+													<f:setPropertyActionListener value="#{rowVarLPDocList}" target="#{uploadDocUI.doc}" />
+													<p:tooltip value="#{lang['download.the.file']}" position="left" rendered="#{rowVarLPDocList.id ne null}" />
+												</p:commandButton>
+
+												<p:commandButton icon="fa fa-bars" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rowVarLPDocList.id ne null and sessionUI.employee}">
+													<f:setPropertyActionListener value="#{rowVarLPDocList}" target="#{uploadDocUI.doc}" />
+													<p:tooltip value="#{lang['document.tracker']}" position="left" rendered="#{rowVarLPDocList.id ne null}" />
+												</p:commandButton>
+
+												<p:commandButton rendered="#{workplaceMonitoringSiteVisitWorkflowUI.canUploadAbstract}" icon="fa fa-upload" styleClass="#{rowVarLPDocList.originalFname eq null ? 'red-btn' : ''} flat" process="@this" oncomplete="PF('dlgUploadGeneric').show()" update=":uploadGenericForm">
+													<f:setPropertyActionListener value="#{rowVarLPDocList}" target="#{workplaceMonitoringSiteVisitWorkflowUI.doc}" />
+													<f:setPropertyActionListener value="8" target="#{workplaceMonitoringSiteVisitWorkflowUI.updateIndicatoryScreen}" />
+													<p:tooltip value="#{rowVarLPDocList.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+												</p:commandButton>
+
+												<p:commandButton rendered="#{rowVarLPDocList.note ne null and rowVarLPDocList.note.length() gt 0}" icon="fa fa-comment-o" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+													<f:setPropertyActionListener value="#{rowVarLPDocList}" target="#{uploadDocUI.doc}" />
+													<p:tooltip value="#{lang['view.note']}" position="left" />
+												</p:commandButton>
+
+												<p:commandButton rendered="#{rowVarLPDocList.extension.toLowerCase() eq 'pdf' or rowVarLPDocList.extension.toLowerCase() eq 'png' or rowVarLPDocList.extension.toLowerCase() eq 'jpg' or rowVarLPDocList.extension.toLowerCase() eq 'jpeg' or rowVarLPDocList.extension.toLowerCase() eq 'gif'}"
+													icon="fa fa-eye " oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+													<f:setPropertyActionListener value="#{rowVarLPDocList}" target="#{uploadDocUI.doc}" />
+													<p:tooltip value="#{lang['view.document']} " position="left" />
+												</p:commandButton>
+											</p:column>
+										</p:dataTable>
+									</p:rowExpansion>
+								</p:dataTable>
+							</p:fieldset>
+						</p:outputPanel>
+					</div>
+				</div>
+				<div class="ui-g-12">
+					<c:if test="#{workplaceMonitoringSiteVisitWorkflowUI.signoffList ne null and workplaceMonitoringSiteVisitWorkflowUI.signoffList.size() gt 0}">
+						<div class="card card-w-title">
+							<h1>Sign Off List</h1>
+							<div class="EmptyBox10" />
+							<p:outputPanel id="signOffOp">
+								<span class="Fs13 gray"><i class="fa fa-info-circle" aria-hidden="true"></i> Recommended to test email notification for External Sign Off Users</span>
+								<div class="EmptyBox5" />
+								<p:dataTable var="rvso" value="#{workplaceMonitoringSiteVisitWorkflowUI.signoffList}" id="signoffList" reflow="true">
+									<p:column headerText="External Sign Off User" width="7%" exportable="false">
+										<center>
+											<p:selectBooleanCheckbox value="#{rvso.externalUserSignoff}" disabled="true">
+											</p:selectBooleanCheckbox>
+										</center>
+									</p:column>
+									<p:column headerText="External Sign Off User" width="7%" style="display:none">
+										<p:outputLabel value="Yes" rendered="#{rvso.externalUserSignoff}" />
+										<p:outputLabel value="No" rendered="#{rvso.externalUserSignoff eq null or !rvso.externalUserSignoff}" />
+									</p:column>
+									<p:column headerText="Sign Off Title" width="15%">
+										<p:outputLabel value="#{rvso.signOffTitle}" />
+									</p:column>
+									<p:column headerText="#{lang['signed.off.by']}" width="15%">
+										<p:outputLabel value="#{rvso.user.firstName} #{rvso.user.lastName}" rendered="#{rvso.user ne null and !rvso.externalUserSignoff}" />
+										<p:outputLabel value="Awaiting Assignment" rendered="#{rvso.user eq null and !rvso.externalUserSignoff}" />
+										<p:outputLabel value="#{rvso.tempSignoff.firstName} #{rvso.tempSignoff.lastName} (#{rvso.tempSignoff.email})" rendered="#{rvso.tempSignoff ne null and rvso.externalUserSignoff}" />
+										<p:outputLabel value="Awaiting Assignment" rendered="##{rvso.tempSignoff eq null and rvso.externalUserSignoff}" />
+									</p:column>
+									<p:column headerText="#{lang['date']}" width="7%">
+										<p:outputLabel value="Pending Sign Off" rendered="#{rvso.signOffDate eq null and (rvso.accept eq null or !rvso.accept)}" />
+										<p:outputLabel value="Pending Submission" rendered="#{rvso.signOffDate eq null and (rvso.accept)}" />
+										<p:outputLabel value="#{rvso.signOffDate}" rendered="#{rvso.signOffDate ne null}">
+											<f:convertDateTime pattern="dd/MM/yyyy HH:MM" />
+										</p:outputLabel>
+									</p:column>
+									<p:column headerText="#{lang['acknowledge']}" width="15%">
+										<div>
+											<p:selectBooleanCheckbox value="#{rvso.accept}" disabled="true">
+											</p:selectBooleanCheckbox>
+										</div>
+										<div>
+											<p:outputLabel value="#{lang['i.acknowledge.read.understand.terms.and.conditions']}"></p:outputLabel>
+										</div>
+									</p:column>
+									<p:column style="width:10%" styleClass="action-column" headerText="Actions" exportable="false" rendered="#{sessionUI.task.processRole ne null and (sessionUI.task.firstInProcess or workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringSiteVisit.status eq ApprovalEnum.PendingSignOff)}">
+										<p:commandButton rendered="#{sessionUI.task.firstInProcess and rvso.canChangeSignOffUser}" title="Change Sign-off User" icon="fa fa-user-circle-o" process="signoffList" action="#{workplaceMonitoringSiteVisitWorkflowUI.prepChangeSignOffUser}" update=":mainForm:signoffList :changeUserForm">
+											<f:setPropertyActionListener value="#{rvso}" target="#{workplaceMonitoringSiteVisitWorkflowUI.signOffSelected}" />
+											<p:confirm header="Confirmation" message="Are You Sure You Wish To Change Sign Off User? " icon="fa fa-exclamation-triangle" />
+										</p:commandButton>
+										<p:commandButton rendered="#{sessionUI.task.firstInProcess and rvso.externalUserSignoff}" title="Test Email Notification" icon="fa fa-envelope-o" process="signoffList" action="#{workplaceMonitoringSiteVisitWorkflowUI.testExternalSignOffUserEmail}" update=":mainForm:signoffList">
+											<f:setPropertyActionListener value="#{rvso}" target="#{workplaceMonitoringSiteVisitWorkflowUI.signOffSelected}" />
+											<p:confirm header="Confirmation" message="Is the provide email address correct?" icon="fa fa-exclamation-triangle" />
+										</p:commandButton>
+										<p:commandButton rendered="#{!sessionUI.task.firstInProcess and rvso.user.id eq sessionUI.activeUser.id}" title="Sign Off" icon="fa fa-pencil" action="#{workplaceMonitoringSiteVisitWorkflowUI.prepSignOff}" update=":mainForm:signoffList :signOffExtneralForm" process="signoffList">
+											<f:setPropertyActionListener value="#{rvso}" target="#{workplaceMonitoringSiteVisitWorkflowUI.signOffSelected}" />
+										</p:commandButton>
+									</p:column>
+								</p:dataTable>
+							</p:outputPanel>
+						</div>
+					</c:if>
+				</div>
+
+				<div class="ui-g-12">
+					<c:if test="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringSiteVisit.docs ne null and workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringSiteVisit.docs.size() gt 0}">
+						<div class="card card-w-title">
+							<h1>Documents</h1>
+							<div class="EmptyBox10" />
+							<p:outputPanel id="docsPanel">
+								<p:dataTable value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringSiteVisit.docs}" var="rvSiteVisit" rowKey="#{rvSiteVisit.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+									<p:column headerText="#{lang['type']}" width="20%">#{rvSiteVisit.configDoc.name}</p:column>
+									<p:column headerText="#{lang['uploaded.by']}">#{rvSiteVisit.users.firstName} #{rvSiteVisit.users.lastName}</p:column>
+									<p:column headerText="#{lang['uploaded']}" width="15%">
+										<h:outputText value="#{rvSiteVisit.createDate}">
+											<f:convertDateTime pattern="dd MMM yyyy" />
+										</h:outputText>
+									</p:column>
+
+									<p:column headerText="#{lang['document.is.required']}" width="150">
+										<p:selectBooleanCheckbox value="#{rvSiteVisit.configDoc.requiredDocument}" disabled="true" style="opacity: 1 !important" rendered="#{not rvSiteVisit.required}"></p:selectBooleanCheckbox>
+										<p:selectBooleanCheckbox value="#{rvSiteVisit.required}" disabled="true" style="opacity: 1 !important" rendered="#{rvSiteVisit.required}"></p:selectBooleanCheckbox>
+									</p:column>
+
+									<p:column headerText="#{lang['original.required']}" width="150">
+										<p:selectBooleanCheckbox value="#{rvSiteVisit.configDoc.originalRequired}" disabled="true" style="opacity: 1 !important" rendered="#{not rvSiteVisit.configDoc.originalRequired}"></p:selectBooleanCheckbox>
+										<p:selectBooleanCheckbox value="#{rvSiteVisit.configDoc.originalRequired}" disabled="true" style="opacity: 1 !important" rendered="#{rvSiteVisit.configDoc.originalRequired}"></p:selectBooleanCheckbox>
+									</p:column>
+
+									<p:column headerText="#{lang['version']}" width="15%">
+										<h:outputText value="#{rvSiteVisit.versionNo}">
+										</h:outputText>
+									</p:column>
+
+									<p:column width="180" headerText="#{lang['view.edit']}" styleClass="action-column">
+										<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rvSiteVisit.id ne null}">
+											<f:setPropertyActionListener value="#{rvSiteVisit}" target="#{uploadDocUI.doc}" />
+											<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rvSiteVisit.id ne null}" />
+										</p:commandButton>
+
+										<p:commandButton icon="fa fa-bars " id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rvSiteVisit.id ne null}">
+											<f:setPropertyActionListener value="#{rvSiteVisit}" target="#{uploadDocUI.doc}" />
+											<p:tooltip for="dhistUserDocs" value="#{lang['document.tracker']}" position="left" rendered="#{rvSiteVisit.id ne null}" />
+										</p:commandButton>
+
+										<p:commandButton rendered="#{workplaceMonitoringSiteVisitWorkflowUI.canUploadAbstract}" icon="fa fa-upload" id="uploadUserDocs" styleClass="#{rvSiteVisit.originalFname eq null ? 'red-btn' : ''} flat" process="@this" oncomplete="PF('dlgUpload').show()" update=":uploadForm">
+											<f:setPropertyActionListener value="#{rvSiteVisit}" target="#{workplaceMonitoringSiteVisitWorkflowUI.doc}" />
+											<p:tooltip for="uploadUserDocs" value="#{rvSiteVisit.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+										</p:commandButton>
+
+										<p:commandButton rendered="#{rvSiteVisit.note ne null and rvSiteVisit.note.length() gt 0}" icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+											<f:setPropertyActionListener value="#{rvSiteVisit}" target="#{uploadDocUI.doc}" />
+											<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+										</p:commandButton>
+
+										<p:commandButton rendered="#{rvSiteVisit.extension.toLowerCase() eq 'pdf' or rvSiteVisit.extension.toLowerCase() eq 'png' or rvSiteVisit.extension.toLowerCase() eq 'jpg' or rvSiteVisit.extension.toLowerCase() eq 'jpeg' or rvSiteVisit.extension.toLowerCase() eq 'gif'}" icon="fa fa-eye "
+											id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+											<f:setPropertyActionListener value="#{rvSiteVisit}" target="#{uploadDocUI.doc}" />
+											<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+										</p:commandButton>
+									</p:column>
+								</p:dataTable>
+
+							</p:outputPanel>
+						</div>
+					</c:if>
+				</div>
+
+
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+						<c:if test="#{workplaceMonitoringSiteVisitWorkflowUI.rejectReasonsList.size() ne 0}">
+
+							<h1>Rejection Reasons:</h1>
+							<p:repeat var="rowVarRR" value="#{workplaceMonitoringSiteVisitWorkflowUI.rejectReasonsList}">
+								<p:outputLabel value="#{rowVarRR.description}" style="font-weight:bold; font-size: 20px; color: red;" />
+								<br />
+								<p:outputLabel value="#{rowVarRR.howTo}" style="color: grey;" />
+								<br />
+								<br />
+							</p:repeat>
+							<br />
+
+							<div class="EmptyBox10" />
+						</c:if>
+
+
+						<c:if test="#{sessionUI.task.processRole eq null or sessionUI.task.processRole.rolePermission eq null}">
+							<!-- Step before -->
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+							</p:panelGrid>
+						</c:if>
+
+
+						<c:if test="#{sessionUI.task.processRole ne null and sessionUI.task.firstInProcess}">
+							<!-- First Step -->
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+								<p:commandButton value="Submit For Sign off" icon="ui-icon-save" update="@form" process="@form" action="#{workplaceMonitoringSiteVisitWorkflowUI.submitForSignoff}" styleClass="flat green-btn Fs18" style="height: 50px;">
+									<p:confirm header="Confirmation" message="Are You Sure You Wish To Send To Sign Off? " icon="fa fa-exclamation-triangle" />
+								</p:commandButton>
+							</p:panelGrid>
+						</c:if>
+
+
+						<c:if test="#{workplaceMonitoringSiteVisitWorkflowUI.canSignOffAbstract}">
+							<!-- Sign off State -->
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+								<p:commandButton value="Complete Task" icon="ui-icon-save" update="@form" process="@form" action="#{workplaceMonitoringSiteVisitWorkflowUI.completeSignOffInternalUser}" styleClass="flat green-btn Fs18" style="height: 50px;">
+									<p:confirm header="Confirmation" message="Are You Sure To Proceed? " icon="fa fa-exclamation-triangle" />
+								</p:commandButton>
+							</p:panelGrid>
+						</c:if>
+
+						<c:if test="#{!sessionUI.task.firstInProcess and !workplaceMonitoringSiteVisitWorkflowUI.canFinalApproveTaskAbstract and !workplaceMonitoringSiteVisitWorkflowUI.canSignOffAbstract}">
+							<!-- Clo Step to sign off -->
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+								<p:commandButton value="Complete Task" icon="ui-icon-save" update="@form :signOffCloForm" oncomplete="PF('signOffCloDlg').show()" process="@form" action="#{workplaceMonitoringSiteVisitWorkflowUI.prepSignOffCloCrm}" styleClass="flat green-btn Fs18" style="height: 50px;">
+									<p:confirm header="Confirmation" message="Are You Sure To Proceed? " icon="fa fa-exclamation-triangle" />
+								</p:commandButton>
+							</p:panelGrid>
+						</c:if>
+
+						<c:if test="#{!sessionUI.task.firstInProcess and workplaceMonitoringSiteVisitWorkflowUI.canFinalApproveTaskAbstract and !workplaceMonitoringSiteVisitWorkflowUI.canSignOffAbstract}">
+							<!-- CRM Step to final approve -->
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+								<p:commandButton value="Final Approve" oncomplete="PF('signOffCrmDlg').show()" icon="ui-icon-save" update="@form :signOffCrmForm" process="@form" action="#{workplaceMonitoringSiteVisitWorkflowUI.prepSignOffCloCrm}" styleClass="flat green-btn Fs18" style="height: 50px;">
+									<p:confirm header="Confirmation" message="Are You Sure To Proceed? " icon="fa fa-exclamation-triangle" />
+								</p:commandButton>
+								<p:commandButton value="Reject Task" icon="fa fa-times" update="@form rejectReasonForm" oncomplete="PF('rejectReasonsDlg').show()" action="#{workplaceMonitoringSiteVisitWorkflowUI.prepRejection}" styleClass="red-btn flat Fs18" style="height: 50px;" process="@this">
+									<p:confirm header="Confirmation" message="Are You Sure? " icon="fa fa-exclamation-triangle" />
+								</p:commandButton>
+							</p:panelGrid>
+						</c:if>
+					</div>
+				</div>
+			</div>
+		</h:form>
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+			<h:form>
+				<p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="fa fa-check" />
+				<p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="fa fa-times" />
+			</h:form>
+		</p:confirmDialog>
+
+		<p:dialog position="top" header="Update: Mitigation Plan" dynamic="true" responsive="true" widgetVar="mitigationPlanDlg" resizable="false" hideEffect="clip" showEffect="clip" id="mitigationPlanDialog" appendTo="@(body)" modal="true" width="70%" height="80vh">
+			<h:form id="mitigationPlanForm">
+				<p:fieldset id="infoFS" legend="Mitigation Plan Information" style="width:95%">
+					<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="Yes" style="width:95%" disabled="true" rendered="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringMitigationPlan.systemGenerated}" />
+							<p:inputText value="No" style="width:95%" disabled="true" rendered="#{!workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringMitigationPlan.systemGenerated}" />
+							<p:outputLabel value="System Generated" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield" rendered="#{!workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringMitigationPlan.systemGenerated}">
+							<p:inputText
+								value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringMitigationPlan.createUser.firstName} #{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringMitigationPlan.createUser.lastName} (#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringMitigationPlan.createUser.email})"
+								style="width:95%" disabled="true" />
+							<p:outputLabel value="Create User" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringMitigationPlan.createDate}" style="width:95%" disabled="true">
+								<f:convertDateTime pattern="dd MMMM yyyy HH:mm" />
+							</p:inputText>
+							<p:outputLabel value="Date Submitted" />
+						</h:panelGroup>
+					</p:panelGrid>
+				</p:fieldset>
+				<p:fieldset id="gcsNonComplianceFS" legend="Grants Compliance Survey: Non-compliance" style="width:95%"
+					rendered="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringMitigationPlan.systemGenerated and workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringMitigationPlan.discretionaryGrantComplianceLinkSurvey ne null}">
+					<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringMitigationPlan.discretionaryGrantComplianceLinkSurvey.question}" style="width:95%" disabled="true" />
+							<p:outputLabel value="Question" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringMitigationPlan.discretionaryGrantComplianceLinkSurvey.answer.friendlyName}" style="width:95%" disabled="true" />
+							<p:outputLabel value="Answer" />
+						</h:panelGroup>
+					</p:panelGrid>
+				</p:fieldset>
+				<p:fieldset id="lmsNonComplianceFS" legend="Learner Monitoring Survey: Non-compliance" style="width:95%"
+					rendered="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringMitigationPlan.systemGenerated and workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringMitigationPlan.learnerSurveyAnswerLink ne null}">
+					<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringMitigationPlan.learnerSurveyLink.companyLearners.user.firstName} #{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringMitigationPlan.learnerSurveyLink.companyLearners.user.lastName}" style="width:95%"
+								disabled="true" />
+							<p:outputLabel value="Learner Information" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringMitigationPlan.learnerSurveyAnswerLink.question}" style="width:95%" disabled="true" />
+							<p:outputLabel value="Question" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringMitigationPlan.learnerSurveyAnswerLink.answer.friendlyName}" style="width:95%" disabled="true" />
+							<p:outputLabel value="Answer" />
+						</h:panelGroup>
+					</p:panelGrid>
+				</p:fieldset>
+				<p:fieldset legend="Information Required" style="width:95%" id="infoRequiredFS">
+					<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="Non-Compliance Issue" for="nonComplianceIssueSelect" />
+							</div>
+							<div>
+								<p:selectOneMenu id="nonComplianceIssueSelect" value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringMitigationPlan.nonComplianceIssue}" style="width:95%" required="true" requiredMessage="Provide: Non-Compliance Issue">
+									<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+						<h:panelGroup>
+							<div>
+								<p:outputLabel value="Status" for="statusSelect" />
+							</div>
+							<div>
+								<p:selectOneMenu id="statusSelect" value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringMitigationPlan.openClosedEnum}" style="width:95%" required="true" requiredMessage="Provide: Status">
+									<f:selectItems value="#{enumUI.openClosedEnumDD}" />
+								</p:selectOneMenu>
+							</div>
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:calendar mask="true" id="dueDateEntry" value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringMitigationPlan.dueDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" required="true" requiredMessage="Provide: Due Date">
+								<p:ajax event="dateSelect" />
+							</p:calendar>
+							<p:outputLabel value="Due Date" for="dueDateEntry" />
+						</h:panelGroup>
+					</p:panelGrid>
+					<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText id="actionPlanEntry" value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringMitigationPlan.actionPlan}" style="width:95%" required="true" requiredMessage="Provide: Action Plan">
+							</p:inputText>
+							<p:outputLabel value="Action Plan" for="actionPlanEntry" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText id="responsibleEntry" value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringMitigationPlan.actionPlan}" style="width:95%" required="true" requiredMessage="Provide: Who is responsible">
+							</p:inputText>
+							<p:outputLabel value="Responsible" for="responsibleEntry" />
+						</h:panelGroup>
+
+					</p:panelGrid>
+
+				</p:fieldset>
+				<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:95%" layout="grid">
+					<p:commandButton value="Update" icon="fa fa-database" process="mitigationPlanForm" update="@form :mainForm:mitigationPlanOP" action="#{workplaceMonitoringSiteVisitWorkflowUI.updateMitigationPlan}" onstart="uploadStart()" oncomplete="uploadDone()" />
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog position="top" header="Learner Survey" fitViewport="true" dynamic="true" responsive="true" widgetVar="learnerSurveyDlg" resizable="false" hideEffect="clip" showEffect="clip" id="learnerSurveyDialog" appendTo="@(body)" modal="true" width="70%" height="80vh">
+			<h:form id="learnerSurveyForm">
+				<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+					<p:dataTable var="rowVarAllLearners" value="#{workplaceMonitoringSiteVisitWorkflowUI.allLearnersDataModel}" id="allLearnersDT" rowKey="#{rowVarAllLearners.id}" paginator="true" rows="5" paginatorPosition="bottom"
+						paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" reflow="true" lazy="true">
+						<f:facet name="header">Select Learner</f:facet>
+						<p:column headerText="#{lang['first.name']}" filterBy="#{rowVarAllLearners.user.firstName}" sortBy="#{rowVarAllLearners.user.firstName}">
+							<h:outputText value="#{rowVarAllLearners.user.firstName}" />
+						</p:column>
+						<p:column headerText="#{lang['last.name']}" filterBy="#{rowVarAllLearnersuser.lastName}" sortBy="#{rowVarAllLearners.user.lastName}">
+							<h:outputText value="#{rowVarAllLearners.user.lastName}" />
+						</p:column>
+						<p:column headerText="Identity Number" filterBy="#{rowVarAllLearners.user.rsaIDNumber}" sortBy="#{rowVarAllLearners.user.rsaIDNumber}">
+							<h:outputText value="#{rowVarAllLearners.user.rsaIDNumber}" />
+							<h:outputText rendered="#{rowVarAllLearners.user.rsaIDNumber.length() lt 1}" value="N/A" />
+						</p:column>
+						<p:column headerText="Passport Number" filterBy="#{rowVarAllLearners.user.rsaIDNumber}" sortBy="#{rowVarAllLearners.user.rsaIDNumber}">
+							<h:outputText rendered="#{rowVarAllLearners.user.passportNumber.length() lt 1}" value="N/A" />
+							<h:outputText value="#{rowVarAllLearners.user.passportNumber}" />
+						</p:column>
+						<p:column headerText="Application Status">
+							<h:outputText value="#{rowVarAllLearners.learnerStatus.friendlyName}" />
+						</p:column>
+						<p:column headerText="Intervention Type">
+							<h:outputText value="#{rowVarAllLearners.interventionType.description}" />
+						</p:column>
+						<p:column headerText="Course / Qualification ">
+							<h:outputText value="(#{rowVarAllLearners.qualification.code})" rendered="#{rowVarAllLearners.qualification ne null}" />
+							<h:outputText value="#{rowVarAllLearners.qualification.description}" rendered="#{rowVarAllLearners.qualification ne null}" />
+							<h:outputText value="(#{rowVarAllLearners.qualification.nqflevelg2description})" rendered="#{rowVarAllLearners.qualification ne null}" />
+							<h:outputText value="#{rowVarAllLearners.skillsSet.description}" rendered="#{rowVarAllLearners.skillsSet ne null}" />
+							<h:outputText value="#{rowVarAllLearners.skillsProgram.description}" rendered="#{rowVarAllLearners.skillsProgram ne null}" />
+							<h:outputText value="#{rowVarAllLearners.unitStandard.title}" rendered="#{rowVarAllLearners.unitStandard ne null}" />
+							<h:outputText value="#{rowVarAllLearners.nonCredidBearingDescription}" rendered="#{rowVarAllLearners.nonCredidBearingDescription ne null}" />
+						</p:column>
+						<p:column headerText="Select Learner">
+							<p:commandButton icon="fa fa-plus" title="Select Learner" update=":learnerSurveyForm:popGrid" action="#{workplaceMonitoringSiteVisitWorkflowUI.populateQuestionsBasedOnLearnerSelection}">
+								<f:setPropertyActionListener value="#{rowVarAllLearners}" target="#{workplaceMonitoringSiteVisitWorkflowUI.companyLearners}" />
+							</p:commandButton>
+						</p:column>
+					</p:dataTable>
+				</p:panelGrid>
+				<p:outputPanel id="popGrid">
+					<p:panelGrid id="questionsGrid" columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerSurveyAnswersList.size() gt 0}">
+						<p:dataTable var="rowVarAnswers" value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerSurveyAnswersList}" id="answersList" rowKey="#{rowVarAnswers.id}" reflow="true" sortBy="#{rowVar.section}">
+							<f:facet name="header"> Survey Question / Statement </f:facet>
+							<p:column headerText="Question / Statement">
+								<p:outputLabel value="#{rowVarAnswers.question}" />
+							</p:column>
+							<p:column headerText="Answer">
+								<center>
+									<p:selectOneButton id="evidenceRequired2" value="#{rowVarAnswers.answer}" layout="grid" columns="2">
+										<p:ajax />
+										<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+									</p:selectOneButton>
+								</center>
+							</p:column>
+						</p:dataTable>
+					</p:panelGrid>
+					<p:panelGrid id="actionsGrid" columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+						<p:commandButton rendered="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerSurveyAnswersList.size() gt 0}" value="Submit Survey" icon="fa fa-database" update="@form :mainForm:learnerMonitoringSurveyOP :mainForm:mitigationPlanOP"
+							action="#{workplaceMonitoringSiteVisitWorkflowUI.createLearnerSurveyAnswers}" onstart="uploadStart()" oncomplete="uploadDone()" />
+					</p:panelGrid>
+				</p:outputPanel>
+			</h:form>
+		</p:dialog>
+
+
+		<p:dialog position="top" header="Learner Induction" widgetVar="learnerInductionDlg" hideEffect="clip" showEffect="clip" id="learnerInductionDialog" modal="true" closable="true" width="50%" responsive="true">
+			<h:form id="learnerInductionForm">
+				<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+					<c:if test="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.id eq null}">
+						<h3>Create: Learner Induction</h3>
+					</c:if>
+					<c:if test="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.id ne null}">
+						<h3>Update: Learner Induction</h3>
+					</c:if>
+				</p:panelGrid>
+
+				<div class="EmptyBox10" />
+
+				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" id="createGird" layout="grid" rendered="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.id eq null}">
+
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="Qualification Type" for="qualType" />
+						</div>
+						<div>
+							<p:selectOneMenu id="qualType" value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.qualificationTypeSelectionEnum}" style="width:95%" required="true" requiredMessage="Provide: Qualfiication Type">
+								<p:ajax update="createGird" />
+								<f:selectItem itemLabel="---Select Type---" itemValue="" styleClass="FontLight gray" noSelectionOption="true" />
+								<f:selectItems value="#{enumUI.qualificationTypeSelectionEnumDD}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield" rendered="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.qualificationTypeSelectionEnum eq QualificationTypeSelectionEnum.Qualification}" style="margin-top: 19px">
+						<p:autoComplete required="true" id="qualSelection" value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.qualification}" completeMethod="#{autoCompleteUI.completeQualification}" var="rv" itemLabel="#{rv.saqaQualification}" itemValue="#{rv}" forceSelection="true"
+							converter="QualificationConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+							<p:ajax />
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+							<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+							<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+						</p:autoComplete>
+						<p:outputLabel value="Qualification" for="qualSelection" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield" rendered="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.qualificationTypeSelectionEnum eq QualificationTypeSelectionEnum.UnitStandards}" style="margin-top: 19px">
+						<p:autoComplete required="true" id="unitStandard" value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.unitStandard}" completeMethod="#{autoCompleteUI.completeUnitStandards}" var="rv" itemLabel="#{rv.title}" itemValue="#{rv}" forceSelection="true"
+							converter="UnitStandardsConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+							<p:ajax event="itemSelect" />
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+							<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.title}</p:column>
+							<p:column headerText="NQF Level" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+						</p:autoComplete>
+						<p:outputLabel value="#{lang['unit.standard']}" for="unitStandard" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield" rendered="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.qualificationTypeSelectionEnum eq QualificationTypeSelectionEnum.SkillsProgram}" style="margin-top: 19px">
+						<p:autoComplete required="true" id="skillsProgram" value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.skillsProgram}" completeMethod="#{autoCompleteUI.completeSkillsProgram}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true"
+							converter="SkillsProgramConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+							<p:ajax event="itemSelect" />
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+							<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+						</p:autoComplete>
+						<p:outputLabel value="Skills Program" for="skillsProgram" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield" rendered="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.qualificationTypeSelectionEnum eq QualificationTypeSelectionEnum.SkillsSet}" style="margin-top: 19px">
+						<p:autoComplete required="true" id="skillsSet" value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.skillsSet}" completeMethod="#{autoCompleteUI.completeSkillsSet}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true"
+							converter="SkillsSetConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+							<p:ajax event="itemSelect" />
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+							<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+						</p:autoComplete>
+						<p:outputLabel value="Skills Set" for="skillsSet" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield" rendered="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.qualificationTypeSelectionEnum eq QualificationTypeSelectionEnum.Learnership}" style="margin-top: 19px">
+						<p:autoComplete required="true" id="learnership" value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.learnership}" completeMethod="#{autoCompleteUI.completeLearnershipQualification}" var="rv" itemLabel="(#{rv.code}) #{rv.description}" itemValue="#{rv}"
+							forceSelection="true" converter="LearnershipConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+							<p:ajax event="itemSelect" />
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+							<p:column headerText="Learnership" style="white-space: nowrap">#{rv.description}</p:column>
+						</p:autoComplete>
+						<p:outputLabel value="Learnership" for="learnership" />
+					</h:panelGroup>
+
+					<h:panelGroup rendered="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.qualificationTypeSelectionEnum eq QualificationTypeSelectionEnum.NonCreditBearingIntervationTitle}">
+						<div>
+							<p:outputLabel value="Non-Credit Bearing Intervation Title" for="intTitle" />
+						</div>
+						<div>
+							<p:selectOneMenu id="intTitle" value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.nonCreditBearingIntervationTitle}" style="width:95%" required="true" requiredMessage="Select Non-Credit Bearing Intervation Title"
+								converter="NonCreditBearingIntervationTitleConvertor">
+								<p:ajax />
+								<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+								<f:selectItems value="#{selectItemsUI.selectItemsNonCreditBearingIntervationTitle}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield" rendered="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.qualificationTypeSelectionEnum ne null}">
+						<p:inputText id="numAttCreate" value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.numberOfAttendees}" style="width:95%" required="true" requiredMessage="Provide: Number Of Attendees">
+							<p:ajax />
+						</p:inputText>
+						<p:outputLabel for="numAttCreate" value="Number Of Attendees" />
+					</h:panelGroup>
+				</p:panelGrid>
+
+				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" id="updateGrid" layout="grid" rendered="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.id ne null}">
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.qualificationTypeSelectionEnum.friendlyName}" style="width:95%" disabled="true" />
+						<p:outputLabel value="Qualification Type" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText style="width:95%" disabled="true" value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.learnership.code}" rendered="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.learnership ne null}" />
+						<p:inputText style="width:95%" disabled="true" value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.qualification.code}" rendered="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.qualification ne null}" />
+						<p:inputText style="width:95%" disabled="true" value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.unitStandard.code}" rendered="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.unitStandard ne null}" />
+						<p:inputText style="width:95%" disabled="true" value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.skillsProgram.programmeID}" rendered="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.skillsProgram ne null}" />
+						<p:inputText style="width:95%" disabled="true" value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.skillsSet.code}" rendered="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.skillsSet ne null}" />
+						<p:inputText style="width:95%" disabled="true" value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.nonCreditBearingIntervationTitle.code}"
+							rendered="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.nonCreditBearingIntervationTitle ne null}" />
+						<p:outputLabel value="Qualification ID / SAQA ID" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText style="width:95%" disabled="true" value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.qualification.description}" rendered="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.qualification ne null}" />
+						<p:inputText style="width:95%" disabled="true" value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.unitStandard.title}" rendered="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.unitStandard ne null}" />
+						<p:inputText style="width:95%" disabled="true" value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.skillsProgram.description}" rendered="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.skillsProgram ne null}" />
+						<p:inputText style="width:95%" disabled="true" value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.skillsSet.description}" rendered="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.skillsSet ne null}" />
+						<p:inputText style="width:95%" disabled="true" value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.nonCreditBearingIntervationTitle.description}"
+							rendered="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.nonCreditBearingIntervationTitle ne null}" />
+						<p:inputText style="width:95%" disabled="true" value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.learnership.description}" rendered="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.learnership ne null}" />
+						<p:outputLabel value="Qualification Title" />
+					</h:panelGroup>
+
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringLearnerInduction.numberOfAttendees}" style="width:95%" required="true" requiredMessage="Provide: Number Of Attendees" />
+						<p:outputLabel value="Number Of Attendees" />
+					</h:panelGroup>
+				</p:panelGrid>
+
+
+				<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+					<p:commandButton value="Submit" icon="fa fa-database" update="learnerInductionForm :mainForm:learnerInductionOP" action="#{workplaceMonitoringSiteVisitWorkflowUI.createUpdateLearnerInduction}" onstart="uploadStart()" oncomplete="uploadDone()" />
+				</p:panelGrid>
+
+			</h:form>
+		</p:dialog>
+
+		<p:dialog position="top" header="Discretionary Grant Compliance Survey: Update" widgetVar="grantComplianceSurveyDlg" hideEffect="clip" showEffect="clip" id="grantComplianceSurveyDialog" modal="true" closable="true" width="50%" responsive="true">
+			<h:form id="grantComplianceSurveyForm">
+				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:95%" layout="grid">
+
+					<p:outputLabel value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringDiscretionaryGrantComplianceSurvey.question}:" for="answerSelection" />
+
+					<p:selectOneRadio id="answerSelection" value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringDiscretionaryGrantComplianceSurvey.answer}" required="true" columns="2" layout="grid" requiredMessage="Provide: Answer">
+						<p:ajax />
+						<f:selectItems value="#{enumUI.yesNoEnumDD}" var="yesNo" itemLabel="#{yesNo}" itemValue="#{yesNo}" />
+					</p:selectOneRadio>
+				</p:panelGrid>
+
+
+				<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:95%" layout="grid">
+					<p:commandButton value="Update" icon="fa fa-database" update="grantComplianceSurveyForm :mainForm:grantComplianceSurveyOP :mainForm:mitigationPlanOP" action="#{workplaceMonitoringSiteVisitWorkflowUI.updateComplianceSurvey}" onstart="uploadStart()" oncomplete="uploadDone()" />
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog position="top" header="Action Plan To Improve Company Category: Update" widgetVar="actionPlanDlg" hideEffect="clip" showEffect="clip" id="actionPlanDialog" modal="true" closable="true" width="70%" responsive="true">
+			<h:form id="actionPlanForm">
+				<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:95%" layout="grid">
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringActionPlan.criteria}" style="width:95%" disabled="true" />
+						<p:outputLabel value="Criteria" />
+					</h:panelGroup>
+				</p:panelGrid>
+				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:95%" layout="grid">
+					<p:outputLabel value="At Risk:" for="atRiskSelection" />
+					<p:selectOneRadio id="atRiskSelection" value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringActionPlan.atRisk}" required="true" columns="2" layout="grid" requiredMessage="Provide: At Risk">
+						<p:ajax />
+						<f:selectItems value="#{enumUI.yesNoEnumDD}" var="yesNo" itemLabel="#{yesNo}" itemValue="#{yesNo}" />
+					</p:selectOneRadio>
+				</p:panelGrid>
+				<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:95%" layout="grid">
+					<h:panelGroup styleClass="md-inputfield">
+						<p:inputText required="true" requiredMessage="Provide: Action" id="actionEntry" value="#{workplaceMonitoringSiteVisitWorkflowUI.workplaceMonitoringActionPlan.action}" style="width:95%" />
+						<p:outputLabel value="Action:" for="actionEntry" />
+					</h:panelGroup>
+				</p:panelGrid>
+				<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:95%" layout="grid">
+					<p:commandButton value="Update" icon="fa fa-database" update="grantComplianceSurveyForm :mainForm:actionPlanSurveyOP" action="#{workplaceMonitoringSiteVisitWorkflowUI.updateActionPlan}" onstart="uploadStart()" oncomplete="uploadDone()" />
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog position="top" header="Change Sign Off User" widgetVar="changeSignOffUserDlg" hideEffect="clip" showEffect="clip" id="changeSignOffUserDialog" modal="true" closable="true" width="50%" responsive="true">
+			<h:form id="changeUserForm">
+				<h:panelGroup>
+					<p:outputLabel style="color:red; font-weight: bold;" value="You are advised that, if it is established that the selected user is not duly authorised to sign off, the said action may constitute fraud and be subject to the full penalty of the law." />
+					<br />
+				</h:panelGroup>
+				<h:panelGroup>
+					<br />
+					<p:outputLabel style="color:red; font-weight: bold;" value="Please note that if the duly authorised person is not on this list, please go to Company Contacts and add." />
+				</h:panelGroup>
+				<h:panelGroup>
+					<h4>Current User Assigned For Sign Off</h4>
+				</h:panelGroup>
+				<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+					<h:panelGroup styleClass="md-inputfield" rendered="#{workplaceMonitoringSiteVisitWorkflowUI.currentSignOffUserInfo eq null or workplaceMonitoringSiteVisitWorkflowUI.currentSignOffUserInfo eq ''}">
+						<p:inputText id="noUserAssignedDisplay" value="No User Assigned" style="width:95%" disabled="true" />
+						<p:outputLabel value="Current User:" for="noUserAssignedDisplay" />
+					</h:panelGroup>
+					<h:panelGroup styleClass="md-inputfield" rendered="#{workplaceMonitoringSiteVisitWorkflowUI.currentSignOffUserInfo ne null and workplaceMonitoringSiteVisitWorkflowUI.currentSignOffUserInfo ne ''}">
+						<p:inputText id="userAssignedDisplay" value="#{workplaceMonitoringSiteVisitWorkflowUI.currentSignOffUserInfo}" style="width:95%" disabled="true" />
+						<p:outputLabel value="Current User:" for="userAssignedDisplay" />
+					</h:panelGroup>
+				</p:panelGrid>
+
+				<h4>Select New User For Sign Off</h4>
+
+				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+					<p:outputLabel value="Extneral User?" for="userSignOffSelection" />
+					<p:selectBooleanCheckbox value="#{workplaceMonitoringSiteVisitWorkflowUI.signOffSelected.externalUserSignoff}">
+						<p:ajax update="@form" listener="#{workplaceMonitoringSiteVisitWorkflowUI.changeSignOffType}" />
+					</p:selectBooleanCheckbox>
+				</p:panelGrid>
+
+
+				<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{workplaceMonitoringSiteVisitWorkflowUI.signOffSelected.externalUserSignoff}">
+					<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText required="true" requiredMessage="Provide: First Name" id="firstNameEntry" value="#{workplaceMonitoringSiteVisitWorkflowUI.signOffSelected.tempSignoff.firstName}" style="width:95%" />
+							<p:outputLabel value="First Name:" for="firstNameEntry" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText required="false" requiredMessage="Provide: Middle Name" id="middleNameEntry" value="#{workplaceMonitoringSiteVisitWorkflowUI.signOffSelected.tempSignoff.middleName}" style="width:95%" />
+							<p:outputLabel value="Middle Name:" for="middleNameEntry" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText required="true" requiredMessage="Provide: Last Name" id="lastNameEntry" value="#{workplaceMonitoringSiteVisitWorkflowUI.signOffSelected.tempSignoff.lastName}" style="width:95%" />
+							<p:outputLabel value="Last Name:" for="lastNameEntry" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText required="true" requiredMessage="Provide: Email Address" id="emailEntry" value="#{workplaceMonitoringSiteVisitWorkflowUI.signOffSelected.tempSignoff.email}" style="width:95%" />
+							<p:outputLabel value="Email Address:" for="emailEntry" />
+						</h:panelGroup>
+
+						<p:selectOneRadio id="passNumID" value="#{workplaceMonitoringSiteVisitWorkflowUI.signOffSelected.tempSignoff.idPassportSelection}" columns="1" layout="responsive" required="true" requiredMessage="Provide: ID type">
+							<p:ajax update="idInput" />
+							<f:selectItems value="#{enumUI.idPassportEnumDD}" var="idpassEnum" itemLabel="#{idpassEnum}" itemValue="#{idpassEnum}" />
+						</p:selectOneRadio>
+
+						<h:panelGroup id="idInput" styleClass="md-inputfield">
+							<p:inputText rendered="#{workplaceMonitoringSiteVisitWorkflowUI.signOffSelected.tempSignoff.idPassportSelection eq idPassportEnum.RsaId}" id="rsaIdCriteria" maxlength="#{searchUserPassportOrIdUI.MAX_RSA_ID_NUMBER}"
+								value="#{workplaceMonitoringSiteVisitWorkflowUI.signOffSelected.tempSignoff.idNumber}" style="width:95%" requiredMessage="#{lang['rsa.id.number']} " required="true">
+							</p:inputText>
+							<p:outputLabel rendered="#{workplaceMonitoringSiteVisitWorkflowUI.signOffSelected.tempSignoff.idPassportSelection eq idPassportEnum.RsaId}" value="#{lang['rsa.id.number']}" for="rsaIdCriteria" />
+							<p:inputText rendered="#{workplaceMonitoringSiteVisitWorkflowUI.signOffSelected.tempSignoff.idPassportSelection eq idPassportEnum.Passport}" validatorMessage="#{lang['user.passport.length']}" id="passportNumCriteria" maxlength="#{searchUserPassportOrIdUI.MAX_PASSPORT_NUMBER}"
+								value="#{workplaceMonitoringSiteVisitWorkflowUI.signOffSelected.tempSignoff.passportNumber}" style="width:95%" requiredMessage="Provide: #{lang['passport.number']}" required="true">
+							</p:inputText>
+							<p:outputLabel rendered="#{workplaceMonitoringSiteVisitWorkflowUI.signOffSelected.tempSignoff.idPassportSelection eq idPassportEnum.Passport}" value="#{lang['passport.number']}" for="passportNumCriteria" />
+						</h:panelGroup>
+					</p:panelGrid>
+				</p:panelGrid>
+
+				<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{!workplaceMonitoringSiteVisitWorkflowUI.signOffSelected.externalUserSignoff}">
+					<h:panelGroup>
+						<div>
+							<p:outputLabel value="User Responsible For Sign off" for="userSignOffSelection" />
+						</div>
+						<div>
+							<p:selectOneMenu id="userSignOffSelection" value="#{workplaceMonitoringSiteVisitWorkflowUI.userSelectionForMoaSignOff}" converter="UsersConvertor" style="width:95%" required="true" requiredMessage="#{lang['provide.type.of.id']}">
+								<f:selectItems value="#{workplaceMonitoringSiteVisitWorkflowUI.userSelectionList}" var="rvu" itemValue="#{rvu}" itemLabel="#{rvu.firstName} #{rvu.lastName} (#{rvu.email} - Status: #{rvu.status.friendlyName})" />
+							</p:selectOneMenu>
+						</div>
+					</h:panelGroup>
+				</p:panelGrid>
+				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+					<h:panelGroup>
+						<p:commandButton title="Change Sign Off User" icon="fa fa-user-circle-o" value="Change Sign Off User" action="#{workplaceMonitoringSiteVisitWorkflowUI.changeSignOffUser}" update=":mainForm :mainForm:signoffList :changeUserForm" process="changeUserForm">
+							<p:confirm header="Confirmation" message="Are You Sure?" icon="fa fa-exclamation-triangle" />
+						</p:commandButton>
+					</h:panelGroup>
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog position="top" header="Sign Off" widgetVar="signOffExtneralDlg" resizable="false" hideEffect="clip" showEffect="clip" id="signOffExtneralDialog" width="80%" responsive="true" modal="true" dynamic="true">
+			<h:form id="signOffExtneralForm">
+				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+					<h:panelGroup styleClass="md-inputfield" style="margin-top:19px;">
+						<p:inputText value="#{workplaceMonitoringSiteVisitWorkflowUI.signOffSelected.user.firstName} #{workplaceMonitoringSiteVisitWorkflowUI.signOffSelected.user.lastName}" readonly="true" />
+						<p:outputLabel value="Sign Off User" />
+					</h:panelGroup>
+					<h:panelGroup>
+						<div>
+							<p:selectBooleanCheckbox value="#{workplaceMonitoringSiteVisitWorkflowUI.signOffSelected.accept}" disabled="false">
+							</p:selectBooleanCheckbox>
+						</div>
+						<div>
+							<p:outputLabel value="#{lang['i.acknowledge.read.understand.terms.and.conditions']}"></p:outputLabel>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup>
+						<p:commandButton title="Sign Off" icon="fa fa-pencil" value="Sign Off" action="#{workplaceMonitoringSiteVisitWorkflowUI.signOff}" update=":mainForm :mainForm:signoffList :signOffExtneralForm" process="signOffExtneralForm">
+							<p:confirm header="Confirmation" message="Are You Sure?" icon="fa fa-exclamation-triangle" />
+						</p:commandButton>
+					</h:panelGroup>
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog position="top" header="Sign Off: CLO" widgetVar="signOffCloDlg" resizable="false" hideEffect="clip" showEffect="clip" id="signOffCloDialog" width="80%" responsive="true" modal="true" dynamic="true">
+			<h:form id="signOffCloForm">
+				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+					<h:panelGroup styleClass="md-inputfield" style="margin-top:19px;">
+						<p:inputText value="#{sessionUI.activeUser.firstName} #{sessionUI.activeUser.lastName}" readonly="true" />
+						<p:outputLabel value="Sign Off User" />
+					</h:panelGroup>
+					<h:panelGroup>
+					</h:panelGroup>
+					<h:panelGroup>
+						<div>
+							<p:selectBooleanCheckbox value="#{workplaceMonitoringSiteVisitWorkflowUI.accept}" disabled="false">
+							</p:selectBooleanCheckbox>
+						</div>
+						<div>
+							<p:outputLabel value="#{lang['site.visit.report.declaration.text']}"></p:outputLabel>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup>
+						<p:commandButton title="Sign Off" icon="fa fa-pencil" value="Sign Off" action="#{workplaceMonitoringSiteVisitWorkflowUI.completeCloSignOff}" update=":signOffCloForm" process="signOffCloForm" onstart="uploadStart()" oncomplete="uploadDone()">
+							<p:confirm header="Confirmation" message="Are You Sure?" icon="fa fa-exclamation-triangle" />
+						</p:commandButton>
+					</h:panelGroup>
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog position="top" header="Sign Off: CRM" widgetVar="signOffCrmDlg" resizable="false" hideEffect="clip" showEffect="clip" id="signOffCrmDialog" width="80%" responsive="true" modal="true" dynamic="true">
+			<h:form id="signOffCrmForm">
+				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+					<h:panelGroup styleClass="md-inputfield" style="margin-top:19px;">
+						<p:inputText value="#{sessionUI.activeUser.firstName} #{sessionUI.activeUser.lastName}" readonly="true" />
+						<p:outputLabel value="Sign Off User" />
+					</h:panelGroup>
+					<h:panelGroup>
+					</h:panelGroup>
+					<h:panelGroup>
+						<div>
+							<p:selectBooleanCheckbox value="#{workplaceMonitoringSiteVisitWorkflowUI.accept}" disabled="false">
+							</p:selectBooleanCheckbox>
+						</div>
+						<div>
+							<p:outputLabel value="#{lang['site.visit.report.declaration.text']}"></p:outputLabel>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup>
+						<p:commandButton title="Sign Off" icon="fa fa-pencil" value="Sign Off" action="#{workplaceMonitoringSiteVisitWorkflowUI.completeCrmSignOff}" update=":signOffCrmForm" process="signOffCrmForm" onstart="uploadStart()" oncomplete="uploadDone()">
+							<p:confirm header="Confirmation" message="Are You Sure?" icon="fa fa-exclamation-triangle" />
+						</p:commandButton>
+					</h:panelGroup>
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="Reject Reasons" widgetVar="rejectReasonsDlg" hideEffect="clip" showEffect="clip" id="dialogRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{workplaceMonitoringSiteVisitWorkflowUI.selectedRejectReasonsList}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:100%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<p:ajax />
+								<f:selectItems value="#{workplaceMonitoringSiteVisitWorkflowUI.rejectReasonsForSelection}" var="rv" itemValue="#{rv}" />
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+							</p:selectManyMenu>
+						</div>
+					</div>
+					<p:commandButton value="Reject Task" action="#{workplaceMonitoringSiteVisitWorkflowUI.rejectBackToClo}" update="@form" onstart="uploadStart()" oncomplete="uploadDone()" />
+				</div>
+			</h:form>
+		</p:dialog>
+
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true" dynamic="true">
+			<h:form id="uploadForm">
+				<h:panelGroup id="uploadGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{workplaceMonitoringSiteVisitWorkflowUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{workplaceMonitoringSiteVisitWorkflowUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{workplaceMonitoringSiteVisitWorkflowUI.storeFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}"
+										update=":mainForm:docsPanel" multiple="false" fileLimit="1" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUploadGeneric" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOADGeneric" width="80%" responsive="true" modal="true" dynamic="true">
+			<h:form id="uploadGenericForm">
+				<h:panelGroup id="uploadGroupGeneric">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<c:if test="#{workplaceMonitoringSiteVisitWorkflowUI.doc.configDoc ne null}">
+									<h1 style="font-weight: bold; font-size: 25px;">#{workplaceMonitoringSiteVisitWorkflowUI.doc.configDoc.name}</h1>
+								</c:if>
+								<c:if test="#{workplaceMonitoringSiteVisitWorkflowUI.doc.configDoc eq null}">
+									<h1 style="font-weight: bold; font-size: 25px;">Supporting Document</h1>
+								</c:if>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{workplaceMonitoringSiteVisitWorkflowUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{workplaceMonitoringSiteVisitWorkflowUI.storeFileGeneric}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}"
+										update=":mainForm" multiple="false" fileLimit="1" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+
+
+	</ui:define>
+</ui:composition>

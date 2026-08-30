@@ -1,0 +1,416 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<h:panelGroup id="companyDetails">
+		<div class="EmptyBox10"></div>
+
+		<h:form id="infoForm">
+			<h:panelGroup style="width:100%" rendered="false">
+				<div style="text-align: left">
+					<p:commandButton id="updCompInfo" update=":tabView:infoForm :tabView:infoForm:companyInsGrid :tabView:updateForm" icon="fa fa-pencil-square-o" rendered="#{not initiatewspdgUI.updateCompanyData and initiatewspdgUI.wsp.wspStatusEnum eq WspStatusEnum.Draft}" action="#{initiatewspdgUI.changeCompanyEdit}">
+						<p:tooltip value="Update Allocated Company Information" position="" for="updCompInfo" />
+					</p:commandButton>
+				</div>
+			</h:panelGroup>
+			<p:outputPanel rendered="#{not initiatewspdgUI.updateCompanyData}">
+				<p:panelGrid columns="3" style="width:100%" id="companyInsGrid" layout="grid" styleClass="ui-panelgrid-blank">
+
+					<h:panelGroup>
+						<p:outputLabel value="#{lang['companyName']}" for="companyName" styleClass="Fs12 FontLight" />
+						<br />
+						<p:inputText disabled="true" id="companyName" value="#{initiatewspdgUI.company.companyName}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.company.name']}" />
+					</h:panelGroup>
+					<h:panelGroup>
+						<p:outputLabel value="#{lang['tradingName']}" for="tradingName" styleClass="Fs12 FontLight" />
+						<br />
+						<p:inputText disabled="true" id="tradingName" value="#{initiatewspdgUI.company.tradingName}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.trading.name']}" />
+					</h:panelGroup>
+
+					<h:panelGroup>
+						<p:outputLabel value="#{lang['telNumber']}" for="telNumberComp" styleClass="Fs12 FontLight" />
+						<br />
+						<p:inputText disabled="true" id="telNumberComp" value="#{initiatewspdgUI.company.telNumber}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.tel.number']}" />
+					</h:panelGroup>
+					<h:panelGroup>
+						<p:outputLabel value="#{lang['faxNumber']}" for="faxNumberComp" styleClass="Fs12 FontLight" />
+						<br />
+						<p:inputText disabled="true" id="faxNumberComp" value="#{initiatewspdgUI.company.faxNumber}" style="width:95%" rendered="#{initiatewspdgUI.company.faxNumber ne null and initiatewspdgUI.company.faxNumber.length() gt 0}" />
+						<p:inputText disabled="true" id="faxNumberComp2" value="N/A" style="width:95%" rendered="#{initiatewspdgUI.company.faxNumber eq null or initiatewspdgUI.company.faxNumber.length() eq 0}" />
+					</h:panelGroup>
+					<h:panelGroup>
+						<p:outputLabel value="#{lang['companyRegistrationNumber']}" for="companyRegistrationNumber" styleClass="Fs12 FontLight" />
+						<br />
+						<p:inputText disabled="true" id="companyRegistrationNumber" value="#{initiatewspdgUI.company.companyRegistrationNumber}" style="width:95%" />
+					</h:panelGroup>
+					<h:panelGroup>
+						<p:outputLabel value="#{lang['email']}" for="emailComp" styleClass="Fs12 FontLight" />
+						<br />
+						<p:inputText disabled="true" id="emailComp" value="#{initiatewspdgUI.company.email}" style="width:95%" />
+					</h:panelGroup>
+					<h:panelGroup>
+						<p:outputLabel value="#{lang['levyNumber']}" for="levyNumber" styleClass="Fs12 FontLight" />
+						<br />
+						<p:inputText disabled="true" id="levyNumber" value="#{initiatewspdgUI.company.levyNumber}" style="width:95%" />
+					</h:panelGroup>
+					<h:panelGroup>
+						<p:outputLabel value="#{lang['numberOfEmployees']}" for="numberOfEmployees" styleClass="Fs12 FontLight" />
+						<br />
+						<p:inputText disabled="true" id="numberOfEmployees" value="#{initiatewspdgUI.company.numberOfEmployees}" style="width:95%" />
+					</h:panelGroup>
+					<h:panelGroup>
+						<p:outputLabel value="#{lang['sicCode']}" for="sicCode" styleClass="Fs12 FontLight" />
+						<br />
+						<p:inputText disabled="true" id="sicCode" value="#{initiatewspdgUI.company.sicCode.description}" style="width:95%" required="true" requiredMessage="#{lang['enter.sic.code']}" />
+					</h:panelGroup>
+					<h:panelGroup>
+						<p:outputLabel value="Organisation Type" for="organisationType" styleClass="Fs12 FontLight" />
+						<br />
+						<p:inputText disabled="true" value="N/A" rendered="#{initiatewspdgUI.company.organisationType eq null}" />
+						<p:inputText disabled="true" id="organisationType" value="#{initiatewspdgUI.company.organisationType.description}" style="width:95%" rendered="#{initiatewspdgUI.company.organisationType ne null}" />
+					</h:panelGroup>
+					<h:panelGroup>
+						<p:outputLabel value="Recognition Agreement" styleClass="Fs12 FontLight" />
+						<br />
+						<p:inputText disabled="true" value="N/A" rendered="#{initiatewspdgUI.company.recognitionAgreement eq null}" />
+						<p:inputText disabled="true" value="#{initiatewspdgUI.company.recognitionAgreement.yesNoName}" style="width:95%" rendered="#{initiatewspdgUI.company.recognitionAgreement ne null}" />
+					</h:panelGroup>
+					<h:panelGroup>
+						<p:outputLabel value="Union Name" styleClass="Fs12 FontLight" />
+						<br />
+						<p:inputText disabled="true" value="N/A" rendered="#{initiatewspdgUI.company.majorityUnion eq null}" />
+						<p:inputText disabled="true" value="#{initiatewspdgUI.company.majorityUnion.description}" style="width:95%" rendered="#{initiatewspdgUI.company.majorityUnion ne null}" />
+					</h:panelGroup>
+				</p:panelGrid>
+				<p:panelGrid columns="1" style="width:100%" styleClass="ui-panelgrid-blank">
+					<p:fieldset legend="#{lang['banking.details']}">
+						<p:panelGrid columns="4" style="width : 95%" styleClass="ui-panelgrid-blank" id="bankingDetails">
+							<h:panelGroup>
+								<p:outputLabel value="#{lang['bank.name']}" for="bank" styleClass="Fs12 FontLight" />
+								<br />
+								<p:inputText disabled="true" id="bank" value="#{initiatewspdgUI.bankingDetails.bank.description}" style="width:95%" />
+							</h:panelGroup>
+							<h:panelGroup>
+								<p:outputLabel value="#{lang['bankAccNumber']}" for="bankAccNumber" styleClass="Fs12 FontLight" />
+								<br />
+								<p:inputText disabled="true" id="bankAccNumber" value="#{initiatewspdgUI.bankingDetails.maskedBankAccNumber}" style="width:95%" />
+							</h:panelGroup>
+							<h:panelGroup>
+								<p:outputLabel value="#{lang['branchCode']}" for="branchCode" styleClass="Fs12 FontLight" />
+								<br />
+								<p:inputText disabled="true" id="branchCode" value="#{initiatewspdgUI.bankingDetails.branchCode}" style="width:95%" />
+							</h:panelGroup>
+							<h:panelGroup>
+								<p:outputLabel value="#{lang['bankHolder']}" for="bankHolder" styleClass="Fs12 FontLight" />
+								<br />
+								<p:inputText disabled="true" id="bankHolder" value="#{initiatewspdgUI.bankingDetails.bankHolder}" style="width:95%" />
+							</h:panelGroup>
+						</p:panelGrid>
+					</p:fieldset>
+				</p:panelGrid>
+
+				<p:panelGrid columns="2" style="width:100%" id="companyInsGrida" layout="grid" styleClass="ui-panelgrid-blank">
+					<p:fieldset legend="#{lang['residentialAddress']}">
+						<p:panelGrid columns="2" style="width : 95%" styleClass="ui-panelgrid-blank" id="addrPcode">
+							<h:panelGroup>
+								<p:outputLabel value="#{lang['address.line.1']}" for="addr1" styleClass="Fs12 FontLight" />
+								<br />
+								<p:inputText disabled="true" id="addr1" value="#{initiatewspdgUI.company.residentialAddress.addressLine1}" style="width:95%" required="true" requiredMessage="#{lang['enter.residential.address']}" />
+								<br />
+								<p:outputLabel value="#{lang['address.line.2']}" for="addr2" styleClass="Fs12 FontLight" />
+								<br />
+								<p:inputText disabled="true" value="N/A" style="width:95%" rendered="#{initiatewspdgUI.company.residentialAddress.addressLine2 eq null or initiatewspdgUI.company.residentialAddress.addressLine2.length() eq 0}" />
+								<p:inputText disabled="true" id="addr2" style="width:95%" value="#{initiatewspdgUI.company.residentialAddress.addressLine2}" rendered="#{initiatewspdgUI.company.residentialAddress.addressLine2 ne null and initiatewspdgUI.company.residentialAddress.addressLine2.length() gt 0}" />
+							</h:panelGroup>
+							<h:panelGroup>
+								<p:outputLabel value="#{lang['address.line.3']}" for="addr3" styleClass="Fs12 FontLight" />
+								<br />
+								<p:inputText disabled="true" id="addr3" style="width:95%" value="#{initiatewspdgUI.company.residentialAddress.addressLine3}" rendered="#{initiatewspdgUI.company.residentialAddress.addressLine3 ne null and initiatewspdgUI.company.residentialAddress.addressLine3.length() gt 0}" />
+								<p:inputText disabled="true" value="N/A" style="width:95%" rendered="#{initiatewspdgUI.company.residentialAddress.addressLine3 eq null or initiatewspdgUI.company.residentialAddress.addressLine3.length() eq 0}" />
+								<br />
+								<p:outputLabel value="#{lang['address.line.4']}" for="addr4" styleClass="Fs12 FontLight" />
+								<br />
+								<p:inputText disabled="true" id="addr4" style="width:95%" value="#{initiatewspdgUI.company.residentialAddress.addressLine4}" rendered="#{initiatewspdgUI.company.residentialAddress.addressLine4 ne null and initiatewspdgUI.company.residentialAddress.addressLine4.length() gt 0}" />
+								<p:inputText disabled="true" value="N/A" style="width:95%" rendered="#{initiatewspdgUI.company.residentialAddress.addressLine4 eq null or initiatewspdgUI.company.residentialAddress.addressLine4.length() eq 0}" />
+							</h:panelGroup>
+							<h:panelGroup>
+								<p:outputLabel value="#{lang['post.code']}" for="pcode" styleClass="Fs12 FontLight" />
+								<br />
+								<p:inputText disabled="true" id="pcode" style="width:95%" value="#{initiatewspdgUI.company.residentialAddress.postcode}" rendered="#{initiatewspdgUI.company.residentialAddress.postcode ne null and initiatewspdgUI.company.residentialAddress.postcode.length() gt 0}" />
+								<p:inputText disabled="true" value="N/A" style="width:95%" rendered="#{initiatewspdgUI.company.residentialAddress.postcode eq null or initiatewspdgUI.company.residentialAddress.postcode.length() eq 0}" />
+								<br />
+								<h:outputLabel value="#{lang['municipality']}" for="MunicipalityID" styleClass="Fs12 FontLight" />
+								<br />
+								<p:inputText disabled="true" id="MunicipalityID" style="width:95%" value="#{initiatewspdgUI.company.residentialAddress.municipality.municipalityDesc}" />
+							</h:panelGroup>
+
+							<h:panelGroup>
+								<div class="EmptyBox40"></div>
+							</h:panelGroup>
+						</p:panelGrid>
+					</p:fieldset>
+
+					<p:fieldset legend="#{lang['postalAddress']}">
+						<p:panelGrid columns="2" style="width : 95%" styleClass="ui-panelgrid-blank" id="postalAddress">
+							<h:panelGroup>
+								<p:outputLabel value="#{lang['address.line.1']}" for="postalAddressaddr1" styleClass="Fs12 FontLight" />
+								<br />
+								<p:inputText disabled="true" id="postalAddressaddr1" value="#{initiatewspdgUI.company.postalAddress.addressLine1}" style="width:95%" required="true" requiredMessage="#{lang['enter.postal.address']}" />
+								<br />
+								<p:outputLabel value="#{lang['address.line.2']}" for="postalAddressaddr2" styleClass="Fs12 FontLight" />
+								<br />
+								<p:inputText disabled="true" id="postalAddressaddr2" style="width:95%" value="#{initiatewspdgUI.company.postalAddress.addressLine2}" />
+								<p:inputText disabled="true" value="N/A" style="width:95%" rendered="#{initiatewspdgUI.company.postalAddress.addressLine2 eq null or initiatewspdgUI.company.postalAddress.addressLine2.length() eq 0}" />
+							</h:panelGroup>
+							<h:panelGroup>
+								<p:outputLabel value="#{lang['address.line.3']}" for="postalAddressaddr3" styleClass="Fs12 FontLight" />
+								<br />
+								<p:inputText disabled="true" id="postalAddressaddr3" style="width:95%" value="#{initiatewspdgUI.company.postalAddress.addressLine3}" />
+								<p:inputText disabled="true" value="N/A" style="width:95%" rendered="#{initiatewspdgUI.company.postalAddress.addressLine3 eq null or initiatewspdgUI.company.postalAddress.addressLine3.length() eq 0}" />
+								<br />
+								<p:outputLabel value="#{lang['address.line.4']}" for="postalAddressaddr4" styleClass="Fs12 FontLight" />
+								<br />
+								<p:inputText disabled="true" id="postalAddressaddr4" style="width:95%" value="#{initiatewspdgUI.company.postalAddress.addressLine4}" />
+								<p:inputText disabled="true" value="N/A" style="width:95%" rendered="#{initiatewspdgUI.company.postalAddress.addressLine4 eq null or initiatewspdgUI.company.postalAddress.addressLine4.length() eq 0}" />
+							</h:panelGroup>
+							<h:panelGroup>
+								<p:outputLabel value="#{lang['post.code']}" for="postalAddressPcode" styleClass="Fs12 FontLight" />
+								<br />
+								<p:inputText disabled="true" id="postalAddressPcode" style="width:95%" value="#{initiatewspdgUI.company.postalAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}" />
+								<p:inputText disabled="true" value="N/A" style="width:95%" rendered="#{initiatewspdgUI.company.postalAddress.postcode eq null or initiatewspdgUI.company.postalAddress.postcode.length() eq 0}" />
+								<br />
+								<h:outputLabel value="#{lang['municipality']}" for="postalAddressMunicipalityID" styleClass="Fs12 FontLight" />
+								<br />
+								<p:inputText disabled="true" id="postalAddressMunicipalityID" style="width:95%" value="#{initiatewspdgUI.company.postalAddress.municipality.municipalityDesc}" />
+							</h:panelGroup>
+
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="#{lang['same.as.my.address']}" styleClass="Fs12 FontLight" />
+								</div>
+								<div>
+									<p:selectBooleanCheckbox value="#{initiatewspdgUI.company.postalAddress.sameAddress}" disabled="true">
+									</p:selectBooleanCheckbox>
+								</div>
+							</h:panelGroup>
+						</p:panelGrid>
+					</p:fieldset>
+				</p:panelGrid>
+			</p:outputPanel>
+		</h:form>
+
+		<h:form id="updateForm">
+			<p:outputPanel rendered="#{initiatewspdgUI.updateCompanyData}">
+
+				<p:panelGrid columns="3" style="width:100%" id="companyUpdGrid" layout="grid" styleClass="ui-panelgrid-blank">
+
+					<h:panelGroup>
+						<p:outputLabel value="#{lang['companyName']}" for="companyName" styleClass="Fs12 FontLight" />
+						<br />
+						<p:inputText  id="companyName" value="#{initiatewspdgUI.company.companyName}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.company.name']}" />
+					</h:panelGroup>
+					<h:panelGroup>
+						<p:outputLabel value="#{lang['tradingName']}" for="tradingName" styleClass="Fs12 FontLight" />
+						<br />
+						<p:inputText id="tradingName" value="#{initiatewspdgUI.company.tradingName}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.trading.name']}">
+							<p:ajax />
+						</p:inputText>
+					</h:panelGroup>
+
+					<h:panelGroup>
+						<p:outputLabel value="#{lang['telNumber']}" for="telNumberComp" styleClass="Fs12 FontLight" />
+						<br />
+						<p:inputText id="telNumberComp" value="#{initiatewspdgUI.company.telNumber}" style="width:95%" required="true" requiredMessage="#{lang['enter.the.tel.number']}">
+							<p:ajax />
+						</p:inputText>
+					</h:panelGroup>
+					<h:panelGroup>
+						<p:outputLabel value="#{lang['faxNumber']}" for="faxNumberComp" styleClass="Fs12 FontLight" />
+						<br />
+						<p:inputText id="faxNumberComp" value="#{initiatewspdgUI.company.faxNumber}" style="width:95%" rendered="#{initiatewspdgUI.company.faxNumber ne null and initiatewspdgUI.company.faxNumber.length() gt 0}">
+							<p:ajax />
+						</p:inputText>
+					</h:panelGroup>
+					<h:panelGroup>
+						<p:outputLabel value="#{lang['companyRegistrationNumber']}" for="companyRegistrationNumber" styleClass="Fs12 FontLight" />
+						<br />
+						<p:outputLabel id="companyRegistrationNumber" value="#{initiatewspdgUI.company.companyRegistrationNumber}" style="width:95%" />
+					</h:panelGroup>
+					<h:panelGroup>
+						<p:outputLabel value="#{lang['email']}" for="emailComp" styleClass="Fs12 FontLight" />
+						<br />
+						<p:inputText id="emailComp" value="#{initiatewspdgUI.company.email}" style="width:95%">
+							<p:ajax />
+						</p:inputText>
+					</h:panelGroup>
+					<h:panelGroup>
+						<p:outputLabel value="#{lang['levyNumber']}" for="levyNumber" styleClass="Fs12 FontLight" />
+						<br />
+						<p:outputLabel id="levyNumber" value="#{initiatewspdgUI.company.levyNumber}" style="width:95%" />
+					</h:panelGroup>
+					<h:panelGroup>
+						<p:outputLabel value="#{lang['numberOfEmployees']}" for="numberOfEmployees" styleClass="Fs12 FontLight" />
+						<br />
+						<p:outputLabel id="numberOfEmployees" value="#{initiatewspdgUI.company.numberOfEmployees}" style="width:95%" />
+					</h:panelGroup>
+					<h:panelGroup>
+						<p:outputLabel value="#{lang['sicCode']}" for="sicCode" styleClass="Fs12 FontLight" />
+						<br />
+						<p:autoComplete id="sicCode" value="#{initiatewspdgUI.company.sicCode}" style="width: 95%" completeMethod="#{autoCompleteUI.completeSIC}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SICCodeConvertor" dropdown="true" minQueryLength="1" maxResults="10">
+							<p:ajax />
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+							<p:column headerText="#{lang['description']}" style="white-space: nowrap">#{rv.description}</p:column>
+						</p:autoComplete>
+					</h:panelGroup>
+					<h:panelGroup>
+						<p:outputLabel value="Organisation Type" for="organisationType" styleClass="Fs12 FontLight" />
+						<br />
+						<p:outputLabel value="N/A" rendered="#{initiatewspdgUI.company.organisationType eq null}" />
+						<p:outputLabel id="organisationType" value="#{initiatewspdgUI.company.organisationType.description}" style="width:95%" rendered="#{initiatewspdgUI.company.organisationType ne null}" />
+					</h:panelGroup>
+				</p:panelGrid>
+				<p:panelGrid columns="1" style="width:100%" styleClass="ui-panelgrid-blank">
+					<p:fieldset legend="#{lang['banking.details']}">
+						<p:panelGrid columns="4" style="width : 95%" styleClass="ui-panelgrid-blank" id="bankingDetails">
+							<h:panelGroup>
+								<p:outputLabel value="#{lang['bank.name']}" for="bank" styleClass="Fs12 FontLight" />
+								<br />
+								<p:outputLabel id="bank" value="#{initiatewspdgUI.bankingDetails.bank.description}" style="width:95%" />
+							</h:panelGroup>
+							<h:panelGroup>
+								<p:outputLabel value="#{lang['bankAccNumber']}" for="bankAccNumber" styleClass="Fs12 FontLight" />
+								<br />
+								<p:outputLabel id="bankAccNumber" value="#{initiatewspdgUI.bankingDetails.maskedBankAccNumber}" style="width:95%" />
+							</h:panelGroup>
+							<h:panelGroup>
+								<p:outputLabel value="#{lang['branchCode']}" for="branchCode" styleClass="Fs12 FontLight" />
+								<br />
+								<p:outputLabel id="branchCode" value="#{initiatewspdgUI.bankingDetails.branchCode}" style="width:95%" />
+							</h:panelGroup>
+							<h:panelGroup>
+								<p:outputLabel value="#{lang['bankHolder']}" for="bankHolder" styleClass="Fs12 FontLight" />
+								<br />
+								<p:outputLabel id="bankHolder" value="#{initiatewspdgUI.bankingDetails.bankHolder}" style="width:95%" />
+							</h:panelGroup>
+						</p:panelGrid>
+					</p:fieldset>
+				</p:panelGrid>
+
+				<p:panelGrid columns="2" style="width:100%" id="companyInsGrida" layout="grid" styleClass="ui-panelgrid-blank">
+					<p:fieldset legend="#{lang['residentialAddress']}">
+						<p:panelGrid columns="2" style="width : 95%" styleClass="ui-panelgrid-blank" id="addrPcode">
+							<h:panelGroup>
+
+								<p:outputLabel value="#{lang['address.line.1']}" for="addr1" styleClass="Fs12 FontLight" />
+								<br />
+								<p:inputText id="addr1" value="#{initiatewspdgUI.company.residentialAddress.addressLine1}" style="width:95%" required="true" requiredMessage="#{lang['enter.residential.address']}">
+									<p:ajax />
+								</p:inputText>
+
+								<br />
+								<p:outputLabel value="#{lang['address.line.2']}" for="addr2" styleClass="Fs12 FontLight" />
+								<br />
+								<p:inputText id="addr2" style="width:95%" value="#{initiatewspdgUI.company.residentialAddress.addressLine2}">
+									<p:ajax />
+								</p:inputText>
+							</h:panelGroup>
+							<h:panelGroup>
+								<p:outputLabel value="#{lang['address.line.3']}" for="addr3" styleClass="Fs12 FontLight" />
+								<br />
+								<p:inputText id="addr3" style="width:95%" value="#{initiatewspdgUI.company.residentialAddress.addressLine3}">
+									<p:ajax />
+								</p:inputText>
+
+								 <br />
+								<h:outputLabel value="#{lang['town']}" for="theTown" />
+								<br />
+								<p:autoComplete id="theTown" value="#{initiatewspdgUI.company.residentialAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}"
+									itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true"
+									requiredMessage="#{lang['please.select.a.town']}">
+									<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+								</p:autoComplete>
+							
+								
+							</h:panelGroup>
+							<h:panelGroup>
+								<p:outputLabel value="#{lang['post.code']}" for="pcode" styleClass="Fs12 FontLight" />
+								<br />
+								<p:inputText id="pcode" style="width:95%" value="#{initiatewspdgUI.company.residentialAddress.postcode}">
+									<p:ajax />
+								</p:inputText>
+								<br />
+								<h:outputLabel value="#{lang['municipality']}" for="MunicipalityID" styleClass="Fs12 FontLight" />
+								<br />
+								<p:outputLabel id="MunicipalityID" style="width:95%" value="#{initiatewspdgUI.company.residentialAddress.municipality.municipalityDesc}" />
+							</h:panelGroup>
+
+							<h:panelGroup>
+								<div class="EmptyBox40"></div>
+							</h:panelGroup>
+						</p:panelGrid>
+					</p:fieldset>
+
+					<p:fieldset legend="#{lang['postalAddress']}">
+						<p:panelGrid columns="2" style="width : 95%" styleClass="ui-panelgrid-blank" id="postalAddress">
+							<h:panelGroup>
+								<p:outputLabel value="#{lang['address.line.1']}" for="postalAddressaddr1" styleClass="Fs12 FontLight" />
+								<br />
+								<p:inputText id="postalAddressaddr1" value="#{initiatewspdgUI.company.postalAddress.addressLine1}" style="width:95%" required="true" requiredMessage="#{lang['enter.postal.address']}">
+									<p:ajax />
+								</p:inputText>
+								<br />
+								<p:outputLabel value="#{lang['address.line.2']}" for="postalAddressaddr2" styleClass="Fs12 FontLight" />
+								<br />
+								<p:inputText id="postalAddressaddr2" style="width:95%" value="#{initiatewspdgUI.company.postalAddress.addressLine2}">
+									<p:ajax />
+								</p:inputText>
+							</h:panelGroup>
+							<h:panelGroup>
+								<p:outputLabel value="#{lang['address.line.3']}" for="postalAddressaddr3" styleClass="Fs12 FontLight" />
+								<br />
+								<p:inputText id="postalAddressaddr3" style="width:95%" value="#{initiatewspdgUI.company.postalAddress.addressLine3}">
+									<p:ajax />
+								</p:inputText>
+
+								
+								 <br />
+								<h:outputLabel value="#{lang['town']}" for="theTown2" />
+								<br />
+								<p:autoComplete id="theTown2" value="#{initiatewspdgUI.company.postalAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}"
+									itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true"
+									requiredMessage="#{lang['please.select.a.town']}">
+									<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+								</p:autoComplete>
+								
+								
+								
+							</h:panelGroup>
+							<h:panelGroup>
+								<p:outputLabel value="#{lang['post.code']}" for="postalAddressPcode" styleClass="Fs12 FontLight" />
+								<br />
+								<p:inputText id="postalAddressPcode" style="width:95%" value="#{initiatewspdgUI.company.postalAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}">
+									<p:ajax />
+								</p:inputText>
+								<br />
+								<h:outputLabel value="#{lang['municipality']}" for="postalAddressMunicipalityID" styleClass="Fs12 FontLight" />
+								<br />
+								<p:outputLabel id="postalAddressMunicipalityID" style="width:95%" value="#{initiatewspdgUI.company.postalAddress.municipality.municipalityDesc}" />
+							</h:panelGroup>
+
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="#{lang['same.as.my.address']}" styleClass="Fs12 FontLight" />
+								</div>
+								<div>
+									<p:selectBooleanCheckbox value="#{initiatewspdgUI.company.postalAddress.sameAddress}" disabled="true">
+									</p:selectBooleanCheckbox>
+								</div>
+							</h:panelGroup>
+						</p:panelGrid>
+					</p:fieldset>
+					<p:commandButton styleClass="Fs14 FontLight" value="#{lang['submit']}" icon="ui-icon-save" update="tabView :tabView:infoForm :tabView:updateForm" immediate="true" action="#{initiatewspdgUI.updateCompanyInformationOnWsp}" process="updateForm"
+						rendered="#{initiatewspdgUI.wsp.wspStatusEnum eq WspStatusEnum.Draft}" />
+					<p:commandButton styleClass="Fs14 FontLight" value="#{lang['cancel']}" icon="fa fa-times" update="tabView :tabView:infoForm :tabView:infoForm:companyInsGrid :tabView:updateForm" immediate="true" action="#{initiatewspdgUI.cancelUpdateCompanyInformationOnWsp}"
+						rendered="#{initiatewspdgUI.wsp.wspStatusEnum eq WspStatusEnum.Draft}" />
+				</p:panelGrid>
+			</p:outputPanel>
+		</h:form>
+	</h:panelGroup>
+</ui:composition>

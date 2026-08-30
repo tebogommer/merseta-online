@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.4.3.final using JasperReports Library version 6.4.3  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="ETQ-FM-003-Record-of-Support-Site-Visit" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="802" leftMargin="20" rightMargin="20" topMargin="20" bottomMargin="20" uuid="bb58a86f-8d23-4ee9-9043-f8d26190f3e4">
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="src\main\webapp\reports\DataAdapter.xml"/>
+	<parameter name="company_id" class="java.lang.Long"/>
+	<parameter name="user_id" class="java.lang.Long"/>
+	<parameter name="logo" class="java.awt.Image"/>
+	<parameter name="backround_image" class="java.awt.Image"/>
+	<queryString language="SQL">
+		<![CDATA[SELECT company.company_name AS company_name,
+	   company.levy_number AS levy_number,
+	   company.fax_number AS fax_number,
+       company.email AS email,
+       company.tel_number AS tel_no,
+       company.trading_name AS trading_name,
+       company.company_registration_number AS com_reg_number,
+       company.company_type AS company_type,
+       company.paye_sdl_number AS sdl_number,
+       company.company_guid AS guid,
+       company.number_of_employees AS no_emp,
+       
+       address.address_line_1 address_line_one,
+       address.address_line_2 address_line_two,
+       address.address_line_3 address_line_three,
+       address.postcode As postal_code,
+       
+       res_address.address_line_1 As res_address_line_one,
+       res_address.address_line_2 As res_address_line_two,
+       res_address.address_line_3 As res_address_line_three,
+       res_address.postcode As res_postal_code,
+       
+       substr(users.first_name ,1,1)AS first_name,
+       users.last_name AS surname,
+       users.rsa_id_number AS id_number,
+       users.email AS userEmail,
+       users.cell_number AS userCellNo
+       
+FROM merseta.company AS company 
+LEFT JOIN merseta.address address
+ON company.postal_address_id = address.id
+LEFT JOIN merseta.address res_address
+ON company.residential_address_id = res_address.id
+LEFT JOIN merseta.wsp wsp
+ON wsp.company_id = company.id
+LEFT JOIN merseta.wsp_signoff wspsignoff
+ON wsp.id = wsp_id
+LEFT JOIN merseta.users users
+ON wspsignoff.user_id = users.id
+WHERE company.id=$P{company_id}
+AND users.id =$P{user_id}]]>
+	</queryString>
+	<field name="company_name" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="company_name"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="company"/>
+	</field>
+	<field name="levy_number" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="levy_number"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="company"/>
+	</field>
+	<field name="fax_number" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="fax_number"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="company"/>
+	</field>
+	<field name="email" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="email"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="company"/>
+	</field>
+	<field name="tel_no" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="tel_no"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="company"/>
+	</field>
+	<field name="trading_name" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="trading_name"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="company"/>
+	</field>
+	<field name="com_reg_number" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="com_reg_number"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="company"/>
+	</field>
+	<field name="company_type" class="java.lang.Integer">
+		<property name="com.jaspersoft.studio.field.label" value="company_type"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="company"/>
+	</field>
+	<field name="sdl_number" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="sdl_number"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="company"/>
+	</field>
+	<field name="guid" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="guid"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="company"/>
+	</field>
+	<field name="no_emp" class="java.lang.Integer">
+		<property name="com.jaspersoft.studio.field.label" value="no_emp"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="company"/>
+	</field>
+	<field name="address_line_one" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="address_line_one"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="address_line_two" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="address_line_two"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="address_line_three" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="address_line_three"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="postal_code" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="postal_code"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="res_address_line_one" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="res_address_line_one"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="res_address_line_two" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="res_address_line_two"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="res_address_line_three" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="res_address_line_three"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="res_postal_code" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="res_postal_code"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="first_name" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="first_name"/>
+	</field>
+	<field name="surname" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="surname"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="users"/>
+	</field>
+	<field name="id_number" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="id_number"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="users"/>
+	</field>
+	<field name="userEmail" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="userEmail"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="users"/>
+	</field>
+	<field name="userCellNo" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="userCellNo"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="users"/>
+	</field>
+	<background>
+		<band height="555" splitType="Stretch">
+			<image>
+				<reportElement x="530" y="60" width="270" height="450" uuid="4a30f513-2d63-4aad-9e26-8e69ceb65e75"/>
+				<imageExpression><![CDATA[$P{backround_image}]]></imageExpression>
+			</image>
+		</band>
+	</background>
+	<title>
+		<band height="146" splitType="Stretch">
+			<property name="com.jaspersoft.studio.unit.height" value="px"/>
+			<image scaleImage="RetainShape">
+				<reportElement stretchType="ElementGroupHeight" x="310" y="0" width="160" height="146" uuid="d8fb2232-5803-4e0f-ab1e-f39bc9ffd8ce"/>
+				<graphicElement fill="Solid"/>
+				<imageExpression><![CDATA[$P{logo}]]></imageExpression>
+			</image>
+		</band>
+	</title>
+	<detail>
+		<band height="125" splitType="Stretch"/>
+		<band height="50"/>
+	</detail>
+	<pageFooter>
+		<band height="54" splitType="Stretch">
+			<staticText>
+				<reportElement x="179" y="1" width="117" height="15" forecolor="#404040" uuid="ed89482f-3fa4-4475-afcf-7a20f48bac86"/>
+				<box>
+					<topPen lineWidth="0.5" lineColor="#505050"/>
+					<leftPen lineWidth="0.5" lineColor="#505050"/>
+					<bottomPen lineWidth="0.5" lineColor="#505050"/>
+					<rightPen lineWidth="0.5" lineColor="#505050"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[Document Title]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="179" y="16" width="117" height="15" forecolor="#404040" uuid="45ed24d8-3d4b-4ce7-98c5-119590dd64e2"/>
+				<box>
+					<topPen lineWidth="0.5" lineColor="#505050"/>
+					<leftPen lineWidth="0.5" lineColor="#505050"/>
+					<bottomPen lineWidth="0.5" lineColor="#505050"/>
+					<rightPen lineWidth="0.5" lineColor="#505050"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[Page Number]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="179" y="31" width="117" height="16" forecolor="#404040" uuid="28a0db5b-2217-4741-89f5-7542466488bf"/>
+				<box>
+					<topPen lineWidth="0.5" lineColor="#505050"/>
+					<leftPen lineWidth="0.5" lineColor="#505050"/>
+					<bottomPen lineWidth="0.5" lineColor="#505050"/>
+					<rightPen lineWidth="0.5" lineColor="#505050"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[Document Number]]></text>
+			</staticText>
+			<textField>
+				<reportElement x="296" y="31" width="117" height="16" forecolor="#404040" uuid="c9ba2e91-5362-4321-9ae6-53cbec1e059e"/>
+				<box>
+					<topPen lineWidth="0.5" lineColor="#505050"/>
+					<leftPen lineWidth="0.5" lineColor="#505050"/>
+					<bottomPen lineWidth="0.5" lineColor="#505050"/>
+					<rightPen lineWidth="0.5" lineColor="#505050"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA["ETQ–TP– 010"]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement mode="Opaque" x="296" y="16" width="117" height="15" forecolor="#404040" uuid="9bded020-4e11-4359-9f65-bf9e68a42437"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement textAlignment="Left" verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Page " + ($V{PAGE_NUMBER}+1)+ " of  " + ($V{PAGE_NUMBER}+1)]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="296" y="1" width="351" height="15" forecolor="#404040" uuid="560387cf-6e37-4eca-ab62-28abb8be4f8c"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle" markup="html">
+					<font fontName="Arial" size="9" isBold="true" pdfFontName="Helvetica-Bold"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[<b>Accreditation Reporting</b>]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="413" y="16" width="117" height="15" forecolor="#404040" uuid="f74c0207-1427-4a94-9bce-029ac17ef051"/>
+				<box>
+					<topPen lineWidth="0.5" lineColor="#505050"/>
+					<leftPen lineWidth="0.5" lineColor="#505050"/>
+					<bottomPen lineWidth="0.5" lineColor="#505050"/>
+					<rightPen lineWidth="0.5" lineColor="#505050"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[Submission Date & Time]]></text>
+			</staticText>
+			<textField pattern="dd MMMMM yyyy H:mm:ss">
+				<reportElement x="530" y="16" width="117" height="15" forecolor="#404040" uuid="78f48d6f-6d48-4e8b-953d-694cfc6906a7"/>
+				<box>
+					<topPen lineWidth="0.5"/>
+					<leftPen lineWidth="0.5"/>
+					<bottomPen lineWidth="0.5"/>
+					<rightPen lineWidth="0.5"/>
+				</box>
+				<textElement>
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="0" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="530" y="31" width="117" height="16" forecolor="#404040" uuid="3e4095a0-6992-4f16-890a-1bc8f6395ef7"/>
+				<box>
+					<pen lineWidth="0.5"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Controlled"]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement x="413" y="31" width="117" height="16" forecolor="#404040" uuid="6219fe59-3776-4949-8248-4936e3d6ef70"/>
+				<box>
+					<topPen lineWidth="0.5" lineColor="#505050"/>
+					<leftPen lineWidth="0.5" lineColor="#505050"/>
+					<bottomPen lineWidth="0.5" lineColor="#505050"/>
+					<rightPen lineWidth="0.5" lineColor="#505050"/>
+				</box>
+				<textElement verticalAlignment="Middle">
+					<font fontName="Arial" size="9"/>
+					<paragraph firstLineIndent="3" leftIndent="3" rightIndent="3"/>
+				</textElement>
+				<text><![CDATA[Access]]></text>
+			</staticText>
+			<frame>
+				<reportElement x="132" y="1" width="47" height="46" uuid="630b90fe-e38a-486c-80ed-753cca8ab43b"/>
+				<box>
+					<pen lineWidth="0.25"/>
+				</box>
+				<componentElement>
+					<reportElement x="3" y="2" width="42" height="42" uuid="ce044dcc-2643-43ab-9658-d0e189deacd8"/>
+					<jr:QRCode xmlns:jr="http://jasperreports.sourceforge.net/jasperreports/components" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports/components http://jasperreports.sourceforge.net/xsd/components.xsd">
+						<jr:codeExpression><![CDATA[$F{guid}]]></jr:codeExpression>
+					</jr:QRCode>
+				</componentElement>
+			</frame>
+		</band>
+	</pageFooter>
+</jasperReport>

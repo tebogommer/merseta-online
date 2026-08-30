@@ -1,0 +1,81 @@
+<ui:composition xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+		<p:growl showDetail="false" sticky="false" id="msg">
+			<p:autoUpdate />
+		</p:growl>
+		<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+		<p:importEnum type="haj.com.entity.enums.UsersStatusEnum" />
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card">
+					<h:form id="hostingcompanydepartmentsInsForm">
+						<h1>Company Banking Details</h1>
+						<p:tooltip position="left" />
+						
+						<p:panelGrid columns="1" style="width:100%" id="filterdownloadGrid" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{sessionUI.employee or sessionUI.activeUser.admin}">
+							<p:commandButton icon="fa fa-download" value="Download Report" ajax="false" action="#{companyBankingDetailsReportUI.downloadCompanyBankingDetailsReport}" />
+						</p:panelGrid>
+						
+						<ui:include src="/pages/includes/download_lazy_with_page.xhtml">
+							<ui:param name="file_name" value="Company_Banking_Details" />
+							<ui:param name="target" value="companyList" />
+						</ui:include>
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+						<p:dataTable var="rowVar" value="#{companyBankingDetailsReportUI.dataModelBankingDetails}" id="companyList" rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" reflow="true" lazy="true">
+							<p:column headerText="#{lang['entity.id']}" filterBy="#{rowVar.levyNumber}" sortBy="#{rowVar.levyNumber}" filterStyle="width: 95%" width="7%">
+								<h:outputText value="#{rowVar.levyNumber}" />
+							</p:column>
+							<p:column headerText="#{lang['company.name']}" filterBy="#{rowVar.companyName}" sortBy="#{rowVar.companyName}" filterStyle="width: 95%" width="15%">
+								<h:outputText value="#{rowVar.companyName}" />
+							</p:column>
+							<p:column headerText="#{lang['companyRegistrationNumber']}" filterBy="#{rowVar.companyName}" sortBy="#{rowVar.companyRegistrationNumber}" filterStyle="width: 95%" width="15%">
+								<h:outputText value="#{rowVar.companyRegistrationNumber}" />
+							</p:column>
+							<p:column headerText="#{lang['tradingName']}" filterBy="#{rowVar.tradingName}" sortBy="#{rowVar.tradingName}" filterStyle="width: 95%" width="15%">
+								<h:outputText value="#{rowVar.tradingName}" />
+							</p:column>
+							<p:column headerText="#{lang['status']}" sortBy="#{rowVar.companyStatus}" width="10%" rendered="false">
+								<h:outputText value="#{lang[rowVar.companyStatus.registrationName]}" />
+							</p:column>
+							<p:column headerText="#{lang['bank.name']}" width="15%">
+								<h:outputText value="#{rowVar.bankingDetails.bank.description}" />
+								<h:outputText value="N/A" rendered="#{rowVar.bankingDetails eq null}" />
+							</p:column>
+							<p:column headerText="#{lang['account.number']}" width="7%">
+								<h:outputText value="#{rowVar.bankingDetails.bankAccNumber}" />
+								<h:outputText value="N/A" rendered="#{rowVar.bankingDetails eq null}" />
+							</p:column>
+							<p:column headerText="#{lang['branch.code']}" width="5%">
+								<h:outputText value="#{rowVar.bankingDetails.branchCode}" />
+								<h:outputText value="N/A" rendered="#{rowVar.bankingDetails eq null}" />
+							</p:column>
+							<p:column headerText="#{lang['account.name']}" width="15%">
+								<h:outputText value="#{rowVar.bankingDetails.bankHolder}" />
+								<h:outputText value="N/A" rendered="#{rowVar.bankingDetails eq null}" />
+							</p:column>
+							<p:column headerText="#{lang['gp.account.number']}" rendered="false" width="10%">
+								<h:outputText value="#{rowVar.bankingDetails}" />
+								<h:outputText value="N/A" rendered="#{rowVar.bankingDetails eq null}" />
+							</p:column>
+							<p:column headerText="#{lang['banking.details.status']}" width="10%">
+								<h:outputText value="#{rowVar.bankingDetails.status.friendlyName}" />
+								<h:outputText value="N/A" rendered="#{rowVar.bankingDetails eq null}" />
+							</p:column>
+							<p:column headerText="#{lang['approved.date']}" width="7%">
+								<p:outputLabel value="#{rowVar.bankingDetails.approvalDate}">
+									<f:convertDateTime pattern="dd MMMM yyyy" />
+								</p:outputLabel>
+								<h:outputText value="N/A" rendered="#{rowVar.bankingDetails.approvalDate eq null}" />
+							</p:column>
+							<p:column headerText="#{lang['approved.by']}" width="10%">
+								<h:outputText value="#{rowVar.bankingDetails.approvalUser.firstName} #{rowVar.bankingDetails.approvalUser.lastName}" />
+								<h:outputText value="N/A" rendered="#{rowVar.bankingDetails eq null}" />
+							</p:column>
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+</ui:composition>

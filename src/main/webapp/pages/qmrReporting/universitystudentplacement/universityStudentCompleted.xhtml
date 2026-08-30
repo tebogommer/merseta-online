@@ -1,0 +1,296 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<p:growl showDetail="false" sticky="false" id="msg">
+						<p:autoUpdate />
+					</p:growl>
+					<h1>QMR: University Student Placement Completed</h1>
+					<h:form id="mainForm">
+						<p:dataTable var="rowVarFinYear" value="#{qmrUniversityStudentCompletedUI.distinctFinYearList}" rowKey="#{rowVarFinYear}" id="finYearList" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20,40" reflow="true">
+							<f:facet name="header">Financial Years</f:facet>
+							<p:column headerText="Financial Year Start">
+								<h:outputText value="#{rowVarFinYear}" />
+							</p:column>
+							<p:column headerText="Financial Year End">
+								<h:outputText value="#{rowVarFinYear + 1}" />
+							</p:column>
+							<p:column width="30" exportable="false">
+								<p:commandButton onstart="uploadStart()" oncomplete="uploadDone()" icon="fa fa-tasks" title="Select Financial Year" action="#{qmrUniversityStudentCompletedUI.selectFinYear}" update="resultsForm">
+									<f:setPropertyActionListener value="#{rowVarFinYear}" target="#{qmrUniversityStudentCompletedUI.selectedFinYear}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+					</h:form>
+				</div>
+				<h:form id="resultsForm">
+					<c:if test="#{qmrUniversityStudentCompletedUI.selectedFinYear ne null}">
+						<div class="card card-w-title">
+							<h3>Financial Year Selected: #{qmrUniversityStudentCompletedUI.selectedFinYear}/#{qmrUniversityStudentCompletedUI.selectedFinYear + 1}</h3>
+							<div class="EmptyBox10" />
+							<p:commandButton value="Summary Report" icon="fa fa-table" update="summaryReportPanel" action="#{qmrUniversityStudentCompletedUI.generateSummaryReport}">
+								<p:confirm header="#{lang['confirmation']}" message="Are you sure? This may take some time to generate." icon="ui-icon-warning" />
+							</p:commandButton>
+							<div class="EmptyBox10" />
+							<p:outputPanel id="summaryReportPanel">
+								<c:if test="#{qmrUniversityStudentCompletedUI.qmrSummaryBeanList ne null}">
+									<ui:include src="/pages/includes/qmrInc/summaryReport.xhtml">
+										<ui:param name="summaryReportData" value="#{qmrUniversityStudentCompletedUI.qmrSummaryBeanList}" />
+										<ui:param name="reportFileName" value="University Student Placement Completed Summary Report" />
+									</ui:include>
+									<div class="EmptyBox5" />
+									<p:commandButton icon="ui-icon-clear-all" value="Clear Results" update="summaryReportPanel" action="#{qmrUniversityStudentCompletedUI.clearSummaryReport}" />
+								</c:if>
+							</p:outputPanel>
+							<div class="EmptyBox10" />
+							<p:dataTable var="rowVarQuarters" value="#{qmrUniversityStudentCompletedUI.qmrFinYearsDataModel}" id="quartersList" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="4,5,10,20,40" reflow="true" lazy="true">
+								<f:facet name="header">Financial Years: Quarters</f:facet>
+								<p:column headerText="Reference">
+									<h:outputText value="#{rowVarQuarters.refNo}" />
+								</p:column>
+								<p:column headerText="From Year">
+									<h:outputText value="#{rowVarQuarters.finYearStart}" />
+								</p:column>
+								<p:column headerText="To Year">
+									<h:outputText value="#{rowVarQuarters.finYearEnd}" />
+								</p:column>
+								<p:column headerText="Description">
+									<h:outputText value="#{rowVarQuarters.finYearQuarters.friendlyName}" />
+								</p:column>
+								<p:column headerText="From Date">
+									<h:outputText value="#{rowVarQuarters.fromDate}">
+										<f:convertDateTime pattern="dd/MM/yyyy" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="To Date">
+									<h:outputText value="#{rowVarQuarters.toDate}">
+										<f:convertDateTime pattern="dd/MM/yyyy" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Data Generated" exportable="false">
+									<p:selectBooleanCheckbox value="#{rowVarQuarters.dataGenerated}" disabled="true" />
+								</p:column>
+								<p:column width="30" exportable="false">
+									<p:commandButton onstart="uploadStart()" oncomplete="uploadDone()" icon="fa fa-table" title="View Data For Quarter" update=":resultsForm:quarterResultsPanel" action="#{qmrUniversityStudentCompletedUI.viewDataForQuarter}">
+										<p:confirm header="#{lang['confirmation']}" message="Are you sure? This may take some time to generate." icon="ui-icon-warning" />
+										<f:setPropertyActionListener value="#{rowVarQuarters}" target="#{qmrUniversityStudentCompletedUI.selectedQuarter}" />
+									</p:commandButton>
+								</p:column>
+							</p:dataTable>
+
+							<div class="EmptyBox10" />
+							<p:outputPanel id="quarterResultsPanel">
+								<c:if test="#{qmrUniversityStudentCompletedUI.selectedQuarter ne null}">
+									<h3>#{qmrUniversityStudentCompletedUI.selectedQuarter.finYearStart}/#{qmrUniversityStudentCompletedUI.selectedQuarter.finYearEnd} #{qmrUniversityStudentCompletedUI.selectedQuarter.finYearQuarters.friendlyName} Selected.</h3>
+									<p:commandButton icon="ui-icon-clear-all" value="Clear Results" update=":resultsForm:quarterResultsPanel" action="#{qmrUniversityStudentCompletedUI.clearDataForQuarter}" />
+									<div class="EmptyBox10" />
+									<ui:include src="/pages/includes/qmrInc/countReport.xhtml">
+										<ui:param name="countReportData" value="#{qmrUniversityStudentCompletedUI.qmrQuarterCountBeanList}" />
+										<ui:param name="reportFileName" value="University Student Placement Completed Count Report" />
+									</ui:include>
+									<div class="EmptyBox10" />
+									<c:if test="#{qmrUniversityStudentCompletedUI.selectedQuarter.dataGenerated eq null or !qmrUniversityStudentCompletedUI.selectedQuarter.dataGenerated}">
+									<ui:include src="/pages/includes/download_lazy.xhtml">
+											<ui:param name="file_name" value="University Student Placement Completed Data Report" />
+											<ui:param name="target" value="dataReport1" />
+										</ui:include>
+										<div class="EmptyBox10" />
+										<div class="p-grid">
+											<div class="p-col-6">
+												<p:commandButton styleClass="Fright" id="toggler1" type="button" value="Column Toggler" icon="fa fa-columns" />
+												<p:columnToggler datasource="dataReport1" trigger="toggler1" />
+												<p:tooltip for="toggler1" value="Column Toggler Define" />
+											</div>
+										</div>
+										<p:dataTable var="rowVar1" value="#{qmrUniversityStudentCompletedUI.rawData}" id="dataReport1" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,25,50" reflow="true" lazy="true">
+											<f:facet name="header">Data Report</f:facet>
+											<p:column visible="true" headerText="Reporting Period">
+												<h:outputText value="#{rowVar1.reportingPeriod}">
+													<f:convertDateTime pattern="dd/MM/yyyy" />
+												</h:outputText>
+											</p:column>
+											<p:column visible="true" headerText="Names of the Learner">
+												<h:outputText value="#{rowVar1.namesOfTheLearner}" />
+											</p:column>
+											<p:column visible="true" headerText="Surname of the Learner">
+												<h:outputText value="#{rowVar1.surnameOfTheLearner}" />
+											</p:column>
+											<p:column visible="true" headerText="ID Number of the Learner">
+												<h:outputText value="#{rowVar1.idNumberOfTheLearner}" />
+											</p:column>
+											<p:column visible="true" headerText="OFO Code">
+												<h:outputText value="#{rowVar1.ofoCode}" />
+											</p:column>
+											<p:column visible="true" headerText="NQF Level">
+												<h:outputText value="#{rowVar1.nqfLevel}" />
+											</p:column>
+											<p:column visible="false" headerText="Qualification as per OFO Code/Description of the Qualification">
+												<h:outputText value="#{rowVar1.qualificationAsPerOfoCodeDesctiptionOfTheQualification}" />
+											</p:column>
+											<p:column visible="false" headerText="Name of University">
+												<h:outputText value="#{rowVar1.nameOfInstetution}" />
+											</p:column>
+											<p:column visible="false" headerText="Name of Employer">
+												<h:outputText value="#{rowVar1.nameOfTheEmployer}" />
+											</p:column>
+											<p:column visible="false" headerText="Employer Registration/SDL Number">
+												<h:outputText value="#{rowVar1.employerRegistartionSdlNumber}" />
+											</p:column>
+											<p:column visible="false" headerText="Employer Contact Details">
+												<h:outputText value="#{rowVar1.employerContactDetails}" />
+											</p:column>
+											<p:column visible="false" headerText="Completion Date">
+												<h:outputText value="#{rowVar1.completionDate}">
+													<f:convertDateTime pattern="dd/MM/yyyy" />
+												</h:outputText>
+											</p:column>
+											<p:column visible="false" headerText="Learner Province">
+												<h:outputText value="#{rowVar1.learnerProvince}" />
+											</p:column>
+											<p:column visible="false" headerText="Learner Local District Municipality">
+												<h:outputText value="#{rowVar1.learnerLocalDistrictMunciplaity}" />
+											</p:column>
+											<p:column visible="false" headerText="Specific Learner Residential Area">
+												<h:outputText value="#{rowVar1.specifyLearnerResidentialArea}" />
+											</p:column>
+											<p:column visible="false" headerText="Is the Learner Residential Area Urban/Rural">
+												<h:outputText value="#{rowVar1.isTheLearnerResidentialAreaUrbanRural}" />
+											</p:column>
+											<p:column visible="false" headerText="Is The Programme SETA/Industry Funded">
+												<h:outputText value="#{rowVar1.isTheProgrammeSetaIndustryFunded}" />
+											</p:column>
+											<p:column visible="false" headerText="Amount Spent per Learner">
+												<h:outputText value="#{rowVar1.amountSpentPerLearner}" />
+											</p:column>
+											<p:column visible="false" headerText="Race">
+												<h:outputText value="#{rowVar1.race}" />
+											</p:column>
+											<p:column visible="false" headerText="Gender">
+												<h:outputText value="#{rowVar1.gender}" />
+											</p:column>
+											<p:column visible="false" headerText="Age">
+												<h:outputText value="#{rowVar1.age}" />
+											</p:column>
+											<p:column visible="false" headerText="Disability">
+												<h:outputText value="#{rowVar1.disability}" />
+											</p:column>
+											<p:column visible="false" headerText="Youth">
+												<h:outputText value="#{rowVar1.youth}" />
+											</p:column>
+											<p:column visible="false" headerText="Non-RSA Citizen">
+												<h:outputText value="#{rowVar1.nonRsaCitizen}" />
+											</p:column>
+										</p:dataTable>
+									</c:if>
+									<c:if test="#{qmrUniversityStudentCompletedUI.selectedQuarter.dataGenerated}">
+										<ui:include src="/pages/includes/download_lazy.xhtml">
+											<ui:param name="file_name" value="University Student Placement Completed Data Report" />
+											<ui:param name="target" value="dataReport" />
+										</ui:include>
+										<div class="EmptyBox10" />
+										<div class="p-grid">
+											<div class="p-col-6">
+												<p:commandButton styleClass="Fright" id="toggler2" type="button" value="Column Toggler" icon="fa fa-columns" />
+												<p:columnToggler datasource="dataReport" trigger="toggler2" />
+												<p:tooltip for="toggler2" value="Column Toggler Define" />
+											</div>
+										</div>
+										<p:dataTable var="rowVar" value="#{qmrUniversityStudentCompletedUI.savedData}" id="dataReport" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,25,50" reflow="true" >
+											<f:facet name="header">Data Report</f:facet>
+											<p:column visible="true" headerText="Reporting Period">
+												<h:outputText value="#{rowVar.reportingPeriod}">
+													<f:convertDateTime pattern="dd/MM/yyyy" />
+												</h:outputText>
+											</p:column>
+											<p:column visible="true" headerText="Names of the Learner">
+												<h:outputText value="#{rowVar.namesOfTheLearner}" />
+											</p:column>
+											<p:column visible="true" headerText="Surname of the Learner">
+												<h:outputText value="#{rowVar.surnameOfTheLearner}" />
+											</p:column>
+											<p:column visible="true" headerText="ID Number of the Learner">
+												<h:outputText value="#{rowVar.idNumberOfTheLearner}" />
+											</p:column>
+											<p:column visible="true" headerText="OFO Code">
+												<h:outputText value="#{rowVar.ofoCode}" />
+											</p:column>
+											<p:column visible="true" headerText="NQF Level">
+												<h:outputText value="#{rowVar.nqfLevel}" />
+											</p:column>
+											<p:column visible="false" headerText="Qualification as per OFO Code/Description of the Qualification">
+												<h:outputText value="#{rowVar.qualificationAsPerOfoCodeDesctiptionOfTheQualification}" />
+											</p:column>
+											<p:column visible="false" headerText="Name of University">
+												<h:outputText value="#{rowVar.nameOfInstetution}" />
+											</p:column>
+											<p:column visible="false" headerText="Name of Employer">
+												<h:outputText value="#{rowVar.nameOfTheEmployer}" />
+											</p:column>
+											<p:column visible="false" headerText="Employer Registration/SDL Number">
+												<h:outputText value="#{rowVar.employerRegistartionSdlNumber}" />
+											</p:column>
+											<p:column visible="false" headerText="Employer Contact Details">
+												<h:outputText value="#{rowVar.employerContactDetails}" />
+											</p:column>
+											<p:column visible="false" headerText="Completion Date">
+												<h:outputText value="#{rowVar.completionDate}">
+													<f:convertDateTime pattern="dd/MM/yyyy" />
+												</h:outputText>
+											</p:column>
+											<p:column visible="false" headerText="Learner Province">
+												<h:outputText value="#{rowVar.learnerProvince}" />
+											</p:column>
+											<p:column visible="false" headerText="Learner Local District Municipality">
+												<h:outputText value="#{rowVar.learnerLocalDistrictMunciplaity}" />
+											</p:column>
+											<p:column visible="false" headerText="Specific Learner Residential Area">
+												<h:outputText value="#{rowVar.specifyLearnerResidentialArea}" />
+											</p:column>
+											<p:column visible="false" headerText="Is the Learner Residential Area Urban/Rural">
+												<h:outputText value="#{rowVar.isTheLearnerResidentialAreaUrbanRural}" />
+											</p:column>
+											<p:column visible="false" headerText="Is The Programme SETA/Industry Funded">
+												<h:outputText value="#{rowVar.isTheProgrammeSetaIndustryFunded}" />
+											</p:column>
+											<p:column visible="false" headerText="Amount Spent per Learner">
+												<h:outputText value="#{rowVar.amountSpentPerLearner}" />
+											</p:column>
+											<p:column visible="false" headerText="Race">
+												<h:outputText value="#{rowVar.race}" />
+											</p:column>
+											<p:column visible="false" headerText="Gender">
+												<h:outputText value="#{rowVar.gender}" />
+											</p:column>
+											<p:column visible="false" headerText="Age">
+												<h:outputText value="#{rowVar.ageOfLearner}" />
+											</p:column>
+											<p:column visible="false" headerText="Disability">
+												<h:outputText value="#{rowVar.disability}" />
+											</p:column>
+											<p:column visible="false" headerText="Youth">
+												<h:outputText value="#{rowVar.youth}" />
+											</p:column>
+											<p:column visible="false" headerText="Non-RSA Citizen">
+												<h:outputText value="#{rowVar.nonRsaCitizen}" />
+											</p:column>
+										</p:dataTable>
+									</c:if>
+								</c:if>
+							</p:outputPanel>
+						</div>
+					</c:if>
+				</h:form>
+			</div>
+		</div>
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+			<h:form>
+				<p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="fa fa-check" />
+				<p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="fa fa-times" />
+			</h:form>
+		</p:confirmDialog>
+
+	</ui:define>
+</ui:composition>

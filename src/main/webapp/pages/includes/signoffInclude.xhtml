@@ -1,0 +1,64 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+	<c:if test="false">
+		<!-- 
+			companylearnerstradetest entity
+		-->
+		<!--  
+			<ui:include src="/pages/includes/signoffInclude.xhtml">
+				<ui:param name="#{SignOffList}" value =" " /> 
+				<ui:param name="CALENDER_PATTERN" value=" autoCompleteUI.CALENDER_PATTERN " />
+				<ui:param name="acknowledge" value="#{lang['site.visit.report.declaration.text']} " />
+			</ui:include> 
+		-->
+	</c:if>
+	<div class="EmptyBox10" />
+	<ui:include src="/pages/includes/download_lazy.xhtml">
+		<ui:param name="file_name" value="Sign_Off_List_Extracted" />
+		<ui:param name="target" value="signOffList" />
+	</ui:include>
+	<div class="EmptyBox10" />
+	<p:dataTable var="rvsignoff" value="#{SignOffList}" id="signOffList" rowKey="#{rvsignoff.id}" reflow="true">
+		<p:column headerText="External Sign Off User" exportable="false" styleClass="action-column">
+
+			<p:selectBooleanCheckbox value="#{rvsignoff.externalUserSignoff}" disabled="true">
+			</p:selectBooleanCheckbox>
+
+		</p:column>
+		<p:column headerText="External Sign Off User" style="display:none">
+			<p:outputLabel value="Yes" rendered="#{rvsignoff.externalUserSignoff}" />
+			<p:outputLabel value="No" rendered="#{rvsignoff.externalUserSignoff eq null or !rvsignoff.externalUserSignoff}" />
+		</p:column>
+		<p:column headerText="Sign Off Title">
+			<p:outputLabel value="#{rvsignoff.signOffTitle}" />
+		</p:column>
+		<p:column headerText="#{lang['signed.off.by']}" styleClass="overflow-column">
+
+			<p:outputLabel value="#{rvsignoff.user.firstName} #{rvsignoff.user.lastName}" rendered="#{rvsignoff.user ne null and !rvsignoff.externalUserSignoff}" />
+			<p:outputLabel value="Awaiting Assignment" rendered="#{rvsignoff.user eq null and !rvsignoff.externalUserSignoff}" />
+			<p:outputLabel value="#{rvsignoff.tempSignoff.firstName} #{rvsignoff.tempSignoff.lastName} (#{rvsignoff.tempSignoff.email})" rendered="#{rvsignoff.tempSignoff ne null and rvsignoff.externalUserSignoff}" />
+			<p:outputLabel value="Awaiting Assignment" rendered="##{rvsignoff.tempSignoff eq null and rvsignoff.externalUserSignoff}" />
+
+		</p:column>
+		<p:column headerText="#{lang['date']}" styleClass="number-column">
+			<p:outputLabel value="Pending Sign Off" rendered="#{rvsignoff.signOffDate eq null and (rvsignoff.accept eq null or !rvsignoff.accept)}" />
+			<p:outputLabel value="Pending Submission" rendered="#{rvsignoff.signOffDate eq null and (rvsignoff.accept)}" />
+			<p:outputLabel value="#{rvsignoff.signOffDate}" rendered="#{rvsignoff.signOffDate ne null}">
+				<f:convertDateTime pattern="dd/MM/yyyy HH:MM" />
+			</p:outputLabel>
+		</p:column>
+		<p:column headerText="Accepted" width="55px" exportable="false" styleClass="action-column">
+			<p:selectBooleanCheckbox value="#{rvsignoff.accept}" disabled="true">
+			</p:selectBooleanCheckbox>
+		</p:column>
+		<p:column headerText="Accepted" style="display:none">
+			<p:outputLabel value="Yes" rendered="#{rvsignoff.accept}" />
+			<p:outputLabel value="No" rendered="#{rvsignoff.accept eq null or !rvsignoff.accept}" />
+		</p:column>
+		<p:column headerText="#{lang['acknowledge']}" rendered="true" styleClass="overflow-column">
+			<div role="small">
+				<p:outputLabel value="#{acknowledge}"></p:outputLabel>
+			</div>
+		</p:column>
+	</p:dataTable>
+</ui:composition>

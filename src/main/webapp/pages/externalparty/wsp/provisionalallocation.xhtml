@@ -1,0 +1,61 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:pt="http://xmlns.jcp.org/jsf/passthrough">
+	<h:form>
+		<p:remoteCommand update="@form" id="updateAllocation" action="#{dgforecastingUI.populateDgAllocationForcatByWsp}" name="updateAllocation" process="@this"></p:remoteCommand>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<h1>Allocation Forecast Report</h1>
+				<p:dataTable var="dgallo" value="#{dgforecastingUI.forcastAllocationList}" id="dgForcastReportDT" rowKey="#{dgallo.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}" paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+					rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+					<p:column headerText="Available Amount" rendered="true" exportable="false">
+						<p:outputLabel value="#{dgallo.availableAmount}">
+							<f:convertNumber type="currency" currencySymbol="R" />
+						</p:outputLabel>
+					</p:column>
+					<p:column headerText="Learning Programme">
+						<p:outputLabel value="#{dgallo.mandatoryGrant.interventionType.description}"></p:outputLabel>
+					</p:column>
+					<p:column headerText="Title">
+						<p:outputLabel value="#{dgallo.mandatoryGrant.qualification.description}" rendered="#{dgallo.lastestMandatoryGrantRecommendation eq null and dgallo.mandatoryGrant.qualification ne null}" />
+						<p:outputLabel value="#{dgallo.mandatoryGrant.unitStandard.title}" rendered="#{dgallo.lastestMandatoryGrantRecommendation eq null and dgallo.mandatoryGrant.unitStandard ne null}" />
+						<p:outputLabel value="#{dgallo.mandatoryGrant.skillsProgram.description}" rendered="#{dgallo.lastestMandatoryGrantRecommendation eq null and dgallo.mandatoryGrant.skillsProgram ne null}" />
+						<p:outputLabel value="#{dgallo.mandatoryGrant.skillsSet.description}" rendered="#{dgallo.lastestMandatoryGrantRecommendation eq null and dgallo.mandatoryGrant.skillsSet ne null}" />
+						<p:outputLabel value="#{dgallo.mandatoryGrant.nonCreditBearingIntervationTitle.description}" rendered="#{dgallo.lastestMandatoryGrantRecommendation eq null and dgallo.mandatoryGrant.nonCreditBearingIntervationTitle ne null}" />
+						<p:outputLabel value="#{dgallo.lastestMandatoryGrantRecommendation.qualification.description}" rendered="#{dgallo.lastestMandatoryGrantRecommendation ne null and dgallo.lastestMandatoryGrantRecommendation.qualification ne null}" />
+						<p:outputLabel value="#{dgallo.lastestMandatoryGrantRecommendation.unitStandards.title}" rendered="#{dgallo.lastestMandatoryGrantRecommendation ne null and dgallo.lastestMandatoryGrantRecommendation.unitStandards ne null}" />
+						<p:outputLabel value="#{dgallo.lastestMandatoryGrantRecommendation.skillsProgram.description}" rendered="#{dgallo.lastestMandatoryGrantRecommendation ne null and dgallo.lastestMandatoryGrantRecommendation.skillsProgram ne null}" />
+						<p:outputLabel value="#{dgallo.lastestMandatoryGrantRecommendation.skillsSet.description}" rendered="#{dgallo.lastestMandatoryGrantRecommendation ne null and dgallo.lastestMandatoryGrantRecommendation.skillsSet ne null}" />
+						<p:outputLabel value="#{dgallo.lastestMandatoryGrantRecommendation.nonCreditBearingIntervationTitle.description}" rendered="#{dgallo.lastestMandatoryGrantRecommendation ne null and dgallo.lastestMandatoryGrantRecommendation.nonCreditBearingIntervationTitle ne null}" />
+					</p:column>
+					<p:column headerText="OFO Code">
+						<p:outputLabel value="#{dgallo.mandatoryGrant.ofoCodes.ofoDescription}"></p:outputLabel>
+					</p:column>
+					<p:column headerText="Learners">
+						<p:outputLabel value="#{dgallo.totalLearners}" rendered="#{dgallo.changeAllocationLearners eq null}"></p:outputLabel>
+						<p:outputLabel value="#{dgallo.initialLearners} -&gt; #{dgallo.changeAllocationLearners}" rendered="#{dgallo.changeAllocationLearners ne null}"></p:outputLabel>
+					</p:column>
+					<p:column headerText="Requested Amount">
+						<p:outputLabel value="#{dgallo.requestedAmount}">
+							<f:convertNumber type="currency" currencySymbol="R" />
+						</p:outputLabel>
+					</p:column>
+					<p:column headerText="Provisional Allocation">
+						<p:outputLabel value="#{dgallo.awardAmount}" styleClass="FontBold" style="color: #5ecf80" rendered="#{dgallo.awardAmount gt 0}">
+							<f:convertNumber type="currency" currencySymbol="R" />
+						</p:outputLabel>
+						<p:outputLabel value="#{dgallo.awardAmount}" styleClass="FontBold" rendered="#{dgallo.awardAmount lt 0.1}">
+							<f:convertNumber type="currency" currencySymbol="R" />
+						</p:outputLabel>
+					</p:column>
+					<p:column headerText="Total Awarded" styleClass="FontBold">
+						<p:outputLabel value="#{dgallo.totalAwardAmount}" styleClass="FontBold" style="color: #5ecf80" rendered="#{dgallo.totalAwardAmount gt 0}">
+							<f:convertNumber type="currency" currencySymbol="R" />
+						</p:outputLabel>
+						<p:outputLabel value="#{dgallo.totalAwardAmount}" styleClass="FontBold" rendered="#{dgallo.totalAwardAmount lt 0.1}">
+							<f:convertNumber type="currency" currencySymbol="R" />
+						</p:outputLabel>
+					</p:column>
+				</p:dataTable>
+			</div>
+		</div>
+	</h:form>
+</ui:composition>

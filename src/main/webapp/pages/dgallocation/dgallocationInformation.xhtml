@@ -1,0 +1,549 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<!--<p:dataTable rendered="#{sessionUI.externalParty}" var="rowVar" value="#{dgAllocationInformationUI.dataModelSdfCompany}" id="companyList" rowKey="#{rowVar.id}" paginator="true" rows="5" selectionMode="single" selection="#{dgAllocationInformationUI.sdfCompany}" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+							paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+							<p:ajax event="rowSelect" listener="#{dgAllocationInformationUI.onRowSelectExternalParty}" update="wspForm allocationForm" /> 
+							
+							<p:dataTable var="rv" value="#{dgAllocationInformationUI.dataModelWspWithAllocation}" rowKey="#{rv.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}" selectionMode="single" selection="#{dgAllocationInformationUI.selectedWsp}"
+								paginatorTemplate="#{lang['page']} {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+								<p:ajax event="rowSelect" listener="#{dgAllocationInformationUI.onRowSelectWsp}" update="allocationForm" />-->
+
+	<ui:define name="content">
+
+		<p:growl showDetail="false" sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+					<p:importEnum type="haj.com.entity.enums.UsersStatusEnum" />
+					<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+						<p:commandButton id="confYes" value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+						<p:commandButton id="confNo" value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+					</p:confirmDialog>
+					<h1>#{lang['available.companies']}</h1>
+					<ui:include src="/pages/includes/filterGuide.xhtml" />
+
+					<h:form id="mainForm">
+						<p:tooltip position="left"></p:tooltip>
+						<p:dataTable rendered="#{sessionUI.externalParty}" var="rowVar" value="#{dgAllocationInformationUI.dataModelSdfCompany}" id="companyList" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+							paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['companyName']}" filterBy="#{rowVar.company.companyName}" sortBy="#{rowVar.company.companyName}">
+								<h:outputText value="#{rowVar.company.companyName}" />
+							</p:column>
+							<p:column headerText="#{lang['sdl.number']}" filterBy="#{rowVar.company.levyNumber}" sortBy="#{rowVar.company.levyNumber}">
+								<h:outputText value="#{rowVar.company.levyNumber}" />
+							</p:column>
+							<p:column headerText="#{lang['email']}" filterBy="#{rowVar.company.email}" sortBy="#{rowVar.company.email}">
+								<h:outputText value="#{rowVar.company.email}" />
+							</p:column>
+							<p:column headerText="#{lang['status']}">
+								<h:outputText value="#{lang[rowVar.company.companyStatus.registrationName]}" />
+							</p:column>
+							<p:column headerText="Size of Company" width="10%">
+								<h:outputText value="#{rowVar.company.sizeOfCompany.detailDescription}" escape="false" />
+							</p:column>
+							<p:column headerText="#{lang['levy.paying']}" width="110" style="text-align:center">
+								<p:outputPanel rendered="#{rowVar.company.nonLevyPaying}">
+									<i class="fa fa-times fa-3x red" aria-hidden="true"></i>
+								</p:outputPanel>
+								<p:outputPanel rendered="#{not rowVar.company.nonLevyPaying}">
+									<i class="fa fa-check fa-3x green" aria-hidden="true"></i>
+								</p:outputPanel>
+							</p:column>
+
+							<p:column width="37" headerText="#{lang['RAG']}">
+								<h:graphicImage value="/resources/hls/images/red.svg" rendered="#{rowVar.company.companyStatus eq CompanyStatusEnum.Pending}" width="40" styleClass="animated pulse infinite" />
+								<h:graphicImage value="/resources/hls/images/green.svg" rendered="#{rowVar.company.companyStatus eq CompanyStatusEnum.Active}" width="30" />
+								<h:graphicImage value="/resources/hls/images/green.svg" rendered="#{rowVar.company.companyStatus eq CompanyStatusEnum.Approved}" width="30" />
+							</p:column>
+							<p:column headerText="Barcode" width="400" rendered="false">
+								<p:barcode value="#{rowVar.company.companyGuid}" type="qr" />
+							</p:column>
+							<p:column rendered="true" width="60" headerText="#{lang['view.edit']}">
+								<center>
+									<p:commandButton icon="fa fa-newspaper-o" title="#{lang['view.edit']}" update="wspForm allocationForm" action="#{dgAllocationInformationUI.onRowSelectExternalParty}">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{dgAllocationInformationUI.sdfCompany}" />
+									</p:commandButton>
+								</center>
+							</p:column>
+
+						</p:dataTable>
+
+						<p:dataTable rendered="#{!sessionUI.externalParty}" var="rve" value="#{dgAllocationInformationUI.dataModelCompany}" id="siccodeList" rowKey="#{rve.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20,40"
+							reflow="true" lazy="true">
+						
+							<p:column headerText="#{lang['company.name']}" filterBy="#{rve.companyName}" sortBy="#{rve.companyName}" filterStyle="width: 95%">
+								<h:outputText value="#{rve.companyName}" />
+							</p:column>
+							<p:column headerText="#{lang['tradingName']}" filterBy="#{rve.tradingName}" sortBy="#{rve.tradingName}" filterStyle="width: 95%">
+								<h:outputText value="#{rve.tradingName}" />
+							</p:column>
+							<p:column headerText="#{lang['entity.id']}" filterBy="#{rve.levyNumber}" sortBy="#{rve.levyNumber}" filterStyle="width: 95%" width="10%">
+								<h:outputText value="#{rve.levyNumber}" />
+							</p:column>
+							<p:column headerText="#{lang['status']}" sortBy="#{rve.companyStatus}" width="10%">
+								<h:outputText value="#{lang[rve.companyStatus.registrationName]}" />
+							</p:column>
+							
+							<p:column width="37" headerText="#{lang['RAG']}">
+								<h:graphicImage value="/resources/hls/images/red.svg" rendered="#{rve.companyStatus eq CompanyStatusEnum.Pending}" width="40" styleClass="animated pulse infinite" />
+								<h:graphicImage value="/resources/hls/images/green.svg" rendered="#{rve.companyStatus eq CompanyStatusEnum.Active}" width="30" />
+								<h:graphicImage value="/resources/hls/images/green.svg" rendered="#{rve.companyStatus eq CompanyStatusEnum.Approved}" width="30" />
+							</p:column>
+							<p:column headerText="Barcode" width="400" rendered="false">
+								<p:barcode value="#{rve.companyGuid}" type="qr" />
+							</p:column>
+							<p:column rendered="true" width="60" headerText="#{lang['view.edit']}">
+								<center>
+									<p:commandButton icon="fa fa-newspaper-o" title="#{lang['view.edit']}" update="wspForm allocationForm" action="#{dgAllocationInformationUI.onRowSelectInternalParty}">
+										<f:setPropertyActionListener value="#{rve}" target="#{dgAllocationInformationUI.company}" />
+									</p:commandButton>
+								</center>
+							</p:column>
+							
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+
+
+			<h:form id="wspForm">
+				<p:outputPanel rendered="#{dgAllocationInformationUI.company ne null}">
+					<div class="ui-g-12">
+						<div class="card card-w-title">
+							<h1>#{dgAllocationInformationUI.company.companyName} Allocation</h1>
+							<p:dataTable var="rv" value="#{dgAllocationInformationUI.dataModelWspWithAllocation}" rowKey="#{rv.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}" paginatorTemplate="#{lang['page']} {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25"
+								reflow="true" lazy="true">
+
+								<p:column headerText="#{lang['id']}" width="8%">
+									<p:outputLabel value="#{rv.id}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="#{lang['from.date']}" rendered="false">
+									<p:outputLabel value="#{rv.fromDatePeriod}">
+										<f:convertDateTime pattern="dd-MMM-yyyy" />
+									</p:outputLabel>
+								</p:column>
+								<p:column headerText="#{lang['to.date']}" rendered="false">
+									<p:outputLabel value="#{rv.toDatePeriod}">
+										<f:convertDateTime pattern="dd-MMM-yyyy" />
+									</p:outputLabel>
+								</p:column>
+								<p:column headerText="#{lang['fin.year']}" rendered="true">
+									<p:outputLabel value="#{rv.finYear}">
+									</p:outputLabel>
+								</p:column>
+								<p:column headerText="#{lang['grant.application.status']}" rendered="true">
+									<p:outputLabel value="#{rv.wspStatusEnum.friendlyName}">
+									</p:outputLabel>
+								</p:column>
+								<p:column headerText="Barcode" width="400" rendered="false">
+									<p:barcode value="#{rv.wspGuid}" type="code39" />
+								</p:column>
+								<p:column headerText="Applied for extension" style="text-align:center">
+									<p:outputPanel rendered="#{rv.extensionRequests.size() eq 0}">
+										<i class="fa fa-times fa-3x red" aria-hidden="true"></i>
+									</p:outputPanel>
+									<p:outputPanel rendered="#{rv.extensionRequests.size() gt 0}">
+										<i class="fa fa-check fa-3x green" aria-hidden="true"></i>
+									</p:outputPanel>
+								</p:column>
+								<p:column headerText="DG Verification Status" rendered="true" exportable="false">
+									<p:outputLabel value="#{rv.dgVerificationStatus.friendlyName}" rendered="#{rv.dgVerificationStatus ne null}">
+									</p:outputLabel>
+									<p:outputLabel value="N/A" rendered="#{rv.dgVerificationStatus eq null}">
+									</p:outputLabel>
+								</p:column>
+
+								<p:column width="80" headerText="Download Documents">
+									<p:commandButton id="btnPIP" icon="fa fa-download" action="#{dgAllocationInformationUI.downloadPIP}" ajax="false"  rendered="#{dgAllocationInformationUI.checkDisplayButtons(rv)}">
+										<f:setPropertyActionListener value="#{rv}" target="#{dgAllocationInformationUI.wsp}" />
+									</p:commandButton>
+									<p:tooltip for="btnPIP"  value="Download Project Implementation Plan" position="right"/>
+									
+									<p:spacer width="5"></p:spacer>
+									<p:commandButton id="btnMOA" icon="fa fa-download" action="#{dgAllocationInformationUI.downloadMOAVersionTwo}" ajax="false" rendered="#{dgAllocationInformationUI.checkDisplayContract(rv)}">
+										<f:setPropertyActionListener value="#{rv}" target="#{dgAllocationInformationUI.wsp}" />
+									</p:commandButton>
+									<p:tooltip for="btnMOA"  value="Download Contract" position="right"/>
+								</p:column>
+
+								<p:column rendered="true" width="90" headerText="#{lang['view.edit']}">
+									
+										<p:commandButton id="btnAllocation" icon="fa fa-newspaper-o"  update="allocationForm" action="#{dgAllocationInformationUI.loadCompanyAllocation}" >
+											<f:setPropertyActionListener value="#{rv}" target="#{dgAllocationInformationUI.selectedWsp}" />
+										</p:commandButton>
+										<p:tooltip for="btnAllocation"  value="View Company Allocation" position="left"/>
+									
+										<p:spacer width="5"></p:spacer>
+									
+										<p:commandButton id="btnActiveContract" icon="fa fa-trash-o"  update="mainForm" action="#{dgAllocationInformationUI.loadActiveContract}" rendered="#{dgAllocationInformationUI.checkStatus(rv) and not sessionUI.hideETQA}">
+											<f:setPropertyActionListener value="#{rv}" target="#{dgAllocationInformationUI.selectedWsp}" />
+											<p:confirm header="#{lang['confirmation']}" message="Are you sure you want to terminate this project" icon="ui-icon-warning" />
+										</p:commandButton>
+										<p:tooltip for="btnActiveContract"  value="Terminate Project" position="right"/>
+									
+								</p:column>
+							</p:dataTable>
+						</div>
+					</div>
+				</p:outputPanel>
+			</h:form>
+
+			<h:form id="allocationForm">				
+				<p:outputPanel rendered="#{dgAllocationInformationUI.wspDgAllocationsList.size() ne null}">
+					<div class="ui-g-12">
+						<div class="card card-w-title">
+							<h1>Allocation Information</h1>
+							<p:fieldset legend="Additional Information">
+								<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank" layout="grid" id="additionalInfoGrid">
+									<h:panelGroup>
+										<p:outputLabel value="Status:" />
+										<br />
+										<p:outputLabel value="#{dgAllocationInformationUI.dgAllocationParent.status.friendlyName}" />
+									</h:panelGroup>
+									<h:panelGroup rendered="#{dgAllocationInformationUI.dgAllocationParent.appealStatus ne null}">
+										<p:outputLabel value="Appeal Status:" />
+										<br />
+										<p:outputLabel value="#{dgAllocationInformationUI.dgAllocationParent.appealStatus.friendlyName}" />
+									</h:panelGroup>
+									<h:panelGroup rendered="#{dgAllocationInformationUI.canAppeal}">
+										<p:commandButton value="Appeal Allocation" oncomplete="PF('dlgUpload').show()" update="uploadForm" />
+									</h:panelGroup>
+								</p:panelGrid>
+								<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank" layout="grid" id="rejectReasonInfoGrid">
+									<c:if test="#{dgAllocationInformationUI.rejectReasonsChild.size() gt 0}">
+										<h3>Reject Reasons</h3>
+										<p:dataTable var="rowVar" value="#{dgAllocationInformationUI.rejectReasonsChild}" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom" paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+											<p:column headerText="Create Date">
+												<p:outputLabel value="#{rowVar.createDate}">
+													<f:convertDateTime pattern="dd MMMM yyyy" />
+												</p:outputLabel>
+											</p:column>
+											<p:column headerText="Reason for Rejection">
+												<p:outputLabel value="#{rowVar.rejectReasons.description}"></p:outputLabel>
+											</p:column>
+											<p:column headerText="Additional Information">
+												<p:outputLabel value="#{rowVar.additionalInformation}"></p:outputLabel>
+											</p:column>
+											<p:column headerText="How to fix">
+												<p:outputLabel value="#{rowVar.rejectReasons.howTo}"></p:outputLabel>
+											</p:column>
+										</p:dataTable>
+									</c:if>
+								</p:panelGrid>
+							</p:fieldset>
+							<div class="EmptyBox5" />
+							<ui:include src="/pages/includes/download_lazy.xhtml" rendered="#{dgAllocationInformationUI.wspDgAllocationsList.size() ne null}">
+								<ui:param name="file_name" value="DG Allocation" />
+								<ui:param name="target" value="skill4" />
+							</ui:include>
+							<p:dataTable var="dgallo" rows="#{dgAllocationInformationUI.wspDgAllocationsList.size()}" emptyMessage="#{lang['no.records.found']}" value="#{dgAllocationInformationUI.wspDgAllocationsList}" id="skill4" expandableRowGroups="true" sortBy="#{dgallo.dgAllocationParent.id}">
+								<p:headerRow>
+									<p:column colspan="6" rendered="#{sessionUI.externalParty}">
+										<h:outputText value="#{dgallo.mandatoryGrant.wsp.company.companyNameDisplay}" />
+									</p:column>
+									<p:column colspan="13" rendered="#{not sessionUI.externalParty}">
+										<h:outputText value="#{dgallo.mandatoryGrant.wsp.company.companyNameDisplay}" />
+									</p:column>
+								</p:headerRow>
+								<p:columnGroup type="header">
+									<p:row rendered="#{not sessionUI.externalParty}">
+										<p:column colspan="7" headerText="Learner Information" />
+										<p:column colspan="6" headerText="Total Allocation" />
+									</p:row>
+									<p:row>
+										<p:column colspan="1" headerText="Intervention" />
+										<p:column colspan="1" headerText="Recommended Intervention" />
+										<p:column colspan="1" headerText="Requested Learners" />
+										<p:column colspan="1" headerText="Recommended Learners" rendered="#{not sessionUI.externalParty}" />
+										<p:column colspan="1" headerText="Awarded Learners" />
+										<p:column colspan="1" headerText="Partially Funded Learners" />
+										<p:column colspan="1" headerText="Intervention Cost" rendered="#{not sessionUI.externalParty}" />
+										<p:column colspan="1" headerText="Requested Amount" rendered="#{not sessionUI.externalParty}" />
+										<p:column colspan="1" headerText="Recommended Amount" rendered="#{not sessionUI.externalParty}" />
+										<p:column colspan="1" headerText="Award Amount" rendered="#{not sessionUI.externalParty}" />
+										<p:column colspan="1" headerText="Running Total" rendered="#{not sessionUI.externalParty}" />
+										<p:column colspan="1" headerText="Disabled Grant Amount" rendered="#{not sessionUI.externalParty}" />
+										<p:column colspan="1" headerText="Total Awarded" />
+									</p:row>
+								</p:columnGroup>
+								<p:column headerText="Company" style="display: none !important;" exportable="true">
+									<p:outputLabel value="#{dgallo.mandatoryGrant.wsp.company.companyNameDisplay}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="Intervention">
+									<p:outputLabel value="#{dgallo.mandatoryGrant.interventionType.description}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="Recommended Intervention">
+									<p:outputLabel value="#{dgallo.interventionType.description}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="Requested Learners">
+									<p:outputLabel value="#{dgallo.totalLearners}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="Recommended Learners" rendered="#{not sessionUI.externalParty}">
+									<p:outputLabel value="#{dgallo.numberOfLearners}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="Awarded Learners">
+									<p:outputLabel value="#{dgallo.maxPossibleLearners}" rendered="#{not sessionUI.externalParty}"></p:outputLabel>
+									<p:outputLabel value="#{dgallo.maxPossibleLearners + dgallo.coFundingLearnersAwarded}" rendered="#{sessionUI.externalParty}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="Partially Funded Learners">
+									<p:outputLabel value="#{dgallo.coFundingLearnersAwarded}"></p:outputLabel>
+								</p:column>	
+								<p:column headerText="Intervention Cost" rendered="#{not sessionUI.externalParty}">
+									<p:outputLabel value="#{dgallo.interventionType.basicGrantAmount}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="Requested Amount" rendered="#{not sessionUI.externalParty}">
+									<p:outputLabel value="#{dgallo.requestedAmount}">
+										<f:convertNumber type="currency" pattern="###,###,###,###,##0.00" />
+									</p:outputLabel>
+								</p:column>
+								<p:column headerText="Recommended Amount" rendered="#{not sessionUI.externalParty}">
+									<p:outputLabel value="#{dgallo.recommendedAmount}">
+										<f:convertNumber type="currency" pattern="###,###,###,###,##0.00" />
+									</p:outputLabel>
+								</p:column>
+								<p:column headerText="Award Amount" rendered="#{not sessionUI.externalParty}">
+									<p:outputLabel value="#{dgallo.awardAmount}" styleClass="FontBold" style="color: #5ecf80" rendered="#{dgallo.awardAmount gt 0}">
+										<f:convertNumber type="currency" pattern="###,###,###,###,##0.00" />
+									</p:outputLabel>
+									<p:outputLabel value="#{dgallo.awardAmount}" styleClass="FontBold" rendered="#{dgallo.awardAmount lt 0.1}">
+										<f:convertNumber type="currency" pattern="###,###,###,###,##0.00" />
+									</p:outputLabel>
+								</p:column>
+								<p:column headerText="Running Total" rendered="#{not sessionUI.externalParty}">
+									<p:outputLabel value="#{dgallo.runningTotal}">
+										<f:convertNumber type="currency" pattern="###,###,###,###,##0.00" />
+									</p:outputLabel>
+								</p:column>
+								<p:column headerText="Disabled Grant Amount" rendered="#{not sessionUI.externalParty}">
+									<p:outputLabel value="#{dgallo.disabledGrantAmount}">
+										<f:convertNumber type="currency" pattern="R###,###,###,###,##0.00" />
+									</p:outputLabel>
+								</p:column>
+								<p:column headerText="Total Awarded" styleClass="FontBold">
+									<p:outputLabel value="#{dgallo.totalAwardAmount}" styleClass="FontBold" style="color: #5ecf80" rendered="#{dgallo.totalAwardAmount gt 0}">
+										<f:convertNumber type="currency" pattern="R###,###,###,###,##0.00" />
+									</p:outputLabel>
+									<p:outputLabel value="#{dgallo.totalAwardAmount}" styleClass="FontBold" rendered="#{dgallo.totalAwardAmount lt 0.1}">
+										<f:convertNumber type="currency" pattern="R###,###,###,###,##0.00" />
+									</p:outputLabel>
+								</p:column>
+								<p:column headerText="#{lang['RAG']}" width="37" exportable="false" rendered="false">
+									<h:graphicImage value="/resources/hls/images/red.svg" rendered="#{dgallo.awardAmount.doubleValue() eq 0 and dgallo.coFundingAwardAmount.doubleValue() eq 0}" width="40" styleClass="animated pulse infinite" />
+									<h:graphicImage value="/resources/hls/images/amber.svg" rendered="#{dgallo.coFundingAwardAmount.doubleValue() ne 0}" width="35" />
+									<h:graphicImage value="/resources/hls/images/green.svg" rendered="#{dgallo.awardAmount.doubleValue() ne 0 and dgallo.coFundingAwardAmount.doubleValue() eq 0}" width="30" />
+								</p:column>
+								<p:summaryRow listener="#{dgAllocationInformationUI.onSummaryRow}" rendered="#{not sessionUI.externalParty}">
+									<p:column colspan="6"></p:column>
+									<p:column colspan="1">
+										<h:outputText value="Total:" />
+									</p:column>
+									<p:column colspan="1">
+										<p:outputLabel value="#{dgAllocationInformationUI.totalRequestedAmount}">
+											<f:convertNumber type="currency" pattern="R###,###,###,###,##0.00" />
+										</p:outputLabel>
+									</p:column>
+									<p:column colspan="1">
+										<p:outputLabel value="#{dgAllocationInformationUI.totalRecommendedAmount}">
+											<f:convertNumber type="currency" pattern="R###,###,###,###,##0.00" />
+										</p:outputLabel>
+									</p:column>
+									<p:column colspan="2">
+									</p:column>
+									<p:column colspan="1" style="text-align:right">
+										<p:outputLabel value="#{dgAllocationInformationUI.totalAwardAmountDisabled}">
+											<f:convertNumber type="currency" pattern="R###,###,###,###,##0.00" />
+										</p:outputLabel>
+									</p:column>
+									<p:column>
+										<p:outputLabel value="#{dgAllocationInformationUI.total}">
+											<f:convertNumber type="currency" pattern="R###,###,###,###,##0.00" />
+										</p:outputLabel>
+									</p:column>
+								</p:summaryRow>
+							</p:dataTable>
+							
+							<div class="EmptyBox20" />
+							<h3>Project Implementation Plan</h3>
+							<p:dataTable var="rowVar" value="#{dgAllocationInformationUI.projectImplementationPlans}" expandableRowGroups="true" rowKey="#{rowVar.id}" reflow="true">
+								<p:column headerText="Reference Number">
+									<h:outputText value="#{rowVar.activeContracts.refnoAuto}">
+									</h:outputText>
+								</p:column>
+								<p:column headerText="MOA Type">
+									<h:outputText value="#{rowVar.activeContracts.moaType.friendlyName}">
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Category">
+									<h:outputText value="#{rowVar.interventionTypeDescription}">
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Learners">
+									<h:outputText value="#{rowVar.fullyFundedLearnerAwarded}">
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Projected Recruitment Date" rendered="true">
+									<p:calendar value="#{rowVar.projectedRecruitmentDate}" inputStyle="width: 95%; opacity: 1; color: black" disabled="#{not sessionUI.externalParty or (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalEdit)}" pattern="dd MMMM yyyy" readonlyInput="true" />
+								</p:column>
+								<p:column headerText="Projected Induction Date" rendered="true">
+									<p:calendar value="#{rowVar.projectedInductionDate}" inputStyle="width: 95%; opacity: 1; color: black" disabled="#{not sessionUI.externalParty or (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalEdit)}"
+										pattern="dd MMMM yyyy" readonlyInput="true" />
+								</p:column>
+								<p:column headerText="Projected Date of Registration" rendered="true">
+									<p:calendar value="#{rowVar.projectedRegistrationDate}" inputStyle="width: 95%; opacity: 1; color: black" disabled="#{not sessionUI.externalParty or (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalEdit)}"
+										pattern="dd MMMM yyyy" readonlyInput="true" />
+								</p:column>
+								<p:column headerText="Estimated 50% Progress Date" rendered="true">
+									<p:calendar value="#{rowVar.projectedRegistrationDate}" inputStyle="width: 95%; opacity: 1; color: black" disabled="#{not sessionUI.externalParty or (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalEdit)}"
+										pattern="dd MMMM yyyy" readonlyInput="true" />
+								</p:column>
+								<p:column headerText="Estimated Complete Date" rendered="true">
+									<p:calendar value="#{rowVar.estimatedCompletionDate}" inputStyle="width: 95%; opacity: 1; color: black" disabled="#{not sessionUI.externalParty or (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalEdit)}"
+										pattern="dd MMMM yyyy" readonlyInput="true" />
+								</p:column>
+								<p:column headerText="Accredited Provider Identified">
+									<p:selectOneMenu required="true" requiredMessage="#{lang['accreditedProviderIdentified']}" id="b" value="#{rowVar.accreditedProviderIdentified}"
+										disabled="#{not sessionUI.externalParty or (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalEdit)}" style="width:75%; opacity: 1; color: black">
+										<p:ajax />
+										<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+										<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+									</p:selectOneMenu>
+								</p:column>
+								<p:column headerText="Logistical Aspects Addressed">
+									<p:selectOneMenu required="true" requiredMessage="#{lang['logisticalAspectsAddressed']}" id="a" value="#{rowVar.logisticalAspectsAddressed}"
+										disabled="#{not sessionUI.externalParty or (sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Edit and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.EditUpload and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalEdit)}" style="width:75%; opacity: 1; color: black">
+										<p:ajax />
+										<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+										<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+									</p:selectOneMenu>
+								</p:column>
+								<!-- <p:column headerText="Change PIP">
+									<p:commandButton title="#{lang['pip.update']}" icon="fa fa-database" update="@form"  process="@this" oncomplete="PF('dlgPIPUpdate').show()">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{dgAllocationInformationUI.selectedProjectImplementationPlan}" />
+									</p:commandButton>
+								</p:column> -->
+								<p:column headerText="Change PIP" rendered="#{sessionUI.externalParty}">
+									<p:commandButton title="#{lang['pip.update']}" icon="fa fa-database" update="@form"  process="@this" >
+										<f:setPropertyActionListener value="#{rowVar}" target="#{dgAllocationInformationUI.selectedProjectImplementationPlan}" />
+										<f:ajax listener="#{dgAllocationInformationUI.kicakOffProjectImplementationPlan}"/>
+									</p:commandButton>
+								</p:column>
+							</p:dataTable>
+
+							<div class="EmptyBox20" />
+							<h3>Documents</h3>
+							<p:dataTable value="#{dgAllocationInformationUI.dgAllocationParent.docs}" var="rv1" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv1.id}">
+
+								<p:column headerText="#{lang['type']}" width="18%">#{rv1.configDoc.name}</p:column>
+								<p:column headerText="#{lang['original.file.name']}" priority="4">
+									<p:outputLabel value="#{rv1.originalFname}" styleClass="Fs12"></p:outputLabel>
+								</p:column>
+								<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+								<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+									<h:outputText value="#{rv1.createDate}">
+										<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="#{lang['version']}" width="10%" priority="4">
+									<h:outputText value="#{rv1.versionNo}">
+									</h:outputText>
+								</p:column>
+								<p:column headerText="#{lang['original.required']}" rendered="false">
+									<center>
+										<h:panelGroup rendered="#{rv1.configDoc.originalRequired}" styleClass="green">
+											<i class="fa fa-files-o fa-3x" aria-hidden="true"></i>
+										</h:panelGroup>
+										<h:panelGroup rendered="#{not rv1.configDoc.originalRequired}" styleClass="red">
+											<i class="fa fa-times fa-3x" aria-hidden="true"></i>
+										</h:panelGroup>
+									</center>
+								</p:column>
+								<p:column width="180" headerText="#{lang['view.edit']}">
+									<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}">
+										<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+									<p:spacer width="5" rendered="#{rv1.id ne null}" />
+									<p:commandButton icon="fa fa-bars " id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}">
+										<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="dhistUserDocs" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+									<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+										<p:spacer width="5" />
+										<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+									</h:panelGroup>
+									<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+										<p:spacer width="5" />
+										<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+									</h:panelGroup>
+								</p:column>
+							</p:dataTable>
+						</div>
+					</div>
+				</p:outputPanel>
+			</h:form>
+		</div>
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true" dynamic="true">
+			<h:form id="uploadForm">
+				<h:panelGroup id="uploadGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">Upload Appeal Document To Start Process</h1>
+								<p:panel>
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span>
+										<br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{dgAllocationInformationUI.storeNewFileAndStartAppealProcess}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" multiple="false" fileLimit="1" allowTypes="/(\.|\/)(gif|jpe?g|png|pdf|docx|txt)$/" immediate="false"
+										auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+		<p:dialog header="#{lang['pip.update']}" widgetVar="dlgPIPUpdate" resizable="false" hideEffect="clip" showEffect="clip" id="pipChange" width="80%" responsive="true" modal="true" dynamic="true">
+			<h:form id="pipUpdateForm">
+				<h:panelGroup id="pipUpdateGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{dgAllocationInformationUI.docPIP.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{dgAllocationInformationUI.docPIP.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span>
+										<br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{dgAllocationInformationUI.storeFilePIP}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update="allocationForm" multiple="false" fileLimit="1" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+
+	</ui:define>
+</ui:composition>

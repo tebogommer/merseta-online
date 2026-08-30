@@ -1,0 +1,163 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Survey Report</h1>
+					<h:form id="mainForm">
+						<p:growl sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+						<div class="ui-g">
+							<div class="ui-g-12 ui-md-6">
+								<p:outputLabel value="Total Surveys Taken: #{surveyReportUI.totalSurveysTaken}" />
+							</div>
+							<div class="ui-g-12 ui-md-6">
+								<p:outputLabel value="Total Surveys Avalaible: #{surveyReportUI.totalSurveysAvalible}" />
+							</div>
+							<div class="ui-g-12">
+								<p:tabView id="tabView" cache="false" activeIndex="#{sessionUI.activeIndex}" dynamic="true">
+									<p:tab id="surveysConfiguedTab" title="Surveys Configured">
+										<div class="EmptyBox10" />
+										<p:dataTable var="rvsc" value="#{surveyReportUI.dataModelSurveysConfigured}" id="surveyConfiguredDT" rowKey="#{rvsc.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="No Surveys Have Been Configured"
+											paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+											<f:facet name="header">
+												<p:outputLabel value="Available Surveys For Users" style="font-size:15px" />
+											</f:facet>
+											<p:column style="width:7%" headerText="#{lang['expand.row']}">
+												<p:rowToggler />
+											</p:column>
+											<p:column headerText="#{lang['description']}" filterBy="#{rvsc.description}">
+												<h:outputText value="#{rvsc.description}" />
+											</p:column>
+											<p:column headerText="#{lang['date.added']}" sortBy="#{rvsc.createDate}" style="width:15%">
+												<h:outputText value="#{rvsc.createDate}">
+													<f:convertDateTime pattern="dd MMMM yyyy" />
+												</h:outputText>
+											</p:column>
+											<p:rowExpansion>
+												<p:outputPanel>
+													<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+														<p:dataTable id="answersTableConfigured" var="ansc" value="#{rvsc.stakeholderRelationsSurveyList}">
+															<p:column headerText="Question">
+																<p:outputLabel value="#{ansc.description}" />
+															</p:column>
+															<p:column headerText="#{lang['not.at.all']}">
+																<p:selectBooleanCheckbox value="#{ans.notAtAll}" disabled="true">
+																</p:selectBooleanCheckbox>
+															</p:column>
+															<p:column headerText=" #{lang['not.really']}">
+																<p:selectBooleanCheckbox value="#{ansc.notReally}" disabled="true">
+																</p:selectBooleanCheckbox>
+															</p:column>
+															<p:column headerText=" #{lang['neutral']}">
+																<p:selectBooleanCheckbox value="#{ansc.nuetral}" disabled="true">
+																</p:selectBooleanCheckbox>
+															</p:column>
+															<p:column headerText=" #{lang['to.a.limited.extent']}">
+																<p:selectBooleanCheckbox value="#{ansc.toaLimitedExtent}" disabled="true">
+																</p:selectBooleanCheckbox>
+															</p:column>
+															<p:column headerText="#{lang['to.a.large.extent']}">
+																<p:selectBooleanCheckbox value="#{ansc.toaLargeExtent}" disabled="true">
+																</p:selectBooleanCheckbox>
+															</p:column>
+														</p:dataTable>
+													</p:panelGrid>
+												</p:outputPanel>
+											</p:rowExpansion>
+										</p:dataTable>
+									</p:tab>
+									<p:tab id="surveysTakenTab" title="Surveys Taken">
+										<div class="EmptyBox10" />
+										<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+											<p:outputLabel value="Filter Results By Date Ranges?" />
+											<p:selectBooleanCheckbox value="#{surveyReportUI.filterByDateRange}">
+												<p:ajax update="dateRangePanel" listener="#{surveyReportUI.runSearch}" />
+											</p:selectBooleanCheckbox>
+										</p:panelGrid>
+										<p:outputPanel id="dateRangePanel">
+											<c:if test="#{surveyReportUI.filterByDateRange}">
+												<p:panelGrid columns="4" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+													<p:outputLabel value="From Date:" for="fromDateSelection" />
+													<p:calendar id="fromDateSelection" mask="true" readonlyInput="true" showOn="button" value="#{surveyReportUI.fromDate}"  pattern="dd/MM/yyyy">
+														<p:ajax event="dateSelect" />
+													</p:calendar>
+													<p:outputLabel value="To Date:" for="toDateSelection" />
+													<p:calendar id="toDateSelection" mask="true" readonlyInput="true" showOn="button" value="#{surveyReportUI.toDate}"  pattern="dd/MM/yyyy">
+														<p:ajax event="dateSelect" />
+													</p:calendar>
+													<p:commandButton icon="fa fa-search" value="Search" update="dateRangePanel" action="#{surveyReportUI.runSearch}" />
+												</p:panelGrid>
+											</c:if>
+											<p:dataTable var="rvst" value="#{surveyReportUI.dataModelAllSurveysTakenList}" id="surveysTakenDT" rowKey="#{rvst.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="No Surveys Have Been Completed"
+												paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+												<f:facet name="header">
+													<p:outputLabel value="Surveys Completed" style="font-size:15px" />
+												</f:facet>
+												<p:column style="width:7%" headerText="#{lang['expand.row']}">
+													<p:rowToggler />
+												</p:column>
+												<p:column headerText="#{lang['description']}" filterBy="#{rvst.description}">
+													<h:outputText value="#{rvst.description}" />
+												</p:column>
+												<p:column headerText="Additional Comment" rendered="false">
+													<h:outputText value="#{rvst.additionalComment}" />
+												</p:column>
+												<p:column headerText="User Information">
+													<h:outputText value="#{rvst.user.firstName} #{rvst.user.lastName} (#{rvst.user.email})" />
+												</p:column>
+												<p:column headerText="Date Submitted" sortBy="#{rvst.dateSubmitted}" style="width:15%">
+													<h:outputText value="#{rvst.dateSubmitted}">
+														<f:convertDateTime pattern="dd MMMM yyyy" />
+													</h:outputText>
+												</p:column>
+
+												<p:rowExpansion>
+													<p:outputPanel>
+														<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{rvst.additionalComment ne null and rvst.additionalComment ne ''}">
+															<p:outputLabel value="Additional Comment:" style="font-weight:bold;"/>
+															<h:outputText value="#{rvst.additionalComment}" />
+														</p:panelGrid>
+														<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+															<p:dataTable id="answersTable" var="ans" value="#{rvst.stakeholderRelationsSurveyList}">
+																<p:column headerText="Question">
+																	<p:outputLabel value="#{ans.description}" />
+																</p:column>
+																<p:column headerText="#{lang['not.at.all']}">
+																	<p:selectBooleanCheckbox value="#{ans.notAtAll}" disabled="true">
+																	</p:selectBooleanCheckbox>
+																</p:column>
+																<p:column headerText=" #{lang['not.really']}">
+																	<p:selectBooleanCheckbox value="#{ans.notReally}" disabled="true">
+																	</p:selectBooleanCheckbox>
+																</p:column>
+																<p:column headerText=" #{lang['neutral']}">
+																	<p:selectBooleanCheckbox value="#{ans.nuetral}" disabled="true">
+																	</p:selectBooleanCheckbox>
+																</p:column>
+																<p:column headerText=" #{lang['to.a.limited.extent']}">
+																	<p:selectBooleanCheckbox value="#{ans.toaLimitedExtent}" disabled="true">
+																	</p:selectBooleanCheckbox>
+																</p:column>
+																<p:column headerText="#{lang['to.a.large.extent']}">
+																	<p:selectBooleanCheckbox value="#{ans.toaLargeExtent}" disabled="true">
+																	</p:selectBooleanCheckbox>
+																</p:column>
+															</p:dataTable>
+														</p:panelGrid>
+													</p:outputPanel>
+												</p:rowExpansion>
+											</p:dataTable>
+										</p:outputPanel>
+									</p:tab>
+								</p:tabView>
+							</div>
+						</div>
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+</ui:composition>

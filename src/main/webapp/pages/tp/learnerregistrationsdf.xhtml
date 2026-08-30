@@ -1,0 +1,425 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:o="http://omnifaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+		<p:growl showDetail="false" sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+		<h:panelGroup id="laernerPG">
+		<h:form id="learnerRegUserForm">
+			<p:importEnum type="haj.com.entity.enums.CompanyRegOrSDLEnum" var="regSDL"></p:importEnum>
+			<p:importEnum type="haj.com.entity.enums.YesNoEnum"></p:importEnum>
+			<p:importEnum type="haj.com.entity.enums.PivotNonPivotEnum" />
+			<p:importEnum type="haj.com.entity.enums.IdPassportEnum"></p:importEnum>
+			<p:importEnum type="haj.com.entity.enums.EmploymentStatusEnum"></p:importEnum>
+			<p:importEnum type="haj.com.entity.enums.InterventionTypeEnum"></p:importEnum>
+			<p:importEnum type="haj.com.entity.enums.HighestEducationEnum"></p:importEnum>
+			<div class="ui-g ">
+				<div class="ui-g-12">
+					<c:if test="#{learnerApplicationFormSdfUI.user eq null}">
+						<div class="card">
+							<p:fieldset legend="#{lang['intervention.type']}" style="margin-top: 20px">
+								<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+									<h:panelGroup>
+										<div>
+											<p:outputLabel value="#{lang['intervention.type']}" for="intType1" styleClass="gray" />
+										</div>
+										<div>
+											<p:selectOneMenu id="intType1" value="#{learnerApplicationFormSdfUI.interventionType}" style="width:95%" required="true" requiredMessage="#{lang['select.planned']}" converter="InterventionTypeConvertor">
+												<p:ajax event="itemSelect" listener="#{learnerApplicationFormSdfUI.clearInputFields}" update="@form :accForms1" />
+												<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+												<f:selectItems value="#{selectItemsUI.selectItemsInterventionType}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+											</p:selectOneMenu>
+										</div>
+									</h:panelGroup>
+									
+									<h:panelGroup styleClass="md-inputfield" style="margin-top: 19px" id="learnershipPanelReg" rendered="#{learnerApplicationFormSdfUI.interventionType.interventionTypeEnum eq InterventionTypeEnum.Learnership}">									
+										
+										<p:autoComplete id="learnershipPanelRegistration" value="#{learnerApplicationFormSdfUI.companylearners.learnership}" completeMethod="#{autoCompleteUI.completeLearnershipQualificationLastDateOfEnrollment}" var="rv" itemLabel="#{rv.qualification.saqaQualification}" itemValue="#{rv}" forceSelection="true" converter="LearnershipConvertor" required="true" requiredMessage="Please Select Learnership Qualification" dropdown="true" minQueryLength="3" maxResults="10"
+											inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+											<p:ajax event="itemSelect" update="@form" />
+											<p:column headerText="Learnership #{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+											<p:column headerText="Qualification #{lang['code']}" style="white-space: nowrap">#{rv.qualification.code}</p:column>
+											<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.qualification.description}</p:column>
+											<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.qualification.nqflevelg2description}</p:column>
+										</p:autoComplete>
+										<p:outputLabel value="Learnership Qualification" for="learnershipPanelRegistration" styleClass="gray" />
+									</h:panelGroup>
+									
+									<h:panelGroup styleClass="md-inputfield" style="margin-top: 19px" id="learnershipPanelRegApprenticeship" rendered="#{learnerApplicationFormSdfUI.interventionType.interventionTypeEnum eq InterventionTypeEnum.Apprenticeship}">									
+										
+										<p:autoComplete id="learnershipPanelRegistrationApprenticeship" value="#{learnerApplicationFormSdfUI.selectedQualification}" completeMethod="#{autoCompleteUI.completeQualificationTrade}" var="rv" itemLabel="#{rv.saqaQualification}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor" required="true" requiredMessage="Please Select Learnership Qualification" dropdown="true" minQueryLength="3" maxResults="10"
+											inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+											<p:ajax event="itemSelect" update="@form" />
+											<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+											<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+											<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+										</p:autoComplete>
+										<p:outputLabel value="Trade" for="learnershipPanelRegistrationApprenticeship" styleClass="gray" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield" style="margin-top: 19px" rendered="#{learnerApplicationFormSdfUI.showQual eq true}">
+										<p:autoComplete id="highestQualTitle1" value="#{learnerApplicationFormSdfUI.selectedQualification}" completeMethod="#{autoCompleteUI.completeQualificationBeforeLastEnrolmentDate}" var="rv" itemLabel="#{rv.saqaQualification}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor" required="true" requiredMessage="Please Select Qualification" dropdown="true" minQueryLength="3" maxResults="10"
+											inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+											<p:ajax event="itemSelect" update="@form" />
+											<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+											<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+											<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+										</p:autoComplete>
+										<p:outputLabel value="#{lang['saqa.id']}" for="highestQualTitle1" styleClass="gray" />
+									</h:panelGroup>
+									
+									<h:panelGroup styleClass="md-inputfield" style="margin-top: 19px" rendered="#{learnerApplicationFormSdfUI.interventionType.id eq 55}">
+										<p:autoComplete id="occupationalCertificateQualification" value="#{learnerApplicationFormSdfUI.selectedQualification}" completeMethod="#{autoCompleteUI.completeQualificationEnrolmentDateAndIsOccupationalCertificate}" var="rv" itemLabel="#{rv.saqaQualification}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor" required="true" requiredMessage="Please Select Qualification" dropdown="true" minQueryLength="3" maxResults="10"
+											inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+											<p:ajax event="itemSelect" update="@form" />
+											<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+											<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+											<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+										</p:autoComplete>
+										<p:outputLabel value="#{lang['saqa.id']}" for="occupationalCertificateQualification" styleClass="gray" />
+									</h:panelGroup>
+									
+									<h:panelGroup styleClass="md-inputfield" rendered="#{learnerApplicationFormSdfUI.interventionType.id eq 37 or learnerApplicationFormSdfUI.interventionType.id eq 90 or learnerApplicationFormSdfUI.interventionType.id eq 91}" style="margin-top: 19px">
+										<p:autoComplete id="skillsProgram37" value="#{learnerApplicationFormSdfUI.selectedSkillsProgram}" completeMethod="#{autoCompleteUI.completeSkillsProgram}" 
+														var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SkillsProgramConvertor" dropdown="true" minQueryLength="3" 
+														maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%" required="true" requiredMessage="Select Skills Programme">
+											<p:ajax event="itemSelect"  update="@form" />
+											<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+											<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+										</p:autoComplete>
+										<p:outputLabel value="Skills Programme" for="skillsProgram37" styleClass="gray" />
+									</h:panelGroup>
+									
+									<h:panelGroup styleClass="md-inputfield" rendered="#{learnerApplicationFormSdfUI.interventionType.id eq 38 or learnerApplicationFormSdfUI.interventionType.id eq 92 or learnerApplicationFormSdfUI.interventionType.id eq 93}" style="margin-top: 19px">
+										<p:autoComplete id="skillsSet38" value="#{learnerApplicationFormSdfUI.selectedSkillsSet}" completeMethod="#{autoCompleteUI.completeSkillsSet}" var="rv" 
+										itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SkillsSetConvertor" dropdown="true" minQueryLength="3" maxResults="10" 
+										inputStyle="width: 95%; opacity:1 !important;" style="width: 95%" required="true" requiredMessage="Select Skills Set">
+											<p:ajax event="itemSelect"  update="@form" />
+											<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+											<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+										</p:autoComplete>
+										<p:outputLabel value="Skills Set" for="skillsSet38" styleClass="gray" />
+									</h:panelGroup>
+									
+									<h:panelGroup styleClass="md-inputfield" rendered="#{learnerApplicationFormSdfUI.interventionType.id eq 28}" style="margin-top: 19px">
+										<p:autoComplete id="unitStandard" value="#{learnerApplicationFormSdfUI.selectedUnitStandards}" completeMethod="#{autoCompleteUI.completeUnitStandards}" var="rv" itemLabel="#{rv.title}" itemValue="#{rv}" forceSelection="true" converter="UnitStandardsConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%"
+											required="true" requiredMessage="Select Unit Standarts">
+											<p:ajax event="itemSelect" listener="#{learnerApplicationFormSdfUI.clearSelectedUnitStandartQualification}" update="@form" />
+											<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+											<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.title}</p:column>
+										</p:autoComplete>
+										<p:outputLabel value="#{lang['unit.standard']}" for="unitStandard" styleClass="gray" />
+									</h:panelGroup>
+									
+									<h:panelGroup styleClass="md-inputfield" style="margin-top: 19px" rendered="#{learnerApplicationFormSdfUI.selectedUnitStandards.id ne null}">
+										<p:autoComplete id="unitStandartQualification" value="#{learnerApplicationFormSdfUI.selectedQualification}" completeMethod="#{learnerApplicationFormSdfUI.completeUnitStandartQualification}" var="rv" itemLabel="#{rv.saqaQualification}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor" required="true" requiredMessage="Please Select Qualification" dropdown="true" minQueryLength="3" maxResults="20"
+											inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+											<p:ajax event="itemSelect" update="@form" listener="#{learnerApplicationFormSdfUI.countLearningProgrammes}" />
+											<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+											<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+											<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+										</p:autoComplete>
+										<p:outputLabel value="#{lang['saqa.id']}" for="unitStandartQualification" styleClass="gray" />
+									</h:panelGroup>
+									
+									<h:panelGroup styleClass="md-inputfield" style="margin-top: 19px" rendered="#{learnerApplicationFormSdfUI.showUSQual}">
+										<p:autoComplete id="unitStandartQualification22" value="#{learnerApplicationFormSdfUI.learningProgramme}" completeMethod="#{learnerApplicationFormSdfUI.completeQualificationByLearningProgrammeQual}" var="rv" itemLabel="#{rv.saqaQualification}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor" required="true" requiredMessage="Please Select Qualification" dropdown="true" minQueryLength="3" maxResults="10"
+											inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+											<p:ajax event="itemSelect" />
+											<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+											<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+											<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+										</p:autoComplete>
+										<p:outputLabel value="Learning Programme" for="unitStandartQualification22" styleClass="gray" />
+									</h:panelGroup>
+									
+									<h:panelGroup styleClass="md-inputfield" style="margin-top: 19px" rendered="#{learnerApplicationFormSdfUI.interventionType.id eq 48}">
+										<p:inputText id="nonCredidBearingDescription" value="#{learnerApplicationFormSdfUI.nonCredidBearingDescription}" style="width:95%" required="true" requiredMessage="Provide Non-Credit Bearing Description" >
+											<p:ajax />
+										</p:inputText>
+										<p:outputLabel value="Non Credit Bearing Title:" for="nonCredidBearingDescription" styleClass="gray" />
+									</h:panelGroup>
+									
+									<h:panelGroup rendered="false">
+										<div>
+											<p:outputLabel value="#{lang['saqa.id']}" for="unitStandartQualification1" styleClass="gray" />
+										</div>
+										<div>
+											<p:selectOneMenu id="unitStandartQualification1" value="#{learnerApplicationFormSdfUI.selectedUnitStandartQualification}" style="width:95%" required="true" requiredMessage="#{lang['select.planned']}" converter="QualificationConvertor">
+												<p:ajax event="itemSelect" update="@form" />
+												<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+												<f:selectItems value="#{learnerApplicationFormSdfUI.selectItemsQualification}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+											</p:selectOneMenu>
+										</div>
+									</h:panelGroup>
+
+
+								</p:panelGrid>
+								<br />							
+								
+								<p:fieldset id="siteDetailes" collapsed="false" legend="Site Details" rendered="#{learnerApplicationFormSdfUI.sitesList.size() ne 0}">
+									<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:50%">
+										<h:panelGroup styleClass="md-inputfield" rendered="#{!learnerApplicationFormSdfUI.useCompanyAsSite}">
+											<p:autoComplete style="width:100%" inputStyle="width:100%" id="siteForWpa" value="#{learnerApplicationFormSdfUI.selectedSite}" completeMethod="#{learnerApplicationFormSdfUI.completeSites}" var="rv" itemLabel="#{rv.companyName}" itemValue="#{rv}" forceSelection="true" converter="SitesConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+												<p:ajax event="itemSelect" />
+											</p:autoComplete>
+											<p:outputLabel value="Select #{lang['sites']}" for="siteForWpa" />
+										</h:panelGroup>
+										<h:panelGroup>
+											<p:outputLabel value="Use Company Address:" style="color:grey" />
+											<p:spacer width="5" />
+											<p:selectBooleanCheckbox value="#{learnerApplicationFormSdfUI.useCompanyAsSite}">
+												<p:ajax update="learnerRegUserForm" listener="#{learnerApplicationFormSdfUI.resetSite}"/>
+											</p:selectBooleanCheckbox>
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+										</h:panelGroup>
+									</p:panelGrid>
+								</p:fieldset>
+									
+								<br />
+								<p:commandButton value="Continue" action="#{learnerApplicationFormSdfUI.continueRegistration}" process="learnerRegUserForm" update="learnerRegUserForm" rendered="#{!learnerApplicationFormSdfUI.showInfo}"/>
+							</p:fieldset>
+							
+							
+							<c:if test="#{learnerApplicationFormSdfUI.showInfo and learnerApplicationFormSdfUI.interventionType.forSdpAccreditaion}">
+								<p:fieldset id="employersFs" collapsed="false" legend="Training Provider Details">
+								
+									<p:panelGrid id="searchCompanyPnl" columns="2" styleClass="ui-panelgrid-blank" rendered="#{learnerApplicationFormSdfUI.trainingProvider.id eq null}" style="width:30%">
+										<h:panelGroup id="accreditationNumberInput" styleClass="md-inputfield">
+											<p:inputText id="accreditationNumberCriteria" maxlength="80" value="#{learnerApplicationFormSdfUI.criteria}" style="width:100%" requiredMessage="Enter Accreditation Number" required="true" />
+											<p:outputLabel value="Provider Accreditation Number" for="accreditationNumberCriteria" />
+										</h:panelGroup>
+										
+										<p:commandButton id="idSearch3" icon="fa fa-search" value="Submit" process="searchCompanyPnl" actionListener="#{learnerApplicationFormSdfUI.findByAccreditationNumberTrainingProviderRegistartion}" update="@form"  />
+																	
+									</p:panelGrid>
+									
+									<p:panelGrid  columns="2" styleClass="ui-panelgrid-blank" rendered="#{learnerApplicationFormSdfUI.trainingProvider.id ne null and learnerApplicationFormSdfUI.interventionType.forSdpAccreditaion}" style="width:100%">
+										<h:panelGroup style="width:100%;">
+											<p:outputLabel value="Training Provider" for="hostCompany1" styleClass="gray"  />
+											<br />
+											<p:autoComplete style="width:95%" id="hostCompany1" value="#{learnerApplicationFormSdfUI.trainingProvider}" required="true" requiredMessage="Select Company" completeMethod="#{autoCompleteUI.completeCompany}" var="rv" itemLabel="#{rv.companyNameDisplay}"
+												itemValue="#{rv}" forceSelection="true" converter="CompanyConvertor" dropdown="true" minQueryLength="3" maxResults="10" disabled="true">
+												<p:column headerText="#{lang['companyName']}" style="white-space: nowrap">#{rv.companyName}</p:column>
+												<p:column headerText="#{lang['entity.id']}" style="white-space: nowrap">#{rv.levyNumber}</p:column>
+												<p:column headerText="Accreditation Number" style="white-space: nowrap">#{rv.accreditationNumber}</p:column>
+											</p:autoComplete>
+										</h:panelGroup>
+				
+										<h:panelGroup >
+											<p:outputLabel value="Accreditation Number:" for="accrediNumber" styleClass="gray" />
+											<br />
+											<p:inputText id="accrediNumber" value="#{learnerApplicationFormSdfUI.trainingProviderApplication.accreditationNumber}" style="width:95%" disabled="true">
+											</p:inputText>
+										</h:panelGroup>										
+									</p:panelGrid>								
+								</p:fieldset>							
+							</c:if>
+							
+							<c:if test="#{learnerApplicationFormSdfUI.showInfo}">
+								<br />
+								<ui:include src="/pages/includes/searchUserPassportOrIDValidation.xhtml" />	
+								<br />
+								<p:commandButton value="#{lang['clear']}" icon="fa fa-recycle" styleClass="flat red-btn Fs18" style="height: 50px;" actionListener="#{learnerApplicationFormSdfUI.clearCurrentLearner}" process="@this" update="@form" />							
+							</c:if>
+						</div>
+					</c:if>
+
+					<c:if test="#{learnerApplicationFormSdfUI.user ne null}">
+						<c:if test="#{learnerApplicationFormSdfUI.companylearners.interventionType.form eq '002'}">
+							<ui:include src="/pages/tp/includes/learnershipapprenticeformsdf.xhtml">
+								<ui:param name="disableFields" value="false" />
+							</ui:include>
+						</c:if>
+						<c:if test="#{learnerApplicationFormSdfUI.companylearners.interventionType.form eq '015'}">
+							<ui:include src="/pages/tp/includes/otherapplicationformsdf.xhtml">
+								<ui:param name="disableFields" value="false" />
+							</ui:include>
+						</c:if>
+												
+						<p:outputPanel styleClass="card" id="learnerRegUploadForm" style="width: 100%" rendered="#{learnerApplicationFormSdfUI.companylearners.docs.size() gt 0}">
+					<h:panelGroup id="docList">
+						<p:fieldset legend="#{lang['documents']}" id="userDocs" rendered="#{learnerApplicationFormSdfUI.companylearners.docs.size() gt 0}">
+							<p:dataTable value="#{learnerApplicationFormSdfUI.companylearners.docs}" var="rv1" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+								<p:column headerText="#{lang['type']}" width="20%">
+									<p:outputLabel value="#{rv1.configDoc.name} #{rv1.configDoc.requiredDocument ? '*' : ''}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="#{lang['uploaded.by']}">
+									<p:outputLabel value="#{rv1.users.firstName} #{rv1.users.lastName}"></p:outputLabel>
+								</p:column>
+								<p:column headerText="#{lang['uploaded']}" width="15%">
+									<h:outputText value="#{rv1.createDate}">
+										<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="#{lang['version']}" width="15%">
+									<h:outputText value="#{rv1.versionNo}">
+									</h:outputText>
+								</p:column>
+
+								<p:column width="180" headerText="#{lang['view.edit']}">
+									<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null and rv1.originalFname ne null}">
+										<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null and rv1.originalFname ne null}" />
+
+									<p:spacer width="5" rendered="#{rv1.id ne null}" />
+									<p:commandButton icon="fa fa-bars " id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null and rv1.originalFname ne null}">
+										<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="dhistUserDocs" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null and rv1.originalFname ne null}" />
+
+									<!-- only with permission to upload can upload a new version -->
+									<p:commandButton rendered="#{sessionUI.task.processRole eq null or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload}" icon="fa fa-upload" id="uploadUserDocs" styleClass="#{rv1.originalFname eq null ? 'red-btn' : ''} flat" process="@this" oncomplete="PF('dlgUpload').show()"
+										update=":uploadForm">
+										<f:setPropertyActionListener value="#{rv1}" target="#{learnerApplicationFormSdfUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="uploadUserDocs" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+
+									<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+										<p:spacer width="5" />
+										<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+									</h:panelGroup>
+
+									<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+										<p:spacer width="5" />
+										<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+									</h:panelGroup>
+
+								</p:column>
+							</p:dataTable>
+						</p:fieldset>
+
+					</h:panelGroup>
+				</p:outputPanel>
+				
+						<div class="ui-g-12">
+							<div class="card">
+								<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+									<p:commandButton value="#{lang['submit']}" icon="fa fa-check" styleClass="flat green-btn Fs18" style="height: 50px;" actionListener="#{learnerApplicationFormSdfUI.submitLearnerRegistration}" update="@form" />
+
+									<p:commandButton value="#{lang['clear']}" icon="fa fa-recycle" styleClass="flat red-btn Fs18" style="height: 50px;" actionListener="#{learnerApplicationFormSdfUI.clearCurrentLearner}" process="@this" update="@form" />
+								</p:panelGrid>
+							</div>
+						</div>
+					</c:if>
+				</div>
+			</div>
+		</h:form>
+
+
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true" dynamic="true">
+			<h:form id="uploadForm">
+				<h:panelGroup id="uploadGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{learnerApplicationFormSdfUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{learnerApplicationFormSdfUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span>
+										<br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{learnerApplicationFormSdfUI.storeFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update="learnerRegUserForm:learnerRegUploadForm" multiple="false" fileLimit="1" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+		
+		<p:dialog header="Accredited Provider(s)" widgetVar="accreCompanyForQualDialog" resizable="false" hideEffect="clip" showEffect="clip" id="accreCompanyForQualDialog" width="80%" height="700" responsive="true" modal="true" dynamic="true" >
+			<h:form id="accForms1">
+				<ui:include src="/pages/includes/tabinfo.xhtml">
+					<ui:param name="showInfoCircle" value="true" />
+					<ui:param name="cssClass" value="secondaryText Fs15" />
+					<ui:param name="helpTxt" value="#{learnerApplicationFormSdfUI.accreditedQuallMssg}" />
+				</ui:include>
+				<p:dataTable var="rowVar" value="#{learnerApplicationFormSdfUI.trainingProviderApplicationModel}"  id="accreCompanyList" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+						paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" 
+						rowsPerPageTemplate="5,10,15,25,30,35,40,45,50,100,150,200" reflow="true" lazy="true" emptyMessage="#{lang['no.records.found']}">
+		
+						<p:column headerText="#{lang['provider.name']}" filterBy="#{rowVar.company.companyName}" sortBy="#{rowVar.company.companyName}" filterStyle="width: 95%" >
+							<h:outputText value="#{rowVar.company.companyName}" />
+						</p:column>
+						
+						<p:column headerText="#{lang['accreditation.number']}"  filterStyle="width: 95%" filterBy="#{rowVar.accreditationNumber}">
+							<h:outputText value="#{rowVar.accreditationNumber}" rendered="#{rowVar.accreditationNumber ne null}"/>
+							<h:outputText value="#{rowVar.certificateNumber}" rendered="#{rowVar.accreditationNumber eq null}"/>
+						</p:column>
+						<p:column headerText="#{lang['tradingName']}" filterBy="#{rowVar.company.tradingName}" sortBy="#{rowVar.company.tradingName}" filterStyle="width: 95%" rendered="false">
+							<h:outputText value="#{rowVar.company.tradingName}" />
+						</p:column>
+						<p:column headerText="#{lang['entity.id']}" filterBy="#{rowVar.company.levyNumber}" sortBy="#{rowVar.company.levyNumber}" filterStyle="width: 95%" width="10%" rendered="false">
+							<h:outputText value="#{rowVar.company.levyNumber}" />
+						</p:column>
+						
+						<p:column headerText="#{lang['tel.number']}">
+							<h:outputText value="#{rowVar.company.telNumber}" />
+						</p:column>
+						<p:column headerText="#{lang['email']}">
+							<h:outputText value="#{rowVar.company.email}" />
+						</p:column>
+						<p:column headerText="#{lang['address.line.1']}" >
+							<h:outputText value="#{rowVar.company.residentialAddress.addressLine1}" />
+						</p:column>
+						<p:column headerText="#{lang['address.line.2']}" >
+							<h:outputText value="#{rowVar.company.residentialAddress.addressLine2}" />
+						</p:column>
+						<p:column headerText="#{lang['address.line.3']}" >
+							<h:outputText value="#{rowVar.company.residentialAddress.addressLine3}" />
+						</p:column>
+						<p:column headerText="Postal Code" rendered="false">
+							<h:outputText value="#{rowVar.company.residentialAddress.postcode}" />
+						</p:column>
+						<p:column headerText="Town">
+							<h:outputText value="#{rowVar.company.residentialAddress.town.description}" />
+						</p:column>						
+						<p:column headerText="Province">
+							<h:outputText value="#{rowVar.company.residentialAddress.municipality.province.provinceDesc}" />
+						</p:column>						
+					<p:column width="45" headerText="Select" exportable="false">
+						<p:commandButton icon="fa fa-check" oncomplete="PF('accreCompanyForQualDialog').hide()" action="#{learnerApplicationFormSdfUI.prepPreferredTrainingProvider}" title="Select Company" update="laernerPG">
+							<f:setPropertyActionListener value="#{rowVar}"  target="#{learnerApplicationFormSdfUI.trainingProviderApplication}" />
+						</p:commandButton>
+					</p:column>
+		
+				</p:dataTable>
+				
+		  </h:form>
+			
+		</p:dialog>
+		
+		<p:dialog header="Create Workplace Approval for Company" widgetVar="wpaCompanyForQualDialog" resizable="false" hideEffect="clip" showEffect="clip" id="wpaCompanyForQualDialog" width="20%" responsive="true" modal="true" dynamic="true">
+			<h:form id="wpaForms1">
+				<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+					<h:outputText value="#{learnerApplicationFormSdfUI.workplaceApprovalMsg}" />				
+				</p:panelGrid>
+			
+				<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+					<p:commandButton value="#{lang['submit']}" icon="fa fa-check" styleClass="flat green-btn Fs18" actionListener="#{learnerApplicationFormSdfUI.createWorkplaceApproval}" update="learnerRegUserForm" />
+
+					<p:commandButton value="#{lang['cancel']}" icon="fa fa-times" styleClass="flat red-btn Fs18"  actionListener="#{learnerApplicationFormSdfUI.cancelWorkplaceApproval}" process="@this" update="@form" />
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+		
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+		</h:panelGroup>
+	</ui:define>
+</ui:composition>

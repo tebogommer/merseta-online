@@ -1,0 +1,171 @@
+<ui:composition xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+		<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum"></p:importEnum>
+		<p:importEnum type="haj.com.entity.enums.AssessorModeratorTypeEnum"></p:importEnum>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card">
+					<h:form id="hostingcompanydepartmentsInsForm">
+						<p:growl showDetail="false" sticky="false" id="msg">
+							<p:autoUpdate />
+						</p:growl>
+						<p:tooltip position="left" />
+						<h1>#{lang['search.am']}</h1>
+						<c:if test="false">
+							<ui:include src="/pages/includes/download_lazy.xhtml">
+									<ui:param name="file_name" value="Assessor_Moderator_Details" />
+									<ui:param name="target" value="AssessorModeratorList" />
+							 </ui:include>
+						 </c:if>
+						 <p:panelGrid columns="1" style="width:100%" id="downloadGrid" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{sessionUI.employee or sessionUI.activeUser.admin}">
+							<p:commandButton icon="fa fa-download" value="Download Report" ajax="false" action="#{assessorModeratorApplicationUI.downloadReport}" />
+						</p:panelGrid>
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+						<p:importEnum type="haj.com.entity.enums.CompanyRegOrSDLEnum" var="regSDL"></p:importEnum>
+						<p:importEnum type="haj.com.entity.enums.YesNoEnum"></p:importEnum>
+						<p:importEnum type="haj.com.entity.enums.PivotNonPivotEnum" />
+						<p:importEnum type="haj.com.entity.enums.IdPassportEnum"></p:importEnum>
+						<p:importEnum type="haj.com.entity.enums.EmploymentStatusEnum"></p:importEnum>
+						
+						<p:dataTable var="rowVar" value="#{assessorModeratorApplicationUI.allAMDataModel}" id="AssessorModeratorList" rowKey="#{rowVar.id}" paginator="true" rows="10" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="10,20,40" reflow="true" lazy="true" selectionMode="single" selection="#{assessorModeratorApplicationUI.selectedAMApp}">
+							<p:ajax event="rowSelect" update=":detailInfoForm" listener="#{assessorModeratorApplicationUI.prepareAMInfor()}" />
+
+							<p:column headerText="#{lang['first.name']}" filterBy="#{rowVar.user.firstName}" sortBy="#{rowVar.user.firstName}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.user.firstName}" />
+							</p:column>
+							
+							<p:column headerText="#{lang['last.name']}" filterBy="#{rowVar.user.lastName}" sortBy="#{rowVar.user.lastName}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.user.lastName}" />
+							</p:column>
+							
+							<p:column headerText="#{lang['rsa.id.number']}" filterBy="#{rowVar.user.rsaIDNumber}" sortBy="#{rowVar.user.rsaIDNumber}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.user.rsaIDNumber}" />
+								<h:outputText value="N/A" rendered="#{rowVar.user.rsaIDNumber.length() lt 1}" />
+							</p:column>
+							
+							<p:column headerText="#{lang['passport.number']}" filterBy="#{rowVar.user.passportNumber}" sortBy="#{rowVar.user.passportNumber}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.user.passportNumber}" />
+								<h:outputText value="N/A" rendered="#{rowVar.user.passportNumber.length() lt 1}" />
+							</p:column>
+														
+							<p:column headerText="#{lang['type.of.application']}"  sortBy="#{rowVar.applicationType}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.applicationType.displayName}" />
+							</p:column>
+							
+							<p:column headerText="Type Of Assesspr/Moderator"  sortBy="#{rowVar.startDate}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.assessorModeratorType.friendlyName}" >
+								</h:outputText>
+							</p:column>
+							
+							<p:column headerText="#{lang['status']}"  sortBy="#{rowVar.status}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.status.friendlyName}" />
+							</p:column>
+							
+							<p:column headerText="#{lang['registration.number']}" filterBy="#{rowVar.certificateNumber}" sortBy="#{rowVar.certificateNumber}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.certificateNumber}" />
+								<h:outputText rendered="#{rowVar.certificateNumber eq null or rowVar.certificateNumber eq ''}" value="N/A" />
+							</p:column>
+							
+							<p:column headerText="#{lang['start.date']}"  sortBy="#{rowVar.startDate}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.startDate}" >
+									 <f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</h:outputText>
+								<h:outputText rendered="#{rowVar.startDate eq null}" value="N/A" />
+							</p:column>
+							
+							<p:column headerText="#{lang['end.date']}"  sortBy="#{rowVar.endDate}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.endDate}" >
+									 <f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</h:outputText>
+								<h:outputText rendered="#{rowVar.endDate eq null}" value="N/A" />
+							</p:column>
+							
+							<p:column headerText="#{lang['review.committee.date']}"  sortBy="#{rvwpa.approvalDate}">
+									<h:outputText value="#{rowVar.reviewCommitteeMeeting.fromDateTime}">
+										 <f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+									</h:outputText>
+									<h:outputText rendered="#{rowVar.reviewCommitteeMeeting.fromDateTime eq null}" value="N/A" />
+							</p:column>
+							
+							<p:column headerText="#{lang['decision.number']}"  sortBy="#{rowVar.reviewCommitteeMeetingAgenda.decisionNumber}">
+									<h:outputText rendered="#{rowVar.reviewCommitteeMeetingAgenda ne null}" value="#{rowVar.reviewCommitteeMeetingAgenda.decisionNumber}" />
+									<h:outputText rendered="#{rowVar.reviewCommitteeMeetingAgenda eq null}" value="N/A" />
+							</p:column>
+							
+							<p:column width="45">
+								<center>
+									<p:commandButton  action="#{assessorModeratorApplicationUI.prepareAMInfor()}" icon="fa fa-search-plus" update=":detailInfoForm @form" title="View Details">
+										<f:setPropertyActionListener value="#{rowVar}" target="#{assessorModeratorApplicationUI.selectedAMApp}" />
+									</p:commandButton>
+								</center>
+							</p:column>
+							
+							
+						</p:dataTable>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+		
+		<h:form id="detailInfoForm">
+			<h:panelGroup  rendered="#{assessorModeratorApplicationUI.selectedAMApp.id != null}">
+			<div class="ui-g">
+				<div class="ui-g-12">
+					<div class="card">
+						<h1>#{assessorModeratorApplicationUI.selectedAMApp.applicationType.displayName} Details</h1>
+						<p:tabView rendered="#{assessorModeratorApplicationUI.selectedAMApp.assessorModeratorType eq AssessorModeratorTypeEnum.MerSETA_AM}">
+							<p:tab title="#{lang['am.information']}">
+							
+								<ui:include src="/pages/includes/searchAMUserInfo.xhtml"/>
+									
+								
+							</p:tab>
+							
+							<p:tab title="#{lang['qualification.or.unit.standard']}">
+								<ui:include src="/pages/includes/searchAMUnitStandrsAndQualification.xhtml"/>
+							</p:tab>
+							
+							<p:tab title="#{lang['documents']}" rendered="true">
+								<ui:include src="/pages/includes/searchAMDocuments.xhtml"/>
+							</p:tab>
+							
+							<p:tab title="#{lang['code.of.conduct']}" rendered="true">
+								<ui:include src="/pages/includes/searchAMCodeOfConduct.xhtml"/>
+							</p:tab>
+							
+							<p:tab title="Re-Registration Details" rendered="true">
+								<ui:include src="/pages/includes/searchAMReRegistratioDetails.xhtml"/>
+							</p:tab>
+							
+							<p:tab title="Extension Of Scope Details" rendered="true">
+								<ui:include src="/pages/includes/searchAMExtensionOfScope.xhtml"/>
+							</p:tab>
+							
+							<p:tab title="#{lang['legacy.assessor.information']}" rendered="#{assessorModeratorApplicationUI.selectedAMApp.legacyAssessorAccreditation ne null}">
+								<ui:include src="/pages/includes/legacy_assessor_infor_display.xhtml">
+									<ui:param name="legacyAssessorAccreditation" value="#{assessorModeratorApplicationUI.selectedAMApp.legacyAssessorAccreditation}" />
+								</ui:include>
+							</p:tab>
+							
+							<p:tab title="#{lang['legacy.moderator.information']}" rendered="#{assessorModeratorApplicationUI.selectedAMApp.legacyModeratorAccreditation ne null}">
+								<ui:include src="/pages/includes/legacy_moderator_infor_display.xhtml">
+									<ui:param name="legacyModeratorAccreditation" value="#{assessorModeratorApplicationUI.selectedAMApp.legacyModeratorAccreditation}" />
+								</ui:include>
+							</p:tab>
+						</p:tabView>
+					</div>
+				</div>
+			</div>
+			</h:panelGroup>
+		</h:form>
+
+	<ui:include src="/pages/includes/amDocumentsHistory.xhtml">
+		<ui:param name="docHistDataModel" value="#{assessorModeratorApplicationUI.docHistDataModel}" />
+	</ui:include>
+	<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+	</ui:define>
+
+
+</ui:composition>

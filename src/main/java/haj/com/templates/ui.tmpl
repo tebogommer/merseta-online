@@ -1,0 +1,190 @@
+package  _@@_;
+
+import javax.annotation.PostConstruct;
+import java.util.ArrayList;
+import java.util.List;
+import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ViewScoped;
+import haj.com.framework.AbstractUI;
+import _@hb@_.###;
+import _@service@_.###Service;
+import _@datamodel@_.###Datamodel;
+import javax.faces.model.SelectItem;
+import org.primefaces.model.LazyDataModel;
+import org.primefaces.model.SortOrder;
+import java.util.Map;
+import haj.com.exceptions.ValidationException;
+
+@ManagedBean(name = "%%%UI")
+@ViewScoped
+public class ###UI extends AbstractUI {
+
+	private ###Service service = new ###Service();
+	private List<###> %%%List = null;
+	private List<###> %%%filteredList = null;
+	private ### %%% = null;
+	private LazyDataModel<###> dataModel; 
+
+    @PostConstruct
+	public void init() {
+		try {
+			runInit();
+		} catch (ValidationException e) {
+			addErrorMessage(getEntryLanguage(e.getMessage(), e.getParams()));
+		} catch (Exception e) {
+			addErrorMessage(e.getMessage(), e);
+		}
+	}
+
+	/**
+	 * Initialize method to get all ### and prepare a for a create of a new ###
+ 	 * @author TechFinium 
+ 	 * @see    ###
+	 * @throws Exception the exception
+ 	 */
+	private void runInit() throws Exception {
+		prepareNew();
+		%%%Info();
+	}
+
+	/**
+	 * Get all ### for data table
+ 	 * @author TechFinium 
+ 	 * @see    ###
+ 	 */
+	public void %%%Info() {
+			dataModel = new ###Datamodel();
+	}
+
+	/**
+	 * Insert ### into database
+ 	 * @author TechFinium 
+ 	 * @see    ###
+ 	 */
+	public void %%%Insert() {
+		try {
+				 service.create(this.%%%);
+				 prepareNew();
+				 addInfoMessage(super.getEntryLanguage("update.successful"));
+				 %%%Info();
+			 } catch (ValidationException e) {
+				addErrorMessage(getEntryLanguage(e.getMessage(), e.getParams()));
+			} catch (Exception e) {
+		 	   super.addCallBackParm("validationFailed", true);
+				addErrorMessage(e.getMessage(), e);
+			}
+	}
+	
+	/**
+	 * Update ### in database
+ 	 * @author TechFinium 
+ 	 * @see    ###
+ 	 */
+    public void %%%Update() {
+		try {
+				 service.update(this.%%%);
+				  addInfoMessage(super.getEntryLanguage("update.successful"));
+				 %%%Info();
+			 } catch (ValidationException e) {
+				addErrorMessage(getEntryLanguage(e.getMessage(), e.getParams()));
+			} catch (Exception e) {
+			   super.addCallBackParm("validationFailed", true);
+				addErrorMessage(e.getMessage(), e);
+			}
+	}
+
+	/**
+	 * Delete ### from database
+ 	 * @author TechFinium 
+ 	 * @see    ###
+ 	 */
+	public void %%%Delete() {
+		try {
+			 service.delete(this.%%%);
+			  prepareNew();
+			 %%%Info();
+			 super.addWarningMessage(super.getEntryLanguage("row.deleted"));
+			 } catch (ValidationException e) {
+				addErrorMessage(getEntryLanguage(e.getMessage(), e.getParams()));
+		} catch (Exception e) {
+			addErrorMessage(e.getMessage(), e);
+		}
+	}
+	
+	/**
+	 * Create new instance of ### 
+ 	 * @author TechFinium 
+ 	 * @see    ###
+ 	 */
+	public void prepareNew() {
+		%%% = new ###();
+	}
+
+/*
+    public List<SelectItem> get###DD() {
+    	List<SelectItem> l =new ArrayList<SelectItem>();
+    	l.add(new SelectItem(Long.valueOf(-1L),"-------------Select-------------"));
+    	%%%Info();
+    	for (### ug : %%%List) {
+    		// l.add(new SelectItem(ug.getUserGroupId(), ug.getUserGroupDesc()));
+		}
+    	return l;
+    }
+  */
+  
+    /**
+     * Complete.
+     *
+     * @param desc the desc
+     * @return the list
+     */  
+    public List<###> complete(String desc) {
+		List<###> l = null;
+		try {
+			l = service.findByName(desc);
+		} catch (ValidationException e) {
+			addErrorMessage(getEntryLanguage(e.getMessage(), e.getParams()));
+		}
+		catch (Exception e) {
+		addErrorMessage(e.getMessage(), e);
+		}
+		return l;
+	}
+    
+    public List<###> get###List() {
+		return %%%List;
+	}
+	public void set###List(List<###> %%%List) {
+		this.%%%List = %%%List;
+	}
+	public ### get%_%() {
+		return %%%;
+	}
+	public void set%_%(### %%%) {
+		this.%%% = %%%;
+	}
+
+    public List<###> get###filteredList() {
+		return %%%filteredList;
+	}
+	
+	/**
+	 * Prepare auto complete data
+ 	 * @author TechFinium 
+ 	 * @param %%%filteredList the new %%%filteredList list
+ 	 * @see    ###
+ 	 */	
+	public void set###filteredList(List<###> %%%filteredList) {
+		this.%%%filteredList = %%%filteredList;
+	}
+
+	
+	public LazyDataModel<###> getDataModel() {
+		return dataModel;
+	}
+
+	public void setDataModel(LazyDataModel<###> dataModel) {
+		this.dataModel = dataModel;
+	}
+	
+}

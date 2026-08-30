@@ -1,0 +1,770 @@
+@page "/wsp/{id:int}"
+@page "/wsp/create"
+@using Nsdms.Web.Components.Shared
+@inject IWspService WspService
+@inject IOrganisationService OrgService
+@inject LookupService LookupService
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+<!-- Sticky Top Bar with Breadcrumbs and Action Buttons -->
+<div class="sticky-top bg-white pa-4 mb-4 border-bottom elevation-1 d-flex flex-wrap justify-space-between align-center gap-3">
+    <div class="d-flex align-center gap-3">
+        <MudButton Variant="Variant.Text"
+                   StartIcon="@Icons.Material.Filled.ArrowBack"
+                   Color="Color.Default"
+                   OnClick="BackToList">
+            Back to WSP Submissions
+        </MudButton>
+        <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-2" />
+        <div>
+            <MudBreadcrumbs Items="_breadcrumbItems" Separator=">" Class="pa-0 ma-0" />
+            <MudText Typo="Typo.h6" Class="font-weight-bold">
+                @(Id == 0 ? "New WSP & Mandatory Grant Submission" : $"{_wsp.ReferenceNumber} ({_wsp.FinYear}) - {_wsp.Organisation?.CompanyName ?? "Submission Detail"}")
+            </MudText>
+        </div>
+    </div>
+    <div class="d-flex align-center gap-2">
+        @if (Id > 0)
+        {
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Error"
+                       StartIcon="@Icons.Material.Filled.Delete"
+                       OnClick="DeleteWsp">
+                Delete
+            </MudButton>
+        }
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Secondary"
+                   OnClick="BackToList">
+            Cancel
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Save"
+                   OnClick="SaveWsp"
+                   Disabled="_isSaving">
+            @(_isSaving ? "Saving..." : "Save Submission")
+        </MudButton>
+    </div>
+</div>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="pa-0">
+    @if (Id > 0)
+    {
+        <!-- Action Bridge for Workflow Transitions -->
+        <WorkflowActionBridge ProcessCode="WSP" 
+                              EntityId="@Id" 
+                              EntityTitle="@($"{_wsp.Organisation?.CompanyName ?? "Toyota SA"} - FinYear {_wsp.FinYear} WSP")" 
+                              EntityRef="@_wsp.ReferenceNumber" 
+                              OnStatusChanged="OnWorkflowStatusChanged" />
+    }
+
+    @if (_loading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-6" />
+    }
+    else
+    {
+        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Color="Color.Surface">
+            <!-- TAB 1: Submission Info -->
+            <MudTabPanel Text="Submission Info" Icon="@Icons.Material.Filled.Assignment">
+                <MudForm @ref="_form" @bind-IsValid="_isValid">
+                    <MudGrid Spacing="3">
+                        <MudItem xs="12" lg="8">
+                            <MudCard Elevation="2" Class="mb-4">
+                                <MudCardHeader>
+                                    <CardHeaderAvatar>
+                                        <MudAvatar Color="Color.Primary" Variant="Variant.Filled">
+                                            <MudIcon Icon="@Icons.Material.Filled.Description" />
+                                        </MudAvatar>
+                                    </CardHeaderAvatar>
+                                    <CardHeaderContent>
+                                        <MudText Typo="Typo.h6">WSP Filing Identification</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Employer details, financial year, and overall training budget</MudText>
+                                    </CardHeaderContent>
+                                </MudCardHeader>
+                                <MudCardContent>
+                                    <MudGrid>
+                                        <MudItem xs="12" md="6">
+                                            <MudSelect T="int" Label="Host Employer / Organisation" Required="true" RequiredError="Organisation is mandatory" @bind-Value="_wsp.OrganisationId" Variant="Variant.Outlined">
+                                                @foreach (var org in _organisations)
+                                                {
+                                                    <MudSelectItem Value="@org.Id">@org.CompanyName (@org.SdlNumber)</MudSelectItem>
+                                                }
+                                            </MudSelect>
+                                        </MudItem>
+                                        <MudItem xs="12" md="6">
+                                            <MudSelect T="int" Label="Financial Year" Required="true" @bind-Value="_wsp.FinYear" Variant="Variant.Outlined">
+                                                <MudSelectItem Value="2027">2027 / 2028</MudSelectItem>
+                                                <MudSelectItem Value="2026">2026 / 2027</MudSelectItem>
+                                                <MudSelectItem Value="2025">2025 / 2026</MudSelectItem>
+                                                <MudSelectItem Value="2024">2024 / 2025</MudSelectItem>
+                                            </MudSelect>
+                                        </MudItem>
+                                        <MudItem xs="12" md="6">
+                                            <MudTextField T="string"
+                                                          Label="Reference Number"
+                                                          Required="true"
+                                                          RequiredError="Reference Number is mandatory"
+                                                          @bind-Value="_wsp.ReferenceNumber"
+                                                          Variant="Variant.Outlined" />
+                                        </MudItem>
+                                        <MudItem xs="12" md="6">
+                                            <MudSelect T="string" Label="Submission Lifecycle Status" @bind-Value="_wsp.StatusCode" Variant="Variant.Outlined">
+                                                <MudSelectItem Value="@("DRAFT")">Draft</MudSelectItem>
+                                                <MudSelectItem Value="@("SDF_SIGNED")">Signed by SDF</MudSelectItem>
+                                                <MudSelectItem Value="@("LABOUR_SIGNED")">Signed by Labour</MudSelectItem>
+                                                <MudSelectItem Value="@("SUBMITTED")">Submitted</MudSelectItem>
+                                                <MudSelectItem Value="@("UNDER_REVIEW")">Under Review</MudSelectItem>
+                                                <MudSelectItem Value="@("APPROVED")">Approved</MudSelectItem>
+                                                <MudSelectItem Value="@("REJECTED")">Rejected</MudSelectItem>
+                                            </MudSelect>
+                                        </MudItem>
+                                        <MudItem xs="12" md="6">
+                                            <MudNumericField T="int"
+                                                             Label="Total Employee Headcount"
+                                                             @bind-Value="_wsp.EmployeeCount"
+                                                             Variant="Variant.Outlined"
+                                                             Min="0" />
+                                        </MudItem>
+                                        <MudItem xs="12" md="6">
+                                            <MudNumericField T="decimal"
+                                                             Label="Planned Annual Training Budget (ZAR)"
+                                                             @bind-Value="_wsp.PlannedTrainingBudget"
+                                                             Variant="Variant.Outlined"
+                                                             Format="N2"
+                                                             Min="0" />
+                                        </MudItem>
+                                        <MudItem xs="12" md="6">
+                                            <MudDatePicker Label="Formal Submission Date" @bind-Date="_submissionDate" Variant="Variant.Outlined" DateFormat="yyyy-MM-dd" />
+                                        </MudItem>
+                                    </MudGrid>
+                                </MudCardContent>
+                            </MudCard>
+                        </MudItem>
+
+                        <!-- Right Column: Governance -->
+                        <MudItem xs="12" lg="4">
+                            <MudCard Elevation="2" Class="mb-4">
+                                <MudCardHeader>
+                                    <CardHeaderAvatar>
+                                        <MudAvatar Color="Color.Dark" Variant="Variant.Filled">
+                                            <MudIcon Icon="@Icons.Material.Filled.Security" />
+                                        </MudAvatar>
+                                    </CardHeaderAvatar>
+                                    <CardHeaderContent>
+                                        <MudText Typo="Typo.h6">Audit &amp; Verification</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Record tracking</MudText>
+                                    </CardHeaderContent>
+                                </MudCardHeader>
+                                <MudCardContent>
+                                    <div class="d-flex flex-column gap-2 text-muted">
+                                        <div class="d-flex justify-space-between">
+                                            <MudText Typo="Typo.caption">WSP ID:</MudText>
+                                            <MudText Typo="Typo.caption" Class="fw-bold">@(Id > 0 ? Id.ToString() : "Draft")</MudText>
+                                        </div>
+                                        <div class="d-flex justify-space-between">
+                                            <MudText Typo="Typo.caption">Created At:</MudText>
+                                            <MudText Typo="Typo.caption">@(_wsp.CreatedAt > DateTime.MinValue ? _wsp.CreatedAt.ToString("yyyy-MM-dd HH:mm") : "-")</MudText>
+                                        </div>
+                                        <div class="d-flex justify-space-between">
+                                            <MudText Typo="Typo.caption">Created By:</MudText>
+                                            <MudText Typo="Typo.caption">@(!string.IsNullOrWhiteSpace(_wsp.CreatedBy) ? _wsp.CreatedBy : "-")</MudText>
+                                        </div>
+                                        <div class="d-flex justify-space-between">
+                                            <MudText Typo="Typo.caption">Modified At:</MudText>
+                                            <MudText Typo="Typo.caption">@(_wsp.ModifiedAt.HasValue ? _wsp.ModifiedAt.Value.ToString("yyyy-MM-dd HH:mm") : "-")</MudText>
+                                        </div>
+                                    </div>
+                                </MudCardContent>
+                            </MudCard>
+                        </MudItem>
+                    </MudGrid>
+                </MudForm>
+            </MudTabPanel>
+
+            <!-- TAB 2: Employment Breakdown -->
+            <MudTabPanel Text="Employment Breakdown" Icon="@Icons.Material.Filled.Group">
+                <div class="d-flex justify-space-between align-center mb-4">
+                    <div>
+                        <MudText Typo="Typo.h6">Employment Profile &amp; Demographics (OFO Breakdown)</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Employee distribution across Organising Framework for Occupations (OFO) categories and race/gender equity</MudText>
+                    </div>
+                    @if (Id > 0)
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd" OnClick="OpenAddSummaryForm">
+                            Add OFO Category
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <MudAlert Severity="Severity.Info" Dense="true">Save the WSP submission first to enter employment breakdown.</MudAlert>
+                    }
+                </div>
+
+                @if (_showAddSummaryForm)
+                {
+                    <MudCard Class="pa-4 mb-4 border-primary" Elevation="3">
+                        <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-3">Add Employment Demographic Entry</MudText>
+                        <MudGrid>
+                            <MudItem xs="12" md="4">
+                                <MudTextField T="string" Label="OFO Major Group / Code" Required="true" @bind-Value="_newSummary.OfoCode" Variant="Variant.Outlined" Placeholder="e.g. 2021-121901" />
+                            </MudItem>
+                            <MudItem xs="12" md="8">
+                                <MudTextField T="string" Label="Occupational Category Title" Required="true" @bind-Value="_newSummary.OccupationalCategory" Variant="Variant.Outlined" Placeholder="e.g. Mechanical Engineering Technicians" />
+                            </MudItem>
+                            <MudItem xs="6" md="3">
+                                <MudNumericField T="int" Label="African Male" @bind-Value="_newSummary.MaleAfrican" Variant="Variant.Outlined" Min="0" />
+                            </MudItem>
+                            <MudItem xs="6" md="3">
+                                <MudNumericField T="int" Label="African Female" @bind-Value="_newSummary.FemaleAfrican" Variant="Variant.Outlined" Min="0" />
+                            </MudItem>
+                            <MudItem xs="6" md="3">
+                                <MudNumericField T="int" Label="Coloured Male" @bind-Value="_newSummary.MaleColoured" Variant="Variant.Outlined" Min="0" />
+                            </MudItem>
+                            <MudItem xs="6" md="3">
+                                <MudNumericField T="int" Label="Coloured Female" @bind-Value="_newSummary.FemaleColoured" Variant="Variant.Outlined" Min="0" />
+                            </MudItem>
+                            <MudItem xs="6" md="3">
+                                <MudNumericField T="int" Label="Indian Male" @bind-Value="_newSummary.MaleIndian" Variant="Variant.Outlined" Min="0" />
+                            </MudItem>
+                            <MudItem xs="6" md="3">
+                                <MudNumericField T="int" Label="Indian Female" @bind-Value="_newSummary.FemaleIndian" Variant="Variant.Outlined" Min="0" />
+                            </MudItem>
+                            <MudItem xs="6" md="3">
+                                <MudNumericField T="int" Label="White Male" @bind-Value="_newSummary.MaleWhite" Variant="Variant.Outlined" Min="0" />
+                            </MudItem>
+                            <MudItem xs="6" md="3">
+                                <MudNumericField T="int" Label="White Female" @bind-Value="_newSummary.FemaleWhite" Variant="Variant.Outlined" Min="0" />
+                            </MudItem>
+                            <MudItem xs="12" md="6">
+                                <MudNumericField T="int" Label="Employees with Disabilities" @bind-Value="_newSummary.DisabledCount" Variant="Variant.Outlined" Min="0" />
+                            </MudItem>
+                            <MudItem xs="12" Class="d-flex justify-end gap-2">
+                                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" OnClick="CancelAddSummaryForm">Cancel</MudButton>
+                                <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveSummary">Save Demographic Entry</MudButton>
+                            </MudItem>
+                        </MudGrid>
+                    </MudCard>
+                }
+
+                <MudTable Items="_summaries" Hover="true" Dense="true" Striped="true">
+                    <HeaderContent>
+                        <MudTh>OFO Code</MudTh>
+                        <MudTh>Occupational Category</MudTh>
+                        <MudTh>African</MudTh>
+                        <MudTh>Coloured</MudTh>
+                        <MudTh>Indian</MudTh>
+                        <MudTh>White</MudTh>
+                        <MudTh>Disabled</MudTh>
+                        <MudTh>Total</MudTh>
+                        <MudTh Style="text-align:right">Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="OFO Code">
+                            <span class="font-monospace fw-bold">@context.OfoCode</span>
+                        </MudTd>
+                        <MudTd DataLabel="Category">
+                            <MudText Typo="Typo.body2" Class="fw-bold">@context.OccupationalCategory</MudText>
+                        </MudTd>
+                        <MudTd DataLabel="African">
+                            <span>M: @context.MaleAfrican / F: @context.FemaleAfrican</span>
+                        </MudTd>
+                        <MudTd DataLabel="Coloured">
+                            <span>M: @context.MaleColoured / F: @context.FemaleColoured</span>
+                        </MudTd>
+                        <MudTd DataLabel="Indian">
+                            <span>M: @context.MaleIndian / F: @context.FemaleIndian</span>
+                        </MudTd>
+                        <MudTd DataLabel="White">
+                            <span>M: @context.MaleWhite / F: @context.FemaleWhite</span>
+                        </MudTd>
+                        <MudTd DataLabel="Disabled">
+                            <MudChip T="string" Size="Size.Small" Color="Color.Warning" Variant="Variant.Outlined">@context.DisabledCount</MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Total">
+                            <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Filled">@context.TotalEmployees</MudChip>
+                        </MudTd>
+                        <MudTd Style="text-align:right" DataLabel="Actions">
+                            <MudTooltip Text="Remove Entry">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => RemoveSummary(context.Id))" aria-label="Remove Demographic Entry" />
+                            </MudTooltip>
+                        </MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <div class="pa-4 text-center">
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">No employment demographic entries recorded yet.</MudText>
+                        </div>
+                    </NoRecordsContent>
+                </MudTable>
+            </MudTabPanel>
+
+            <!-- TAB 3: Training Plans -->
+            <MudTabPanel Text="Training Plans" Icon="@Icons.Material.Filled.MenuBook">
+                <div class="d-flex justify-space-between align-center mb-4">
+                    <div>
+                        <MudText Typo="Typo.h6">Planned Training Interventions (WSP Annual Targets)</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Learning programmes, learnerships, apprenticeships, bursaries, and skills development targets</MudText>
+                    </div>
+                    @if (Id > 0)
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenAddPlanForm">
+                            Add Training Plan
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <MudAlert Severity="Severity.Info" Dense="true">Save the WSP submission first to add planned training interventions.</MudAlert>
+                    }
+                </div>
+
+                @if (_showAddPlanForm)
+                {
+                    <MudCard Class="pa-4 mb-4 border-primary" Elevation="3">
+                        <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-3">Add Planned Training Intervention</MudText>
+                        <MudGrid>
+                            <MudItem xs="12" md="4">
+                                <MudSelect T="string" Label="Learning Programme Type" Required="true" @bind-Value="_newPlan.ProgrammeTypeCode" Variant="Variant.Outlined">
+                                    @foreach (var pt in _learningProgrammeTypes)
+                                    {
+                                        <MudSelectItem Value="@pt.Code">@pt.Name (@pt.Code)</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </MudItem>
+                            <MudItem xs="12" md="2">
+                                <MudNumericField T="int?" Label="NQF Level" @bind-Value="_newPlan.NqfLevel" Variant="Variant.Outlined" Min="1" Max="10" />
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudNumericField T="int" Label="Beneficiary Count" Required="true" @bind-Value="_newPlan.BeneficiaryCount" Variant="Variant.Outlined" Min="1" />
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudNumericField T="decimal" Label="Estimated Cost (ZAR)" Required="true" @bind-Value="_newPlan.EstimatedCost" Variant="Variant.Outlined" Format="N2" Min="0" />
+                            </MudItem>
+                            <MudItem xs="12" Class="d-flex justify-end gap-2">
+                                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" OnClick="CancelAddPlanForm">Cancel</MudButton>
+                                <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Filled.Save" OnClick="SavePlan">Save Training Plan</MudButton>
+                            </MudItem>
+                        </MudGrid>
+                    </MudCard>
+                }
+
+                <MudTable Items="_plans" Hover="true" Dense="true" Striped="true">
+                    <HeaderContent>
+                        <MudTh>Programme Type</MudTh>
+                        <MudTh>NQF Level</MudTh>
+                        <MudTh>Beneficiaries</MudTh>
+                        <MudTh>Estimated Cost</MudTh>
+                        <MudTh Style="text-align:right">Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Programme Type">
+                            <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">
+                                @(!string.IsNullOrWhiteSpace(context.ProgrammeTypeCode) ? context.ProgrammeTypeCode : "Learnership")
+                            </MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="NQF Level">
+                            <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">NQF @(context.NqfLevel?.ToString() ?? "-")</MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Beneficiaries">
+                            <MudText Typo="Typo.body2" Class="fw-bold">@context.BeneficiaryCount learners</MudText>
+                        </MudTd>
+                        <MudTd DataLabel="Estimated Cost">
+                            <MudText Typo="Typo.body2" Class="fw-bold text-success">@context.EstimatedCost.ToString("C")</MudText>
+                        </MudTd>
+                        <MudTd Style="text-align:right" DataLabel="Actions">
+                            <MudTooltip Text="Remove Plan">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => RemovePlan(context.Id))" aria-label="Remove Training Plan" />
+                            </MudTooltip>
+                        </MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <div class="pa-4 text-center">
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">No planned training interventions registered yet.</MudText>
+                        </div>
+                    </NoRecordsContent>
+                </MudTable>
+            </MudTabPanel>
+
+            <!-- TAB 4: Mandatory Claim -->
+            <MudTabPanel Text="Mandatory Claim" Icon="@Icons.Material.Filled.Payments">
+                <MudGrid Spacing="3">
+                    <!-- Claim Calculation Breakdown -->
+                    <MudItem xs="12" md="6">
+                        <MudCard Elevation="2" Class="mb-4">
+                            <MudCardHeader>
+                                <CardHeaderAvatar>
+                                    <MudAvatar Color="Color.Success" Variant="Variant.Filled">
+                                        <MudIcon Icon="@Icons.Material.Filled.AccountBalance" />
+                                    </MudAvatar>
+                                </CardHeaderAvatar>
+                                <CardHeaderContent>
+                                    <MudText Typo="Typo.h6">Mandatory Grant (MG) 20% Calculation</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Statutory 20% Skills Development Levy rebate entitlement</MudText>
+                                </CardHeaderContent>
+                            </MudCardHeader>
+                            <MudCardContent>
+                                <div class="d-flex flex-column gap-3">
+                                    <div class="d-flex justify-space-between align-center border-bottom pb-2">
+                                        <MudText Typo="Typo.body2">Planned Training Spend</MudText>
+                                        <MudText Typo="Typo.body1" Class="fw-bold">@_wsp.PlannedTrainingBudget.ToString("C")</MudText>
+                                    </div>
+                                    <div class="d-flex justify-space-between align-center border-bottom pb-2">
+                                        <MudText Typo="Typo.body2">Total Target Beneficiaries</MudText>
+                                        <MudText Typo="Typo.body1" Class="fw-bold">@(_plans.Sum(p => p.BeneficiaryCount)) learners</MudText>
+                                    </div>
+                                    <div class="d-flex justify-space-between align-center border-bottom pb-2">
+                                        <MudText Typo="Typo.body2">Estimated Mandatory Grant Payout (20% SDL Rebate)</MudText>
+                                        <MudText Typo="Typo.h6" Color="Color.Success" Class="fw-bold">@((_wsp.PlannedTrainingBudget * 0.20m).ToString("C"))</MudText>
+                                    </div>
+                                </div>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+
+                    <!-- Statutory Compliance Checklist -->
+                    <MudItem xs="12" md="6">
+                        <MudCard Elevation="2" Class="mb-4">
+                            <MudCardHeader>
+                                <CardHeaderAvatar>
+                                    <MudAvatar Color="Color.Info" Variant="Variant.Filled">
+                                        <MudIcon Icon="@Icons.Material.Filled.Checklist" />
+                                    </MudAvatar>
+                                </CardHeaderAvatar>
+                                <CardHeaderContent>
+                                    <MudText Typo="Typo.h6">Statutory Compliance Gates</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Requirements for Mandatory Grant disbursement</MudText>
+                                </CardHeaderContent>
+                            </MudCardHeader>
+                            <MudCardContent>
+                                <div class="d-flex flex-column gap-2">
+                                    <div class="d-flex align-center gap-2">
+                                        <MudIcon Icon="@(_wsp.OrganisationId > 0 ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Cancel)" Color="@(_wsp.OrganisationId > 0 ? Color.Success : Color.Error)" />
+                                        <MudText Typo="Typo.body2">Registered Levy-Paying Organisation Linked</MudText>
+                                    </div>
+                                    <div class="d-flex align-center gap-2">
+                                        <MudIcon Icon="@(_summaries.Count > 0 ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Warning)" Color="@(_summaries.Count > 0 ? Color.Success : Color.Warning)" />
+                                        <MudText Typo="Typo.body2">Employment Profile Breakdown Completed (@_summaries.Count OFO Categories)</MudText>
+                                    </div>
+                                    <div class="d-flex align-center gap-2">
+                                        <MudIcon Icon="@(_plans.Count > 0 ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Warning)" Color="@(_plans.Count > 0 ? Color.Success : Color.Warning)" />
+                                        <MudText Typo="Typo.body2">Planned Training Interventions Target (@_plans.Count Plan Items)</MudText>
+                                    </div>
+                                    <div class="d-flex align-center gap-2">
+                                        <MudIcon Icon="@(_submissionDate.HasValue ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Warning)" Color="@(_submissionDate.HasValue ? Color.Success : Color.Warning)" />
+                                        <MudText Typo="Typo.body2">Formal Submission Date Logged Before Deadline</MudText>
+                                    </div>
+                                </div>
+                            </MudCardContent>
+                            <MudCardActions Class="pa-4 pt-0">
+                                @if (_wsp.StatusCode != "APPROVED")
+                                {
+                                    <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.ThumbUp" OnClick="ApproveMandatoryClaim">
+                                        Approve Mandatory Claim Payout
+                                    </MudButton>
+                                }
+                                else
+                                {
+                                    <MudChip T="string" Color="Color.Success" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Verified">
+                                        Claim Formally Approved for Disbursement
+                                    </MudChip>
+                                }
+                            </MudCardActions>
+                        </MudCard>
+                    </MudItem>
+                </MudGrid>
+            </MudTabPanel>
+
+            <!-- TAB 5: Evidence Vault -->
+            @if (Id > 0)
+            {
+                <MudTabPanel Text="Evidence Vault" Icon="@Icons.Material.Filled.FolderZip">
+                    <DocumentVault TargetEntityName="WspSubmission" TargetEntityId="@Id" />
+                </MudTabPanel>
+
+                <!-- TAB 6: Workflow History -->
+                <MudTabPanel Text="Workflow History" Icon="@Icons.Material.Filled.History">
+                    <WorkflowTimeline ProcessCode="WSP" EntityId="@Id" />
+                </MudTabPanel>
+            }
+        </MudTabs>
+    }
+</MudContainer>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private WspSubmission _wsp = new();
+    private MudForm? _form;
+    private bool _isValid;
+    private bool _loading = true;
+    private bool _isSaving = false;
+
+    private List<Organisation> _organisations = new();
+    private List<LookupItemDto> _learningProgrammeTypes = new();
+
+    private List<WspEmploymentSummary> _summaries = new();
+    private List<WspTrainingPlan> _plans = new();
+
+    private DateTime? _submissionDate;
+
+    // Summary form
+    private bool _showAddSummaryForm = false;
+    private WspEmploymentSummary _newSummary = new();
+
+    // Plan form
+    private bool _showAddPlanForm = false;
+    private WspTrainingPlan _newPlan = new();
+
+    private List<BreadcrumbItem> _breadcrumbItems = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _loading = true;
+        SetupBreadcrumbs();
+
+        // Sequential lookup loading
+        _learningProgrammeTypes = await LookupService.GetLookupItemsAsync("LearningProgrammeType");
+        _organisations = await OrgService.GetAllAsync();
+
+        if (Id > 0)
+        {
+            await LoadWspData();
+        }
+        else
+        {
+            _wsp = new WspSubmission
+            {
+                OrganisationId = _organisations.FirstOrDefault()?.Id ?? 0,
+                FinYear = 2026,
+                ReferenceNumber = $"WSP-2026-{new Random().Next(10000, 99999)}",
+                StatusCode = "DRAFT",
+                PlannedTrainingBudget = 500000m,
+                EmployeeCount = 120
+            };
+            _submissionDate = DateTime.Today;
+        }
+
+        _loading = false;
+    }
+
+    private void SetupBreadcrumbs()
+    {
+        _breadcrumbItems = new List<BreadcrumbItem>
+        {
+            new BreadcrumbItem("Home", href: "/"),
+            new BreadcrumbItem("WSP & Mandatory Grants", href: "/wsp"),
+            new BreadcrumbItem(Id == 0 ? "Create" : $"WSP #{Id}", href: null, disabled: true)
+        };
+    }
+
+    private async Task LoadWspData()
+    {
+        var w = await WspService.GetByIdAsync(Id);
+        if (w != null)
+        {
+            _wsp = w;
+            _submissionDate = w.SubmissionDate;
+            _summaries = await WspService.GetEmploymentSummariesAsync(Id);
+            _plans = await WspService.GetTrainingPlansAsync(Id);
+        }
+        else
+        {
+            Snackbar.Add($"WSP Submission #{Id} not found.", Severity.Error);
+            NavManager.NavigateTo("/wsp");
+        }
+    }
+
+    private async Task OnWorkflowStatusChanged(string newStatus)
+    {
+        await LoadWspData();
+        StateHasChanged();
+    }
+
+    private async Task SaveWsp()
+    {
+        if (string.IsNullOrWhiteSpace(_wsp.ReferenceNumber))
+        {
+            Snackbar.Add("Reference Number is required.", Severity.Warning);
+            return;
+        }
+
+        if (_wsp.OrganisationId <= 0)
+        {
+            Snackbar.Add("Host Organisation is required.", Severity.Warning);
+            return;
+        }
+
+        _wsp.SubmissionDate = _submissionDate;
+
+        _isSaving = true;
+        try
+        {
+            var saved = await WspService.SaveAsync(_wsp, "Admin");
+            Snackbar.Add($"WSP Submission '{saved.ReferenceNumber}' saved successfully with audit log.", Severity.Success);
+
+            if (Id == 0)
+            {
+                NavManager.NavigateTo($"/wsp/{saved.Id}");
+            }
+            else
+            {
+                await LoadWspData();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving WSP: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task DeleteWsp()
+    {
+        if (Id <= 0) return;
+
+        try
+        {
+            var deleted = await WspService.DeleteAsync(Id, "Admin");
+            if (deleted)
+            {
+                Snackbar.Add("WSP submission deleted successfully.", Severity.Success);
+                NavManager.NavigateTo("/wsp");
+            }
+            else
+            {
+                Snackbar.Add("Could not delete WSP submission.", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error deleting record: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task ApproveMandatoryClaim()
+    {
+        _wsp.StatusCode = "APPROVED";
+        await SaveWsp();
+        Snackbar.Add("Mandatory Grant claim successfully approved for financial disbursement.", Severity.Success);
+    }
+
+    private void BackToList()
+    {
+        NavManager.NavigateTo("/wsp");
+    }
+
+    // Employment Summary
+    private void OpenAddSummaryForm()
+    {
+        _newSummary = new WspEmploymentSummary
+        {
+            WspSubmissionId = Id,
+            OfoCode = "2021-121901",
+            OccupationalCategory = "Engineers & Technologists"
+        };
+        _showAddSummaryForm = true;
+    }
+
+    private void CancelAddSummaryForm()
+    {
+        _showAddSummaryForm = false;
+    }
+
+    private async Task SaveSummary()
+    {
+        if (string.IsNullOrWhiteSpace(_newSummary.OfoCode) || string.IsNullOrWhiteSpace(_newSummary.OccupationalCategory))
+        {
+            Snackbar.Add("OFO Code and Category are required.", Severity.Warning);
+            return;
+        }
+
+        _newSummary.WspSubmissionId = Id;
+
+        try
+        {
+            await WspService.AddEmploymentSummaryAsync(_newSummary, "Admin");
+            Snackbar.Add("Demographic summary entry recorded successfully.", Severity.Success);
+            _showAddSummaryForm = false;
+            _summaries = await WspService.GetEmploymentSummariesAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error adding summary: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task RemoveSummary(int summaryId)
+    {
+        try
+        {
+            var removed = await WspService.RemoveEmploymentSummaryAsync(summaryId, "Admin");
+            if (removed)
+            {
+                Snackbar.Add("Demographic summary entry removed.", Severity.Success);
+                _summaries = await WspService.GetEmploymentSummariesAsync(Id);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error removing entry: {ex.Message}", Severity.Error);
+        }
+    }
+
+    // Training Plans
+    private void OpenAddPlanForm()
+    {
+        _newPlan = new WspTrainingPlan
+        {
+            WspSubmissionId = Id,
+            ProgrammeTypeCode = "LEARNERSHIP",
+            NqfLevel = 4,
+            BeneficiaryCount = 10,
+            EstimatedCost = 150000m
+        };
+        _showAddPlanForm = true;
+    }
+
+    private void CancelAddPlanForm()
+    {
+        _showAddPlanForm = false;
+    }
+
+    private async Task SavePlan()
+    {
+        _newPlan.WspSubmissionId = Id;
+
+        try
+        {
+            await WspService.AddTrainingPlanAsync(_newPlan, "Admin");
+            Snackbar.Add("Training plan intervention added successfully.", Severity.Success);
+            _showAddPlanForm = false;
+            _plans = await WspService.GetTrainingPlansAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error adding plan: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task RemovePlan(int planId)
+    {
+        try
+        {
+            var removed = await WspService.RemoveTrainingPlanAsync(planId, "Admin");
+            if (removed)
+            {
+                Snackbar.Add("Training plan intervention removed.", Severity.Success);
+                _plans = await WspService.GetTrainingPlansAsync(Id);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error removing plan: {ex.Message}", Severity.Error);
+        }
+    }
+}

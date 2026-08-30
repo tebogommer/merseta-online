@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.6.0.final using JasperReports Library version 6.6.0  -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PageHeader" pageWidth="595" pageHeight="842" whenNoDataType="AllSectionsNoDetail" columnWidth="515" leftMargin="40" rightMargin="40" topMargin="0" bottomMargin="0" uuid="cd2c9ec7-8198-4500-b7ca-e80d16f1d492">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="MerSetaDataAdapter.xml"/>
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<parameter name="company_id" class="java.lang.Long"/>
+	<parameter name="user_id" class="java.lang.Long"/>
+	<parameter name="title" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[SELECT  user.first_name,user.last_name,title.description AS title,postalAddress.address_line_1,
+postalAddress.address_line_2,postalAddress.address_line_3,postalAddress.address_line_4,postalAddress.postcode,
+town.description AS postal_add_town
+
+FROM merseta.users AS user
+
+LEFT JOIN merseta.company AS company
+ON company.id=$P{company_id}
+
+LEFT JOIN merseta.title AS title
+ON title.id=user.title_id
+
+LEFT JOIN merseta.address AS postalAddress
+ON postalAddress.id=company.postal_address_id
+
+LEFT JOIN merseta.towns AS town
+ON town.id=postalAddress.town_id
+
+WHERE user.id=$P{user_id}]]>
+	</queryString>
+	<field name="first_name" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="first_name"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="users"/>
+	</field>
+	<field name="last_name" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="last_name"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="users"/>
+	</field>
+	<field name="title" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="title"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="title"/>
+	</field>
+	<field name="address_line_1" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="address_line_1"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="address_line_2" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="address_line_2"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="address_line_3" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="address_line_3"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="address_line_4" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="address_line_4"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="postcode" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="postcode"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="address"/>
+	</field>
+	<field name="postal_add_town" class="java.lang.String">
+		<property name="com.jaspersoft.studio.field.label" value="postal_add_town"/>
+		<property name="com.jaspersoft.studio.field.tree.path" value="towns"/>
+	</field>
+	<group name="Group1">
+		<groupHeader>
+			<band height="166">
+				<textField>
+					<reportElement x="0" y="112" width="515" height="20" uuid="b4b01ae9-0f2d-4114-9c32-254c4981b2f9"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Dear "+$F{title}+" "+$F{last_name}]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="0" y="132" width="515" height="12" uuid="9626ddb3-d534-47b9-9190-643babb30805"/>
+					<text><![CDATA[]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="0" y="100" width="515" height="12" uuid="25e944a9-031b-432f-923b-0059d56040cf"/>
+					<text><![CDATA[]]></text>
+				</staticText>
+				<textField>
+					<reportElement x="0" y="27" width="280" height="13" uuid="1612863e-24fe-45a3-ac52-385c99edab36"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{address_line_1}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="0" y="42" width="280" height="13" uuid="a1a6b654-61d1-4c24-bdac-9c797d857100"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{address_line_2}]]></textFieldExpression>
+				</textField>
+				<textField pattern="dd  MMMMM  yyyy">
+					<reportElement x="0" y="2" width="281" height="13" uuid="b5d3a3f7-a8d5-4253-bf7c-05b44354e1b4"/>
+					<textElement verticalAlignment="Bottom">
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="0" y="15" width="515" height="12" uuid="134df9a9-7e35-4c0f-90e7-9235db5dea4f"/>
+					<text><![CDATA[]]></text>
+				</staticText>
+				<textField>
+					<reportElement x="0" y="57" width="280" height="13" uuid="dde26321-00fc-4b67-910c-66dd3bc83901"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{address_line_3}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="0" y="87" width="280" height="13" uuid="7d12fb64-c398-4f2d-8472-2c051250a949"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{postcode}]]></textFieldExpression>
+				</textField>
+				<textField isStretchWithOverflow="true" evaluationTime="Report" isBlankWhenNull="true">
+					<reportElement x="0" y="144" width="515" height="20" uuid="c8235712-5312-4001-aae8-2b95c5f41226"/>
+					<textElement verticalAlignment="Middle" markup="html">
+						<font fontName="Arial" size="11" isBold="true" pdfFontName="Helvetica-Bold"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$P{title}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="0" y="72" width="280" height="13" uuid="057511ff-8dde-49aa-a5d9-314d6d496a64"/>
+					<textElement verticalAlignment="Middle">
+						<font fontName="Arial" size="11"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$F{postal_add_town}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupHeader>
+	</group>
+	<background>
+		<band splitType="Stretch"/>
+	</background>
+</jasperReport>

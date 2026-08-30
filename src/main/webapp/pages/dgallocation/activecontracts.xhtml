@@ -1,0 +1,274 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<ui:include src="/pages/includes/taskdiagram.xhtml" />
+			</div>
+		</div>
+		<h:form id="activecontractsInsForm">
+			<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+			<div class="ui-g">
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+						<h1>Project Information</h1>
+						<p:growl sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+
+						<p:panelGrid columns="2" style="width:100%" id="activecontractdetailInsGrid2" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="refnoAuto" value="#{activecontractdetailUI.activecontractdetail.activeContracts.refnoAuto}" style="width:95%; opacity : 1; color: black" disabled="true" />
+								<p:outputLabel value="#{lang['refno']}" for="refnoAuto" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="company" value="#{activecontractdetailUI.activecontractdetail.activeContracts.dgAllocationParent.wsp.company.companyNameDisplay}#{activecontractdetailUI.activecontractdetail.activeContracts.company.companyNameDisplay}" style="width:95%; opacity : 1; color: black" disabled="true" />
+								<p:outputLabel value="#{lang['company']}" for="company" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:calendar id="startdate" value="#{activecontractdetailUI.activecontractdetail.activeContracts.startdate}" inputStyle="width:95%; opacity : 1; color: black" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" required="true" disabled="true" />
+								<p:outputLabel value="#{lang['start.date']}" for="startdate" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:calendar id="endDateAuto" value="#{activecontractdetailUI.activecontractdetail.activeContracts.endDateAuto}" inputStyle="width:95%; opacity : 1; color: black" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" required="true" disabled="true" />
+								<p:outputLabel value="#{lang['start.date']}" for="endDateAuto" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:calendar id="amendmentenddate" value="#{activecontractdetailUI.activecontractdetail.activeContracts.amendmentenddate}" inputStyle="width:95%; opacity : 1; color: black" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" required="true" disabled="true" />
+								<p:outputLabel value="#{lang['amendmentenddate']}" for="amendmentenddate" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="contractStatusEnum" value="#{activecontractdetailUI.activecontractdetail.activeContracts.contractStatusEnum.friendlyName}" style="width:95%; opacity : 1; color: black" disabled="true" />
+								<p:outputLabel value="#{lang['contractStatusEnum']}" for="contractStatusEnum" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="nooflearners" value="#{activecontractdetailUI.activecontractdetail.activeContracts.nooflearners}" style="width:95%; opacity : 1; color: black" disabled="true" />
+								<p:outputLabel value="#{lang['nooflearners']}" for="nooflearners" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="contractvalue" value="#{activecontractdetailUI.activecontractdetail.activeContracts.contractvalue}" style="width:95%; opacity : 1; color: black" disabled="true" >
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</p:inputText>
+								<p:outputLabel value="#{lang['contractvalue']}" for="contractvalue" />
+							</h:panelGroup>
+						</p:panelGrid>
+					</div>
+					<div class="card card-w-title">
+						<h1>Payment Information</h1>
+						<p:growl sticky="false">
+							<p:autoUpdate />
+						</p:growl>
+
+						<p:panelGrid columns="2" style="width:100%" id="activecontractdetailInsGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="interventionType" value="#{activecontractdetailUI.activecontractdetail.projectImplementationPlan.interventionType.description}" style="width:95%; opacity : 1; color: black" disabled="true" />
+								<p:outputLabel value="#{lang['intervention.type']}" for="interventionType" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="paymentType" value="#{activecontractdetailUI.activecontractdetail.trancheEnum.friendlyName}" style="width:95%; opacity : 1; color: black" disabled="true" />
+								<p:outputLabel value="Payment Type" for="paymentType" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:calendar id="paymentMonth" value="#{activecontractdetailUI.activecontractdetail.paymentMonth}" inputStyle="width:95%; opacity : 1; color: black" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" required="true" disabled="true" />
+								<p:outputLabel value="#{lang['payment.month']}" for="paymentMonth" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="fullyFundedLearnerAwarded" value="#{activecontractdetailUI.activecontractdetail.projectImplementationPlan.fullyFundedLearnerAwarded}" style="width:95%; opacity : 1; color: black" disabled="true" />
+								<p:outputLabel value="Funded Learners" for="fullyFundedLearnerAwarded" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="coFundingLearnersAwarded" value="#{activecontractdetailUI.activecontractdetail.projectImplementationPlan.coFundingLearnersAwarded}" style="width:95%; opacity : 1; color: black" disabled="true" />
+								<p:outputLabel value="Partially Funded Learners" for="coFundingLearnersAwarded" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="openingbalance" value="#{activecontractdetailUI.activecontractdetail.openingbalance}" style="width:95%; opacity : 1; color: black" disabled="true" >
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</p:inputText>
+								<p:outputLabel value="Opening Balance" for="openingbalance" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="payments" value="#{activecontractdetailUI.activecontractdetail.payments}" style="width:95%; opacity : 1; color: black" disabled="true" >
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</p:inputText>
+								<p:outputLabel value="#{lang['payments']}" for="payments" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="total" value="#{activecontractdetailUI.activecontractdetail.total}" style="width:95%; opacity : 1; color: black" disabled="true" >
+									<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</p:inputText>
+								<p:outputLabel value="Total" for="total" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="closingbalance" value="#{activecontractdetailUI.activecontractdetail.closingbalance}" style="width:95%; opacity : 1; color: black" disabled="true" >
+								 	<f:convertNumber pattern="###,###,###,###,##0.00" />
+								</p:inputText>
+								<p:outputLabel value="Closing Balance" for="closingbalance" />
+							</h:panelGroup>
+						</p:panelGrid>
+					</div>
+					<c:if test="#{activecontractdetailUI.activecontractdetail.companyLearners ne null}">
+						<div class="card card-w-title">
+							<h1>Learner Information</h1>
+							<p:growl sticky="false">
+								<p:autoUpdate />
+							</p:growl>
+							<p:panelGrid columns="2" style="width:100%" id="companyLearners" layout="grid" styleClass="ui-panelgrid-blank form-group">
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="firstName" value="#{activecontractdetailUI.activecontractdetail.companyLearners.user.firstName}" style="width:95%; opacity : 1; color: black" required="true" requiredMessage="#{lang['provide.first.name']}" disabled="true" />
+									<p:outputLabel value="#{lang['first.name']}:" for="firstName" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="lastName" value="#{activecontractdetailUI.activecontractdetail.companyLearners.user.lastName}" style="width:95%; opacity : 1; color: black" required="true" requiredMessage="#{lang['provide.last.name']}" disabled="true" />
+									<p:outputLabel value="#{lang['last.name']}:" for="lastName" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="middleName" value="#{activecontractdetailUI.activecontractdetail.companyLearners.user.middleName}" style="width:95%; opacity : 1; color: black" required="true" requiredMessage="Provide Middle Name" disabled="true" />
+									<p:outputLabel value="#{lang['middle.name']}" for="middleName" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield" rendered="#{activecontractdetailUI.activecontractdetail.companyLearners.user.rsaIDNumber.length() gt 0}">
+									<p:inputText id="rsaId" value="#{activecontractdetailUI.activecontractdetail.companyLearners.user.rsaIDNumber}" style="width:95%; opacity : 1; color: black" required="true" requiredMessage="#{lang['rsa.id.number']}" disabled="true" />
+									<p:outputLabel value="#{lang['rsa.id.number']}" for="rsaId" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="learnerStatus" value="#{activecontractdetailUI.activecontractdetail.companyLearners.learnerStatus.friendlyName}" style="width:95%; opacity : 1; color: black" required="true" requiredMessage="Provide Middle Name" disabled="true" />
+									<p:outputLabel value="Application Status" for="learnerStatus" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:calendar id="approvalDate" value="#{activecontractdetailUI.activecontractdetail.approvalDate}" inputStyle="width:95%; opacity : 1; color: black" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" required="true" disabled="true" />
+									<p:outputLabel value="Approval Date" for="approvalDate" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:calendar value="#{activecontractdetailUI.activecontractdetail.companyLearners.user.dateOfBirth}" disabled="true" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" inputStyle="width: 95%; opacity : 1; color: black"></p:calendar>
+									<p:outputLabel value="#{lang['date.of.birth']}"></p:outputLabel>
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText value="#{activecontractdetailUI.activecontractdetail.companyLearners.user.gender.genderName}" disabled="true" style="width: 95%; opacity : 1; color: black"></p:inputText>
+									<p:outputLabel value="#{lang['gender']}"></p:outputLabel>
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText value="#{activecontractdetailUI.activecontractdetail.companyLearners.user.nationality.description}" disabled="true" style="width: 95%; opacity : 1; color: black"></p:inputText>
+									<p:outputLabel value="#{lang['nationality']}"></p:outputLabel>
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText value="#{activecontractdetailUI.activecontractdetail.companyLearners.user.disabilityStatus.description}" disabled="true" style="width: 95%; opacity : 1; color: black"></p:inputText>
+									<p:outputLabel value="#{lang['disability.status']}"></p:outputLabel>
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText value="#{activecontractdetailUI.activecontractdetail.companyLearners.user.equity.description}" disabled="true" style="width: 95%; opacity : 1; color: black"></p:inputText>
+									<p:outputLabel value="#{lang['equity']}"></p:outputLabel>
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText value="#{activecontractdetailUI.activecontractdetail.companyLearners.user.cellNumber}" disabled="true" style="width: 95%; opacity : 1; color: black"></p:inputText>
+									<p:outputLabel value="#{lang['cell.number']}"></p:outputLabel>
+								</h:panelGroup>
+							</p:panelGrid>
+						</div>
+					</c:if>
+					<c:if test="#{activecontractdetailUI.activecontractdetail.docs.size() gt 0}">
+						<div class="card card-w-title">
+							<h1>#{lang['documents']}</h1>
+							<p:dataTable value="#{activecontractdetailUI.activecontractdetail.docs}" var="rv1" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+								<p:column headerText="#{lang['type']}" width="20%">#{rv1.configDoc.name}</p:column>
+								<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+								<p:column headerText="#{lang['uploaded']}" width="15%">
+									<h:outputText value="#{rv1.createDate}">
+										<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="#{lang['version']}" width="15%">
+									<h:outputText value="#{rv1.versionNo}">
+									</h:outputText>
+								</p:column>
+								<p:column width="180" headerText="#{lang['view.edit']}">
+									<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}">
+										<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+									<p:spacer width="5" rendered="#{rv1.id ne null}" />
+									<p:commandButton icon="fa fa-bars " id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}">
+										<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="dhistUserDocs" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+									<!-- only with permission to upload can upload a new version -->
+									<p:commandButton rendered="#{(rv1.users eq null or sessionUI.activeUser eq rv1.users) and (sessionUI.task.processRole eq null or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload)}" icon="fa fa-upload" id="uploadUserDocs" styleClass="#{rv1.originalFname eq null ? 'red-btn' : ''} flat"
+										process="@this" oncomplete="PF('dlgUpload').show()" update=":uploadForm">
+										<f:setPropertyActionListener value="#{rv1}" target="#{activecontractdetailUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="uploadUserDocs" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+									<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+										<p:spacer width="5" />
+										<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+									</h:panelGroup>
+									<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+										<p:spacer width="5" />
+										<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+									</h:panelGroup>
+								</p:column>
+							</p:dataTable>
+						</div>
+					</c:if>
+
+					<div class="card card-w-title">
+						<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve}">
+							<p:commandButton value="#{lang['approve']}" icon="ui-icon-save" update="@form" action="#{activecontractdetailUI.approveWorkflow}" styleClass="flat green-btn Fs18" style="height: 50px;">
+							</p:commandButton>
+							<p:commandButton value="#{lang['reject.task']}" icon="ui-icon-save" update="@form" action="#{activecontractdetailUI.rejectWorkflow}" styleClass="flat red-btn Fs18" style="height: 50px;" process="@this" rendered="#{not sessionUI.task.firstInProcess}">
+							</p:commandButton>
+						</p:panelGrid>
+
+						<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval}">
+							<p:commandButton value="#{lang['approve']}" icon="ui-icon-save" update="@form" action="#{activecontractdetailUI.finalApproveWorkflow}" styleClass="flat green-btn Fs18" style="height: 50px;">
+							</p:commandButton>
+							<p:commandButton value="#{lang['reject.task']}" icon="ui-icon-save" update="@form" action="#{activecontractdetailUI.finalRejectWorkflow}" styleClass="flat red-btn Fs18" style="height: 50px;" process="@this" rendered="#{not sessionUI.task.firstInProcess}">
+							</p:commandButton>
+						</p:panelGrid>
+
+						<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" rendered="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Approve and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalApproval}">
+							<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" update="@form" action="#{activecontractdetailUI.completeWorkflow}" styleClass="flat green-btn Fs18" style="height: 50px;"></p:commandButton>
+							<p:commandButton value="Reject" icon="ui-icon-save" update="@form" action="#{activecontractdetailUI.rejectWorkflow}" styleClass="flat red-btn Fs18" style="height: 50px;" rendered="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.View and not sessionUI.task.firstInProcess}">
+							</p:commandButton>
+						</p:panelGrid>
+					</div>
+
+				</div>
+			</div>
+		</h:form>
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true" dynamic="true">
+			<h:form id="uploadForm">
+				<h:panelGroup id="uploadGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{activecontractdetailUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{activecontractdetailUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span>
+										<br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{activecontractdetailUI.storeFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}" update="activecontractsInsForm" multiple="false" fileLimit="1" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+	</ui:define>
+
+</ui:composition>

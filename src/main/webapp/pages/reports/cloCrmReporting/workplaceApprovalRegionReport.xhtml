@@ -1,0 +1,91 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<p:growl sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>Workplace Approval List Region Report</h1>
+					<c:if test="#{workplaceApprovalRegionReportUI.cloCrmUser eq false}">
+						<h3>You are currently not linked to any region. Note this report is limited to CLO and CRM users. If you have any queries please contact support.</h3>
+					</c:if>
+					<h:form id="mainForm" rendered="#{workplaceApprovalRegionReportUI.cloCrmUser}">
+						<c:if test="#{workplaceApprovalRegionReportUI.displayNormalDownload}">
+							<ui:include src="/pages/includes/download_lazy.xhtml">
+								<ui:param name="file_name" value="Workplace_Approval_List_Region_Report" />
+								<ui:param name="target" value="wpaDataModelList" />
+							</ui:include>
+						</c:if>
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+						<p:dataTable id="wpaDataModelList" var="rvwpa" value="#{workplaceApprovalRegionReportUI.workPlaceApprovalDataModel}" rowKey="#{rvwpa.id}" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['company.name']}" filterBy="#{rvwpa.company.companyName}" sortBy="#{rvwpa.company.companyName}">
+								<p:outputLabel value="#{rvwpa.company.companyName}" rendered="#{rvwpa.company.companyName ne null}" />
+							</p:column>
+
+							<p:column headerText="#{lang['trading.name']}" filterBy="#{rvwpa.company.tradingName}" sortBy="#{rvwpa.company.tradingName}">
+								<p:outputLabel value="#{rvwpa.company.tradingName}" rendered="#{rvwpa.company.tradingName ne null}" />
+							</p:column>
+
+							<p:column headerText="#{lang['entity.id']}" filterBy="#{rvwpa.company.levyNumber}" sortBy="#{rvwpa.company.levyNumber}">
+								<p:outputLabel value="#{rvwpa.company.levyNumber}" rendered="#{rvwpa.company.levyNumber ne null}" />
+							</p:column>
+
+							<p:column headerText="Company WPA Number">
+								<p:outputLabel value="#{rvwpa.company.workplaceApprovalNumber}" />
+							</p:column>
+
+							<p:column headerText="#{lang['site.name']}">
+								<p:outputLabel value="#{rvwpa.sites.companyName}" rendered="#{rvwpa.sites ne null}" />
+								<p:outputLabel value="#{rvwpa.company.companyName}" rendered="#{rvwpa.sites eq null}" />
+							</p:column>
+
+							<p:column headerText="#{lang['address']}">
+								<p:outputLabel value="#{rvwpa.sites.registeredAddress.addressLine1} " rendered="#{rvwpa.sites ne null}" />
+								<p:outputLabel value="#{rvwpa.company.residentialAddress.addressLine1} " rendered="#{rvwpa.company.residentialAddress ne null}" />
+
+								<p:outputLabel value="#{rvwpa.sites.registeredAddress.addressLine2} " rendered="#{rvwpa.sites ne null}" />
+								<p:outputLabel value="#{rvwpa.company.residentialAddress.addressLine2} " rendered="#{rvwpa.company.residentialAddress ne null}" />
+
+								<p:outputLabel value="#{rvwpa.sites.registeredAddress.addressLine3} " rendered="#{rvwpa.sites ne null}" />
+								<p:outputLabel value="#{rvwpa.company.residentialAddress.addressLine3} " rendered="#{rvwpa.company.residentialAddress ne null}" />
+
+								<p:outputLabel value="#{rvwpa.sites.registeredAddress.town.description} " rendered="#{rvwpa.sites ne null}" />
+								<p:outputLabel value="#{rvwpa.company.residentialAddress.town.description} " rendered="#{rvwpa.company.residentialAddress ne null}" />
+
+							</p:column>
+
+							<p:column headerText="Qualification">
+								<p:outputLabel value="(#{rvwpa.qualification.codeString}) - #{rvwpa.qualification.description}" rendered="#{rvwpa.qualification ne null}" />
+								<p:outputLabel value="#{lang['N/A']}" rendered="#{rvwpa.qualification eq null}" />
+							</p:column>
+
+							<p:column headerText="Trade">
+								<p:outputLabel value="(#{rvwpa.ofoCodes.ofoCodeParent}) - (#{rvwpa.ofoCodes.description})" rendered="#{rvwpa.ofoCodes ne null}" />
+								<p:outputLabel value="#{lang['N/A']}" rendered="#{rvwpa.ofoCodes eq null}" />
+							</p:column>
+
+							<p:column headerText="Status" sortBy="#{rvwpa.approvalEnum}">
+								<p:outputLabel value="#{rvwpa.approvalEnum.friendlyName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['approval.date']}" sortBy="#{rvwpa.approvalDate}">
+								<h:outputText value="#{rvwpa.approvalDate}" rendered="#{rvwpa.approvalDate ne null}">
+									<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+								</h:outputText>
+								<p:outputLabel value="#{lang['N/A']}" rendered="#{rvwpa.approvalDate eq null}" />
+							</p:column>
+
+							<p:column headerText="#{lang['wpa.num']}">
+								<p:outputLabel value="#{rvwpa.workPlaceApprovalNumber}" />
+							</p:column>
+						</p:dataTable>
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+</ui:composition>

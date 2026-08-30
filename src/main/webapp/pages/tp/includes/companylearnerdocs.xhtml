@@ -1,0 +1,58 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+
+	<p:outputPanel style="width: 100%">
+
+		<p:dataTable value="#{companyLearners.docs}" var="rv1" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+			<p:column headerText="#{lang['type']}" width="20%">#{rv1.configDoc.name}</p:column>
+			<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+			<p:column headerText="#{lang['uploaded']}" width="15%">
+				<h:outputText value="#{rv1.createDate}">
+					<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+				</h:outputText>
+			</p:column>
+			<p:column headerText="#{lang['version']}" width="15%">
+				<h:outputText value="#{rv1.versionNo}">
+				</h:outputText>
+			</p:column>
+
+			<p:column width="180" headerText="#{lang['view.edit']}">
+				<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}">
+					<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+				</p:commandButton>
+				<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+
+				<p:spacer width="5" rendered="#{rv1.id ne null}" />
+				<p:commandButton icon="fa fa-bars " id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}">
+					<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+				</p:commandButton>
+				<p:tooltip for="dhistUserDocs" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+
+				<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+					<p:spacer width="5" />
+					<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+						<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+					</p:commandButton>
+					<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+				</h:panelGroup>
+
+				<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+					<p:spacer width="5" />
+					<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+						<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+					</p:commandButton>
+					<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+				</h:panelGroup>
+
+
+				<!-- only with permission to upload can upload a new version -->
+				<p:commandButton rendered="#{showUpload}" icon="fa fa-upload" id="uploadUserDocs" styleClass="#{rv1.originalFname eq null ? 'red-btn' : ''} flat"
+					process="@this" oncomplete="PF('dlgUpload').show()" update=":uploadForm">
+					<f:setPropertyActionListener value="#{rv1}" target="#{target}" />
+				</p:commandButton>
+				<p:tooltip for="uploadUserDocs" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+
+			</p:column>
+		</p:dataTable>
+	</p:outputPanel>
+
+</ui:composition>

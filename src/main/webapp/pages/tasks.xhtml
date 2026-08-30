@@ -1,0 +1,73 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+
+	<ui:define name="content">
+		<div class="ui-g">
+
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<h1>All Tasks</h1>
+					<h:form id="mainForm">
+						<p:importEnum type="haj.com.entity.enums.RagEnum" />
+						<p:dataTable var="rowVar" value="#{tasksUI.dataModel}" filteredValue="#{tasksUI.tasksfilteredList}" id="tasksList" emptyMessage="#{lang['no.records.found']}" rowKey="#{rowVar.id}" paginator="true" rows="6" paginatorPosition="bottom"
+							paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true" lazy="true">
+
+							<p:column headerText="#{lang['process.name']}">
+								<h:outputText value="#{lang[rowVar.workflowProcess.registrationName]}" />
+							</p:column>
+
+							<p:column headerText="#{lang['description']}" width="40%">
+								<h:outputText value="#{rowVar.description}" />
+							</p:column>
+
+							<p:column headerText="#{lang['last.action.user']}">
+								<h:outputText value="#{rowVar.actionUser.firstName} #{rowVar.actionUser.lastName}" />
+							</p:column>
+
+							<p:column headerText="#{lang['status']}" width="120">
+								<h:outputText value="#{lang[rowVar.taskStatus.registrationName]}" />
+							</p:column>
+
+							<p:column headerText="#{lang['dueDate']}" width="120">
+								<h:outputText value="#{rowVar.dueDate}">
+									<f:convertDateTime pattern="dd MMM yyyy" />
+								</h:outputText>
+							</p:column>
+
+							<p:column headerText="#{lang['RAG']}" exportable="false" width="5%" styleClass="Fs13">
+								<center>
+									<h:graphicImage value="/resources/hls/images/red.svg" rendered="#{rowVar.rag eq RagEnum.Red}" width="33" styleClass="animated pulse infinite" />
+									<h:graphicImage value="/resources/hls/images/amber.svg" rendered="#{rowVar.rag eq RagEnum.Amber}" width="31" />
+									<h:graphicImage value="/resources/hls/images/green.svg" rendered="#{rowVar.rag eq RagEnum.Green}" width="22" />
+								</center>
+							</p:column>
+
+						</p:dataTable>
+
+						<p:confirmDialog global="true" showEffect="fade" hideEffect="fade" width="250">
+							<p:commandButton value="#{lang['yes']}" styleClass="ui-confirmdialog-yes GreenButton" icon="ui-icon-check" />
+							<p:commandButton value="#{lang['no']}" type="button" styleClass="ui-confirmdialog-no RedButton" icon="ui-icon-close" />
+						</p:confirmDialog>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+	</ui:define>
+	<!-- 
+completionDate = completionDate
+targetKey = targetKey
+taskStatus = taskStatus
+createDate = createDate
+taskGuide = taskGuide
+taskDirectPage = taskDirectPage
+actionUser = actionUser
+actionDate = actionDate
+startDate = startDate
+dueDate = dueDate
+company = company
+createUser = createUser
+targetClass = targetClass
+description = description
+
+-->
+</ui:composition>

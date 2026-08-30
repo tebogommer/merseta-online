@@ -1,0 +1,220 @@
+<ui:composition xmlns:o="http://omnifaces.org/ui" xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<h:panelGroup id="companyGrid" rendered="#{trainingproviderUI.company.doneSearch}">
+
+		<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" id="pgnonSetaComps">
+			<h:panelGroup styleClass="md-inputfield" rendered="#{!trainingproviderUI.company.lockInfoUpdate}">
+				<p:inputText id="companyNameExisting1" disabled="true" value="#{trainingproviderUI.company.companyName}" style="width:95%" required="true" requiredMessage="#{lang['enter.your.company.name']}">
+					<p:ajax></p:ajax>
+				</p:inputText>
+				<p:outputLabel value="#{lang['companyName']}" for="companyNameExisting1" />
+			</h:panelGroup>
+
+			<h:panelGroup styleClass="md-inputfield" rendered="#{trainingproviderUI.company.lockInfoUpdate}">
+				<p:inputText disabled="true" value="#{trainingproviderUI.company.companyName}" style="width:95%">
+				</p:inputText>
+				<p:outputLabel value="#{lang['companyName']}" />
+			</h:panelGroup>
+
+			<h:panelGroup styleClass="md-inputfield" rendered="#{!trainingproviderUI.company.lockInfoUpdate}">
+				<p:inputMask disabled="true" id="companyRegNumberExisting1" value="#{trainingproviderUI.company.companyRegistrationNumber}" style="width:95%" requiredMessage="#{lang['enter.reg.number']}" required="true">
+					<p:ajax></p:ajax>
+				</p:inputMask>
+				<p:outputLabel value="#{lang['registration.number']}" for="companyRegNumberExisting1" />
+			</h:panelGroup>
+
+			<h:panelGroup styleClass="md-inputfield" rendered="#{trainingproviderUI.company.lockInfoUpdate}">
+				<p:inputMask disabled="true" value="#{trainingproviderUI.company.companyRegistrationNumber}" style="width:95%">
+				</p:inputMask>
+				<p:outputLabel value="#{lang['registration.number']}" />
+			</h:panelGroup>
+
+			<h:panelGroup styleClass="md-inputfield" rendered="true">
+				<p:inputText value="#{trainingproviderUI.company.levyNumber}" style="width:95%" disabled="true">
+					<p:ajax />
+				</p:inputText>
+				<p:outputLabel value="SDL Number" />
+			</h:panelGroup>
+
+			<h:panelGroup styleClass="md-inputfield" rendered="#{!trainingproviderUI.company.lockInfoUpdate}">
+				<p:inputText id="compEmail1" value="#{trainingproviderUI.company.email}" disabled="true" style="width:95%" required="true" requiredMessage="#{lang['enter.email.address']}">
+					<p:ajax />
+				</p:inputText>
+				<p:outputLabel value="#{lang['email.address']}" for="compEmail1" />
+			</h:panelGroup>
+
+			<h:panelGroup styleClass="md-inputfield" rendered="#{trainingproviderUI.company.lockInfoUpdate}">
+				<p:inputText value="#{trainingproviderUI.company.email}" disabled="true" style="width:95%">
+				</p:inputText>
+				<p:outputLabel value="#{lang['email.address']}" />
+			</h:panelGroup>
+
+			<h:panelGroup styleClass="md-inputfield" rendered="#{!trainingproviderUI.company.lockInfoUpdate}">
+				<p:inputMask id="nonSetaTelNumber" mask="#{profileUI.TELPHONE_FORMAT}" disabled="true" value="#{trainingproviderUI.company.telNumber}" style="width: 95%" label="telNumber" required="true"
+					requiredMessage="Enter tel number">
+					<p:ajax />
+					<o:validator validatorId="javax.faces.Length" minimum="0" maximum="20" message="#{lang['user.tellnumber.length']}" />
+				</p:inputMask>
+				<p:outputLabel value="#{lang['tel.number']}:" for="nonSetaTelNumber" />
+			</h:panelGroup>
+
+			<h:panelGroup styleClass="md-inputfield" rendered="#{trainingproviderUI.company.lockInfoUpdate}">
+				<p:inputMask mask="#{profileUI.TELPHONE_FORMAT}" disabled="true" value="#{trainingproviderUI.company.telNumber}" style="width: 95%" label="telNumber" required="true" requiredMessage="Enter tel number">
+					<o:validator validatorId="javax.faces.Length" minimum="0" maximum="20" message="#{lang['user.tellnumber.length']}" />
+				</p:inputMask>
+				<p:outputLabel value="#{lang['tel.number']}:" />
+			</h:panelGroup>
+
+			<h:panelGroup styleClass="md-inputfield" rendered="#{!trainingproviderUI.company.lockInfoUpdate}">
+				<p:inputMask id="nonStaFax" mask="#{profileUI.CELLPHONE_FORMAT}" disabled="true" value="#{trainingproviderUI.company.faxNumber}" style="width: 95%" label="cellNumber" required="false" requiredMessage="Enter fax number">
+					<p:ajax />
+				</p:inputMask>
+				<p:outputLabel value="#{lang['fax.number']}" for="nonStaFax" />
+			</h:panelGroup>
+
+			<h:panelGroup styleClass="md-inputfield" rendered="#{trainingproviderUI.company.lockInfoUpdate}">
+				<p:inputMask mask="#{profileUI.CELLPHONE_FORMAT}" disabled="true" value="#{trainingproviderUI.company.faxNumber}" style="width: 95%" label="cellNumber" required="false" requiredMessage="Enter fax number">
+					<p:ajax />
+				</p:inputMask>
+				<p:outputLabel value="#{lang['fax.number']} " />
+			</h:panelGroup>
+
+			<h:panelGroup rendered="#{!trainingproviderUI.company.lockInfoUpdate}">
+				<div style="margin-top: -20px !important;">
+					<p:outputLabel value="#{lang['sicCode']}" for="sicCodeNew" styleClass="gray Fs12" style="margin-left:5px">
+					</p:outputLabel>
+				</div>
+				<div>
+					<p:autoComplete id="sicCodeNew" disabled="true" value="#{trainingproviderUI.company.sicCode}" style="width: 95%" completeMethod="#{autoCompleteUI.completeSIC}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true"
+						converter="SICCodeConvertor" dropdown="true" minQueryLength="1" maxResults="10" required="true" requiredMessage="#{lang['sic.code.error']}">
+						<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+						<p:column headerText="#{lang['description']}" style="white-space: nowrap">#{rv.description}</p:column>
+						<p:ajax event="itemSelect" />
+					</p:autoComplete>
+				</div>
+			</h:panelGroup>
+
+			<h:panelGroup rendered="#{trainingproviderUI.company.lockInfoUpdate}">
+				<div style="margin-top: -20px !important;">
+					<p:outputLabel value="#{lang['sicCode']}" styleClass="gray Fs12" style="margin-left:5px">
+					</p:outputLabel>
+				</div>
+				<div>
+					<p:autoComplete disabled="true" value="#{trainingproviderUI.company.sicCode}" style="width: 95%" completeMethod="#{autoCompleteUI.completeSIC}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SICCodeConvertor" dropdown="true" minQueryLength="1"
+						maxResults="10" required="true" requiredMessage="#{lang['sic.code.error']}">
+						<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+						<p:column headerText="#{lang['description']}" style="white-space: nowrap">#{rv.description}</p:column>
+						<p:ajax event="itemSelect" />
+					</p:autoComplete>
+				</div>
+			</h:panelGroup>
+
+			<h:panelGroup rendered="#{trainingproviderUI.company.nonLevyPaying or trainingproviderUI.company.nonSetaCompany and !trainingproviderUI.company.lockInfoUpdate}">
+				<div style="margin-top: -20px !important;">
+					<p:outputLabel value="SETA" for="setaSelection" styleClass="gray Fs12" style="margin-left:5px">
+					</p:outputLabel>
+				</div>
+				<div>
+					<p:selectOneMenu id="setaSelection" disabled="true" value="#{trainingproviderUI.company.seta}" style="width: 95%" converter="SetaConvertor" required="true" requiredMessage="Provide SETA">
+						<f:selectItems value="#{selectItemsUI.seta}" var="rcseta" itemLabel="#{rcseta.description} (#{rcseta.code})" />
+						<p:ajax />
+					</p:selectOneMenu>
+				</div>
+			</h:panelGroup>
+
+			<h:panelGroup rendered="#{trainingproviderUI.company.nonLevyPaying or trainingproviderUI.company.nonSetaCompany and trainingproviderUI.company.lockInfoUpdate} ">
+				<div style="margin-top: -20px !important;">
+					<p:outputLabel value="SETA" styleClass="gray Fs12" style="margin-left:5px">
+					</p:outputLabel>
+				</div>
+				<div>
+					<p:selectOneMenu disabled="true" value="#{trainingproviderUI.company.seta}" style="width: 95%" converter="SetaConvertor" required="true" requiredMessage="Provide SETA">
+						<f:selectItems value="#{selectItemsUI.seta}" var="rcseta" itemLabel="#{rcseta.description} (#{rcseta.code})" />
+						<p:ajax />
+					</p:selectOneMenu>
+				</div>
+			</h:panelGroup>
+		</p:panelGrid>
+
+		<h:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" id="pgCompAddress1">
+			<ui:include src="/pages/includes/legacyTpNonSetaCompanyAddressesExistingDisabled.xhtml">
+			</ui:include>
+		</h:panelGrid>
+
+
+		<h:panelGroup id="docList1" rendered="#{trainingproviderUI.company.docs.size() gt 0}">
+			<p:fieldset legend="Company Document(s)">
+				<br />
+				<span class="FontBold"> <i class="fa fa-exclamation-circle" aria-hidden="true"></i> #{lang['please.upload.the.following.compulsory.documents']}
+				</span>
+				<br />
+				<div class="ui-g dashboard">
+					<div class="ui-g-12">
+						<p:repeat var="rc" value="#{trainingproviderUI.company.docs}" varStatus="x">
+							<div class="ui-g-12 ui-md-6 ui-lg-3">
+								<div class="ui-g card colorbox #{rc.originalFname eq null ? 'colorbox-1' : 'colorbox-5'}">
+									<div class="ui-g-4">
+										<i class="material-icons">#{rc.originalFname eq null ? 'cloud_upload' : 'check_circle'}</i>
+									</div>
+									<div class="ui-g-8">
+										<span class="colorbox-name">#{rc.configDoc.name}</span> <span class="colorbox-count"> <p:commandButton value="#{rc.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" styleClass="#{rc.originalFname eq null ? 'red-btn' : 'green-btn'} flat" process="@this"
+												oncomplete="PF('dlgUpload').show()" update=":uploadForm">
+												<f:setPropertyActionListener value="#{rc}" target="#{trainingproviderUI.doc}" />
+											</p:commandButton>
+										</span>
+									</div>
+								</div>
+							</div>
+						</p:repeat>
+					</div>
+				</div>
+			</p:fieldset>
+		</h:panelGroup>
+
+		<p:outputPanel id="docUpdate">
+			<h:panelGroup id="docListUser" rendered="#{trainingproviderUI.formUser.docs.size() gt 0}">
+				<p:fieldset legend="SDP Representative Document(s)">
+					<br />
+					<span class="FontBold"> <i class="fa fa-exclamation-circle" aria-hidden="true"></i> #{lang['please.upload.the.following.compulsory.documents']}
+					</span>
+					<br />
+					<div class="ui-g dashboard">
+						<div class="ui-g-12">
+							<p:repeat var="rc" value="#{trainingproviderUI.formUser.docs}" varStatus="x">
+								<div class="ui-g-12 ui-md-6 ui-lg-3">
+									<div class="ui-g card colorbox #{rc.originalFname eq null ? 'colorbox-1' : 'colorbox-5'}">
+										<div class="ui-g-4">
+											<i class="material-icons">#{rc.originalFname eq null ? 'cloud_upload' : 'check_circle'}</i>
+										</div>
+										<div class="ui-g-8">
+											<span class="colorbox-name">#{rc.configDoc.name}</span> <span class="colorbox-count"> <p:commandButton value="#{rc.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" styleClass="#{rc.originalFname eq null ? 'red-btn' : 'green-btn'} flat" process="@this"
+													oncomplete="PF('dlgUploadUser').show()" update=":uploadFormUser">
+													<f:setPropertyActionListener value="#{rc}" target="#{trainingproviderUI.doc}" />
+												</p:commandButton>
+											</span>
+										</div>
+									</div>
+								</div>
+							</p:repeat>
+						</div>
+					</div>
+				</p:fieldset>
+			</h:panelGroup>
+		</p:outputPanel>
+		
+		
+		
+		
+		
+		<div class="EmptyBox10" />
+		<p:outputPanel id="validiationsTab">
+			<p:fieldset rendered="#{trainingproviderUI.validiationErrorsLegacySdp ne null and trainingproviderUI.validiationErrorsLegacySdp ne ''}">
+				<p:outputLabel escape="false" value="#{trainingproviderUI.validiationErrorsLegacySdp}" />
+			</p:fieldset>
+			<br />
+			<p:commandButton id="runValidiations" process="companyGrid1" value="Validate Information" rendered="#{!trainingproviderUI.validiationPassed}" update="@form" icon="fa fa-check-square" action="#{trainingproviderUI.runLegacySdpValidations}" iconPos="right" />
+			<br />
+			<p:commandButton id="btnCompNonSeta" process="companyGrid1" value="#{lang['continue']}" rendered="#{trainingproviderUI.validiationPassed and trainingproviderUI.company.doneSearch}" update="@form" icon="ui-icon-fast-forward"
+				action="#{trainingproviderUI.doneLegacyCompanyBitForExistingLegacyCompanies}" iconPos="right" />
+		</p:outputPanel>
+	</h:panelGroup>
+</ui:composition>

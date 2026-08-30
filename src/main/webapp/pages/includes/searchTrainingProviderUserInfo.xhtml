@@ -1,0 +1,276 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<p:fieldset legend="#{lang['accreditation.detail']}" rendered="false">
+		<p:panelGrid columns="4" style="width:100%" id="accreditGrid" layout="grid" styleClass="ui-panelgrid-blank form-group">
+			
+			<h:panelGroup id="etqa" styleClass="md-inputfield">
+				<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" rendered="#{trainingproviderapplicationUI.selectedTrainingProviderApplication.etqa.description ne null}" value="#{trainingproviderapplicationUI.selectedTrainingProviderApplication.etqa.description}" />
+				<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%"  rendered="#{trainingproviderapplicationUI.selectedTrainingProviderApplication.etqa.description eq null}" value="#{lang['N/A']}" />
+				<p:outputLabel value="#{lang['etqa']}" />
+			</h:panelGroup>
+			
+			<h:panelGroup id="AccreditationNum" styleClass="md-inputfield">
+				<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" rendered="#{trainingproviderapplicationUI.selectedTrainingProviderApplication.accreditationNumber ne null}" value="#{trainingproviderapplicationUI.selectedTrainingProviderApplication.accreditationNumber}" />
+				<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%"  rendered="#{trainingproviderapplicationUI.selectedTrainingProviderApplication.accreditationNumber eq null}" value="#{lang['N/A']}" />
+				<p:outputLabel value="#{lang['accreditation.number']}" />
+			</h:panelGroup>
+			
+			<h:panelGroup id="accreditationPeriod" styleClass="md-inputfield">
+				<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" rendered="#{trainingproviderapplicationUI.selectedTrainingProviderApplication.accreditationPeriod ne null}" value="#{trainingproviderapplicationUI.selectedTrainingProviderApplication.accreditationPeriod}" />
+				<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%"  rendered="#{trainingproviderapplicationUI.selectedTrainingProviderApplication.accreditationPeriod eq null}" value="#{lang['N/A']}" />
+				<p:outputLabel value="#{lang['accreditation.period']}" />
+			</h:panelGroup>
+			
+			<h:panelGroup id="expiriyDate" styleClass="md-inputfield">
+				<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%" rendered="#{trainingproviderapplicationUI.selectedTrainingProviderApplication.expiriyDate ne null}" value="#{trainingproviderapplicationUI.selectedTrainingProviderApplication.expiriyDate}" />
+				<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:100%"  rendered="#{trainingproviderapplicationUI.selectedTrainingProviderApplication.expiriyDate eq null}" value="#{lang['N/A']}" />
+				<p:outputLabel value="#{lang['expiry.date']}" />
+			</h:panelGroup>
+			
+		</p:panelGrid>
+	</p:fieldset>
+	
+	<p:fieldset legend="Application Submission User">
+		<p:panelGrid columns="2" style="width : 95%" styleClass="ui-panelgrid-blank" id="leanerInfo">
+			
+			<h:panelGroup id="title" styleClass="md-inputfield">
+				<p:inputText  style="opacity: 1 !important; color: black; width:100%" value="#{trainingproviderapplicationUI.trainingProviderUser.title.description}" />
+				<p:outputLabel value="#{lang['title']}" />
+			</h:panelGroup>
+			
+			<h:panelGroup id="fName" styleClass="md-inputfield">
+				<p:inputText  style="opacity: 1 !important; color: black; width:100%" value="#{trainingproviderapplicationUI.trainingProviderUser.firstName}" />
+				<p:outputLabel value="#{lang['first.name']}" />
+			</h:panelGroup>
+			
+			<h:panelGroup id="lName" styleClass="md-inputfield">
+				<p:inputText  style="opacity: 1 !important; color: black; width:100%" value="#{trainingproviderapplicationUI.trainingProviderUser.lastName}" />
+				<p:outputLabel value="#{lang['last.name']}" />
+			</h:panelGroup>
+			
+			<h:panelGroup id="oName" styleClass="md-inputfield">
+				<p:inputText  style="opacity: 1 !important; color: black; width:100%" value="#{trainingproviderapplicationUI.trainingProviderUser.middleName}" />
+				<p:outputLabel value="#{lang['middle.name']}" />
+			</h:panelGroup>
+			
+			<h:panelGroup styleClass="md-inputfield">
+						<p:autoComplete id="gender" style="width:95%" value="#{trainingproviderapplicationUI.trainingProviderUser.gender}" 
+						completeMethod="#{autoCompleteUI.completeGender}" var="rv"  itemLabel="#{trainingproviderapplicationUI.trainingProviderUser.gender.genderName}"
+							itemValue="#{rv}" forceSelection="true" converter="GenderConvertor" 
+							dropdown="true" minQueryLength="3" maxResults="10" requiredMessage="#{lang['provide.gender']}" required="true">
+							<p:column headerText="Gender" style="white-space: nowrap">#{rv.genderName}</p:column>
+							<p:ajax event="itemSelect" />
+						</p:autoComplete>
+						<p:outputLabel value="#{lang['gender']}" for="gender"  />
+					</h:panelGroup>
+					
+					
+			
+			
+			<h:panelGroup rendered="#{trainingproviderapplicationUI.trainingProviderUser.passportNumber.length() gt 0 }" id="passNum" styleClass="md-inputfield">
+				<p:inputText  style="opacity: 1 !important; color: black; width:100%" value="#{trainingproviderapplicationUI.trainingProviderUser.passportNumber}" />
+				<p:outputLabel value="#{lang['passport.number']}" />
+			</h:panelGroup>
+			
+			<h:panelGroup rendered="#{trainingproviderapplicationUI.trainingProviderUser.rsaIDNumber.length() gt 0 }" id="rsaIDNumber" styleClass="md-inputfield">
+				<p:inputText  style="opacity: 1 !important; color: black; width:100%" value="#{trainingproviderapplicationUI.trainingProviderUser.rsaIDNumber}" />
+				<p:outputLabel value="#{lang['id.number']}" />
+			</h:panelGroup>
+			
+			<h:panelGroup styleClass="md-inputfield">
+						<p:calendar navigator="true" id="dob" inputStyle="width:50%"   showOn="button" requiredMessage="#{lang['select.date.of.birth']}"
+							value="#{trainingproviderapplicationUI.trainingProviderUser.dateOfBirth}" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" style="width:95%">
+							<p:ajax event="dateSelect" />
+						</p:calendar>
+						<p:outputLabel value="#{lang['date.of.birth']}" for="dob" style="width:95%" />
+					</h:panelGroup>
+			
+			
+			
+			<h:panelGroup  id="lEmail" styleClass="md-inputfield">
+				<p:inputText  style="opacity: 1 !important; color: black; width:100%" value="#{trainingproviderapplicationUI.trainingProviderUser.email}" />
+				<p:outputLabel value="#{lang['email']}" />
+			</h:panelGroup>
+			
+			<h:panelGroup styleClass="md-inputfield">
+						<p:autoComplete id="equity" style="width:95%" value="#{trainingproviderapplicationUI.trainingProviderUser.equity}" 
+						completeMethod="#{autoCompleteUI.completeEquityExcludeOtherAndUnkown}" var="rv"  itemLabel="#{trainingproviderapplicationUI.trainingProviderUser.equity.description}"
+							itemValue="#{rv}" forceSelection="true" converter="EquityConvertor" 
+							dropdown="true" minQueryLength="3" maxResults="10" requiredMessage="#{lang['provide.equity']}" required="true">
+							<p:column headerText="equity" style="white-space: nowrap">#{rv.description}</p:column>
+							<p:ajax event="itemSelect" />
+						</p:autoComplete>
+						<p:outputLabel value="#{lang['equity']}" for="equity" />
+					</h:panelGroup>
+			
+			
+			<h:panelGroup styleClass="md-inputfield">
+						<p:autoComplete  style="width:95%" id="nationality" value="#{trainingproviderUI.formUser.nationality}"  requiredMessage="#{lang['nationality.required']}"
+							completeMethod="#{autoCompleteUI.completeNationality}" var="rv"    itemLabel="#{trainingproviderapplicationUI.trainingProviderUser.nationality.description}" forceSelection="true" converter="NationalityConvertor" dropdown="true" minQueryLength="3" maxResults="10"  itemValue="#{rv}">
+							<p:column headerText="#{lang['nationality']}" style="white-space: nowrap">#{rv.description}</p:column>
+							<p:ajax event="itemSelect" />
+						</p:autoComplete>
+						<p:outputLabel value="#{lang['nationality']}" for="nationality" />
+					</h:panelGroup>
+			
+			
+			<h:panelGroup styleClass="md-inputfield" style="margin-top: 20px">
+						<p:autoComplete  id="disability" value="#{trainingproviderapplicationUI.trainingProviderUser.disabilityStatus}" style="width:95%" completeMethod="#{autoCompleteUI.completeDisabilityStatus}" var="rv"
+							itemLabel="#{trainingproviderapplicationUI.trainingProviderUser.disabilityStatus.description}" itemValue="#{rv}" forceSelection="true" converter="DisabilityStatusConvertor" dropdown="true" minQueryLength="3" maxResults="100"  requiredMessage="Please Select Disability">
+							<p:column headerText="Disability" style="white-space: nowrap">#{rv.description}</p:column>
+							<!-- <p:ajax event="itemSelect" update="pgDisRating" listener="#{trainingproviderapplicationUI.clearDisabilityRating}" /> -->
+						</p:autoComplete>
+						<p:outputLabel value="#{lang['disability']}" for="disability" />
+					</h:panelGroup>			
+		</p:panelGrid>
+	
+	</p:fieldset>
+				
+	<!--  Address info ****NOT IN USE**** -->
+	<h:panelGroup rendered="false">
+		<p:fieldset>
+			<p:panelGrid columns="2" style="width:100%" styleClass="ui-panelgrid-blank">
+
+				<p:fieldset legend="#{lang['residentialAddress']}">
+					<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank" id="residentialAddress">
+
+						<h:panelGroup>
+							<p:outputLabel value="#{lang['address.line.1']}" for="address1" styleClass="Fs12 FontLight" />
+							<br />
+							<p:outputLabel id="address1" value="#{trainingproviderapplicationUI.trainingProviderUser.residentialAddress.addressLine1}" style="width:95%" />
+						</h:panelGroup>
+						<h:panelGroup>
+							<p:outputLabel value="#{lang['address.line.2']}" for="address2" styleClass="Fs12 FontLight" />
+							<br />
+							<p:outputLabel id="address2" value="#{trainingproviderapplicationUI.trainingProviderUser.residentialAddress.addressLine2}" style="width:95%" />
+						</h:panelGroup>
+						<h:panelGroup>
+							<p:outputLabel value="#{lang['address.line.3']}" for="address3" styleClass="Fs12 FontLight" />
+							<br />
+							<p:outputLabel id="address3" value="#{trainingproviderapplicationUI.trainingProviderUser.residentialAddress.addressLine3}" style="width:95%" />
+						</h:panelGroup>
+						
+						<h:panelGroup>
+							<p:outputLabel value="#{lang['town']}" for="town" styleClass="Fs12 FontLight" />
+							<br />
+							<p:outputLabel id="town" value="#{trainingproviderapplicationUI.trainingProviderUser.residentialAddress.town.description}" style="width:95%" />
+						</h:panelGroup>
+						
+						<h:panelGroup>
+							<p:outputLabel value="#{lang['municipality']}" for="municipality" styleClass="Fs12 FontLight" />
+							<br />
+							<p:outputLabel id="municipality" value="#{trainingproviderapplicationUI.trainingProviderUser.residentialAddress.municipality.municipalityDesc}" style="width:95%" />
+						</h:panelGroup>
+						
+						<h:panelGroup>
+							<p:outputLabel value="#{lang['post.code']}" for="postCode" styleClass="Fs12 FontLight" />
+							<br />
+							<p:outputLabel id="postCode" value="#{trainingproviderapplicationUI.trainingProviderUser.residentialAddress.postcode}" style="width:95%" />
+						</h:panelGroup>
+
+
+
+					</p:panelGrid>
+				</p:fieldset>
+
+				<p:fieldset legend="#{lang['postalAddress']}">
+					<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank" id="postalAddress">
+						<h:panelGroup>
+							<p:outputLabel value="#{lang['address.line.1']}" for="postalAddress1" styleClass="Fs12 FontLight" />
+							<br />
+							<p:outputLabel id="postalAddress1" value="#{trainingproviderapplicationUI.trainingProviderUser.postalAddress.addressLine1}" style="width:95%" />
+						</h:panelGroup>
+						<h:panelGroup>
+							<p:outputLabel value="#{lang['address.line.2']}" for="postalAddress2" styleClass="Fs12 FontLight" />
+							<br />
+							<p:outputLabel id="postalAddress2" value="#{trainingproviderapplicationUI.trainingProviderUser.postalAddress.addressLine2}" style="width:95%" />
+						</h:panelGroup>
+						<h:panelGroup>
+							<p:outputLabel value="#{lang['address.line.4']}" for="postalAddress3" styleClass="Fs12 FontLight" />
+							<br />
+							<p:outputLabel id="postalAddress3" value="#{trainingproviderapplicationUI.trainingProviderUser.postalAddress.addressLine3}" style="width:95%" />
+						</h:panelGroup>
+						
+						<h:panelGroup>
+							<p:outputLabel value="#{lang['town']}" for="town1" styleClass="Fs12 FontLight" />
+							<br />
+							<p:outputLabel id="town1" value="#{trainingproviderapplicationUI.trainingProviderUser.residentialAddress.town.description}" style="width:95%" />
+						</h:panelGroup>
+						
+						<h:panelGroup>
+							<p:outputLabel value="#{lang['municipality']}" for="municipality1" styleClass="Fs12 FontLight" />
+							<br />
+							<p:outputLabel id="municipality1" value="#{trainingproviderapplicationUI.trainingProviderUser.residentialAddress.municipality.municipalityDesc}" style="width:95%" />
+						</h:panelGroup>
+						
+						<h:panelGroup>
+							<p:outputLabel value="#{lang['post.code']}" for="postCode1" styleClass="Fs12 FontLight" />
+							<br />
+							<p:outputLabel id="postCode1" value="#{trainingproviderapplicationUI.trainingProviderUser.residentialAddress.postcode}" style="width:95%" />
+						</h:panelGroup>
+					</p:panelGrid>
+				</p:fieldset>
+
+			</p:panelGrid>
+		</p:fieldset>
+	</h:panelGroup>
+	
+	
+		<!-- User Documents -->
+		<p:fieldset legend="#{lang['raining.provider.representative.docs']}" id="userDocs" rendered="#{trainingproviderapplicationUI.trainingProviderUser.docs.size() gt 0}">
+			<p:dataTable emptyMessage="#{lang['no.records.found']}" value="#{trainingproviderapplicationUI.trainingProviderUser.docs}" var="rv1" rowKey="#{rv1.id}"
+				 rows="5" paginator="true" paginatorPosition="bottom"
+                         paginatorTemplate="{CurrentPageReport} {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}"
+                         rowsPerPageTemplate="5,10,15,20,25,50,100,150,300,600,900">
+				<p:column headerText="#{lang['type']}" width="20%">
+				
+	                       #{rv1.configDoc.name}
+	                    </p:column>
+				<p:column headerText="#{lang['uploaded.by']}">
+	                       #{rv1.users.firstName} #{rv1.users.lastName}
+	                    </p:column>
+				<p:column headerText="#{lang['uploaded']}" width="15%">
+					<h:outputText value="#{rv1.createDate}">
+						<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+					</h:outputText>
+				</p:column>
+				<p:column headerText="#{lang['version']}" width="15%">
+					<h:outputText value="#{rv1.versionNo}">
+					</h:outputText>
+				</p:column>
+
+				<p:column width="80">
+					<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}">
+						<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+					</p:commandButton>
+					<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+
+					<p:spacer width="5" rendered="#{rv1.id ne null}" />
+					
+					<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+						<p:spacer width="5" />
+						<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+							<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+						</p:commandButton>
+						<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+					</h:panelGroup>
+
+					<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+						<p:spacer width="5" />
+						<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+							<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+						</p:commandButton>
+						<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+					</h:panelGroup>
+
+				</p:column>
+			</p:dataTable>
+		</p:fieldset>
+	
+		<p:outputLabel value="Please ensure all information provided is correct before submitting." style="color:red;font-weight: bold;font-size:15px"/>
+	<p:spacer/>
+
+	<p:commandButton id="submitupdateUserApplicationData" action="#{trainingproviderapplicationUI.updateUserApplicationData}" value="#{lang['submit']}"   icon="fa fa-check" styleClass="green-btn flat Fs18" style="height: 50px;"
+		oncomplete="if (args &amp;&amp; !args.validationFailed)">
+	</p:commandButton>
+
+</ui:composition>

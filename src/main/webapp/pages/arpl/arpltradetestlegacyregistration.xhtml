@@ -1,0 +1,2165 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" xmlns:o="http://omnifaces.org/ui"
+	template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+		<p:growl sticky="false">
+			<p:autoUpdate />
+		</p:growl>
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<ui:include src="/pages/includes/taskdiagram.xhtml" />
+			</div>
+		</div>
+		<h:form id="learnersInsForm">
+			<div class="ui-g">
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+						<p:importEnum type="haj.com.entity.enums.UserPermissionEnum" />
+						<p:importEnum type="haj.com.entity.enums.RsaCitizenTypeEnum" />
+						<p:importEnum type="haj.com.entity.enums.LearnerTransferTypeEnum" />
+						<p:importEnum type="haj.com.entity.enums.YesNoEnum" />
+						<p:importEnum type="haj.com.entity.enums.AprlProgressEnum" />
+						<p:importEnum type="haj.com.entity.enums.EmploymentStatusEnum" />
+						<p:importEnum type="haj.com.entity.enums.EmployedUnEmployedEnum" />
+						<h1>ARPL Trade Test Application</h1>
+						<p:fieldset id="userInfoFS" legend="Learner Information">
+							<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid" id="learnerInfoGrid">
+								<h:panelGroup>
+									<div>
+										<p:outputLabel value="#{lang['occupation.ofo.code']}" for="ofoCodeUser" style="width:100%; color:#977949" />
+									</div>
+									<div>
+										<p:autoComplete required="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.updateBean.ofoCodes}" disabled="#{!legacyTradeTestRegistrationUI.companylearnerstradetest.learner.updateBean.ofoCodes}" id="ofoCodeUser"
+											value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.ofoCodes}" completeMethod="#{autoCompleteUI.completeOfoCodes}" var="rvofo" itemLabel="#{rvofo.ofoDescription}" itemValue="#{rvofo}" forceSelection="true" converter="OfoCodesConvertor" dropdown="true" minQueryLength="3"
+											maxResults="10" inputStyle="width: 100%" style="width: 100%;" requiredMessage="#{lang['select.ofo.code']}">
+											<p:ajax event="itemSelect" />
+											<p:column headerText="OfoCodes" style="white-space: nowrap">#{rvofo.ofoCodeParent}</p:column>
+											<p:column headerText="Description" style="white-space: nowrap">#{rvofo.description}</p:column>
+										</p:autoComplete>
+									</div>
+								</h:panelGroup>
+
+								<h:panelGroup>
+									<div>
+										<p:outputLabel value="#{lang['title']}" for="title" style="width:100%; color:#977949" />
+									</div>
+									<div>
+										<p:selectOneMenu required="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.updateBean.title}" disabled="#{!legacyTradeTestRegistrationUI.companylearnerstradetest.learner.updateBean.title}" id="title" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.title}"
+											converter="TitleConvertor" style="width:100%" requiredMessage="#{lang['select.title']}">
+											<p:ajax event="itemSelect" />
+											<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+											<f:selectItems value="#{selectItemsUI.selectItemsTitles}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+										</p:selectOneMenu>
+									</div>
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText required="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.updateBean.firstName}" disabled="#{!legacyTradeTestRegistrationUI.companylearnerstradetest.learner.updateBean.firstName}" id="userName"
+										value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.firstName}" style="width:100%" requiredMessage="#{lang['enter.your.name']}">
+										<p:ajax />
+									</p:inputText>
+									<p:outputLabel value="#{lang['first.name']}" for="userName" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText id="otherNames" required="false" disabled="#{!legacyTradeTestRegistrationUI.companylearnerstradetest.learner.updateBean.middleName}" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.middleName}" style="width:100%"
+										requiredMessage="#{lang['enter.your.last.name']}">
+										<p:ajax />
+									</p:inputText>
+									<p:outputLabel value="Other Names" for="otherNames" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText required="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.updateBean.lastName}" disabled="#{!legacyTradeTestRegistrationUI.companylearnerstradetest.learner.updateBean.lastName}" id="userSurname"
+										value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.lastName}" style="width:100%" requiredMessage="#{lang['enter.your.last.name']}">
+										<p:ajax />
+									</p:inputText>
+									<p:outputLabel value="#{lang['surname']}" for="userSurname" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputText required="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.updateBean.email}" disabled="#{!legacyTradeTestRegistrationUI.companylearnerstradetest.learner.updateBean.email}" id="userEmailAddress"
+										value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.email}" style="width:100%" requiredMessage="#{lang['enter.your.email.address']}">
+										<p:ajax />
+									</p:inputText>
+									<p:outputLabel value="#{lang['emails']}" for="userEmailAddress" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputMask required="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.updateBean.cellNumber}" disabled="#{!legacyTradeTestRegistrationUI.companylearnerstradetest.learner.updateBean.cellNumber}" id="cellNumber" mask="#{profileUI.CELLPHONE_FORMAT}"
+										value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.cellNumber}" style="width: 100%" label="cellNumber" requiredMessage="Enter mobile number">
+										<o:validator validatorId="javax.faces.Length" minimum="0" maximum="20" message="#{lang['user.cellnumber.length']}" />
+										<p:ajax />
+									</p:inputMask>
+									<p:outputLabel value="#{lang['mobile.number']}" for="cellNumber" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield">
+									<p:inputMask required="false" disabled="#{!legacyTradeTestRegistrationUI.companylearnerstradetest.learner.updateBean.telNumber}" id="telNumber" mask="#{profileUI.TELPHONE_FORMAT}" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.telNumber}" style="width: 100%"
+										label="telNumber" requiredMessage="Enter mobile number">
+										<o:validator validatorId="javax.faces.Length" minimum="0" maximum="20" message="#{lang['user.tellnumber.length']}" />
+										<p:ajax />
+									</p:inputMask>
+									<p:outputLabel value="#{lang['tel.number']}:" for="telNumber" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.rsaIDNumber.length() gt 0}">
+									<p:inputText id="userIdNumber" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.rsaIDNumber}" style="width:100%" disabled="true">
+										<p:ajax />
+									</p:inputText>
+									<p:outputLabel value="#{lang['rsa.id.number']}" for="userIdNumber" />
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.passportNumber.length() gt 0}">
+									<p:inputText id="userPassport" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.passportNumber}" style="width:100%" disabled="true">
+										<p:ajax />
+									</p:inputText>
+									<p:outputLabel value="#{lang['passport.number']}" for="userPassport" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.rsaIDNumber.length() gt 0}">
+									<p:inputText value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.rsaCitizenTypeEnum.friendlyName}" style="width:100%" disabled="true">
+										<p:ajax />
+									</p:inputText>
+									<p:outputLabel value="RSA Citizen Type" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.rsaIDNumber.length() gt 0 and legacyTradeTestRegistrationUI.companylearnerstradetest.learner.rsaCitizenTypeEnum eq RsaCitizenTypeEnum.RsaCitizen}">
+									<p:autoComplete disabled="true" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.nationality}" style="width:100%" id="nationalityDisplay" requiredMessage="#{lang['nationality.required']}" completeMethod="#{autoCompleteUI.completeNationality}" var="rv"
+										itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="NationalityConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+										<p:column headerText="#{lang['nationality']}" style="white-space: nowrap">#{rv.description}</p:column>
+										<p:ajax event="itemSelect" />
+									</p:autoComplete>
+									<p:outputLabel value="#{lang['nationality']}" for="nationalityDisplay" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.rsaIDNumber.length() gt 0 and legacyTradeTestRegistrationUI.companylearnerstradetest.learner.rsaCitizenTypeEnum ne RsaCitizenTypeEnum.RsaCitizen}">
+									<p:autoComplete required="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.updateBean.nationality}" disabled="#{!legacyTradeTestRegistrationUI.companylearnerstradetest.learner.updateBean.nationality}"
+										value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.nationality}" style="width:100%" id="nationalityNonRsaCitizen" requiredMessage="#{lang['nationality.required']}" completeMethod="#{autoCompleteUI.completeNationalityWithNonSelectable}" var="rv"
+										itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="NationalityConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+										<p:column headerText="#{lang['nationality']}" style="white-space: nowrap">#{rv.description}</p:column>
+										<p:ajax event="itemSelect" />
+									</p:autoComplete>
+									<p:outputLabel value="#{lang['nationality']}" for="nationalityNonRsaCitizen" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.passportNumber.length() gt 0}">
+									<p:autoComplete required="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.updateBean.nationality}" disabled="#{!legacyTradeTestRegistrationUI.companylearnerstradetest.learner.updateBean.nationality}"
+										value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.nationality}" style="width:100%" id="nationalityWithExclude" requiredMessage="#{lang['nationality.required']}" completeMethod="#{autoCompleteUI.completeNationalityWithNonSelectable}" var="rv" itemLabel="#{rv.description}"
+										itemValue="#{rv}" forceSelection="true" converter="NationalityConvertor" dropdown="true" minQueryLength="3" maxResults="10">
+										<p:column headerText="#{lang['nationality']}" style="white-space: nowrap">#{rv.description}</p:column>
+										<p:ajax event="itemSelect" />
+									</p:autoComplete>
+									<p:outputLabel value="#{lang['nationality']}" for="nationalityWithExclude" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield">
+									<p:autoComplete required="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.updateBean.gender}" disabled="#{!legacyTradeTestRegistrationUI.companylearnerstradetest.learner.updateBean.gender}" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.gender}" id="gender"
+										style="width:100%" completeMethod="#{autoCompleteUI.completeGender}" var="rv" itemLabel="#{rv.genderName}" itemValue="#{rv}" forceSelection="true" converter="GenderConvertor" dropdown="true" minQueryLength="3" maxResults="10" requiredMessage="#{lang['provide.gender']}">
+										<p:column headerText="Gender" style="white-space: nowrap">#{rv.genderName}</p:column>
+										<p:ajax event="itemSelect" />
+									</p:autoComplete>
+									<p:outputLabel value="#{lang['gender']}" for="gender" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield">
+									<p:autoComplete required="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.updateBean.equity}" disabled="#{!legacyTradeTestRegistrationUI.companylearnerstradetest.learner.updateBean.equity}" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.equity}" id="equity"
+										style="width:100%" completeMethod="#{autoCompleteUI.completeEquityExcludeOtherAndUnkown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="EquityConvertor" dropdown="true" minQueryLength="3" maxResults="10"
+										requiredMessage="#{lang['provide.equity']}">
+										<p:column headerText="equity" style="white-space: nowrap">#{rv.description}</p:column>
+										<p:ajax event="itemSelect" />
+									</p:autoComplete>
+									<p:outputLabel value="#{lang['equity']}" for="equity" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield">
+									<p:calendar required="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.updateBean.dateOfBirth}" disabled="#{!legacyTradeTestRegistrationUI.companylearnerstradetest.learner.updateBean.dateOfBirth}" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.dateOfBirth}"
+										id="dob" showOn="button" requiredMessage="#{lang['select.date.of.birth']}" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" inputStyle="width:90%">
+										<p:ajax event="dateSelect"></p:ajax>
+									</p:calendar>
+									<p:outputLabel value="#{lang['date.of.birth']}" for="dob" style="width:100%" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield">
+									<p:calendar required="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.updateBean.lastSchoolYear}" disabled="#{!legacyTradeTestRegistrationUI.companylearnerstradetest.learner.updateBean.lastSchoolYear}" id="monthlastSchoolYear"
+										value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.lastSchoolYear}" maxdate="#{legacyTradeTestRegistrationUI.now}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" inputStyle="width:90%" requiredMessage="Select Last School Year Date">
+										<p:ajax event="dateSelect"></p:ajax>
+									</p:calendar>
+									<p:outputLabel value="Last School Year Date" for="monthlastSchoolYear" style="width:100%" />
+								</h:panelGroup>
+
+								<h:panelGroup styleClass="md-inputfield">
+									<p:autoComplete required="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.updateBean.previousSchools}" disabled="#{!legacyTradeTestRegistrationUI.companylearnerstradetest.learner.updateBean.previousSchools}" id="lastSchoolAttended"
+										value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.previousSchools}" completeMethod="#{autoCompleteUI.completePreviousSchools}" var="rv" itemLabel="#{rv.officialInstitutionName}" itemValue="#{rv}" forceSelection="true" converter="PreviousSchoolsConvertor" dropdown="true"
+										minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" resultsMessage="Select Last School Attended">
+										<p:column headerText="EMIS Code" style="white-space: nowrap">#{rv.natEmis}</p:column>
+										<p:column headerText="Official Institution Name" style="white-space: nowrap">#{rv.officialInstitutionName}</p:column>
+										<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.townCity}</p:column>
+										<p:column headerText="#{lang['province']}" style="white-space: nowrap">#{rv.province}</p:column>
+										<p:ajax event="itemSelect" />
+									</p:autoComplete>
+									<p:outputLabel value="Last School Attended" for="lastSchoolAttended" styleClass="gray" />
+								</h:panelGroup>
+							</p:panelGrid>
+							<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+								<p:fieldset legend="#{lang['residentialAddress']}">
+									<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank" id="compAddrPcode">
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText required="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.residentialAddress.addressUpdateInfoBean.lineOne}" disabled="#{!legacyTradeTestRegistrationUI.companylearnerstradetest.learner.residentialAddress.addressUpdateInfoBean.lineOne}" id="addr1"
+												value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.residentialAddress.addressLine1}" style="opacity: 1 !important; color: black; width:100%" requiredMessage="#{lang['enter.residential.address']}">
+												<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['residentialAddress.lineone.length.error']}" />
+												<p:ajax />
+											</p:inputText>
+											<p:outputLabel value="#{lang['address.line.1']}" for="addr1" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText required="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.residentialAddress.addressUpdateInfoBean.lineTwo}" disabled="#{!legacyTradeTestRegistrationUI.companylearnerstradetest.learner.residentialAddress.addressUpdateInfoBean.lineTwo}" id="addr2"
+												style="opacity: 1 !important; color: black; width:100%" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.residentialAddress.addressLine2}" requiredMessage="Please enter address line 2">
+												<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['residentialAddress.linetwo.length.error']}" />
+												<p:ajax />
+											</p:inputText>
+											<p:outputLabel value="#{lang['address.line.2']}" for="addr2" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText required="false" disabled="#{!legacyTradeTestRegistrationUI.companylearnerstradetest.learner.residentialAddress.addressUpdateInfoBean.lineThree}" id="addr3" style="opacity: 1 !important; color: black; width:100%"
+												value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.residentialAddress.addressLine3}">
+												<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['residentialAddress.linethree.length.error']}" />
+												<p:ajax />
+											</p:inputText>
+											<p:outputLabel value="#{lang['address.line.3']}" for="addr3" />
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:autoComplete required="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.residentialAddress.addressUpdateInfoBean.town}" disabled="#{!legacyTradeTestRegistrationUI.companylearnerstradetest.learner.residentialAddress.addressUpdateInfoBean.town}" id="town"
+												value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.residentialAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3"
+												maxResults="10" inputstyle="opacity: 1 !important; color: black; width: 100%" style="opacity: 1 !important; color: black; width: 100%" requiredMessage="#{lang['please.select.a.town']}">
+												<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+												<p:ajax event="itemSelect" />
+											</p:autoComplete>
+											<p:outputLabel value="#{lang['town']}" for="town" />
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText required="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.residentialAddress.addressUpdateInfoBean.postCode}" disabled="#{!legacyTradeTestRegistrationUI.companylearnerstradetest.learner.residentialAddress.addressUpdateInfoBean.postCode}" id="pcode"
+												style="opacity: 1 !important; color: black; width:100%" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.residentialAddress.postcode}" requiredMessage="#{lang['provide.postcode']}">
+												<o:validator validatorId="javax.faces.Length" minimum="0" maximum="4" message="#{lang['residentialAddress.code.length.error']}" />
+												<p:ajax />
+											</p:inputText>
+											<p:outputLabel value="#{lang['post.code']}" for="pcode" />
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:autoComplete required="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.residentialAddress.addressUpdateInfoBean.muncipality}" disabled="#{!legacyTradeTestRegistrationUI.companylearnerstradetest.learner.residentialAddress.addressUpdateInfoBean.muncipality}"
+												id="MunicipalityID" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.residentialAddress.municipality}" completeMethod="#{sdfDetailUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityDesc}" itemValue="#{rv}" forceSelection="true"
+												converter="MunicipalityConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputstyle="opacity: 1 !important; color: black; width: 100%" style="opacity: 1 !important; color: black; width: 100%" requiredMessage="#{lang['select.municipality']}">
+												<p:column headerText="#{lang['province']}" style="white-space: nowrap">#{rv.province.provinceDesc}</p:column>
+												<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">#{rv.municipalityDesc}</p:column>
+												<p:ajax event="itemSelect" update="resProvincePG"></p:ajax>
+											</p:autoComplete>
+											<p:outputLabel value="#{lang['municipality']}" for="MunicipalityID" />
+										</h:panelGroup>
+
+										<p:outputPanel id="resProvincePG">
+											<h:panelGroup rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.residentialAddress.municipality ne null}" styleClass="md-inputfield">
+												<p:inputText disabled="true" id="resProvince" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.residentialAddress.municipality.province.provinceDesc}" style="opacity: 1 !important; color: black; width:100%">
+													<p:ajax />
+												</p:inputText>
+												<p:outputLabel value="#{lang['province']}" for="resProvince" />
+											</h:panelGroup>
+										</p:outputPanel>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:autoComplete required="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.residentialAddress.addressUpdateInfoBean.statsSaAreaCode}" disabled="#{!legacyTradeTestRegistrationUI.companylearnerstradetest.learner.residentialAddress.addressUpdateInfoBean.statsSaAreaCode}"
+												id="statsSaAreaCode" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.residentialAddress.statsSaAreaCode}" completeMethod="#{autoCompleteUI.completeSTATSSAAreaCode}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true"
+												converter="STATSSAAreaCodeConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputstyle="opacity: 1 !important; color: black; width: 100%" style="opacity: 1 !important; color: black; width: 100%" requiredMessage="Select STATS SA Area Code">
+												<p:ajax event="itemSelect" />
+												<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+												<p:column headerText="#{lang['description']}" style="white-space: nowrap">#{rv.description}</p:column>
+											</p:autoComplete>
+											<p:outputLabel value="STATS SA Area Code" for="statsSaAreaCode" />
+										</h:panelGroup>
+									</p:panelGrid>
+								</p:fieldset>
+
+								<p:fieldset legend="#{lang['postalAddress']}">
+									<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank" id="postalAddress">
+										<h:panelGroup styleClass="md-inputfield" rendered="#{!legacyTradeTestRegistrationUI.copyAddress}">
+											<p:inputText required="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.postalAddress.addressUpdateInfoBean.lineOne}" disabled="#{!legacyTradeTestRegistrationUI.companylearnerstradetest.learner.postalAddress.addressUpdateInfoBean.lineOne}" id="addr1Postal"
+												value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.postalAddress.addressLine1}" style="opacity: 1 !important; color: black; width:100%" requiredMessage="#{lang['enter.residential.address']}">
+												<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['residentialAddress.lineone.length.error']}" />
+												<p:ajax />
+											</p:inputText>
+											<p:outputLabel value="#{lang['address.line.1']}" for="addr1Postal" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield" rendered="#{!legacyTradeTestRegistrationUI.copyAddress}">
+											<p:inputText required="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.postalAddress.addressUpdateInfoBean.lineTwo}" disabled="#{!legacyTradeTestRegistrationUI.companylearnerstradetest.learner.postalAddress.addressUpdateInfoBean.lineTwo}" id="addr2Postal"
+												style="opacity: 1 !important; color: black; width:100%" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.postalAddress.addressLine2}" requiredMessage="Please enter address line 2">
+												<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['residentialAddress.linetwo.length.error']}" />
+												<p:ajax />
+											</p:inputText>
+											<p:outputLabel value="#{lang['address.line.2']}" for="addr2Postal" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield" rendered="#{!legacyTradeTestRegistrationUI.copyAddress}">
+											<p:inputText required="false" disabled="#{!legacyTradeTestRegistrationUI.companylearnerstradetest.learner.postalAddress.addressUpdateInfoBean.lineThree}" id="addr3Postal" style="opacity: 1 !important; color: black; width:100%"
+												value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.postalAddress.addressLine3}">
+												<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['residentialAddress.linethree.length.error']}" />
+												<p:ajax />
+											</p:inputText>
+											<p:outputLabel value="#{lang['address.line.3']}" for="addr3Postal" />
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield" rendered="#{!legacyTradeTestRegistrationUI.copyAddress}">
+											<p:autoComplete required="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.postalAddress.addressUpdateInfoBean.town}" disabled="#{!legacyTradeTestRegistrationUI.companylearnerstradetest.learner.postalAddress.addressUpdateInfoBean.town}" id="townPostal"
+												value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.postalAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3"
+												maxResults="10" inputstyle="opacity: 1 !important; color: black; width: 100%" style="opacity: 1 !important; color: black; width: 100%" requiredMessage="#{lang['please.select.a.town']}">
+												<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+												<p:ajax event="itemSelect" />
+											</p:autoComplete>
+											<p:outputLabel value="#{lang['town']}" for="townPostal" />
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield" rendered="#{!legacyTradeTestRegistrationUI.copyAddress}">
+											<p:inputText required="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.postalAddress.addressUpdateInfoBean.postCode}" disabled="#{!legacyTradeTestRegistrationUI.companylearnerstradetest.learner.postalAddress.addressUpdateInfoBean.postCode}" id="pcodePostal"
+												style="opacity: 1 !important; color: black; width:100%" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.postalAddress.postcode}" requiredMessage="#{lang['provide.postcode']}">
+												<o:validator validatorId="javax.faces.Length" minimum="0" maximum="4" message="#{lang['residentialAddress.code.length.error']}" />
+												<p:ajax />
+											</p:inputText>
+											<p:outputLabel value="#{lang['post.code']}" for="pcodePostal" />
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield" rendered="#{!legacyTradeTestRegistrationUI.copyAddress}">
+											<p:autoComplete required="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.postalAddress.addressUpdateInfoBean.muncipality}" disabled="#{!legacyTradeTestRegistrationUI.companylearnerstradetest.learner.postalAddress.addressUpdateInfoBean.muncipality}" id="MunicipalityIDPostal"
+												value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.postalAddress.municipality}" completeMethod="#{sdfDetailUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityDesc}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true"
+												minQueryLength="3" maxResults="10" inputstyle="opacity: 1 !important; color: black; width: 100%" style="opacity: 1 !important; color: black; width: 100%" requiredMessage="#{lang['select.municipality']}">
+												<p:column headerText="#{lang['province']}" style="white-space: nowrap">#{rv.province.provinceDesc}</p:column>
+												<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">#{rv.municipalityDesc}</p:column>
+												<p:ajax event="itemSelect" update="resProvincePGPostal"></p:ajax>
+											</p:autoComplete>
+											<p:outputLabel value="#{lang['municipality']}" for="MunicipalityIDPostal" />
+										</h:panelGroup>
+
+										<p:outputPanel id="resProvincePGPostal" rendered="#{!legacyTradeTestRegistrationUI.copyAddress}">
+											<h:panelGroup rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.postalAddress.municipality ne null}" styleClass="md-inputfield">
+												<p:inputText disabled="true" id="resProvincePostal" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.postalAddress.municipality.province.provinceDesc}" style="opacity: 1 !important; color: black; width:100%">
+													<p:ajax />
+												</p:inputText>
+												<p:outputLabel value="#{lang['province']}" for="resProvincePostal" />
+											</h:panelGroup>
+										</p:outputPanel>
+									</p:panelGrid>
+									<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank">
+										<c:if test="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.postalAddress.id ne null}">
+											<div class="EmptyBox10" />
+											<div class="EmptyBox10" />
+										</c:if>
+										<c:if test="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.postalAddress.id eq null}">
+											<h:panelGroup>
+												<div>
+													<p:outputLabel value="#{lang['same.as.my.address']}" styleClass="FontLight" />
+												</div>
+												<div>
+													<p:selectBooleanCheckbox value="#{legacyTradeTestRegistrationUI.copyAddress}">
+														<p:ajax update="postalAddress" listener="#{legacyTradeTestRegistrationUI.clearPostal}" />
+													</p:selectBooleanCheckbox>
+												</div>
+											</h:panelGroup>
+										</c:if>
+									</p:panelGrid>
+								</p:fieldset>
+							</p:panelGrid>
+							<p:commandButton icon="fa fa-database" value="Update Missing Information" process="learnerInfoGrid" action="#{legacyTradeTestRegistrationUI.updatelearnerInformation}" update=":learnersInsForm:learnerInfoGrid" rendered="#{sessionUI.task.firstInProcess and false}" />
+						</p:fieldset>
+						<div class="EmptyBox5" />
+						<p:fieldset id="userInfoLanguageFS" legend="Learner Languages">
+							<p:outputPanel id="languageEntryOP">
+								<p:fieldset legend="Link/Assign Languages" rendered="#{legacyTradeTestRegistrationUI.alterUserLanguages}">
+									<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+										<h:panelGroup styleClass="md-inputfield">
+											<p:autoComplete value="#{legacyTradeTestRegistrationUI.selectedUserLanguage.language}" completeMethod="#{autoCompleteUI.completeLanguage}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="LanguageConvertor" dropdown="true" minQueryLength="3"
+												maxResults="10" inputstyle="opacity: 1 !important; color: black; width: 95%" style="opacity: 1 !important; color: black; width: 95%">
+												<p:column headerText="#{lang['language']}" style="white-space: nowrap">#{rv.description}</p:column>
+												<p:ajax event="itemSelect" />
+											</p:autoComplete>
+											<p:outputLabel value="#{lang['language']}" />
+										</h:panelGroup>
+									</p:panelGrid>
+									<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+										<h:panelGroup rendered="true">
+											<div>
+												<p:outputLabel value="Speak?" style="width:95%; color:#977949" />
+											</div>
+											<div>
+												<p:selectOneMenu value="#{legacyTradeTestRegistrationUI.selectedUserLanguage.speark}" style="width:95%" converter="YesNoLookupConvertor">
+													<p:ajax event="itemSelect" />
+													<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+													<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+												</p:selectOneMenu>
+											</div>
+										</h:panelGroup>
+
+										<h:panelGroup>
+											<div>
+												<p:outputLabel value="Read?" style="width:95%; color:#977949" />
+											</div>
+											<div>
+												<p:selectOneMenu value="#{legacyTradeTestRegistrationUI.selectedUserLanguage.read}" style="width:95%" converter="YesNoLookupConvertor">
+													<p:ajax event="itemSelect" />
+													<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+													<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+												</p:selectOneMenu>
+											</div>
+										</h:panelGroup>
+
+										<h:panelGroup>
+											<div>
+												<p:outputLabel value="Write?" style="width:95%; color:#977949" />
+											</div>
+											<div>
+												<p:selectOneMenu value="#{legacyTradeTestRegistrationUI.selectedUserLanguage.write}" style="width:95%" converter="YesNoLookupConvertor">
+													<p:ajax event="itemSelect" />
+													<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+													<f:selectItems value="#{selectItemsUI.selectItemsYesNoLookup}" var="yesNo" itemLabel="#{yesNo.yesNoName}" itemValue="#{yesNo}" />
+												</p:selectOneMenu>
+											</div>
+										</h:panelGroup>
+
+										<h:panelGroup>
+											<div>
+												<p:outputLabel value="Home Language?" styleClass="FontLight" />
+											</div>
+											<div>
+												<p:selectBooleanCheckbox value="#{legacyTradeTestRegistrationUI.selectedUserLanguage.homeLanguage}" />
+											</div>
+										</h:panelGroup>
+
+									</p:panelGrid>
+									<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+										<p:commandButton action="#{legacyTradeTestRegistrationUI.addUserLanguageToList}" process="languageEntryOP" value="Link/Assign Language" icon="fa fa-plus" update="languageEntryOP" />
+									</p:panelGrid>
+								</p:fieldset>
+
+								<div class="EmptyBox5" />
+
+								<p:dataTable var="rvl" value="#{legacyTradeTestRegistrationUI.userLanguageList}" id="languageList" rowKey="#{rvl.id}" paginator="true" rows="5" paginatorPosition="bottom"
+									paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10" reflow="true">
+
+									<f:facet name="header">Learner Languages</f:facet>
+
+									<p:column headerText="#{lang['language']}">
+										<h:outputText value="#{rvl.language.description}" />
+									</p:column>
+
+									<p:column headerText="#{lang['speak']}">
+										<h:outputText value="#{rvl.speark.yesNoName}" />
+									</p:column>
+
+									<p:column headerText="#{lang['read']}">
+										<h:outputText value="#{rvl.read.yesNoName}" />
+									</p:column>
+
+									<p:column headerText="#{lang['write']}">
+										<h:outputText value="#{rvl.write.yesNoName}" />
+									</p:column>
+
+									<p:column headerText="#{lang['home.language']}">
+										<p:selectBooleanCheckbox disabled="true" value="#{rvl.homeLanguage}" />
+									</p:column>
+
+									<p:column headerText="Edit" exportable="false" width="7%" rendered="#{legacyTradeTestRegistrationUI.alterUserLanguages}">
+										<p:commandButton process="@this" icon="fa fa-trash-o" title="Remove" update=":learnersInsForm:languageEntryOP" action="#{legacyTradeTestRegistrationUI.removeUserLanguage}">
+											<f:setPropertyActionListener value="#{rvl}" target="#{legacyTradeTestRegistrationUI.selectedUserLanguage}" />
+										</p:commandButton>
+									</p:column>
+								</p:dataTable>
+							</p:outputPanel>
+						</p:fieldset>
+
+
+						<div class="EmptyBox5" />
+						<p:fieldset id="userInfodisbalityFS" legend="User Disabilities">
+							<p:outputPanel id="disabilityEntryOP">
+								<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+									<h:panelGroup>
+										<div>
+											<p:outputLabel value="Does The User Have a Disability?" for="disabilitySelection" style="width:95%; color:#977949" />
+										</div>
+										<div>
+											<p:selectOneMenu required="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.updateBean.disability}" disabled="#{!legacyTradeTestRegistrationUI.companylearnerstradetest.learner.updateBean.disability}" id="disabilitySelection"
+												value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.disability}" style="width:95%" requiredMessage="Provide if the user has a disability">
+												<p:ajax event="itemSelect" update="disabilityEntryOP" listener="#{legacyTradeTestRegistrationUI.prepNewDisabilityOnSelection}" />
+												<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+												<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+											</p:selectOneMenu>
+										</div>
+									</h:panelGroup>
+								</p:panelGrid>
+								<c:if test="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learner.disability eq YesNoEnum.Yes}">
+									<c:if test="#{legacyTradeTestRegistrationUI.alterUserDisability}">
+										<div class="EmptyBox5" />
+										<p:fieldset legend="Link/Assign Disability">
+											<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+												<h:panelGroup styleClass="md-inputfield">
+													<p:autoComplete value="#{legacyTradeTestRegistrationUI.selectedUserDisability.disabilityStatus}" completeMethod="#{autoCompleteUI.completeDisabilityCanSelect}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="DisabilityStatusConvertor"
+														dropdown="true" minQueryLength="3" maxResults="10" inputstyle="opacity: 1 !important; color: black; width: 95%" style="opacity: 1 !important; color: black; width: 95%">
+														<p:column headerText="Disability" style="white-space: nowrap">#{rv.description}</p:column>
+														<p:ajax event="itemSelect" update="disabilityEntryOP" />
+													</p:autoComplete>
+													<p:outputLabel value="#{lang['disability']}" />
+												</h:panelGroup>
+
+												<h:panelGroup rendered="#{legacyTradeTestRegistrationUI.selectedUserDisability.disabilityStatus ne null}">
+													<div>
+														<p:outputLabel value="#{lang['disability.rating']}" style="width:95%; color:#977949" />
+													</div>
+													<div>
+														<p:selectOneMenu value="#{legacyTradeTestRegistrationUI.selectedUserDisability.disabilityRating}" style="width:95%" converter="DisabilityRatingConvertor">
+															<p:ajax event="itemSelect" />
+															<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+															<f:selectItems value="#{legacyTradeTestRegistrationUI.selectItemsUsersDisabilityRatingNew}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+														</p:selectOneMenu>
+													</div>
+												</h:panelGroup>
+												<p:commandButton action="#{legacyTradeTestRegistrationUI.addDisabilityToList}" process="disabilityEntryOP" value="Link/Assign Disability" icon="fa fa-plus" update=":learnersInsForm:disabilityEntryOP" />
+											</p:panelGrid>
+										</p:fieldset>
+									</c:if>
+
+									<div class="EmptyBox5" />
+
+									<p:dataTable var="rvd" value="#{legacyTradeTestRegistrationUI.userDisabilityList}" id="disabilityList" rowKey="#{rvd.id}" paginator="true" rows="5" paginatorPosition="bottom"
+										paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10" reflow="true">
+
+										<f:facet name="header">User Disabilities</f:facet>
+
+										<p:column headerText="#{lang['disability']}">
+											<h:outputText value="#{rvd.disabilityStatus.description}" />
+										</p:column>
+
+										<p:column headerText="#{lang['disability.rating']}">
+											<h:outputText value="#{rvd.disabilityRating.description}" />
+										</p:column>
+
+										<p:column headerText="Edit" exportable="false" width="7%" rendered="#{legacyTradeTestRegistrationUI.alterUserDisability}">
+											<p:commandButton process="@this" icon="fa fa-trash-o" title="Remove" update=":learnersInsForm:disabilityEntryOP" action="#{legacyTradeTestRegistrationUI.removeDisability}">
+												<f:setPropertyActionListener value="#{rvd}" target="#{legacyTradeTestRegistrationUI.selectedUserDisability}" />
+											</p:commandButton>
+										</p:column>
+									</p:dataTable>
+								</c:if>
+							</p:outputPanel>
+						</p:fieldset>
+
+						<div class="EmptyBox5" />
+						<p:fieldset id="medicalInfoFS" legend="Medical Information">
+							<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid" id="medicalGrid">
+								<p:outputLabel value="Please indicate whether or not you suffer from any medical disorder or allergy, e.g. high / low blood pressure, epilepsy, etc." />
+								<h:panelGroup>
+									<div>
+										<p:outputLabel value="Medical disorder or allergy:" styleClass="gray" for="meddisc" />
+									</div>
+									<div>
+										<p:selectOneMenu disabled="#{!legacyTradeTestRegistrationUI.alterApplicationForm}" required="true" requiredMessage="Provide: Medical disorder or allergy" id="meddisc" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.medicalInfo}" style="width:95%">
+											<p:ajax update="medicalGrid" />
+											<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+											<f:selectItems value="#{enumUI.yesNoEnumDD}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+										</p:selectOneMenu>
+									</div>
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.medicalInfo eq YesNoEnum.Yes}">
+									<p:inputText disabled="#{!legacyTradeTestRegistrationUI.alterApplicationForm}" id="natureOfMed" required="true" requiredMessage="Provide: State The Nature" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.natureMedicalInfo}" style="width:95%">
+										<p:ajax />
+									</p:inputText>
+									<p:outputLabel value="State The Nature:" for="natureOfMed" />
+								</h:panelGroup>
+								<h:panelGroup rendered="false">
+									<div>
+										<p:outputLabel value="Please indicate if you have any disability:" styleClass="gray" for="meddiscTwo" />
+									</div>
+									<div>
+										<p:selectOneMenu disabled="#{!legacyTradeTestRegistrationUI.alterApplicationForm}" required="true" requiredMessage="Provide: Medical disorder or allergy" id="meddiscTwo" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.disability}" style="width:95%">
+											<p:ajax update="medicalGrid disabilityGridInfo" />
+											<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+											<f:selectItems value="#{enumUI.yesNoEnumDD}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+										</p:selectOneMenu>
+									</div>
+								</h:panelGroup>
+								<h:panelGroup styleClass="md-inputfield" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.disability eq YesNoEnum.Yes and false}">
+									<p:inputText rendered="false" disabled="#{!legacyTradeTestRegistrationUI.alterApplicationForm}" id="natureOfMedTwo" required="true" requiredMessage="Provide: State The Nature" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.disabilityInfo}" style="width:95%">
+										<p:ajax />
+									</p:inputText>
+									<p:outputLabel rendered="false" value="State The Nature:" for="natureOfMedTwo" />
+								</h:panelGroup>
+							</p:panelGrid>
+							<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid" id="disabilityGridInfo" rendered="false">
+								<h:panelGroup style="margin-top: 20px" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.disability eq YesNoEnum.Yes}">
+									<div>
+										<p:outputLabel value="#{lang['disability']}" for="disability3" styleClass="FontLight gray" />
+									</div>
+									<div>
+										<p:autoComplete disabled="#{!legacyTradeTestRegistrationUI.alterApplicationForm}" id="disability3" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.disabilityStatus}" style="width:95%" completeMethod="#{autoCompleteUI.completeDisabilityStatusExcludeNone}" var="rv"
+											itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="DisabilityStatusConvertor" dropdown="true" minQueryLength="3" maxResults="100" required="true" requiredMessage="Please Select Disability">
+											<p:column headerText="Disability" style="white-space: nowrap">#{rv.description}</p:column>
+											<p:ajax event="itemSelect" update="disabilityGridInfo" listener="#{legacyTradeTestRegistrationUI.clearDisabilityRating}" />
+										</p:autoComplete>
+									</div>
+								</h:panelGroup>
+								<h:panelGroup style="margin-top: 20px" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.disability eq YesNoEnum.Yes}">
+									<h:panelGroup rendered="#{legacyTradeTestRegistrationUI.selectItemsUsersDisabilityRating.size() > 0}" style="margin-top: 0px">
+										<p:outputLabel value="#{lang['disability.rating']}" styleClass="FontLight gray" for="diasbiltyRating3" />
+										<br />
+										<p:selectOneMenu disabled="#{!legacyTradeTestRegistrationUI.alterApplicationForm}" id="diasbiltyRating3" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.disabilityRating}" converter="DisabilityRatingConvertor" style="width:95%" required="true"
+											requiredMessage="Please Select Disability Rating">
+											<p:ajax />
+											<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+											<f:selectItems value="#{legacyTradeTestRegistrationUI.selectItemsUsersDisabilityRating}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+										</p:selectOneMenu>
+									</h:panelGroup>
+								</h:panelGroup>
+							</p:panelGrid>
+						</p:fieldset>
+					</div>
+				</div>
+
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+						<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+							<h2>Employer Information</h2>
+						</p:panelGrid>
+
+						<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid" id="employerInfoGridInfo">
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="Employment Status:" styleClass="gray" for="meddisc" />
+								</div>
+								<div>
+									<p:selectOneMenu disabled="#{!legacyTradeTestRegistrationUI.alterApplicationForm or !legacyTradeTestRegistrationUI.companylearnerstradetest.alterEmployerInfo}" required="true" requiredMessage="Provide: Occupation" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.employmentStatus}"
+										style="width:95%">
+										<p:ajax update="employerInfoGridInfo employerInformationOutputPanel" />
+										<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+										<f:selectItems value="#{enumUI.employmentStatusFilteredEnumDD}" var="rv" itemValue="#{rv}" />
+									</p:selectOneMenu>
+								</div>
+							</h:panelGroup>
+							<h:panelGroup rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.employmentStatus eq EmploymentStatusEnum.Employed}">
+								<div>
+									<p:outputLabel value="Employer On NSDMS:" styleClass="gray" for="empOnFileSel" />
+								</div>
+								<div>
+									<p:selectOneMenu disabled="#{!legacyTradeTestRegistrationUI.alterApplicationForm or !legacyTradeTestRegistrationUI.companylearnerstradetest.alterEmployerInfo}" required="true" requiredMessage="Provide: If Employer On NSDMS" id="empOnFileSel"
+										value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.employerOnNsdms}" style="width:95%">
+										<p:ajax update="employerInformationOutputPanel" event="itemSelect" listener="#{legacyTradeTestRegistrationUI.prepEmployedUser}" />
+										<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+										<f:selectItems value="#{enumUI.yesNoEnumDD}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+									</p:selectOneMenu>
+								</div>
+							</h:panelGroup>
+							<h:panelGroup rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.employmentStatus eq EmploymentStatusEnum.Employed and false}">
+								<div>
+									<p:outputLabel value="Current Occupation:" styleClass="gray" for="currentOccuputation" />
+								</div>
+								<div>
+									<p:selectOneMenu disabled="#{!legacyTradeTestRegistrationUI.alterApplicationForm}" id="currentOccuputation" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.occupationCategory}" converter="OccupationCategoryConvertor"
+										label="(#{legacyTradeTestRegistrationUI.companylearnerstradetest.occupationCategory.code}) #{legacyTradeTestRegistrationUI.companylearnerstradetest.occupationCategory.description}" style="width:75%" requiredMessage="Provide Occupation Category" required="true">
+										<p:ajax update="employerInfoGrid" />
+										<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+										<f:selectItems value="#{selectItemsUI.selectItemsOccupationCategory}" var="il" itemLabel="#{il.description}" />
+									</p:selectOneMenu>
+								</div>
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.employmentStatus eq EmploymentStatusEnum.Employed and legacyTradeTestRegistrationUI.companylearnerstradetest.occupationCategory ne null and false}">
+								<p:inputText id="occCode" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.occupationCategory.code}" style="width:95%" required="true" disabled="true" />
+								<p:outputLabel value="Occupation Code" for="occCode" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.employmentStatus eq EmploymentStatusEnum.Employed}">
+								<p:inputText id="spec" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.specialisation}" style="width:95%" required="true" disabled="#{!legacyTradeTestRegistrationUI.alterApplicationForm}">
+									<p:ajax />
+								</p:inputText>
+								<p:outputLabel value="Specialisation" for="spec" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.employmentStatus eq EmploymentStatusEnum.Employed and false}">
+								<p:inputText id="nameEmpAddasd" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.currentEmployerAddress}" style="width:95%" required="true" disabled="#{!legacyTradeTestRegistrationUI.alterApplicationForm}" />
+								<p:outputLabel value="Name and address of current employer" for="nameEmpAddasd" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield" rendered="false">
+								<p:inputText id="nameEmpAddssss" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.currentOcc}" style="width:95%" required="true" disabled="#{!legacyTradeTestRegistrationUI.alterApplicationForm}" />
+								<p:outputLabel value="Current Occupation:" for="nameEmpAddssss" />
+							</h:panelGroup>
+						</p:panelGrid>
+
+						<p:outputPanel id="employerInformationOutputPanel">
+							<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid"
+								rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.employerOnNsdms eq YesNoEnum.Yes and legacyTradeTestRegistrationUI.alterApplicationForm and legacyTradeTestRegistrationUI.companylearnerstradetest.alterEmployerInfo}">
+								<h:panelGroup styleClass="md-inputfield">
+									<p:autoComplete id="company2" style="width:95%" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.companyEmployer}" completeMethod="#{autoCompleteUI.completeCompany}" var="rv" itemLabel="#{rv.companyNameDisplay}" itemValue="#{rv}" forceSelection="true"
+										converter="CompanyConvertor" dropdown="true" minQueryLength="3" maxResults="10" required="true">
+										<p:column headerText="#{lang['companyName']}" style="white-space: nowrap">#{rv.companyName}</p:column>
+										<p:column headerText="#{lang['entity.id']}" style="white-space: nowrap">#{rv.levyNumber}</p:column>
+										<p:ajax event="itemSelect" update="employerInformationOutputPanel" listener="#{legacyTradeTestRegistrationUI.searchEmployer}" />
+									</p:autoComplete>
+									<p:outputLabel value="Search Employer On NSDMS" for="company2" />
+								</h:panelGroup>
+							</p:panelGrid>
+
+							<div class="EmptyBox10" />
+
+							<p:outputPanel id="empInfoPanel" rendered="#{legacyTradeTestRegistrationUI.displayEmployerInfo}">
+								<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid" id="empInsGrid">
+									<c:if test="false">
+										<!-- Employer Info: on NSDMS -->
+									</c:if>
+									<h:panelGroup styleClass="md-inputfield" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.companyEmployer ne null}">
+										<p:inputText value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.companyEmployer.companyName}" style="width:95%" required="true" disabled="true" />
+										<p:outputLabel value="#{lang['company.name']}" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.companyEmployer ne null}">
+										<p:inputText value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.companyEmployer.email}" style="width:95%" required="true" requiredMessage="#{lang['provide.email']}" disabled="true" />
+										<p:outputLabel value="#{lang['email']}" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.companyEmployer ne null}">
+										<p:inputText value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.companyEmployer.tradingName}" style="width:95%" required="true" disabled="true" />
+										<p:outputLabel value="#{lang['trading.name']}" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.companyEmployer ne null}">
+										<p:inputMask value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.companyEmployer.telNumber}" mask="#{legacyTradeTestRegistrationUI.TELPHONE_FORMAT}" style="width:95%" required="true" disabled="true" />
+										<p:outputLabel value="#{lang['tel.number']}" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.companyEmployer ne null}">
+										<p:inputText value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.companyEmployer.faxNumber}" style="width:95%" disabled="true" />
+										<p:outputLabel value="#{lang['fax.number']}" />
+									</h:panelGroup>
+									<p:spacer rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.companyEmployer ne null}" />
+									<p:fieldset legend="#{lang['residentialAddress']}" style="margin-top: 20px" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.companyEmployer ne null}">
+										<p:panelGrid columns="1" style="width : 95%" styleClass="ui-panelgrid-blank">
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText disabled="true" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.companyEmployer.residentialAddress.addressLine1}" style="opacity: 1 !important; color: black; width:95%" required="true" requiredMessage="#{lang['enter.residential.address']}">
+													<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['residentialAddress.lineone.length.error']}" />
+												</p:inputText>
+												<p:outputLabel value="#{lang['address.line.1']}" />
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText disabled="true" required="true" requiredMessage="Provide Address Line 2 Information" style="opacity: 1 !important; color: black; width:95%" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.companyEmployer.residentialAddress.addressLine2}">
+													<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['residentialAddress.linetwo.length.error']}" />
+												</p:inputText>
+												<p:outputLabel value="#{lang['address.line.2']}" />
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:95%" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.companyEmployer.residentialAddress.addressLine3}">
+													<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['residentialAddress.linethree.length.error']}" />
+												</p:inputText>
+												<p:outputLabel value="#{lang['address.line.3']}" for="addr3" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<div>
+													<h:outputLabel value="#{lang['town']}" />
+												</div>
+												<div>
+													<p:autoComplete disabled="true" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.companyEmployer.residentialAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor"
+														dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true" requiredMessage="#{lang['please.select.a.town']}">
+														<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+													</p:autoComplete>
+												</div>
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:95%" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.companyEmployer.residentialAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}">
+													<o:validator validatorId="javax.faces.Length" minimum="0" maximum="4" message="#{lang['residentialAddress.code.length.error']}" />
+												</p:inputText>
+												<p:outputLabel value="#{lang['post.code']}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<div>
+													<h:outputLabel value="#{lang['municipality']}" />
+												</div>
+												<div>
+													<p:autoComplete disabled="true" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.companyEmployer.residentialAddress.municipality}" completeMethod="#{sdfDetailUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityDesc}" itemValue="#{rv}" forceSelection="true"
+														converter="MunicipalityConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputstyle="opacity: 1 !important; color: black; width: 95%" style="opacity: 1 !important; color: black; width: 95%" required="true" requiredMessage="#{lang['select.municipality']}">
+														<p:column headerText="#{lang['province']}" style="white-space: nowrap">#{rv.province.provinceDesc}</p:column>
+														<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">#{rv.municipalityDesc}</p:column>
+													</p:autoComplete>
+												</div>
+											</h:panelGroup>
+											<h:panelGroup rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.companyEmployer.residentialAddress.municipality ne null}" styleClass="md-inputfield">
+												<p:inputText disabled="true" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.companyEmployer.residentialAddress.municipality.province.provinceDesc}" style="opacity: 1 !important; color: black; width:95%" />
+												<p:outputLabel value="#{lang['province']}" />
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.companyEmployer.residentialAddress.id eq null}">
+												<div class="EmptyBox40"></div>
+											</h:panelGroup>
+										</p:panelGrid>
+									</p:fieldset>
+
+									<p:fieldset legend="#{lang['postalAddress']}" style="margin-top: 20px" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.companyEmployer ne null}">
+										<p:panelGrid columns="1" style="width : 95%" styleClass="ui-panelgrid-blank">
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText disabled="true" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.companyEmployer.postalAddress.addressLine1}" style="opacity: 1 !important; color: black; width:95%" required="true" requiredMessage="#{lang['enter.postal.address']}">
+													<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['postalAddress.lineone.length.error']}" />
+												</p:inputText>
+												<p:outputLabel value="#{lang['address.line.1']}" />
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText disabled="true" required="true" requiredMessage="Provide Address Line 2 Information" style="opacity: 1 !important; color: black; width:95%" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.companyEmployer.postalAddress.addressLine2}">
+													<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['postalAddress.linetwo.length.error']}" />
+												</p:inputText>
+												<p:outputLabel value="#{lang['address.line.2']}" />
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:95%" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.companyEmployer.postalAddress.addressLine3}">
+													<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['postalAddress.linethree.length.error']}" />
+												</p:inputText>
+												<p:outputLabel value="#{lang['address.line.3']}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<div>
+													<h:outputLabel value="#{lang['town']}" />
+												</div>
+												<div>
+													<p:autoComplete disabled="true" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.companyEmployer.postalAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="TownConvertor"
+														dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true" requiredMessage="#{lang['please.select.a.town']}">
+														<p:column headerText="#{lang['town']}" style="white-space: nowrap">
+															#{rv.description}
+														</p:column>
+													</p:autoComplete>
+												</div>
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText disabled="true" style="opacity: 1 !important; color: black; width:95%" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.companyEmployer.postalAddress.postcode}" required="true" requiredMessage="#{lang['provide.postcode']}">
+													<o:validator validatorId="javax.faces.Length" minimum="0" maximum="4" message="#{lang['postalAddress.code.length.error']}" />
+												</p:inputText>
+												<p:outputLabel value="#{lang['post.code']}" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<div>
+													<h:outputLabel value="#{lang['municipality']}" />
+												</div>
+												<div>
+													<p:autoComplete disabled="true" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.companyEmployer.postalAddress.municipality}" completeMethod="#{sdfDetailUI.completeMunicipality}" var="rv" itemLabel="#{rv.municipalityProvince}" itemValue="#{rv}" forceSelection="true"
+														converter="MunicipalityConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputstyle="opacity: 1 !important; color: black; width: 95%" style="opacity: 1 !important; color: black; width: 95%" required="true" requiredMessage="#{lang['select.municipality']}">
+														<p:column headerText="#{lang['province']}" style="white-space: nowrap">#{rv.province.provinceDesc}</p:column>
+														<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">#{rv.municipalityDesc}</p:column>
+													</p:autoComplete>
+												</div>
+											</h:panelGroup>
+											<h:panelGroup rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.companyEmployer.postalAddress.municipality ne null}" styleClass="md-inputfield">
+												<p:inputText disabled="true" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.companyEmployer.postalAddress.municipality.province.provinceDesc}" style="opacity: 1 !important; color: black; width:100%" />
+												<p:outputLabel value="#{lang['province']}" />
+											</h:panelGroup>
+											<h:panelGroup rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.companyEmployer.postalAddress.id eq null}">
+												<div>
+													<p:outputLabel value="#{lang['same.as.my.address']}" styleClass="FontLight" />
+												</div>
+												<div>
+													<p:selectBooleanCheckbox value="#{legacyTradeTestRegistrationUI.copyAddress}">
+														<p:ajax update="postalAddress" listener="#{legacyTradeTestRegistrationUI.clearPostal}" />
+													</p:selectBooleanCheckbox>
+												</div>
+											</h:panelGroup>
+										</p:panelGrid>
+									</p:fieldset>
+
+									<c:if test="false">
+										<!-- Employer Info: on NSDMS -->
+									</c:if>
+									<h:panelGroup styleClass="md-inputfield" rendered="#{legacyTradeTestRegistrationUI.companyTradeTestEmployer ne null and legacyTradeTestRegistrationUI.companylearnerstradetest.companyEmployer eq null}">
+										<p:inputText id="companyName" value="#{legacyTradeTestRegistrationUI.companyTradeTestEmployer.companyName}" style="width:95%" required="true" disabled="#{!legacyTradeTestRegistrationUI.alterApplicationForm or legacyTradeTestRegistrationUI.doneSearch eq true}">
+											<p:ajax />
+										</p:inputText>
+										<p:outputLabel value="#{lang['company.name']}" for="companyName" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield" rendered="#{legacyTradeTestRegistrationUI.companyTradeTestEmployer ne null and legacyTradeTestRegistrationUI.companylearnerstradetest.companyEmployer eq null}">
+										<p:inputText id="compemail" value="#{legacyTradeTestRegistrationUI.companyTradeTestEmployer.email}" style="width:95%" required="true" requiredMessage="#{lang['provide.email']}" disabled="#{!legacyTradeTestRegistrationUI.alterApplicationForm or legacyTradeTestRegistrationUI.doneSearch eq true}">
+											<p:ajax />
+										</p:inputText>
+										<p:outputLabel value="#{lang['email']}" for="compemail" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield" rendered="#{legacyTradeTestRegistrationUI.companyTradeTestEmployer ne null and legacyTradeTestRegistrationUI.companylearnerstradetest.companyEmployer eq null}">
+										<p:inputText id="tradingName" value="#{legacyTradeTestRegistrationUI.companyTradeTestEmployer.tradingName}" style="width:95%" required="true" disabled="#{!legacyTradeTestRegistrationUI.alterApplicationForm or legacyTradeTestRegistrationUI.doneSearch eq true}">
+											<p:ajax />
+										</p:inputText>
+										<p:outputLabel value="#{lang['trading.name']}" for="tradingName" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield" rendered="#{legacyTradeTestRegistrationUI.companyTradeTestEmployer ne null and legacyTradeTestRegistrationUI.companylearnerstradetest.companyEmployer eq null}">
+										<p:inputMask id="telNumber1" value="#{legacyTradeTestRegistrationUI.companyTradeTestEmployer.telNumber}" mask="#{legacyTradeTestRegistrationUI.TELPHONE_FORMAT}" style="width:95%" required="true"
+											disabled="#{!legacyTradeTestRegistrationUI.alterApplicationForm or legacyTradeTestRegistrationUI.doneSearch eq true}">
+											<p:ajax />
+										</p:inputMask>
+										<p:outputLabel value="#{lang['tel.number']}" for="telNumber1" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield" rendered="#{legacyTradeTestRegistrationUI.companyTradeTestEmployer ne null and legacyTradeTestRegistrationUI.companylearnerstradetest.companyEmployer eq null}">
+										<p:inputText id="faxNumber1" value="#{legacyTradeTestRegistrationUI.companyTradeTestEmployer.faxNumber}" style="width:95%" disabled="#{!legacyTradeTestRegistrationUI.alterApplicationForm or legacyTradeTestRegistrationUI.doneSearch eq true}">
+											<p:ajax />
+										</p:inputText>
+										<p:outputLabel value="#{lang['fax.number']}" for="faxNumber1" />
+									</h:panelGroup>
+
+									<div class="EmptyBox10" rendered="#{legacyTradeTestRegistrationUI.companyTradeTestEmployer ne null and legacyTradeTestRegistrationUI.companylearnerstradetest.companyEmployer eq null}" />
+									<p:fieldset legend="#{lang['residentialAddress']}" style="margin-top: 20px" rendered="#{legacyTradeTestRegistrationUI.companyTradeTestEmployer ne null and legacyTradeTestRegistrationUI.companylearnerstradetest.companyEmployer eq null}">
+										<p:panelGrid columns="1" style="width : 95%" styleClass="ui-panelgrid-blank" id="addrPcodeEm">
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText disabled="#{!legacyTradeTestRegistrationUI.alterApplicationForm}" id="addr1Em" value="#{legacyTradeTestRegistrationUI.companyTradeTestEmployer.residentialAddress.addressLine1}" style="opacity: 1 !important; color: black; width:95%" required="true"
+													requiredMessage="#{lang['enter.residential.address']}">
+													<p:ajax />
+													<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['residentialAddress.lineone.length.error']}" />
+												</p:inputText>
+												<p:outputLabel value="#{lang['address.line.1']}" for="addr1Em" />
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText disabled="#{!legacyTradeTestRegistrationUI.alterApplicationForm}" id="addr2Em" required="true" requiredMessage="Provide Address Line 2 Information" style="opacity: 1 !important; color: black; width:95%"
+													value="#{legacyTradeTestRegistrationUI.companyTradeTestEmployer.residentialAddress.addressLine2}">
+													<p:ajax />
+													<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['residentialAddress.linetwo.length.error']}" />
+												</p:inputText>
+												<p:outputLabel value="#{lang['address.line.2']}" for="addr2Em" />
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText required="false" requiredMessage="Provide Address Line 3 Information" disabled="#{!legacyTradeTestRegistrationUI.alterApplicationForm}" id="addr3Em" style="opacity: 1 !important; color: black; width:95%"
+													value="#{legacyTradeTestRegistrationUI.companyTradeTestEmployer.residentialAddress.addressLine3}">
+													<p:ajax />
+													<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['residentialAddress.linethree.length.error']}" />
+												</p:inputText>
+												<p:outputLabel value="#{lang['address.line.3']}" for="addr3Em" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<div>
+													<h:outputLabel value="#{lang['town']} *" for="townEm" />
+												</div>
+												<div>
+													<p:autoComplete disabled="#{!legacyTradeTestRegistrationUI.alterApplicationForm}" id="townEm" value="#{legacyTradeTestRegistrationUI.companyTradeTestEmployer.residentialAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}"
+														forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true" requiredMessage="#{lang['please.select.a.town']}">
+														<p:ajax />
+														<p:column headerText="#{lang['town']}" style="white-space: nowrap">#{rv.description}</p:column>
+													</p:autoComplete>
+												</div>
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText disabled="#{!legacyTradeTestRegistrationUI.alterApplicationForm}" id="pcodeEm" style="opacity: 1 !important; color: black; width:95%" value="#{legacyTradeTestRegistrationUI.companyTradeTestEmployer.residentialAddress.postcode}" required="true"
+													requiredMessage="#{lang['provide.postcode']}">
+													<p:ajax />
+													<o:validator validatorId="javax.faces.Length" minimum="0" maximum="4" message="#{lang['residentialAddress.code.length.error']}" />
+												</p:inputText>
+												<p:outputLabel value="#{lang['post.code']}" for="pcodeEm" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<div>
+													<h:outputLabel value="#{lang['municipality']} *" for="MunicipalityIDEm" />
+												</div>
+												<div>
+													<p:autoComplete disabled="#{!legacyTradeTestRegistrationUI.alterApplicationForm}" id="MunicipalityIDEm" value="#{legacyTradeTestRegistrationUI.companyTradeTestEmployer.residentialAddress.municipality}" completeMethod="#{sdfDetailUI.completeMunicipality}" var="rv"
+														itemLabel="#{rv.municipalityDesc}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputstyle="opacity: 1 !important; color: black; width: 95%" style="opacity: 1 !important; color: black; width: 95%"
+														required="true" requiredMessage="#{lang['select.municipality']}">
+														<p:ajax event="itemSelect" update="resProvincePGTwoEm" />
+														<p:column headerText="#{lang['province']}" style="white-space: nowrap">#{rv.province.provinceDesc}</p:column>
+														<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">#{rv.municipalityDesc}</p:column>
+													</p:autoComplete>
+												</div>
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield" id="resProvincePGTwoEm">
+												<p:inputText disabled="true" id="resProvinceasdasdEm" value="#{legacyTradeTestRegistrationUI.companyTradeTestEmployer.residentialAddress.municipality.province.provinceDesc}" style="opacity: 1 !important; color: black; width:95%">
+												</p:inputText>
+												<p:outputLabel value="#{lang['province']}" for="resProvinceasdasdEm" />
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield" rendered="#{legacyTradeTestRegistrationUI.companyTradeTestEmployer.residentialAddress.id eq null}">
+												<div class="EmptyBox40"></div>
+											</h:panelGroup>
+										</p:panelGrid>
+									</p:fieldset>
+
+									<p:fieldset legend="#{lang['postalAddress']}" style="margin-top: 20px" rendered="#{legacyTradeTestRegistrationUI.companyTradeTestEmployer ne null and legacyTradeTestRegistrationUI.companylearnerstradetest.companyEmployer eq null}">
+										<p:panelGrid columns="1" style="width : 98%" styleClass="ui-panelgrid-blank" id="postalAddress0">
+											<h:panelGroup styleClass="md-inputfield" rendered="#{not legacyTradeTestRegistrationUI.copyAddressEmployer}">
+												<p:inputText disabled="#{!legacyTradeTestRegistrationUI.alterApplicationForm}" id="postalAddressaddr10" value="#{legacyTradeTestRegistrationUI.companyTradeTestEmployer.postalAddress.addressLine1}" style="opacity: 1 !important; color: black; width:95%" required="true"
+													requiredMessage="#{lang['enter.postal.address']}">
+													<p:ajax />
+													<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['postalAddress.lineone.length.error']}" />
+												</p:inputText>
+												<p:outputLabel value="#{lang['address.line.1']}" for="postalAddressaddr10" />
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield" rendered="#{not legacyTradeTestRegistrationUI.copyAddressEmployer}">
+												<p:inputText disabled="#{!legacyTradeTestRegistrationUI.alterApplicationForm}" id="postalAddressaddr20" required="true" requiredMessage="Provide Address Line 2 Information" style="opacity: 1 !important; color: black; width:95%"
+													value="#{legacyTradeTestRegistrationUI.companyTradeTestEmployer.postalAddress.addressLine2}">
+													<p:ajax />
+													<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['postalAddress.linetwo.length.error']}" />
+												</p:inputText>
+												<p:outputLabel value="#{lang['address.line.2']}" for="postalAddressaddr20" />
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield" rendered="#{not legacyTradeTestRegistrationUI.copyAddressEmployer}">
+												<p:inputText required="false" requiredMessage="Provide Address Line 3 Information" disabled="#{!legacyTradeTestRegistrationUI.alterApplicationForm}" id="postalAddressaddr30" style="opacity: 1 !important; color: black; width:95%"
+													value="#{legacyTradeTestRegistrationUI.companyTradeTestEmployer.postalAddress.addressLine3}">
+													<p:ajax />
+													<o:validator validatorId="javax.faces.Length" minimum="0" maximum="50" message="#{lang['postalAddress.linethree.length.error']}" />
+												</p:inputText>
+												<p:outputLabel value="#{lang['address.line.3']}" for="postalAddressaddr30" />
+											</h:panelGroup>
+											<h:panelGroup rendered="#{not legacyTradeTestRegistrationUI.copyAddressEmployer}">
+												<div>
+													<h:outputLabel value="#{lang['town']} *" for="townPostal" />
+												</div>
+												<div>
+													<p:autoComplete disabled="#{!legacyTradeTestRegistrationUI.alterApplicationForm}" id="townPostal0" value="#{legacyTradeTestRegistrationUI.companyTradeTestEmployer.postalAddress.town}" completeMethod="#{autoCompleteUI.completeTown}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}"
+														forceSelection="true" converter="TownConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%" style="width: 95%" required="true" requiredMessage="#{lang['please.select.a.town']}">
+														<p:ajax />
+														<p:column headerText="#{lang['town']}" style="white-space: nowrap">
+													#{rv.description}
+												</p:column>
+													</p:autoComplete>
+												</div>
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield" rendered="#{not legacyTradeTestRegistrationUI.copyAddressEmployer}">
+												<p:inputText disabled="#{!legacyTradeTestRegistrationUI.alterApplicationForm}" id="postalAddressPcode0" style="opacity: 1 !important; color: black; width:95%" value="#{legacyTradeTestRegistrationUI.companyTradeTestEmployer.postalAddress.postcode}" required="true"
+													requiredMessage="#{lang['provide.postcode']}">
+													<p:ajax />
+													<o:validator validatorId="javax.faces.Length" minimum="0" maximum="4" message="#{lang['postalAddress.code.length.error']}" />
+												</p:inputText>
+												<p:outputLabel value="#{lang['post.code']}" for="postalAddressPcode0" />
+											</h:panelGroup>
+											<h:panelGroup rendered="#{not legacyTradeTestRegistrationUI.copyAddressEmployer}">
+												<div>
+													<h:outputLabel value="#{lang['municipality']} *" for="postalAddressMunicipalityID0" />
+												</div>
+												<div>
+													<p:autoComplete disabled="#{!legacyTradeTestRegistrationUI.alterApplicationForm}" id="postalAddressMunicipalityID0" value="#{legacyTradeTestRegistrationUI.companyTradeTestEmployer.postalAddress.municipality}" completeMethod="#{sdfDetailUI.completeMunicipality}" var="rv"
+														itemLabel="#{rv.municipalityProvince}" itemValue="#{rv}" forceSelection="true" converter="MunicipalityConvertor" dropdown="true" minQueryLength="3" maxResults="10" inputstyle="opacity: 1 !important; color: black; width: 95%" style="opacity: 1 !important; color: black; width: 95%"
+														required="true" requiredMessage="#{lang['select.municipality']}">
+														<p:ajax event="itemSelect" update="resProvincePgpenel0" />
+														<p:column headerText="#{lang['province']}" style="white-space: nowrap">#{rv.province.provinceDesc}</p:column>
+														<p:column headerText="#{lang['municipality']}" style="white-space: nowrap">#{rv.municipalityDesc}</p:column>
+													</p:autoComplete>
+												</div>
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield" id="resProvincePgpenel0" rendered="#{not legacyTradeTestRegistrationUI.copyAddressEmployer}">
+												<p:inputText disabled="true" id="resProvinceasd0" value="#{legacyTradeTestRegistrationUI.companyTradeTestEmployer.postalAddress.municipality.province.provinceDesc}" style="opacity: 1 !important; color: black; width:100%" />
+												<p:outputLabel value="#{lang['province']}" for="resProvinceasd0" />
+											</h:panelGroup>
+											<h:panelGroup rendered="#{legacyTradeTestRegistrationUI.companyTradeTestEmployer.postalAddress.id eq null}">
+												<div>
+													<p:outputLabel value="#{lang['same.as.my.address']}" styleClass="FontLight" />
+												</div>
+												<div>
+													<p:selectBooleanCheckbox value="#{legacyTradeTestRegistrationUI.copyAddressEmployer}">
+														<p:ajax update="postalAddress0" listener="#{legacyTradeTestRegistrationUI.clearPostalEmployer}" />
+													</p:selectBooleanCheckbox>
+												</div>
+											</h:panelGroup>
+										</p:panelGrid>
+									</p:fieldset>
+								</p:panelGrid>
+
+								<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+									<h3>Contact Information</h3>
+								</p:panelGrid>
+
+								<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText id="userFirstName" value="#{legacyTradeTestRegistrationUI.companyTradeTestEmployer.userFirstName}" style="width:95%" required="true" requiredMessage="#{lang['provide.first.name']}" disabled="#{!legacyTradeTestRegistrationUI.alterApplicationForm}" />
+										<p:outputLabel value="#{lang['first.name']}" for="userFirstName" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText id="userMiddleName" value="#{legacyTradeTestRegistrationUI.companyTradeTestEmployer.userMiddleName}" style="width:95%" required="false" disabled="#{!legacyTradeTestRegistrationUI.alterApplicationForm}" />
+										<p:outputLabel value="#{lang['middle.name']}" for="userMiddleName" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText id="userLastName" value="#{legacyTradeTestRegistrationUI.companyTradeTestEmployer.userLastName}" style="width:95%" required="true" requiredMessage="#{lang['provide.last.name']}" disabled="#{!legacyTradeTestRegistrationUI.alterApplicationForm}" />
+										<p:outputLabel value="#{lang['last.name']}" for="userLastName" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputText id="userEmail" value="#{legacyTradeTestRegistrationUI.companyTradeTestEmployer.userEmail}" maxlength="#{legacyTradeTestRegistrationUI.MAX_EMAIL_SIZE}" style="width:95%" required="true" requiredMessage="#{lang['provide.email']}"
+											disabled="#{!legacyTradeTestRegistrationUI.alterApplicationForm}" />
+										<p:outputLabel value="#{lang['email']}" for="userEmail" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputMask id="userTelNumber" value="#{legacyTradeTestRegistrationUI.companyTradeTestEmployer.userTelNumber}" mask="#{legacyTradeTestRegistrationUI.TELPHONE_FORMAT}" style="width:95%" required="true" requiredMessage="#{lang['provide.tel.number']}"
+											disabled="#{!legacyTradeTestRegistrationUI.alterApplicationForm}" />
+										<p:outputLabel value="#{lang['tel.number']}" for="userTelNumber" />
+									</h:panelGroup>
+
+									<h:panelGroup styleClass="md-inputfield">
+										<p:inputMask id="userCellNumber" value="#{legacyTradeTestRegistrationUI.companyTradeTestEmployer.userCellNumber}" mask="#{legacyTradeTestRegistrationUI.CELLPHONE_FORMAT}" style="width:95%" required="true" requiredMessage="#{lang['provide.cell.number']}"
+											disabled="#{!legacyTradeTestRegistrationUI.alterApplicationForm}" />
+										<p:outputLabel value="#{lang['cell.number']}" for="userCellNumber" />
+									</h:panelGroup>
+
+								</p:panelGrid>
+							</p:outputPanel>
+						</p:outputPanel>
+					</div>
+				</div>
+
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+						<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+							<h2>Application Information</h2>
+						</p:panelGrid>
+
+						<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid" id="applicationInfo">
+							<h:panelGroup styleClass="md-inputfield">
+								<p:autoComplete id="company" style="width:95%" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.preferredTrainingCenter}" completeMethod="#{autoCompleteUI.completeCompany}" var="rv" itemLabel="#{rv.companyNameDisplay}" itemValue="#{rv}" forceSelection="true"
+									converter="CompanyConvertor" dropdown="true" minQueryLength="3" maxResults="10" disabled="true">
+									<p:column headerText="#{lang['companyName']}" style="white-space: nowrap">#{rv.companyName}</p:column>
+									<p:column headerText="#{lang['entity.id']}" style="white-space: nowrap">#{rv.levyNumber}</p:column>
+								</p:autoComplete>
+								<p:outputLabel value="Preferred Trade Test Centre" for="company" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield">
+								<p:inputText id="qualificationDisplay" value="(#{legacyTradeTestRegistrationUI.companylearnerstradetest.qualification.codeString}) #{legacyTradeTestRegistrationUI.companylearnerstradetest.qualification.description}" style="width:95%" required="true" disabled="true" />
+								<p:outputLabel value="Trade test applying for (trade title)" for="qualificationDisplay" />
+							</h:panelGroup>
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="Foundational Learning Competence: English" styleClass="gray" for="englishComp" />
+								</div>
+								<div>
+									<p:selectOneMenu required="true" requiredMessage="Provide: oundational Learning Competence: English" id="englishComp" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.flcEnglish}" style="width:95%" disabled="#{!legacyTradeTestRegistrationUI.alterApplicationForm}">
+										<p:ajax />
+										<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+										<f:selectItems value="#{enumUI.yesNoEnumDD}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+									</p:selectOneMenu>
+								</div>
+							</h:panelGroup>
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="Foundational Learning Competence: Mathematical Literacy (Math Lit)" styleClass="gray" for="mathListComp" />
+								</div>
+								<div>
+									<p:selectOneMenu required="true" requiredMessage="Provide: oundational Learning Competence: Mathematical Literacy" id="mathListComp" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.flcMathsLit}" style="width:95%" disabled="#{!legacyTradeTestRegistrationUI.alterApplicationForm}">
+										<p:ajax />
+										<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+										<f:selectItems value="#{enumUI.yesNoEnumDD}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+									</p:selectOneMenu>
+								</div>
+							</h:panelGroup>
+							<p:spacer />
+							<p:spacer />
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="Have you attempted a trade test previously?" styleClass="gray" for="attemptTradeTest" />
+								</div>
+								<div>
+									<p:selectOneMenu id="attemptTradeTest" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.attemptedTradeTest}" style="width:95%" disabled="true">
+										<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+										<f:selectItems value="#{enumUI.yesNoEnumDD}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+									</p:selectOneMenu>
+								</div>
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.attemptedTradeTest eq YesNoEnum.Yes}">
+								<p:autoComplete style="width:95%" id="preTestCenter" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.previousTrainingCenter}" completeMethod="#{autoCompleteUI.completeCompany}" var="rv" itemLabel="#{rv.companyNameDisplay}" itemValue="#{rv}" forceSelection="true"
+									converter="CompanyConvertor" dropdown="true" minQueryLength="3" maxResults="10" disabled="true">
+									<p:column headerText="#{lang['companyName']}" style="white-space: nowrap">#{rv.companyName}</p:column>
+									<p:column headerText="#{lang['entity.id']}" style="white-space: nowrap">#{rv.levyNumber}</p:column>
+								</p:autoComplete>
+								<p:outputLabel value="Previous Test Center" for="preTestCenter" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.attemptedTradeTest eq YesNoEnum.Yes}">
+								<p:calendar inputStyle="width:90%" id="preAttDate" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.previousAttemptDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" readonlyInput="true" disabled="true" />
+								<p:outputLabel value="Previous Attempt Date" for="preAttDate" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.attemptedTradeTest eq YesNoEnum.Yes}">
+								<p:inputNumber value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.attemptNumber}" decimalPlaces="0" inputStyle="width:95%" disabled="true"></p:inputNumber>
+								<p:outputLabel value="Number of Attempts" for="preAttDate" />
+							</h:panelGroup>
+						</p:panelGrid>
+
+						<p:spacer />
+						<p:spacer />
+						<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid" id="employerInfoGrid">
+							<h:panelGroup>
+								<div>
+									<p:outputLabel value="Are you currently bound by a learner agreement?" styleClass="gray" for="learnerAgreement" />
+								</div>
+								<div>
+									<p:selectOneMenu disabled="#{!legacyTradeTestRegistrationUI.alterApplicationForm}" required="true" requiredMessage="Provide: currently bound by a learner agreement" id="learnerAgreement" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learnerAgreement}" style="width:95%">
+										<p:ajax event="itemSelect" update="employerInfoGrid" />
+										<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+										<f:selectItems value="#{enumUI.yesNoEnumDD}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+									</p:selectOneMenu>
+								</div>
+							</h:panelGroup>
+							<h:panelGroup id="relevantSETA" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learnerAgreement eq YesNoEnum.Yes}">
+								<div>
+									<p:outputLabel value="Relevent SETA:" styleClass="gray" for="seta" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learnerAgreement eq YesNoEnum.Yes}" />
+								</div>
+								<div>
+									<p:selectOneMenu disabled="#{!legacyTradeTestRegistrationUI.alterApplicationForm}" converter="SetaConvertor" required="true" requiredMessage="Provide: Relevent SETA" id="seta" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.releventSeta}" style="width:95%"
+										rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learnerAgreement eq YesNoEnum.Yes}">
+										<p:ajax />
+										<f:selectItems value="#{selectItemsUI.seta}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" />
+									</p:selectOneMenu>
+								</div>
+							</h:panelGroup>
+							<h:panelGroup id="agreementNo" styleClass="md-inputfield" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learnerAgreement eq YesNoEnum.Yes}">
+								<p:inputText disabled="#{!legacyTradeTestRegistrationUI.alterApplicationForm}" id="learnerAgreementNumber" required="true" requiredMessage="Provide: Learner Agreement No" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learnerAgreementNumber}" decimalPlaces="0" style="width:95%">
+									<p:ajax />
+								</p:inputText>
+								<p:outputLabel value="Learner Agreement No" for="learnerAgreementNumber" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learnerAgreement eq YesNoEnum.Yes}" />
+							</h:panelGroup>
+							<h:panelGroup styleClass="md-inputfield" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.learnerAgreement eq YesNoEnum.Yes}">
+							</h:panelGroup>
+
+
+						</p:panelGrid>
+
+
+						<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid" id="deatOfExperianceGrid">
+							<h4>Details of Experience</h4>
+							<p:commandButton rendered="#{legacyTradeTestRegistrationUI.alterApplicationForm}" icon="fa fa-plus" value="Add New Entry" immediate="true" action="#{legacyTradeTestRegistrationUI.prepNewDetailsOfExperienceArpl}" update="newEntryPanel" />
+							<p:outputPanel id="newEntryPanel">
+								<p:fieldset legend="New Entry: Details of Experience" style="margin-top: 20px" rendered="#{legacyTradeTestRegistrationUI.detailsOfExperienceArpl ne null and legacyTradeTestRegistrationUI.detailsOfExperienceArpl.id eq null}">
+									<p:panelGrid columns="2" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group">
+										<h:panelGroup styleClass="md-inputfield">
+											<p:calendar maxdate="#{legacyTradeTestRegistrationUI.detailsOfExperienceArpl.toDate}" required="true" requiredMessage="Provide: From Date" id="fdExp" value="#{legacyTradeTestRegistrationUI.detailsOfExperienceArpl.fromDate}" showOn="button" navigator="true" size="19"
+												pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true">
+												<p:ajax event="dateSelect" update="newEntryPanel" />
+											</p:calendar>
+											<p:outputLabel value="From" for="fdExp" />
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:calendar mindate="#{legacyTradeTestRegistrationUI.detailsOfExperienceArpl.fromDate}" required="true" requiredMessage="Provide: To Date" navigator="true" id="toExp" value="#{legacyTradeTestRegistrationUI.detailsOfExperienceArpl.toDate}" size="19" showOn="button"
+												pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true">
+												<p:ajax event="dateSelect" update="newEntryPanel" />
+											</p:calendar>
+											<p:outputLabel value="To" for="toExp" />
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText id="npExp" required="true" requiredMessage="Provide: Name and address of workplace" value="#{legacyTradeTestRegistrationUI.detailsOfExperienceArpl.nameAddressWorkplace}" style="width:95%">
+											</p:inputText>
+											<p:outputLabel value="Name and address of workplace" for="npExp" />
+										</h:panelGroup>
+
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText id="dtExp" required="true" requiredMessage="Provide: Detail of practical tasks" value="#{legacyTradeTestRegistrationUI.detailsOfExperienceArpl.detail}" style="width:95%">
+											</p:inputText>
+											<p:outputLabel value="Detail of practical tasks" for="dtExp" />
+										</h:panelGroup>
+										<p:commandButton process="newEntryPanel" update="newEntryPanel deatExpDT" action="#{legacyTradeTestRegistrationUI.createNewDetailsOfExperienceArpl}" value="Submit" icon="fa fa-plus" />
+										<p:commandButton immediate="true" update="newEntryPanel" action="#{legacyTradeTestRegistrationUI.cancelNewDetailsOfExperienceArpl}" value="Cancel" icon="fa fa-times" />
+									</p:panelGrid>
+								</p:fieldset>
+							</p:outputPanel>
+
+							<p:dataTable var="rv" id="deatExpDT" value="#{legacyTradeTestRegistrationUI.dataModelDetailsOfExperienceArpl}" rowKey="#{rv.id}" paginator="true" rows="5" paginatorPosition="bottom"
+								paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20" reflow="true" lazy="true">
+								<p:column headerText="Name and address of workplace">
+									<h:outputText value="#{rv.nameAddressWorkplace}" />
+								</p:column>
+								<p:column headerText="From">
+									<h:outputText value="#{rv.fromDate}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="To">
+									<h:outputText value="#{rv.toDate}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Detail of practical tasks">
+									<h:outputText value="#{rv.detail}">
+									</h:outputText>
+								</p:column>
+
+								<p:column rendered="#{legacyTradeTestRegistrationUI.alterApplicationForm}">
+									<p:commandButton immediate="true" update="deatExpDT" icon="fa fa-minus" action="#{legacyTradeTestRegistrationUI.deleteDetailsOfExperienceArpl}">
+										<p:confirm header="Confirmation" message="Are you sure?" icon="pi pi-exclamation-triangle" />
+										<f:setPropertyActionListener value="#{rv}" target="#{legacyTradeTestRegistrationUI.detailsOfExperienceArpl}" />
+									</p:commandButton>
+								</p:column>
+							</p:dataTable>
+						</p:panelGrid>
+
+						<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid" id="deatOfTrainingGrid">
+							<h4>Details of Training (Knowledge and Skills Training)</h4>
+							<p:commandButton rendered="#{legacyTradeTestRegistrationUI.alterApplicationForm}" icon="fa fa-plus" value="Add New Entry" immediate="true" action="#{legacyTradeTestRegistrationUI.prepNewDetailsOfTrainingArpl}" update="newEntryTrainingPanel" />
+
+							<p:outputPanel id="newEntryTrainingPanel">
+								<p:fieldset legend="New Entry: Details of Training" style="margin-top: 20px" rendered="#{legacyTradeTestRegistrationUI.detailsOfTrainingArpl ne null and legacyTradeTestRegistrationUI.detailsOfTrainingArpl.id eq null}">
+									<p:panelGrid columns="2" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group">
+										<h:panelGroup styleClass="md-inputfield">
+											<p:calendar maxdate="#{legacyTradeTestRegistrationUI.detailsOfTrainingArpl.toDate}" required="true" requiredMessage="Provide: From Date" id="fdsExp" value="#{legacyTradeTestRegistrationUI.detailsOfTrainingArpl.fromDate}" showOn="button" navigator="true" size="19"
+												pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true">
+												<p:ajax event="dateSelect" update="newEntryTrainingPanel" />
+											</p:calendar>
+											<p:outputLabel value="From" for="fdsExp" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:calendar mindate="#{legacyTradeTestRegistrationUI.detailsOfTrainingArpl.fromDate}" required="true" requiredMessage="Provide: To Date" id="tocExp" value="#{legacyTradeTestRegistrationUI.detailsOfTrainingArpl.toDate}" size="19" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}"
+												mask="true">
+												<p:ajax event="dateSelect" update="newEntryTrainingPanel" />
+											</p:calendar>
+											<p:outputLabel value="To" for="tocExp" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText id="nSdpExp" required="true" requiredMessage="Provide: Name of Skills Development Provider" value="#{legacyTradeTestRegistrationUI.detailsOfTrainingArpl.nameSkillsProvider}" style="width:95%">
+											</p:inputText>
+											<p:outputLabel value="Name of Skills Development Provider" for="nSdpExp" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText id="dtExpa" required="true" requiredMessage="Provide: Detail of practical tasks" value="#{legacyTradeTestRegistrationUI.detailsOfTrainingArpl.course}" style="width:95%">
+											</p:inputText>
+											<p:outputLabel value="Course" for="dtExpa" />
+										</h:panelGroup>
+										<p:commandButton process="newEntryTrainingPanel" update="newEntryTrainingPanel deatTrainDT" action="#{legacyTradeTestRegistrationUI.createNewDetailsOfTrainingArpl}" value="Add New Entry" icon="fa fa-plus" />
+										<p:commandButton immediate="true" update="newEntryTrainingPanel" action="#{legacyTradeTestRegistrationUI.cancelNewDetailsOfTrainingArpl}" value="Cancel" icon="fa fa-minus" />
+									</p:panelGrid>
+								</p:fieldset>
+							</p:outputPanel>
+
+							<p:dataTable var="rvt" id="deatTrainDT" value="#{legacyTradeTestRegistrationUI.dataModelDetailsOfTrainingArpl}" rowKey="#{rvt.id}" paginator="true" rows="5" paginatorPosition="bottom"
+								paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20" reflow="true" lazy="true">
+								<p:column headerText="Name of Skills Development Provider">
+									<h:outputText value="#{rvt.nameSkillsProvider}" />
+								</p:column>
+								<p:column headerText="From">
+									<h:outputText value="#{rvt.fromDate}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="To">
+									<h:outputText value="#{rvt.toDate}">
+										<f:convertDateTime pattern="dd MMMM yyyy" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="Course">
+									<h:outputText value="#{rvt.course}">
+									</h:outputText>
+								</p:column>
+								<p:column rendered="#{legacyTradeTestRegistrationUI.alterApplicationForm}">
+									<p:commandButton immediate="true" update="deatTrainDT" icon="fa fa-minus" action="#{legacyTradeTestRegistrationUI.deleteDetailsOfTrainingArpl}">
+										<p:confirm header="Confirmation" message="Are you sure?" icon="pi pi-exclamation-triangle" />
+										<f:setPropertyActionListener value="#{rvt}" target="#{legacyTradeTestRegistrationUI.detailsOfTrainingArpl}" />
+									</p:commandButton>
+								</p:column>
+							</p:dataTable>
+						</p:panelGrid>
+
+						<c:if test="#{legacyTradeTestRegistrationUI.displayDateOrginalDocumentSubmission}">
+							<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+								<h4>Provide date of visit to regional office to provide original copies of required documents</h4>
+								<h:panelGroup styleClass="md-inputfield">
+									<p:calendar mindate="#{legacyTradeTestRegistrationUI.companylearnerstradetest.dateSubmissionOriginalDoc}" maxdate="#{legacyTradeTestRegistrationUI.companylearnerstradetest.dueDateSubmissionOriginalDoc}" disabled="#{!legacyTradeTestRegistrationUI.alterDateOrginalDocumentSubmission}" required="true"
+										requiredMessage="Provide: Date Of Visit To Provide Original Copies Of Documents" id="dateOrgiCopies" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.dateToProvideOriginalCopies}" size="19" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" />
+									<p:outputLabel value="Date Of Visit" for="dateOrgiCopies" />
+								</h:panelGroup>
+							</p:panelGrid>
+						</c:if>
+					</div>
+				</div>
+
+				<div class="ui-g-12">
+					<c:if test="#{legacyTradeTestRegistrationUI.displayTestInformation}">
+						<div class="card card-w-title">
+							<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+								<h2>Trade Test Information</h2>
+							</p:panelGrid>
+							<p:outputPanel id="testInfoPanel" style="width: 100%">
+								<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" id="dateGrids" layout="grid">
+									<h:panelGroup styleClass="md-inputfield">
+										<p:calendar disabled="#{!legacyTradeTestRegistrationUI.alterTestInformation and legacyTradeTestRegistrationUI.viewTestResults}" required="true" requiredMessage="Provide: Date Of Assesment" inputStyle="width:90%" id="dateAssement"
+											value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.dateOfTest}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" readonlyInput="true" >
+											<p:ajax event="dateSelect"></p:ajax>
+										</p:calendar>
+										<p:outputLabel value="Date Of Assesment: From" for="dateAssement" />
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield">
+										<p:calendar disabled="#{!legacyTradeTestRegistrationUI.alterTestInformation and legacyTradeTestRegistrationUI.viewTestResults}" required="true" requiredMessage="Provide: Date Of Assesment" inputStyle="width:90%" id="dateAssementTo"
+											value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.dateOfTestToDate}" showOn="button" pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" readonlyInput="true">
+											<p:ajax event="dateSelect"></p:ajax>
+										</p:calendar>
+										<p:outputLabel value="Date Of Assesment: To" for="dateAssementTo" />
+									</h:panelGroup>
+									<p:commandButton process="dateGrids" icon="fa fa-database" value="Set Test Dates" action="#{legacyTradeTestRegistrationUI.setTestDates}"
+										rendered="#{legacyTradeTestRegistrationUI.alterTestInformation and !legacyTradeTestRegistrationUI.companylearnerstradetest.testDatesProvided and !legacyTradeTestRegistrationUI.viewTestResults}" update="testInfoPanel">
+										<p:confirm header="Confirmation" message="Are you sure?" icon="fa fa-exclamation-triangle" />
+									</p:commandButton>
+									<p:commandButton process="dateGrids" icon="fa fa-database" value="Amend Test Dates" action="#{legacyTradeTestRegistrationUI.amendTestDates}"
+										rendered="#{legacyTradeTestRegistrationUI.alterTestInformation and legacyTradeTestRegistrationUI.companylearnerstradetest.testDatesProvided and !legacyTradeTestRegistrationUI.viewTestResults}" update="testInfoPanel">
+										<p:confirm header="Confirmation" message="Are you sure?" icon="fa fa-exclamation-triangle" />
+									</p:commandButton>
+								</p:panelGrid>
+								
+								<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid" rendered="#{legacyTradeTestRegistrationUI.viewTestResults}">
+									<h:panelGroup>
+										<div>
+											<p:outputLabel value="Learner Competence" for="competenceEnum" styleClass="gray" />
+										</div>
+										<div>
+											<p:selectOneMenu disabled="#{!legacyTradeTestRegistrationUI.alterTestInformation}" rendered="true" requiredMessage="Provide: Learner Competence" id="competenceEnum" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.competenceEnum}" style="width:95%" required="true">
+												<p:ajax event="itemSelect" />
+												<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+												<f:selectItems value="#{enumUI.allCompetenceEnumDD}" />
+											</p:selectOneMenu>
+										</div>
+									</h:panelGroup>
+								</p:panelGrid>
+
+								<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid" rendered="#{legacyTradeTestRegistrationUI.viewTestResults and legacyTradeTestRegistrationUI.companylearnerstradetest.testDatesProvided}">
+									<p:fieldset legend="Assessor Assigned">
+										<p:panelGrid columns="2" style="width : 95%" styleClass="ui-panelgrid-blank form-group" layout="grid" rendered="#{legacyTradeTestRegistrationUI.alterTestInformation}">
+											<p:commandButton icon="fa fa-plus" value="Assign: Assessor"  process="@this" update="assignAssessorForm" action="#{legacyTradeTestRegistrationUI.prepAssignNewAssessor}" />
+											<p:commandButton icon="fa fa-eraser" value="Clear: Assessor" process="@this" update="@form" action="#{legacyTradeTestRegistrationUI.clearAssignedAssessor}" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.assessorApplication ne null}" onstart="uploadStart()" oncomplete="uploadDone()" >
+												<p:confirm header="Confirmation" message="Are you sure you?" icon="fa fa-exclamation-triangle" />
+											</p:commandButton>
+										</p:panelGrid>
+										<c:if test="#{legacyTradeTestRegistrationUI.alterTestInformation}">
+											<div class="EmptyBox10"/><div class="EmptyBox10"/>
+										</c:if>
+										<p:panelGrid columns="1" style="width : 95%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+											<p:outputLabel value="Assessor Not Assigned" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.assessorApplication eq null}" />
+											<h:panelGroup styleClass="md-inputfield" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.assessorApplication ne null}">
+												<p:inputText disabled="true" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.assessorApplication.user.firstName}" style="width:95%">
+													<p:ajax />
+												</p:inputText>
+												<p:outputLabel value="First Name" />
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.assessorApplication ne null}">
+												<p:inputText disabled="true" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.assessorApplication.user.lastName}" style="width:95%">
+													<p:ajax />
+												</p:inputText>
+												<p:outputLabel value="Last Name" />
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.assessorApplication ne null}">
+												<p:inputText disabled="true" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.assessorApplication.user.email}" style="width:95%">
+													<p:ajax />
+												</p:inputText>
+												<p:outputLabel value="Email" />
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.assessorApplication ne null}">
+												<p:inputText disabled="true" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.assessorApplication.certificateNumber}" style="width:95%">
+													<p:ajax />
+												</p:inputText>
+												<p:outputLabel value="Designation Registration Number" />
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.assessorApplication ne null}">
+												<p:inputText disabled="true" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.assessorApplication.etqa.description}" style="width:95%">
+													<p:ajax />
+												</p:inputText>
+												<p:outputLabel value="Primary ETQA" />
+											</h:panelGroup>
+										</p:panelGrid>
+										
+										<p:panelGrid id="assessorGrid" columns="1" style="width : 95%" styleClass="ui-panelgrid-blank form-group" layout="grid" rendered="false">
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText id="firstNameAssessor" maxlength="#{legacyTradeTestRegistrationUI.MAX_FIRST_NAME_SIZE}" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.assessorFirstName}" style="width:95%" required="true"
+													disabled="#{!legacyTradeTestRegistrationUI.alterTestInformation and legacyTradeTestRegistrationUI.viewTestResults}" />
+												<p:outputLabel value="First Name" for="firstNameAssessor" />
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText id="lastNameAssessor" maxlength="#{legacyTradeTestRegistrationUI.MAX_LAST_NAME_SIZE}" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.assessorLastName}" style="width:95%" required="true"
+													disabled="#{!legacyTradeTestRegistrationUI.alterTestInformation and legacyTradeTestRegistrationUI.viewTestResults}" />
+												<p:outputLabel value="Last Name" for="lastNameAssessor" />
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText id="assessorEmail" maxlength="#{legacyTradeTestRegistrationUI.MAX_EMAIL_SIZE}" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.assessorEmail}" style="width:95%" required="true"
+													disabled="#{!legacyTradeTestRegistrationUI.alterTestInformation and legacyTradeTestRegistrationUI.viewTestResults}" />
+												<p:outputLabel value="Email Address:" for="assessorEmail" />
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText id="accreditationNumber" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.assessorCertificateNumber}" style="width:95%" required="true" disabled="#{!legacyTradeTestRegistrationUI.alterTestInformation and legacyTradeTestRegistrationUI.viewTestResults}" />
+												<p:outputLabel value="Accreditation Number" for="accreditationNumber" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<div style="margin-top: -20px !important;">
+													<p:outputLabel value="ETQA" for="assessorEtqaSelection" styleClass="gray Fs12" style="margin-left:5px">
+													</p:outputLabel>
+												</div>
+												<div>
+													<p:selectOneMenu id="assessorEtqaSelection" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.assessorEtqa}" style="width: 95%" converter="EtqaConvertor" required="true" requiredMessage="Provide ETQA For Assessor"
+														disabled="#{!legacyTradeTestRegistrationUI.alterTestInformation and legacyTradeTestRegistrationUI.viewTestResults}">
+														<f:selectItems value="#{selectItemsUI.selectItemsEtqa}" var="assEtqaRV" itemLabel="#{assEtqaRV.description} (#{assEtqaRV.code})" />
+														<p:ajax event="itemSelect" />
+													</p:selectOneMenu>
+												</div>
+											</h:panelGroup>
+										</p:panelGrid>
+									</p:fieldset>
+									
+									<p:fieldset legend="Moderator Assigned">
+										<p:panelGrid columns="2" style="width : 95%" styleClass="ui-panelgrid-blank form-group" layout="grid" rendered="#{legacyTradeTestRegistrationUI.alterTestInformation}">
+											<p:commandButton icon="fa fa-plus" value="Assign: Moderator" rendered="#{legacyTradeTestRegistrationUI.alterTestInformation}" process="@this" update="assignModeratorForm" action="#{legacyTradeTestRegistrationUI.prepAssignNewModerator}" />
+											<p:commandButton icon="fa fa-eraser" value="Clear: Moderator" process="@this" update="@form" action="#{legacyTradeTestRegistrationUI.clearAssignedModerator}" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.moderatorApplication ne null}" onstart="uploadStart()" oncomplete="uploadDone()" >
+												<p:confirm header="Confirmation" message="Are you sure you?" icon="fa fa-exclamation-triangle" />
+											</p:commandButton>
+										</p:panelGrid>
+										<c:if test="#{legacyTradeTestRegistrationUI.alterTestInformation}">
+											<div class="EmptyBox10"/><div class="EmptyBox10"/>
+										</c:if>
+										<p:panelGrid columns="1" style="width : 95%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+											<p:outputLabel value="Moderator Not Assigned" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.moderatorApplication eq null}" />
+											<h:panelGroup styleClass="md-inputfield" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.moderatorApplication ne null}">
+												<p:inputText disabled="true" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.moderatorApplication.user.firstName}" style="width:95%">
+													<p:ajax />
+												</p:inputText>
+												<p:outputLabel value="First Name" />
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.moderatorApplication ne null}">
+												<p:inputText disabled="true" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.moderatorApplication.user.lastName}" style="width:95%">
+													<p:ajax />
+												</p:inputText>
+												<p:outputLabel value="Last Name" />
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.moderatorApplication ne null}">
+												<p:inputText disabled="true" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.moderatorApplication.user.email}" style="width:95%">
+													<p:ajax />
+												</p:inputText>
+												<p:outputLabel value="Email" />
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.moderatorApplication ne null}">
+												<p:inputText disabled="true" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.moderatorApplication.certificateNumber}" style="width:95%">
+													<p:ajax />
+												</p:inputText>
+												<p:outputLabel value="Designation Registration Number" />
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.moderatorApplication ne null}">
+												<p:inputText disabled="true" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.moderatorApplication.etqa.description}" style="width:95%">
+													<p:ajax />
+												</p:inputText>
+												<p:outputLabel value="Primary ETQA" />
+											</h:panelGroup>
+										</p:panelGrid>
+										
+										<p:panelGrid columns="1" style="width : 95%" styleClass="ui-panelgrid-blank form-group" layout="grid" rendered="false">
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText id="firstNameMod" maxlength="#{legacyTradeTestRegistrationUI.MAX_FIRST_NAME_SIZE}" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.moderatorFirstName}" style="width:95%" required="true"
+													disabled="#{!legacyTradeTestRegistrationUI.alterTestInformation and legacyTradeTestRegistrationUI.viewTestResults}" />
+												<p:outputLabel value="First Name" for="firstNameMod" />
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText id="lastNameMod" maxlength="#{legacyTradeTestRegistrationUI.MAX_LAST_NAME_SIZE}" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.moderatorLastName}" style="width:95%" required="true"
+													disabled="#{!legacyTradeTestRegistrationUI.alterTestInformation and legacyTradeTestRegistrationUI.viewTestResults}" />
+												<p:outputLabel value="Last Name" for="lastNameMod" />
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText id="moderatorEmail" maxlength="#{legacyTradeTestRegistrationUI.MAX_EMAIL_SIZE}" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.moderatorEmail}" style="width:95%" required="true"
+													disabled="#{!legacyTradeTestRegistrationUI.alterTestInformation and legacyTradeTestRegistrationUI.viewTestResults}" />
+												<p:outputLabel value="Email Address:" for="moderatorEmail" />
+											</h:panelGroup>
+											<h:panelGroup styleClass="md-inputfield">
+												<p:inputText id="accreditationNumberMod" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.moderatorCertificateNumber}" style="width:95%" required="true" disabled="#{!legacyTradeTestRegistrationUI.alterTestInformation and legacyTradeTestRegistrationUI.viewTestResults}" />
+												<p:outputLabel value="Accreditation Number" for="accreditationNumberMod" />
+											</h:panelGroup>
+											<h:panelGroup>
+												<div style="margin-top: -20px !important;">
+													<p:outputLabel value="ETQA" for="moderatorEtqaSelection" styleClass="gray Fs12" style="margin-left:5px">
+													</p:outputLabel>
+												</div>
+												<div>
+													<p:selectOneMenu id="moderatorEtqaSelection" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.moderatorEtqa}" style="width: 95%" converter="EtqaConvertor" required="true" requiredMessage="Provide ETQA For Moderator"
+														disabled="#{!legacyTradeTestRegistrationUI.alterTestInformation and legacyTradeTestRegistrationUI.viewTestResults}">
+														<f:selectItems value="#{selectItemsUI.selectItemsEtqa}" var="modEtqaRV" itemLabel="#{modEtqaRV.description} (#{modEtqaRV.code})" />
+														<p:ajax event="itemSelect" />
+													</p:selectOneMenu>
+												</div>
+											</h:panelGroup>
+										</p:panelGrid>
+									</p:fieldset>
+								</p:panelGrid>
+
+								<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid" rendered="#{legacyTradeTestRegistrationUI.viewTestResults and legacyTradeTestRegistrationUI.alterTestInformation and false}">
+									<p:commandButton immediate="true" icon="fa fa-download" value="Download LPM-FM-010 (Trade Test Results Report Form)" action="#{legacyTradeTestRegistrationUI.downloadLPMFM010()}" ajax="false" title="Download: LPM-FM-010 (Trade Test Results Report Form)">
+									</p:commandButton>
+								</p:panelGrid>
+
+								<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid" rendered="#{legacyTradeTestRegistrationUI.viewTestResults and false}">
+									<h4>Assessment Tasks</h4>
+									<p:commandButton rendered="#{legacyTradeTestRegistrationUI.alterTestInformation}" icon="fa fa-plus" value="Add New Entry" immediate="true" action="#{legacyTradeTestRegistrationUI.prepNewTradeTestTaskResult}" update="assTaskPanel" />
+									<p:outputPanel id="assTaskPanel">
+										<p:fieldset legend="New Entry: Assessment Tasks" style="margin-top: 20px" rendered="#{legacyTradeTestRegistrationUI.tradeTestTaskResult ne null and legacyTradeTestRegistrationUI.tradeTestTaskResult.id eq null}">
+											<p:panelGrid columns="1" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group">
+												<h:panelGroup styleClass="md-inputfield">
+													<p:inputText id="taskEntry" required="true" requiredMessage="Provide: Task" value="#{legacyTradeTestRegistrationUI.tradeTestTaskResult.task}" style="width:95%">
+													</p:inputText>
+													<p:outputLabel value="Task" for="taskEntry" />
+												</h:panelGroup>
+												<h:panelGroup>
+													<div>
+														<p:outputLabel value="Result" for="resultSelectionEnum" styleClass="gray" />
+													</div>
+													<div>
+														<p:selectOneMenu rendered="true" requiredMessage="Provide: Result" id="resultSelectionEnum" value="#{legacyTradeTestRegistrationUI.tradeTestTaskResult.competence}" style="width:95%" required="true">
+															<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+															<f:selectItems value="#{enumUI.competenceEnumDD}" />
+														</p:selectOneMenu>
+													</div>
+												</h:panelGroup>
+											</p:panelGrid>
+											<p:panelGrid columns="2" style="width:100%;" layout="grid" styleClass="ui-panelgrid-blank form-group">
+												<p:commandButton process="assTaskPanel" update="assTaskPanel assInfo" action="#{legacyTradeTestRegistrationUI.createNewTradeTestTaskResult}" value="Add New Entry" icon="fa fa-plus" />
+												<p:commandButton immediate="true" update="assTaskPanel" action="#{legacyTradeTestRegistrationUI.cancelNewTradeTestTaskResult}" value="Cancel" icon="fa fa-minus" />
+											</p:panelGrid>
+										</p:fieldset>
+									</p:outputPanel>
+									<p:dataTable var="rvb" id="assInfo" value="#{legacyTradeTestRegistrationUI.dataModelTradeTestTaskResult}" rowKey="#{rvt.id}" paginator="true" rows="5" paginatorPosition="bottom"
+										paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20" reflow="true" lazy="true">
+										<p:column headerText="Task">
+											<h:outputText value="#{rvb.task}" />
+										</p:column>
+										<p:column headerText="Result">
+											<h:outputText value="#{rvb.competence.friendlyName}">
+											</h:outputText>
+										</p:column>
+										<p:column rendered="#{legacyTradeTestRegistrationUI.alterTestInformation}" width="5%">
+											<p:commandButton immediate="true" update="assInfo" icon="fa fa-minus" action="#{legacyTradeTestRegistrationUI.deleteTradeTestTaskResult}">
+												<p:confirm header="Confirmation" message="Are you sure?" icon="pi pi-exclamation-triangle" />
+												<f:setPropertyActionListener value="#{rvb}" target="#{legacyTradeTestRegistrationUI.tradeTestTaskResult}" />
+											</p:commandButton>
+										</p:column>
+									</p:dataTable>
+								</p:panelGrid>
+							</p:outputPanel>
+						</div>
+					</c:if>
+				</div>
+
+				<div class="ui-g-12">
+					<c:if test="#{legacyTradeTestRegistrationUI.displayNambInfo}">
+						<div class="card card-w-title">
+							<p:outputPanel id="nambInfoPanel" style="width: 100%">
+								<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+									<h2>NAMB Information</h2>
+								</p:panelGrid>
+								<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+									<h:panelGroup styleClass="md-inputfield">
+										<p:calendar disabled="#{!legacyTradeTestRegistrationUI.editNambInfo}" required="true" requiredMessage="Provide: NAMB Submission Date" inputStyle="width:90%" id="datenambSubmission" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.nambSubmissionDate}" showOn="button"
+											pattern="#{autoCompleteUI.CALENDER_PATTERN}" mask="true" readonlyInput="true">
+											<p:ajax event="dateSelect"></p:ajax>
+										</p:calendar>
+										<p:outputLabel value="NAMB Submission Date" for="datenambSubmission" />
+									</h:panelGroup>
+								</p:panelGrid>
+							</p:outputPanel>
+						</div>
+					</c:if>
+				</div>
+
+				<div class="ui-g-12">
+					<c:if test="#{legacyTradeTestRegistrationUI.displayCollection}">
+						<div class="card card-w-title">
+							<p:outputPanel id="collectionInfoPanel" style="width: 100%">
+								<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+									<h2>Collection Information</h2>
+								</p:panelGrid>
+
+								<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+									<h:panelGroup>
+										<div style="margin-top: -20px !important;">
+											<p:outputLabel value="Certificate Collection" for="collectionEnum" styleClass="gray" />
+										</div>
+										<div>
+											<p:selectOneMenu requiredMessage="Provide: Certificate Collection" id="collectionEnum" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.collectionEnum}" style="width:95%" required="true" disabled="#{!legacyTradeTestRegistrationUI.editCollectionInfo}">
+												<p:ajax update="collectionInfoPanel" />
+												<f:selectItem itemLabel="--- #{lang['select.one']} ---" styleClass="FontLight gray" noSelectionOption="true" />
+												<f:selectItems value="#{enumUI.collectionEnumDD}" />
+											</p:selectOneMenu>
+										</div>
+									</h:panelGroup>
+									<h:panelGroup styleClass="md-inputfield" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.collectionEnum ne null}">
+										<p:inputText id="infoCollection" required="true" requiredMessage="Provide: Information on collection" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.collectionInformation}" style="width:95%">
+										</p:inputText>
+										<p:outputLabel value="Information on collection" for="infoCollection" />
+									</h:panelGroup>
+								</p:panelGrid>
+							</p:outputPanel>
+						</div>
+					</c:if>
+				</div>
+
+				<div class="ui-g-12">
+					<c:if test="#{legacyTradeTestRegistrationUI.companylearnerstradetest.docs.size() gt 0}">
+						<div class="card card-w-title">
+							<p:outputPanel id="learnerRegUploadForm" style="width: 100%">
+								<h:panelGroup id="docList">
+									<div class="ui-g dashboard">
+										<div class="ui-g-12">
+											<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+												<h2>Documents</h2>
+												<p:panelGrid columns="1" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid" id="gridDownload" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.aprlProgress eq AprlProgressEnum.WithInitiatorOne}">
+													<h:panelGroup>
+														<p:commandButton rendered="false" immediate="true" icon="fa fa-download" value="Download AMIC Application Form" action="#{legacyTradeTestRegistrationUI.downloadLPMFM008()}" ajax="false" title="Download AMIC Application For Immediate Recognition Test Form">
+														</p:commandButton>
+														<p:spacer width="25" rendered="false"></p:spacer>
+														<p:commandButton immediate="true" icon="fa fa-download" value="Download LPM-FM-009 (Trade Test Application Form)" action="#{legacyTradeTestRegistrationUI.downloadLPMFM009()}" ajax="false" title="Download Trade Test Application Form">
+														</p:commandButton>
+													</h:panelGroup>
+												</p:panelGrid>
+												<p:dataTable value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.docs}" var="rv1" rowKey="#{rv1.id}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+													<p:column headerText="#{lang['type']}" width="20%">#{rv1.configDoc.name}</p:column>
+													<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+													<p:column headerText="#{lang['uploaded']}" width="15%">
+														<h:outputText value="#{rv1.createDate}">
+															<f:convertDateTime pattern="dd MMM yyyy" />
+														</h:outputText>
+													</p:column>
+
+													<p:column headerText="#{lang['document.is.required']}" width="150">
+														<p:selectBooleanCheckbox value="#{rv1.configDoc.requiredDocument}" disabled="true" style="opacity: 1 !important" rendered="#{not rv1.required}"></p:selectBooleanCheckbox>
+														<p:selectBooleanCheckbox value="#{rv1.required}" disabled="true" style="opacity: 1 !important" rendered="#{rv1.required}"></p:selectBooleanCheckbox>
+													</p:column>
+
+													<p:column headerText="#{lang['original.required']}" width="150">
+														<p:selectBooleanCheckbox value="#{rv1.configDoc.originalRequired}" disabled="true" style="opacity: 1 !important" rendered="#{not rv1.configDoc.originalRequired}"></p:selectBooleanCheckbox>
+														<p:selectBooleanCheckbox value="#{rv1.configDoc.originalRequired}" disabled="true" style="opacity: 1 !important" rendered="#{rv1.configDoc.originalRequired}"></p:selectBooleanCheckbox>
+													</p:column>
+
+													<p:column headerText="#{lang['version']}" width="15%">
+														<h:outputText value="#{rv1.versionNo}">
+														</h:outputText>
+													</p:column>
+
+													<p:column width="180" headerText="#{lang['view.edit']}">
+
+														<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlbUserDocs" rendered="#{rv1.id ne null}">
+															<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+														</p:commandButton>
+														<p:tooltip for="dlbUserDocs" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+
+														<p:spacer width="5" rendered="#{rv1.id ne null}" />
+														<p:commandButton icon="fa fa-bars " id="dhistUserDocs" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}">
+															<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+														</p:commandButton>
+														<p:tooltip for="dhistUserDocs" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+
+														<!-- only with permission to upload can upload a new version -->
+														<p:commandButton rendered="#{(sessionUI.task.processRole eq null or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Upload or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.EditUpload)}" icon="fa fa-upload" id="uploadUserDocs"
+															styleClass="#{rv1.originalFname eq null ? 'red-btn' : ''} flat" process="@this" oncomplete="PF('dlgUpload').show()" update=":uploadForm">
+															<f:setPropertyActionListener value="#{rv1}" target="#{legacyTradeTestRegistrationUI.doc}" />
+														</p:commandButton>
+														<p:tooltip for="uploadUserDocs" value="#{rv1.originalFname eq null ? lang['click.to.upload'] : lang['re.upload']}" position="left" />
+
+														<h:panelGroup id="panelGroupThreeUserDocs" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+															<p:spacer width="5" />
+															<p:commandButton icon="fa fa-comment-o " id="dnoteUserDocs" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel">
+																<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+															</p:commandButton>
+															<p:tooltip for="dnoteUserDocs" value="#{lang['view.note']}" position="left" />
+														</h:panelGroup>
+
+														<h:panelGroup id="panelGroupFourUserDocs" rendered="#{rv1.extension.toLowerCase() eq 'pdf' or rv1.extension.toLowerCase() eq 'png' or rv1.extension.toLowerCase() eq 'jpg' or rv1.extension.toLowerCase() eq 'jpeg' or rv1.extension.toLowerCase() eq 'gif'}">
+															<p:spacer width="5" />
+															<p:commandButton icon="fa fa-eye " id="viewerButtonUserDocs" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}">
+																<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+															</p:commandButton>
+															<p:tooltip for="viewerButtonUserDocs" value="#{lang['view.document']} " position="left" />
+														</h:panelGroup>
+													</p:column>
+												</p:dataTable>
+											</p:panelGrid>
+
+										</div>
+									</div>
+								</h:panelGroup>
+							</p:outputPanel>
+						</div>
+					</c:if>
+				</div>
+
+				<div class="ui-g-12">
+					<div class="card card-w-title">
+
+						<c:if test="#{legacyTradeTestRegistrationUI.rejectionReasonsFound.size() gt 0}">
+							<h1>Rejection Reasons Provided:</h1>
+							<p:repeat var="rowVarRR" value="#{legacyTradeTestRegistrationUI.rejectionReasonsFound}">
+								<p:outputLabel value="#{rowVarRR.description}" style="font-weight:bold; font-size: 20px; color: red;" />
+								<br />
+								<p:outputLabel value="#{rowVarRR.howTo}" style="color: grey;" />
+								<br />
+								<br />
+							</p:repeat>
+							<br />
+						</c:if>
+
+						<c:if test="#{legacyTradeTestRegistrationUI.companylearnerstradetest.aprlProgress eq AprlProgressEnum.WithInitiatorOne}">
+							<!-- With Initiator first time-->
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+								<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" update="@form" styleClass="flat green-btn Fs18" action="#{legacyTradeTestRegistrationUI.completeWorkflowWithInitiatorOne}" style="height: 50px;" onstart="uploadStart()" oncomplete="uploadDone()">
+								</p:commandButton>
+							</p:panelGrid>
+						</c:if>
+
+						<c:if test="#{legacyTradeTestRegistrationUI.companylearnerstradetest.aprlProgress eq AprlProgressEnum.WithMersetaOne}">
+							<!-- With MerSETA First time-->
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+								<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" update="@form" styleClass="flat green-btn Fs18" action="#{legacyTradeTestRegistrationUI.completeWorkflowWithWithMersetaOne}" style="height: 50px;" onstart="uploadStart()" oncomplete="uploadDone()">
+								</p:commandButton>
+								<p:commandButton value="Reject Task" icon="fa fa-times" update="@form rejectReasonForm" oncomplete="PF('rejectReasonsDlg').show()" action="#{legacyTradeTestRegistrationUI.prepRejectionWithWithMersetaOne}" styleClass="red-btn flat Fs18" style="height: 50px;" process="@this">
+								</p:commandButton>
+							</p:panelGrid>
+						</c:if>
+
+						<c:if test="#{legacyTradeTestRegistrationUI.companylearnerstradetest.aprlProgress eq AprlProgressEnum.WithInitiatorTwo}">
+							<!-- With Initiator Second Time -->
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+								<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" update="@form" styleClass="flat green-btn Fs18" action="#{legacyTradeTestRegistrationUI.completeWithInitiatorTwo}" style="height: 50px;" onstart="uploadStart()" oncomplete="uploadDone()">
+								</p:commandButton>
+							</p:panelGrid>
+						</c:if>
+
+						<c:if test="#{legacyTradeTestRegistrationUI.companylearnerstradetest.aprlProgress eq AprlProgressEnum.WithMersetaTwo}">
+							<!-- With MerSETA Second time-->
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+								<p:commandButton value="Approve Date" icon="ui-icon-save" update="@form" action="#{legacyTradeTestRegistrationUI.approveApplicationWithWithMersetaTwo}" styleClass="flat green-btn Fs18" style="height: 50px;" onstart="uploadStart()" oncomplete="uploadDone()">
+									<p:confirm header="Confirmation" message="Are you sure?" icon="fa fa-exclamation-triangle" />
+								</p:commandButton>
+								<p:commandButton value="Reject Date" icon="fa fa-times" update="@form rejectReasonForm" oncomplete="PF('rejectReasonsDlg').show()" action="#{legacyTradeTestRegistrationUI.prepRejectionWithWithMersetaTwo}" styleClass="red-btn flat Fs18" style="height: 50px;" process="@this">
+									<p:confirm header="Confirmation" message="Are you sure?" icon="fa fa-exclamation-triangle" />
+								</p:commandButton>
+							</p:panelGrid>
+						</c:if>
+
+						<c:if test="#{legacyTradeTestRegistrationUI.companylearnerstradetest.aprlProgress eq AprlProgressEnum.WithMersetaThree}">
+							<!-- With MerSETA Third Time -->
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+								<p:commandButton value="Approve Original Documents" icon="ui-icon-save" update="@form" styleClass="flat green-btn Fs18" action="#{legacyTradeTestRegistrationUI.completeWorkflowWithMersetaThree}" style="height: 50px;" onstart="uploadStart()" oncomplete="uploadDone()">
+								</p:commandButton>
+								<p:commandButton value="Reject Original Documents" icon="fa fa-times" update="@form rejectReasonForm" oncomplete="PF('rejectReasonsDlg').show()" action="#{legacyTradeTestRegistrationUI.prepRejectionWithWithMersetaThree}" styleClass="red-btn flat Fs18" style="height: 50px;" process="@this">
+								</p:commandButton>
+							</p:panelGrid>
+						</c:if>
+
+						<c:if test="#{legacyTradeTestRegistrationUI.companylearnerstradetest.aprlProgress eq AprlProgressEnum.WithMersetaFour}">
+							<!-- With MerSETA Forth Time -->
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+								<p:commandButton value="Approve Application" icon="ui-icon-save" update="@form" styleClass="flat green-btn Fs18" action="#{legacyTradeTestRegistrationUI.completeWorkflowWithMersetaFour}" style="height: 50px;" onstart="uploadStart()" oncomplete="uploadDone()">
+									<p:confirm header="Confirmation" message="Are you sure?" icon="pi pi-exclamation-triangle" />
+								</p:commandButton>
+								<p:commandButton value="Reject Application" icon="fa fa-times" update="@form rejectReasonForm" oncomplete="PF('rejectReasonsDlg').show()" action="#{legacyTradeTestRegistrationUI.prepApplicationRejectionWithMersetaFour}" styleClass="red-btn flat Fs18" style="height: 50px;" process="@this">
+								</p:commandButton>
+								<p:commandButton value="Reject Task" rendered="false" icon="fa fa-times" update="@form rejectReasonForm" oncomplete="PF('rejectReasonsDlg').show()" action="#{legacyTradeTestRegistrationUI.prepRejectionWithMersetaFour}" styleClass="red-btn flat Fs18" style="height: 50px;" process="@this">
+								</p:commandButton>
+							</p:panelGrid>
+						</c:if>
+
+						<c:if test="#{legacyTradeTestRegistrationUI.companylearnerstradetest.aprlProgress eq AprlProgressEnum.WithTestCenterOne}">
+							<!-- With Test Center -->
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+								<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" update="@form" styleClass="flat green-btn Fs18" action="#{legacyTradeTestRegistrationUI.completeWorkflowWithTestCenter}" style="height: 50px;">
+								</p:commandButton>
+							</p:panelGrid>
+						</c:if>
+
+						<c:if test="#{legacyTradeTestRegistrationUI.companylearnerstradetest.aprlProgress eq AprlProgressEnum.WithMersetaFive}">
+							<!-- With MerSETA Fith Time -->
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+								<p:commandButton value="#{lang['complete.task']}" icon="ui-icon-save" update="@form :signOffForm" styleClass="flat green-btn Fs18" oncomplete="PF('signOffDlg').show()" style="height: 50px;">
+
+								</p:commandButton>
+								<p:commandButton value="Reject Task" icon="fa fa-times" update="@form rejectReasonForm" oncomplete="PF('rejectReasonsDlg').show()" action="#{legacyTradeTestRegistrationUI.prepApplicationRejectionWithMersetaFive}" styleClass="red-btn flat Fs18" style="height: 50px;" process="@this">
+								</p:commandButton>
+							</p:panelGrid>
+						</c:if>
+
+						<c:if test="#{legacyTradeTestRegistrationUI.companylearnerstradetest.aprlProgress eq AprlProgressEnum.WithMersetaSix}">
+							<!-- With MerSETA Sixth Time -->
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+								<p:commandButton value="Complete Task" icon="ui-icon-save" update="@form" styleClass="flat green-btn Fs18" action="#{legacyTradeTestRegistrationUI.completeWorkflowWithMersetaSix}" style="height: 50px;" onstart="uploadStart()" oncomplete="uploadDone()">
+									<p:confirm header="Confirmation" message="Are you sure?" icon="pi pi-exclamation-triangle" />
+								</p:commandButton>
+							</p:panelGrid>
+						</c:if>
+
+					</div>
+				</div>
+			</div>
+		</h:form>
+		
+		<p:dialog position="top" header="Assign: Assessor" widgetVar="dlgAssignAssessor" resizable="false" hideEffect="clip" showEffect="clip" id="dialogAssignAssessor" appendTo="@(body)" modal="true" width="70%" height="80vh" responsive="true" dynamic="true">
+			<h:form id="assignAssessorForm">
+				<p:fieldset legend="Current Assigned Assessor" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.assessorApplication ne null}">
+					<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText disabled="true" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.assessorApplication.user.firstName}" style="width:95%">
+								<p:ajax />
+							</p:inputText>
+							<p:outputLabel value="First Name" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText disabled="true" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.assessorApplication.user.lastName}" style="width:95%">
+								<p:ajax />
+							</p:inputText>
+							<p:outputLabel value="Last Name" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText disabled="true" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.assessorApplication.user.email}" style="width:95%">
+								<p:ajax />
+							</p:inputText>
+							<p:outputLabel value="Email" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText disabled="true" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.assessorApplication.certificateNumber}" style="width:95%">
+								<p:ajax />
+							</p:inputText>
+							<p:outputLabel value="Designation Registration Number" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText disabled="true" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.assessorApplication.etqa.description}" style="width:95%">
+								<p:ajax />
+							</p:inputText>
+							<p:outputLabel value="Primary ETQA" />
+						</h:panelGroup>
+					</p:panelGrid>
+				</p:fieldset>
+				<p:fieldset legend="Avalaible Assessors">
+					<c:if test="#{legacyTradeTestRegistrationUI.companylearnerstradetest.trainingProviderApplication eq null}">
+						<p:outputLabel value="Unable to locate accreditation! Contact support with reference number: TT-ACC-ERR-#{legacyTradeTestRegistrationUI.companylearnerstradetest.id}!" style="font-weight:bold; font-size: 20px; color: red;" />
+						<div class="EmptyBox10"/>
+					</c:if>
+					<c:if test="#{legacyTradeTestRegistrationUI.companylearnerstradetest.qualification eq null}">
+						<p:outputLabel value="Unable to locate qualification! Contact support with reference number: TT-QUL-ERR-#{legacyTradeTestRegistrationUI.companylearnerstradetest.id}!" style="font-weight:bold; font-size: 20px; color: red;" />
+						<div class="EmptyBox10"/>
+					</c:if>
+					<p:dataTable var="rvycc" value="#{legacyTradeTestRegistrationUI.assessorListDataModel}" id="ttcAssDT" paginator="true" rows="5" paginatorPosition="bottom"
+						paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20,40,60,80,100" reflow="true" lazy="true">
+						<p:column headerText="Full Name" >
+							<h:outputText value="#{rvycc.user.firstName} #{rvycc.user.lastName}" />
+						</p:column>
+
+						<p:column headerText="Email" >
+							<h:outputText value="#{rvycc.user.email}" />
+						</p:column>
+
+						<p:column headerText="Designation Registration Number" >
+							<h:outputText value="#{rvycc.certificateNumber}" />
+						</p:column>
+						
+						<p:column headerText="Primary ETQA" >
+							<h:outputText value="#{rvycc.etqa.description}" />
+						</p:column>
+
+						<p:column headerText="End Date" >
+							<h:outputText value="#{rvycc.endDate}">
+								<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+							</h:outputText>
+						</p:column>
+
+						<p:column headerText="Application Type" >
+							<h:outputText value="#{rvycc.applicationType.displayName}" />
+						</p:column>
+						
+						<p:column headerText="Action" styleClass="action-column" >
+							<p:commandButton icon="fa fa-plus" title="Assign Assessor" action="#{legacyTradeTestRegistrationUI.assesignNewAssessor}" update="@form :learnersInsForm" onstart="uploadStart()" oncomplete="uploadDone()">
+								<p:confirm header="Confirmation" message="Are you sure you wish to assign this user as the assessor?" icon="fa fa-exclamation-triangle" />
+								<f:setPropertyActionListener value="#{rvycc}" target="#{legacyTradeTestRegistrationUI.selectedAssessorModeratorApplication}" />
+							</p:commandButton>
+						</p:column>
+					</p:dataTable>
+					
+				</p:fieldset>
+			</h:form>
+		</p:dialog>
+		
+		<p:dialog position="top" header="Assign: Moderator" widgetVar="dlgAssignModerator" resizable="false" hideEffect="clip" showEffect="clip" id="dialogAssignModerator" appendTo="@(body)" modal="true" width="70%" height="80vh" responsive="true" dynamic="true">
+			<h:form id="assignModeratorForm">
+				<p:fieldset legend="Current Assigned Moderator" rendered="#{legacyTradeTestRegistrationUI.companylearnerstradetest.moderatorApplication ne null}">
+					<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText disabled="true" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.moderatorApplication.user.firstName}" style="width:95%">
+								<p:ajax />
+							</p:inputText>
+							<p:outputLabel value="First Name" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText disabled="true" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.moderatorApplication.user.lastName}" style="width:95%">
+								<p:ajax />
+							</p:inputText>
+							<p:outputLabel value="Last Name" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText disabled="true" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.moderatorApplication.user.email}" style="width:95%">
+								<p:ajax />
+							</p:inputText>
+							<p:outputLabel value="Email" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText disabled="true" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.moderatorApplication.certificateNumber}" style="width:95%">
+								<p:ajax />
+							</p:inputText>
+							<p:outputLabel value="Designation Registration Number" />
+						</h:panelGroup>
+						<h:panelGroup styleClass="md-inputfield">
+							<p:inputText disabled="true" value="#{legacyTradeTestRegistrationUI.companylearnerstradetest.moderatorApplication.etqa.description}" style="width:95%">
+								<p:ajax />
+							</p:inputText>
+							<p:outputLabel value="Primary ETQA" />
+						</h:panelGroup>
+					</p:panelGrid>
+				</p:fieldset>
+				<p:fieldset legend="Avalaible Moderators">
+					<c:if test="#{legacyTradeTestRegistrationUI.companylearnerstradetest.trainingProviderApplication eq null}">
+						<p:outputLabel value="Unable to locate accreditation! Contact support with reference number: TT-ACC-ERR-#{legacyTradeTestRegistrationUI.companylearnerstradetest.id}!" style="font-weight:bold; font-size: 20px; color: red;" />
+						<div class="EmptyBox10"/>
+					</c:if>
+					<c:if test="#{legacyTradeTestRegistrationUI.companylearnerstradetest.qualification eq null}">
+						<p:outputLabel value="Unable to locate qualification! Contact support with reference number: TT-QUL-ERR-#{legacyTradeTestRegistrationUI.companylearnerstradetest.id}!" style="font-weight:bold; font-size: 20px; color: red;" />
+						<div class="EmptyBox10"/>
+					</c:if>
+					<p:dataTable var="rvymod" value="#{legacyTradeTestRegistrationUI.moderatorListDataModel}" id="ttcModDT" paginator="true" rows="5" paginatorPosition="bottom"
+						paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20,40,60,80,100" reflow="true" lazy="true">
+						<p:column headerText="Full Name" >
+							<h:outputText value="#{rvymod.user.firstName} #{rvymod.user.lastName}" />
+						</p:column>
+
+						<p:column headerText="Email" >
+							<h:outputText value="#{rvymod.user.email}" />
+						</p:column>
+
+						<p:column headerText="Designation Registration Number" >
+							<h:outputText value="#{rvymod.certificateNumber}" />
+						</p:column>
+						
+						<p:column headerText="Primary ETQA" >
+							<h:outputText value="#{rvymod.etqa.description}" />
+						</p:column>
+
+						<p:column headerText="End Date" >
+							<h:outputText value="#{rvymod.endDate}">
+								<f:convertDateTime pattern="#{autoCompleteUI.CALENDER_PATTERN}" />
+							</h:outputText>
+						</p:column>
+
+						<p:column headerText="Application Type" >
+							<h:outputText value="#{rvymod.applicationType.displayName}" />
+						</p:column>
+						
+						<p:column headerText="Action" styleClass="action-column" >
+							<p:commandButton icon="fa fa-plus" title="Assign Moderator" action="#{legacyTradeTestRegistrationUI.assesignNewModerator}" update="@form :learnersInsForm" onstart="uploadStart()" oncomplete="uploadDone()">
+								<p:confirm header="Confirmation" message="Are you sure you wish to assign this user as the moderator?" icon="fa fa-exclamation-triangle" />
+								<f:setPropertyActionListener value="#{rvymod}" target="#{legacyTradeTestRegistrationUI.selectedAssessorModeratorApplication}" />
+							</p:commandButton>
+						</p:column>
+					</p:dataTable>
+					
+				</p:fieldset>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog position="top" header="Sign Off" widgetVar="signOffDlg" resizable="false" hideEffect="clip" showEffect="clip" id="signOffDialog" width="80%" responsive="true" modal="true" dynamic="true">
+			<h:form id="signOffForm">
+				<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="width:100%" layout="grid">
+					<h:panelGroup styleClass="md-inputfield" style="margin-top:19px;">
+						<p:inputText value="#{sessionUI.activeUser.firstName} #{sessionUI.activeUser.lastName}" readonly="true" />
+						<p:outputLabel value="Sign Off User" />
+					</h:panelGroup>
+					<h:panelGroup>
+					</h:panelGroup>
+					<h:panelGroup>
+						<div>
+							<p:selectBooleanCheckbox value="#{legacyTradeTestRegistrationUI.accept}" disabled="false">
+							</p:selectBooleanCheckbox>
+						</div>
+						<div>
+							<p:outputLabel value="#{lang['arpl.signoff.declaration.text']}"></p:outputLabel>
+						</div>
+					</h:panelGroup>
+					<h:panelGroup>
+						<p:commandButton title="Sign Off" icon="fa fa-pencil" value="Sign Off" action="#{legacyTradeTestRegistrationUI.completeWorkflowWithMersetaFive}" update=":signOffForm" process="signOffForm" onstart="uploadStart()" oncomplete="uploadDone()">
+							<p:confirm header="Confirmation" message="Are You Sure?" icon="fa fa-exclamation-triangle" />
+						</p:commandButton>
+					</h:panelGroup>
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+			<h:form>
+				<p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="fa fa-check" />
+				<p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="fa fa-times" />
+			</h:form>
+		</p:confirmDialog>
+
+		<p:dialog header="Reject Reasons" widgetVar="rejectReasonsDlg" hideEffect="clip" showEffect="clip" id="dialogRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{legacyTradeTestRegistrationUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:100%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<p:ajax />
+								<f:selectItems value="#{legacyTradeTestRegistrationUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+							</p:selectManyMenu>
+						</div>
+					</div>
+					<p:commandButton rendered="#{legacyTradeTestRegistrationUI.rejectionIndicator eq 1}" value="Reject" action="#{legacyTradeTestRegistrationUI.rejectWorkflowWithWithMersetaOne}" update="@form" onstart="uploadStart()" oncomplete="uploadDone()" />
+					<p:commandButton rendered="#{legacyTradeTestRegistrationUI.rejectionIndicator eq 2}" value="Reject" action="#{legacyTradeTestRegistrationUI.rejectApplicationWithWithMersetaTwo}" update="@form" onstart="uploadStart()" oncomplete="uploadDone()" />
+					<p:commandButton rendered="#{legacyTradeTestRegistrationUI.rejectionIndicator eq 3}" value="Reject" action="#{legacyTradeTestRegistrationUI.rejectWorkflowWithMersetaThree}" update="@form" onstart="uploadStart()" oncomplete="uploadDone()" />
+					<p:commandButton rendered="#{legacyTradeTestRegistrationUI.rejectionIndicator eq 4}" value="Reject" action="#{legacyTradeTestRegistrationUI.rejectWorkflowWithMersetaFour}" update="@form" onstart="uploadStart()" oncomplete="uploadDone()" />
+					<p:commandButton rendered="#{legacyTradeTestRegistrationUI.rejectionIndicator eq 5}" value="Reject Application" action="#{legacyTradeTestRegistrationUI.rejectApplicationWorkflowWithMersetaFour}" update="@form" onstart="uploadStart()" oncomplete="uploadDone()" />
+					<p:commandButton rendered="#{legacyTradeTestRegistrationUI.rejectionIndicator eq 6}" value="Reject" action="#{legacyTradeTestRegistrationUI.rejectWorkflowWithMersetaFive}" update="@form" onstart="uploadStart()" oncomplete="uploadDone()" />
+				</div>
+			</h:form>
+		</p:dialog>
+
+		<p:dialog position="top" header="A Quality Assuror has not been assigned to the region." widgetVar="NoRegionDlg" hideEffect="clip" showEffect="clip" id="NoRegion" modal="true" closable="true" width="50%" responsive="true">
+			<h:form id="NoRegionForm">
+				<p:panelGrid columns="2" style="width : 100%" styleClass="ui-panelgrid-blank form-group" layout="grid">
+					<p:outputLabel value="Please contact Support to raise the issue" />
+					<h:panelGroup>
+						<p:commandButton icon="fa fa-times" style="float: right" title="Clear merSeta's Contact Information" update="NoRegionForm">
+							<f:setPropertyActionListener value="false" target="#{legacyTradeTestRegistrationUI.viewContactDetails}" />
+						</p:commandButton>
+						<p:commandButton icon="fa fa-search" style="float: right" title="View merSeta's Contact Information" update="NoRegionForm">
+							<f:setPropertyActionListener value="true" target="#{legacyTradeTestRegistrationUI.viewContactDetails}" />
+						</p:commandButton>
+						<p:spacer width="5px" />
+					</h:panelGroup>
+				</p:panelGrid>
+				<c:if test="#{legacyTradeTestRegistrationUI.viewContactDetails eq true}">
+					<p:panel>
+						<p:scrollPanel mode="native" style="width:100%;height:500px;border:none">
+							<p:repeat var="rv" value="#{officeUI.officeList}">
+								<div class="ui-g-12 ui-md-6" style="border-bottom: 0.5pt solid #dedede">
+									<h2>#{rv.description}</h2>
+									<b>Contact Number:</b> #{rv.contactNumber} <br /> <b>Contact Person:</b> #{rv.contactPerson} <br /> <b>Contact Person Email:</b> #{rv.contactPersonEmail} <br /> <br /> <b>Address</b> <br /> #{rv.physicalAddress.addressLine1} <br /> #{rv.physicalAddress.addressLine2} <br />
+									#{rv.physicalAddress.addressLine3} <br /> #{rv.physicalAddress.town.description} <br />
+								</div>
+							</p:repeat>
+						</p:scrollPanel>
+					</p:panel>
+				</c:if>
+				<div class="EmptyBox10" />
+				<p:commandButton value="Email Support" icon="fa fa-envelope-o" action="#{legacyTradeTestRegistrationUI.contactSupport}" oncomplete="PF('NoRegionDlg').hide()" title="Email Support" update="NoRegionForm" disabled="#{legacyTradeTestRegistrationUI.companylearnerstradetest.emailSupport eq true}">
+					<f:setPropertyActionListener value="true" target="#{legacyTradeTestRegistrationUI.companylearnerstradetest.emailSupport}" />
+				</p:commandButton>
+			</h:form>
+		</p:dialog>
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+		<p:dialog header="#{lang['upload.documents']}" widgetVar="dlgUpload" resizable="false" hideEffect="clip" showEffect="clip" id="commonUPLOAD" width="80%" responsive="true" modal="true" dynamic="true">
+			<h:form id="uploadForm">
+				<h:panelGroup id="uploadGroup">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<div class="card">
+								<h1 style="font-weight: bold; font-size: 25px;">#{legacyTradeTestRegistrationUI.doc.configDoc.name}</h1>
+								<p:panel>
+									<h:panelGrid columns="2" style="width: 100%">
+										<p:outputLabel value="#{lang['notes']}:" for="note" />
+										<p:inputTextarea id="note" value="#{legacyTradeTestRegistrationUI.doc.note}" autoResize="false" rows="2" style="width: 90%">
+											<p:ajax />
+										</p:inputTextarea>
+									</h:panelGrid>
+
+									<div class="TexAlCenter">
+										<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+									</div>
+									<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone()" fileUploadListener="#{legacyTradeTestRegistrationUI.storeFile}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}" fileLimitMessage="#{lang['file.to.big.to.upload']}"
+										update="learnersInsForm:learnerRegUploadForm" multiple="false" fileLimit="1" immediate="false" auto="true" />
+								</p:panel>
+								<div class="EmptyBox10" />
+							</div>
+						</div>
+					</div>
+				</h:panelGroup>
+			</h:form>
+		</p:dialog>
+
+	</ui:define>
+</ui:composition>

@@ -1,0 +1,206 @@
+@page "/employers"
+@inject IOrganisationService OrgService
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+<div class="d-flex justify-space-between align-center mb-4">
+    <div>
+        <MudText Typo="Typo.h5" Class="font-weight-bold">Employer & Organisation Registry</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary">Centralized database of levy-paying employers, chambers, providers, and accredited entities</MudText>
+    </div>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AddBusiness" OnClick="CreateNewEmployer">
+        New Employer
+    </MudButton>
+</div>
+
+<MudPaper Class="pa-4 mb-4" Elevation="1">
+    <div class="d-flex flex-wrap gap-4 align-center justify-space-between mb-3">
+        <div class="d-flex align-center gap-3 flex-grow-1" style="max-width: 600px;">
+            <MudTextField @bind-Value="_searchString"
+                          Placeholder="Search by SDL Number, Company Name, Registration No, Tax No..."
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          IconSize="Size.Medium"
+                          Class="mt-0"
+                          Immediate="true"
+                          Clearable="true" />
+        </div>
+        <div class="d-flex align-center gap-2">
+            <MudChipSet T="string" @bind-SelectedValue="_statusFilter" SelectionMode="SelectionMode.SingleSelection">
+                <MudChip T="string" Value="@("All")" Color="Color.Default" Variant="@(_statusFilter == "All" ? Variant.Filled : Variant.Outlined)">All</MudChip>
+                <MudChip T="string" Value="@("Active")" Color="Color.Success" Variant="@(_statusFilter == "Active" ? Variant.Filled : Variant.Outlined)">Active Only</MudChip>
+                <MudChip T="string" Value="@("Inactive")" Color="Color.Error" Variant="@(_statusFilter == "Inactive" ? Variant.Filled : Variant.Outlined)">Inactive</MudChip>
+            </MudChipSet>
+        </div>
+    </div>
+
+    @if (_loading)
+    {
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-7" />
+    }
+    else
+    {
+        <MudTable Items="@FilteredEmployers"
+                  Hover="true"
+                  Dense="true"
+                  Striped="true"
+                  Breakpoint="Breakpoint.Sm"
+                  OnRowClick="@((TableRowClickEventArgs<Organisation> e) => OpenDetail(e.Item != null ? e.Item.Id : 0))"
+                  T="Organisation">
+            <HeaderContent>
+                <MudTh>SDL Number</MudTh>
+                <MudTh>Company Name</MudTh>
+                <MudTh Class="d-none d-md-table-cell">Trading Name</MudTh>
+                <MudTh Class="d-none d-md-table-cell">Registration / Tax No</MudTh>
+                <MudTh>Chamber / Sector</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh Style="text-align:right">Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="SDL Number">
+                    <div class="d-flex align-center gap-1">
+                        <MudIcon Icon="@Icons.Material.Filled.Business" Size="Size.Small" Color="Color.Primary" />
+                        <MudText Typo="Typo.body2" Class="fw-bold font-monospace">@context.SdlNumber</MudText>
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="Company Name">
+                    <MudText Typo="Typo.body2" Class="fw-bold">@context.CompanyName</MudText>
+                    @if (context.PrimaryContactPerson != null)
+                    {
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                            Contact: @context.PrimaryContactPerson.FirstName @context.PrimaryContactPerson.LastName
+                        </MudText>
+                    }
+                </MudTd>
+                <MudTd Class="d-none d-md-table-cell" DataLabel="Trading Name">
+                    @(!string.IsNullOrWhiteSpace(context.TradingName) ? context.TradingName : "-")
+                </MudTd>
+                <MudTd Class="d-none d-md-table-cell" DataLabel="Registration / Tax No">
+                    <div>
+                        @if (!string.IsNullOrWhiteSpace(context.RegistrationNumber))
+                        {
+                            <MudText Typo="Typo.caption" Class="d-block">Reg: @context.RegistrationNumber</MudText>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(context.TaxNumber))
+                        {
+                            <MudText Typo="Typo.caption" Class="d-block text-muted">Tax: @context.TaxNumber</MudText>
+                        }
+                        @if (string.IsNullOrWhiteSpace(context.RegistrationNumber) && string.IsNullOrWhiteSpace(context.TaxNumber))
+                        {
+                            <span>-</span>
+                        }
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="Chamber / Sector">
+                    <div>
+                        @if (!string.IsNullOrWhiteSpace(context.ChamberCode))
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">@context.ChamberCode</MudChip>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(context.SectorCode))
+                        {
+                            <MudText Typo="Typo.caption" Class="d-block text-muted">@context.SectorCode</MudText>
+                        }
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="Status">
+                    <MudChip T="string" Color="@(context.IsActive ? Color.Success : Color.Error)" Size="Size.Small" Variant="Variant.Filled">
+                        @(context.IsActive ? "Active" : "Inactive")
+                    </MudChip>
+                </MudTd>
+                <MudTd Style="text-align:right" DataLabel="Actions">
+                    <div class="d-flex justify-end gap-1">
+                        <MudTooltip Text="View & Edit Details">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Small" OnClick="@(() => OpenDetail(context.Id))" aria-label="Edit Record" />
+                        </MudTooltip>
+                        <MudTooltip Text="Delete Record">
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => DeleteEmployer(context.Id, context.CompanyName))" aria-label="Delete Record" />
+                        </MudTooltip>
+                    </div>
+                </MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <div class="pa-4 text-center">
+                    <MudText Typo="Typo.body1" Color="Color.Secondary">No employers found matching search criteria.</MudText>
+                </div>
+            </NoRecordsContent>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
+            </PagerContent>
+        </MudTable>
+    }
+</MudPaper>
+
+@code {
+    private List<Organisation> _employers = new();
+    private string _searchString = string.Empty;
+    private string _statusFilter = "All";
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _loading = true;
+        _employers = await OrgService.GetAllAsync();
+        _loading = false;
+    }
+
+    private IEnumerable<Organisation> FilteredEmployers
+    {
+        get
+        {
+            var query = _employers.AsEnumerable();
+
+            if (_statusFilter == "Active")
+            {
+                query = query.Where(x => x.IsActive);
+            }
+            else if (_statusFilter == "Inactive")
+            {
+                query = query.Where(x => !x.IsActive);
+            }
+
+            if (!string.IsNullOrWhiteSpace(_searchString))
+            {
+                var s = _searchString.Trim();
+                query = query.Where(x =>
+                    (x.CompanyName != null && x.CompanyName.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    (x.TradingName != null && x.TradingName.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    (x.SdlNumber != null && x.SdlNumber.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    (x.RegistrationNumber != null && x.RegistrationNumber.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    (x.TaxNumber != null && x.TaxNumber.Contains(s, StringComparison.OrdinalIgnoreCase)));
+            }
+
+            return query;
+        }
+    }
+
+    private void OpenDetail(int id)
+    {
+        NavManager.NavigateTo($"/employers/{id}");
+    }
+
+    private void CreateNewEmployer()
+    {
+        NavManager.NavigateTo("/employers/create");
+    }
+
+    private async Task DeleteEmployer(int id, string companyName)
+    {
+        var deleted = await OrgService.DeleteAsync(id, "Admin");
+        if (deleted)
+        {
+            Snackbar.Add($"Employer '{companyName}' deleted successfully with audit confirmation.", Severity.Success);
+            await LoadData();
+        }
+        else
+        {
+            Snackbar.Add("Could not delete the employer record.", Severity.Error);
+        }
+    }
+}

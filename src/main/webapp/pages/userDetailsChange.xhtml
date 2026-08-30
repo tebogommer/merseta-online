@@ -1,0 +1,224 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<p:growl showDetail="false" sticky="false">
+						<p:autoUpdate />
+					</p:growl>
+					<p:importEnum type="haj.com.entity.enums.ConfigDocProcessEnum"></p:importEnum>
+					<h:form id="extensionrequestInsForm">
+						<h1>Changes Made To User Details</h1>
+
+						<p:fieldset legend="#{lang['change.reason']}">
+							<p:fieldset legend="Change Reason Description" rendered="#{profileUI.changeReason.description ne null}">
+								<p:textEditor widgetVar="editor1" value="#{profileUI.changeReason.description}" readonly="true" height="100" style="margin-bottom:10px" />
+							</p:fieldset>
+							<br />
+							<p:dataTable value="#{profileUI.changeReason.docs}" id="tblChangeReason" var="rv1" emptyMessage="#{lang['no.records.found']}" rowKey="#{rv1.id}">
+								<p:column headerText="#{lang['original.file.name']}" priority="4">
+									<p:outputLabel value="#{rv1.originalFname}" styleClass="Fs12"></p:outputLabel>
+								</p:column>
+								<p:column headerText="#{lang['uploaded.by']}">#{rv1.users.firstName} #{rv1.users.lastName}</p:column>
+								<p:column headerText="#{lang['uploaded']}" width="15%" priority="3">
+									<h:outputText value="#{rv1.createDate}">
+										<f:convertDateTime pattern="dd MMM yyyy (HH:mm)" />
+									</h:outputText>
+								</p:column>
+								<p:column headerText="#{lang['version']}" width="10%" priority="4">
+									<h:outputText value="#{rv1.versionNo}">
+									</h:outputText>
+								</p:column>
+
+								<p:column width="180">
+									<p:commandButton ajax="false" icon="fa fa-download " action="#{uploadDocUI.download}" id="dlb" rendered="#{rv1.id ne null}" immediate="true">
+										<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+									<p:tooltip for="dlb" value="#{lang['download.the.file']}" position="left" rendered="#{rv1.id ne null}" />
+
+
+									<p:spacer width="5" rendered="#{rv1.id ne null}" />
+									<p:commandButton icon="fa fa-bars " id="dhist" action="#{uploadDocUI.showHistory}" oncomplete="PF('histDialog').show()" update=":documenttrackeForm:documenttrackeList" rendered="#{rv1.id ne null}" process="@this">
+										<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+									</p:commandButton>
+
+									<p:tooltip for="dhist" value="#{lang['document.tracker']}" position="left" rendered="#{rv1.id ne null}" />
+									<h:panelGroup id="panelGroupThree" rendered="#{rv1.note ne null and rv1.note.length() gt 0}">
+										<p:spacer width="5" />
+										<p:commandButton icon="fa fa-comment-o" id="dnote" oncomplete="PF('noteDialog').show()" update=":noteForm:notePanel" process="@this">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="dnote" value="#{lang['view.note']}" position="left" />
+									</h:panelGroup>
+									<h:panelGroup id="panelGroupFour" rendered="#{rv1.extension.toLowerCase() eq 'pdf' and rv1.id ne null}">
+										<p:spacer width="5" />
+										<p:commandButton icon="fa fa-eye " id="viewerButton" oncomplete="PF('viewDialog').show()" update=":viewForm:viewer" action="#{uploadDocUI.buildStreamContent}" process="@this">
+											<f:setPropertyActionListener value="#{rv1}" target="#{uploadDocUI.doc}" />
+										</p:commandButton>
+										<p:tooltip for="viewerButton" value="#{lang['view.document']} " position="left" />
+									</h:panelGroup>
+								</p:column>
+							</p:dataTable>
+						</p:fieldset>
+						<p:fieldset legend="User Details">
+							<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" layout="grid">
+								<p:panel header="Current User Details">
+									<div class="EmptyBox10"></div>
+									<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+
+										<h:panelGroup>
+											<p:outputLabel value="#{lang['title']}" for="currtitle" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="currtitle" value="#{profileUI.userChangeRequest.user.title.description}" style="width:95%" />
+										</h:panelGroup>
+
+										<h:panelGroup>
+											<p:outputLabel value="#{lang['first.name']}" for="currname" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="currname" value="#{profileUI.userChangeRequest.user.firstName}" style="width:95%" />
+										</h:panelGroup>
+
+										<h:panelGroup>
+											<p:outputLabel value="Middle Name" for="currMiddleName" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="currMiddleName" value="#{profileUI.userChangeRequest.user.middleName}" style="width:95%" />
+										</h:panelGroup>
+
+										<h:panelGroup>
+											<p:outputLabel value="#{lang['last.name']}" for="currlastname" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="currlastname" value="#{profileUI.userChangeRequest.user.lastName}" style="width:95%" />
+										</h:panelGroup>
+
+										<h:panelGroup rendered="#{profileUI.userChangeRequest.user.rsaIDNumber ne null and profileUI.userChangeRequest.user.rsaIDNumber.length() gt 0}">
+											<p:outputLabel value="#{lang['rsa.id.number']}" for="currrsaID" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="currrsaID" value="#{profileUI.userChangeRequest.user.rsaIDNumber}" style="width:95%" />
+										</h:panelGroup>
+
+										<h:panelGroup rendered="#{profileUI.userChangeRequest.user.passportNumber ne null and profileUI.userChangeRequest.user.passportNumber.length() gt 0}">
+											<p:outputLabel value="#{lang['passport.number']}" for="currpassport" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="currpassport" value="#{profileUI.userChangeRequest.user.passportNumber}" style="width:95%" />
+										</h:panelGroup>
+
+										<h:panelGroup>
+											<p:outputLabel value="#{lang['email']}" for="curremail" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="curremail" value="#{profileUI.userChangeRequest.user.email}" style="width:95%" />
+										</h:panelGroup>
+
+
+										<h:panelGroup>
+											<p:outputLabel value="#{lang['tel.number']}" for="currtel" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="currtel" value="#{profileUI.userChangeRequest.user.telNumber}" style="width:95%" />
+										</h:panelGroup>
+
+
+										<h:panelGroup>
+											<p:outputLabel value="#{lang['cell.number']}" for="currcell" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="currcell" value="#{profileUI.userChangeRequest.user.cellNumber}" style="width:95%" />
+										</h:panelGroup>
+									</p:panelGrid>
+								</p:panel>
+								<p:panel header="Requested Changes">
+									<div class="EmptyBox10"></div>
+									<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+										<h:panelGroup>
+											<p:outputLabel value="#{lang['title']}" for="title" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="title" value="#{profileUI.userChangeRequest.title.description}" style="width:95%" />
+										</h:panelGroup>
+
+										<h:panelGroup>
+											<p:outputLabel value="#{lang['first.name']}" for="name" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="name" value="#{profileUI.userChangeRequest.firstName}" style="width:95%" />
+										</h:panelGroup>
+
+										<h:panelGroup>
+											<p:outputLabel value="Middle Name" for="newMiddleName" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="newMiddleName" value="#{profileUI.userChangeRequest.middleName}" style="width:95%" />
+										</h:panelGroup>
+
+										<h:panelGroup>
+											<p:outputLabel value="#{lang['last.name']}" for="tclastname" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="tclastname" value="#{profileUI.userChangeRequest.lastName}" style="width:95%" />
+										</h:panelGroup>
+
+										<h:panelGroup rendered="#{profileUI.userChangeRequest.rsaIDNumber ne null and profileUI.userChangeRequest.rsaIDNumber.length() gt 0}">
+											<p:outputLabel value="#{lang['rsa.id.number']}" for="rsaID" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="rsaID" value="#{profileUI.userChangeRequest.rsaIDNumber}" style="width:95%" />
+										</h:panelGroup>
+
+										<h:panelGroup rendered="#{profileUI.userChangeRequest.passportNumber ne null and profileUI.userChangeRequest.passportNumber.length() gt 0}">
+											<p:outputLabel value="#{lang['passport.number']}" for="passport" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="passport" value="#{profileUI.userChangeRequest.passportNumber}" style="width:95%" />
+										</h:panelGroup>
+
+										<h:panelGroup>
+											<p:outputLabel value="#{lang['email']}" for="tcemail" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="tcemail" value="#{profileUI.userChangeRequest.email}" style="width:95%" />
+										</h:panelGroup>
+
+
+										<h:panelGroup>
+											<p:outputLabel value="#{lang['tel.number']}" for="tel" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="tel" value="#{profileUI.userChangeRequest.telNumber}" style="width:95%" />
+										</h:panelGroup>
+
+
+										<h:panelGroup>
+											<p:outputLabel value="#{lang['cell.number']}" for="cell" styleClass="Fs12 FontLight" />
+											<br />
+											<p:outputLabel id="cell" value="#{profileUI.userChangeRequest.cellNumber}" style="width:95%" />
+										</h:panelGroup>
+
+									</p:panelGrid>
+								</p:panel>
+							</p:panelGrid>
+						</p:fieldset>
+						<p:fieldset legend="Validiation Errors" rendered="#{profileUI.validiationExceptionUserInfoWorkflow ne ''}">
+							<p:outputLabel value="#{profileUI.validiationExceptionUserInfoWorkflow}" escape="false" />
+						</p:fieldset>
+						<p:panelGrid columns="2" styleClass="ui-panelgrid-blank" style="text-align: center; width:100%" layout="grid">
+							<p:commandButton value="#{lang['approve.task']}" icon="ui-icon-save" update="@form" action="#{profileUI.approveUserChangesTask}" styleClass="flat green-btn Fs18" style="height: 50px;">
+							</p:commandButton>
+
+							<p:commandButton value="#{lang['reject.task']}" icon="ui-icon-clear-all" update="@form" oncomplete="PF('rejectReasonsDlg').show()" process="@this" styleClass="flat red-btn Fs18" style="height: 50px;">
+							</p:commandButton>
+						</p:panelGrid>
+					</h:form>
+				</div>
+			</div>
+		</div>
+		<ui:include src="/pages/upload/commonuploadDialogs.xhtml" />
+		<p:dialog header="Reject Reasons" widgetVar="rejectReasonsDlg" hideEffect="clip" showEffect="clip" id="dialogRejectReason" appendTo="@(body)" modal="true" closable="true" width="50%" height="60vh" responsive="true">
+			<h:form id="rejectReasonForm">
+				<div class="ui-fluid">
+					<div class="ui-g">
+						<div class="ui-g-12">
+							<p:selectManyMenu value="#{profileUI.selectedRejectReason}" converter="RejectReasonsConvertor" scrollHeight="400" style="width:100%" required="true" var="t" requiredMessage="Please select a reject reason" showCheckbox="true">
+								<f:selectItems value="#{profileUI.rejectReasons}" var="rv" itemValue="#{rv}" />
+								<p:column>
+									<h:outputText value="#{t.description}" />
+									<br />
+									<h:outputText styleClass="Fs12 gray" value="#{t.howTo}" />
+								</p:column>
+							</p:selectManyMenu>
+						</div>
+					</div>
+					<p:commandButton value="Reject User Details Change Request" action="#{profileUI.rejectUserChangesTask}" onstart="uploadStart()" oncomplete="uploadDone();PF('rejectReasonsDlg').hide()" update="@form" />
+				</div>
+			</h:form>
+		</p:dialog>
+	</ui:define>
+</ui:composition>

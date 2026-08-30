@@ -1,0 +1,303 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:pt="http://xmlns.jcp.org/jsf/passthrough" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui"
+	xmlns:c="http://java.sun.com/jsp/jstl/core">
+	<h:panelGroup id="pgNonSetaQual">
+		<p:fieldset legend="#{lang['qualifications']}" rendered="true" id="nonSetaCompanyQualifications">
+			<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup>
+					<div>
+					
+						<p:outputLabel rendered="true" value="#{lang['qualification']}"></p:outputLabel>
+						
+					</div>
+					<div>
+					   <!-- Non-merSETA Qualification-->
+						<p:autoComplete rendered="#{tpDetailUI.trainingProviderApplication.accreditationApplicationTypeEnum eq AccreditationApplicationTypeEnum.Non_MerSETA_Focused_Provider}"
+							style="width: 100%" id="nonSetaQualificationAuto" value="#{tpDetailUI.qualification}" completeMethod="#{autoCompleteUI.completeNonMerSETAQualification}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor" dropdown="true" minQueryLength="3"
+							maxResults="10">
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+							<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+							<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+						</p:autoComplete>
+						
+						<!-- QCTO Skills Development Provider-->
+						<p:autoComplete rendered="#{tpDetailUI.trainingProviderApplication.accreditationApplicationTypeEnum eq AccreditationApplicationTypeEnum.QCTOSkillsDevelopmentProvider}"
+							style="width: 100%" id="nonSetaQualificationSelection" value="#{tpDetailUI.qualification}" completeMethod="#{autoCompleteUI.completeQCTOQualification}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor"
+							dropdown="true" minQueryLength="3" maxResults="10">
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+							<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+							<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+						</p:autoComplete>
+						
+						<!-- QCTO Trade Test Centre-->
+						<p:autoComplete rendered="#{tpDetailUI.trainingProviderApplication.accreditationApplicationTypeEnum eq AccreditationApplicationTypeEnum.QCTOTradeTestCentre}"
+							style="width: 100%" id="nonSetaQualificationSelectionTC" value="#{tpDetailUI.qualification}" completeMethod="#{autoCompleteUI.completeQCTOTradeTestCentreQualification}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="QualificationConvertor"
+							dropdown="true" minQueryLength="3" maxResults="10">
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+							<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+							<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqflevelg2description}</p:column>
+						</p:autoComplete>
+						
+					</div>
+				</h:panelGroup>
+				<p:commandButton value="#{lang['add.qualification']}" update="nonSetaCompanyQualifications pgNonSetaQual" process="@this nonSetaCompanyQualifications" icon="ui-icon-plus" iconPos="right" styleClass="flat" action="#{tpDetailUI.addNonSetaQualificationToList}" />
+			</p:panelGrid>
+			
+			<p:dataList value="#{tpDetailUI.qualificationList}" var="company" rendered="#{tpDetailUI.qualificationList.size() gt 0}">
+				<p:outputLabel value="#{company.saqaQualification}"></p:outputLabel>
+				<p:commandLink id="ajaxs" update="mainForm:trainingProviderTabView:pgNonSetaQual" process="@this" action="#{tpDetailUI.removeNonSetaQualificationFromList}">
+					<span class="fa fa-times Fs12 grey"></span>
+					<f:setPropertyActionListener value="#{company}" target="#{tpDetailUI.qualification}" />
+				</p:commandLink>
+			</p:dataList>
+		</p:fieldset>
+
+		<p:fieldset legend="#{lang['unit.standards']}" rendered="#{tpDetailUI.trainingProviderApplication.accreditationApplicationTypeEnum ne AccreditationApplicationTypeEnum.QCTOTradeTestCentre  and  tpDetailUI.trainingProviderApplication.accreditationApplicationTypeEnum ne AccreditationApplicationTypeEnum.QCTOSkillsDevelopmentProvider}" id="nonSetaCompanyunitStandardList">
+			<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup>
+					<div>
+						<p:outputLabel value="#{lang['unit.standard']}" for="nonSetaCompanyunitStandardListAuto"></p:outputLabel>
+					</div>
+					<div>
+						<p:autoComplete style="width: 100%" id="nonSetaCompanyunitStandardListAuto" value="#{tpDetailUI.unitStandard}" completeMethod="#{tpDetailUI.completeUnit}" var="rv" itemLabel="#{rv.title}" itemValue="#{rv}" forceSelection="true" converter="UnitStandardsConvertor" dropdown="true"
+							minQueryLength="3" maxResults="10">
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.code}</p:column>
+							<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.title}</p:column>
+							<p:column headerText="#{lang['level']}" style="white-space: nowrap">#{rv.nqf}</p:column>
+							<p:ajax event="itemSelect" listener="#{tpDetailUI.usQualificationValidation}" update="nonSetaCompanyunitStandardList" />
+						</p:autoComplete>
+					</div>
+				</h:panelGroup>
+				<p:commandButton value="#{lang['add.unit.standard']}" process="nonSetaCompanyunitStandardList" update="nonSetaCompanyunitStandardList nonSetaPgSkillsProgOP pgNonSetaQual" icon="ui-icon-plus" iconPos="right" styleClass="flat" action="#{tpDetailUI.addNonSetaUnitStandardToList}" />
+			</p:panelGrid>
+			<p:dataList value="#{tpDetailUI.unitStandardList}" var="company" rendered="#{tpDetailUI.unitStandardList.size() gt 0}">
+				<p:outputLabel value="(#{company.code}) #{company.title}"></p:outputLabel>
+				<p:commandLink id="ajaxs" update="mainForm:trainingProviderTabView:pgNonSetaQual" process="@this" action="#{tpDetailUI.removeNonSetaUnitStandardsFromList}">
+					<span class="fa fa-times Fs12 grey"></span>
+					<f:setPropertyActionListener value="#{company}" target="#{tpDetailUI.unitStandard}" />
+				</p:commandLink>
+			</p:dataList>
+			
+		</p:fieldset>
+		<br />
+		<p:fieldset legend="#{lang['skills.programme']}" rendered="#{tpDetailUI.trainingProviderApplication.accreditationApplicationTypeEnum ne AccreditationApplicationTypeEnum.QCTOTradeTestCentre  and  tpDetailUI.trainingProviderApplication.accreditationApplicationTypeEnum ne AccreditationApplicationTypeEnum.QCTOSkillsDevelopmentProvider}" id="fSetSkillsProgram">
+			<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup styleClass="md-inputfield" id="pgSkillsP2" rendered="true">
+					<p:autoComplete required="false" id="nonSetaTpSkillsProgram" value="#{tpDetailUI.skillsProgram}" completeMethod="#{autoCompleteUI.completeSkillsProgram}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SkillsProgramConvertor" dropdown="true"
+						minQueryLength="3" maxResults="10" inputStyle="width: 100%; opacity:1 !important;" style="width: 100%">
+						<p:ajax event="itemSelect" update="mainForm:trainingProviderTabView:fSetSkillsProgram" />
+						<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+						<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+					</p:autoComplete>
+					<p:outputLabel value="Skills Programme" for="pgSkillsP2" styleClass="gray" />
+				</h:panelGroup>
+				<p:commandButton value="#{lang['add.skills.program']}" update="mainForm:trainingProviderTabView:fSetSkillsProgram pgNonSetaQual" process="@this fSetSkillsProgram" icon="ui-icon-plus" iconPos="right" styleClass="flat" action="#{tpDetailUI.addNonSetaSkillsProgramToList}" />
+			</p:panelGrid>
+			<p:dataList value="#{tpDetailUI.skillsProgramList}" var="sp" rendered="#{tpDetailUI.skillsProgramList.size() gt 0}">
+				<p:outputLabel value="(#{sp.programmeID}) #{sp.description}"></p:outputLabel>
+				<p:commandLink id="ajaxs" disabled="#{sp.cannotRemove}" update="mainForm:trainingProviderTabView:pgNonSetaQual" process="@this" action="#{tpDetailUI.removeNonSetaSkillsProgramFromList}">
+					<span class="fa fa-times Fs12 grey"></span>
+					<f:setPropertyActionListener value="#{sp}" target="#{tpDetailUI.skillsProgram}" />
+				</p:commandLink>
+			</p:dataList>
+		</p:fieldset>
+		<br />
+		<p:fieldset legend="#{lang['skills.set']}" rendered="#{tpDetailUI.trainingProviderApplication.accreditationApplicationTypeEnum ne AccreditationApplicationTypeEnum.QCTOTradeTestCentre  and  tpDetailUI.trainingProviderApplication.accreditationApplicationTypeEnum ne AccreditationApplicationTypeEnum.QCTOSkillsDevelopmentProvider}" id="fSetSkillsSet">
+			<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group">
+				<h:panelGroup styleClass="md-inputfield" style="margin-top: 0px">
+					<p:autoComplete required="false" id="skillsSet2" value="#{tpDetailUI.skillsSet}" completeMethod="#{autoCompleteUI.completeSkillsSet}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SkillsSetConvertor" dropdown="true" minQueryLength="3"
+						maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 100%">
+						<p:ajax event="itemSelect" update="pgNonSetaQual" />
+						<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+						<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+					</p:autoComplete>
+					<p:outputLabel value="Skills Set" for="skillsSet2" styleClass="gray" />
+				</h:panelGroup>
+				<p:commandButton value="#{lang['add.skills.set']}" update="mainForm:trainingProviderTabView:fSetSkillsSet pgNonSetaQual" process="@this fSetSkillsSet" icon="ui-icon-plus" iconPos="right" styleClass="flat" action="#{tpDetailUI.addNonSetaSkillsSetToList}" />
+			</p:panelGrid>
+			<p:dataList value="#{tpDetailUI.skillsSetList}" var="sp" rendered="#{tpDetailUI.skillsSetList.size() gt 0}">
+				<p:outputLabel value="(#{sp.programmeID}) #{sp.description}"></p:outputLabel>
+				<p:commandLink id="ajaxs" update="mainForm:trainingProviderTabView:pgNonSetaQual" process="@this" action="#{tpDetailUI.removeNonSetaSkillsSetFromList}">
+					<span class="fa fa-times Fs12 grey"></span>
+					<f:setPropertyActionListener value="#{sp}" target="#{tpDetailUI.skillsSet}" />
+				</p:commandLink>
+			</p:dataList>
+			
+		</p:fieldset>
+		<br />
+		<p:outputPanel id="nonSetaPgSkillsProgOP">
+			<p:panelGrid columns="2" id="pgSkillsProg2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="#{tpDetailUI.unitStandardList ne null and tpDetailUI.unitStandardList.size() ne 0 and tpDetailUI.resultsForSkillsProgramFound ne 0}">
+				<h:panelGroup>
+					<p:outputLabel styleClass="FontBold Fs15" style="font-weight:bold" value="Please indicate if a skills programme route will be used for obtaining the unit standards?" />
+	
+					<p:selectOneMenu id="useSkillProgrammeRoute2" value="#{tpDetailUI.trainingProviderApplication.useSkillProgrammeRoute}" style="width:100%" required="true" requiredMessage="#{lang['use.skill.programme.route.error.msg']}">
+						<p:ajax event="itemSelect" update="nonSetaPgSkillsProgOP" listener="#{tpDetailUI.populateSkillsProgramByUnitStandardsList}" />
+						<f:selectItem itemLabel="#{lang['select.one']}" itemValue="" noSelectionOption="true" />
+						<f:selectItems value="#{enumUI.yesNoEnumDD}" />
+					</p:selectOneMenu>
+				</h:panelGroup>
+	
+				<h:panelGroup style="margin-top: -20px" rendered="#{tpDetailUI.trainingProviderApplication.useSkillProgrammeRoute eq YesNoEnum.Yes}" >
+					<div>
+						<p:outputLabel value="Skills Programme" for="qualSP2" />
+					</div>
+					<div>
+						<p:selectOneMenu id="qualSP2" value="#{tpDetailUI.trainingProviderApplication.skillsProgram}" converter="SkillsProgramConvertor" style="width:100%" required="true" requiredMessage="#{lang['select.skills.program']}">
+							<p:ajax />
+							<f:selectItem itemLabel="---#{lang['select.one']}---" noSelectionOption="true" />
+							<f:selectItems value="#{tpDetailUI.skillsProgramByUnitStandardsList}" var="rv" itemLabel="(#{rv.programmeID})  #{rv.description}" itemValue="#{rv}" />
+							<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+							<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+						</p:selectOneMenu>
+					</div>
+				</h:panelGroup>
+	
+				<h:panelGroup styleClass="md-inputfield" id="spPg2" rendered="false">
+					<!-- NOT IN USE -->
+					<p:autoComplete required="true" id="skillsProgram2" value="#{tpDetailUI.trainingProviderApplication.skillsProgram}" completeMethod="#{autoCompleteUI.completeSkillsProgram}" var="rv" itemLabel="#{rv.description}" itemValue="#{rv}" forceSelection="true" converter="SkillsProgramConvertor"
+						dropdown="true" minQueryLength="3" maxResults="10" inputStyle="width: 95%; opacity:1 !important;" style="width: 95%">
+						<p:ajax event="itemSelect" update="@form" />
+						<p:column headerText="#{lang['code']}" style="white-space: nowrap">#{rv.programmeID}</p:column>
+						<p:column headerText="#{lang['qualification']}" style="white-space: nowrap">#{rv.description}</p:column>
+					</p:autoComplete>
+					<p:outputLabel value="Skills Programme" for="skillsProgram2" styleClass="gray" />
+				</h:panelGroup>
+			</p:panelGrid>
+		</p:outputPanel>
+		
+		<p:panelGrid columns="1" style="width:95%" layout="grid" styleClass="ui-panelgrid-blank form-group" rendered="true">
+			<p:commandButton value="Upload Document(s)" update="mainForm:trainingProviderTabView" icon="ui-icon-fast-forward" iconPos="right" action="#{tpDetailUI.doneQualificationDetails}" />
+		</p:panelGrid>
+		
+		<br/>
+		<h:panelGroup rendered="#{tpDetailUI.doneQualification}">
+			<span class="FontBold">
+				<i class="fa fa-exclamation-circle" aria-hidden="true"></i>
+				#{lang['please.upload.the.following.compulsory.documents']}
+			</span>
+		</h:panelGroup>
+		<p:outputPanel id="pgSupDocs" layout="gride" rendered="#{tpDetailUI.doneQualification}">
+			<div class="ui-g dashboard">
+				<div class="ui-g-12">
+					<!-- Qualification(s) Supporting Document -->
+					<h:panelGroup rendered="#{tpDetailUI.qualificationList.size() gt 0}" style="width:100%">
+						<div class="ui-g-12 ui-md-6 ui-lg-3">
+							<div class="ui-g card colorbox #{!tpDetailUI.qualUplaoaded ? 'colorbox-1' : 'colorbox-5'}">
+								<div class="ui-g-4">
+									<i class="material-icons">#{!tpDetailUI.qualUplaoaded  ? 'cloud_upload' : 'check_circle'}</i>
+								</div>
+								<div class="ui-g-8">
+									<span class="colorbox-name">Qualification(s) Supporting Document</span>
+									<span class="colorbox-count">
+										<p:commandButton icon="fa fa-download" rendered="#{tpDetailUI.qualUplaoaded and false}" action="#{tpDetailUI.downloadQualSupportingDoc()}" ajax="false" value="#{lang['download']}" immediate="true" process="@parent">
+											<p:ajax onevent="oneventFunction" />
+										</p:commandButton>
+										<p:spacer width="10"></p:spacer>
+										<p:commandButton value="#{!tpDetailUI.qualUplaoaded ? lang['click.to.upload'] : lang['re.upload']}" styleClass="#{!tpDetailUI.qualUplaoaded ? 'red-btn' : 'green-btn'} flat" process="@this" oncomplete="PF('dlgSupportingDoc').show()" update="@form">
+											<f:setPropertyActionListener value="Qualifications" target="#{tpDetailUI.docFor}" />
+										</p:commandButton>
+									</span>
+								</div>
+							</div>
+						</div>
+					</h:panelGroup>
+			
+					<!-- Unit Standard(s) Supporting Document-->
+					<h:panelGroup rendered="#{tpDetailUI.unitStandardList.size() gt 0}" style="width:100%">
+						<div class="ui-g-12 ui-md-6 ui-lg-3">
+							<div class="ui-g card colorbox #{!tpDetailUI.usUplaoaded ? 'colorbox-1' : 'colorbox-5'}">
+								<div class="ui-g-4">
+									<i class="material-icons">#{!tpDetailUI.usUplaoaded  ? 'cloud_upload' : 'check_circle'}</i>
+								</div>
+								<div class="ui-g-8">
+									<span class="colorbox-name">Unit Standard(s) Supporting Document</span>
+									<span class="colorbox-count">
+										<p:commandButton icon="fa fa-download" rendered="#{tpDetailUI.qualUplaoaded and false}" action="#{tpDetailUI.downloadUSSupportingDoc()}" ajax="false" value="#{lang['download']}" immediate="true" process="@parent">
+											<p:ajax onevent="oneventFunction" />
+										</p:commandButton>
+										<p:spacer width="10"></p:spacer>
+										<p:commandButton value="#{!tpDetailUI.usUplaoaded ? lang['click.to.upload'] : lang['re.upload']}" styleClass="#{!tpDetailUI.usUplaoaded ? 'red-btn' : 'green-btn'} flat" process="@this" oncomplete="PF('dlgSupportingDoc').show()" update="@form">
+											<f:setPropertyActionListener value="Unit Standards" target="#{tpDetailUI.docFor}" />
+										</p:commandButton>
+									</span>
+								</div>
+							</div>
+						</div>
+					</h:panelGroup>
+					
+					<!-- Skills Programme(s) Supporting Document-->
+					<h:panelGroup rendered="#{tpDetailUI.skillsProgramList.size() gt 0}" style="width:100%">
+						<div class="ui-g-12 ui-md-6 ui-lg-3">
+							<div class="ui-g card colorbox #{!tpDetailUI.spUplaoaded ? 'colorbox-1' : 'colorbox-5'}">
+								<div class="ui-g-4">
+									<i class="material-icons">#{!tpDetailUI.spUplaoaded  ? 'cloud_upload' : 'check_circle'}</i>
+								</div>
+								<div class="ui-g-8">
+									<span class="colorbox-name">Skills Programme(s) Supporting Document</span>
+									<span class="colorbox-count">
+										<p:commandButton icon="fa fa-download" rendered="#{tpDetailUI.qualUplaoaded and false}" action="#{tpDetailUI.downloadSkillsProgSupportingDoc()}" ajax="false" value="#{lang['download']}" immediate="true" process="@parent">
+											<p:ajax onevent="oneventFunction" />
+										</p:commandButton>
+										<p:spacer width="10"></p:spacer>
+										<p:commandButton value="#{!tpDetailUI.spUplaoaded  ? lang['click.to.upload'] : lang['re.upload']}" styleClass="#{!tpDetailUI.spUplaoaded  ? 'red-btn' : 'green-btn'} flat" process="@this" oncomplete="PF('dlgSupportingDoc').show()" update="@form">
+											<f:setPropertyActionListener value="Skills Programme" target="#{tpDetailUI.docFor}" />
+										</p:commandButton>
+									</span>
+								</div>
+							</div>
+						</div>
+					</h:panelGroup>
+					
+					<!-- Skills Set(s) Supporting Document-->
+					<h:panelGroup rendered="#{tpDetailUI.skillsSetList.size() gt 0}" style="width:100%">
+						<div class="ui-g-12 ui-md-6 ui-lg-3">
+							<div class="ui-g card colorbox #{!tpDetailUI.ssUplaoaded ? 'colorbox-1' : 'colorbox-5'}">
+								<div class="ui-g-4">
+									<i class="material-icons">#{!tpDetailUI.ssUplaoaded  ? 'cloud_upload' : 'check_circle'}</i>
+								</div>
+								<div class="ui-g-8">
+									<span class="colorbox-name">Skills Set(s) Supporting Document</span>
+									<span class="colorbox-count">
+										<p:commandButton icon="fa fa-download" rendered="#{tpDetailUI.qualUplaoaded and false}" action="#{tpDetailUI.downloadSkillsSetSupportingDoc()}" ajax="false" value="#{lang['download']}" immediate="true" process="@parent">
+											<p:ajax onevent="oneventFunction" />
+										</p:commandButton>
+										<p:spacer width="10"></p:spacer>
+										<p:commandButton value="#{!tpDetailUI.ssUplaoaded  ? lang['click.to.upload'] : lang['re.upload']}" styleClass="#{!tpDetailUI.ssUplaoaded  ? 'red-btn' : 'green-btn'} flat" process="@this" oncomplete="PF('dlgSupportingDoc').show()" update="@form">
+											<f:setPropertyActionListener value="Skills Set" target="#{tpDetailUI.docFor}" />
+										</p:commandButton>
+									</span>
+								</div>
+							</div>
+						</div>
+					</h:panelGroup>
+				</div>
+			</div>
+		</p:outputPanel>
+			
+		<!-- Supporting Document-->
+		<p:dialog closeOnEscape="true" header="Upload supporting Documents" id="dlgSupportingDoc" widgetVar="dlgSupportingDoc" resizable="false" hideEffect="clip" showEffect="clip" width="60%" height="40vh" responsive="true" modal="true" position="center">
+			<h:form id="supportingDocFomr">
+				<p:panelGrid columns="1" style="width : 100%" styleClass="ui-panelgrid-blank">
+					<p:fieldset legend="Upload Supporting Document *">
+						<h:panelGrid columns="2" style="width: 100%">
+							<p:outputLabel value="#{lang['notes']}:" for="note" />
+							<p:inputTextarea id="note" value="#{tpDetailUI.docNode}" autoResize="false" rows="1" style="width: 100%">
+								<p:ajax />
+							</p:inputTextarea>
+						</h:panelGrid>
+						<div class="TexAlCenter">
+							<span class="Fleft Fs12 softgray">#{lang['drag.and.drop.your.file.on.the.upload.image.below']}</span> <br />
+						</div>
+						<p:fileUpload onstart="uploadStart()" oncomplete="uploadDone();PF('dlgSupportingDoc').hide()" fileUploadListener="#{tpDetailUI.storeSupportingDoc}" mode="advanced" dragDropSupport="true" showButtons="false" label="#{lang['select.file']}"
+							fileLimitMessage="#{lang['file.to.big.to.upload']}" update="supportingDocFomr mainForm:trainingProviderTabView:pgNonSetaQual" multiple="false" fileLimit="1" sizeLimit="#{tpDetailUI.maxFileSize}" allowTypes="/(\.|\/)(gif|jpe?g|png|pdf|docx|txt)$/" immediate="false" auto="true" />
+						
+						<h:panelGrid rendered="#{tpDetailUI.docParent ne null}">
+								<h1 class="fa fa-check" style="color:green;"> Document Uploaded</h1>
+					    </h:panelGrid>
+					    
+					</p:fieldset>
+					<p:commandButton rendered="false" value="#{lang['submit']}" process="supportingDocFomr" icon="ui-icon-save" update="mainForm:trainingProviderTabView:pgNonSetaQual @form" action="#{tpDetailUI.saveDocument}" onstart="uploadStart()" oncomplete="uploadDone();PF('dlgSupportingDoc').hide()" />
+				</p:panelGrid>
+			</h:form>
+		</p:dialog>
+	</h:panelGroup>
+</ui:composition>

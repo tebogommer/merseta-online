@@ -1,0 +1,732 @@
+<ui:composition xmlns="http://www.w3.org/1999/xhtml" xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:ui="http://java.sun.com/jsf/facelets" xmlns:p="http://primefaces.org/ui" xmlns:c="http://java.sun.com/jsp/jstl/core" template="/WEB-INF/template.xhtml">
+	<ui:define name="content">
+		<div class="ui-g">
+			<div class="ui-g-12">
+				<div class="card card-w-title">
+					<p:importEnum type="haj.com.entity.enums.CompanyStatusEnum" />
+					<p:importEnum type="haj.com.entity.enums.UsersStatusEnum" />
+					<p:growl showDetail="false" sticky="false" id="msg">
+						<p:autoUpdate />
+					</p:growl>
+					<h1>Company Finance Report</h1>
+					<h:form id="mainForm">
+						<p:panelGrid columns="2" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank" rendered="false">
+							<p:outputLabel value="Enable Auto Calls On Company Selection: " />
+							<p:selectBooleanCheckbox value="#{companyFinanceReportUI.autoRunCalls}">
+								<p:ajax update="@form" listener="#{companyFinanceReportUI.enableDisableAutoRunCalls}" />
+							</p:selectBooleanCheckbox>
+						</p:panelGrid>
+						<ui:include src="/pages/includes/filterGuide.xhtml" />
+						<p:dataTable var="rowVar" value="#{companyFinanceReportUI.dataModelComapny}" id="companyList" rowKey="#{rowVar.id}" paginator="true" rows="5" paginatorPosition="bottom"
+							paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,20,40" reflow="true" lazy="true">
+							<p:column headerText="#{lang['company.name']}" filterBy="#{rowVar.companyName}" sortBy="#{rowVar.companyName}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.companyName}" />
+							</p:column>
+							<p:column headerText="#{lang['tradingName']}" filterBy="#{rowVar.tradingName}" sortBy="#{rowVar.tradingName}" filterStyle="width: 95%">
+								<h:outputText value="#{rowVar.tradingName}" />
+							</p:column>
+							<p:column headerText="#{lang['entity.id']}" filterBy="#{rowVar.levyNumber}" sortBy="#{rowVar.levyNumber}" filterStyle="width: 95%" width="10%">
+								<h:outputText value="#{rowVar.levyNumber}" />
+							</p:column>
+							<p:column headerText="#{lang['status']}" sortBy="#{rowVar.companyStatus}" width="10%">
+								<h:outputText value="#{lang[rowVar.companyStatus.registrationName]}" />
+							</p:column>
+							<p:column width="30">
+								<p:commandButton rendered="false" icon="fa fa-tasks" title="View Raw Data" action="#{companyFinanceReportUI.selectCompany}" update="@form" onstart="uploadStart()" oncomplete="uploadDone()">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{companyFinanceReportUI.selectedCompany}" />
+								</p:commandButton>
+								<p:commandButton icon="fa fa-bars" title="View Report" action="#{companyFinanceReportUI.selectCompanySdfReport}" update="@form" onstart="uploadStart()" oncomplete="uploadDone()">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{companyFinanceReportUI.selectedCompanySdfReport}" />
+								</p:commandButton>
+								<p:commandButton icon="fa fa-download" title="Download Report" action="#{companyFinanceReportUI.downloadReport}" ajax="false" update="@form" onstart="uploadStart()" oncomplete="uploadDone()">
+									<f:setPropertyActionListener value="#{rowVar}" target="#{companyFinanceReportUI.selectedCompany}" />
+								</p:commandButton>
+							</p:column>
+						</p:dataTable>
+
+						<c:if test="#{companyFinanceReportUI.selectedCompany ne null and companyFinanceReportUI.selectedCompany.id ne null}">
+							<h2>#{companyFinanceReportUI.selectedCompany.companyName} (#{companyFinanceReportUI.selectedCompany.levyNumber}) Selected.</h2>
+							<c:if test="#{sessionUI.employee or sessionUI.admin}">
+								<span class="Fs13 gray"><i class="fa fa-info-circle" aria-hidden="true"></i> Please note: Any header containing 'Web Service' is only visible to MerSETA Employees. It contains the raw data recived from the web services for referance.</span>
+								<div class="EmptyBox5" />
+							</c:if>
+						</c:if>
+
+						<p:tabView id="tabView" rendered="#{companyFinanceReportUI.selectedCompany ne null and companyFinanceReportUI.selectedCompany.id ne null}">
+							<p:tab title="NSDMS Organisation Details" id="nsdmsOrgDetailsTab">
+								<p:outputPanel id="nsdmsOrgDetailsPanel">
+									<ui:include src="/pages/includes/fullCompanyInformationWithAddressInformation.xhtml">
+										<ui:param name="company" value="#{companyFinanceReportUI.selectedCompany}" />
+										<ui:param name="CELLPHONE_FORMAT" value="#{companyFinanceReportUI.cellphoneFormat}" />
+										<ui:param name="FAX_NUMBER_FORMAT" value="#{companyFinanceReportUI.faxNumberFormat}" />
+										<ui:param name="TELPHONE_FORMAT" value="#{companyFinanceReportUI.telephoneFormat}" />
+									</ui:include>
+								</p:outputPanel>
+							</p:tab>
+							<p:tab title="NSDMS Organisation Banking Details" id="nsdsmsOrgBankDetailsTab">
+								<p:outputPanel id="nsdsmsOrgBankDetailsPanel">
+									<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+										<ui:include src="/pages/includes/download_lazy.xhtml">
+											<ui:param name="file_name" value="#{companyFinanceReportUI.selectedCompany.levyNumber} Approved Banking Details Extract" />
+											<ui:param name="target" value="bankingdetailsListNew" />
+										</ui:include>
+										<p:dataTable var="rowVarBD" value="#{companyFinanceReportUI.bankingDetailsList}" id="bankingdetailsListNew" rowKey="#{rowVarBD.id}" paginator="true" rows="6" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+											paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+											<f:facet name="header">Approved Banking Details</f:facet>
+											<p:column headerText="#{lang['bank']}">
+												<h:outputText value="#{rowVarBD.bank.description}" />
+											</p:column>
+											<p:column headerText="#{lang['createDate']}">
+												<h:outputText value="#{rowVarBD.createDate}">
+													<f:convertDateTime pattern="dd MMMM yyyy (HH:mm:ss)" />
+												</h:outputText>
+											</p:column>
+											<p:column headerText="#{lang['bankAccNumber']}">
+												<h:outputText value="#{rowVarBD.maskedBankAccNumber}" />
+											</p:column>
+											<p:column headerText="#{lang['branchCode']}">
+												<h:outputText value="#{rowVarBD.branchCode}" />
+											</p:column>
+											<p:column headerText="#{lang['bankHolder']}">
+												<h:outputText value="#{rowVarBD.bankHolder}" />
+											</p:column>
+											<p:column headerText="#{lang['status']}">
+												<p:outputLabel value="#{rowVarBD.status.friendlyName}"></p:outputLabel>
+											</p:column>
+											<p:column headerText="Approved Date" sortBy="#{rowVarBD.approvalDate}">
+												<p:outputLabel value="#{rowVarBD.approvalDate}">
+													<f:convertDateTime pattern="dd MMMM yyyy HH:mm:ss" />
+												</p:outputLabel>
+											</p:column>
+										</p:dataTable>
+									</p:panelGrid>
+								</p:outputPanel>
+							</p:tab>
+							<p:tab title="GP Organisation Status" id="gpInfoTab">
+								<p:outputPanel id="gpInfoPanel">
+									<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+										<p:commandButton value="Retrieve GP Organisation Status" update=":mainForm:tabView:gpInfoPanel" icon="fa fa-check" action="#{companyFinanceReportUI.runGpCall}" onstart="uploadStart()" oncomplete="uploadDone()" />
+									</p:panelGrid>
+									<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank" rendered="#{!companyFinanceReportUI.gpCallRan}">
+										<h4>Please click: 'Retrieve GP Organisation Status' to view the information.</h4>
+									</p:panelGrid>
+									<div class="EmptyBox10" />
+									<p:panelGrid columns="3" style="width:100%" id="gpInfo" layout="grid" styleClass="ui-panelgrid-blank" rendered="#{companyFinanceReportUI.gpCallRan}">
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText rendered="#{companyFinanceReportUI.vendor eq null}" value="No" style="width:95%" disabled="true" />
+											<p:inputText rendered="#{companyFinanceReportUI.vendor ne null}" value="Yes" style="width:95%" disabled="true" />
+											<p:outputLabel value="Entity On GP" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText rendered="#{companyFinanceReportUI.vendor eq null}" value="N/A" style="width:95%" disabled="true" />
+											<p:inputText rendered="#{companyFinanceReportUI.vendor ne null}" value="#{companyFinanceReportUI.vendor.name}" style="width:95%" disabled="true" />
+											<p:outputLabel value="Name" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText rendered="#{companyFinanceReportUI.vendor eq null or companyFinanceReportUI.vendor.taxRegistrationNumber eq ''}" value="N/A" styleClass="FontBold orange" style="width:95%" disabled="true" />
+											<p:inputText rendered="#{companyFinanceReportUI.vendor ne null and companyFinanceReportUI.vendor.taxRegistrationNumber ne ''}" value="#{companyFinanceReportUI.vendor.maskedBankAccNumber}" style="width:95%" disabled="true" />
+											<p:outputLabel value="GP #{lang['bankAccNumber']}" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="On Hold" rendered="#{companyFinanceReportUI.vendor ne null and companyFinanceReportUI.vendor.detailsOnHold}" style="width:95%" disabled="true" />
+											<p:inputText value="Not On Hold" rendered="#{companyFinanceReportUI.vendor ne null and !companyFinanceReportUI.vendor.detailsOnHold}" style="width:95%" disabled="true" />
+											<p:inputText value="N/A" rendered="#{companyFinanceReportUI.vendor eq null}" style="width:95%" disabled="true" />
+											<p:outputLabel value="Status" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{companyFinanceReportUI.vendor.userDefined1}" rendered="#{companyFinanceReportUI.vendor ne null and companyFinanceReportUI.vendor.userDefined1 ne ''}" style="width:95%" disabled="true" />
+											<p:inputText value="No Reason Found" rendered="#{companyFinanceReportUI.vendor ne null and companyFinanceReportUI.vendor.userDefined1 eq ''}" style="width:95%" disabled="true" />
+											<p:inputText value="N/A" rendered="#{companyFinanceReportUI.vendor eq null}" style="width:95%" disabled="true" />
+											<p:outputLabel value="Hold Reason" />
+										</h:panelGroup>
+									</p:panelGrid>
+								</p:outputPanel>
+							</p:tab>
+							<p:tab title="Web Service: getInfo Raw Data" id="infoTab" rendered="#{sessionUI.employee or sessionUI.admin}">
+								<p:outputPanel id="infoPanel">
+									<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+										<p:commandButton value="Retrieve Raw Data" update=":mainForm:tabView:infoPanel" icon="fa fa-check" action="#{companyFinanceReportUI.runArrayOfInfoCall}" onstart="uploadStart()" oncomplete="uploadDone()" />
+									</p:panelGrid>
+									<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank" rendered="#{!companyFinanceReportUI.arrayOfInfoRan}">
+										<h4>Awaiting Data Call</h4>
+									</p:panelGrid>
+									<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank" rendered="#{companyFinanceReportUI.arrayOfInfoRan}">
+										<ui:include src="/pages/includes/download_lazy.xhtml">
+											<ui:param name="file_name" value="getInfo_Raw_Data_Extract" />
+											<ui:param name="target" value="getInfoDT" />
+										</ui:include>
+										<p:dataTable var="rowVarIn" id="getInfoDT" value="#{companyFinanceReportUI.arrayOfInfo.info}" paginator="true" rows="5" paginatorPosition="bottom"
+											paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+											<f:facet name="header"></f:facet>
+											<p:column headerText="VendID">
+												<h:outputText value="#{rowVarIn.vendID}" />
+											</p:column>
+											<p:column headerText="Vendname">
+												<h:outputText value="#{rowVarIn.vendname}" />
+											</p:column>
+											<p:column headerText="VoucherNumber">
+												<h:outputText value="#{rowVarIn.voucherNumber}" />
+											</p:column>
+											<p:column headerText="DocType">
+												<h:outputText value="#{rowVarIn.docType}" />
+											</p:column>
+											<p:column headerText="DocDate">
+												<h:outputText value="#{rowVarIn.docDate}" />
+											</p:column>
+											<p:column headerText="DocNumber">
+												<h:outputText value="#{rowVarIn.docNumber}" />
+											</p:column>
+											<p:column headerText="DocDescription">
+												<h:outputText value="#{rowVarIn.docDescription}" />
+											</p:column>
+											<p:column headerText="DocFunctionalAmount">
+												<h:outputText value="#{rowVarIn.docFunctionalAmount}" />
+											</p:column>
+											<p:column headerText="DockBalance1">
+												<h:outputText value="#{rowVarIn.dockBalance1}" />
+											</p:column>
+											<p:column headerText="DocHold1">
+												<h:outputText value="#{rowVarIn.docHold1}" />
+											</p:column>
+											<p:column headerText="DocHoldReason1">
+												<h:outputText value="#{rowVarIn.docHoldReason1}" />
+											</p:column>
+										</p:dataTable>
+									</p:panelGrid>
+								</p:outputPanel>
+							</p:tab>
+							<p:tab title="Outstanding Transactions" id="outstandingTransTab" rendered="false">
+								<p:outputPanel id="outstandingTransPanel">
+								</p:outputPanel>
+							</p:tab>
+							<p:tab title="Web Service: getPayments Raw Data" id="recentPayTab" rendered="#{sessionUI.employee or sessionUI.admin}">
+								<p:outputPanel id="recentPayPanel">
+									<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+										<p:commandButton value="Retrieve Raw Data" update=":mainForm:tabView:recentPayPanel" icon="fa fa-check" action="#{companyFinanceReportUI.runArrayOfPaymentsCall}" onstart="uploadStart()" oncomplete="uploadDone()" />
+									</p:panelGrid>
+									<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank" rendered="#{!companyFinanceReportUI.arrayOfPaymentsRan}">
+										<h4>Awaiting Data Call</h4>
+									</p:panelGrid>
+									<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank" rendered="#{companyFinanceReportUI.arrayOfPaymentsRan}">
+										<ui:include src="/pages/includes/download_lazy.xhtml">
+											<ui:param name="file_name" value="getPayments_Raw_Data_Extract" />
+											<ui:param name="target" value="getPaymentsDT" />
+										</ui:include>
+										<p:dataTable var="rowVarP" id="getPaymentsDT" value="#{companyFinanceReportUI.arrayOfPayments.recentPayments}" paginator="true" rows="5" paginatorPosition="bottom"
+											paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+											<p:column headerText="OrgID">
+												<h:outputText value="#{rowVarP.orgID}" />
+											</p:column>
+											<p:column headerText="OrgName">
+												<h:outputText value="#{rowVarP.orgName}" />
+											</p:column>
+											<p:column headerText="Pdoctype">
+												<h:outputText value="#{rowVarP.pdoctype}" />
+											</p:column>
+											<p:column headerText="AnType">
+												<h:outputText value="#{rowVarP.anType}" />
+											</p:column>
+											<p:column headerText="PDate">
+												<h:outputText value="#{rowVarP.PDate}" />
+											</p:column>
+											<p:column headerText="ADate">
+												<h:outputText value="#{rowVarP.ADate}" />
+											</p:column>
+											<p:column headerText="PNumber">
+												<h:outputText value="#{rowVarP.PNumber}" />
+											</p:column>
+											<p:column headerText="Anumber">
+												<h:outputText value="#{rowVarP.anumber}" />
+											</p:column>
+											<p:column headerText="PDescription">
+												<h:outputText value="#{rowVarP.PDescription}" />
+											</p:column>
+											<p:column headerText="ADescription">
+												<h:outputText value="#{rowVarP.ADescription}" />
+											</p:column>
+											<p:column headerText="Pamount">
+												<h:outputText value="#{rowVarP.pamount}" />
+											</p:column>
+											<p:column headerText="Aamount">
+												<h:outputText value="#{rowVarP.aamount}" />
+											</p:column>
+											<p:column headerText="Pbalance">
+												<h:outputText value="#{rowVarP.pbalance}" />
+											</p:column>
+											<p:column headerText="Abalance">
+												<h:outputText value="#{rowVarP.abalance}" />
+											</p:column>
+										</p:dataTable>
+									</p:panelGrid>
+								</p:outputPanel>
+							</p:tab>
+							<p:tab title="Web Service: getAjustments Raw Data" id="recentAdjustmentsTab" rendered="true">
+								<p:outputPanel id="recentAdjustmentsPanel">
+									<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+										<p:commandButton value="Retrieve Raw Data" update=":mainForm:tabView:recentAdjustmentsPanel" icon="fa fa-check" action="#{companyFinanceReportUI.runArrayOfAdjustmentsCall}" onstart="uploadStart()" oncomplete="uploadDone()" />
+									</p:panelGrid>
+									<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank" rendered="#{!companyFinanceReportUI.arrayOfAdjustmentsRan}">
+										<h4>Awaiting Data Call</h4>
+									</p:panelGrid>
+
+									<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank" rendered="#{companyFinanceReportUI.arrayOfAdjustmentsRan}">
+										<ui:include src="/pages/includes/download_lazy.xhtml">
+											<ui:param name="file_name" value="getAjustments_Raw_Data_extract" />
+											<ui:param name="target" value="getAjustmentDT" />
+										</ui:include>
+										<p:dataTable var="rowVarA" id="getAjustmentDT" value="#{companyFinanceReportUI.arrayOfAdjustments.recentAdjustments}" paginator="true" rows="5" paginatorPosition="bottom"
+											paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+											<p:column headerText="OrgID">
+												<h:outputText value="#{rowVarA.orgID}" />
+											</p:column>
+											<p:column headerText="OrgName">
+												<h:outputText value="#{rowVarA.orgName}" />
+											</p:column>
+											<p:column headerText="Pdoctype">
+												<h:outputText value="#{rowVarA.pdoctype}" />
+											</p:column>
+											<p:column headerText="AnType">
+												<h:outputText value="#{rowVarA.anType}" />
+											</p:column>
+											<p:column headerText="PDate">
+												<h:outputText value="#{rowVarA.PDate}" />
+											</p:column>
+											<p:column headerText="ADate">
+												<h:outputText value="#{rowVarA.ADate}" />
+											</p:column>
+											<p:column headerText="PNumber">
+												<h:outputText value="#{rowVarA.PNumber}" />
+											</p:column>
+											<p:column headerText="PNumber">
+												<h:outputText value="#{rowVarA.PNumber}" />
+											</p:column>
+											<p:column headerText="Anumber">
+												<h:outputText value="#{rowVarA.aamount}" />
+											</p:column>
+											<p:column headerText="PDescription">
+												<h:outputText value="#{rowVarA.PDescription}" />
+											</p:column>
+											<p:column headerText="ADescription">
+												<h:outputText value="#{rowVarA.ADescription}" />
+											</p:column>
+											<p:column headerText="Pamount">
+												<h:outputText value="#{rowVarA.pamount}" />
+											</p:column>
+											<p:column headerText="Aamount">
+												<h:outputText value="#{rowVarA.aamount}" />
+											</p:column>
+											<p:column headerText="Pbalance">
+												<h:outputText value="#{rowVarA.pbalance}" />
+											</p:column>
+											<p:column headerText="Abalance">
+												<h:outputText value="#{rowVarA.abalance}" />
+											</p:column>
+										</p:dataTable>
+									</p:panelGrid>
+								</p:outputPanel>
+							</p:tab>
+							<p:tab title="Web Service: getPaymentReturns Raw Data" id="paymentReturnsTab">
+								<p:outputPanel id="paymentReturnsPanel">
+
+									<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+										<p:commandButton value="Retrieve Raw Data" update=":mainForm:tabView:paymentReturnsPanel" icon="fa fa-check" action="#{companyFinanceReportUI.runArrayOfPaymentReturnsCall}" onstart="uploadStart()" oncomplete="uploadDone()" />
+									</p:panelGrid>
+									<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank" rendered="#{!companyFinanceReportUI.arrayOfPaymentReturnsRan}">
+										<h4>Awaiting Data Call</h4>
+									</p:panelGrid>
+
+									<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank" rendered="#{companyFinanceReportUI.arrayOfPaymentReturnsRan}">
+										<ui:include src="/pages/includes/download_lazy.xhtml">
+											<ui:param name="file_name" value="getPaymentReturns_Raw_Data_extract" />
+											<ui:param name="target" value="paymentReturnsDT" />
+										</ui:include>
+										<p:dataTable var="rowVarPR" id="paymentReturnsDT" value="#{companyFinanceReportUI.arrayOfPaymentReturns.paymentReturns}" paginator="true" rows="5" paginatorPosition="bottom"
+											paginatorTemplate="Page {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+											<p:column headerText="VendId">
+												<h:outputText value="#{rowVarPR.vendId}" />
+											</p:column>
+											<p:column headerText="VendName">
+												<h:outputText value="#{rowVarPR.vendName}" />
+											</p:column>
+											<p:column headerText="Type">
+												<h:outputText value="#{rowVarPR.type}" />
+											</p:column>
+											<p:column headerText="Date">
+												<h:outputText value="#{rowVarPR.date}" />
+											</p:column>
+											<p:column headerText="Number">
+												<h:outputText value="#{rowVarPR.number}" />
+											</p:column>
+											<p:column headerText="Amount">
+												<h:outputText value="#{rowVarPR.amount}" />
+											</p:column>
+											<p:column headerText="Reason">
+												<h:outputText value="#{rowVarPR.reason}" />
+											</p:column>
+										</p:dataTable>
+									</p:panelGrid>
+								</p:outputPanel>
+							</p:tab>
+						</p:tabView>
+
+						<p:outputPanel rendered="#{companyFinanceReportUI.selectedCompany ne null and companyFinanceReportUI.selectedCompany.id ne null and false}">
+							<p:panel header="GP Information" rendered="false">
+								<c:if test="#{companyFinanceReportUI.vendor eq null}">
+									<h4>Not Found On GP: #{companyFinanceReportUI.selectedCompany.levyNumber}</h4>
+								</c:if>
+								<c:if test="#{companyFinanceReportUI.vendor ne null}">
+									<h:panelGroup>
+										<p:outputLabel value="#{lang['bankAccNumber']}" for="bankAccNumberID"
+											styleClass="#{companyFinanceReportUI.vendor eq null or companyFinanceReportUI.vendor.taxRegistrationNumber eq '' ? 'FontBold Fs20 orange' : companyFinanceReportUI.bankingDetails.bankAccNumber ne companyFinanceReportUI.vendor.taxRegistrationNumber ? 'FontBold Fs20 red': 'FontBold Fs20 green'}" />
+										<br />
+										<p:outputLabel id="bankAccNumberID" value="#{companyFinanceReportUI.bankingDetails.maskedBankAccNumber}" style="width:95%"
+											styleClass="#{companyFinanceReportUI.vendor eq null or companyFinanceReportUI.vendor.taxRegistrationNumber eq '' ? 'FontBold Fs20 orange' : companyFinanceReportUI.bankingDetails.bankAccNumber ne companyFinanceReportUI.vendor.taxRegistrationNumber ?'FontBold Fs20 red':'FontBold Fs20 green'}" />
+									</h:panelGroup>
+									<br />
+									<br />
+									<h:panelGroup>
+										<p:outputLabel value="GP #{lang['bankAccNumber']}"
+											styleClass="#{companyFinanceReportUI.vendor eq null or companyFinanceReportUI.vendor.taxRegistrationNumber eq '' ? 'FontBold Fs20 orange' : companyFinanceReportUI.bankingDetails.bankAccNumber ne companyFinanceReportUI.vendor.taxRegistrationNumber ? 'FontBold Fs20 red': 'FontBold Fs20 green'}" />
+										<br />
+										<c:if test="#{sessionUI.task.processRole.rolePermission eq UserPermissionEnum.FinalApproval or sessionUI.task.processRole.rolePermission eq UserPermissionEnum.Approve or (sessionUI.task.processRole.rolePermission eq UserPermissionEnum.View and !sessionUI.task.firstInProcess)}">
+											<p:outputLabel id="gpbankAccNumberIDDisplay" value="#{companyFinanceReportUI.vendor.taxRegistrationNumber}" style="width:95%"
+												styleClass="#{companyFinanceReportUI.bankingDetails.bankAccNumber ne companyFinanceReportUI.vendor.taxRegistrationNumber ?'FontBold Fs20 red': 'FontBold Fs20 green'}" />
+											<p:outputLabel id="gpbankAccNumberID2Display" value="N/A" style="width:95%" styleClass="FontBold Fs20 orange" rendered="#{companyFinanceReportUI.vendor eq null or companyFinanceReportUI.vendor.taxRegistrationNumber eq ''}" />
+										</c:if>
+										<c:if test="#{sessionUI.task.processRole.rolePermission ne UserPermissionEnum.FinalApproval and sessionUI.task.processRole.rolePermission ne UserPermissionEnum.Approve and (sessionUI.task.processRole.rolePermission eq UserPermissionEnum.View and sessionUI.task.firstInProcess)}">
+											<p:outputLabel id="gpbankAccNumberID" value="#{companyFinanceReportUI.vendor.maskedBankAccNumber}" style="width:95%" styleClass="#{companyFinanceReportUI.bankingDetails.bankAccNumber ne companyFinanceReportUI.vendor.taxRegistrationNumber ?'FontBold Fs20 red': 'FontBold Fs20 green'}" />
+											<p:outputLabel id="gpbankAccNumberID2" value="N/A" style="width:95%" styleClass="FontBold Fs20 orange" rendered="#{companyFinanceReportUI.vendor eq null or companyFinanceReportUI.vendor.taxRegistrationNumber eq ''}" />
+										</c:if>
+									</h:panelGroup>
+									<br />
+									<br />
+									<h:panelGroup>
+										<p:outputLabel value="Status: On Hold" rendered="#{companyFinanceReportUI.vendor.detailsOnHold}" styleClass="FontBold Fs20 red" />
+										<p:outputLabel value="Status: Not On Hold" rendered="#{!companyFinanceReportUI.vendor.detailsOnHold}" styleClass="FontBold Fs20 green" />
+										<br />
+										<br />
+										<p:outputLabel value="Reason: #{companyFinanceReportUI.vendor.userDefined1}" rendered="#{companyFinanceReportUI.vendor.detailsOnHold}" styleClass="FontBold Fs20 red" />
+										<p:outputLabel value="Reason: #{companyFinanceReportUI.vendor.userDefined1}" rendered="#{!companyFinanceReportUI.vendor.detailsOnHold}" styleClass="FontBold Fs20 green" />
+									</h:panelGroup>
+								</c:if>
+							</p:panel>
+						</p:outputPanel>
+
+						<div class="EmptyBox10" />
+
+						<c:if test="#{companyFinanceReportUI.selectedCompanySdfReport ne null and companyFinanceReportUI.selectedCompanySdfReport.id ne null}">
+							<h2>#{companyFinanceReportUI.selectedCompanySdfReport.companyName} (#{companyFinanceReportUI.selectedCompanySdfReport.levyNumber}) Selected.</h2>
+							<p:panelGrid columns="1" style="width:100%" layout="grid" styleClass="ui-panelgrid-blank">
+
+								<p:fieldset legend="NSDMS Organisation Details" style="margin-bottom:20px">
+									<ui:include src="/pages/includes/fullCompanyInformationWithAddressInformation.xhtml">
+										<ui:param name="company" value="#{companyFinanceReportUI.selectedCompanySdfReport}" />
+										<ui:param name="CELLPHONE_FORMAT" value="#{companyFinanceReportUI.cellphoneFormat}" />
+										<ui:param name="FAX_NUMBER_FORMAT" value="#{companyFinanceReportUI.faxNumberFormat}" />
+										<ui:param name="TELPHONE_FORMAT" value="#{companyFinanceReportUI.telephoneFormat}" />
+									</ui:include>
+								</p:fieldset>
+
+
+								<p:fieldset legend="NSDMS Organisation Banking Details" style="margin-bottom:20px">
+									<ui:include src="/pages/includes/download_lazy.xhtml">
+										<ui:param name="file_name" value="NSDMS Organisation Banking Details" />
+										<ui:param name="target" value="dtBankingDetails" />
+									</ui:include>
+									<p:dataTable id="dtBankingDetails" var="rowVarBD" value="#{companyFinanceReportUI.bankingDetailsList}" rowKey="#{rowVarBD.id}" paginator="true" rows="5" paginatorPosition="bottom" emptyMessage="#{lang['no.records.found']}"
+										paginatorTemplate="#{lang['page']} {CurrentPageReport}  {FirstPageLink} {PreviousPageLink} {PageLinks} {NextPageLink} {LastPageLink} {RowsPerPageDropdown}" rowsPerPageTemplate="5,10,15,20,25" reflow="true">
+										<f:facet name="header">Banking Details Status</f:facet>
+										<p:column headerText="#{lang['bank']}">
+											<h:outputText value="#{rowVarBD.bank.description}" />
+										</p:column>
+										<p:column headerText="#{lang['createDate']}">
+											<h:outputText value="#{rowVarBD.createDate}">
+												<f:convertDateTime pattern="dd MMMM yyyy (HH:mm:ss)" />
+											</h:outputText>
+										</p:column>
+										<p:column headerText="#{lang['bankAccNumber']}">
+											<h:outputText value="#{rowVarBD.maskedBankAccNumber}" />
+										</p:column>
+										<p:column headerText="#{lang['branchCode']}">
+											<h:outputText value="#{rowVarBD.branchCode}" />
+										</p:column>
+										<p:column headerText="#{lang['bankHolder']}">
+											<h:outputText value="#{rowVarBD.bankHolder}" />
+										</p:column>
+										<p:column headerText="#{lang['status']}">
+											<p:outputLabel value="#{rowVarBD.status.friendlyName}"></p:outputLabel>
+										</p:column>
+										<p:column headerText="Approved Date" sortBy="#{rowVarBD.approvalDate}">
+											<p:outputLabel value="#{rowVarBD.approvalDate}">
+												<f:convertDateTime pattern="dd MMMM yyyy HH:mm:ss" />
+											</p:outputLabel>
+										</p:column>
+									</p:dataTable>
+								</p:fieldset>
+
+								<p:fieldset legend="GP Organisation status" style="margin-bottom:20px">
+									<p:panelGrid columns="3" style="width:100%" id="gpInfo" layout="grid" styleClass="ui-panelgrid-blank">
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText rendered="#{companyFinanceReportUI.vendor eq null}" value="No" style="width:95%" disabled="true" />
+											<p:inputText rendered="#{companyFinanceReportUI.vendor ne null}" value="Yes" style="width:95%" disabled="true" />
+											<p:outputLabel value="Entity On GP" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText rendered="#{companyFinanceReportUI.vendor eq null}" value="N/A" style="width:95%" disabled="true" />
+											<p:inputText rendered="#{companyFinanceReportUI.vendor ne null}" value="#{companyFinanceReportUI.vendor.name}" style="width:95%" disabled="true" />
+											<p:outputLabel value="Name" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText rendered="#{companyFinanceReportUI.vendor eq null or companyFinanceReportUI.vendor.taxRegistrationNumber eq ''}" value="N/A" styleClass="FontBold orange" style="width:95%" disabled="true" />
+											<p:inputText rendered="#{companyFinanceReportUI.vendor ne null and companyFinanceReportUI.vendor.taxRegistrationNumber ne ''}" value="#{companyFinanceReportUI.vendor.maskedBankAccNumber}" style="width:95%" disabled="true" />
+											<p:outputLabel value="GP #{lang['bankAccNumber']}" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="On Hold" rendered="#{companyFinanceReportUI.vendor ne null and companyFinanceReportUI.vendor.detailsOnHold}" style="width:95%" disabled="true" />
+											<p:inputText value="Not On Hold" rendered="#{companyFinanceReportUI.vendor ne null and !companyFinanceReportUI.vendor.detailsOnHold}" style="width:95%" disabled="true" />
+											<p:inputText value="N/A" rendered="#{companyFinanceReportUI.vendor eq null}" style="width:95%" disabled="true" />
+											<p:outputLabel value="Status" />
+										</h:panelGroup>
+										<h:panelGroup styleClass="md-inputfield">
+											<p:inputText value="#{companyFinanceReportUI.vendor.userDefined1}" rendered="#{companyFinanceReportUI.vendor ne null and companyFinanceReportUI.vendor.userDefined1 ne ''}" style="width:95%" disabled="true" />
+											<p:inputText value="No Reason Found" rendered="#{companyFinanceReportUI.vendor ne null and companyFinanceReportUI.vendor.userDefined1 eq ''}" style="width:95%" disabled="true" />
+											<p:inputText value="N/A" rendered="#{companyFinanceReportUI.vendor eq null}" style="width:95%" disabled="true" />
+											<p:outputLabel value="Hold Reason" />
+										</h:panelGroup>
+									</p:panelGrid>
+								</p:fieldset>
+
+								<p:fieldset legend="Outstanding Transactions" style="margin-bottom:20px">
+									<ui:include src="/pages/includes/download_lazy.xhtml">
+										<ui:param name="file_name" value="Outstanding Transactions" />
+										<ui:param name="target" value="dtOutTransInfo" />
+									</ui:include>
+									<p:dataTable id="dtOutTransInfo" var="rowVarInfo" value="#{companyFinanceReportUI.infoList}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+										<f:facet name="header">Outstanding Transactions</f:facet>
+										<p:column headerText="vendID" rendered="false" >
+											<p:outputLabel value="#{rowVarInfo.vendID}" />
+										</p:column>
+										<p:column headerText="vendname" rendered="false">
+											<p:outputLabel value="#{rowVarInfo.vendname}" />
+										</p:column>
+										<p:column headerText="Voucher Number">
+											<p:outputLabel value="#{rowVarInfo.voucherNumber}" />
+										</p:column>
+										<p:column headerText="Type">
+											<p:outputLabel value="#{rowVarInfo.docType}" />
+										</p:column>
+										<p:column headerText="Date">
+											<p:outputLabel value="#{rowVarInfo.docDate}" styleClass="Fright">
+												<f:convertDateTime pattern="dd-MM-yyyy" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="Number">
+											<p:outputLabel value="#{rowVarInfo.docNumber}" />
+										</p:column>
+										<p:column headerText="Description">
+											<p:outputLabel value="#{rowVarInfo.docDescription}" />
+										</p:column>
+										<p:column headerText="Functional Amount">
+											<p:outputLabel value="#{rowVarInfo.docFunctionalAmount}" styleClass="Fright">
+												<f:convertNumber type="currency" currencySymbol="R" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="Balance">
+											<p:outputLabel value="#{rowVarInfo.dockBalance1}" styleClass="Fright">
+												<f:convertNumber type="currency" currencySymbol="R" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="Hold">
+											<p:outputLabel value="No" rendered="#{rowVarInfo.docHold1 eq '0'}" />
+											<p:outputLabel value="Yes" rendered="#{rowVarInfo.docHold1 eq '1'}" />
+										</p:column>
+										<p:column headerText="Hold Reason">
+											<p:outputLabel value="#{rowVarInfo.docHoldReason1}" />
+										</p:column>
+									</p:dataTable>
+								</p:fieldset>
+
+								<p:fieldset legend="Outstanding Transactions" style="margin-bottom:20px" rendered="false">
+									<ui:include src="/pages/includes/download_lazy.xhtml">
+										<ui:param name="file_name" value="Outstanding Transactions" />
+										<ui:param name="target" value="dtOutTrans" />
+									</ui:include>
+									<p:dataTable rendered="false" id="dtOutTrans" var="rowVarOT" value="#{companyFinanceReportUI.outstandingTransList}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+										<f:facet name="header">Outstanding Transactions</f:facet>
+										<p:column headerText="Type">
+											<p:outputLabel value="#{rowVarOT.type}" />
+										</p:column>
+										<p:column headerText="Date">
+											<p:outputLabel value="#{rowVarOT.date}" styleClass="Fright">
+												<f:convertDateTime pattern="dd-MM-yyyy" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="Number">
+											<p:outputLabel value="#{rowVarOT.number}" />
+										</p:column>
+										<p:column headerText="Description">
+											<p:outputLabel value="#{rowVarOT.description}" />
+										</p:column>
+										<p:column headerText="Amount">
+											<p:outputLabel value="#{rowVarOT.amount}" styleClass="Fright">
+												<f:convertNumber type="currency" currencySymbol="R" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="Balance">
+											<p:outputLabel value="#{rowVarOT.balance}" styleClass="Fright">
+												<f:convertNumber type="currency" currencySymbol="R" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="Status: Active" exportable="false" styleClass="action-column">
+											<p:selectBooleanCheckbox disabled="true" value="#{rowVarOT.statusActive}" />
+										</p:column>
+										<p:column headerText="Status: On-hold" exportable="false" styleClass="action-column">
+											<p:selectBooleanCheckbox disabled="true" value="#{rowVarOT.statusHold}" />
+										</p:column>
+										<p:column headerText="Status: Active" style="display:none">
+											<p:outputLabel value="Yes" rendered="#{rowVarOT.statusActive}" />
+											<p:outputLabel value="No" rendered="#{rowVarOT.statusActive eq null or !rowVarOT.statusActive}" />
+										</p:column>
+										<p:column headerText="Status: On-hold" style="display:none">
+											<p:outputLabel value="Yes" rendered="#{rowVarOT.statusHold}" />
+											<p:outputLabel value="No" rendered="#{rowVarOT.statusHold eq null or !rowVarOT.statusHold}" />
+										</p:column>
+										<p:column headerText="Hold Reason">
+											<p:outputLabel value="#{rowVarOT.holdReason}" />
+										</p:column>
+									</p:dataTable>
+								</p:fieldset>
+
+								<p:fieldset legend="Payments" style="margin-bottom:20px">
+									<ui:include src="/pages/includes/download_lazy.xhtml">
+										<ui:param name="file_name" value="Payments" />
+										<ui:param name="target" value="dtPayments" />
+									</ui:include>
+									<p:dataTable id="dtPayments" var="rowVarRP" value="#{companyFinanceReportUI.paymentsList}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+										<f:facet name="header">Payments</f:facet>
+										<p:column headerText="Type" style="display:none;">
+											<p:outputLabel value="#{rowVarRP.type}" />
+										</p:column>
+										<p:column headerText="Type" exportable="false">
+											<p:spacer width="5" rendered="#{!rowVarRP.displaySpacer}"/>
+											<p:outputLabel value="#{rowVarRP.type}" />
+										</p:column>
+										<p:column headerText="Date">
+											<p:outputLabel value="#{rowVarRP.date}" styleClass="Fright">
+												<f:convertDateTime pattern="dd-MM-yyyy" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="Number">
+											<p:outputLabel value="#{rowVarRP.number}" />
+										</p:column>
+										<p:column headerText="Description">
+											<p:outputLabel value="#{rowVarRP.description}" />
+										</p:column>
+										<p:column headerText="Amount" exportable="fale">
+											<p:outputLabel value="#{rowVarRP.amountDescription}" />
+											<p:spacer width="5" />
+											<p:outputLabel value="#{rowVarRP.amount}" styleClass="Fright">
+												<f:convertNumber type="currency" currencySymbol="R" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="Amount" style="display:none">
+											<p:outputLabel value="#{rowVarRP.amountDescription}: " />
+											<p:outputLabel value="#{rowVarRP.amount}" styleClass="Fright">
+												<f:convertNumber type="currency" currencySymbol="R" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="Balance">
+											<p:outputLabel value="#{rowVarRP.balance}" styleClass="Fright">
+												<f:convertNumber type="currency" currencySymbol="R" />
+											</p:outputLabel>
+										</p:column>
+									</p:dataTable>
+								</p:fieldset>
+
+								<p:fieldset legend="Recent Adjustments" style="margin-bottom:20px">
+									<ui:include src="/pages/includes/download_lazy.xhtml">
+										<ui:param name="file_name" value="Recent Adjustments" />
+										<ui:param name="target" value="dtRecentAdjustments" />
+									</ui:include>
+									<p:dataTable id="dtRecentAdjustments" var="rowVarRA" value="#{companyFinanceReportUI.adjustmentsList}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+										<f:facet name="header">Recent Adjustments</f:facet>
+										<p:column headerText="Type">
+											<p:outputLabel value="#{rowVarRA.type}" />
+										</p:column>
+										<p:column headerText="Date">
+											<p:outputLabel value="#{rowVarRA.date}" styleClass="Fright">
+												<f:convertDateTime pattern="dd-MM-yyyy" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="Number">
+											<p:outputLabel value="#{rowVarRA.number}" />
+										</p:column>
+										<p:column headerText="Description">
+											<p:outputLabel value="#{rowVarRA.description}" />
+										</p:column>
+										<p:column headerText="Amount" exportable="false">
+											<p:outputLabel value="#{rowVarRA.amountDescription}" />
+											<p:spacer width="5" />
+											<p:outputLabel value="#{rowVarRA.amount}" styleClass="Fright">
+												<f:convertNumber type="currency" currencySymbol="R" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="Amount" style="display:none">
+											<p:outputLabel value="#{rowVarRA.amountDescription}: " />
+											<p:outputLabel value="#{rowVarRA.amount}" styleClass="Fright">
+												<f:convertNumber type="currency" currencySymbol="R" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="Balance">
+											<p:outputLabel value="#{rowVarRA.balance}" styleClass="Fright">
+												<f:convertNumber type="currency" currencySymbol="R" />
+											</p:outputLabel>
+										</p:column>
+									</p:dataTable>
+								</p:fieldset>
+
+								<p:fieldset legend="Payments Returned by the Bank" style="margin-bottom:20px">
+									<ui:include src="/pages/includes/download_lazy.xhtml">
+										<ui:param name="file_name" value="Payments Returned by the Bank" />
+										<ui:param name="target" value="dtPaymentsByBank" />
+									</ui:include>
+									<p:dataTable id="dtPaymentsByBank" var="rowVarPA" value="#{companyFinanceReportUI.paymentsReturnedList}" emptyMessage="#{lang['no.records.found']}" reflow="true">
+										<f:facet name="header">Payments Returned by the Bank</f:facet>
+										<p:column headerText="Type">
+											<p:outputLabel value="#{rowVarPA.type}" />
+										</p:column>
+										<p:column headerText="Date">
+											<p:outputLabel value="#{rowVarPA.date}" styleClass="Fright">
+												<f:convertDateTime pattern="dd-MM-yyyy" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="Number">
+											<p:outputLabel value="#{rowVarPA.number}" />
+										</p:column>
+										<p:column headerText="Amount">
+											<p:outputLabel value="#{rowVarPA.amount}" styleClass="Fright">
+												<f:convertNumber type="currency" currencySymbol="R" />
+											</p:outputLabel>
+										</p:column>
+										<p:column headerText="Reason">
+											<p:outputLabel value="#{rowVarPA.reason}" />
+										</p:column>
+									</p:dataTable>
+								</p:fieldset>
+							</p:panelGrid>
+						</c:if>
+
+					</h:form>
+				</div>
+			</div>
+		</div>
+
+		<p:confirmDialog global="true" showEffect="fade" hideEffect="fade">
+			<h:form>
+				<p:commandButton value="Yes" type="button" styleClass="ui-confirmdialog-yes" icon="pi pi-check" />
+				<p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no" icon="pi pi-times" />
+			</h:form>
+		</p:confirmDialog>
+
+	</ui:define>
+</ui:composition>
