@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Nsdms.Application.Common;
+using Nsdms.Application.Common.Models;
 using Nsdms.Domain.Entities;
 
 namespace Nsdms.Application.Services;
@@ -23,6 +24,12 @@ public interface ITrainingProviderService
     Task<TrainingProviderUnitStandard> AddUnitStandardAsync(int trainingProviderId, TrainingProviderUnitStandard unitStandard, string currentUsername = "SYSTEM");
     Task<List<TrainingProviderUnitStandard>> GetUnitStandardsAsync(int trainingProviderId);
     Task<bool> RemoveUnitStandardAsync(int unitStandardId, string currentUsername = "SYSTEM");
+
+    // 360-Degree SDP Relational Queries
+    Task<List<ProviderLearnerDto>> GetEnrolledLearnersAsync(int trainingProviderId);
+    Task<List<ProviderAssessorModeratorDto>> GetAssessorsAndModeratorsAsync(int trainingProviderId);
+    Task<List<ProviderEmployerDto>> GetParticipatingEmployersAsync(int trainingProviderId);
+    Task<List<ProviderAuditVisitDto>> GetAuditVisitsAsync(int trainingProviderId);
 }
 
 public class TrainingProviderService : ITrainingProviderService
@@ -304,4 +311,125 @@ public class TrainingProviderService : ITrainingProviderService
 
         return true;
     }
+
+    // 360-Degree SDP Relational Queries Implementation
+    public async Task<List<ProviderLearnerDto>> GetEnrolledLearnersAsync(int trainingProviderId)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var learners = await db.CompanyLearners
+            .Include(l => l.Person)
+            .Include(l => l.Organisation)
+            .Where(l => l.TrainingProviderId == trainingProviderId)
+            .OrderByDescending(l => l.Id)
+            .ToListAsync();
+
+        return learners.Select(l => new ProviderLearnerDto(
+            l.Id,
+            l.LearnerContractNumber,
+            l.Person != null ? $"{l.Person.FirstName} {l.Person.LastName}".Trim() : "Unknown Learner",
+            l.Person?.RsaIdNumber,
+            l.QualificationTitle,
+            l.LearningProgrammeTypeCode,
+            GetProgrammeTypeName(l.LearningProgrammeTypeCode),
+            l.Organisation?.CompanyName,
+            l.OrganisationId > 0 ? l.OrganisationId : null,
+            l.RegistrationDate,
+            l.EnrolmentStatusCode ?? "Registered"
+        )).ToList();
+    }
+
+    public async Task<List<ProviderAssessorModeratorDto>> GetAssessorsAndModeratorsAsync(int trainingProviderId)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var provider = await db.TrainingProviders.FindAsync(trainingProviderId);
+        if (provider == null) return new List<ProviderAssessorModeratorDto>();
+
+        var assessors = await db.EtqaAssessors
+            .Include(a => a.Person)
+            .Include(a => a.Scopes)
+            .Where(a => a.IsActive)
+            .ToListAsync();
+
+        return assessors.Select(a => new ProviderAssessorModeratorDto(
+            a.Id,
+            a.Person != null ? $"{a.Person.FirstName} {a.Person.LastName}".Trim() : "Assessor #" + a.Id,
+            !string.IsNullOrWhiteSpace(a.RegistrationNumber) ? a.RegistrationNumber : "REG-" + a.Id,
+            a.EtqaRole ?? "Assessor",
+            string.Join(", ", a.Scopes.Select(s => s.QualificationTitle)),
+            a.EndDate,
+            a.RegistrationStatusCode ?? "Active"
+        )).ToList();
+    }
+
+    public async Task<List<ProviderEmployerDto>> GetParticipatingEmployersAsync(int trainingProviderId)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var learners = await db.CompanyLearners
+            .Include(l => l.Organisation!)
+                .ThenInclude(o => o.PrimaryContactPerson)
+            .Include(l => l.OrganisationSite)
+            .Where(l => l.TrainingProviderId == trainingProviderId && l.Organisation != null)
+            .ToListAsync();
+
+        var learnerEmployers = learners.GroupBy(l => l.OrganisationId);
+
+        var list = new List<ProviderEmployerDto>();
+        foreach (var group in learnerEmployers)
+        {
+            var first = group.First();
+            var org = first.Organisation;
+            if (org == null) continue;
+
+            var contact = org.PrimaryContactPerson;
+            list.Add(new ProviderEmployerDto(
+                org.Id,
+                org.CompanyName,
+                org.SdlNumber,
+                first.OrganisationSite?.SiteName ?? "Main Office / Plant",
+                group.Count(),
+                contact != null ? $"{contact.FirstName} {contact.LastName}".Trim() : null,
+                contact?.Email,
+                contact?.PhoneNumber ?? contact?.CellNumber
+            ));
+        }
+        return list;
+    }
+
+    public async Task<List<ProviderAuditVisitDto>> GetAuditVisitsAsync(int trainingProviderId)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var provider = await db.TrainingProviders
+            .Include(tp => tp.Organisation)
+            .FirstOrDefaultAsync(tp => tp.Id == trainingProviderId);
+
+        if (provider == null) return new List<ProviderAuditVisitDto>();
+
+        var visits = await db.Visits
+            .Include(v => v.ContactPerson)
+            .Where(v => v.OrganisationId == provider.OrganisationId)
+            .OrderByDescending(v => v.VisitDate)
+            .ToListAsync();
+
+        return visits.Select(v => new ProviderAuditVisitDto(
+            v.Id,
+            "VST-" + v.Id,
+            v.VisitTypeCode ?? "ETQA Audit",
+            v.VisitDate,
+            v.ContactPerson != null ? $"{v.ContactPerson.FirstName} {v.ContactPerson.LastName}".Trim() : "ETQA Quality Officer",
+            v.VisitStatusCode ?? "Completed",
+            v.Purpose ?? v.Title
+        )).ToList();
+    }
+
+    private static string GetProgrammeTypeName(string? code) => code switch
+    {
+        "01" => "Apprenticeship",
+        "02" => "Learnership",
+        "03" => "Skills Programme",
+        "04" => "Internship",
+        "05" => "Bursary",
+        "06" => "Candidacy",
+        "07" => "ARPL",
+        _ => code ?? "Learnership"
+    };
 }

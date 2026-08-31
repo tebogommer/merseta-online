@@ -17,7 +17,7 @@ public static class AppPermissions
     public const string ModulePeople = "People";
     public const string ModuleSystem = "System";
 
-    // Standard Actions
+    // Standard & Domain-Specific Actions
     public const string ActionView = "View";
     public const string ActionCreate = "Create";
     public const string ActionEdit = "Edit";
@@ -27,20 +27,30 @@ public static class AppPermissions
     public const string ActionDisburse = "Disburse";
     public const string ActionSubmit = "Submit";
     public const string ActionManage = "Manage";
+    public const string ActionSign = "Sign";
+    public const string ActionEndorse = "Endorse";
+    public const string ActionVerify = "Verify";
+    public const string ActionQuery = "Query";
+    public const string ActionRemediate = "Remediate";
+    public const string ActionModerate = "Moderate";
+    public const string ActionCertificate = "Certificate";
+    public const string ActionReconcile = "Reconcile";
+    public const string ActionTransfer = "Transfer";
+    public const string ActionDelegate = "Delegate";
 
     // Permission Claims Dictionary (Module -> List of Actions)
     public static readonly Dictionary<string, List<string>> ModuleActions = new()
     {
-        { ModuleOrganisations, new() { ActionView, ActionCreate, ActionEdit, ActionDelete, ActionManage } },
+        { ModuleOrganisations, new() { ActionView, ActionCreate, ActionEdit, ActionDelete, ActionSign, ActionDelegate, ActionManage } },
         { ModulePeople, new() { ActionView, ActionCreate, ActionEdit, ActionDelete, ActionManage } },
-        { ModuleWsp, new() { ActionView, ActionCreate, ActionEdit, ActionSubmit, ActionApprove, ActionReject, ActionManage } },
-        { ModuleGrants, new() { ActionView, ActionCreate, ActionEdit, ActionDelete, ActionSubmit, ActionApprove, ActionReject, ActionDisburse, ActionManage } },
-        { ModuleFinance, new() { ActionView, ActionCreate, ActionEdit, ActionApprove, ActionDisburse, ActionManage } },
-        { ModuleLearners, new() { ActionView, ActionCreate, ActionEdit, ActionDelete, ActionApprove, ActionManage } },
-        { ModuleEtqa, new() { ActionView, ActionCreate, ActionEdit, ActionDelete, ActionApprove, ActionManage } },
-        { ModuleWorkplace, new() { ActionView, ActionCreate, ActionEdit, ActionDelete, ActionApprove, ActionManage } },
-        { ModuleCompliance, new() { ActionView, ActionCreate, ActionEdit, ActionSubmit, ActionManage } },
-        { ModuleSystem, new() { ActionView, ActionCreate, ActionEdit, ActionDelete, ActionManage } }
+        { ModuleWsp, new() { ActionView, ActionCreate, ActionEdit, ActionSubmit, ActionSign, ActionEndorse, ActionQuery, ActionRemediate, ActionApprove, ActionReject, ActionManage } },
+        { ModuleGrants, new() { ActionView, ActionCreate, ActionEdit, ActionDelete, ActionSubmit, ActionSign, ActionVerify, ActionQuery, ActionRemediate, ActionApprove, ActionReject, ActionDisburse, ActionManage } },
+        { ModuleFinance, new() { ActionView, ActionCreate, ActionEdit, ActionVerify, ActionApprove, ActionDisburse, ActionReconcile, ActionTransfer, ActionManage } },
+        { ModuleLearners, new() { ActionView, ActionCreate, ActionEdit, ActionDelete, ActionSubmit, ActionModerate, ActionCertificate, ActionApprove, ActionManage } },
+        { ModuleEtqa, new() { ActionView, ActionCreate, ActionEdit, ActionDelete, ActionQuery, ActionRemediate, ActionVerify, ActionModerate, ActionApprove, ActionReject, ActionManage } },
+        { ModuleWorkplace, new() { ActionView, ActionCreate, ActionEdit, ActionDelete, ActionVerify, ActionApprove, ActionReject, ActionManage } },
+        { ModuleCompliance, new() { ActionView, ActionCreate, ActionEdit, ActionSubmit, ActionVerify, ActionManage } },
+        { ModuleSystem, new() { ActionView, ActionCreate, ActionEdit, ActionDelete, ActionDelegate, ActionManage } }
     };
 
     public static string Create(string module, string action) => $"{module}:{action}";

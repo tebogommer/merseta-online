@@ -34,6 +34,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
     public DbSet<WorkplaceApproval> WorkplaceApprovals => Set<WorkplaceApproval>();
     public DbSet<WorkplaceApprovalMentor> WorkplaceApprovalMentors => Set<WorkplaceApprovalMentor>();
     public DbSet<WorkplaceApprovalToolList> WorkplaceApprovalToolLists => Set<WorkplaceApprovalToolList>();
+    public DbSet<TradeMentorRatioPolicy> TradeMentorRatioPolicies => Set<TradeMentorRatioPolicy>();
     public DbSet<CompanyLearner> CompanyLearners => Set<CompanyLearner>();
     public DbSet<LearnerTradeTest> LearnerTradeTests => Set<LearnerTradeTest>();
     public DbSet<AuditLog> AuditLogs => Set<AuditLog>();
@@ -61,6 +62,18 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
     public DbSet<GrantTranchePayment> GrantTranchePayments => Set<GrantTranchePayment>();
     public DbSet<MandatoryGrantDisbursement> MandatoryGrantDisbursements => Set<MandatoryGrantDisbursement>();
     public DbSet<InterSetaTransfer> InterSetaTransfers => Set<InterSetaTransfer>();
+
+    // MoA Template & Reusable Clause Engine (Option A)
+    public DbSet<MoaTemplate> MoaTemplates => Set<MoaTemplate>();
+    public DbSet<MoaClause> MoaClauses => Set<MoaClause>();
+    public DbSet<MoaTemplateSection> MoaTemplateSections => Set<MoaTemplateSection>();
+    public DbSet<MoaExecutionSnapshot> MoaExecutionSnapshots => Set<MoaExecutionSnapshot>();
+
+    // Universal Document & Verification Engine (Strategic Action Items)
+    public DbSet<DocumentTemplate> DocumentTemplates => Set<DocumentTemplate>();
+    public DbSet<DocumentClause> DocumentClauses => Set<DocumentClause>();
+    public DbSet<DocumentTemplateSection> DocumentTemplateSections => Set<DocumentTemplateSection>();
+    public DbSet<DocumentSnapshot> DocumentSnapshots => Set<DocumentSnapshot>();
 
 
     // System Configuration & Feature Flags
@@ -371,6 +384,8 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.HasIndex(o => o.CompanySizeCode);
             entity.HasIndex(o => o.OrganisationTypeCode);
             entity.HasIndex(o => o.PrimaryContactPersonId);
+            entity.Property(o => o.MentorRatioExemptionReason).HasMaxLength(500);
+            entity.HasIndex(o => o.IsMentorRatioEnforced);
             entity.HasIndex(o => o.IsActive);
         });
 
@@ -520,12 +535,20 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.Property(g => g.RequestedAmount).HasPrecision(18, 2);
             entity.Property(g => g.ApprovedAmount).HasPrecision(18, 2);
 
+            entity.Property(g => g.WspExemptionReason).HasMaxLength(500);
+
             entity.HasOne(g => g.Organisation)
                   .WithMany(o => o.GrantApplications)
                   .HasForeignKey(g => g.OrganisationId)
                   .OnDelete(DeleteBehavior.Restrict);
 
+            entity.HasOne(g => g.WspSubmission)
+                  .WithMany()
+                  .HasForeignKey(g => g.WspSubmissionId)
+                  .OnDelete(DeleteBehavior.SetNull);
+
             entity.HasIndex(g => g.OrganisationId);
+            entity.HasIndex(g => g.WspSubmissionId);
             entity.HasIndex(g => g.ApplicationNumber);
             entity.HasIndex(g => g.ApplicationStatusCode);
         });
@@ -577,6 +600,10 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.Property(tp => tp.SarsNumber).HasMaxLength(50);
             entity.Property(tp => tp.FaxNumber).HasMaxLength(50);
             entity.Property(tp => tp.WebsiteUrl).HasMaxLength(200);
+
+            entity.Ignore(tp => tp.StatusCode);
+            entity.Ignore(tp => tp.LegalName);
+            entity.Ignore(tp => tp.ProviderName);
 
             entity.HasOne(tp => tp.Organisation)
                   .WithMany(o => o.TrainingProviders)
@@ -826,11 +853,16 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
                   .HasForeignKey(t => t.WorkplaceApprovalId)
                   .OnDelete(DeleteBehavior.Cascade);
 
+            entity.Property(w => w.TradeCode).HasMaxLength(50);
+            entity.Property(w => w.MentorRatioExemptionNotes).HasMaxLength(500);
+
             entity.HasIndex(w => w.OrganisationId);
             entity.HasIndex(w => w.OrganisationSiteId);
             entity.HasIndex(w => w.ContactPersonId);
             entity.HasIndex(w => w.ApprovalNumber);
             entity.HasIndex(w => w.ApprovalStatusCode);
+            entity.HasIndex(w => w.TradeCode);
+            entity.HasIndex(w => w.IsRatioEnforced);
         });
 
         // WorkplaceApprovalMentor
@@ -839,6 +871,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.ToTable("WorkplaceApprovalMentor");
             entity.Property(m => m.Designation).HasMaxLength(100);
             entity.Property(m => m.ArtisanTradeNumber).HasMaxLength(50);
+            entity.Property(m => m.Notes).HasMaxLength(500);
 
             entity.HasOne(m => m.Person)
                   .WithMany()
@@ -847,6 +880,24 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
 
             entity.HasIndex(m => m.WorkplaceApprovalId);
             entity.HasIndex(m => m.PersonId);
+            entity.HasIndex(m => m.IsActive);
+            entity.HasIndex(m => m.IsRatioExempt);
+            entity.HasIndex(m => m.IsRatioEnforced);
+        });
+
+        // TradeMentorRatioPolicy
+        modelBuilder.Entity<TradeMentorRatioPolicy>(entity =>
+        {
+            entity.ToTable("TradeMentorRatioPolicy");
+            entity.Property(p => p.TradeCode).HasMaxLength(50).IsRequired();
+            entity.Property(p => p.TradeTitle).HasMaxLength(200).IsRequired();
+            entity.Property(p => p.TradeOfoCode).HasMaxLength(50);
+            entity.Property(p => p.Notes).HasMaxLength(500);
+
+            entity.HasIndex(p => p.TradeCode).IsUnique();
+            entity.HasIndex(p => p.TradeOfoCode);
+            entity.HasIndex(p => p.SaqaQualificationId);
+            entity.HasIndex(p => p.IsActive);
         });
 
         // WorkplaceApprovalToolList
@@ -1181,9 +1232,179 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
                 .HasForeignKey(m => m.GrantApplicationId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            entity.HasOne(m => m.MoaTemplate)
+                .WithMany(t => t.GrantMoas)
+                .HasForeignKey(m => m.MoaTemplateId)
+                .OnDelete(DeleteBehavior.SetNull);
+
             entity.HasIndex(m => m.GrantApplicationId);
+            entity.HasIndex(m => m.MoaTemplateId);
             entity.HasIndex(m => m.MoaNumber).IsUnique();
             entity.HasIndex(m => m.MoaStatusCode);
+        });
+
+        // MoA Template & Reusable Clause Engine Configurations (Option A)
+        modelBuilder.Entity<MoaTemplate>(entity =>
+        {
+            entity.ToTable("MoaTemplate");
+            entity.Property(t => t.TemplateCode).HasMaxLength(100).IsRequired();
+            entity.Property(t => t.TemplateTitle).HasMaxLength(200).IsRequired();
+            entity.Property(t => t.GrantTypeCode).HasMaxLength(50).IsRequired();
+            entity.Property(t => t.LegalEntityType).HasMaxLength(50).IsRequired();
+            entity.Property(t => t.VersionNumber).HasMaxLength(20).IsRequired();
+            entity.Property(t => t.ApprovalStatus).HasMaxLength(50).IsRequired();
+            entity.Property(t => t.ApprovedBy).HasMaxLength(100);
+
+            entity.HasIndex(t => t.TemplateCode).IsUnique();
+            entity.HasIndex(t => new { t.FinancialYear, t.GrantTypeCode, t.IsActive });
+            entity.HasIndex(t => t.ApprovalStatus);
+        });
+
+        modelBuilder.Entity<MoaClause>(entity =>
+        {
+            entity.ToTable("MoaClause");
+            entity.Property(c => c.ClauseCode).HasMaxLength(100).IsRequired();
+            entity.Property(c => c.ClauseTitle).HasMaxLength(200).IsRequired();
+            entity.Property(c => c.Category).HasMaxLength(50).IsRequired();
+            entity.Property(c => c.ClauseContent).HasColumnType("nvarchar(max)").IsRequired();
+
+            entity.HasIndex(c => c.ClauseCode).IsUnique();
+            entity.HasIndex(c => c.Category);
+            entity.HasIndex(c => c.IsActive);
+        });
+
+        modelBuilder.Entity<MoaTemplateSection>(entity =>
+        {
+            entity.ToTable("MoaTemplateSection");
+            entity.Property(s => s.SectionNumber).HasMaxLength(50).IsRequired();
+            entity.Property(s => s.SectionTitle).HasMaxLength(200).IsRequired();
+            entity.Property(s => s.ConditionRuleJson).HasMaxLength(1000);
+
+            entity.HasOne(s => s.MoaTemplate)
+                .WithMany(t => t.Sections)
+                .HasForeignKey(s => s.MoaTemplateId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(s => s.MoaClause)
+                .WithMany(c => c.TemplateSections)
+                .HasForeignKey(s => s.MoaClauseId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(s => s.MoaTemplateId);
+            entity.HasIndex(s => s.MoaClauseId);
+            entity.HasIndex(s => new { s.MoaTemplateId, s.SequenceOrder });
+        });
+
+        modelBuilder.Entity<MoaExecutionSnapshot>(entity =>
+        {
+            entity.ToTable("MoaExecutionSnapshot");
+            entity.Property(s => s.TemplateVersionNumber).HasMaxLength(20).IsRequired();
+            entity.Property(s => s.RenderedContentHash).HasMaxLength(100).IsRequired();
+            entity.Property(s => s.RenderedContent).HasColumnType("nvarchar(max)").IsRequired();
+            entity.Property(s => s.PdfStorageUri).HasMaxLength(500);
+            entity.Property(s => s.SignatoryEmployer).HasMaxLength(150);
+            entity.Property(s => s.SignatorySeta).HasMaxLength(150);
+
+            entity.HasOne(s => s.GrantMoa)
+                .WithMany(m => m.ExecutionSnapshots)
+                .HasForeignKey(s => s.GrantMoaId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(s => s.MoaTemplate)
+                .WithMany(t => t.ExecutionSnapshots)
+                .HasForeignKey(s => s.MoaTemplateId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(s => s.GrantMoaId);
+            entity.HasIndex(s => s.MoaTemplateId);
+            entity.HasIndex(s => s.RenderedContentHash);
+            entity.HasIndex(s => s.FrozenAt);
+        });
+
+        modelBuilder.Entity<DocumentTemplate>(entity =>
+        {
+            entity.ToTable("DocumentTemplate");
+            entity.Property(t => t.TemplateCode).HasMaxLength(50).IsRequired();
+            entity.Property(t => t.TemplateTitle).HasMaxLength(200).IsRequired();
+            entity.Property(t => t.DocumentCategory).HasMaxLength(50).IsRequired();
+            entity.Property(t => t.DocumentTypeCode).HasMaxLength(50).IsRequired();
+            entity.Property(t => t.TargetEntityType).HasMaxLength(50).IsRequired();
+            entity.Property(t => t.VersionNumber).HasMaxLength(20).IsRequired();
+            entity.Property(t => t.ApprovalStatus).HasMaxLength(30).IsRequired();
+            entity.Property(t => t.HeaderBannerUrl).HasMaxLength(500);
+            entity.Property(t => t.FooterDisclaimerText).HasMaxLength(500);
+            entity.Property(t => t.ApprovedBy).HasMaxLength(100);
+
+            entity.HasIndex(t => t.TemplateCode).IsUnique();
+            entity.HasIndex(t => new { t.DocumentCategory, t.DocumentTypeCode, t.FinancialYear, t.IsActive });
+            entity.HasIndex(t => t.ApprovalStatus);
+        });
+
+        modelBuilder.Entity<DocumentClause>(entity =>
+        {
+            entity.ToTable("DocumentClause");
+            entity.Property(c => c.ClauseCode).HasMaxLength(50).IsRequired();
+            entity.Property(c => c.ClauseTitle).HasMaxLength(200).IsRequired();
+            entity.Property(c => c.Category).HasMaxLength(50).IsRequired();
+            entity.Property(c => c.ClauseContent).HasColumnType("nvarchar(max)").IsRequired();
+
+            entity.HasIndex(c => c.ClauseCode).IsUnique();
+            entity.HasIndex(c => c.Category);
+            entity.HasIndex(c => c.IsActive);
+        });
+
+        modelBuilder.Entity<DocumentTemplateSection>(entity =>
+        {
+            entity.ToTable("DocumentTemplateSection");
+            entity.Property(s => s.SectionNumber).HasMaxLength(30).IsRequired();
+            entity.Property(s => s.SectionTitle).HasMaxLength(200).IsRequired();
+            entity.Property(s => s.ConditionRuleJson).HasColumnType("nvarchar(max)");
+
+            entity.HasOne(s => s.DocumentTemplate)
+                .WithMany(t => t.Sections)
+                .HasForeignKey(s => s.DocumentTemplateId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(s => s.DocumentClause)
+                .WithMany(c => c.TemplateSections)
+                .HasForeignKey(s => s.DocumentClauseId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(s => s.DocumentTemplateId);
+            entity.HasIndex(s => s.DocumentClauseId);
+            entity.HasIndex(s => new { s.DocumentTemplateId, s.SequenceOrder });
+        });
+
+        modelBuilder.Entity<DocumentSnapshot>(entity =>
+        {
+            entity.ToTable("DocumentSnapshot");
+            entity.Property(s => s.DocumentSnapshotNumber).HasMaxLength(50).IsRequired();
+            entity.Property(s => s.DocumentTypeCode).HasMaxLength(50).IsRequired();
+            entity.Property(s => s.TemplateVersionNumber).HasMaxLength(20).IsRequired();
+            entity.Property(s => s.RelatedEntityType).HasMaxLength(50).IsRequired();
+            entity.Property(s => s.RecipientName).HasMaxLength(200).IsRequired();
+            entity.Property(s => s.RecipientIdentifier).HasMaxLength(50).IsRequired();
+            entity.Property(s => s.RenderedContentHash).HasMaxLength(100).IsRequired();
+            entity.Property(s => s.RenderedContent).HasColumnType("nvarchar(max)").IsRequired();
+            entity.Property(s => s.VerificationQrBase64).HasColumnType("nvarchar(max)");
+            entity.Property(s => s.VerificationUri).HasMaxLength(500).IsRequired();
+            entity.Property(s => s.PdfStorageUri).HasMaxLength(500);
+            entity.Property(s => s.IssuedBy).HasMaxLength(100).IsRequired();
+            entity.Property(s => s.SignatoryName).HasMaxLength(150);
+            entity.Property(s => s.SignatoryTitle).HasMaxLength(150);
+            entity.Property(s => s.RevocationReason).HasMaxLength(500);
+
+            entity.HasOne(s => s.DocumentTemplate)
+                .WithMany(t => t.Snapshots)
+                .HasForeignKey(s => s.DocumentTemplateId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(s => s.DocumentSnapshotNumber).IsUnique();
+            entity.HasIndex(s => s.RenderedContentHash);
+            entity.HasIndex(s => new { s.RelatedEntityType, s.RelatedEntityId });
+            entity.HasIndex(s => s.DocumentTypeCode);
+            entity.HasIndex(s => s.IssuedAt);
+            entity.HasIndex(s => s.RecipientIdentifier);
         });
 
         modelBuilder.Entity<GrantMoaMilestone>(entity =>
@@ -2027,8 +2248,15 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
         modelBuilder.Entity<SkillsRegistration>(entity =>
         {
             entity.ToTable("SkillsRegistration");
-            entity.Property(s => s.SkillsProgrammeCode).HasMaxLength(50).IsRequired();
-            entity.Property(s => s.SkillsProgrammeTitle).HasMaxLength(200).IsRequired();
+            entity.Property(s => s.NonNqfIntervCode).HasMaxLength(50).IsRequired();
+            entity.Property(s => s.NonNqfIntervName).HasMaxLength(200).IsRequired();
+            entity.Property(s => s.SubfieldId).HasMaxLength(10);
+            entity.Property(s => s.EtqaId).HasMaxLength(10);
+            entity.Property(s => s.NonNqfIntervStatusId).HasMaxLength(10);
+            entity.Property(s => s.LearningProgrammeTypeId).HasMaxLength(10);
+
+            entity.Ignore(s => s.SkillsProgrammeCode);
+            entity.Ignore(s => s.SkillsProgrammeTitle);
 
             entity.HasOne(s => s.QualificationsCurriculumDevelopment)
                 .WithMany(q => q.SkillsRegistrations)
@@ -2036,7 +2264,7 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasIndex(s => s.QualificationsCurriculumDevelopmentId);
-            entity.HasIndex(s => s.SkillsProgrammeCode);
+            entity.HasIndex(s => s.NonNqfIntervCode);
         });
 
         // Non-SETA Qualifications & Provider Verification (Area 16)
@@ -2127,9 +2355,24 @@ public class NsdmsDbContext : IdentityDbContext<ApplicationUser, ApplicationRole
             entity.HasKey(s => s.Id);
             entity.Property(s => s.SdfTypeCode).HasMaxLength(50).IsRequired();
             entity.Property(s => s.SdfStatusCode).HasMaxLength(50).IsRequired();
+            entity.Ignore(s => s.AppointmentStatusCode);
             entity.HasIndex(s => s.OrganisationId);
             entity.HasIndex(s => s.PersonId);
             entity.HasIndex(s => s.SdfStatusCode);
+        });
+
+        modelBuilder.Entity<SdfAppointmentHistory>(entity =>
+        {
+            entity.ToTable("SdfAppointmentHistory");
+            entity.HasKey(h => h.Id);
+            entity.Property(h => h.PreviousStatusCode).HasMaxLength(50).IsRequired();
+            entity.Property(h => h.NewStatusCode).HasMaxLength(50).IsRequired();
+            entity.Property(h => h.ChangedByUserId).HasMaxLength(100).IsRequired();
+            entity.HasOne(h => h.SdfCompany)
+                .WithMany()
+                .HasForeignKey(h => h.SdfCompanyId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(h => h.SdfCompanyId);
         });
 
         modelBuilder.Entity<ContractAddenda>(entity =>

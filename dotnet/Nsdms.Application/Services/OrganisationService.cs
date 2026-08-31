@@ -28,6 +28,15 @@ public interface IOrganisationService
     Task<OrganisationSite> AddSiteAsync(OrganisationSite site, string currentUsername = "Admin");
     Task<OrganisationSite> UpdateSiteAsync(OrganisationSite site, string currentUsername = "Admin");
     Task<bool> RemoveSiteAsync(int siteId, string currentUsername = "Admin");
+
+    // Relational Child Queries (360-Degree Views)
+    Task<List<OrganisationLearnerDto>> GetLinkedLearnersAsync(int organisationId);
+    Task<List<OrganisationGrantSummaryDto>> GetGrantMoasAndApplicationsAsync(int organisationId);
+    Task<List<OrganisationWpaDto>> GetWorkplaceApprovalsAsync(int organisationId);
+    Task<List<OrganisationCommitteeMemberDto>> GetTrainingCommitteeMembersAsync(int organisationId);
+    Task<OrganisationCommitteeMemberDto> AddTrainingCommitteeMemberAsync(int organisationId, int personId, string roleCode, string constituency, string currentUsername = "Admin");
+    Task<bool> RemoveTrainingCommitteeMemberAsync(int memberId, string currentUsername = "Admin");
+    Task<List<OrganisationLevyReconDto>> GetLevyReconHistoryAsync(int organisationId);
 }
 
 public class OrganisationService : IOrganisationService
@@ -476,5 +485,243 @@ public class OrganisationService : IOrganisationService
         _audit.LogAction(db, "OrganisationSite", siteId, "RemoveSite", currentUsername, before, null);
         await db.SaveChangesAsync();
         return true;
+    }
+
+    // 360-Degree Relational Queries Implementation
+    public async Task<List<OrganisationLearnerDto>> GetLinkedLearnersAsync(int organisationId)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var learners = await db.CompanyLearners
+            .Include(cl => cl.Person)
+            .Include(cl => cl.TrainingProvider)
+            .Include(cl => cl.OrganisationSite)
+            .Where(cl => cl.OrganisationId == organisationId)
+            .OrderByDescending(cl => cl.Id)
+            .ToListAsync();
+
+        return learners.Select(l => new OrganisationLearnerDto(
+            l.Id,
+            l.PersonId,
+            l.Person != null ? $"{l.Person.FirstName} {l.Person.LastName}".Trim() : "Unknown Learner",
+            l.Person?.RsaIdNumber,
+            l.Person?.PassportNumber,
+            l.LearnerContractNumber,
+            l.LearningProgrammeTypeCode,
+            GetProgrammeTypeName(l.LearningProgrammeTypeCode),
+            l.QualificationTitle,
+            l.NqfLevel,
+            l.EnrolmentStatusId,
+            GetEnrolmentStatusName(l.EnrolmentStatusId),
+            l.RegistrationDate,
+            l.CommencementDate,
+            l.CompletionDate,
+            l.TrainingProvider?.ProviderName,
+            l.OrganisationSite?.SiteName
+        )).ToList();
+    }
+
+    private static string GetProgrammeTypeName(string? code) => code switch
+    {
+        "01" => "Apprenticeship",
+        "02" => "Learnership",
+        "03" => "Skills Programme",
+        "04" => "Internship",
+        "05" => "Bursary",
+        "06" => "Candidacy",
+        "07" => "ARPL",
+        _ => code ?? "Learnership"
+    };
+
+    private static string GetEnrolmentStatusName(string? code) => code switch
+    {
+        "01" => "Enrolled / Active",
+        "02" => "Achieved",
+        "03" => "Certificated",
+        "04" => "Terminated",
+        "05" => "Transferred",
+        _ => code ?? "Active"
+    };
+
+    public async Task<List<OrganisationGrantSummaryDto>> GetGrantMoasAndApplicationsAsync(int organisationId)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var apps = await db.GrantApplications
+            .Include(g => g.FundingWindow)
+            .Where(g => g.OrganisationId == organisationId)
+            .OrderByDescending(g => g.Id)
+            .ToListAsync();
+
+        var appIds = apps.Select(a => a.Id).ToList();
+        var moas = await db.GrantMoas
+            .Include(m => m.Milestones)
+            .Where(m => appIds.Contains(m.GrantApplicationId))
+            .ToListAsync();
+
+        var results = new List<OrganisationGrantSummaryDto>();
+
+        foreach (var app in apps)
+        {
+            var linkedMoa = moas.FirstOrDefault(m => m.GrantApplicationId == app.Id);
+            var totalDisbursed = await db.GrantTranchePayments
+                .Where(t => t.GrantApplicationId == app.Id && t.PaymentStatusCode == "Paid")
+                .SumAsync(t => (decimal?)t.ApprovedPaymentAmount) ?? 0m;
+
+            results.Add(new OrganisationGrantSummaryDto(
+                app.Id,
+                linkedMoa?.Id,
+                linkedMoa != null ? linkedMoa.MoaNumber : app.ApplicationNumber,
+                app.ProjectTitle,
+                app.FundingWindow?.WindowName,
+                app.GrantTypeCode,
+                app.RequestedAmount,
+                linkedMoa != null ? linkedMoa.TotalContractValue : (app.ApprovedAmount ?? 0m),
+                totalDisbursed,
+                linkedMoa != null ? linkedMoa.MoaStatusCode : (app.ApplicationStatusCode ?? "Pending"),
+                linkedMoa != null ? linkedMoa.ContractStartDate : app.CreatedAt,
+                linkedMoa?.ContractEndDate,
+                linkedMoa?.Milestones.Count ?? 0
+            ));
+        }
+
+        return results;
+    }
+
+    public async Task<List<OrganisationWpaDto>> GetWorkplaceApprovalsAsync(int organisationId)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var wpas = await db.WorkplaceApprovals
+            .Include(w => w.OrganisationSite)
+            .Include(w => w.Mentors)
+            .Include(w => w.ToolItems)
+            .Where(w => w.OrganisationId == organisationId)
+            .OrderByDescending(w => w.Id)
+            .ToListAsync();
+
+        return wpas.Select(w => new OrganisationWpaDto(
+            w.Id,
+            w.ApprovalNumber,
+            w.OrganisationSite?.SiteName ?? "Main Facility",
+            w.QualificationTitle,
+            w.SaqaQualificationId,
+            w.ApprovalStatusCode,
+            w.InspectionDate,
+            w.ApprovalDate,
+            w.ExpiryDate,
+            w.Mentors.Count,
+            w.ToolItems.Count
+        )).ToList();
+    }
+
+    public async Task<List<OrganisationCommitteeMemberDto>> GetTrainingCommitteeMembersAsync(int organisationId)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var members = await db.TrainingCommitteeMembers
+            .Include(m => m.Person)
+            .Include(m => m.TrainingCommittee)
+            .Where(m => m.TrainingCommittee != null && m.TrainingCommittee.OrganisationId == organisationId)
+            .OrderByDescending(m => m.Id)
+            .ToListAsync();
+
+        return members.Select(m => new OrganisationCommitteeMemberDto(
+            m.Id,
+            m.TrainingCommitteeId,
+            m.PersonId,
+            m.Person != null ? $"{m.Person.FirstName} {m.Person.LastName}".Trim() : "Unknown Person",
+            m.Person?.RsaIdNumber,
+            m.Person?.EmailAddress,
+            m.Person?.CellPhoneNumber,
+            m.MemberRoleCode,
+            m.Constituency,
+            m.IsActive,
+            m.CreatedAt
+        )).ToList();
+    }
+
+    public async Task<OrganisationCommitteeMemberDto> AddTrainingCommitteeMemberAsync(int organisationId, int personId, string roleCode, string constituency, string currentUsername = "Admin")
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var committee = await db.TrainingCommittees.FirstOrDefaultAsync(tc => tc.OrganisationId == organisationId && tc.CommitteeStatusCode == "Active");
+        if (committee == null)
+        {
+            committee = new TrainingCommittee
+            {
+                OrganisationId = organisationId,
+                FinancialYear = DateTime.UtcNow.Year,
+                CommitteeStatusCode = "Active",
+                ConstitutionalQuorumMet = true,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = currentUsername
+            };
+            db.TrainingCommittees.Add(committee);
+            await db.SaveChangesAsync();
+        }
+
+        var member = new TrainingCommitteeMember
+        {
+            TrainingCommitteeId = committee.Id,
+            PersonId = personId,
+            MemberRoleCode = roleCode,
+            Constituency = constituency,
+            IsActive = true,
+            CreatedAt = DateTime.UtcNow,
+            CreatedBy = currentUsername
+        };
+
+        db.TrainingCommitteeMembers.Add(member);
+        await db.SaveChangesAsync();
+
+        var person = await db.People.FindAsync(personId);
+        _audit.LogAction(db, "TrainingCommitteeMember", member.Id, "AddMember", currentUsername, null, member);
+        await db.SaveChangesAsync();
+
+        return new OrganisationCommitteeMemberDto(
+            member.Id,
+            committee.Id,
+            personId,
+            person != null ? $"{person.FirstName} {person.LastName}".Trim() : "Unknown Person",
+            person?.RsaIdNumber,
+            person?.EmailAddress,
+            person?.CellPhoneNumber,
+            member.MemberRoleCode,
+            member.Constituency,
+            member.IsActive,
+            member.CreatedAt
+        );
+    }
+
+    public async Task<bool> RemoveTrainingCommitteeMemberAsync(int memberId, string currentUsername = "Admin")
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var member = await db.TrainingCommitteeMembers.FindAsync(memberId);
+        if (member == null) return false;
+
+        db.TrainingCommitteeMembers.Remove(member);
+        _audit.LogAction(db, "TrainingCommitteeMember", memberId, "RemoveMember", currentUsername, member, null);
+        await db.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<List<OrganisationLevyReconDto>> GetLevyReconHistoryAsync(int organisationId)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var org = await db.Organisations.FindAsync(organisationId);
+        if (org == null) return new List<OrganisationLevyReconDto>();
+
+        var recons = await db.SarsLevyReconAudits
+            .Where(r => r.OrganisationId == organisationId || r.SdlNumber == org.SdlNumber)
+            .OrderByDescending(r => r.FinancialYear)
+            .ToListAsync();
+
+        return recons.Select(r => new OrganisationLevyReconDto(
+            r.Id,
+            r.FinancialYear,
+            r.SdlNumber,
+            r.TotalSarsLeviesReceived,
+            r.TotalSarsLeviesReceived * 0.20m,
+            r.TotalSarsLeviesReceived * 0.495m,
+            r.TotalSarsLeviesReceived * 0.105m,
+            r.AuditStatusCode,
+            r.ReconciliationDate
+        )).ToList();
     }
 }

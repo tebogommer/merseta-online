@@ -1,16 +1,18 @@
-﻿@page "/non-seta/verifications"
+@page "/non-seta/verifications"
 @using Nsdms.Application.Common.Interfaces
 @using Nsdms.Domain.Entities
 @inject INonSetaVerificationService NonSetaService
 @inject NavigationManager Nav
 @inject ISnackbar Snackbar
+@inject IJSRuntime JS
+@rendermode InteractiveServer
 
 <PageTitle>Non-SETA Qualifications &amp; Articulation | merSETA NSDMS</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
     <!-- Top Bar -->
     <MudCard Elevation="2" Class="mb-4">
-        <MudCardContent Class="d-flex align-center justify-space-between py-3">
+        <MudCardContent Class="d-flex flex-wrap align-center justify-space-between gap-3 py-3">
             <div>
                 <MudBreadcrumbs Items="_breadcrumbs" Class="pa-0 mb-1" />
                 <MudText Typo="Typo.h5" Class="fw-bold">Non-SETA Qualifications &amp; Provider Articulation</MudText>
@@ -18,13 +20,37 @@
                     Verification of qualifications and credits completed through other SETAs, TVETs, and Higher Education institutions for merSETA endorsement.
                 </MudText>
             </div>
-            <MudStack Row="true" Spacing="2">
+            <MudStack Row="true" Spacing="2" Class="align-center">
+                <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.FileDownload" OnClick="ExportCsvAsync">
+                    Export CSV
+                </MudButton>
+
                 <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadDataAsync">
                     Refresh
+                </MudButton>
+
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AddCircle" OnClick="@(() => Nav.NavigateTo("/people"))">
+                    New Verification
                 </MudButton>
             </MudStack>
         </MudCardContent>
     </MudCard>
+
+    <!-- Quick Status Filter Chips -->
+    <MudPaper Elevation="0" Class="d-flex flex-wrap align-center gap-2 mb-3 px-1 py-1">
+        <MudChip T="string" Color="@(_statusFilter == null ? Color.Primary : Color.Default)" Variant="@(_statusFilter == null ? Variant.Filled : Variant.Outlined)" OnClick="@(() => _statusFilter = null)">
+            All (@_verifications.Count)
+        </MudChip>
+        <MudChip T="string" Color="Color.Success" Variant="@(_statusFilter == "EndorsedByMerSeta" ? Variant.Filled : Variant.Outlined)" OnClick="@(() => _statusFilter = "EndorsedByMerSeta")">
+            Endorsed (@_verifications.Count(v => v.VerificationStatusCode == "EndorsedByMerSeta"))
+        </MudChip>
+        <MudChip T="string" Color="Color.Info" Variant="@(_statusFilter == "CreditsArticulated" ? Variant.Filled : Variant.Outlined)" OnClick="@(() => _statusFilter = "CreditsArticulated")">
+            Articulated (@_verifications.Count(v => v.VerificationStatusCode == "CreditsArticulated"))
+        </MudChip>
+        <MudChip T="string" Color="Color.Warning" Variant="@(_statusFilter == "PendingVerification" ? Variant.Filled : Variant.Outlined)" OnClick="@(() => _statusFilter = "PendingVerification")">
+            Pending Verification (@_verifications.Count(v => v.VerificationStatusCode == "PendingVerification"))
+        </MudChip>
+    </MudPaper>
 
     @if (_isLoading)
     {
@@ -34,9 +60,9 @@
     <!-- Table -->
     <MudCard Elevation="2">
         <MudCardContent>
-            <MudTable Items="_verifications" Hover="true" Dense="true" Elevation="0" Filter="FilterVerifications">
+            <MudTable Items="_filteredVerifications" Hover="true" Dense="true" Elevation="0">
                 <ToolBarContent>
-                    <MudText Typo="Typo.h6">Qualification Verifications (@_verifications.Count)</MudText>
+                    <MudText Typo="Typo.h6">Qualification Verifications (@_filteredVerifications.Count)</MudText>
                     <MudSpacer />
                     <MudTextField @bind-Value="_searchString" Placeholder="Search by candidate, qualification, originating SETA..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Immediate="true" />
                 </ToolBarContent>
@@ -48,10 +74,21 @@
                     <MudTh>Credits</MudTh>
                     <MudTh>Cert #</MudTh>
                     <MudTh>Status</MudTh>
-                    <MudTh Style="text-align: right;">Action</MudTh>
+                    <MudTh Style="text-align: right;">Actions</MudTh>
                 </HeaderContent>
                 <RowTemplate>
-                    <MudTd DataLabel="Candidate">@(context.Person != null ? $"{context.Person.FirstName} {context.Person.LastName}" : "Candidate")</MudTd>
+                    <MudTd DataLabel="Candidate" Class="fw-bold">
+                        @if (context.PersonId > 0)
+                        {
+                            <MudLink Href="@($"/people/{context.PersonId}")" Color="Color.Primary" Underline="Underline.Hover">
+                                @(context.Person != null ? $"{context.Person.FirstName} {context.Person.LastName}" : "Candidate")
+                            </MudLink>
+                        }
+                        else
+                        {
+                            <span>@(context.Person != null ? $"{context.Person.FirstName} {context.Person.LastName}" : "Candidate")</span>
+                        }
+                    </MudTd>
                     <MudTd DataLabel="Originating SETA">
                         <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">@context.OriginatingSetaCode</MudChip>
                     </MudTd>
@@ -64,10 +101,15 @@
                             @context.VerificationStatusCode
                         </MudChip>
                     </MudTd>
-                    <MudTd DataLabel="Action" Style="text-align: right;">
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.VerifiedUser" OnClick="@(() => Nav.NavigateTo($"/non-seta/verifications/{context.Id}"))">
-                            Verify &amp; Endorse
-                        </MudButton>
+                    <MudTd DataLabel="Actions" Style="text-align: right;">
+                        <MudButtonGroup Size="Size.Small" Variant="Variant.Outlined">
+                            <MudIconButton Icon="@Icons.Material.Filled.VerifiedUser"
+                                           Color="Color.Primary"
+                                           Size="Size.Small"
+                                           OnClick="@(() => Nav.NavigateTo($"/non-seta/verifications/{context.Id}"))"
+                                           aria-label="Verify & Endorse"
+                                           Title="Verify & Endorse" />
+                        </MudButtonGroup>
                     </MudTd>
                 </RowTemplate>
                 <PagerContent>
@@ -89,6 +131,7 @@
     private List<NonSetaQualificationsCompletion> _verifications = new();
     private bool _isLoading = true;
     private string _searchString = string.Empty;
+    private string? _statusFilter = null;
 
     protected override async Task OnInitializedAsync()
     {
@@ -112,14 +155,33 @@
         }
     }
 
-    private bool FilterVerifications(NonSetaQualificationsCompletion v)
+    private List<NonSetaQualificationsCompletion> _filteredVerifications => _verifications.Where(v =>
     {
+        if (!string.IsNullOrEmpty(_statusFilter) && !string.Equals(v.VerificationStatusCode, _statusFilter, StringComparison.OrdinalIgnoreCase))
+            return false;
+
         if (string.IsNullOrWhiteSpace(_searchString)) return true;
         var personName = v.Person != null ? $"{v.Person.FirstName} {v.Person.LastName}" : "";
         return v.QualificationTitle.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
                v.OriginatingSetaCode.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
                v.ExternalCertificateNumber.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
-               personName.Contains(_searchString, StringComparison.OrdinalIgnoreCase);
+               personName.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+               v.VerificationStatusCode.Contains(_searchString, StringComparison.OrdinalIgnoreCase);
+    }).ToList();
+
+    private async Task ExportCsvAsync()
+    {
+        var csv = new System.Text.StringBuilder();
+        csv.AppendLine("CandidateName,OriginatingSeta,QualificationTitle,NqfLevel,CreditsAchieved,CertNumber,Status");
+        foreach (var item in _filteredVerifications)
+        {
+            csv.AppendLine($"\"{item.Person?.FirstName} {item.Person?.LastName}\",\"{item.OriginatingSetaCode}\",\"{item.QualificationTitle}\",{item.NqfLevel},{item.TotalCreditsAchieved},\"{item.ExternalCertificateNumber}\",\"{item.VerificationStatusCode}\"");
+        }
+
+        var bytes = System.Text.Encoding.UTF8.GetBytes(csv.ToString());
+        var base64 = Convert.ToBase64String(bytes);
+        await JS.InvokeVoidAsync("eval", $"const a = document.createElement('a'); a.href = 'data:text/csv;base64,{base64}'; a.download = 'NonSetaVerifications_{DateTime.UtcNow:yyyyMMdd}.csv'; a.click();");
+        Snackbar.Add("Non-SETA verifications exported to CSV successfully.", Severity.Success);
     }
 
     private Color GetStatusColor(string status) => status switch

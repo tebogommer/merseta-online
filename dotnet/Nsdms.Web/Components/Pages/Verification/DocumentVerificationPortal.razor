@@ -1,0 +1,283 @@
+@page "/verify"
+@page "/verify/document/{DocumentHash}"
+@using Nsdms.Application.Common.Interfaces
+@inject IDocumentVerificationService VerificationService
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<PageTitle>Digital Document Verification Portal | merSETA NSDMS</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="my-6">
+    <MudPaper Elevation="3" Class="pa-6 rounded-lg mb-6 border-t-4 border-solid" Style="border-top-color: var(--mud-palette-primary) !important;">
+        <div class="d-flex align-center justify-space-between flex-wrap gap-4">
+            <div class="d-flex align-center gap-4">
+                <MudAvatar Color="Color.Primary" Size="Size.Large" Variant="Variant.Filled">
+                    <MudIcon Icon="@Icons.Material.Filled.VerifiedUser" Size="Size.Large" />
+                </MudAvatar>
+                <div>
+                    <MudText Typo="Typo.h5" Class="font-weight-bold">National Skills Document Verification Portal</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        Instant cryptographic point-in-time provenance verification for all merSETA trade certificates, letters, and statutory contracts.
+                    </MudText>
+                </div>
+            </div>
+            <MudChip T="string" Color="Color.Success" Variant="Variant.Outlined" Size="Size.Small" Icon="@Icons.Material.Filled.Security">
+                SHA-256 Hash Anchored
+            </MudChip>
+        </div>
+
+        <MudDivider Class="my-4" />
+
+        <div class="d-flex gap-2 align-center">
+            <MudTextField @bind-Value="_searchQuery"
+                          Placeholder="Enter document SHA-256 hash or tracking number (e.g. DOC-2026-TT-00123)..."
+                          Variant="Variant.Outlined"
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Immediate="true"
+                          OnKeyDown="@HandleKeyDown"
+                          Class="flex-grow-1" />
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       Size="Size.Large"
+                       StartIcon="@Icons.Material.Filled.Search"
+                       OnClick="PerformVerificationAsync"
+                       Disabled="_isSearching">
+                @if (_isSearching)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                    <span>Verifying...</span>
+                }
+                else
+                {
+                    <span>Verify Provenance</span>
+                }
+            </MudButton>
+        </div>
+    </MudPaper>
+
+    @if (_hasSearched)
+    {
+        @if (_result != null && _result.IsFound)
+        {
+            <MudCard Elevation="4" Class="mb-6 rounded-lg overflow-hidden">
+                <MudCardHeader Class="@GetHeaderClass(_result)">
+                    <CardHeaderAvatar>
+                        <MudAvatar Color="@GetStatusColor(_result)" Variant="Variant.Filled">
+                            <MudIcon Icon="@GetStatusIcon(_result)" />
+                        </MudAvatar>
+                    </CardHeaderAvatar>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6" Class="font-weight-bold text-white">
+                            @if (_result.IsAuthentic)
+                            {
+                                <span>OFFICIALLY VERIFIED AUTHENTIC</span>
+                            }
+                            else if (_result.IsRevoked)
+                            {
+                                <span>DOCUMENT REVOKED / SUPERSEDED</span>
+                            }
+                            else
+                            {
+                                <span>INTEGRITY TAMPER MISMATCH DETECTED</span>
+                            }
+                        </MudText>
+                        <MudText Typo="Typo.body2" Class="text-white">
+                            Issued by merSETA National Skills Development Management System
+                        </MudText>
+                    </CardHeaderContent>
+                    <CardHeaderActions>
+                        <MudChip T="string" Color="Color.Dark" Variant="Variant.Filled" Size="Size.Small">
+                            Scans: @_result.VerificationScanCount
+                        </MudChip>
+                    </CardHeaderActions>
+                </MudCardHeader>
+
+                <MudCardContent Class="pa-6">
+                    <MudGrid>
+                        <MudItem xs="12" md="8">
+                            <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-4" Color="Color.Primary">
+                                @(_result.DocumentTitle)
+                            </MudText>
+
+                            <MudSimpleTable Dense="true" Hover="true" Striped="true" Class="mb-4">
+                                <tbody>
+                                    <tr>
+                                        <td class="font-weight-bold" style="width: 200px;">Document Reference</td>
+                                        <td><code>@_result.DocumentSnapshotNumber</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-weight-bold">Document Type</td>
+                                        <td>@_result.DocumentTypeCode</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-weight-bold">Issued To (Recipient)</td>
+                                        <td><strong>@_result.RecipientName</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-weight-bold">Recipient ID / SDL Number</td>
+                                        <td><code>@_result.RecipientIdentifier</code></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-weight-bold">Date of Issuance</td>
+                                        <td>@_result.IssuedAt.ToString("dd MMMM yyyy, HH:mm:ss 'UTC'")</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="font-weight-bold">Issued By Authority</td>
+                                        <td>@_result.IssuedBy</td>
+                                    </tr>
+                                    @if (!string.IsNullOrWhiteSpace(_result.SignatoryName))
+                                    {
+                                        <tr>
+                                            <td class="font-weight-bold">Authorised Signatory</td>
+                                            <td>@_result.SignatoryName (@(_result.SignatoryTitle ?? "Signatory"))</td>
+                                        </tr>
+                                    }
+                                    <tr>
+                                        <td class="font-weight-bold">SHA-256 Fingerprint</td>
+                                        <td>
+                                            <code style="word-break: break-all;" class="pa-1 rounded mud-background-gray">
+                                                @_result.RenderedContentHash
+                                            </code>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </MudSimpleTable>
+
+                            @if (_result.IsRevoked)
+                            {
+                                <MudAlert Severity="Severity.Error" Variant="Variant.Filled" Class="mb-4">
+                                    <strong>REVOCATION NOTICE:</strong> This document was officially revoked. Reason: @(_result.RevocationReason ?? "Administrative cancellation")
+                                </MudAlert>
+                            }
+                        </MudItem>
+
+                        <MudItem xs="12" md="4" Class="d-flex flex-column align-center justify-center border-l-2 border-solid pa-4" Style="border-left-color: var(--mud-palette-divider) !important;">
+                            @if (!string.IsNullOrWhiteSpace(_result.VerificationQrBase64))
+                            {
+                                <img src="@_result.VerificationQrBase64" alt="Verification QR Code" style="width: 160px; height: 160px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" />
+                            }
+                            <MudText Typo="Typo.caption" Class="mt-2 text-center" Color="Color.Secondary">
+                                Scan with any mobile device camera to confirm authenticity in real time.
+                            </MudText>
+                            <MudButton Variant="Variant.Outlined"
+                                       Color="Color.Primary"
+                                       Size="Size.Small"
+                                       StartIcon="@Icons.Material.Filled.Share"
+                                       Class="mt-4"
+                                       OnClick="CopyVerificationUrlAsync">
+                                Copy Verification Link
+                            </MudButton>
+                        </MudItem>
+                    </MudGrid>
+
+                    <MudDivider Class="my-4" />
+
+                    <MudExpansionPanels>
+                        <MudExpansionPanel Text="Inspect Point-in-Time Frozen Content (Legal Markdown Text)" Icon="@Icons.Material.Filled.Description">
+                            <pre class="pa-4 rounded mud-background-gray text-body2" style="max-height: 400px; overflow-y: auto; white-space: pre-wrap; font-family: monospace;">
+@_result.AssembledContent
+                            </pre>
+                        </MudExpansionPanel>
+                    </MudExpansionPanels>
+                </MudCardContent>
+            </MudCard>
+        }
+        else
+        {
+            <MudAlert Severity="Severity.Warning" Variant="Variant.Filled" Class="rounded-lg">
+                <MudText Typo="Typo.subtitle1" Class="font-weight-bold">No Verified Document Found</MudText>
+                <MudText Typo="Typo.body2">
+                    No authentic merSETA document record matching <code>@_searchQuery</code> was found. Please check that you entered the complete SHA-256 fingerprint hash or document tracking number.
+                </MudText>
+            </MudAlert>
+        }
+    }
+</MudContainer>
+
+@code {
+    [Parameter]
+    public string? DocumentHash { get; set; }
+
+    private string _searchQuery = string.Empty;
+    private bool _isSearching = false;
+    private bool _hasSearched = false;
+    private DocumentVerificationResult? _result;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(DocumentHash))
+        {
+            _searchQuery = DocumentHash;
+            await PerformVerificationAsync();
+        }
+    }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await PerformVerificationAsync();
+        }
+    }
+
+    private async Task PerformVerificationAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_searchQuery))
+        {
+            Snackbar.Add("Please enter a valid document hash or snapshot reference.", Severity.Warning);
+            return;
+        }
+
+        _isSearching = true;
+        try
+        {
+            _result = await VerificationService.VerifyDocumentSnapshotAsync(_searchQuery);
+            _hasSearched = true;
+
+            if (_result.IsFound)
+            {
+                // Record the scan in audit log
+                // Let's find snapshot ID if needed
+                Snackbar.Add("Cryptographic document verification complete.", Severity.Success);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Verification error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSearching = false;
+        }
+    }
+
+    private void CopyVerificationUrlAsync()
+    {
+        if (_result != null && !string.IsNullOrWhiteSpace(_result.VerificationUri))
+        {
+            Snackbar.Add("Verification link ready for sharing.", Severity.Info);
+        }
+    }
+
+    private static string GetHeaderClass(DocumentVerificationResult r)
+    {
+        if (r.IsRevoked) return "mud-error";
+        if (r.IsAuthentic) return "mud-success";
+        return "mud-warning";
+    }
+
+    private static Color GetStatusColor(DocumentVerificationResult r)
+    {
+        if (r.IsRevoked) return Color.Error;
+        if (r.IsAuthentic) return Color.Success;
+        return Color.Warning;
+    }
+
+    private static string GetStatusIcon(DocumentVerificationResult r)
+    {
+        if (r.IsRevoked) return Icons.Material.Filled.Cancel;
+        if (r.IsAuthentic) return Icons.Material.Filled.CheckCircle;
+        return Icons.Material.Filled.Warning;
+    }
+}

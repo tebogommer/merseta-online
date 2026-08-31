@@ -1,0 +1,693 @@
+@page "/admin"
+@page "/administration"
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@using MudBlazor
+@inject IAdminCatalogService CatalogService
+@inject ISystemConfigurationService ConfigService
+@inject IFeatureFlagService FeatureFlags
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@rendermode InteractiveServer
+
+@*
+  UI-STANDARD.md Archetype: T3 (System Administration Command Center)
+  Clauses: 4.2, 4.3, 4.4, 5.1, 7.4.2, 8.3, 9.2, 10, 11.9
+*@
+
+<PageTitle>System Administration & Configuration Hub | MerSETA NSDMS</PageTitle>
+
+<EntityHeader Title="System Administration & Configuration Hub"
+              Subtitle="Unified enterprise control panel for security roles, system parameters, feature flags, statutory reference data, templates, and audits."
+              ReferenceKey="SYS-ADMIN-HUB"
+              Status="Active"
+              BreadcrumbItems="@_breadcrumbs">
+    <ActionZone>
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.KeyboardCommandKey"
+                   OnClick="OpenCommandPalette"
+                   Class="d-none d-sm-inline-flex">
+            Command Palette (Ctrl + K)
+        </MudButton>
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Secondary"
+                   StartIcon="@Icons.Material.Filled.Refresh"
+                   OnClick="LoadCatalogAsync">
+            Refresh
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Add"
+                   OnClick="OpenNewConfigDrawer">
+            Add Parameter
+        </MudButton>
+    </ActionZone>
+</EntityHeader>
+
+@if (_isLoading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-4" />
+}
+
+<!-- System Telemetry & Health HUD (Clause 4.4) -->
+<section aria-label="System Telemetry" class="mb-5">
+    <MudGrid Spacing="3">
+        <!-- 1. System Parameters -->
+        <StatCard Value="@_telemetry.TotalConfigsCount.ToString()"
+                  Label="System Configurations"
+                  Context="Active runtime parameters"
+                  Icon="@Icons.Material.Filled.Settings"
+                  TrendColor="Color.Primary"
+                  Href="/admin/settings" />
+
+        <!-- 2. Feature Flags -->
+        <StatCard Value="@($"{_telemetry.EnabledFlagsCount} / {_telemetry.TotalFlagsCount}")"
+                  Label="Feature Flags & Switches"
+                  Context="@($"{_telemetry.TotalFlagsCount - _telemetry.EnabledFlagsCount} in simulation mode")"
+                  Icon="@Icons.Material.Filled.ToggleOn"
+                  TrendColor="Color.Warning"
+                  Href="/admin/settings" />
+
+        <!-- 3. Reference Lookups -->
+        <StatCard Value="@_telemetry.TotalLookupsCount.ToString()"
+                  Label="Reference Data Tables"
+                  Context="SETMIS & OFO standard enums"
+                  Icon="@Icons.Material.Filled.Tune"
+                  TrendColor="Color.Info"
+                  Href="/admin/lookups" />
+
+        <!-- 4. Security Roles & Audits -->
+        <StatCard Value="@_telemetry.TotalRolesCount.ToString()"
+                  Label="Security Roles (RBAC)"
+                  Context="@($"{_telemetry.TotalAuditLogsCount:N0} audit log entries")"
+                  Icon="@Icons.Material.Filled.Security"
+                  TrendColor="Color.Success"
+                  Href="/admin/roles" />
+    </MudGrid>
+</section>
+
+<!-- OmniSearch & Spotlight Filter Bar -->
+<MudPaper Elevation="1" Class="pa-4 mb-4 rounded-lg border-default" Style="border: 1px solid var(--mud-palette-lines-default);">
+    <MudGrid Spacing="2" Class="align-center">
+        <!-- Main OmniSearch Bar -->
+        <MudItem xs="12" md="7">
+            <MudTextField @bind-Value="_searchQuery"
+                          Placeholder="Search all admin modules, config keys, feature flags, SETMIS lookups, or security roles (e.g. 'SARS', 'Rebate', 'OFO', 'GP', 'SuperAdmin')..."
+                          Adornment="Adornment.Start"
+                          AdornmentIcon="@Icons.Material.Filled.Search"
+                          Immediate="true"
+                          DebounceInterval="200"
+                          OnDebounceIntervalElapsed="OnSearchChanged"
+                          Clearable="true"
+                          OnClearButtonClick="ClearSearch"
+                          Variant="Variant.Outlined"
+                          Margin="Margin.Dense"
+                          Class="admin-omnisearch-input" />
+        </MudItem>
+
+        <!-- Category Dropdown on Mobile / Quick Telemetry Status on Desktop -->
+        <MudItem xs="12" md="5" Class="d-flex justify-md-end align-center gap-2 flex-wrap">
+            <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Filled" Icon="@Icons.Material.Filled.CheckCircle">
+                Database Online
+            </MudChip>
+            <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.History">
+                Temporal Versioning
+            </MudChip>
+            <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Apps">
+                @_filteredItems.Count Total Items
+            </MudChip>
+        </MudItem>
+    </MudGrid>
+
+    <!-- Category Filter Chips -->
+    <div class="d-flex align-center gap-1 flex-wrap mt-3 pt-2" style="border-top: 1px solid var(--mud-palette-lines-default);">
+        <MudChip T="string" Color="@(_selectedCategory == AdminCategoryConstants.All ? Color.Primary : Color.Default)"
+                 Variant="@(_selectedCategory == AdminCategoryConstants.All ? Variant.Filled : Variant.Outlined)"
+                 Size="Size.Small"
+                 OnClick="@(() => SetCategoryFilter(AdminCategoryConstants.All))">
+            All (@_allItems.Count)
+        </MudChip>
+        <MudChip T="string" Color="@(_selectedCategory == AdminCategoryConstants.SecurityAndAccess ? Color.Primary : Color.Default)"
+                 Variant="@(_selectedCategory == AdminCategoryConstants.SecurityAndAccess ? Variant.Filled : Variant.Outlined)"
+                 Size="Size.Small"
+                 OnClick="@(() => SetCategoryFilter(AdminCategoryConstants.SecurityAndAccess))">
+            Security &amp; Access
+        </MudChip>
+        <MudChip T="string" Color="@(_selectedCategory == AdminCategoryConstants.SystemConfiguration ? Color.Primary : Color.Default)"
+                 Variant="@(_selectedCategory == AdminCategoryConstants.SystemConfiguration ? Variant.Filled : Variant.Outlined)"
+                 Size="Size.Small"
+                 OnClick="@(() => SetCategoryFilter(AdminCategoryConstants.SystemConfiguration))">
+            Configurations
+        </MudChip>
+        <MudChip T="string" Color="@(_selectedCategory == AdminCategoryConstants.FeatureFlags ? Color.Primary : Color.Default)"
+                 Variant="@(_selectedCategory == AdminCategoryConstants.FeatureFlags ? Variant.Filled : Variant.Outlined)"
+                 Size="Size.Small"
+                 OnClick="@(() => SetCategoryFilter(AdminCategoryConstants.FeatureFlags))">
+            Feature Flags
+        </MudChip>
+        <MudChip T="string" Color="@(_selectedCategory == AdminCategoryConstants.ReferenceLookups ? Color.Primary : Color.Default)"
+                 Variant="@(_selectedCategory == AdminCategoryConstants.ReferenceLookups ? Variant.Filled : Variant.Outlined)"
+                 Size="Size.Small"
+                 OnClick="@(() => SetCategoryFilter(AdminCategoryConstants.ReferenceLookups))">
+            Reference Lookups
+        </MudChip>
+        <MudChip T="string" Color="@(_selectedCategory == AdminCategoryConstants.DocumentsAndTemplates ? Color.Primary : Color.Default)"
+                 Variant="@(_selectedCategory == AdminCategoryConstants.DocumentsAndTemplates ? Variant.Filled : Variant.Outlined)"
+                 Size="Size.Small"
+                 OnClick="@(() => SetCategoryFilter(AdminCategoryConstants.DocumentsAndTemplates))">
+            Templates &amp; Legal
+        </MudChip>
+        <MudChip T="string" Color="@(_selectedCategory == AdminCategoryConstants.DelegationsAndGovernance ? Color.Primary : Color.Default)"
+                 Variant="@(_selectedCategory == AdminCategoryConstants.DelegationsAndGovernance ? Variant.Filled : Variant.Outlined)"
+                 Size="Size.Small"
+                 OnClick="@(() => SetCategoryFilter(AdminCategoryConstants.DelegationsAndGovernance))">
+            Delegations &amp; Meetings
+        </MudChip>
+        <MudChip T="string" Color="@(_selectedCategory == AdminCategoryConstants.ComplianceAndStatutory ? Color.Primary : Color.Default)"
+                 Variant="@(_selectedCategory == AdminCategoryConstants.ComplianceAndStatutory ? Variant.Filled : Variant.Outlined)"
+                 Size="Size.Small"
+                 OnClick="@(() => SetCategoryFilter(AdminCategoryConstants.ComplianceAndStatutory))">
+            Statutory &amp; Audits
+        </MudChip>
+        <MudChip T="string" Color="@(_selectedCategory == AdminCategoryConstants.DiagnosticsAndDeveloper ? Color.Primary : Color.Default)"
+                 Variant="@(_selectedCategory == AdminCategoryConstants.DiagnosticsAndDeveloper ? Variant.Filled : Variant.Outlined)"
+                 Size="Size.Small"
+                 OnClick="@(() => SetCategoryFilter(AdminCategoryConstants.DiagnosticsAndDeveloper))">
+            Developer &amp; Schema
+        </MudChip>
+    </div>
+</MudPaper>
+
+@if (!string.IsNullOrWhiteSpace(_searchQuery))
+{
+    <!-- SEARCH RESULTS VIEW -->
+    <div class="mb-4">
+        <div class="d-flex align-center justify-space-between mb-3">
+            <MudText Typo="Typo.subtitle1" Class="fw-bold">
+                <MudIcon Icon="@Icons.Material.Filled.FilterList" Size="Size.Small" Class="mr-1" />
+                Search Results for "<span class="text-primary">@_searchQuery</span>" (@_filteredItems.Count matches)
+            </MudText>
+            <MudButton Variant="Variant.Text" Color="Color.Secondary" Size="Size.Small" OnClick="ClearSearch">
+                Reset Search
+            </MudButton>
+        </div>
+
+        @if (!_filteredItems.Any())
+        {
+            <EmptyStateCard Title="No matching administrative items found"
+                            Description="Try searching by a different configuration key, SETMIS table name, feature flag, or security role."
+                            Icon="@Icons.Material.Filled.SearchOff" />
+        }
+        else
+        {
+            <MudGrid Spacing="3">
+                @foreach (var item in _filteredItems)
+                {
+                    <MudItem xs="12" md="6" lg="4">
+                        <MudCard Outlined="true" Class="h-100 d-flex flex-column justify-space-between rounded-lg border-default hover-elevation-2" Style="border: 1px solid var(--mud-palette-lines-default); transition: all 0.2s ease;">
+                            <MudCardContent Class="pa-4">
+                                <div class="d-flex align-start justify-space-between mb-2">
+                                    <div class="d-flex align-center gap-2">
+                                        <MudAvatar Color="@GetAvatarColor(item.Category)" Size="Size.Small" Variant="Variant.Filled">
+                                            <MudIcon Icon="@GetItemIcon(item)" Size="Size.Small" />
+                                        </MudAvatar>
+                                        <div>
+                                            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="font-monospace d-block" Style="font-size: 0.7rem;">
+                                                @item.Category
+                                            </MudText>
+                                            <MudText Typo="Typo.subtitle2" Class="fw-bold text-truncate" Style="max-width: 200px;" title="@item.Title">
+                                                @item.Title
+                                            </MudText>
+                                        </div>
+                                    </div>
+                                    <MudChip T="string" Size="Size.Small" Color="@GetChipColor(item.StatusBadgeColor)" Variant="Variant.Outlined">
+                                        @item.ItemType
+                                    </MudChip>
+                                </div>
+
+                                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block mb-3" Style="min-height: 36px; line-height: 1.3;">
+                                    @item.Description
+                                </MudText>
+
+                                @if (!string.IsNullOrWhiteSpace(item.CurrentValue))
+                                {
+                                    <div class="d-flex align-center justify-space-between pa-2 rounded bg-light mb-2" style="background: var(--mud-palette-background-grey); font-size: 0.75rem;">
+                                        <span class="text-secondary font-weight-medium">Current Setting:</span>
+                                        <span class="font-monospace fw-bold text-primary">@item.CurrentValue</span>
+                                    </div>
+                                }
+                            </MudCardContent>
+
+                            <MudCardActions Class="pa-3 pt-0 d-flex justify-space-between align-center" style="border-top: 1px solid var(--mud-palette-lines-default);">
+                                <span class="font-monospace text-secondary" style="font-size: 0.65rem;">@item.Key</span>
+                                <div class="d-flex gap-1">
+                                    @if (item.IsEditableInline && item.ItemType == "ConfigParameter")
+                                    {
+                                        <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary" OnClick="@(() => OpenInlineConfigEdit(item))">
+                                            Quick Edit
+                                        </MudButton>
+                                    }
+                                    else if (item.IsEditableInline && item.ItemType == "FeatureFlag")
+                                    {
+                                        <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="@(item.CurrentValue?.Contains("Enabled") == true ? Color.Warning : Color.Success)" OnClick="@(() => ToggleFlagInline(item))">
+                                            @(item.CurrentValue?.Contains("Enabled") == true ? "Disable" : "Enable")
+                                        </MudButton>
+                                    }
+                                    <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => Nav.NavigateTo(item.RouteUrl))" EndIcon="@Icons.Material.Filled.ArrowForward">
+                                        Open
+                                    </MudButton>
+                                </div>
+                            </MudCardActions>
+                        </MudCard>
+                    </MudItem>
+                }
+            </MudGrid>
+        }
+    </div>
+}
+else
+{
+    <!-- DEFAULT DASHBOARD VIEW: QUICK ACCESS MODULES & CATEGORY GROUPS -->
+    <div class="mb-6">
+        <div class="d-flex align-center justify-space-between mb-3">
+            <MudText Typo="Typo.h6" Class="fw-bold">
+                <MudIcon Icon="@Icons.Material.Filled.FlashOn" Color="Color.Warning" Size="Size.Small" Class="mr-1" />
+                Primary Administration Workspaces
+            </MudText>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                Most frequent administrative operational consoles
+            </MudText>
+        </div>
+
+        <MudGrid Spacing="3">
+            @foreach (var mod in _catalog.QuickAccessModules)
+            {
+                <MudItem xs="12" sm="6" md="3">
+                    <MudCard Outlined="true" Class="h-100 d-flex flex-column justify-space-between rounded-lg border-default hover-elevation-2 cursor-pointer" Style="border: 1px solid var(--mud-palette-lines-default); transition: all 0.2s ease;" @onclick="@(() => Nav.NavigateTo(mod.RouteUrl))">
+                        <MudCardContent Class="pa-4">
+                            <div class="d-flex align-center justify-space-between mb-2">
+                                <MudAvatar Color="@GetAvatarColor(mod.Category)" Size="Size.Medium" Variant="Variant.Filled">
+                                    <MudIcon Icon="@GetItemIcon(mod)" Size="Size.Medium" />
+                                </MudAvatar>
+                                <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" Color="Color.Secondary" Class="opacity-50" />
+                            </div>
+                            <MudText Typo="Typo.subtitle1" Class="fw-bold mt-1">@mod.Title</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block mt-1" Style="line-height: 1.3;">
+                                @mod.Description
+                            </MudText>
+                        </MudCardContent>
+                        <MudCardActions Class="pa-3 pt-0 d-flex justify-space-between align-center">
+                            <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">
+                                @mod.CurrentValue
+                            </MudChip>
+                            <span class="text-primary font-weight-bold" style="font-size: 0.75rem;">Explore &rarr;</span>
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
+            }
+        </MudGrid>
+    </div>
+
+    <!-- DOMAIN CATEGORIES ACCORDION / CATALOG TREE -->
+    <div class="mb-6">
+        <div class="d-flex align-center justify-space-between mb-3">
+            <MudText Typo="Typo.h6" Class="fw-bold">
+                <MudIcon Icon="@Icons.Material.Filled.FolderSpecial" Color="Color.Primary" Size="Size.Small" Class="mr-1" />
+                Comprehensive Administration Catalog
+            </MudText>
+            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                All configuration items grouped by statutory domain
+            </MudText>
+        </div>
+
+        <MudExpansionPanels MultiExpansion="true" Elevation="1" Class="rounded-lg">
+            @foreach (var group in _catalog.CategoryGroups)
+            {
+                <MudExpansionPanel Text="@($"{group.CategoryName} ({group.ItemCount} items)")" Icon="@GetCategoryGroupIcon(group.CategoryName)" IsInitiallyExpanded="@(group.CategoryName == AdminCategoryConstants.SecurityAndAccess || group.CategoryName == AdminCategoryConstants.SystemConfiguration)">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mb-3 d-block">
+                        @group.Description
+                    </MudText>
+
+                    <MudTable Items="@group.Items" Dense="true" Hover="true" Elevation="0" Outlined="true" Class="border-default">
+                        <HeaderContent>
+                            <MudTh>Item / Key</MudTh>
+                            <MudTh>Type</MudTh>
+                            <MudTh>Description</MudTh>
+                            <MudTh>Current Value / Setting</MudTh>
+                            <MudTh Style="text-align: right;">Action</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>
+                                <div class="d-flex align-center gap-2">
+                                    <MudIcon Icon="@GetItemIcon(context)" Size="Size.Small" Color="Color.Primary" />
+                                    <div>
+                                        <MudText Typo="Typo.body2" Class="fw-bold">@context.Title</MudText>
+                                        <span class="font-monospace text-secondary" style="font-size: 0.68rem;">@context.Key</span>
+                                    </div>
+                                </div>
+                            </MudTd>
+                            <MudTd>
+                                <MudChip T="string" Size="Size.Small" Color="@GetChipColor(context.StatusBadgeColor)" Variant="Variant.Outlined">
+                                    @context.ItemType
+                                </MudChip>
+                            </MudTd>
+                            <MudTd>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                    @context.Description
+                                </MudText>
+                            </MudTd>
+                            <MudTd>
+                                @if (!string.IsNullOrWhiteSpace(context.CurrentValue))
+                                {
+                                    <span class="font-monospace fw-bold" style="font-size: 0.8rem;">@context.CurrentValue</span>
+                                }
+                                else
+                                {
+                                    <span class="text-secondary opacity-50">&mdash;</span>
+                                }
+                            </MudTd>
+                            <MudTd Style="text-align: right;">
+                                <div class="d-inline-flex gap-1">
+                                    @if (context.IsEditableInline && context.ItemType == "ConfigParameter")
+                                    {
+                                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Primary" OnClick="@(() => OpenInlineConfigEdit(context))" aria-label="Edit parameter" />
+                                    }
+                                    <MudIconButton Icon="@Icons.Material.Filled.OpenInNew" Size="Size.Small" Color="Color.Default" OnClick="@(() => Nav.NavigateTo(context.RouteUrl))" aria-label="Navigate to module" />
+                                </div>
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                </MudExpansionPanel>
+            }
+        </MudExpansionPanels>
+    </div>
+}
+
+<!-- QUICK EDIT CONFIGURATION DRAWER -->
+<MudDrawer @bind-Open="_drawerOpen" Anchor="Anchor.Right" Elevation="4" Variant="DrawerVariant.Temporary" Width="420px" Class="pa-4">
+    <MudDrawerHeader Class="px-0 pt-0">
+        <MudText Typo="Typo.h6" Class="fw-bold">
+            <MudIcon Icon="@Icons.Material.Filled.Tune" Class="mr-2" />
+            @(_isNewConfig ? "Create Configuration Parameter" : "Edit Parameter")
+        </MudText>
+    </MudDrawerHeader>
+
+    <MudStack Spacing="3">
+        <MudTextField @bind-Value="_editModel.ConfigKey"
+                      Label="Parameter Key (Namespace.Name)"
+                      Placeholder="e.g. Finance.MandatoryGrantRebatePercent"
+                      Variant="Variant.Outlined"
+                      Margin="Margin.Dense"
+                      Disabled="@(!_isNewConfig)"
+                      Required="true" />
+
+        <MudSelect T="string" @bind-Value="_editModel.ConfigCategory" Label="Category" Variant="Variant.Outlined" Margin="Margin.Dense">
+            <MudSelectItem Value="@("Finance")">Finance</MudSelectItem>
+            <MudSelectItem Value="@("Governance")">Governance</MudSelectItem>
+            <MudSelectItem Value="@("Compliance")">Compliance</MudSelectItem>
+            <MudSelectItem Value="@("Storage")">Storage</MudSelectItem>
+            <MudSelectItem Value="@("Security")">Security</MudSelectItem>
+            <MudSelectItem Value="@("Integrations")">Integrations</MudSelectItem>
+            <MudSelectItem Value="@("General")">General</MudSelectItem>
+        </MudSelect>
+
+        <MudSelect T="string" @bind-Value="_editModel.DataType" Label="Data Type" Variant="Variant.Outlined" Margin="Margin.Dense">
+            <MudSelectItem Value="@("String")">String / Text</MudSelectItem>
+            <MudSelectItem Value="@("Number")">Number / Decimal</MudSelectItem>
+            <MudSelectItem Value="@("Boolean")">Boolean (true/false)</MudSelectItem>
+            <MudSelectItem Value="@("Json")">JSON Object</MudSelectItem>
+        </MudSelect>
+
+        <MudTextField @bind-Value="_editModel.ConfigValue"
+                      Label="Configuration Value"
+                      Placeholder="Enter runtime value..."
+                      Variant="Variant.Outlined"
+                      Lines="@(_editModel.DataType == "Json" ? 4 : 1)"
+                      Margin="Margin.Dense"
+                      Required="true" />
+
+        <MudTextField @bind-Value="_editModel.Description"
+                      Label="Description / Business Purpose"
+                      Placeholder="Explain how this parameter governs business logic..."
+                      Variant="Variant.Outlined"
+                      Lines="2"
+                      Margin="Margin.Dense" />
+
+        <MudDivider Class="my-2" />
+
+        <MudStack Row="true" Justify="Justify.FlexEnd" Spacing="2">
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="@(() => _drawerOpen = false)">
+                Cancel
+            </MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveConfigAsync">
+                Save Parameter
+            </MudButton>
+        </MudStack>
+    </MudStack>
+</MudDrawer>
+
+<!-- GLOBAL COMMAND PALETTE DIALOG COMPONENT -->
+<AdminCommandPalette @ref="_commandPaletteRef" />
+
+@code {
+    private bool _isLoading = true;
+    private string _searchQuery = string.Empty;
+    private string _selectedCategory = AdminCategoryConstants.All;
+    private AdminCatalogIndexDto _catalog = new();
+    private AdminTelemetryDto _telemetry = new();
+    private List<AdminSearchItemDto> _allItems = new();
+    private List<AdminSearchItemDto> _filteredItems = new();
+    private bool _drawerOpen = false;
+    private bool _isNewConfig = false;
+    private SystemConfig _editModel = new();
+    private AdminCommandPalette? _commandPaletteRef;
+
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Administration", href: "/admin")
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCatalogAsync();
+    }
+
+    private async Task LoadCatalogAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _catalog = await CatalogService.GetCatalogIndexAsync();
+            _telemetry = _catalog.Telemetry;
+            _allItems = _catalog.AllItems;
+            ApplyLocalFilters();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading administrative catalog: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void OnSearchChanged(string val)
+    {
+        _searchQuery = val;
+        ApplyLocalFilters();
+    }
+
+    private void ClearSearch()
+    {
+        _searchQuery = string.Empty;
+        ApplyLocalFilters();
+    }
+
+    private void SetCategoryFilter(string category)
+    {
+        _selectedCategory = category;
+        ApplyLocalFilters();
+    }
+
+    private void ApplyLocalFilters()
+    {
+        var items = _allItems.AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(_searchQuery))
+        {
+            var q = _searchQuery.Trim();
+            items = items.Where(i =>
+                i.Title.Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                i.Description.Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                i.Key.Contains(q, StringComparison.OrdinalIgnoreCase) ||
+                (i.CurrentValue?.Contains(q, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                i.Tags.Any(t => t.Contains(q, StringComparison.OrdinalIgnoreCase))
+            );
+        }
+
+        if (!string.IsNullOrWhiteSpace(_selectedCategory) && _selectedCategory != AdminCategoryConstants.All)
+        {
+            items = items.Where(i => i.Category.Equals(_selectedCategory, StringComparison.OrdinalIgnoreCase));
+        }
+
+        _filteredItems = items.OrderBy(i => i.DisplayOrder).ThenBy(i => i.Title).ToList();
+    }
+
+    private void OpenCommandPalette()
+    {
+        _commandPaletteRef?.Open();
+    }
+
+    private void OpenNewConfigDrawer()
+    {
+        _isNewConfig = true;
+        _editModel = new SystemConfig
+        {
+            ConfigCategory = "General",
+            DataType = "String"
+        };
+        _drawerOpen = true;
+    }
+
+    private void OpenInlineConfigEdit(AdminSearchItemDto item)
+    {
+        _isNewConfig = false;
+        _editModel = new SystemConfig
+        {
+            ConfigKey = item.Key,
+            ConfigValue = item.CurrentValue ?? "",
+            ConfigCategory = item.Tags.Contains("finance") ? "Finance" : (item.Tags.Contains("storage") ? "Storage" : "General"),
+            DataType = item.ValueType ?? "String",
+            Description = item.Description
+        };
+        _drawerOpen = true;
+    }
+
+    private async Task SaveConfigAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_editModel.ConfigKey) || string.IsNullOrWhiteSpace(_editModel.ConfigValue))
+        {
+            Snackbar.Add("Key and Value are required.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            await ConfigService.SetConfigAsync(
+                _editModel.ConfigKey,
+                _editModel.ConfigValue,
+                _editModel.ConfigCategory ?? "General",
+                _editModel.Description,
+                _editModel.DataType ?? "String",
+                "Admin"
+            );
+
+            Snackbar.Add($"Parameter '{_editModel.ConfigKey}' saved with double-write audit logging.", Severity.Success);
+            _drawerOpen = false;
+            await LoadCatalogAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving parameter: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task ToggleFlagInline(AdminSearchItemDto item)
+    {
+        try
+        {
+            bool willEnable = !(item.CurrentValue?.Contains("Enabled") == true);
+            await FeatureFlags.SetFeatureFlagAsync(item.Key, willEnable, item.Title, "Integrations", item.Description, "Admin");
+            Snackbar.Add($"Feature '{item.Title}' is now {(willEnable ? "Enabled" : "Disabled (Simulation)")}.", Severity.Success);
+            await LoadCatalogAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error toggling feature: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private Color GetAvatarColor(string category)
+    {
+        return category switch
+        {
+            AdminCategoryConstants.SecurityAndAccess => Color.Error,
+            AdminCategoryConstants.SystemConfiguration => Color.Primary,
+            AdminCategoryConstants.FeatureFlags => Color.Warning,
+            AdminCategoryConstants.ReferenceLookups => Color.Info,
+            AdminCategoryConstants.DocumentsAndTemplates => Color.Success,
+            AdminCategoryConstants.DelegationsAndGovernance => Color.Tertiary,
+            AdminCategoryConstants.ComplianceAndStatutory => Color.Dark,
+            AdminCategoryConstants.AuditAndForensics => Color.Secondary,
+            AdminCategoryConstants.DiagnosticsAndDeveloper => Color.Dark,
+            _ => Color.Default
+        };
+    }
+
+    private Color GetChipColor(string badgeColor)
+    {
+        return badgeColor switch
+        {
+            "Success" => Color.Success,
+            "Warning" => Color.Warning,
+            "Info" => Color.Info,
+            "Error" => Color.Error,
+            "Secondary" => Color.Secondary,
+            _ => Color.Primary
+        };
+    }
+
+    private string GetItemIcon(AdminSearchItemDto item)
+    {
+        if (item.Icon.StartsWith("Icons."))
+        {
+            return item.Icon switch
+            {
+                "Icons.Material.Filled.Security" => Icons.Material.Filled.Security,
+                "Icons.Material.Filled.People" => Icons.Material.Filled.People,
+                "Icons.Material.Filled.Settings" => Icons.Material.Filled.Settings,
+                "Icons.Material.Filled.ToggleOn" => Icons.Material.Filled.ToggleOn,
+                "Icons.Material.Filled.ToggleOff" => Icons.Material.Filled.ToggleOff,
+                "Icons.Material.Filled.Tune" => Icons.Material.Filled.Tune,
+                "Icons.Material.Filled.Description" => Icons.Material.Filled.Description,
+                "Icons.Material.Filled.Gavel" => Icons.Material.Filled.Gavel,
+                "Icons.Material.Filled.LibraryBooks" => Icons.Material.Filled.LibraryBooks,
+                "Icons.Material.Filled.Shield" => Icons.Material.Filled.Shield,
+                "Icons.Material.Filled.VerifiedUser" => Icons.Material.Filled.VerifiedUser,
+                "Icons.Material.Filled.MeetingRoom" => Icons.Material.Filled.MeetingRoom,
+                "Icons.Material.Filled.AssignmentTurnedIn" => Icons.Material.Filled.AssignmentTurnedIn,
+                "Icons.Material.Filled.AccountBalance" => Icons.Material.Filled.AccountBalance,
+                "Icons.Material.Filled.FactCheck" => Icons.Material.Filled.FactCheck,
+                "Icons.Material.Filled.Calculate" => Icons.Material.Filled.Calculate,
+                "Icons.Material.Filled.History" => Icons.Material.Filled.History,
+                "Icons.Material.Filled.MenuBook" => Icons.Material.Filled.MenuBook,
+                "Icons.Material.Filled.Verified" => Icons.Material.Filled.Verified,
+                _ => Icons.Material.Filled.AdminPanelSettings
+            };
+        }
+        return Icons.Material.Filled.AdminPanelSettings;
+    }
+
+    private string GetCategoryGroupIcon(string category)
+    {
+        return category switch
+        {
+            AdminCategoryConstants.SecurityAndAccess => Icons.Material.Filled.Security,
+            AdminCategoryConstants.SystemConfiguration => Icons.Material.Filled.Settings,
+            AdminCategoryConstants.FeatureFlags => Icons.Material.Filled.ToggleOn,
+            AdminCategoryConstants.ReferenceLookups => Icons.Material.Filled.Tune,
+            AdminCategoryConstants.DocumentsAndTemplates => Icons.Material.Filled.Description,
+            AdminCategoryConstants.DelegationsAndGovernance => Icons.Material.Filled.MeetingRoom,
+            AdminCategoryConstants.ComplianceAndStatutory => Icons.Material.Filled.FactCheck,
+            AdminCategoryConstants.AuditAndForensics => Icons.Material.Filled.History,
+            AdminCategoryConstants.DiagnosticsAndDeveloper => Icons.Material.Filled.Code,
+            _ => Icons.Material.Filled.Folder
+        };
+    }
+}

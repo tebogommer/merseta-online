@@ -1,4 +1,4 @@
-﻿-- ====================================================================================================
+-- ====================================================================================================
 -- Script: V2026_09_Enable_Temporal_Tables_History_Schema.sql
 -- Description: Enables SQL Server System-Versioned Temporal Tables for all core domain tables,
 --              routing all point-in-time historical revisions into the dedicated [history] schema.
@@ -45,27 +45,26 @@ FETCH NEXT FROM table_cursor INTO @CurrentTable;
 WHILE @@FETCH_STATUS = 0
 BEGIN
     BEGIN TRY
-        -- Check and add PeriodStart and PeriodEnd hidden datetime2 columns
+        -- Check and add PeriodStart and PeriodEnd hidden datetime2 columns if missing
         IF NOT EXISTS (
             SELECT 1 FROM sys.columns 
-            WHERE object_id = OBJECT_ID(N'dbo.' + QUOTENAME(@CurrentTable)) 
+            WHERE object_id = OBJECT_ID(N'[dbo].[' + @CurrentTable + ']') 
               AND name = 'PeriodStart'
         )
         BEGIN
             DECLARE @sqlCols NVARCHAR(MAX) = N'
-                ALTER TABLE [dbo].' + QUOTENAME(@CurrentTable) + N' ADD 
+                ALTER TABLE [dbo].[' + @CurrentTable + N'] ADD 
                     [PeriodStart] DATETIME2 GENERATED ALWAYS AS ROW START HIDDEN NOT NULL CONSTRAINT [DF_' + @CurrentTable + N'_PeriodStart] DEFAULT SYSUTCDATETIME(),
                     [PeriodEnd] DATETIME2 GENERATED ALWAYS AS ROW END HIDDEN NOT NULL CONSTRAINT [DF_' + @CurrentTable + N'_PeriodEnd] DEFAULT ''9999-12-31 23:59:59.9999999'',
                     PERIOD FOR SYSTEM_TIME ([PeriodStart], [PeriodEnd]);';
             EXEC sp_executesql @sqlCols;
-            PRINT 'Added system-time period columns to [dbo].[' + @CurrentTable + '].';
         END
 
         -- Enable system versioning with history table in [history] schema
         DECLARE @historyTable NVARCHAR(128) = @CurrentTable + N'History';
         DECLARE @sqlTemporal NVARCHAR(MAX) = N'
-            ALTER TABLE [dbo].' + QUOTENAME(@CurrentTable) + N' 
-            SET (SYSTEM_VERSIONING = ON (HISTORY_TABLE = [history].' + QUOTENAME(@historyTable) + N'));';
+            ALTER TABLE [dbo].[' + @CurrentTable + N'] 
+            SET (SYSTEM_VERSIONING = ON (HISTORY_TABLE = [history].[' + @historyTable + N']));';
         EXEC sp_executesql @sqlTemporal;
         PRINT 'Enabled SYSTEM_VERSIONING on [dbo].[' + @CurrentTable + '] -> [history].[' + @historyTable + '].';
     END TRY
@@ -83,3 +82,4 @@ GO
 PRINT '====================================================================================';
 PRINT 'SQL Server System-Versioned Temporal Tables successfully configured in history schema.';
 PRINT '====================================================================================';
+

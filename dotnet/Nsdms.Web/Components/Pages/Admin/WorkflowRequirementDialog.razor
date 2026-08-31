@@ -1,0 +1,126 @@
+@namespace Nsdms.Web.Components.Pages.Admin
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@inject IWorkflowEngineService WorkflowService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@(Rule.Id == 0 ? Icons.Material.Filled.AddCircle : Icons.Material.Filled.Edit)" Color="Color.Primary" />
+            <MudText Typo="Typo.h6">@(Rule.Id == 0 ? "Add Document Requirement Gate" : "Edit Document Requirement Gate")</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form" @bind-IsValid="_isValid">
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudSelect T="int"
+                               @bind-Value="Rule.RequiredAtStateId"
+                               Label="Enforcement Stage / Gate State"
+                               Required="true"
+                               RequiredError="Enforcement state is required"
+                               Variant="Variant.Outlined"
+                               Class="mb-3">
+                        @foreach (var s in AvailableStates.OrderBy(s => s.StepOrder))
+                        {
+                            <MudSelectItem Value="@s.Id">@s.StepOrder. @s.StateName (@s.StateCode)</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="Rule.DocumentTypeCode"
+                                  Label="Document Type Taxonomy Code"
+                                  Placeholder="e.g. RSA_ID, PROOF_OF_BANKING"
+                                  Required="true"
+                                  RequiredError="Document type code is required"
+                                  Variant="Variant.Outlined"
+                                  Class="mb-3" />
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="Rule.DocumentTypeName"
+                                  Label="Document Requirement Title"
+                                  Placeholder="e.g. Certified Copy of Identity Document / Passport"
+                                  Required="true"
+                                  RequiredError="Document title is required"
+                                  Variant="Variant.Outlined"
+                                  Class="mb-3" />
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="Rule.Description"
+                                  Label="Requirement Guidelines &amp; Criteria"
+                                  Placeholder="Must be certified within the last 3 months by a Commissioner of Oaths."
+                                  Lines="2"
+                                  Variant="Variant.Outlined"
+                                  Class="mb-3" />
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudSwitch @bind-Value="Rule.IsMandatory"
+                               Label="Strictly Mandatory (Blocks state progression until verified)"
+                               Color="Color.Error" />
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" StartIcon="@Icons.Material.Filled.Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   OnClick="Submit"
+                   Disabled="@(!_isValid || _isSaving)"
+                   StartIcon="@Icons.Material.Filled.Save">
+            @if (_isSaving)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                <span>Saving...</span>
+            }
+            else
+            {
+                <span>Save Gate Rule</span>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter] public DocumentRequirementRule Rule { get; set; } = new();
+    [Parameter] public List<WorkflowState> AvailableStates { get; set; } = new();
+    [Parameter] public string ProcessCode { get; set; } = string.Empty;
+
+    private MudForm _form = default!;
+    private bool _isValid;
+    private bool _isSaving;
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Submit()
+    {
+        await _form.Validate();
+        if (!_isValid) return;
+
+        _isSaving = true;
+        try
+        {
+            Rule.WorkflowProcessCode = ProcessCode;
+            Rule.DocumentTypeCode = Rule.DocumentTypeCode.ToUpperInvariant().Trim();
+            Rule.DocumentTypeName = Rule.DocumentTypeName.Trim();
+
+            var saved = await WorkflowService.SaveDocumentRequirementAsync(Rule, "admin@merseta.org.za", "System Administrator");
+            Snackbar.Add($"Document gate rule for '{saved.DocumentTypeName}' saved successfully.", Severity.Success);
+            MudDialog.Close(DialogResult.Ok(saved));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving document requirement: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+}

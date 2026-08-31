@@ -4,6 +4,7 @@
 @using Nsdms.Application.Common.Interfaces
 @using Nsdms.Domain.Entities
 @using Nsdms.Web.Components.Common
+@using Nsdms.Web.Components.Shared
 @inject IWorkplaceMonitoringService MonitoringService
 @inject IOrganisationService OrganisationService
 @inject IPersonService PersonService
@@ -27,42 +28,9 @@
                 </div>
             </div>
             <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
-                @if (!IsNew)
-                {
-                    @if (_visit.MonitoringStatusCode == "Approved")
-                    {
-                        <MudChip T="string" Color="Color.Success" Variant="Variant.Filled" Icon="@Icons.Material.Filled.CheckCircle">Approved</MudChip>
-                    }
-                    else if (_visit.MonitoringStatusCode == "NonComplianceIdentified" || _visit.NonCompliancesIdentified)
-                    {
-                        <MudChip T="string" Color="Color.Error" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Warning">Non-Compliant</MudChip>
-                    }
-                    else if (_visit.MonitoringStatusCode == "PendingApproval")
-                    {
-                        <MudChip T="string" Color="Color.Warning" Variant="Variant.Filled">Pending Approval</MudChip>
-                    }
-                    else
-                    {
-                        <MudChip T="string" Color="Color.Default" Variant="Variant.Outlined">@_visit.MonitoringStatusCode</MudChip>
-                    }
-
-                    @if (_visit.MonitoringStatusCode == "Draft")
-                    {
-                        <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.Send" OnClick="SubmitForApprovalAsync">
-                            Submit for Approval
-                        </MudButton>
-                    }
-
-                    @if (_visit.MonitoringStatusCode == "PendingApproval" || _visit.MonitoringStatusCode == "Draft")
-                    {
-                        <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Check" OnClick="ApproveVisitAsync">
-                            Approve Visit
-                        </MudButton>
-                        <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.ReportProblem" OnClick="FlagNonComplianceAsync">
-                            Flag Non-Compliance
-                        </MudButton>
-                    }
-                }
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Cancel" OnClick="@(() => Navigation.NavigateTo("/monitoring"))">
+                    Cancel
+                </MudButton>
 
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveAsync" Disabled="@_isSaving">
                     @if (_isSaving)
@@ -85,6 +53,19 @@
     }
     else
     {
+        @if (!IsNew)
+        {
+            <WorkflowProgressBar ProcessCode="MONITORING" 
+                                 EntityId="@Id" 
+                                 EntityTitle="@($"Workplace Audit #{_visit.Id}: {_visit.Organisation?.CompanyName}")" 
+                                 EntityRef="@($"VISIT-{_visit.Id}")" />
+
+            <WorkflowActionBridge ProcessCode="MONITORING" 
+                                  EntityId="@Id" 
+                                  EntityTitle="@($"Workplace Audit #{_visit.Id}: {_visit.Organisation?.CompanyName}")" 
+                                  EntityRef="@($"VISIT-{_visit.Id}")" 
+                                  OnStatusChanged="OnWorkflowStatusChanged" />
+        }
         <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6" Color="Color.Primary">
             <!-- TAB 1: General Master Details -->
             <MudTabPanel Text="Visit Details" Icon="@Icons.Material.Filled.Business">
@@ -100,6 +81,14 @@
                                             <MudSelectItem Value="@org.Id">@org.CompanyName (@org.SdlNumber)</MudSelectItem>
                                         }
                                     </MudSelect>
+                                    @if (_visit.OrganisationId > 0)
+                                    {
+                                        <div class="mt-1">
+                                            <MudLink Href="@($"/employers/{_visit.OrganisationId}")" Typo="Typo.caption" Color="Color.Primary" Class="fw-semibold">
+                                                <MudIcon Icon="@Icons.Material.Filled.OpenInNew" Size="Size.Small" Class="mr-1" /> Open Employer 360° Hub
+                                            </MudLink>
+                                        </div>
+                                    }
                                 </MudItem>
                                 <MudItem xs="12" md="6">
                                     <MudSelect T="int" Label="Mandatory Employer Contact Person" @bind-Value="_visit.ContactPersonId" Variant="Variant.Outlined" Required="true" RequiredError="Employer Contact Person must be selected per governance rules">
@@ -599,5 +588,11 @@
         await MonitoringService.AddLearnerSurveyAsync(survey, "AdminUser");
         Snackbar.Add("Learner interview logged.", Severity.Success);
         await LoadDataAsync();
+    }
+
+    private async Task OnWorkflowStatusChanged(string newStatus)
+    {
+        await LoadDataAsync();
+        StateHasChanged();
     }
 }

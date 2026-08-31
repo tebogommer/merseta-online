@@ -1,0 +1,256 @@
+@namespace Nsdms.Web.Components.Shared
+@using Nsdms.Domain.Entities
+
+<div class="workflow-graph-container pa-4 rounded-lg mud-elevation-1 border-default" style="background-color: var(--mud-palette-surface); border: 1px solid var(--mud-palette-lines-default); min-height: 480px;">
+    <!-- Visual Graph Header & Controls -->
+    <div class="d-flex align-center justify-space-between flex-wrap gap-3 pb-3 mb-4 border-bottom" style="border-bottom: 1px solid var(--mud-palette-lines-default);">
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.AccountTree" Color="Color.Primary" />
+            <MudText Typo="Typo.subtitle1" Class="font-weight-bold">State Machine Topology &amp; Gate Flow</MudText>
+            <MudChip T="string" Color="Color.Info" Size="Size.Small" Variant="Variant.Outlined">@States.Count States</MudChip>
+            <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Outlined">@Transitions.Count Transitions</MudChip>
+        </div>
+
+        <div class="d-flex align-center gap-2">
+            <MudButtonGroup Variant="Variant.Outlined" Size="Size.Small">
+                <MudButton StartIcon="@Icons.Material.Filled.ViewStream" 
+                           Color="@(_viewMode == "Pipeline" ? Color.Primary : Color.Default)" 
+                           OnClick="@(() => _viewMode = "Pipeline")">
+                    Pipeline Stages
+                </MudButton>
+                <MudButton StartIcon="@Icons.Material.Filled.Hub" 
+                           Color="@(_viewMode == "Matrix" ? Color.Primary : Color.Default)" 
+                           OnClick="@(() => _viewMode = "Matrix")">
+                    Transition Matrix
+                </MudButton>
+            </MudButtonGroup>
+        </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="d-flex flex-wrap align-center gap-4 mb-4 px-3 py-2 rounded bg-light" style="background-color: var(--mud-palette-background-grey); font-size: 0.75rem;">
+        <span class="font-weight-bold text-secondary">Legend:</span>
+        <div class="d-flex align-center gap-1">
+            <span class="rounded-circle d-inline-block" style="width: 10px; height: 10px; background-color: var(--mud-palette-primary);"></span>
+            <span>Initial State</span>
+        </div>
+        <div class="d-flex align-center gap-1">
+            <span class="rounded-circle d-inline-block" style="width: 10px; height: 10px; background-color: var(--mud-palette-info);"></span>
+            <span>Intermediate Gate</span>
+        </div>
+        <div class="d-flex align-center gap-1">
+            <span class="rounded-circle d-inline-block" style="width: 10px; height: 10px; background-color: var(--mud-palette-success);"></span>
+            <span>Terminal State</span>
+        </div>
+        <div class="d-flex align-center gap-1">
+            <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" Color="Color.Secondary" />
+            <span>Authorized Transition</span>
+        </div>
+    </div>
+
+    @if (_viewMode == "Pipeline")
+    {
+        <!-- Sequential Pipeline Flowchart Layout -->
+        <div class="pipeline-flow-wrapper d-flex flex-column gap-6 pa-2">
+            @{
+                var orderedStates = States.OrderBy(s => s.StepOrder).ToList();
+            }
+
+            @for (int i = 0; i < orderedStates.Count; i++)
+            {
+                var state = orderedStates[i];
+                var outgoingTransitions = Transitions.Where(t => t.FromStateId == state.Id).ToList();
+                var incomingTransitions = Transitions.Where(t => t.ToStateId == state.Id).ToList();
+                var isSelected = _selectedStateId == state.Id;
+
+                <div class="state-pipeline-node-card pa-4 rounded-lg transition-all @(isSelected ? "selected-node" : "")"
+                     style="background-color: @(state.IsInitial ? "rgba(30, 64, 175, 0.04)" : state.IsTerminal ? "rgba(22, 163, 74, 0.04)" : "var(--mud-palette-surface)"); border: 2px solid @(isSelected ? "var(--mud-palette-primary)" : state.IsInitial ? "var(--mud-palette-primary)" : state.IsTerminal ? "var(--mud-palette-success)" : "var(--mud-palette-lines-default)"); cursor: pointer;"
+                     @onclick="() => ToggleSelectState(state.Id)">
+
+                    <div class="d-flex align-center justify-space-between flex-wrap gap-2 mb-2">
+                        <div class="d-flex align-center gap-3">
+                            <div class="d-flex align-center justify-center rounded-circle font-weight-bold"
+                                 style="width: 36px; height: 36px; background-color: @(state.IsInitial ? "var(--mud-palette-primary)" : state.IsTerminal ? "var(--mud-palette-success)" : "var(--mud-palette-background-grey)"); color: @(state.IsInitial || state.IsTerminal ? "#ffffff" : "var(--mud-palette-text-primary)");">
+                                @state.StepOrder
+                            </div>
+                            <div>
+                                <div class="d-flex align-center gap-2">
+                                    <MudText Typo="Typo.subtitle1" Class="font-weight-bold">@state.StateName</MudText>
+                                    <code>@state.StateCode</code>
+                                </div>
+                                <div class="d-flex align-center gap-2 mt-1">
+                                    @if (state.IsInitial)
+                                    {
+                                        <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.PlayArrow">
+                                            Entry State
+                                        </MudChip>
+                                    }
+                                    @if (state.IsTerminal)
+                                    {
+                                        <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Flag">
+                                            Terminal (Locked)
+                                        </MudChip>
+                                    }
+                                    @if (!string.IsNullOrEmpty(state.AllowedGroupRole))
+                                    {
+                                        <MudChip T="string" Color="Color.Dark" Size="Size.Small" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Person">
+                                            @state.AllowedGroupRole
+                                        </MudChip>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-center gap-2">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                In: <strong>@incomingTransitions.Count</strong> | Out: <strong>@outgoingTransitions.Count</strong>
+                            </MudText>
+                            <MudIconButton Icon="@Icons.Material.Filled.ChevronRight" Size="Size.Small" Color="Color.Default" />
+                        </div>
+                    </div>
+
+                    <!-- Outgoing Transitions from this State -->
+                    @if (outgoingTransitions.Any())
+                    {
+                        <div class="mt-3 pt-3 border-top" style="border-top: 1px dashed var(--mud-palette-lines-default);">
+                            <MudText Typo="Typo.caption" Class="font-weight-bold text-secondary mb-2 d-block">
+                                OUTGOING TRANSITIONS &amp; ACTION TRIGGERS:
+                            </MudText>
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach (var trans in outgoingTransitions)
+                                {
+                                    var targetStateName = trans.ToState?.StateName ?? States.FirstOrDefault(s => s.Id == trans.ToStateId)?.StateName ?? $"State #{trans.ToStateId}";
+                                    var isDestructive = trans.ActionName.Contains("Reject", StringComparison.OrdinalIgnoreCase) || trans.ActionName.Contains("Decline", StringComparison.OrdinalIgnoreCase);
+
+                                    <div class="d-flex align-center gap-2 pa-2 rounded border" style="background-color: var(--mud-palette-surface); border: 1px solid var(--mud-palette-lines-default); font-size: 0.8rem;">
+                                        <span class="d-inline-block rounded-circle" style="width: 8px; height: 8px; background-color: @(trans.ButtonColor ?? "#1e40af");"></span>
+                                        <span class="font-weight-bold" style="color: @(isDestructive ? "var(--mud-palette-error)" : "var(--mud-palette-primary)");">
+                                            @trans.ActionName
+                                        </span>
+                                        <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" Color="Color.Secondary" />
+                                        <span class="text-secondary">@targetStateName</span>
+
+                                        @if (trans.RequiresComments)
+                                        {
+                                            <MudTooltip Text="Audit comments mandatory">
+                                                <MudIcon Icon="@Icons.Material.Filled.Comment" Size="Size.Small" Color="Color.Warning" />
+                                            </MudTooltip>
+                                        }
+                                        @if (!string.IsNullOrEmpty(trans.RequiredPermission))
+                                        {
+                                            <MudTooltip Text="@($"Requires permission: {trans.RequiredPermission}")">
+                                                <MudIcon Icon="@Icons.Material.Filled.Security" Size="Size.Small" Color="Color.Dark" />
+                                            </MudTooltip>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                    else if (!state.IsTerminal)
+                    {
+                        <div class="mt-2">
+                            <MudText Typo="Typo.caption" Color="Color.Warning">
+                                <MudIcon Icon="@Icons.Material.Filled.Warning" Size="Size.Small" Class="mr-1" />
+                                No outgoing transitions configured for this non-terminal state.
+                            </MudText>
+                        </div>
+                    }
+                </div>
+
+                @if (i < orderedStates.Count - 1)
+                {
+                    <div class="d-flex justify-center my-n2">
+                        <MudIcon Icon="@Icons.Material.Filled.ArrowDownward" Color="Color.Secondary" Size="Size.Medium" />
+                    </div>
+                }
+            }
+        </div>
+    }
+    else
+    {
+        <!-- Transition Matrix Table View -->
+        <MudTable Items="@Transitions" Hover="true" Dense="true" Elevation="0" Class="rounded-lg">
+            <HeaderContent>
+                <MudTh>From State</MudTh>
+                <MudTh>Action Trigger</MudTh>
+                <MudTh>To Destination State</MudTh>
+                <MudTh>Required Permission / Role</MudTh>
+                <MudTh>Audit Comments</MudTh>
+                <MudTh>Target Status Code</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="From State">
+                    <div class="d-flex align-center gap-2">
+                        <span class="badge font-monospace">
+                            @(context.FromState?.StateName ?? States.FirstOrDefault(s => s.Id == context.FromStateId)?.StateName ?? $"#{context.FromStateId}")
+                        </span>
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="Action Trigger">
+                    <div class="d-flex align-center gap-2">
+                        <span class="rounded-circle d-inline-block" style="width: 8px; height: 8px; background-color: @(context.ButtonColor ?? "#1e40af");"></span>
+                        <strong>@context.ActionName</strong>
+                    </div>
+                </MudTd>
+                <MudTd DataLabel="To State">
+                    <span class="badge font-monospace text-primary">
+                        @(context.ToState?.StateName ?? States.FirstOrDefault(s => s.Id == context.ToStateId)?.StateName ?? $"#{context.ToStateId}")
+                    </span>
+                </MudTd>
+                <MudTd DataLabel="Permission">
+                    @if (!string.IsNullOrEmpty(context.RequiredPermission))
+                    {
+                        <code>@context.RequiredPermission</code>
+                    }
+                    else
+                    {
+                        <span class="text-secondary font-italic">Any Officer</span>
+                    }
+                </MudTd>
+                <MudTd DataLabel="Audit Comments">
+                    @if (context.RequiresComments)
+                    {
+                        <MudChip T="string" Color="Color.Warning" Size="Size.Small" Variant="Variant.Filled">Mandatory</MudChip>
+                    }
+                    else
+                    {
+                        <span class="text-secondary">Optional</span>
+                    }
+                </MudTd>
+                <MudTd DataLabel="Target Status">
+                    @if (!string.IsNullOrEmpty(context.NewEntityStatusCode))
+                    {
+                        <code>@context.NewEntityStatusCode</code>
+                    }
+                    else
+                    {
+                        <span class="text-secondary">-</span>
+                    }
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+</div>
+
+@code {
+    [Parameter] public List<WorkflowState> States { get; set; } = new();
+    [Parameter] public List<WorkflowTransition> Transitions { get; set; } = new();
+    [Parameter] public EventCallback<int> OnStateSelected { get; set; }
+
+    private string _viewMode = "Pipeline";
+    private int? _selectedStateId;
+
+    private async Task ToggleSelectState(int stateId)
+    {
+        if (_selectedStateId == stateId)
+        {
+            _selectedStateId = null;
+        }
+        else
+        {
+            _selectedStateId = stateId;
+            await OnStateSelected.InvokeAsync(stateId);
+        }
+    }
+}

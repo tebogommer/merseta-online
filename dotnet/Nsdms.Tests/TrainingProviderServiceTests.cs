@@ -163,4 +163,74 @@ public class TrainingProviderServiceTests
         var inDb = await service.GetByIdAsync(provider.Id);
         Assert.Null(inDb);
     }
+
+    #region 360-Degree SDP Relational Tests
+
+    [Fact]
+    public async Task GetEnrolledLearnersAsync_ReturnsAllLearnersUnderProvider()
+    {
+        var (factory, db, audit, service) = CreateTestContext();
+
+        var org = new Organisation { CompanyName = "Ford SA", SdlNumber = "L123456789" };
+        var sdpOrg = new Organisation { CompanyName = "Tshwane South TVET", SdlNumber = "L987654321" };
+        db.Organisations.AddRange(org, sdpOrg);
+        await db.SaveChangesAsync();
+
+        var provider = new TrainingProvider { OrganisationId = sdpOrg.Id, AccreditationNumber = "ACC-TSHWANE" };
+        db.TrainingProviders.Add(provider);
+        await db.SaveChangesAsync();
+
+        var person1 = new Person { FirstName = "Sipho", LastName = "Mthembu", RsaIdNumber = "0202025009087" };
+        var person2 = new Person { FirstName = "Zanele", LastName = "Dube", RsaIdNumber = "0303035009088" };
+        db.People.AddRange(person1, person2);
+        await db.SaveChangesAsync();
+
+        db.CompanyLearners.AddRange(
+            new CompanyLearner { PersonId = person1.Id, OrganisationId = org.Id, TrainingProviderId = provider.Id, QualificationTitle = "Diesel Mechanic" },
+            new CompanyLearner { PersonId = person2.Id, OrganisationId = org.Id, TrainingProviderId = provider.Id, QualificationTitle = "Mechatronics Technician" }
+        );
+        await db.SaveChangesAsync();
+
+        var learners = await service.GetEnrolledLearnersAsync(provider.Id);
+
+        Assert.Equal(2, learners.Count);
+        Assert.Contains(learners, l => l.LearnerFullName == "Sipho Mthembu" && l.QualificationTitle == "Diesel Mechanic");
+        Assert.Contains(learners, l => l.LearnerFullName == "Zanele Dube" && l.QualificationTitle == "Mechatronics Technician");
+    }
+
+    [Fact]
+    public async Task GetParticipatingEmployersAsync_ReturnsEmployersPlacingLearners()
+    {
+        var (factory, db, audit, service) = CreateTestContext();
+
+        var employer = new Organisation { CompanyName = "BMW Rosslyn", SdlNumber = "L555000555" };
+        var sdpOrg = new Organisation { CompanyName = "Ekurhuleni East TVET", SdlNumber = "L777000777" };
+        db.Organisations.AddRange(employer, sdpOrg);
+        await db.SaveChangesAsync();
+
+        var provider = new TrainingProvider { OrganisationId = sdpOrg.Id, AccreditationNumber = "ACC-EKURHULENI" };
+        db.TrainingProviders.Add(provider);
+        await db.SaveChangesAsync();
+
+        var person = new Person { FirstName = "Thabo", LastName = "Molefe", RsaIdNumber = "9901015009088" };
+        db.People.Add(person);
+        await db.SaveChangesAsync();
+
+        db.CompanyLearners.Add(new CompanyLearner
+        {
+            PersonId = person.Id,
+            OrganisationId = employer.Id,
+            TrainingProviderId = provider.Id,
+            QualificationTitle = "Automotive Body Repair"
+        });
+        await db.SaveChangesAsync();
+
+        var employers = await service.GetParticipatingEmployersAsync(provider.Id);
+
+        Assert.Single(employers);
+        Assert.Equal("BMW Rosslyn", employers[0].CompanyName);
+        Assert.Equal(1, employers[0].PlacedLearnersCount);
+    }
+
+    #endregion
 }

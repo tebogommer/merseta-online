@@ -1,6 +1,6 @@
 # MerSETA NSDMS — Database Data Dictionary
 
-> **Generated:** 2026-08-30 20:12:31 UTC | **Target Engine:** Microsoft SQL Server Express | **Total Tables:** 159
+> **Generated:** 2026-08-31 20:33:44 UTC | **Target Engine:** Microsoft SQL Server Express | **Total Tables:** 168
 
 ---
 
@@ -25,7 +25,7 @@
 | `dbo` | [`AssessorModeratorApplication`](#assessormoderatorapplication) | `AssessorModeratorApplication` | 12 | `Id` | Assessor and Moderator Accreditation Application. |
 | `dbo` | [`AssessorModeratorScope`](#assessormoderatorscope) | `AssessorModeratorScope` | 10 | `Id` | Specific SAQA qualification registration scope granted to an ETQA Assessor or Moderator. |
 | `dbo` | [`AuditLog`](#auditlog) | `AuditLog` | 11 | `Id` | Immutable operational audit trail recording entity mutations, actor identity, timestamps, and JSON snapshots. |
-| `dbo` | [`BankingDetails`](#bankingdetails) | `BankingDetails` | 27 | `Id` | System entity for BankingDetails data governance. |
+| `dbo` | [`BankingDetails`](#bankingdetails) | `BankingDetails` | 34 | `Id` | System entity for BankingDetails data governance. |
 | `dbo` | [`BankingDetailsAudit`](#bankingdetailsaudit) | `BankingDetailsAudit` | 8 | `Id` | System entity for BankingDetailsAudit data governance. |
 | `dbo` | [`CompanyLearner`](#companylearner) | `CompanyLearner` | 43 | `Id` | Represents a learner registration agreement linked to an employer organisation, training provider, and MerSETA learning programme, capturing all statutory fields for SETMIS Files 500, 501, 502, and 506. |
 | `dbo` | [`CompanyLearnerLostTime`](#companylearnerlosttime) | `CompanyLearnerLostTime` | 16 | `Id` | Tracks suspended or lost training time and recalculates revised contract end dates. |
@@ -36,14 +36,18 @@
 | `dbo` | [`ContractTerminationRequest`](#contractterminationrequest) | `ContractTerminationRequest` | 15 | `Id` | System entity for ContractTerminationRequest data governance. |
 | `dbo` | [`CurriculumWorkingGroupMember`](#curriculumworkinggroupmember) | `CurriculumWorkingGroupMember` | 13 | `Id` | Expert stakeholder member participating in the QCTO Qualification Development Working Group. |
 | `dbo` | [`DocumentAttachment`](#documentattachment) | `DocumentAttachment` | 16 | `Id` | Polymorphic document attachment linked to any entity record. |
+| `dbo` | [`DocumentClause`](#documentclause) | `DocumentClause` | 11 | `Id` | Reusable atomic document clause or statutory boilerplate paragraph. |
 | `dbo` | [`DocumentMetadata`](#documentmetadata) | `DocumentMetadata` | 19 | `Id` | SHA-256 integrity-verified digital document evidence stored in the Document Vault. |
 | `dbo` | [`DocumentRequirementRule`](#documentrequirementrule) | `DocumentRequirementRule` | 11 | `Id` | Governance rule defining mandatory document evidence required before workflow gate advancement. |
+| `dbo` | [`DocumentSnapshot`](#documentsnapshot) | `DocumentSnapshot` | 27 | `Id` | Immutable cryptographically frozen snapshot of any issued statutory document, certificate, or letter. |
+| `dbo` | [`DocumentTemplate`](#documenttemplate) | `DocumentTemplate` | 20 | `Id` | Universal enterprise document template for statutory letters, certificates, agreements, and notices. |
+| `dbo` | [`DocumentTemplateSection`](#documenttemplatesection) | `DocumentTemplateSection` | 12 | `Id` | Ordered section mapping a reusable clause to a document template. |
 | `dbo` | [`EisaAssessmentEntry`](#eisaassessmententry) | `EisaAssessmentEntry` | 15 | `Id` | External Integrated Summative Assessment (EISA) exam entry for QCTO occupational qualifications. |
 | `dbo` | [`EtqaAssessor`](#etqaassessor) | `EtqaAssessor` | 17 | `Id` | Registered ETQA Assessors and Moderators with approved qualification scopes, capturing all statutory fields required for SETMIS File 401 (Person Designation) reporting. |
 | `dbo` | [`FinancialApprovalThreshold`](#financialapprovalthreshold) | `FinancialApprovalThreshold` | 12 | `Id` | Represents a tiered financial delegation limit (DoA) enforcing role-based threshold caps on grants and disbursements. |
-| `dbo` | [`GrantApplication`](#grantapplication) | `GrantApplication` | 14 | `Id` | Discretionary Grant funding applications submitted by employers for skills development projects. |
+| `dbo` | [`GrantApplication`](#grantapplication) | `GrantApplication` | 18 | `Id` | Discretionary Grant funding applications submitted by employers for skills development projects. |
 | `dbo` | [`GrantFundingWindow`](#grantfundingwindow) | `GrantFundingWindow` | 12 | `Id` | Gazette-announced Discretionary Grant funding window opening and allocation cycle. |
-| `dbo` | [`GrantMoa`](#grantmoa) | `GrantMoa` | 15 | `Id` | Memorandum of Agreement (MOA) for approved Discretionary Grants. |
+| `dbo` | [`GrantMoa`](#grantmoa) | `GrantMoa` | 16 | `Id` | Memorandum of Agreement (MOA) for approved Discretionary Grants. |
 | `dbo` | [`GrantMoaMilestone`](#grantmoamilestone) | `GrantMoaMilestone` | 17 | `Id` | Delivery milestones linked to MOA tranches. |
 | `dbo` | [`GrantPaymentClaim`](#grantpaymentclaim) | `GrantPaymentClaim` | 14 | `Id` | Milestone-based Payment Claim against a Project Implementation Plan. |
 | `dbo` | [`GrantProjectBudget`](#grantprojectbudget) | `GrantProjectBudget` | 11 | `Id` | Detailed cost item and financial budget breakdown submitted in a Discretionary Grant application. |
@@ -55,10 +59,14 @@
 | `dbo` | [`LevyFile`](#levyfile) | `LevyFile` | 11 | `Id` | Monthly SARS Skills Development Levy file import batches. |
 | `dbo` | [`LevyFileLine`](#levyfileline) | `LevyFileLine` | 16 | `Id` | Individual employer monthly SARS levy transaction breakdown. |
 | `dbo` | [`MandatoryGrantDisbursement`](#mandatorygrantdisbursement) | `MandatoryGrantDisbursement` | 17 | `Id` | Mandatory Grant 20% Rebate Payouts for compliant employers submitting WSP/ATR. |
+| `dbo` | [`MoaClause`](#moaclause) | `MoaClause` | 11 | `Id` | Reusable atomic legal clause in the MerSETA clause library. |
+| `dbo` | [`MoaExecutionSnapshot`](#moaexecutionsnapshot) | `MoaExecutionSnapshot` | 14 | `Id` | Cryptographically frozen snapshot of an issued MoA contract for legal non-repudiation and audit defense. |
+| `dbo` | [`MoaTemplate`](#moatemplate) | `MoaTemplate` | 17 | `Id` | Master legal template defining an MoA contract structure for a specific financial year and grant policy. |
+| `dbo` | [`MoaTemplateSection`](#moatemplatesection) | `MoaTemplateSection` | 12 | `Id` | Ordered section mapping a reusable clause into a specific MoA template with custom numbering and conditions. |
 | `dbo` | [`NambDecisionHistory`](#nambdecisionhistory) | `NambDecisionHistory` | 12 | `Id` | National Artisan Moderation Body (NAMB) adjudication trace and serial assignment log. |
 | `dbo` | [`NonSetaCompany`](#nonsetacompany) | `NonSetaCompany` | 13 | `Id` | Non-SETA External Employer / Organisation registered with other Quality Councils / SETAs. |
 | `dbo` | [`NonSetaQualificationsCompletion`](#nonsetaqualificationscompletion) | `NonSetaQualificationsCompletion` | 19 | `Id` | Cross-SETA Qualification & TVET College Achievement Verification for merSETA articulation. |
-| `dbo` | [`Organisation`](#organisation) | `Organisation` | 37 | `Id` | Registered employer, host workplace, or skills development entity under MerSETA jurisdiction, fully normalized with statutory columns required for SETMIS File 100 and File 200 reporting. |
+| `dbo` | [`Organisation`](#organisation) | `Organisation` | 40 | `Id` | Registered employer, host workplace, or skills development entity under MerSETA jurisdiction, fully normalized with statutory columns required for SETMIS File 100 and File 200 reporting. |
 | `dbo` | [`OrganisationContact`](#organisationcontact) | `OrganisationContact` | 12 | `Id` | Liaison contact person link associating an individual Person with an Employer Organisation. |
 | `dbo` | [`OrganisationSite`](#organisationsite) | `OrganisationSite` | 25 | `Id` | Operational branch facility, plant, or training site belonging to an Employer Organisation, supporting multi-site mapping and GPS geolocation for SETMIS File 200 reporting. |
 | `dbo` | [`Person`](#person) | `Person` | 47 | `Id` | Core demographic profile storing individual identity, SA ID/Passport, Washington Group functioning, POPIA compliance, educational background, and contact details for SETMIS statutory reporting. |
@@ -74,13 +82,14 @@
 | `dbo` | [`SdpExtensionOfScope`](#sdpextensionofscope) | `SdpExtensionOfScope` | 19 | `Id` | System entity for SdpExtensionOfScope data governance. |
 | `dbo` | [`SdpReAccreditationApplication`](#sdpreaccreditationapplication) | `SdpReAccreditationApplication` | 15 | `Id` | System entity for SdpReAccreditationApplication data governance. |
 | `dbo` | [`SdpScopeExtensionApplication`](#sdpscopeextensionapplication) | `SdpScopeExtensionApplication` | 12 | `Id` | Skills Development Provider (SDP) Scope Extension Application. |
-| `dbo` | [`SkillsRegistration`](#skillsregistration) | `SkillsRegistration` | 19 | `Id` | Skills Programme / Part-Qualification Curriculum Registration, capturing all statutory fields required for SETMIS File 304 (Non NQF Intervention) reporting. |
+| `dbo` | [`SkillsRegistration`](#skillsregistration) | `SkillsRegistration` | 17 | `Id` | Skills Programme / Part-Qualification Curriculum Registration, capturing all statutory fields required for SETMIS File 304 (Non NQF Intervention) reporting. |
 | `dbo` | [`StatementOfResults`](#statementofresults) | `StatementOfResults` | 14 | `Id` | Formal merSETA Statement of Results (SOR) document record with cryptographic tamper-proof hash. |
 | `dbo` | [`SummativeAssessmentReport`](#summativeassessmentreport) | `SummativeAssessmentReport` | 26 | `Id` | Comprehensive Summative Assessment Report capturing unit standard credits, EISA exams, and moderation outcomes. |
 | `dbo` | [`SummativeAssessmentUnitStandard`](#summativeassessmentunitstandard) | `SummativeAssessmentUnitStandard` | 16 | `Id` | Unit Standard credit assessment and moderation outcome line item. |
 | `dbo` | [`SystemConfig`](#systemconfig) | `SystemConfig` | 12 | `Id` | Runtime system configuration key-value overrides. |
 | `dbo` | [`SystemFeatureFlag`](#systemfeatureflag) | `SystemFeatureFlag` | 11 | `Id` | Granular runtime feature flags for enabling/disabling modules and integrations. All external third-party integrations default to IsEnabled = false. |
 | `dbo` | [`SystemNotification`](#systemnotification) | `SystemNotification` | 14 | `Id` | Persistent system notification for real-time SignalR push and user inbox alerts. |
+| `dbo` | [`TradeMentorRatioPolicy`](#tradementorratiopolicy) | `TradeMentorRatioPolicy` | 15 | `Id` | Statutory artisan mentor-to-apprentice ratio policy per trade qualification or OFO occupational code. Regulates maximum learner supervision capacity for workplace approvals under NAMB and QCTO frameworks. |
 | `dbo` | [`TradeTestTask`](#tradetesttask) | `TradeTestTask` | 15 | `Id` | Practical Task and Scoring Item evaluated during the Trade Test. |
 | `dbo` | [`TrainingCommittee`](#trainingcommittee) | `TrainingCommittee` | 10 | `Id` | Employer Workplace Training Committee constituted per statutory merSETA guidelines. |
 | `dbo` | [`TrainingCommitteeMember`](#trainingcommitteemember) | `TrainingCommitteeMember` | 10 | `Id` | Individual Union and Employer representatives on a Training Committee. |
@@ -98,8 +107,8 @@
 | `dbo` | [`WorkflowTask`](#workflowtask) | `WorkflowTask` | 17 | `Id` | Task assigned to a specific role or user requiring review, inspection, or verification action. |
 | `dbo` | [`WorkflowTaskLease`](#workflowtasklease) | `WorkflowTaskLease` | 12 | `Id` | Represents a distributed concurrency lock lease on a workflow task to prevent simultaneous claims and race conditions. |
 | `dbo` | [`WorkflowTransition`](#workflowtransition) | `WorkflowTransition` | 14 | `Id` | Authorized state transition path with role authorization gates and UI button metadata. |
-| `dbo` | [`WorkplaceApproval`](#workplaceapproval) | `WorkplaceApproval` | 18 | `Id` | Workplace site inspection approval for hosting apprentice and learnership training. |
-| `dbo` | [`WorkplaceApprovalMentor`](#workplaceapprovalmentor) | `WorkplaceApprovalMentor` | 12 | `Id` | Qualified artisan mentor assigned to supervise apprentices and learners at an approved workplace. |
+| `dbo` | [`WorkplaceApproval`](#workplaceapproval) | `WorkplaceApproval` | 22 | `Id` | Workplace site inspection approval for hosting apprentice and learnership training. |
+| `dbo` | [`WorkplaceApprovalMentor`](#workplaceapprovalmentor) | `WorkplaceApprovalMentor` | 16 | `Id` | Qualified artisan mentor assigned to supervise apprentices and learners at an approved workplace. |
 | `dbo` | [`WorkplaceApprovalToolList`](#workplaceapprovaltoollist) | `WorkplaceApprovalToolList` | 11 | `Id` | Tool, equipment, or health and safety checklist item inspected for workplace qualification approval. |
 | `dbo` | [`WorkplaceMonitoringActionPlan`](#workplacemonitoringactionplan) | `WorkplaceMonitoringActionPlan` | 15 | `Id` | Corrective Action Plan for identified defects or non-compliances. |
 | `dbo` | [`WorkplaceMonitoringComplianceSurvey`](#workplacemonitoringcompliancesurvey) | `WorkplaceMonitoringComplianceSurvey` | 13 | `Id` | 10-Point Statutory Compliance Survey Questions answered during the visit. |
@@ -772,12 +781,16 @@
 | `AccountNumber` | `nvarchar(50)` | **NOT NULL** |  | Domain property for AccountNumber. |
 | `AccountTypeCode` | `nvarchar(50)` | **NOT NULL** |  | Domain property for AccountTypeCode. |
 | `ApprovalStatusCode` | `nvarchar(50)` | **NOT NULL** |  | Domain property for ApprovalStatusCode. |
+| `AvsStatusResponse` | `nvarchar(max)` | NULL |  | Domain property for AvsStatusResponse. |
+| `AvsVerificationReference` | `nvarchar(max)` | NULL |  | Domain property for AvsVerificationReference. |
+| `AvsVerifiedAt` | `datetime2` | NULL |  | Domain property for AvsVerifiedAt. |
 | `BankConfirmationDate` | `datetime2` | NULL |  | Domain property for BankConfirmationDate. |
 | `BankConfirmationDocumentId` | `int` | NULL |  | Domain property for BankConfirmationDocumentId. |
 | `BankConfirmationDocumentPath` | `nvarchar(200)` | NULL |  | Domain property for BankConfirmationDocumentPath. |
 | `BankName` | `nvarchar(100)` | **NOT NULL** |  | Domain property for BankName. |
 | `BranchCode` | `nvarchar(50)` | **NOT NULL** |  | Domain property for BranchCode. |
 | `BranchName` | `nvarchar(100)` | NULL |  | Domain property for BranchName. |
+| `CoolingOffExpiresAt` | `datetime2` | NULL |  | Domain property for CoolingOffExpiresAt. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
 | `CreatedBy` | `nvarchar(max)` | **NOT NULL** |  | User identifier or system process that created the record. |
 | `ErpSyncDate` | `datetime2` | NULL |  | Domain property for ErpSyncDate. |
@@ -785,11 +798,14 @@
 | `FirstSignoffDate` | `datetime2` | NULL |  | Domain property for FirstSignoffDate. |
 | `FirstSignoffNotes` | `nvarchar(max)` | NULL |  | Domain property for FirstSignoffNotes. |
 | `FirstSignoffUserId` | `nvarchar(max)` | NULL |  | Domain property for FirstSignoffUserId. |
+| `FraudRiskFlags` | `nvarchar(max)` | NULL |  | Domain property for FraudRiskFlags. |
 | `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the record is active and operational. |
+| `IsCoolingOffActive` | `bit` | **NOT NULL** |  | Domain property for IsCoolingOffActive. |
 | `IsErpActive` | `bit` | **NOT NULL** |  | Domain property for IsErpActive. |
 | `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last updated. |
 | `ModifiedBy` | `nvarchar(max)` | NULL |  | User identifier or system process that last updated the record. |
 | `OrganisationId` | `int` | NULL | 🔗 **FK** | Foreign key relational reference to parent entity. |
+| `RequiresForensicApproval` | `bit` | **NOT NULL** |  | Domain property for RequiresForensicApproval. |
 | `SecondSignoffDate` | `datetime2` | NULL |  | Domain property for SecondSignoffDate. |
 | `SecondSignoffNotes` | `nvarchar(max)` | NULL |  | Domain property for SecondSignoffNotes. |
 | `SecondSignoffUserId` | `nvarchar(max)` | NULL |  | Domain property for SecondSignoffUserId. |
@@ -1265,6 +1281,38 @@
 
 ---
 
+### <a id="documentclause"></a> `dbo.DocumentClause`
+
+**Description:** Reusable atomic document clause or statutory boilerplate paragraph.  
+**CLR Model:** `Nsdms.Domain.Entities.DocumentClause`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `Category` | `nvarchar(50)` | **NOT NULL** |  | Classification category matching document domains (e.g. MandatoryGrant, TradeTest, EtqaAccreditation, Compliance, Signatures). |
+| `ClauseCode` | `nvarchar(50)` | **NOT NULL** |  | Unique clause reference code (e.g. CL-WSP-APPROVE-BODY, CL-TRADE-COMPETENT, CL-POPIA-NOTICE). |
+| `ClauseContent` | `nvarchar(max)` | **NOT NULL** |  | Rich Markdown content containing dynamic evaluation tokens (e.g. {{RecipientName}}, {{CertificateNumber}}, {{IssuedDate}}). |
+| `ClauseTitle` | `nvarchar(200)` | **NOT NULL** |  | Human-readable title of the clause. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `IsActive` | `bit` | **NOT NULL** |  | Whether this clause is active for inclusion. |
+| `IsMandatory` | `bit` | **NOT NULL** |  | Indicates if this clause is legally mandatory across all template variants. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_DocumentClause_Category` | `Category` | No |
+| `IX_DocumentClause_ClauseCode` | `ClauseCode` | ✅ Yes |
+| `IX_DocumentClause_IsActive` | `IsActive` | No |
+
+---
+
 ### <a id="documentmetadata"></a> `dbo.DocumentMetadata`
 
 **Description:** SHA-256 integrity-verified digital document evidence stored in the Document Vault.  
@@ -1333,6 +1381,144 @@
 | :--- | :--- | :--- |
 | `IX_DocumentRequirementRule_DocumentTypeCode` | `DocumentTypeCode` | No |
 | `IX_DocumentRequirementRule_WorkflowProcessCode` | `WorkflowProcessCode` | No |
+
+---
+
+### <a id="documentsnapshot"></a> `dbo.DocumentSnapshot`
+
+**Description:** Immutable cryptographically frozen snapshot of any issued statutory document, certificate, or letter.  
+**CLR Model:** `Nsdms.Domain.Entities.DocumentSnapshot`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `DocumentSnapshotNumber` | `nvarchar(50)` | **NOT NULL** |  | Unique public tracking and verification reference (e.g. DOC-2026-TT-00123, DOC-2026-WSP-98765). |
+| `DocumentTemplateId` | `int` | NULL | 🔗 **FK** | Optional foreign key referencing the DocumentTemplate used at issuance. |
+| `DocumentTypeCode` | `nvarchar(50)` | **NOT NULL** |  | Document type classification code (e.g. TradeTestCertificate, WspApprovalLetter, AccreditationCertificate, RemittanceAdvice). |
+| `IsRevoked` | `bit` | **NOT NULL** |  | Whether this issued document has been revoked or superseded (e.g. due to fraudulent trade test or re-adjudication). |
+| `IssuedAt` | `datetime2` | **NOT NULL** |  | Official date and time when the document was frozen and issued. |
+| `IssuedBy` | `nvarchar(100)` | **NOT NULL** |  | Username or system process that authorized and issued the document. |
+| `LastVerifiedAt` | `datetime2` | NULL |  | Timestamp of the most recent verification lookup. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `PdfStorageUri` | `nvarchar(500)` | NULL |  | Storage location URI of the signed PDF artifact. |
+| `RecipientIdentifier` | `nvarchar(50)` | **NOT NULL** |  | Recipient primary identifier (e.g. RSA ID Number, SDL Number, Accreditation Number). |
+| `RecipientName` | `nvarchar(200)` | **NOT NULL** |  | Full legal name of the recipient individual or organisation. |
+| `RelatedEntityId` | `int` | **NOT NULL** |  | Identifier of the related entity (e.g. LearnerTradeTest.Id, WspSubmission.Id, TrainingProvider.Id, GrantMoa.Id). |
+| `RelatedEntityType` | `nvarchar(50)` | **NOT NULL** |  | Name of the related entity table/domain (e.g. LearnerTradeTest, WspSubmission, TrainingProvider, GrantMoa, SarsLevyReconAudit). |
+| `RenderedContent` | `nvarchar(max)` | **NOT NULL** |  | Fully assembled and interpolated document text captured at point of issuance. |
+| `RenderedContentHash` | `nvarchar(100)` | **NOT NULL** |  | Cryptographic SHA-256 digital fingerprint hash of the assembled document content. |
+| `RevocationReason` | `nvarchar(500)` | NULL |  | Reason description if the document was revoked. |
+| `SignatoryName` | `nvarchar(150)` | NULL |  | Full name of the designated authorized signatory (e.g. Chief Executive Officer, Senior Manager: ETQA). |
+| `SignatorySignedAt` | `datetime2` | NULL |  | Date when digital/electronic signature was affixed. |
+| `SignatoryTitle` | `nvarchar(150)` | NULL |  | Official title of the designated signatory. |
+| `TemplateVersionNumber` | `nvarchar(20)` | **NOT NULL** |  | Version number of the template captured at point of issuance. |
+| `VerificationQrBase64` | `nvarchar(max)` | NULL |  | Embedded Base64 QR code image payload for offline and optical verification. |
+| `VerificationScanCount` | `int` | **NOT NULL** |  | Total count of times this document has been scanned and verified via the public verification portal. |
+| `VerificationUri` | `nvarchar(500)` | **NOT NULL** |  | Canonical public verification URI (e.g. https://nsdms.merseta.org.za/verify/document/a1b2c3d4...). |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_DocumentSnapshot_DocumentTemplate_DocumentTemplateId` | `DocumentTemplateId` | `dbo.DocumentTemplate` | `Restrict` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_DocumentSnapshot_DocumentSnapshotNumber` | `DocumentSnapshotNumber` | ✅ Yes |
+| `IX_DocumentSnapshot_DocumentTypeCode` | `DocumentTypeCode` | No |
+| `IX_DocumentSnapshot_IssuedAt` | `IssuedAt` | No |
+| `IX_DocumentSnapshot_RecipientIdentifier` | `RecipientIdentifier` | No |
+| `IX_DocumentSnapshot_RenderedContentHash` | `RenderedContentHash` | No |
+| `IX_DocumentSnapshot_RelatedEntityType_RelatedEntityId` | `RelatedEntityType, RelatedEntityId` | No |
+
+---
+
+### <a id="documenttemplate"></a> `dbo.DocumentTemplate`
+
+**Description:** Universal enterprise document template for statutory letters, certificates, agreements, and notices.  
+**CLR Model:** `Nsdms.Domain.Entities.DocumentTemplate`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `ApprovalStatus` | `nvarchar(30)` | **NOT NULL** |  | Governance approval lifecycle status (Draft, UnderReview, Approved, Sunset). |
+| `ApprovedAt` | `datetime2` | NULL |  | Timestamp when governance approval was executed. |
+| `ApprovedBy` | `nvarchar(100)` | NULL |  | Governance/legal officer who approved this template. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `DocumentCategory` | `nvarchar(50)` | **NOT NULL** |  | Document category (e.g. MandatoryGrant, DiscretionaryGrant, TradeTest, EtqaAccreditation, LearnerContract, FinanceAudit). |
+| `DocumentTypeCode` | `nvarchar(50)` | **NOT NULL** |  | Specific document type classification code (e.g. WspApprovalLetter, WspRejectionLetter, TradeTestCertificate, StatementOfResults, AccreditationCertificate). |
+| `EffectiveFrom` | `datetime2` | **NOT NULL** |  | Effective starting date for this template version. |
+| `EffectiveTo` | `datetime2` | NULL |  | Optional expiration / sunset date for this template version. |
+| `FinancialYear` | `int` | **NOT NULL** |  | Financial/statutory scheme year this template is active for (e.g. 2026). |
+| `FooterDisclaimerText` | `nvarchar(500)` | NULL |  | Statutory footer disclaimer text. |
+| `HeaderBannerUrl` | `nvarchar(500)` | NULL |  | Optional custom header branding banner URL or resource path. |
+| `IsActive` | `bit` | **NOT NULL** |  | Whether this template is active for new document generation. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `TargetEntityType` | `nvarchar(50)` | **NOT NULL** |  | Target entity legal classification filter (e.g. All, Employer, Provider, Learner, Assessor). |
+| `TemplateCode` | `nvarchar(50)` | **NOT NULL** |  | Unique template identifier code (e.g. WSP-APPROVAL-STD, TRADE-CERT-STD, ETQA-ACCRED-STD). |
+| `TemplateTitle` | `nvarchar(200)` | **NOT NULL** |  | Human-readable title of the document template. |
+| `VersionNumber` | `nvarchar(20)` | **NOT NULL** |  | Semantic policy version number (e.g. 1.0.0, 2.1.0). |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_DocumentTemplate_ApprovalStatus` | `ApprovalStatus` | No |
+| `IX_DocumentTemplate_TemplateCode` | `TemplateCode` | ✅ Yes |
+| `IX_DocumentTemplate_DocumentCategory_DocumentTypeCode_FinancialYear_IsActive` | `DocumentCategory, DocumentTypeCode, FinancialYear, IsActive` | No |
+
+---
+
+### <a id="documenttemplatesection"></a> `dbo.DocumentTemplateSection`
+
+**Description:** Ordered section mapping a reusable clause to a document template.  
+**CLR Model:** `Nsdms.Domain.Entities.DocumentTemplateSection`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `ConditionRuleJson` | `nvarchar(max)` | NULL |  | Optional conditional inclusion rule expression in JSON format. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `DocumentClauseId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the assigned DocumentClause. |
+| `DocumentTemplateId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the parent DocumentTemplate. |
+| `IsMandatory` | `bit` | **NOT NULL** |  | Whether this section is mandatory for this template. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `SectionNumber` | `nvarchar(30)` | **NOT NULL** |  | Custom section number or bullet label (e.g. "1.0", "Clause 4", "Annexure A"). |
+| `SectionTitle` | `nvarchar(200)` | **NOT NULL** |  | Section heading title override. |
+| `SequenceOrder` | `int` | **NOT NULL** |  | Sorting sequence order within the document layout. |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_DocumentTemplateSection_DocumentClause_DocumentClauseId` | `DocumentClauseId` | `dbo.DocumentClause` | `Restrict` |
+| `FK_DocumentTemplateSection_DocumentTemplate_DocumentTemplateId` | `DocumentTemplateId` | `dbo.DocumentTemplate` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_DocumentTemplateSection_DocumentClauseId` | `DocumentClauseId` | No |
+| `IX_DocumentTemplateSection_DocumentTemplateId` | `DocumentTemplateId` | No |
+| `IX_DocumentTemplateSection_DocumentTemplateId_SequenceOrder` | `DocumentTemplateId, SequenceOrder` | No |
 
 ---
 
@@ -1470,11 +1656,15 @@
 | `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
 | `FundingWindowId` | `int` | NULL | 🔗 **FK** | Optional foreign key referencing the open GrantFundingWindow. |
 | `GrantTypeCode` | `nvarchar(15)` | NULL |  | Discretionary grant funding type code (e.g. PIVOTAL, NON_PIVOTAL, BURSARY, APPRENTICESHIP). |
+| `IsWspCompliant` | `bit` | **NOT NULL** |  | Indicates whether the applicant has an approved, compliant WSP/ATR on file for the scheme year. |
+| `IsWspExempt` | `bit` | **NOT NULL** |  | Indicates whether the applicant is legally exempt from WSP submission (e.g. Non-Levy Payer, Public TVET, NGO, Community Trust). |
 | `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
 | `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
 | `OrganisationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the applying Employer Organisation. |
 | `ProjectTitle` | `nvarchar(300)` | **NOT NULL** |  | Descriptive title of the skills development project. |
 | `RequestedAmount` | `decimal(18,2)` | **NOT NULL** |  | Total grant funding amount requested by the applicant in ZAR. |
+| `WspExemptionReason` | `nvarchar(500)` | NULL |  | Statutory justification or rationale for WSP submission exemption. |
+| `WspSubmissionId` | `int` | NULL | 🔗 **FK** | Optional foreign key referencing the compliant Mandatory Grant WSP submission for this financial year (SETA Grant Regulation 4(4)). |
 
 #### Foreign Key Constraints
 
@@ -1482,6 +1672,7 @@
 | :--- | :--- | :--- | :--- |
 | `FK_GrantApplication_GrantFundingWindow_FundingWindowId` | `FundingWindowId` | `dbo.GrantFundingWindow` | `ClientSetNull` |
 | `FK_GrantApplication_Organisation_OrganisationId` | `OrganisationId` | `dbo.Organisation` | `Restrict` |
+| `FK_GrantApplication_WspSubmission_WspSubmissionId` | `WspSubmissionId` | `dbo.WspSubmission` | `SetNull` |
 
 #### Performance Indexes
 
@@ -1490,6 +1681,7 @@
 | `IX_GrantApplication_ApplicationNumber` | `ApplicationNumber` | No |
 | `IX_GrantApplication_ApplicationStatusCode` | `ApplicationStatusCode` | No |
 | `IX_GrantApplication_OrganisationId` | `OrganisationId` | No |
+| `IX_GrantApplication_WspSubmissionId` | `WspSubmissionId` | No |
 
 ---
 
@@ -1544,6 +1736,7 @@
 | `GrantApplicationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the originating Discretionary Grant application. |
 | `MoaNumber` | `nvarchar(100)` | **NOT NULL** |  | Unique MerSETA MOA legal contract reference number (e.g. MOA-2026-DG-001). |
 | `MoaStatusCode` | `nvarchar(50)` | **NOT NULL** |  | Lifecycle contract state code (e.g. Draft, Pending Signature, Active, Terminated, Completed). |
+| `MoaTemplateId` | `int` | NULL | 🔗 **FK** | Foreign key referencing the active MoaTemplate version applied to this agreement. |
 | `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
 | `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
 | `SignoffDateEmployer` | `datetime2` | NULL |  | Date when the employer authorized signatory signed the contract. |
@@ -1557,6 +1750,7 @@
 | Constraint Name | Foreign Columns | Principal Table | Delete Rule |
 | :--- | :--- | :--- | :--- |
 | `FK_GrantMoa_GrantApplication_GrantApplicationId` | `GrantApplicationId` | `dbo.GrantApplication` | `Restrict` |
+| `FK_GrantMoa_MoaTemplate_MoaTemplateId` | `MoaTemplateId` | `dbo.MoaTemplate` | `SetNull` |
 
 #### Performance Indexes
 
@@ -1565,6 +1759,7 @@
 | `IX_GrantMoa_GrantApplicationId` | `GrantApplicationId` | No |
 | `IX_GrantMoa_MoaNumber` | `MoaNumber` | ✅ Yes |
 | `IX_GrantMoa_MoaStatusCode` | `MoaStatusCode` | No |
+| `IX_GrantMoa_MoaTemplateId` | `MoaTemplateId` | No |
 
 ---
 
@@ -2100,6 +2295,159 @@
 
 ---
 
+### <a id="moaclause"></a> `dbo.MoaClause`
+
+**Description:** Reusable atomic legal clause in the MerSETA clause library.  
+**CLR Model:** `Nsdms.Domain.Entities.MoaClause`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `Category` | `nvarchar(50)` | **NOT NULL** |  | Classification category (e.g. Statutory, Financial, Compliance, General, Annexure). |
+| `ClauseCode` | `nvarchar(100)` | **NOT NULL** |  | Unique clause reference code (e.g. CLAUSE-PREAMBLE, CLAUSE-POPIA, CLAUSE-TRANCHES-01). |
+| `ClauseContent` | `nvarchar(max)` | **NOT NULL** |  | Rich Markdown content of the clause containing dynamic tokens (e.g. {{OrganisationName}}, {{TotalContractValue}}). |
+| `ClauseTitle` | `nvarchar(200)` | **NOT NULL** |  | Human-readable title of the legal clause. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the clause is active in the clause library. |
+| `IsMandatory` | `bit` | **NOT NULL** |  | Indicates if this clause is legally mandatory across all template variants. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_MoaClause_Category` | `Category` | No |
+| `IX_MoaClause_ClauseCode` | `ClauseCode` | ✅ Yes |
+| `IX_MoaClause_IsActive` | `IsActive` | No |
+
+---
+
+### <a id="moaexecutionsnapshot"></a> `dbo.MoaExecutionSnapshot`
+
+**Description:** Cryptographically frozen snapshot of an issued MoA contract for legal non-repudiation and audit defense.  
+**CLR Model:** `Nsdms.Domain.Entities.MoaExecutionSnapshot`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `FrozenAt` | `datetime2` | **NOT NULL** |  | Timestamp when this snapshot was frozen and issued. |
+| `GrantMoaId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the issued GrantMoa contract. |
+| `MoaTemplateId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the MoaTemplate version applied at the moment of issuance. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `PdfStorageUri` | `nvarchar(500)` | NULL |  | Immutable digital storage URI of the generated signed PDF document. |
+| `RenderedContent` | `nvarchar(max)` | **NOT NULL** |  | Fully assembled legal text in Markdown/Text format with all tokens interpolated. |
+| `RenderedContentHash` | `nvarchar(100)` | **NOT NULL** |  | Cryptographic SHA-256 digital fingerprint hash of the assembled document content. |
+| `SignatoryEmployer` | `nvarchar(150)` | NULL |  | Employer signatory name captured at signing time. |
+| `SignatorySeta` | `nvarchar(150)` | NULL |  | MerSETA delegated signatory name captured at signing time. |
+| `TemplateVersionNumber` | `nvarchar(20)` | **NOT NULL** |  | Captured template version string (e.g. 1.2.0). |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_MoaExecutionSnapshot_GrantMoa_GrantMoaId` | `GrantMoaId` | `dbo.GrantMoa` | `Cascade` |
+| `FK_MoaExecutionSnapshot_MoaTemplate_MoaTemplateId` | `MoaTemplateId` | `dbo.MoaTemplate` | `Restrict` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_MoaExecutionSnapshot_FrozenAt` | `FrozenAt` | No |
+| `IX_MoaExecutionSnapshot_GrantMoaId` | `GrantMoaId` | No |
+| `IX_MoaExecutionSnapshot_MoaTemplateId` | `MoaTemplateId` | No |
+| `IX_MoaExecutionSnapshot_RenderedContentHash` | `RenderedContentHash` | No |
+
+---
+
+### <a id="moatemplate"></a> `dbo.MoaTemplate`
+
+**Description:** Master legal template defining an MoA contract structure for a specific financial year and grant policy.  
+**CLR Model:** `Nsdms.Domain.Entities.MoaTemplate`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `ApprovalStatus` | `nvarchar(50)` | **NOT NULL** |  | Governance approval lifecycle status (Draft, UnderReview, Approved, Archived). |
+| `ApprovedAt` | `datetime2` | NULL |  | Timestamp when governance approval was executed. |
+| `ApprovedBy` | `nvarchar(100)` | NULL |  | Username of the governance/legal officer who approved this template. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `EffectiveFrom` | `datetime2` | **NOT NULL** |  | Effective starting date for this template version. |
+| `EffectiveTo` | `datetime2` | NULL |  | Optional expiration / sunset date for this template version. |
+| `FinancialYear` | `int` | **NOT NULL** |  | Financial year the template is effective for (e.g. 2026). |
+| `GrantTypeCode` | `nvarchar(50)` | **NOT NULL** |  | Statutory Grant Type code (e.g. DiscretionaryGrant, SpecialProject, Bursary, Candidacy). |
+| `IsActive` | `bit` | **NOT NULL** |  | Whether this template is active for new contract issuances. |
+| `LegalEntityType` | `nvarchar(50)` | **NOT NULL** |  | Target legal entity type filter (e.g. Employer, TVET, University, NGO, All). |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `TemplateCode` | `nvarchar(100)` | **NOT NULL** |  | Unique administrative template code identifier (e.g. DG-STD-2026, SP-TVET-2026). |
+| `TemplateTitle` | `nvarchar(200)` | **NOT NULL** |  | Descriptive name of the MoA template. |
+| `VersionNumber` | `nvarchar(20)` | **NOT NULL** |  | Semantic version of the template policy (e.g. 1.0.0, 1.2.0, 2.0.0). |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_MoaTemplate_ApprovalStatus` | `ApprovalStatus` | No |
+| `IX_MoaTemplate_TemplateCode` | `TemplateCode` | ✅ Yes |
+| `IX_MoaTemplate_FinancialYear_GrantTypeCode_IsActive` | `FinancialYear, GrantTypeCode, IsActive` | No |
+
+---
+
+### <a id="moatemplatesection"></a> `dbo.MoaTemplateSection`
+
+**Description:** Ordered section mapping a reusable clause into a specific MoA template with custom numbering and conditions.  
+**CLR Model:** `Nsdms.Domain.Entities.MoaTemplateSection`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `ConditionRuleJson` | `nvarchar(1000)` | NULL |  | Optional conditional inclusion rule expression in JSON format. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `IsMandatory` | `bit` | **NOT NULL** |  | Whether this section is mandatory for this specific template. |
+| `MoaClauseId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the assigned MoaClause. |
+| `MoaTemplateId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the parent MoaTemplate. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `SectionNumber` | `nvarchar(50)` | **NOT NULL** |  | Custom section number label in the generated contract (e.g. "1.0", "2.1", "Schedule A"). |
+| `SectionTitle` | `nvarchar(200)` | **NOT NULL** |  | Section heading title override. |
+| `SequenceOrder` | `int` | **NOT NULL** |  | Sorting sequence order within the document layout (e.g. 10, 20, 30). |
+
+#### Foreign Key Constraints
+
+| Constraint Name | Foreign Columns | Principal Table | Delete Rule |
+| :--- | :--- | :--- | :--- |
+| `FK_MoaTemplateSection_MoaClause_MoaClauseId` | `MoaClauseId` | `dbo.MoaClause` | `Restrict` |
+| `FK_MoaTemplateSection_MoaTemplate_MoaTemplateId` | `MoaTemplateId` | `dbo.MoaTemplate` | `Cascade` |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_MoaTemplateSection_MoaClauseId` | `MoaClauseId` | No |
+| `IX_MoaTemplateSection_MoaTemplateId` | `MoaTemplateId` | No |
+| `IX_MoaTemplateSection_MoaTemplateId_SequenceOrder` | `MoaTemplateId, SequenceOrder` | No |
+
+---
+
 ### <a id="nambdecisionhistory"></a> `dbo.NambDecisionHistory`
 
 **Description:** National Artisan Moderation Body (NAMB) adjudication trace and serial assignment log.  
@@ -2243,11 +2591,14 @@
 | `CountryCode` | `nvarchar(10)` | **NOT NULL** |  | Sovereign country lookup code (references lookup.CountryType, default ZA). |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
 | `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CustomMentorRatioCap` | `int` | NULL |  | Optional enterprise-wide uniform mentor capacity cap override (e.g. 5 learners per mentor across all site workshops). |
 | `FaxNumber` | `nvarchar(50)` | NULL |  | Facsimile transmission number. |
 | `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the organisation is currently active. |
+| `IsMentorRatioEnforced` | `bit` | NULL |  | Explicit mentor ratio enforcement override for this organisation (null = inherit Global, true = enforce, false = exempt). |
 | `LevyCategoryCode` | `nvarchar(15)` | NULL |  | Organisation SARS levy compliance category code (e.g. LEVY_PAYING, NON_LEVY_PAYING, EXEMPT). |
 | `LogoDocumentId` | `int` | NULL |  | Foreign key referencing the organisation high-DPI brand logo in DocumentMetadata vault. |
 | `MainSdlNumber` | `nvarchar(20)` | NULL |  | Parent or holding company Main SDL number for enterprise site networks (SETMIS File 200). |
+| `MentorRatioExemptionReason` | `nvarchar(500)` | NULL |  | Statutory or executive justification when the organisation is granted an exemption from mentor ratios (e.g. State-Owned Enterprise Training Academy). |
 | `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
 | `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
 | `OrganisationStatusCode` | `nvarchar(15)` | NULL |  | Current operational registration status code (references lookup.StatusType: ACTIVE, INACTIVE, SUSPENDED). |
@@ -2282,6 +2633,7 @@
 | `IX_Organisation_CompanyName` | `CompanyName` | No |
 | `IX_Organisation_CompanySizeCode` | `CompanySizeCode` | No |
 | `IX_Organisation_IsActive` | `IsActive` | No |
+| `IX_Organisation_IsMentorRatioEnforced` | `IsMentorRatioEnforced` | No |
 | `IX_Organisation_LevyCategoryCode` | `LevyCategoryCode` | No |
 | `IX_Organisation_MainSdlNumber` | `MainSdlNumber` | No |
 | `IX_Organisation_OrganisationStatusCode` | `OrganisationStatusCode` | No |
@@ -2797,6 +3149,12 @@
 | :--- | :--- | :--- | :--- |
 | `FK_SdfAppointmentHistory_SdfCompany_SdfCompanyId` | `SdfCompanyId` | `dbo.SdfCompany` | `Cascade` |
 
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_SdfAppointmentHistory_SdfCompanyId` | `SdfCompanyId` | No |
+
 ---
 
 ### <a id="sdfcompany"></a> `dbo.SdfCompany`
@@ -2988,20 +3346,18 @@
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
 | `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
 | `Credits` | `int` | **NOT NULL** |  | Domain property for Credits. |
-| `EtqaId` | `nvarchar(max)` | **NOT NULL** |  | Submitting ETQA ID (references lookup.SetaType, default 17 for merSETA). |
-| `LearningProgrammeTypeId` | `nvarchar(max)` | **NOT NULL** |  | Statutory Learning Programme Type code (references lookup.LearningProgrammeType, default 03 Skills Programme). |
+| `EtqaId` | `nvarchar(10)` | **NOT NULL** |  | Submitting ETQA ID (references lookup.SetaType, default 17 for merSETA). |
+| `LearningProgrammeTypeId` | `nvarchar(10)` | **NOT NULL** |  | Statutory Learning Programme Type code (references lookup.LearningProgrammeType, default 03 Skills Programme). |
 | `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
 | `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
-| `NonNqfIntervCode` | `nvarchar(max)` | **NOT NULL** |  | Statutory Non-NQF Intervention Code (SETMIS File 304). |
-| `NonNqfIntervName` | `nvarchar(max)` | **NOT NULL** |  | Statutory Non-NQF Intervention descriptive title. |
-| `NonNqfIntervStatusId` | `nvarchar(max)` | **NOT NULL** |  | Statutory Registration Status (references lookup.NonNqfInterventionStatusType: 01 Registered, 02 Approved, 03 Concluded). |
+| `NonNqfIntervCode` | `nvarchar(50)` | **NOT NULL** |  | Statutory Non-NQF Intervention Code (SETMIS File 304). |
+| `NonNqfIntervName` | `nvarchar(200)` | **NOT NULL** |  | Statutory Non-NQF Intervention descriptive title. |
+| `NonNqfIntervStatusId` | `nvarchar(10)` | **NOT NULL** |  | Statutory Registration Status (references lookup.NonNqfInterventionStatusType: 01 Registered, 02 Approved, 03 Concluded). |
 | `NqfLevel` | `int` | **NOT NULL** |  | Domain property for NqfLevel. |
 | `QualificationsCurriculumDevelopmentId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key relational reference to parent entity. |
 | `RegistrationEndDate` | `datetime2` | NULL |  | Registration validity expiration date. |
 | `RegistrationStartDate` | `datetime2` | **NOT NULL** |  | Registration validity start date (SETMIS File 304). |
-| `SkillsProgrammeCode` | `nvarchar(50)` | **NOT NULL** |  | Domain property for SkillsProgrammeCode. |
-| `SkillsProgrammeTitle` | `nvarchar(200)` | **NOT NULL** |  | Domain property for SkillsProgrammeTitle. |
-| `SubfieldId` | `nvarchar(max)` | **NOT NULL** |  | SAQA NQF Subfield ID (references lookup.SubfieldType). |
+| `SubfieldId` | `nvarchar(10)` | **NOT NULL** |  | SAQA NQF Subfield ID (references lookup.SubfieldType). |
 | `UnitStandardsIncludedJson` | `nvarchar(max)` | **NOT NULL** |  | Domain property for UnitStandardsIncludedJson. |
 
 #### Foreign Key Constraints
@@ -3014,8 +3370,8 @@
 
 | Index Name | Columns | Unique |
 | :--- | :--- | :--- |
+| `IX_SkillsRegistration_NonNqfIntervCode` | `NonNqfIntervCode` | No |
 | `IX_SkillsRegistration_QualificationsCurriculumDevelopmentId` | `QualificationsCurriculumDevelopmentId` | No |
-| `IX_SkillsRegistration_SkillsProgrammeCode` | `SkillsProgrammeCode` | No |
 
 ---
 
@@ -3262,6 +3618,43 @@
 | `IX_SystemNotification_IsRead` | `IsRead` | No |
 | `IX_SystemNotification_RecipientRole` | `RecipientRole` | No |
 | `IX_SystemNotification_RecipientUsername` | `RecipientUsername` | No |
+
+---
+
+### <a id="tradementorratiopolicy"></a> `dbo.TradeMentorRatioPolicy`
+
+**Description:** Statutory artisan mentor-to-apprentice ratio policy per trade qualification or OFO occupational code. Regulates maximum learner supervision capacity for workplace approvals under NAMB and QCTO frameworks.  
+**CLR Model:** `Nsdms.Domain.Entities.TradeMentorRatioPolicy`  
+**Primary Key:** `Id`
+
+#### Columns
+
+| Column | SQL Store Type | Nullable | Key | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `Id` | `int` | **NOT NULL** | 🔑 **PK** | Auto-generated integer primary key identifier. |
+| `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
+| `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `EnforceStrictly` | `bit` | **NOT NULL** |  | Indicates whether this trade enforces strict blocking on excess learner enrollments or advisory warnings only. |
+| `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the trade policy is active. |
+| `MaxAllowedRatio` | `int` | **NOT NULL** |  | Maximum permissible ratio under special dispensation / approval (e.g. 6). |
+| `MinExperienceYearsRequired` | `int` | **NOT NULL** |  | Minimum post-apprenticeship / post-trade test verified years of experience required to mentor in this trade. |
+| `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
+| `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `Notes` | `nvarchar(500)` | NULL |  | Regulatory notes, gazette references, or curriculum guidelines. |
+| `SaqaQualificationId` | `int` | NULL |  | SAQA Registered Qualification ID code associated with this trade. |
+| `StandardRatio` | `int` | **NOT NULL** |  | Standard statutory ratio of learners per qualified artisan mentor (e.g. 4 for 1:4). |
+| `TradeCode` | `nvarchar(50)` | **NOT NULL** |  | Unique Trade / Occupational Code (e.g. WELD, ELEC, FITT, BOIL, 651202). |
+| `TradeOfoCode` | `nvarchar(50)` | NULL |  | Organising Framework for Occupations (OFO) code. |
+| `TradeTitle` | `nvarchar(200)` | **NOT NULL** |  | Official trade qualification or occupational title (e.g. Welder, Electrician, Fitter and Turner). |
+
+#### Performance Indexes
+
+| Index Name | Columns | Unique |
+| :--- | :--- | :--- |
+| `IX_TradeMentorRatioPolicy_IsActive` | `IsActive` | No |
+| `IX_TradeMentorRatioPolicy_SaqaQualificationId` | `SaqaQualificationId` | No |
+| `IX_TradeMentorRatioPolicy_TradeCode` | `TradeCode` | ✅ Yes |
+| `IX_TradeMentorRatioPolicy_TradeOfoCode` | `TradeOfoCode` | No |
 
 ---
 
@@ -3938,9 +4331,12 @@
 | `ContactPersonId` | `int` | NULL | 🔗 **FK** | Mandatory Foreign key referencing the designated Employer Contact Person present during the workplace visit/approval. |
 | `CreatedAt` | `datetime2` | **NOT NULL** |  | UTC timestamp when the record was initially created. |
 | `CreatedBy` | `nvarchar(max)` | NULL |  | Username or system process that created the record. |
+| `CustomTradeRatio` | `int` | NULL |  | Custom site-specific learner-to-mentor ratio override (e.g. 3 for 1:3), overriding the standard trade policy. |
 | `ExpiryDate` | `datetime2` | NULL |  | Validity expiration date of the workplace approval certificate. |
 | `InspectionDate` | `datetime2` | NULL |  | Date when the physical on-site audit inspection occurred. |
 | `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the workplace approval is currently active. |
+| `IsRatioEnforced` | `bit` | NULL |  | Explicit mentor ratio enforcement override for this workplace approval (null = inherit Org/Global, true = enforce, false = exempt). |
+| `MentorRatioExemptionNotes` | `nvarchar(500)` | NULL |  | Exemption justification or special dispensation notes for this workplace approval. |
 | `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
 | `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
 | `OrganisationId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the host Employer Organisation. |
@@ -3948,6 +4344,7 @@
 | `QualificationTitle` | `nvarchar(250)` | **NOT NULL** |  | Title of the registered qualification approved for on-site hosting. |
 | `Recommendations` | `nvarchar(max)` | NULL |  | Official auditor recommendations, tool adjustments, or compliance notes. |
 | `SaqaQualificationId` | `int` | NULL |  | SAQA Registered Qualification ID code approved for practical workplace training. |
+| `TradeCode` | `nvarchar(50)` | NULL |  | Designated Trade / Occupational Code (references TradeMentorRatioPolicy.TradeCode, e.g. WELD, ELEC, FITT). |
 
 #### Foreign Key Constraints
 
@@ -3965,8 +4362,10 @@
 | `IX_WorkplaceApproval_ApprovalNumber` | `ApprovalNumber` | No |
 | `IX_WorkplaceApproval_ApprovalStatusCode` | `ApprovalStatusCode` | No |
 | `IX_WorkplaceApproval_ContactPersonId` | `ContactPersonId` | No |
+| `IX_WorkplaceApproval_IsRatioEnforced` | `IsRatioEnforced` | No |
 | `IX_WorkplaceApproval_OrganisationId` | `OrganisationId` | No |
 | `IX_WorkplaceApproval_OrganisationSiteId` | `OrganisationSiteId` | No |
+| `IX_WorkplaceApproval_TradeCode` | `TradeCode` | No |
 
 ---
 
@@ -3987,8 +4386,12 @@
 | `Designation` | `nvarchar(100)` | **NOT NULL** |  | Enterprise job title / role designation (e.g. Master Artisan, Lead Fitter, Foreman). |
 | `IsActive` | `bit` | **NOT NULL** |  | Indicates whether the mentor is actively mentoring learners at this site. |
 | `IsCertifiedArtisan` | `bit` | **NOT NULL** |  | Indicates whether the mentor is certified as a qualified Red Seal artisan. |
+| `IsRatioEnforced` | `bit` | **NOT NULL** |  | Indicates whether ratio enforcement is active for this mentor. |
+| `IsRatioExempt` | `bit` | **NOT NULL** |  | Indicates whether this mentor is exempt from statutory ratio enforcement. |
+| `MaxLearnerCapacity` | `int` | NULL |  | Optional custom maximum apprentice supervision capacity for this specific mentor (overrides trade baseline). |
 | `ModifiedAt` | `datetime2` | NULL |  | UTC timestamp when the record was last modified. |
 | `ModifiedBy` | `nvarchar(max)` | NULL |  | Username or system process that last modified the record. |
+| `Notes` | `nvarchar(500)` | NULL |  | Specific notes or special conditions regarding this mentor's capacity. |
 | `PersonId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the mentor's demographic Person record. |
 | `WorkplaceApprovalId` | `int` | **NOT NULL** | 🔗 **FK** | Foreign key referencing the parent WorkplaceApproval. |
 | `YearsExperience` | `int` | **NOT NULL** |  | Number of verified years of post-apprenticeship industry experience. |
@@ -4004,6 +4407,9 @@
 
 | Index Name | Columns | Unique |
 | :--- | :--- | :--- |
+| `IX_WorkplaceApprovalMentor_IsActive` | `IsActive` | No |
+| `IX_WorkplaceApprovalMentor_IsRatioEnforced` | `IsRatioEnforced` | No |
+| `IX_WorkplaceApprovalMentor_IsRatioExempt` | `IsRatioExempt` | No |
 | `IX_WorkplaceApprovalMentor_PersonId` | `PersonId` | No |
 | `IX_WorkplaceApprovalMentor_WorkplaceApprovalId` | `WorkplaceApprovalId` | No |
 

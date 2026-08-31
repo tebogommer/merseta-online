@@ -13,6 +13,7 @@
 - [project] UI/UX 5-Pillar Compliance: WCAG 2.2 AA (landmarks, aria-labels), NN/g 10 heuristics, ISO 9241, IxDF (>=36px targets), and Lighthouse Vitals → project-conventions.md
 - [project] Form Keybindings & Empty States: Ctrl+S to save, '/' to search, Esc to cancel, <EmptyStateCard> for empty tables → project-conventions.md
 - [project] CI Quality Gate: All changes must pass python scripts/ci_ux_quality_gate.py with 0 errors and >=90% clean pass → project-conventions.md
+- [project] Systemic Bug Remediation: Fix bugs across entire app and enforce regression tests to prevent recurrence → project-conventions.md
 - [project] Component metadata uses SemVer while toolkit releases use CalVer → tech-decisions.md
 
 

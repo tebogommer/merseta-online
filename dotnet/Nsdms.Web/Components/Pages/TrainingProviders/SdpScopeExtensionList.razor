@@ -4,13 +4,15 @@
 @inject ISdpScopeExtensionService ScopeService
 @inject NavigationManager Nav
 @inject ISnackbar Snackbar
+@inject IJSRuntime JS
+@rendermode InteractiveServer
 
 <PageTitle>SDP Extension of Scope &amp; Re-Accreditation | merSETA NSDMS</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
     <!-- Top Bar -->
     <MudCard Elevation="2" Class="mb-4">
-        <MudCardContent Class="d-flex align-center justify-space-between py-3">
+        <MudCardContent Class="d-flex flex-wrap align-center justify-space-between gap-3 py-3">
             <div>
                 <MudBreadcrumbs Items="_breadcrumbs" Class="pa-0 mb-1" />
                 <MudText Typo="Typo.h5" Class="fw-bold">SDP Extension of Scope &amp; Re-Accreditation</MudText>
@@ -18,9 +20,17 @@
                     Skills Development Provider (SDP) applications for additional qualification scope and 5-year cyclical re-accreditation reviews.
                 </MudText>
             </div>
-            <MudStack Row="true" Spacing="2">
+            <MudStack Row="true" Spacing="2" Class="align-center">
+                <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.FileDownload" OnClick="ExportCsvAsync">
+                    Export CSV
+                </MudButton>
+
                 <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadDataAsync">
                     Refresh
+                </MudButton>
+
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AddCircle" OnClick="@(() => Nav.NavigateTo("/sdp"))">
+                    Apply for Scope
                 </MudButton>
             </MudStack>
         </MudCardContent>
@@ -35,20 +45,33 @@
     <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Color="Color.Primary">
         <!-- Tab 1: Scope Extensions -->
         <MudTabPanel Text="Extension of Scope Applications" Icon="@Icons.Material.Filled.AddBusiness">
-            <MudTable Items="_extensions" Hover="true" Dense="true" Elevation="0"
-                      OnRowClick="@((TableRowClickEventArgs<SdpExtensionOfScope> e) => { if (e.Item?.Id > 0) Nav.NavigateTo($"/etqa/scope-extensions/{e.Item.Id}"); })"
-                      RowClass="cursor-pointer" T="SdpExtensionOfScope">
+            <MudTable Items="_extensions" Hover="true" Dense="true" Elevation="0" T="SdpExtensionOfScope">
                 <HeaderContent>
                     <MudTh>App #</MudTh>
                     <MudTh>Training Provider</MudTh>
                     <MudTh>Accreditation #</MudTh>
                     <MudTh>Inspection Req.</MudTh>
                     <MudTh>Status</MudTh>
-                    <MudTh Style="text-align: right;">Action</MudTh>
+                    <MudTh Style="text-align: right;">Actions</MudTh>
                 </HeaderContent>
                 <RowTemplate>
-                    <MudTd DataLabel="App #" Class="font-monospace fw-bold">@context.ApplicationNumber</MudTd>
-                    <MudTd DataLabel="Training Provider" Class="fw-semibold">@(context.TrainingProvider?.ProviderName ?? "SDP Provider")</MudTd>
+                    <MudTd DataLabel="App #" Class="font-monospace fw-bold">
+                        <MudLink Href="@($"/etqa/scope-extensions/{context.Id}")" Color="Color.Primary" Underline="Underline.Hover">
+                            @context.ApplicationNumber
+                        </MudLink>
+                    </MudTd>
+                    <MudTd DataLabel="Training Provider" Class="fw-semibold">
+                        @if (context.TrainingProviderId > 0)
+                        {
+                            <MudLink Href="@($"/sdp/{context.TrainingProviderId}")" Color="Color.Inherit" Underline="Underline.Hover">
+                                @(context.TrainingProvider?.ProviderName ?? "SDP Provider")
+                            </MudLink>
+                        }
+                        else
+                        {
+                            <span>@(context.TrainingProvider?.ProviderName ?? "SDP Provider")</span>
+                        }
+                    </MudTd>
                     <MudTd DataLabel="Accreditation #" Class="font-monospace">@(context.TrainingProvider?.AccreditationNumber ?? "N/A")</MudTd>
                     <MudTd DataLabel="Inspection Req.">
                         <MudCheckBox Value="context.SiteInspectionRequired" Color="Color.Info" ReadOnly="true" />
@@ -58,13 +81,25 @@
                             @context.StatusCode
                         </MudChip>
                     </MudTd>
-                    <MudTd DataLabel="Action" Style="text-align: right;">
-                        @if (context.StatusCode == "Submitted")
-                        {
-                            <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Filled.CheckCircle" OnClick="@(() => ApproveScopeAsync(context.Id))">
-                                Approve Scope
-                            </MudButton>
-                        }
+                    <MudTd DataLabel="Actions" Style="text-align: right;">
+                        <MudButtonGroup Size="Size.Small" Variant="Variant.Outlined">
+                            <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                           Color="Color.Primary"
+                                           Size="Size.Small"
+                                           OnClick="@(() => Nav.NavigateTo($"/etqa/scope-extensions/{context.Id}"))"
+                                           aria-label="View Scope Details"
+                                           Title="View Scope Details" />
+
+                            @if (context.StatusCode == "Submitted")
+                            {
+                                <MudIconButton Icon="@Icons.Material.Filled.CheckCircle"
+                                               Color="Color.Success"
+                                               Size="Size.Small"
+                                               OnClick="@(() => ApproveScopeAsync(context.Id))"
+                                               aria-label="Approve Scope"
+                                               Title="Approve Scope" />
+                            }
+                        </MudButtonGroup>
                     </MudTd>
                 </RowTemplate>
             </MudTable>
@@ -80,11 +115,22 @@
                     <MudTh>Requested Term</MudTh>
                     <MudTh>Audit Score</MudTh>
                     <MudTh>Status</MudTh>
-                    <MudTh Style="text-align: right;">Action</MudTh>
+                    <MudTh Style="text-align: right;">Actions</MudTh>
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd DataLabel="App #" Class="font-monospace fw-bold">@context.ApplicationNumber</MudTd>
-                    <MudTd DataLabel="Training Provider" Class="fw-semibold">@(context.TrainingProvider?.ProviderName ?? "SDP Provider")</MudTd>
+                    <MudTd DataLabel="Training Provider" Class="fw-semibold">
+                        @if (context.TrainingProviderId > 0)
+                        {
+                            <MudLink Href="@($"/sdp/{context.TrainingProviderId}")" Color="Color.Inherit" Underline="Underline.Hover">
+                                @(context.TrainingProvider?.ProviderName ?? "SDP Provider")
+                            </MudLink>
+                        }
+                        else
+                        {
+                            <span>@(context.TrainingProvider?.ProviderName ?? "SDP Provider")</span>
+                        }
+                    </MudTd>
                     <MudTd DataLabel="Current Expiry">@context.CurrentAccreditationEndDate.ToString("yyyy-MM-dd")</MudTd>
                     <MudTd DataLabel="Requested Term">@context.RequestedDurationYears Years</MudTd>
                     <MudTd DataLabel="Audit Score">
@@ -95,13 +141,18 @@
                             @context.StatusCode
                         </MudChip>
                     </MudTd>
-                    <MudTd DataLabel="Action" Style="text-align: right;">
-                        @if (context.StatusCode == "Submitted")
-                        {
-                            <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Filled.Verified" OnClick="@(() => ApproveReAccredAsync(context.Id))">
-                                Grant Re-Accreditation
-                            </MudButton>
-                        }
+                    <MudTd DataLabel="Actions" Style="text-align: right;">
+                        <MudButtonGroup Size="Size.Small" Variant="Variant.Outlined">
+                            @if (context.StatusCode == "Submitted")
+                            {
+                                <MudIconButton Icon="@Icons.Material.Filled.Verified"
+                                               Color="Color.Success"
+                                               Size="Size.Small"
+                                               OnClick="@(() => ApproveReAccredAsync(context.Id))"
+                                               aria-label="Grant Re-Accreditation"
+                                               Title="Grant Re-Accreditation" />
+                            }
+                        </MudButtonGroup>
                     </MudTd>
                 </RowTemplate>
             </MudTable>
@@ -170,5 +221,20 @@
         {
             Snackbar.Add($"Error: {ex.Message}", Severity.Error);
         }
+    }
+
+    private async Task ExportCsvAsync()
+    {
+        var csv = new System.Text.StringBuilder();
+        csv.AppendLine("ApplicationNumber,ProviderName,AccreditationNumber,InspectionRequired,Status");
+        foreach (var item in _extensions)
+        {
+            csv.AppendLine($"\"{item.ApplicationNumber}\",\"{item.TrainingProvider?.ProviderName}\",\"{item.TrainingProvider?.AccreditationNumber}\",{item.SiteInspectionRequired},\"{item.StatusCode}\"");
+        }
+
+        var bytes = System.Text.Encoding.UTF8.GetBytes(csv.ToString());
+        var base64 = Convert.ToBase64String(bytes);
+        await JS.InvokeVoidAsync("eval", $"const a = document.createElement('a'); a.href = 'data:text/csv;base64,{base64}'; a.download = 'SdpExtensions_{DateTime.UtcNow:yyyyMMdd}.csv'; a.click();");
+        Snackbar.Add("SDP Scope Extensions exported to CSV successfully.", Severity.Success);
     }
 }

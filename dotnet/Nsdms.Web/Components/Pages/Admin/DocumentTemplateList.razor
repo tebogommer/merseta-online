@@ -1,0 +1,264 @@
+@page "/admin/document-templates"
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Domain.Entities
+@inject IEnterpriseDocumentTemplateService TemplateService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>Enterprise Document Template Studio | merSETA NSDMS</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
+    <!-- Top Action Bar -->
+    <div class="d-flex align-center justify-space-between flex-wrap gap-4 mb-4">
+        <div>
+            <div class="d-flex align-center gap-2">
+                <MudText Typo="Typo.h5" Class="font-weight-bold">Enterprise Document Template Studio</MudText>
+                <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Filled">Option A Engine</MudChip>
+            </div>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                Manage statutory letter templates, trade test certificates, outcome notices, and clause compositions across all financial years.
+            </MudText>
+        </div>
+
+        <div class="d-flex align-center gap-2">
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Security"
+                       OnClick="@(() => Navigation.NavigateTo("/admin/document-snapshots"))">
+                Document Security Hub
+            </MudButton>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="OpenCreateTemplateDialog">
+                New Document Template
+            </MudButton>
+        </div>
+    </div>
+
+    <!-- Filters & Search -->
+    <MudPaper Elevation="1" Class="pa-4 mb-4 rounded-lg">
+        <MudGrid>
+            <MudItem xs="12" md="4">
+                <MudTextField @bind-Value="_searchString"
+                              Placeholder="Search by template code, title, or type..."
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              Immediate="true"
+                              Clearable="true" />
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudSelect T="string" Label="Filter Category" @bind-Value="_selectedCategory" Clearable="true">
+                    <MudSelectItem Value="@("All")">All Categories</MudSelectItem>
+                    <MudSelectItem Value="@("MandatoryGrant")">Mandatory Grant (WSP)</MudSelectItem>
+                    <MudSelectItem Value="@("TradeTest")">Trade Test &amp; ARPL</MudSelectItem>
+                    <MudSelectItem Value="@("EtqaAccreditation")">ETQA Accreditation</MudSelectItem>
+                    <MudSelectItem Value="@("FinanceAudit")">Finance &amp; Audits</MudSelectItem>
+                    <MudSelectItem Value="@("General")">General</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudSelect T="int?" Label="Financial Year" @bind-Value="_selectedYear" Clearable="true">
+                    <MudSelectItem T="int?" Value="@((int?)null)">All Years</MudSelectItem>
+                    <MudSelectItem T="int?" Value="@(2027)">2027</MudSelectItem>
+                    <MudSelectItem T="int?" Value="@(2026)">2026</MudSelectItem>
+                    <MudSelectItem T="int?" Value="@(2025)">2025</MudSelectItem>
+                    <MudSelectItem T="int?" Value="@(2024)">2024</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="2" Class="d-flex align-center">
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadTemplates" FullWidth="true">
+                    Refresh
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    <!-- Templates Data Table -->
+    <MudTable Items="@FilteredTemplates"
+              Hover="true"
+              Striped="true"
+              Dense="true"
+              Loading="@_loading"
+              Elevation="2"
+              Class="rounded-lg"
+              OnRowClick="@((TableRowClickEventArgs<DocumentTemplate> args) => NavigateToDetail(args.Item?.Id ?? 0))"
+              T="DocumentTemplate">
+        <HeaderContent>
+            <MudTh>Code</MudTh>
+            <MudTh>Template Title</MudTh>
+            <MudTh>Category</MudTh>
+            <MudTh>Type Code</MudTh>
+            <MudTh>Fin Year</MudTh>
+            <MudTh>Version</MudTh>
+            <MudTh>Sections</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh>Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Code">
+                <MudLink Href="@($"/admin/document-templates/{context.Id}")" Typo="Typo.body2" Class="font-weight-bold">
+                    @context.TemplateCode
+                </MudLink>
+            </MudTd>
+            <MudTd DataLabel="Title">
+                <MudText Typo="Typo.body2">@context.TemplateTitle</MudText>
+            </MudTd>
+            <MudTd DataLabel="Category">
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary">
+                    @context.DocumentCategory
+                </MudChip>
+            </MudTd>
+            <MudTd DataLabel="Type Code">
+                <code>@context.DocumentTypeCode</code>
+            </MudTd>
+            <MudTd DataLabel="Fin Year">@context.FinancialYear</MudTd>
+            <MudTd DataLabel="Version">
+                <MudBadge Content="@($"v{context.VersionNumber}")" Color="Color.Info" Overlap="false" Class="mr-2" />
+            </MudTd>
+            <MudTd DataLabel="Sections">
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default">
+                    @context.Sections.Count sections
+                </MudChip>
+            </MudTd>
+            <MudTd DataLabel="Status">
+                <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.ApprovalStatus)" Variant="Variant.Filled">
+                    @context.ApprovalStatus
+                </MudChip>
+            </MudTd>
+            <MudTd DataLabel="Actions">
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Primary" OnClick="@(() => NavigateToDetail(context.Id))" Title="Edit Template" />
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Typo="Typo.body1" Class="pa-4 text-center">No document templates found matching current criteria.</MudText>
+        </NoRecordsContent>
+    </MudTable>
+</MudContainer>
+
+<!-- Create Template Dialog -->
+<MudDialog @bind-Visible="_createDialogOpen" Options="_dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.Add" Class="mr-2" /> New Document Template</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form" @bind-IsValid="_formValid">
+            <MudTextField @bind-Value="_newTemplate.TemplateCode" Label="Template Code (e.g. WSP-APPROVAL-2027)" Required="true" Variant="Variant.Outlined" Class="mb-3" />
+            <MudTextField @bind-Value="_newTemplate.TemplateTitle" Label="Template Title" Required="true" Variant="Variant.Outlined" Class="mb-3" />
+            <MudGrid Class="mb-3">
+                <MudItem xs="6">
+                    <MudSelect T="string" Label="Document Category" @bind-Value="_newTemplate.DocumentCategory" Required="true" Variant="Variant.Outlined">
+                        <MudSelectItem Value="@("MandatoryGrant")">Mandatory Grant (WSP)</MudSelectItem>
+                        <MudSelectItem Value="@("TradeTest")">Trade Test &amp; ARPL</MudSelectItem>
+                        <MudSelectItem Value="@("EtqaAccreditation")">ETQA Accreditation</MudSelectItem>
+                        <MudSelectItem Value="@("FinanceAudit")">Finance &amp; Audits</MudSelectItem>
+                        <MudSelectItem Value="@("General")">General</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudTextField @bind-Value="_newTemplate.DocumentTypeCode" Label="Document Type Code (e.g. WspApprovalLetter)" Required="true" Variant="Variant.Outlined" />
+                </MudItem>
+            </MudGrid>
+            <MudGrid Class="mb-3">
+                <MudItem xs="6">
+                    <MudNumericField @bind-Value="_newTemplate.FinancialYear" Label="Financial Year" Min="2020" Max="2035" Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="6">
+                    <MudTextField @bind-Value="_newTemplate.VersionNumber" Label="Version Number (e.g. 1.0.0)" Variant="Variant.Outlined" />
+                </MudItem>
+            </MudGrid>
+            <MudTextField @bind-Value="_newTemplate.FooterDisclaimerText" Label="Footer Disclaimer Text" Variant="Variant.Outlined" Lines="2" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _createDialogOpen = false)">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateTemplateAsync" Disabled="!_formValid">Create Template</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private List<DocumentTemplate> _templates = new();
+    private bool _loading = true;
+    private string _searchString = string.Empty;
+    private string _selectedCategory = "All";
+    private int? _selectedYear;
+
+    private bool _createDialogOpen = false;
+    private bool _formValid = false;
+    private MudForm? _form;
+    private DocumentTemplate _newTemplate = new() { FinancialYear = 2026, DocumentCategory = "MandatoryGrant", DocumentTypeCode = "WspApprovalLetter", VersionNumber = "1.0.0" };
+    private readonly DialogOptions _dialogOptions = new() { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTemplates();
+    }
+
+    private async Task LoadTemplates()
+    {
+        _loading = true;
+        try
+        {
+            _templates = await TemplateService.GetTemplatesAsync(_selectedCategory == "All" ? null : _selectedCategory, _selectedYear);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading templates: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private IEnumerable<DocumentTemplate> FilteredTemplates => _templates.Where(t =>
+    {
+        if (string.IsNullOrWhiteSpace(_searchString)) return true;
+        return t.TemplateCode.Contains(_searchString, StringComparison.OrdinalIgnoreCase)
+            || t.TemplateTitle.Contains(_searchString, StringComparison.OrdinalIgnoreCase)
+            || t.DocumentTypeCode.Contains(_searchString, StringComparison.OrdinalIgnoreCase);
+    });
+
+    private void OpenCreateTemplateDialog()
+    {
+        _newTemplate = new DocumentTemplate
+        {
+            FinancialYear = 2026,
+            DocumentCategory = "MandatoryGrant",
+            DocumentTypeCode = "WspApprovalLetter",
+            VersionNumber = "1.0.0",
+            ApprovalStatus = "Draft",
+            IsActive = true
+        };
+        _createDialogOpen = true;
+    }
+
+    private async Task CreateTemplateAsync()
+    {
+        try
+        {
+            var created = await TemplateService.CreateTemplateAsync(_newTemplate, "Admin");
+            Snackbar.Add($"Template {created.TemplateCode} created successfully.", Severity.Success);
+            _createDialogOpen = false;
+            Navigation.NavigateTo($"/admin/document-templates/{created.Id}");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error creating template: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void NavigateToDetail(int id)
+    {
+        if (id > 0) Navigation.NavigateTo($"/admin/document-templates/{id}");
+    }
+
+    private static Color GetStatusColor(string? status) => status switch
+    {
+        "Approved" => Color.Success,
+        "Draft" => Color.Warning,
+        "UnderReview" => Color.Info,
+        "Sunset" or "Archived" => Color.Default,
+        _ => Color.Default
+    };
+}

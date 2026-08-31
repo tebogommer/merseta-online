@@ -1,9 +1,12 @@
 @page "/governance/meetings/{Id:int}"
+@page "/governance/meetings/{Id:int}/edit"
 @using Nsdms.Application.Common.Interfaces
 @using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
 @inject IReviewCommitteeService CommitteeService
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
+@rendermode InteractiveServer
 
 <PageTitle>@(_meeting != null ? $"Meeting {_meeting.MeetingNumber} | merSETA NSDMS" : "Review Committee Meeting | merSETA NSDMS")</PageTitle>
 
@@ -18,36 +21,42 @@ else
 {
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
     <!-- Sticky Top Bar -->
-    <MudCard Elevation="2" Class="mb-4 sticky-top-header" Style="position: sticky; top: var(--mud-appbar-height, 64px) !important; z-index: 10;">
-        <MudCardContent Class="d-flex align-center justify-space-between py-3">
-            <div class="d-flex align-center gap-3">
-                <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Default" OnClick="@(() => Navigation.NavigateTo("/governance/meetings"))" />
-                <div>
-                    <MudBreadcrumbs Items="_breadcrumbs" Class="pa-0 mb-1" />
-                    <MudText Typo="Typo.h5" Class="fw-bold">@_meeting.Title</MudText>
-                </div>
+    <MudPaper Elevation="1" Class="sticky-top pa-4 mb-4 rounded-lg d-flex flex-wrap justify-space-between align-center gap-3" Style="top: var(--mud-appbar-height, 64px); z-index: 10;">
+        <div class="d-flex align-center gap-3">
+            <MudButton Variant="Variant.Text"
+                       StartIcon="@Icons.Material.Filled.ArrowBack"
+                       Color="Color.Default"
+                       OnClick="@(() => Navigation.NavigateTo("/governance/meetings"))"
+                       aria-label="Back to Meetings">
+                Back to Meetings
+            </MudButton>
+            <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-2" />
+            <div>
+                <MudBreadcrumbs Items="_breadcrumbs" Class="pa-0 mb-1" />
+                <MudText Typo="Typo.h5" Class="fw-bold">@_meeting.Title</MudText>
             </div>
-            <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
-                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Cancel" OnClick="@(() => Navigation.NavigateTo("/governance/meetings"))">
-                    Cancel
+        </div>
+        <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Cancel" OnClick="@(() => Navigation.NavigateTo("/governance/meetings"))" aria-label="Cancel">
+                Cancel
+            </MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveMeetingAsync" aria-label="Save Meeting Details">
+                Save
+            </MudButton>
+            <MudChip T="string" Color="@(_meeting.StatusCode == "Concluded" ? Color.Success : Color.Primary)" Variant="Variant.Filled">
+                @_meeting.StatusCode
+            </MudChip>
+            @if (_meeting.StatusCode != "Concluded")
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Check" OnClick="ConcludeMeetingAsync" aria-label="Conclude Meeting">
+                    Conclude Meeting
                 </MudButton>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveMeetingAsync">
-                    Save
-                </MudButton>
-                <MudChip T="string" Color="@(_meeting.StatusCode == "Concluded" ? Color.Success : Color.Primary)" Variant="Variant.Filled">
-                    @_meeting.StatusCode
-                </MudChip>
-                @if (_meeting.StatusCode != "Concluded")
-                {
-                    <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Check" OnClick="ConcludeMeetingAsync">
-                        Conclude Meeting
-                    </MudButton>
-                }
-            </MudStack>
-        </MudCardContent>
-    </MudCard>
+            }
+        </MudStack>
+    </MudPaper>
 
     <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6" Color="Color.Primary">
+        <!-- TAB 1: Meeting Overview -->
         <MudTabPanel Text="Meeting Overview" Icon="@Icons.Material.Filled.Info">
             <MudGrid>
                 <MudItem xs="12" md="6">
@@ -65,10 +74,11 @@ else
             </MudGrid>
         </MudTabPanel>
 
+        <!-- TAB 2: Agendas & Resolutions -->
         <MudTabPanel Text="Agendas &amp; Resolutions" Icon="@Icons.Material.Filled.ListAlt">
             <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-3">
                 <MudText Typo="Typo.h6">Adjudication Agendas</MudText>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="AddAgendaItemAsync">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="AddAgendaItemAsync" aria-label="Add Agenda Item">
                     Add Agenda Item
                 </MudButton>
             </MudStack>
@@ -101,13 +111,28 @@ else
                     <MudTd DataLabel="Action" Style="text-align: right;">
                         @if (context.DecisionCode == "Pending")
                         {
-                            <MudButton Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small" OnClick="@(() => ApproveAgendaAsync(context.Id))">
+                            <MudButton Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small" OnClick="@(() => ApproveAgendaAsync(context.Id))" aria-label="Approve Resolution">
                                 Approve Resolution
                             </MudButton>
                         }
                     </MudTd>
                 </RowTemplate>
+                <NoRecordsContent>
+                    <div class="pa-4 text-center">
+                        <MudText Typo="Typo.body2" Color="Color.Secondary">No agenda items added yet.</MudText>
+                    </div>
+                </NoRecordsContent>
             </MudTable>
+        </MudTabPanel>
+
+        <!-- TAB 3: Evidence Vault -->
+        <MudTabPanel Text="Meeting Packs &amp; Minutes" Icon="@Icons.Material.Filled.FolderZip">
+            <DocumentVault TargetEntityName="ReviewCommitteeMeeting" TargetEntityId="@Id" />
+        </MudTabPanel>
+
+        <!-- TAB 4: Workflow Timeline -->
+        <MudTabPanel Text="Workflow History" Icon="@Icons.Material.Filled.History">
+            <WorkflowTimeline ProcessCode="COMMITTEE_MEETING" EntityId="@Id" />
         </MudTabPanel>
     </MudTabs>
 </MudContainer>

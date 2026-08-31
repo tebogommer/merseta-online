@@ -105,6 +105,43 @@ public class AuxiliaryEnterpriseServicesTests
     }
 
     [Fact]
+    public async Task SdfAppointment_PrimarySupersession_WhenNewPrimaryApproved()
+    {
+        var (factory, db, audit) = CreateContext();
+        var sdfService = new SdfAppointmentService(factory, audit);
+
+        var org = new Organisation { CompanyName = "Bell Equipment SA", SdlNumber = "L998877665" };
+        var person1 = new Person { FirstName = "John", LastName = "Doe", RsaIdNumber = "8501015000087", Email = "john.doe@bell.co.za" };
+        var person2 = new Person { FirstName = "Jane", LastName = "Smith", RsaIdNumber = "9002025000088", Email = "jane.smith@bell.co.za" };
+        db.Organisations.Add(org);
+        db.People.AddRange(person1, person2);
+        await db.SaveChangesAsync();
+
+        // 1. Submit and approve first primary SDF
+        var appt1 = await sdfService.SubmitSdfAppointmentAsync(org.Id, person1.Id, "Primary", DateTime.UtcNow.AddYears(-1), "/docs/sdf1.pdf", true, true, "CEO");
+        await sdfService.ApproveSdfAppointmentAsync(appt1.Id, "Initial SDF appointment.", "CLO");
+
+        var approved1 = await db.SdfCompanies.FindAsync(appt1.Id);
+        Assert.Equal("Approved", approved1!.SdfStatusCode);
+
+        // 2. Submit and approve second primary SDF for same org
+        var appt2 = await sdfService.SubmitSdfAppointmentAsync(org.Id, person2.Id, "Primary", DateTime.UtcNow, "/docs/sdf2.pdf", true, true, "CEO");
+        await sdfService.ApproveSdfAppointmentAsync(appt2.Id, "New SDF appointment.", "CLO");
+
+        // 3. Assert first SDF is now Superseded with end date and history
+        using var verifyDb = (NsdmsDbContext)factory.CreateDbContext();
+        var updated1 = await verifyDb.SdfCompanies.FindAsync(appt1.Id);
+        var updated2 = await verifyDb.SdfCompanies.FindAsync(appt2.Id);
+
+        Assert.Equal("Superseded", updated1!.SdfStatusCode);
+        Assert.NotNull(updated1.AppointmentEndDate);
+        Assert.Equal("Approved", updated2!.SdfStatusCode);
+
+        var history1 = await verifyDb.SdfAppointmentHistories.Where(h => h.SdfCompanyId == appt1.Id).ToListAsync();
+        Assert.Contains(history1, h => h.NewStatusCode == "Superseded");
+    }
+
+    [Fact]
     public async Task ContractVariation_AddendaCreation_And_ExecutiveApproval()
     {
         var (factory, db, audit) = CreateContext();

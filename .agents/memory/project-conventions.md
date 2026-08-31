@@ -1,7 +1,7 @@
 ---
 type: project
 created: 2026-05-25
-updated: 2026-08-30
+updated: 2026-08-31
 ---
 
 # Project Conventions
@@ -62,5 +62,10 @@ updated: 2026-08-30
 ## EF Core Nullability & SETMIS Schema Resilience Standard
 - **Optional Relational Codes**: In EF Core entities representing legacy or SETMIS records (`LearnerTradeTest`, `CompanyLearner`, `Person`, `TrainingProvider`), declare all optional foreign key string properties as nullable (`string?`) to prevent `SqlNullValueException` when existing database rows contain NULLs.
 - **Explicit Singular Table Names**: When defining new `DbSet<T>` properties in `INsdmsDbContext` and `NsdmsDbContext`, always configure `modelBuilder.Entity<T>().ToTable("SingularName")` in Fluent API to ensure EF Core does not default to plural table names.
+
+## Systemic Bug Remediation & Zero-Regression Standard
+- **System-Wide Fix Enforcement**: When a bug or defect is identified and fixed, never fix it as an isolated one-off. Proactively search for and remediate the exact root-cause pattern across all related components, services, and routes throughout the application.
+- **Zero-Regression Safeguards**: Reinforce every bug fix with automated unit/integration/E2E regression tests, schema constraints, or architectural invariants to ensure the defect never reoccurs.
+
 
 

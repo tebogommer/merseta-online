@@ -1,0 +1,127 @@
+@namespace Nsdms.Web.Components.Shared
+@using MudBlazor
+@using Nsdms.Application.Common.Interfaces
+@inject INavigationMenuService NavService
+@inject ISnackbar Snackbar
+
+<div class="d-flex align-center gap-1">
+    <MudMenu AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" Dense="true" AriaLabel="Active Persona Context Switcher" Title="Switch Active Persona Context">
+        <ActivatorContent>
+            <MudButton Variant="Variant.Filled" 
+                       Color="@GetPersonaButtonColor(ActivePersona)" 
+                       Size="Size.Small" 
+                       StartIcon="@GetPersonaIcon(ActivePersona)" 
+                       EndIcon="@Icons.Material.Filled.ArrowDropDown"
+                       Class="text-none font-weight-medium rounded-pill px-3 py-1 d-none d-sm-inline-flex"
+                       Style="font-size: 0.76rem; letter-spacing: -0.01em; border: 1px solid rgba(255, 255, 255, 0.2);">
+                <span>@GetShortPersonaLabel(ActivePersona)</span>
+            </MudButton>
+        </ActivatorContent>
+        <ChildContent>
+            <div class="pa-3" style="min-width: 290px;">
+                <div class="d-flex align-center justify-space-between mb-2">
+                    <div class="d-flex align-center gap-2">
+                        <MudIcon Icon="@Icons.Material.Filled.Badge" Color="Color.Primary" Size="Size.Small" />
+                        <MudText Typo="Typo.subtitle2" Class="fw-bold">Active Role Persona</MudText>
+                    </div>
+                    <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary" Class="px-1 py-0" Style="font-size: 0.65rem;">
+                        Multi-Role Filter
+                    </MudChip>
+                </div>
+                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block mb-2">
+                    Select a workspace persona to filter navigation or view all combined role capabilities.
+                </MudText>
+                <MudDivider Class="my-2" />
+                <MudList T="string" Dense="true" Clickable="true">
+                    @foreach (var persona in _availablePersonas)
+                    {
+                        var isCurrent = persona.Equals(ActivePersona, StringComparison.OrdinalIgnoreCase);
+                        <MudListItem T="string" OnClick="@(() => HandleSelectPersona(persona))" Class="@(isCurrent ? "mud-theme-primary rounded px-2" : "rounded px-2")">
+                            <div class="d-flex align-center justify-space-between py-1">
+                                <div class="d-flex align-center gap-2">
+                                    <MudIcon Icon="@GetPersonaIcon(persona)" Size="Size.Small" Color="@(isCurrent ? Color.Inherit : Color.Secondary)" />
+                                    <MudText Typo="Typo.caption" Class="@(isCurrent ? "font-weight-bold text-white" : "font-weight-medium")">
+                                        @persona
+                                    </MudText>
+                                </div>
+                                @if (isCurrent)
+                                {
+                                    <MudIcon Icon="@Icons.Material.Filled.Check" Size="Size.Small" Color="Color.Inherit" />
+                                }
+                            </div>
+                        </MudListItem>
+                    }
+                </MudList>
+            </div>
+        </ChildContent>
+    </MudMenu>
+</div>
+
+@code {
+    [Parameter]
+    public string ActivePersona { get; set; } = "All Roles (Unified)";
+
+    [Parameter]
+    public EventCallback<string> OnPersonaChanged { get; set; }
+
+    private List<string> _availablePersonas = new();
+
+    protected override void OnInitialized()
+    {
+        _availablePersonas = NavService.GetPredefinedPersonas();
+    }
+
+    private async Task HandleSelectPersona(string persona)
+    {
+        ActivePersona = persona;
+        Snackbar.Add($"🔀 Switched active workspace to: {persona}", Severity.Info);
+        if (OnPersonaChanged.HasDelegate)
+        {
+            await OnPersonaChanged.InvokeAsync(persona);
+        }
+    }
+
+    private string GetShortPersonaLabel(string persona)
+    {
+        if (string.IsNullOrWhiteSpace(persona) || persona.StartsWith("All", StringComparison.OrdinalIgnoreCase))
+            return "All Roles (Unified)";
+        if (persona.Contains("SDF", StringComparison.OrdinalIgnoreCase))
+            return "SDF Workspace";
+        if (persona.Contains("Finance", StringComparison.OrdinalIgnoreCase))
+            return "Finance Workspace";
+        if (persona.Contains("Assessor", StringComparison.OrdinalIgnoreCase))
+            return "Assessor & QA";
+        if (persona.Contains("Provider", StringComparison.OrdinalIgnoreCase) || persona.Contains("SDP", StringComparison.OrdinalIgnoreCase))
+            return "SDP Workspace";
+        if (persona.Contains("CLO", StringComparison.OrdinalIgnoreCase))
+            return "CLO Liaison";
+        if (persona.Contains("Executive", StringComparison.OrdinalIgnoreCase))
+            return "Executive BI";
+        if (persona.Contains("Admin", StringComparison.OrdinalIgnoreCase))
+            return "Admin Control";
+        return persona;
+    }
+
+    private string GetPersonaIcon(string persona)
+    {
+        if (persona.StartsWith("All", StringComparison.OrdinalIgnoreCase)) return Icons.Material.Filled.Layers;
+        if (persona.Contains("SDF", StringComparison.OrdinalIgnoreCase)) return Icons.Material.Filled.Badge;
+        if (persona.Contains("Finance", StringComparison.OrdinalIgnoreCase)) return Icons.Material.Filled.AccountBalance;
+        if (persona.Contains("Assessor", StringComparison.OrdinalIgnoreCase)) return Icons.Material.Filled.VerifiedUser;
+        if (persona.Contains("Provider", StringComparison.OrdinalIgnoreCase) || persona.Contains("SDP", StringComparison.OrdinalIgnoreCase)) return Icons.Material.Filled.School;
+        if (persona.Contains("CLO", StringComparison.OrdinalIgnoreCase)) return Icons.Material.Filled.SupportAgent;
+        if (persona.Contains("Executive", StringComparison.OrdinalIgnoreCase)) return Icons.Material.Filled.Insights;
+        if (persona.Contains("Admin", StringComparison.OrdinalIgnoreCase)) return Icons.Material.Filled.AdminPanelSettings;
+        return Icons.Material.Filled.Person;
+    }
+
+    private Color GetPersonaButtonColor(string persona)
+    {
+        if (persona.StartsWith("All", StringComparison.OrdinalIgnoreCase)) return Color.Primary;
+        if (persona.Contains("SDF", StringComparison.OrdinalIgnoreCase)) return Color.Info;
+        if (persona.Contains("Finance", StringComparison.OrdinalIgnoreCase)) return Color.Success;
+        if (persona.Contains("Assessor", StringComparison.OrdinalIgnoreCase)) return Color.Warning;
+        if (persona.Contains("Provider", StringComparison.OrdinalIgnoreCase) || persona.Contains("SDP", StringComparison.OrdinalIgnoreCase)) return Color.Secondary;
+        return Color.Primary;
+    }
+}

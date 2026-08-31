@@ -1,11 +1,16 @@
 @page "/workplace-approvals/{Id:int}"
 @page "/workplace-approvals/{Id:int}/edit"
 @page "/workplace-approvals/create"
+@using Nsdms.Application.Common.Models
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
 @using Nsdms.Web.Components.Shared
 @rendermode InteractiveServer
 @inject IWorkplaceApprovalService ApprovalService
+@inject IMentorRatioPolicyEngine RatioEngine
 @inject IOrganisationService OrganisationService
 @inject IPersonService PersonService
+@inject IVisitService VisitService
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 
@@ -14,36 +19,48 @@
 <!-- STICKY TOP BAR -->
 <MudPaper Elevation="2" Class="sticky-top pa-4 mb-4 rounded-lg bg-surface d-flex justify-space-between align-center" Style="top: var(--mud-appbar-height, 64px); z-index: 10;">
     <div class="d-flex align-center gap-3">
-        <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Default" OnClick="@(() => Navigation.NavigateTo("/workplace-approvals"))" Title="Back to List" />
+        <MudButton Variant="Variant.Text"
+                   StartIcon="@Icons.Material.Filled.ArrowBack"
+                   Color="Color.Default"
+                   OnClick="@(() => Navigation.NavigateTo("/workplace-approvals"))"
+                   aria-label="Back to Workplace Approvals">
+            Back to Approvals
+        </MudButton>
+        <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-2" />
+        <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Small">
+            <MudIcon Icon="@Icons.Material.Filled.HomeRepairService" Size="Size.Small" />
+        </MudAvatar>
         <div>
-            <MudBreadcrumbs Items="_breadcrumbItems" Class="pa-0 ma-0" />
-            <MudText Typo="Typo.h5" Class="fw-bold">
-                @(IsNew ? "Create Workplace Approval Application" : $"Workplace Approval: {_approval.ApprovalNumber}")
-            </MudText>
+            <div class="d-flex align-center gap-2">
+                <MudText Typo="Typo.h5" Class="fw-bold">
+                    @(IsNew ? "Create Workplace Approval Application" : $"Workplace Approval: {_approval.ApprovalNumber}")
+                </MudText>
+                @if (!IsNew)
+                {
+                    <MudChip T="string" Color="@GetStatusColor(_approval.ApprovalStatusCode)" Size="Size.Small" Variant="Variant.Filled">
+                        @_approval.ApprovalStatusCode
+                    </MudChip>
+                }
+            </div>
+            @if (!IsNew)
+            {
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    Employer: <strong>@(_approval.Organisation?.CompanyName ?? "Organisation")</strong> |
+                    Trade: <strong>@_approval.QualificationTitle</strong> |
+                    Site: <strong>@(_approval.OrganisationSite?.SiteName ?? "Main Plant")</strong>
+                </MudText>
+            }
         </div>
     </div>
     <div class="d-flex gap-2 align-center">
         @if (!IsNew)
         {
-            @if (_approval.ApprovalStatusCode == "Approved" || _approval.ApprovalStatusCode == "APPROVED")
-            {
-                <MudChip T="string" Color="Color.Success" Variant="Variant.Filled" Icon="@Icons.Material.Filled.CheckCircle">Approved</MudChip>
-            }
-            else if (_approval.ApprovalStatusCode == "AUDITED" || _approval.ApprovalStatusCode == "AUDIT_SCHEDULED")
-            {
-                <MudChip T="string" Color="Color.Info" Variant="Variant.Filled" Icon="@Icons.Material.Filled.FactCheck">Audit Completed</MudChip>
-            }
-            else
-            {
-                <MudChip T="string" Color="Color.Warning" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Schedule">@_approval.ApprovalStatusCode</MudChip>
-            }
-
-            <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="DeleteAsync">
+            <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="DeleteAsync" aria-label="Delete Approval">
                 Delete
             </MudButton>
         }
 
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveAsync" Disabled="_saving">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveAsync" Disabled="_saving" aria-label="Save Approval">
             @if (_saving)
             {
                 <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
@@ -75,100 +92,221 @@
 
 @if (_loading)
 {
-    <div class="d-flex justify-center my-8">
-        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
-    </div>
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-6" />
 }
 else
 {
-    <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6" Color="Color.Primary">
+    <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Color="Color.Surface" @bind-ActivePanelIndex="_activeTabIndex">
+        
         <!-- TAB 1: MASTER APPLICATION DETAILS -->
-        <MudTabPanel Text="Workplace Details" Icon="@Icons.Material.Filled.FactCheck">
-            <MudCard Outlined="true" Class="mb-4">
-                <MudCardHeader>
-                    <CardHeaderContent>
-                        <MudText Typo="Typo.h6" Class="fw-bold">Host Employer &amp; Trade Scope</MudText>
-                    </CardHeaderContent>
-                </MudCardHeader>
-                <MudCardContent>
-                    <MudGrid>
-                        <MudItem xs="12" md="6">
-                            <MudSelect T="int" @bind-Value="_approval.OrganisationId" Label="Host Employer / Organisation" Variant="Variant.Outlined" Required="true">
-                                <MudSelectItem Value="0">-- Select Employer --</MudSelectItem>
-                                @foreach (var org in _organisations)
-                                {
-                                    <MudSelectItem Value="@org.Id">@org.CompanyName (@org.SdlNumber)</MudSelectItem>
-                                }
-                            </MudSelect>
-                        </MudItem>
-                        <MudItem xs="12" md="6">
-                            <MudTextField @bind-Value="_approval.ApprovalNumber" Label="Approval Reference Number" Variant="Variant.Outlined" ReadOnly="!IsNew" HelperText="Auto-generated upon creation" />
-                        </MudItem>
+        <MudTabPanel Text="Workplace & Scope" Icon="@Icons.Material.Filled.FactCheck">
+            <MudCard Outlined="true" Class="pa-4">
+                <MudGrid Spacing="3">
+                    <MudItem xs="12" md="6">
+                        <MudSelect T="int" @bind-Value="_approval.OrganisationId" Label="Host Employer / Organisation" Variant="Variant.Outlined" Required="true">
+                            <MudSelectItem Value="0">-- Select Employer --</MudSelectItem>
+                            @foreach (var org in _organisations)
+                            {
+                                <MudSelectItem Value="@org.Id">@org.CompanyName (@org.SdlNumber)</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField @bind-Value="_approval.ApprovalNumber" Label="Approval Reference Number" Variant="Variant.Outlined" ReadOnly="!IsNew" HelperText="Auto-generated upon creation" />
+                    </MudItem>
 
-                        <MudItem xs="12" md="8">
-                            <MudTextField @bind-Value="_approval.QualificationTitle" Label="Qualification / Trade Scope" Variant="Variant.Outlined" Required="true"
-                                          Placeholder="e.g. Automotive Motor Mechanic, Boilermaker, Electrician, Fitter &amp; Turner" />
-                        </MudItem>
-                        <MudItem xs="12" md="4">
-                            <MudNumericField @bind-Value="_approval.SaqaQualificationId" Label="SAQA Qualification ID" Variant="Variant.Outlined" />
-                        </MudItem>
+                    <MudItem xs="12" md="8">
+                        <MudTextField @bind-Value="_approval.QualificationTitle" Label="Qualification / Trade Scope" Variant="Variant.Outlined" Required="true"
+                                      Placeholder="e.g. Automotive Motor Mechanic, Boilermaker, Electrician, Fitter &amp; Turner" />
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        <MudNumericField @bind-Value="_approval.SaqaQualificationId" Label="SAQA Qualification ID" Variant="Variant.Outlined" />
+                    </MudItem>
 
-                        <MudItem xs="12" md="4">
-                            <MudDatePicker @bind-Date="_inspectionDate" Label="Site Inspection Date" Variant="Variant.Outlined" />
-                        </MudItem>
-                        <MudItem xs="12" md="4">
-                            <MudDatePicker @bind-Date="_approvalDate" Label="Approval Granted Date" Variant="Variant.Outlined" />
-                        </MudItem>
-                        <MudItem xs="12" md="4">
-                            <MudDatePicker @bind-Date="_expiryDate" Label="Accreditation Expiry Date" Variant="Variant.Outlined" />
-                        </MudItem>
+                    <MudItem xs="12" md="4">
+                        <MudDatePicker @bind-Date="_inspectionDate" Label="Site Inspection Date" Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        <MudDatePicker @bind-Date="_approvalDate" Label="Approval Granted Date" Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" md="4">
+                        <MudDatePicker @bind-Date="_expiryDate" Label="Accreditation Expiry Date" Variant="Variant.Outlined" />
+                    </MudItem>
 
-                        <MudItem xs="12" md="6">
-                            <MudSelect T="int?" @bind-Value="_approval.ContactPersonId" Label="Mandatory Employer Contact Person" Variant="Variant.Outlined" Required="true" RequiredError="Employer Contact Person must be selected per visit governance rules" Clearable="true">
-                                <MudSelectItem Value="@((int?)null)">-- Select Employer Contact Person --</MudSelectItem>
-                                @foreach (var person in _people)
-                                {
-                                    <MudSelectItem Value="@((int?)person.Id)">@person.FullName (@(person.RsaIdNumber ?? person.Email))</MudSelectItem>
-                                }
-                            </MudSelect>
-                        </MudItem>
-                        <MudItem xs="12" md="6">
-                            <MudSelect T="int?" @bind-Value="_approval.AssessorPersonId" Label="Evaluating Assessor / Inspector" Variant="Variant.Outlined" Clearable="true">
-                                <MudSelectItem Value="@((int?)null)">-- Select Assessor --</MudSelectItem>
-                                @foreach (var person in _people)
-                                {
-                                    <MudSelectItem Value="@((int?)person.Id)">@person.FullName (@person.RsaIdNumber)</MudSelectItem>
-                                }
-                            </MudSelect>
-                        </MudItem>
-                        <MudItem xs="12" md="12">
-                            <MudSelect T="string" @bind-Value="_approval.ApprovalStatusCode" Label="Approval Status" Variant="Variant.Outlined">
-                                <MudSelectItem Value="@("DRAFT")">Draft</MudSelectItem>
-                                <MudSelectItem Value="@("AUDIT_SCHEDULED")">Audit Scheduled</MudSelectItem>
-                                <MudSelectItem Value="@("AUDITED")">Audited</MudSelectItem>
-                                <MudSelectItem Value="@("APPROVED")">Approved</MudSelectItem>
-                                <MudSelectItem Value="@("REJECTED")">Rejected</MudSelectItem>
-                                <MudSelectItem Value="@("EXPIRED")">Expired</MudSelectItem>
-                            </MudSelect>
-                        </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudSelect T="int?" @bind-Value="_approval.ContactPersonId" Label="Mandatory Employer Contact Person" Variant="Variant.Outlined" Required="true" RequiredError="Employer Contact Person must be selected per visit governance rules" Clearable="true">
+                            <MudSelectItem Value="@((int?)null)">-- Select Employer Contact Person --</MudSelectItem>
+                            @foreach (var person in _people)
+                            {
+                                <MudSelectItem Value="@((int?)person.Id)">@person.FullName (@(person.RsaIdNumber ?? person.Email))</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudSelect T="int?" @bind-Value="_approval.AssessorPersonId" Label="Evaluating Assessor / Inspector" Variant="Variant.Outlined" Clearable="true">
+                            <MudSelectItem Value="@((int?)null)">-- Select Assessor --</MudSelectItem>
+                            @foreach (var person in _people)
+                            {
+                                <MudSelectItem Value="@((int?)person.Id)">@person.FullName (@person.RsaIdNumber)</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" md="12">
+                        <MudSelect T="string" @bind-Value="_approval.ApprovalStatusCode" Label="Approval Status" Variant="Variant.Outlined">
+                            <MudSelectItem Value="@("DRAFT")">Draft</MudSelectItem>
+                            <MudSelectItem Value="@("AUDIT_SCHEDULED")">Audit Scheduled</MudSelectItem>
+                            <MudSelectItem Value="@("AUDITED")">Audited</MudSelectItem>
+                            <MudSelectItem Value="@("APPROVED")">Approved</MudSelectItem>
+                            <MudSelectItem Value="@("REJECTED")">Rejected</MudSelectItem>
+                            <MudSelectItem Value="@("EXPIRED")">Expired</MudSelectItem>
+                        </MudSelect>
+                    </MudItem>
 
+                    <MudItem xs="12" md="6">
+                        <MudSelect T="string" @bind-Value="_approval.TradeCode" Label="Designated Trade Ratio Policy" Variant="Variant.Outlined" Clearable="true" HelperText="Determines statutory apprentice-to-mentor ratio standard">
+                            <MudSelectItem Value="@((string?)null)">-- Auto-detect from Qualification --</MudSelectItem>
+                            @foreach (var tp in _tradePolicies)
+                            {
+                                <MudSelectItem Value="@tp.TradeCode">@tp.TradeTitle (@tp.TradeCode - 1:@tp.StandardRatio)</MudSelectItem>
+                            }
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" md="3">
+                        <MudSelect T="bool?" @bind-Value="_approval.IsRatioEnforced" Label="Ratio Enforcement Override" Variant="Variant.Outlined">
+                            <MudSelectItem Value="@((bool?)null)">Default (Inherit Org/Global)</MudSelectItem>
+                            <MudSelectItem Value="@((bool?)true)">Strictly Enforce Ratios</MudSelectItem>
+                            <MudSelectItem Value="@((bool?)false)">Exempt from Ratio Checking</MudSelectItem>
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" md="3">
+                        <MudNumericField @bind-Value="_approval.CustomTradeRatio" Label="Custom Site Ratio (e.g. 3 for 1:3)" Variant="Variant.Outlined" Min="1" Max="20" HelperText="Overrides trade standard" />
+                    </MudItem>
+
+                    @if (_approval.IsRatioEnforced == false)
+                    {
                         <MudItem xs="12">
-                            <MudTextField @bind-Value="_approval.Recommendations" Label="Audit Findings &amp; Recommendations" Variant="Variant.Outlined" Lines="3"
-                                          Placeholder="Enter evaluator findings on tooling, safety equipment, and artisan ratios..." />
+                            <MudTextField @bind-Value="_approval.MentorRatioExemptionNotes" Label="Workplace Ratio Exemption Justification / Dispensation" Variant="Variant.Outlined" Required="true" Placeholder="e.g. Approved board dispensation for dual-shift master artisan rotation" />
                         </MudItem>
-                    </MudGrid>
-                </MudCardContent>
+                    }
+
+                    <MudItem xs="12">
+                        <MudTextField @bind-Value="_approval.Recommendations" Label="Audit Findings &amp; Recommendations" Variant="Variant.Outlined" Lines="3"
+                                      Placeholder="Enter evaluator findings on tooling, safety equipment, and artisan ratios..." />
+                    </MudItem>
+                </MudGrid>
             </MudCard>
         </MudTabPanel>
 
         <!-- TAB 2: CERTIFIED WORKSHOP MENTORS -->
         <MudTabPanel Text="Workshop Mentors" Icon="@Icons.Material.Filled.Engineering" Disabled="IsNew">
+            
+            <!-- RATIO & SUPERVISION CAPACITY DASHBOARD CARD -->
+            <MudCard Outlined="true" Class="pa-4 mb-4 elevation-1">
+                <div class="d-flex flex-wrap justify-space-between align-center mb-3 gap-2">
+                    <div class="d-flex align-center gap-2">
+                        <MudIcon Icon="@Icons.Material.Filled.Speed" Color="Color.Primary" />
+                        <MudText Typo="Typo.h6" Class="fw-bold">Artisan Mentor-to-Apprentice Ratio &amp; Capacity</MudText>
+                    </div>
+                    <div>
+                        @if (_ratioEval.Status == MentorRatioComplianceStatus.Exempt)
+                        {
+                            <MudChip T="string" Color="Color.Info" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Shield">
+                                @GetEnforcementStateDisplay(_ratioEval.EnforcementState)
+                            </MudChip>
+                        }
+                        else if (_ratioEval.Status == MentorRatioComplianceStatus.OverCapacity)
+                        {
+                            <MudChip T="string" Color="Color.Error" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Warning">
+                                Over Capacity
+                            </MudChip>
+                        }
+                        else if (_ratioEval.Status == MentorRatioComplianceStatus.NearCapacity)
+                        {
+                            <MudChip T="string" Color="Color.Warning" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.ReportProblem">
+                                Near Capacity (@_ratioEval.UtilizationPercentage%)
+                            </MudChip>
+                        }
+                        else
+                        {
+                            <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.CheckCircle">
+                                Compliant (@_ratioEval.UtilizationPercentage%)
+                            </MudChip>
+                        }
+                    </div>
+                </div>
+
+                <MudGrid Class="mb-2">
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudPaper Outlined="true" Class="pa-3 text-center">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Designated Trade Policy</MudText>
+                            <div class="fw-bold mt-1">@_ratioEval.TradeTitle</div>
+                            <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined" Class="mt-1">
+                                Standard: 1:@_ratioEval.StandardTradeRatio
+                            </MudChip>
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudPaper Outlined="true" Class="pa-3 text-center">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Active Certified Mentors</MudText>
+                            <div class="fw-bold mt-1 fs-5">@_ratioEval.TotalActiveMentors</div>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Supervising at site</MudText>
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudPaper Outlined="true" Class="pa-3 text-center">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Total Supervision Capacity</MudText>
+                            <div class="fw-bold mt-1 fs-5 text-primary">@_ratioEval.EffectiveTotalCapacity Learners</div>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Combined mentor quota</MudText>
+                        </MudPaper>
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudPaper Outlined="true" Class="pa-3 text-center">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Placed / Available Slots</MudText>
+                            <div class="fw-bold mt-1 fs-5">@_ratioEval.TotalPlacedLearners / <span class="text-success">@_ratioEval.AvailableSlots Available</span></div>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Active enrolled apprentices</MudText>
+                        </MudPaper>
+                    </MudItem>
+                </MudGrid>
+
+                <div class="mt-2 mb-2">
+                    <div class="d-flex justify-space-between align-center mb-1">
+                        <MudText Typo="Typo.caption" Class="fw-bold">Supervision Capacity Utilization</MudText>
+                        <MudText Typo="Typo.caption" Class="fw-bold">@_ratioEval.UtilizationPercentage% (@_ratioEval.TotalPlacedLearners / @_ratioEval.EffectiveTotalCapacity)</MudText>
+                    </div>
+                    <MudProgressLinear Value="@Math.Min(100.0, _ratioEval.UtilizationPercentage)"
+                                       Color="@GetCapacityColor(_ratioEval.Status)"
+                                       Size="Size.Medium"
+                                       Rounded="true" />
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(_ratioEval.StatusMessage))
+                {
+                    <MudAlert Severity="@GetAlertSeverity(_ratioEval.Status)" Dense="true" Class="mt-2">
+                        @_ratioEval.StatusMessage
+                        @if (!string.IsNullOrWhiteSpace(_ratioEval.ExemptionReason))
+                        {
+                            <span class="d-block mt-1 fst-italic">Exemption Reason: @_ratioEval.ExemptionReason</span>
+                        }
+                    </MudAlert>
+                }
+
+                @if (_ratioEval.Warnings.Any())
+                {
+                    <div class="mt-2">
+                        @foreach (var warn in _ratioEval.Warnings)
+                        {
+                            <MudAlert Severity="Severity.Warning" Dense="true" Class="my-1">@warn</MudAlert>
+                        }
+                    </div>
+                }
+            </MudCard>
+
             <div class="d-flex justify-space-between align-center mb-4">
                 <div>
                     <MudText Typo="Typo.h6" Class="fw-bold">Designated Workshop Mentors &amp; Artisans</MudText>
-                    <MudText Typo="Typo.body2" Color="Color.Secondary">Qualified artisans supervising apprentices in the workshop.</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Qualified artisans supervising apprentices and learners in the workshop.</MudText>
                 </div>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd" OnClick="OpenAddMentorDialog">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd" OnClick="OpenAddMentorDialog" aria-label="Add Mentor">
                     Add Mentor
                 </MudButton>
             </div>
@@ -181,11 +319,17 @@ else
                     <MudTh>Artisan Trade Number</MudTh>
                     <MudTh>Experience (Years)</MudTh>
                     <MudTh>Certified</MudTh>
+                    <MudTh>Supervision Capacity</MudTh>
+                    <MudTh>Ratio Status</MudTh>
                     <MudTh Style="text-align: right;">Action</MudTh>
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd DataLabel="Mentor Name">
                         <div class="fw-bold">@(context.Person?.FullName ?? "Unknown")</div>
+                        @if (!string.IsNullOrWhiteSpace(context.Notes))
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">@context.Notes</MudText>
+                        }
                     </MudTd>
                     <MudTd DataLabel="RSA ID">@(context.Person?.RsaIdNumber ?? "N/A")</MudTd>
                     <MudTd DataLabel="Designation">@context.Designation</MudTd>
@@ -201,21 +345,57 @@ else
                             <MudChip T="string" Color="Color.Warning" Size="Size.Small" Variant="Variant.Filled">Under Review</MudChip>
                         }
                     </MudTd>
+                    <MudTd DataLabel="Capacity">
+                        @if (context.MaxLearnerCapacity.HasValue && context.MaxLearnerCapacity.Value > 0)
+                        {
+                            <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Filled">
+                                Custom (1:@context.MaxLearnerCapacity.Value)
+                            </MudChip>
+                        }
+                        else
+                        {
+                            <MudChip T="string" Color="Color.Default" Size="Size.Small" Variant="Variant.Outlined">
+                                Default (1:@_ratioEval.StandardTradeRatio)
+                            </MudChip>
+                        }
+                    </MudTd>
+                    <MudTd DataLabel="Ratio Status">
+                        @if (context.IsRatioExempt || !context.IsRatioEnforced)
+                        {
+                            <MudChip T="string" Color="Color.Info" Size="Size.Small" Variant="Variant.Filled">Exempt</MudChip>
+                        }
+                        else
+                        {
+                            <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Outlined">Enforced</MudChip>
+                        }
+                    </MudTd>
                     <MudTd DataLabel="Action" Style="text-align: right;">
-                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => RemoveMentor(context.Id))" />
+                        <div class="d-flex justify-end gap-1">
+                            <MudIconButton Icon="@Icons.Material.Filled.Tune"
+                                           Color="Color.Primary"
+                                           Size="Size.Small"
+                                           OnClick="@(() => OpenEditMentorCapacityDialog(context))"
+                                           aria-label="Configure Mentor Capacity"
+                                           Title="Configure Supervision Capacity Override" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                           Color="Color.Error"
+                                           Size="Size.Small"
+                                           OnClick="@(() => RemoveMentor(context.Id))"
+                                           aria-label="Remove Mentor" />
+                        </div>
                     </MudTd>
                 </RowTemplate>
             </MudTable>
         </MudTabPanel>
 
         <!-- TAB 3: WORKSHOP TOOL & EQUIPMENT CHECKLIST -->
-        <MudTabPanel Text="Tools &amp; Equipment Checklist" Icon="@Icons.Material.Filled.Handyman" Disabled="IsNew">
+        <MudTabPanel Text="Tools &amp; Equipment" Icon="@Icons.Material.Filled.Handyman" Disabled="IsNew">
             <div class="d-flex justify-space-between align-center mb-4">
                 <div>
                     <MudText Typo="Typo.h6" Class="fw-bold">Workshop Tools &amp; Machinery Inventory</MudText>
                     <MudText Typo="Typo.body2" Color="Color.Secondary">Required equipment verification for curriculum training delivery.</MudText>
                 </div>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenAddToolDialog">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenAddToolDialog" aria-label="Add Tool">
                     Add Tool / Equipment
                 </MudButton>
             </div>
@@ -251,20 +431,188 @@ else
                     </MudTd>
                     <MudTd DataLabel="Remarks">@(context.Remarks ?? "—")</MudTd>
                     <MudTd DataLabel="Action" Style="text-align: right;">
-                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => RemoveToolItem(context.Id))" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => RemoveToolItem(context.Id))" aria-label="Remove Tool" />
                     </MudTd>
                 </RowTemplate>
             </MudTable>
         </MudTabPanel>
 
-        <!-- TAB 4: Evidence Vault -->
+        <!-- TAB 4: Placed & Active Learners -->
+        <MudTabPanel Text="Placed Learners" Icon="@Icons.Material.Filled.School" Disabled="IsNew">
+            <div class="d-flex flex-wrap justify-space-between align-center mb-4 gap-3">
+                <div>
+                    <MudText Typo="Typo.h6">Placed Apprentices &amp; Learners</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Learners gaining practical workplace logbook experience under this approved trade scope</MudText>
+                </div>
+                <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Filled">
+                    @_placedLearners.Count Active Learners Placed
+                </MudChip>
+            </div>
+
+            @if (_loadingLearners)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+            }
+            else
+            {
+                <MudTable Items="_placedLearners" Hover="true" Dense="true" Striped="true" Elevation="1">
+                    <HeaderContent>
+                        <MudTh>Contract No</MudTh>
+                        <MudTh>Learner Full Name</MudTh>
+                        <MudTh>RSA ID / Passport</MudTh>
+                        <MudTh>Trade / Qualification</MudTh>
+                        <MudTh>Programme Type</MudTh>
+                        <MudTh>Enrolment Status</MudTh>
+                        <MudTh>Registered Date</MudTh>
+                        <MudTh Style="text-align:right">Action</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Contract No"><strong>@context.LearnerContractNumber</strong></MudTd>
+                        <MudTd DataLabel="Learner Name">@context.FullName</MudTd>
+                        <MudTd DataLabel="RSA ID">@(!string.IsNullOrWhiteSpace(context.RsaIdNumber) ? context.RsaIdNumber : "-")</MudTd>
+                        <MudTd DataLabel="Qualification">@context.QualificationTitle</MudTd>
+                        <MudTd DataLabel="Programme Type">
+                            <MudChip T="string" Color="Color.Info" Size="Size.Small" Variant="Variant.Outlined">
+                                @context.ProgrammeTypeName
+                            </MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Status">
+                            <MudChip T="string" Color="Color.Success" Size="Size.Small">@context.EnrolmentStatus</MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Registered">@context.RegistrationDate.ToString("yyyy-MM-dd")</MudTd>
+                        <MudTd Style="text-align:right" DataLabel="Action">
+                            <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary" Href="@($"/learners/{context.CompanyLearnerId}")">
+                                Open Learner
+                            </MudButton>
+                        </MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <div class="pa-4 text-center">
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">No active learners currently placed under this workplace approval scope.</MudText>
+                        </div>
+                    </NoRecordsContent>
+                </MudTable>
+            }
+        </MudTabPanel>
+
+        <!-- TAB 5: Partnering Providers (SDP) -->
+        <MudTabPanel Text="Training Providers (SDP)" Icon="@Icons.Material.Filled.AccountBalance" Disabled="IsNew">
+            <div class="d-flex flex-wrap justify-space-between align-center mb-4 gap-3">
+                <div>
+                    <MudText Typo="Typo.h6">Partnering Skills Development Providers (SDP)</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">Accredited training institutions providing theoretical training for placed candidates</MudText>
+                </div>
+            </div>
+
+            @if (_loadingSdps)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+            }
+            else
+            {
+                <MudTable Items="_partnerSdps" Hover="true" Dense="true" Striped="true" Elevation="1">
+                    <HeaderContent>
+                        <MudTh>Provider Name</MudTh>
+                        <MudTh>Accreditation No</MudTh>
+                        <MudTh>Contact Person</MudTh>
+                        <MudTh>Contact Email</MudTh>
+                        <MudTh>Cohort Placed</MudTh>
+                        <MudTh Style="text-align:right">Action</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Provider Name">
+                            <div class="d-flex align-center gap-2">
+                                <MudIcon Icon="@Icons.Material.Filled.School" Color="Color.Primary" Size="Size.Small" />
+                                <MudLink Href="@($"/sdp/{context.ProviderId}")" Typo="Typo.body2" Class="fw-bold">
+                                    @context.ProviderName
+                                </MudLink>
+                            </div>
+                        </MudTd>
+                        <MudTd DataLabel="Accreditation No">@context.AccreditationNumber</MudTd>
+                        <MudTd DataLabel="Contact">@(context.ContactPersonName ?? "-")</MudTd>
+                        <MudTd DataLabel="Email">@(context.ContactEmail ?? "-")</MudTd>
+                        <MudTd DataLabel="Cohort">
+                            <MudChip T="string" Color="Color.Info" Size="Size.Small">
+                                @context.CohortCount Learners
+                            </MudChip>
+                        </MudTd>
+                        <MudTd Style="text-align:right" DataLabel="Action">
+                            <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.School" Href="@($"/sdp/{context.ProviderId}")">
+                                View SDP
+                            </MudButton>
+                        </MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <div class="pa-4 text-center">
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">No external training providers mapped to this workplace agreement.</MudText>
+                        </div>
+                    </NoRecordsContent>
+                </MudTable>
+            }
+        </MudTabPanel>
+
+        <!-- TAB 6: Site Verification Visits -->
+        <MudTabPanel Text="Site Visits &amp; Audits" Icon="@Icons.Material.Filled.EventAvailable" Disabled="IsNew">
+            <div class="d-flex justify-space-between align-center mb-4">
+                <div>
+                    <MudText Typo="Typo.h6" Class="fw-bold">Workplace Site Inspection &amp; Monitoring Visits</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Physical on-site audit trail and compliance verification visits.</MudText>
+                </div>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AddLocationAlt" OnClick="OpenScheduleVisitDialog" aria-label="Schedule Site Visit">
+                    Schedule Site Visit
+                </MudButton>
+            </div>
+
+            @if (_loadingVisits)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+            }
+            else
+            {
+                <MudTable Items="_verificationVisits" Hover="true" Dense="true" Striped="true" Elevation="1">
+                    <HeaderContent>
+                        <MudTh>Visit Date</MudTh>
+                        <MudTh>Visit Type</MudTh>
+                        <MudTh>Designated Contact Person</MudTh>
+                        <MudTh>Location</MudTh>
+                        <MudTh>Purpose</MudTh>
+                        <MudTh>Status</MudTh>
+                        <MudTh>Outcome Findings</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Visit Date">@context.VisitDate.ToString("yyyy-MM-dd")</MudTd>
+                        <MudTd DataLabel="Visit Type">
+                            <MudChip T="string" Color="Color.Info" Size="Size.Small" Variant="Variant.Outlined">
+                                @context.VisitType
+                            </MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Contact">@(context.ContactPersonName ?? "—")</MudTd>
+                        <MudTd DataLabel="Location">@(context.Location ?? "Main Plant")</MudTd>
+                        <MudTd DataLabel="Purpose">@context.Purpose</MudTd>
+                        <MudTd DataLabel="Status">
+                            <MudChip T="string" Color="@GetStatusColor(context.VisitStatus)" Size="Size.Small">
+                                @context.VisitStatus
+                            </MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Findings">@(context.OutcomeNotes ?? "—")</MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <div class="pa-4 text-center">
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">No site verification visits recorded for this approval yet.</MudText>
+                        </div>
+                    </NoRecordsContent>
+                </MudTable>
+            }
+        </MudTabPanel>
+
+        <!-- TAB 7: Evidence Vault -->
         @if (!IsNew)
         {
             <MudTabPanel Text="Evidence Vault" Icon="@Icons.Material.Filled.FolderZip">
                 <DocumentVault TargetEntityName="WorkplaceApproval" TargetEntityId="@Id" />
             </MudTabPanel>
 
-            <!-- TAB 5: Workflow History -->
+            <!-- TAB 8: Workflow History -->
             <MudTabPanel Text="Workflow History" Icon="@Icons.Material.Filled.History">
                 <WorkflowTimeline ProcessCode="WPAPP" EntityId="@Id" />
             </MudTabPanel>
@@ -293,17 +641,75 @@ else
             <MudItem xs="12" md="6">
                 <MudTextField @bind-Value="_newMentor.ArtisanTradeNumber" Label="Artisan Trade Number" Variant="Variant.Outlined" Placeholder="e.g. ART-2015-8841" />
             </MudItem>
-            <MudItem xs="12" md="6">
+            <MudItem xs="12" md="4">
                 <MudNumericField @bind-Value="_newMentor.YearsExperience" Label="Years of Experience" Variant="Variant.Outlined" Min="0" />
             </MudItem>
-            <MudItem xs="12" md="6">
+            <MudItem xs="12" md="4">
+                <MudNumericField @bind-Value="_newMentor.MaxLearnerCapacity" Label="Custom Capacity Override" Variant="Variant.Outlined" Min="1" Max="20" Placeholder="Leave empty for trade default" HelperText="Overrides trade default (e.g. 6)" />
+            </MudItem>
+            <MudItem xs="12" md="4">
                 <MudCheckBox @bind-Value="_newMentor.IsCertifiedArtisan" Label="Is Certified Artisan" Color="Color.Primary" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudCheckBox @bind-Value="_newMentor.IsRatioExempt" Label="Exempt from Ratio Checking" Color="Color.Info" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="_newMentor.Notes" Label="Notes / Special Conditions" Variant="Variant.Outlined" Placeholder="e.g. Lead artisan supervising apprentice toolroom" />
             </MudItem>
         </MudGrid>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@(() => _addMentorOpen = false)">Cancel</MudButton>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveNewMentor">Add Mentor</MudButton>
+        <MudButton StartIcon="@Icons.Material.Filled.Cancel" OnClick="@(() => _addMentorOpen = false)">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveNewMentor">Add Mentor</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<!-- CONFIGURE MENTOR CAPACITY OVERRIDE DIALOG -->
+<MudDialog @bind-Visible="_editMentorCapacityOpen">
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.Tune" Color="Color.Primary" />
+            <MudText Typo="Typo.h6">Configure Mentor Supervision Capacity: @(_editingMentor?.Person?.FullName ?? "Artisan Mentor")</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="12">
+                <MudAlert Severity="Severity.Info" Dense="true" Class="mb-2">
+                    Standard Trade Ratio: <strong>1:@_ratioEval.StandardTradeRatio (@_ratioEval.TradeTitle)</strong>. Configure custom capacity or exemption for this specific master artisan.
+                </MudAlert>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudNumericField @bind-Value="_overrideMentorCap"
+                                 Label="Custom Max Apprentice Capacity"
+                                 Variant="Variant.Outlined"
+                                 Min="1"
+                                 Max="30"
+                                 Clearable="true"
+                                 HelperText="@($"Leave empty to use standard trade ratio (1:{_ratioEval.StandardTradeRatio})")" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <div class="pt-2">
+                    <MudCheckBox @bind-Value="_overrideMentorIsExempt"
+                                 Label="Exempt Mentor from Ratio Limits (Unlimited)"
+                                 Color="Color.Info" />
+                    <MudCheckBox @bind-Value="_overrideMentorIsEnforced"
+                                 Label="Active Ratio Enforcement on Mentor"
+                                 Color="Color.Success" />
+                </div>
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField @bind-Value="_overrideMentorNotes"
+                              Label="Regulatory Notes / Exemption Justification"
+                              Variant="Variant.Outlined"
+                              Lines="2"
+                              Placeholder="e.g. Master Artisan holding senior dual-qualification dispensation..." />
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton StartIcon="@Icons.Material.Filled.Cancel" OnClick="@(() => _editMentorCapacityOpen = false)">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveMentorCapacityOverrideAsync">Save Override</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -343,6 +749,38 @@ else
     </DialogActions>
 </MudDialog>
 
+<!-- SCHEDULE SITE VISIT DIALOG -->
+<MudDialog @bind-Visible="_scheduleVisitOpen">
+    <TitleContent>
+        <MudText Typo="Typo.h6">Schedule Workplace Verification Site Visit</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <MudDatePicker @bind-Date="_newVisitDate" Label="Inspection Visit Date" Variant="Variant.Outlined" Required="true" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudSelect T="int" @bind-Value="_newVisitContactPersonId" Label="Mandatory Employer Contact Person" Variant="Variant.Outlined" Required="true">
+                    @foreach (var person in _people)
+                    {
+                        <MudSelectItem Value="@person.Id">@person.FullName (@(person.RsaIdNumber ?? person.Email))</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField @bind-Value="_newVisitLocation" Label="Physical Site / Plant Location" Variant="Variant.Outlined" Required="true" Placeholder="e.g. Rosslyn Manufacturing Plant, Pretoria" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField @bind-Value="_newVisitPurpose" Label="Visit Purpose &amp; Scope" Variant="Variant.Outlined" Required="true" Lines="2" Placeholder="e.g. On-site verification of tool compliance and artisan mentor ratios for WPA approval" />
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _scheduleVisitOpen = false)">Cancel</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveScheduledVisit">Schedule Visit</MudButton>
+    </DialogActions>
+</MudDialog>
+
 @code {
     [Parameter] public int Id { get; set; }
     private bool IsNew => Id == 0;
@@ -353,18 +791,43 @@ else
 
     private bool _loading = true;
     private bool _saving = false;
+    private int _activeTabIndex = 0;
 
     private DateTime? _inspectionDate;
     private DateTime? _approvalDate;
     private DateTime? _expiryDate;
 
+    // 360-Degree Relational Collections
+    private List<WpaLearnerDto> _placedLearners = new();
+    private List<WpaSdpDto> _partnerSdps = new();
+    private List<WpaVisitDto> _verificationVisits = new();
+
+    private bool _loadingLearners = false;
+    private bool _loadingSdps = false;
+    private bool _loadingVisits = false;
+
+    // Ratio & Policy State
+    private MentorRatioEvaluationResult _ratioEval = new();
+    private List<TradeMentorRatioPolicy> _tradePolicies = new();
+    private bool _editMentorCapacityOpen = false;
+    private WorkplaceApprovalMentor? _editingMentor;
+    private int? _overrideMentorCap;
+    private bool _overrideMentorIsExempt;
+    private bool _overrideMentorIsEnforced = true;
+    private string? _overrideMentorNotes;
+
+    // Modals
     private bool _addMentorOpen = false;
     private WorkplaceApprovalMentor _newMentor = new();
 
     private bool _addToolOpen = false;
     private WorkplaceApprovalToolList _newTool = new();
 
-    private List<BreadcrumbItem> _breadcrumbItems = new();
+    private bool _scheduleVisitOpen = false;
+    private DateTime? _newVisitDate = DateTime.Today.AddDays(7);
+    private int _newVisitContactPersonId;
+    private string _newVisitLocation = string.Empty;
+    private string _newVisitPurpose = "Workplace Approval Site Audit & Tool Inspection";
 
     protected override async Task OnInitializedAsync()
     {
@@ -373,13 +836,23 @@ else
         {
             _organisations = await OrganisationService.GetAllAsync();
             _people = await PersonService.GetAllAsync();
+            _tradePolicies = await RatioEngine.GetAllTradePoliciesAsync(activeOnly: true);
 
             if (!IsNew)
             {
                 await LoadApprovalDataAsync();
             }
-
-            UpdateBreadcrumbs();
+            else
+            {
+                _approval = new WorkplaceApproval
+                {
+                    ApprovalStatusCode = "DRAFT",
+                    InspectionDate = DateTime.Today,
+                    ApprovalDate = DateTime.Today,
+                    ExpiryDate = DateTime.Today.AddYears(3),
+                    IsActive = true
+                };
+            }
         }
         catch (Exception ex)
         {
@@ -400,6 +873,30 @@ else
             _inspectionDate = _approval.InspectionDate;
             _approvalDate = _approval.ApprovalDate;
             _expiryDate = _approval.ExpiryDate;
+
+            // Load 360-Degree Relational Collections
+            _loadingLearners = true;
+            _loadingSdps = true;
+            _loadingVisits = true;
+
+            _placedLearners = await ApprovalService.GetPlacedLearnersAsync(Id);
+            _loadingLearners = false;
+
+            _partnerSdps = await ApprovalService.GetPartnerSdpsAsync(Id);
+            _loadingSdps = false;
+
+            _verificationVisits = await ApprovalService.GetVerificationVisitsAsync(Id);
+            _loadingVisits = false;
+
+            // Evaluate live statutory mentor ratio and supervision capacity
+            try
+            {
+                _ratioEval = await RatioEngine.EvaluateWorkplaceApprovalCapacityAsync(Id);
+            }
+            catch
+            {
+                _ratioEval = new MentorRatioEvaluationResult();
+            }
         }
         else
         {
@@ -412,16 +909,6 @@ else
     {
         await LoadApprovalDataAsync();
         StateHasChanged();
-    }
-
-    private void UpdateBreadcrumbs()
-    {
-        _breadcrumbItems = new List<BreadcrumbItem>
-        {
-            new BreadcrumbItem("Dashboard", href: "/"),
-            new BreadcrumbItem("Workplace Approvals", href: "/workplace-approvals"),
-            new BreadcrumbItem(IsNew ? "Create" : _approval.ApprovalNumber, href: null, disabled: true)
-        };
     }
 
     private async Task SaveAsync()
@@ -461,6 +948,7 @@ else
             else
             {
                 _approval = saved;
+                await LoadApprovalDataAsync();
             }
         }
         catch (Exception ex)
@@ -505,10 +993,9 @@ else
         try
         {
             await ApprovalService.AddMentorAsync(_newMentor, "ADMIN");
-            var refreshed = await ApprovalService.GetByIdAsync(Id);
-            if (refreshed != null) _approval = refreshed;
             Snackbar.Add("Mentor added successfully.", Severity.Success);
             _addMentorOpen = false;
+            await LoadApprovalDataAsync();
         }
         catch (Exception ex)
         {
@@ -521,9 +1008,8 @@ else
         var success = await ApprovalService.RemoveMentorAsync(mentorId, "ADMIN");
         if (success)
         {
-            var refreshed = await ApprovalService.GetByIdAsync(Id);
-            if (refreshed != null) _approval = refreshed;
             Snackbar.Add("Mentor removed.", Severity.Success);
+            await LoadApprovalDataAsync();
         }
     }
 
@@ -550,10 +1036,9 @@ else
         try
         {
             await ApprovalService.AddToolItemAsync(_newTool, "ADMIN");
-            var refreshed = await ApprovalService.GetByIdAsync(Id);
-            if (refreshed != null) _approval = refreshed;
             Snackbar.Add("Tool added successfully.", Severity.Success);
             _addToolOpen = false;
+            await LoadApprovalDataAsync();
         }
         catch (Exception ex)
         {
@@ -566,9 +1051,122 @@ else
         var success = await ApprovalService.RemoveToolItemAsync(toolItemId, "ADMIN");
         if (success)
         {
-            var refreshed = await ApprovalService.GetByIdAsync(Id);
-            if (refreshed != null) _approval = refreshed;
             Snackbar.Add("Tool removed.", Severity.Success);
+            await LoadApprovalDataAsync();
         }
     }
+
+    private void OpenScheduleVisitDialog()
+    {
+        _newVisitContactPersonId = _approval.ContactPersonId ?? _people.FirstOrDefault()?.Id ?? 0;
+        _newVisitDate = DateTime.Today.AddDays(7);
+        _newVisitLocation = _approval.OrganisationSite?.SiteName ?? _approval.Organisation?.CompanyName ?? "Main Plant";
+        _newVisitPurpose = $"Workplace Approval Site Audit: {_approval.QualificationTitle}";
+        _scheduleVisitOpen = true;
+    }
+
+    private async Task SaveScheduledVisit()
+    {
+        if (_newVisitContactPersonId <= 0)
+        {
+            Snackbar.Add("A specific Employer Contact Person must be selected per visit governance rules.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            var v = new Visit
+            {
+                OrganisationId = _approval.OrganisationId,
+                ContactPersonId = _newVisitContactPersonId,
+                VisitTypeCode = "WorkplaceApproval",
+                VisitStatusCode = "Scheduled",
+                VisitDate = _newVisitDate ?? DateTime.Today.AddDays(7),
+                Location = _newVisitLocation,
+                Purpose = _newVisitPurpose,
+                Title = $"WPA Audit - {_approval.QualificationTitle}"
+            };
+
+            await VisitService.ScheduleVisitAsync(v, "ADMIN");
+            Snackbar.Add("Site verification visit scheduled successfully with contact person validation.", Severity.Success);
+            _scheduleVisitOpen = false;
+            await LoadApprovalDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error scheduling visit: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void OpenEditMentorCapacityDialog(WorkplaceApprovalMentor mentor)
+    {
+        _editingMentor = mentor;
+        _overrideMentorCap = mentor.MaxLearnerCapacity;
+        _overrideMentorIsExempt = mentor.IsRatioExempt;
+        _overrideMentorIsEnforced = mentor.IsRatioEnforced;
+        _overrideMentorNotes = mentor.Notes;
+        _editMentorCapacityOpen = true;
+    }
+
+    private async Task SaveMentorCapacityOverrideAsync()
+    {
+        if (_editingMentor == null) return;
+
+        try
+        {
+            await RatioEngine.SetMentorCapacityOverrideAsync(
+                _editingMentor.Id,
+                _overrideMentorCap,
+                _overrideMentorIsExempt,
+                _overrideMentorIsEnforced,
+                _overrideMentorNotes,
+                "ADMIN");
+
+            Snackbar.Add($"Supervision capacity override updated for {_editingMentor.Person?.FullName ?? "Mentor"}.", Severity.Success);
+            _editMentorCapacityOpen = false;
+            await LoadApprovalDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving mentor override: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private static Color GetCapacityColor(MentorRatioComplianceStatus status) => status switch
+    {
+        MentorRatioComplianceStatus.Compliant => Color.Success,
+        MentorRatioComplianceStatus.NearCapacity => Color.Warning,
+        MentorRatioComplianceStatus.OverCapacity => Color.Error,
+        MentorRatioComplianceStatus.Exempt => Color.Info,
+        _ => Color.Default
+    };
+
+    private static Severity GetAlertSeverity(MentorRatioComplianceStatus status) => status switch
+    {
+        MentorRatioComplianceStatus.Compliant => Severity.Success,
+        MentorRatioComplianceStatus.NearCapacity => Severity.Warning,
+        MentorRatioComplianceStatus.OverCapacity => Severity.Error,
+        MentorRatioComplianceStatus.Exempt => Severity.Info,
+        _ => Severity.Normal
+    };
+
+    private static string GetEnforcementStateDisplay(MentorRatioEnforcementState state) => state switch
+    {
+        MentorRatioEnforcementState.StrictlyEnforced => "Statutory Enforced",
+        MentorRatioEnforcementState.OrgExempt => "Organisation Exempt",
+        MentorRatioEnforcementState.WorkplaceExempt => "Workplace Exempt",
+        MentorRatioEnforcementState.GlobalDisabled => "Global Bypass",
+        MentorRatioEnforcementState.TradeAdvisoryOnly => "Advisory Mode",
+        MentorRatioEnforcementState.CustomOverride => "Custom Cap Active",
+        _ => "Default"
+    };
+
+    private static Color GetStatusColor(string? status) => status?.ToUpperInvariant() switch
+    {
+        "APPROVED" or "ACTIVE" => Color.Success,
+        "AUDITED" or "AUDIT_SCHEDULED" => Color.Info,
+        "DRAFT" or "PENDING" => Color.Warning,
+        "REJECTED" or "EXPIRED" => Color.Error,
+        _ => Color.Default
+    };
 }

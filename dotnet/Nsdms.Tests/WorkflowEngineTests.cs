@@ -132,6 +132,66 @@ public class WorkflowEngineTests
     }
 
     [Fact]
+    public async Task AdvanceWorkflow_NonDestructiveRfiQueryAndRemediationCycle()
+    {
+        // Arrange
+        var factory = new TestDbContextFactory(Guid.NewGuid().ToString());
+        using (var seedContext = factory.CreateDbContext())
+        {
+            await WorkflowDefinitionSeeder.SeedWorkflowDefinitionsAsync(seedContext);
+        }
+        var workflowService = new WorkflowEngineService(factory);
+
+        var startResult = await workflowService.StartWorkflowAsync(
+            "PROVIDER",
+            502,
+            "Apex Technical Academy",
+            "SDP-2026-502",
+            "admin@apex.co.za",
+            "Apex Director"
+        );
+        var instanceId = startResult.Instance!.Id;
+
+        // 1. Submit for Desktop Review
+        var transitions = await workflowService.GetAvailableTransitionsAsync(instanceId, null);
+        var submitTransition = transitions.First(t => t.ActionName == "Submit for Desktop Review");
+        await workflowService.AdvanceWorkflowAsync(instanceId, submitTransition.Id, "clo@merseta.org.za", "MerSETA CLO", "Client Liaison Officer (CLO)");
+
+        // 2. Issue RFI / Query Documentation (Non-destructive rework request)
+        var reviewTransitions = await workflowService.GetAvailableTransitionsAsync(instanceId, null);
+        var queryTransition = reviewTransitions.First(t => t.ActionName == "Issue RFI / Query Documentation");
+        var queryResult = await workflowService.AdvanceWorkflowAsync(
+            instanceId, 
+            queryTransition.Id, 
+            "clo@merseta.org.za", 
+            "MerSETA CLO", 
+            "Client Liaison Officer (CLO)", 
+            "OshAct fire safety certificate is expired. Please upload renewed compliance certificate.");
+
+        Assert.True(queryResult.Success);
+        Assert.Equal("Desk Review Queried (RFI)", queryResult.NewStateName);
+
+        // 3. Provider resubmits remediated documents
+        var queryStateTransitions = await workflowService.GetAvailableTransitionsAsync(instanceId, null);
+        var resubmitTransition = queryStateTransitions.First(t => t.ActionName == "Resubmit Supporting Documents");
+        var resubmitResult = await workflowService.AdvanceWorkflowAsync(
+            instanceId, 
+            resubmitTransition.Id, 
+            "admin@apex.co.za", 
+            "Apex Director", 
+            "Provider", 
+            "Uploaded renewed fire safety compliance certificate valid until 2028.");
+
+        Assert.True(resubmitResult.Success);
+        Assert.Equal("Under Desktop Review", resubmitResult.NewStateName);
+
+        // Verify history captured both query and remediation
+        var history = await workflowService.GetWorkflowHistoryAsync(instanceId);
+        Assert.Contains(history, h => h.ActionName == "Issue RFI / Query Documentation");
+        Assert.Contains(history, h => h.ActionName == "Resubmit Supporting Documents");
+    }
+
+    [Fact]
     public async Task StorageService_UploadAndVerifyDocument_ShouldCalculateSha256Checksum()
     {
         // Arrange

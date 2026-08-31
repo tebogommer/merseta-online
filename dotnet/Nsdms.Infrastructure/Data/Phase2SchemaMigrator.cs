@@ -552,6 +552,49 @@ BEGIN
     CREATE UNIQUE INDEX [IX_SystemFeatureFlag_FeatureKey] ON [dbo].[SystemFeatureFlag]([FeatureKey]);
     CREATE INDEX [IX_SystemFeatureFlag_FeatureCategory] ON [dbo].[SystemFeatureFlag]([FeatureCategory]);
 END
+
+-- SDF Company & Appointment History Schema Sync
+IF EXISTS (SELECT * FROM sys.tables WHERE name = 'SdfCompany')
+BEGIN
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('SdfCompany') AND name = 'SdfStatusCode')
+        ALTER TABLE [dbo].[SdfCompany] ADD [SdfStatusCode] NVARCHAR(50) NOT NULL CONSTRAINT [DF_SdfCompany_SdfStatusCode] DEFAULT 'PendingApproval';
+
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('SdfCompany') AND name = 'AppointmentStartDate')
+        ALTER TABLE [dbo].[SdfCompany] ADD [AppointmentStartDate] DATETIME2 NOT NULL CONSTRAINT [DF_SdfCompany_AppointmentStartDate] DEFAULT SYSUTCDATETIME();
+
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('SdfCompany') AND name = 'AppointmentEndDate')
+        ALTER TABLE [dbo].[SdfCompany] ADD [AppointmentEndDate] DATETIME2 NULL;
+
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('SdfCompany') AND name = 'SignedAppointmentLetterReceived')
+        ALTER TABLE [dbo].[SdfCompany] ADD [SignedAppointmentLetterReceived] BIT NOT NULL CONSTRAINT [DF_SdfCompany_SignedAppointmentLetterReceived] DEFAULT 0;
+
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('SdfCompany') AND name = 'SignedAcceptanceDeclarationReceived')
+        ALTER TABLE [dbo].[SdfCompany] ADD [SignedAcceptanceDeclarationReceived] BIT NOT NULL CONSTRAINT [DF_SdfCompany_SignedAcceptanceDeclarationReceived] DEFAULT 0;
+
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('SdfCompany') AND name = 'AllowDgApplication')
+        ALTER TABLE [dbo].[SdfCompany] ADD [AllowDgApplication] BIT NOT NULL CONSTRAINT [DF_SdfCompany_AllowDgApplication] DEFAULT 1;
+
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('SdfCompany') AND name = 'AllowTrancheClaims')
+        ALTER TABLE [dbo].[SdfCompany] ADD [AllowTrancheClaims] BIT NOT NULL CONSTRAINT [DF_SdfCompany_AllowTrancheClaims] DEFAULT 0;
+
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('SdfCompany') AND name = 'IsActive')
+        ALTER TABLE [dbo].[SdfCompany] ADD [IsActive] BIT NOT NULL CONSTRAINT [DF_SdfCompany_IsActive] DEFAULT 1;
+END
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'SdfAppointmentHistory')
+BEGIN
+    CREATE TABLE [dbo].[SdfAppointmentHistory] (
+        [Id] INT IDENTITY(1,1) NOT NULL CONSTRAINT [PK_SdfAppointmentHistory] PRIMARY KEY CLUSTERED,
+        [SdfCompanyId] INT NOT NULL,
+        [PreviousStatusCode] NVARCHAR(50) NOT NULL,
+        [NewStatusCode] NVARCHAR(50) NOT NULL,
+        [ChangeReason] NVARCHAR(MAX) NULL,
+        [ChangedByUserId] NVARCHAR(100) NOT NULL CONSTRAINT [DF_SdfAppointmentHistory_ChangedBy] DEFAULT 'SYSTEM',
+        [ChangedAt] DATETIME2 NOT NULL CONSTRAINT [DF_SdfAppointmentHistory_ChangedAt] DEFAULT SYSUTCDATETIME(),
+        CONSTRAINT [FK_SdfAppointmentHistory_SdfCompany_SdfCompanyId] FOREIGN KEY ([SdfCompanyId]) REFERENCES [dbo].[SdfCompany] ([Id]) ON DELETE CASCADE
+    );
+    CREATE NONCLUSTERED INDEX [IX_SdfAppointmentHistory_SdfCompanyId] ON [dbo].[SdfAppointmentHistory]([SdfCompanyId]);
+END
 ";
 
         await db.Database.ExecuteSqlRawAsync(sql);

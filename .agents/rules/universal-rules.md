@@ -57,4 +57,17 @@ When user's prompt is NOT in English:
    - Update the master DDL script (`V2026_08_Complete_Nsdms_Enterprise_DDL.sql`).
    - Verify column presence against `INFORMATION_SCHEMA.COLUMNS` before testing UI routes.
 
+---
+
+## 🛡️ Artisan Mentor-to-Apprentice Ratio Governance Standard
+1. **Cascading Evaluation Precedence**:
+   When validating learner enrollments, workplace capacity, or artisan quotas, ALWAYS resolve ratios via `IMentorRatioPolicyEngine.EvaluateWorkplaceApprovalCapacityAsync(id)`. Never hardcode a 1:4 ratio. The engine evaluates policies in the following strict order:
+   - **Tier 1 (Mentor Override)**: `WorkplaceApprovalMentor.MaxLearnerCapacity` or `IsRatioExempt = true`.
+   - **Tier 2 (Workplace Approval)**: `WorkplaceApproval.CustomTradeRatio` or `IsRatioEnforced = false`.
+   - **Tier 3 (Organisation Exemption)**: `Organisation.IsMentorRatioEnforced = false` or `Organisation.CustomMentorRatioCap`.
+   - **Tier 4 (Trade Policy)**: `TradeMentorRatioPolicy.StandardRatio` matching the trade/qualification.
+   - **Tier 5 (Global Toggle)**: System configuration `WorkplaceApproval.EnforceMentorRatios`.
+2. **Audit Double-Write**: All policy overrides and trade policy mutations must record snapshots in `audit_logs`.
+
+
 

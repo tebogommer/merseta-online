@@ -1,10 +1,13 @@
 @page "/curriculum/{Id:int}"
+@page "/curriculum/{Id:int}/edit"
 @using Nsdms.Application.Common.Interfaces
 @using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
 @inject IQcdAndCurriculumService QcdService
 @inject NavigationManager Nav
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
+@rendermode InteractiveServer
 
 <PageTitle>Curriculum Scoping & SAQA Registration | merSETA NSDMS</PageTitle>
 
@@ -19,59 +22,72 @@ else
 {
     <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
         <!-- Sticky Top Bar -->
-        <MudCard Elevation="2" Class="mb-4 sticky-top-header" Style="position: sticky; top: var(--mud-appbar-height, 64px) !important; z-index: 10;">
-            <MudCardContent Class="d-flex align-center justify-space-between py-3">
-                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Primary" OnClick="@(() => Nav.NavigateTo("/curriculum"))" />
-                    <div>
+        <MudPaper Elevation="2" Class="mb-4 pa-4 sticky-top bg-surface d-flex flex-wrap justify-space-between align-center gap-4 rounded-lg" Style="top: var(--mud-appbar-height, 64px); z-index: 10;">
+            <div class="d-flex align-center gap-3">
+                <MudButton Variant="Variant.Text"
+                           StartIcon="@Icons.Material.Filled.ArrowBack"
+                           Color="Color.Default"
+                           OnClick="@(() => Nav.NavigateTo("/curriculum"))"
+                           aria-label="Back to Curriculum Development">
+                    Back to Curriculum
+                </MudButton>
+                <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-2" />
+                <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Small">
+                    <MudIcon Icon="@Icons.Material.Filled.MenuBook" Size="Size.Small" />
+                </MudAvatar>
+                <div>
+                    <div class="d-flex align-center gap-2">
                         <MudText Typo="Typo.h5" Class="fw-bold">@_qcd.ApplicationNumber — @_qcd.QualificationTitle</MudText>
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">
-                            OFO: <strong>@_qcd.OfoCode</strong> | NQF: <strong>Level @_qcd.NqfLevel (@_qcd.TotalCreditsRequired Credits)</strong> | Type: <strong>@_qcd.DevelopmentTypeCode</strong>
-                        </MudText>
-                    </div>
-                </MudStack>
-
-                <MudStack Row="true" Spacing="2">
-                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Cancel" OnClick="@(() => Nav.NavigateTo("/curriculum"))">
-                        Cancel
-                    </MudButton>
-
-                    @if (_qcd.StatusCode == "Draft")
-                    {
-                        <MudButton Variant="Variant.Filled" Color="Color.Warning" StartIcon="@Icons.Material.Filled.Groups" OnClick="ConveneWorkingGroupAsync">
-                            Convene Working Group
-                        </MudButton>
-                    }
-
-                    @if (_qcd.StatusCode == "PublicCommentOpen")
-                    {
-                        <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Send" OnClick="SubmitToQctoAsync">
-                            Submit to QCTO / SAQA
-                        </MudButton>
-                    }
-
-                    @if (_qcd.StatusCode == "SubmittedToQcto")
-                    {
-                        <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.CheckCircle" OnClick="RecordSaqaApprovalAsync">
-                            Record SAQA Registration
-                        </MudButton>
-                    }
-
-                    @if (_qcd.StatusCode == "ApprovedBySaqa")
-                    {
-                        <MudChip T="string" Color="Color.Success" Variant="Variant.Filled" Size="Size.Large" Icon="@Icons.Material.Filled.Verified">
-                            REGISTERED: @_qcd.SaqaRegistrationNumber
+                        <MudChip T="string" Color="@GetStatusColor(_qcd.StatusCode)" Size="Size.Small" Variant="Variant.Filled">
+                            @_qcd.StatusCode
                         </MudChip>
-                    }
-                </MudStack>
-            </MudCardContent>
-        </MudCard>
+                        @if (!string.IsNullOrWhiteSpace(_qcd.SaqaRegistrationNumber))
+                        {
+                            <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Verified">
+                                SAQA: @_qcd.SaqaRegistrationNumber
+                            </MudChip>
+                        }
+                    </div>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        OFO: <strong>@_qcd.OfoCode</strong> | NQF: <strong>Level @_qcd.NqfLevel (@_qcd.TotalCreditsRequired Credits)</strong> | Type: <strong>@_qcd.DevelopmentTypeCode</strong>
+                    </MudText>
+                </div>
+            </div>
+
+            <div class="d-flex align-center gap-2 flex-wrap">
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Cancel" OnClick="@(() => Nav.NavigateTo("/curriculum"))" aria-label="Cancel">
+                    Cancel
+                </MudButton>
+
+                @if (_qcd.StatusCode == "Draft")
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Warning" StartIcon="@Icons.Material.Filled.Groups" OnClick="ConveneWorkingGroupAsync" aria-label="Convene Working Group">
+                        Convene Working Group
+                    </MudButton>
+                }
+
+                @if (_qcd.StatusCode == "PublicCommentOpen")
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Send" OnClick="SubmitToQctoAsync" aria-label="Submit to QCTO">
+                        Submit to QCTO / SAQA
+                    </MudButton>
+                }
+
+                @if (_qcd.StatusCode == "SubmittedToQcto")
+                {
+                    <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.CheckCircle" OnClick="RecordSaqaApprovalAsync" aria-label="Record SAQA Approval">
+                        Record SAQA Registration
+                    </MudButton>
+                }
+            </div>
+        </MudPaper>
 
         <!-- Main Structure Tabs -->
-        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6" Color="Color.Primary">
+        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Color="Color.Surface" @bind-ActivePanelIndex="_activeTabIndex">
+            
             <!-- Tab 1: Scope & Strategic Alignment -->
             <MudTabPanel Text="Scope & Policy Alignment" Icon="@Icons.Material.Filled.MenuBook">
-                <MudGrid>
+                <MudGrid Spacing="3" Class="pa-4">
                     <MudItem xs="12" md="6">
                         <MudCard Outlined="true" Class="pa-4 h-100">
                             <MudText Typo="Typo.h6" Class="fw-bold mb-3">Occupational Qualification Scope</MudText>
@@ -105,60 +121,84 @@ else
 
             <!-- Tab 2: Development Working Group Stakeholders -->
             <MudTabPanel Text="Working Group Stakeholders" Icon="@Icons.Material.Filled.Groups">
-                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-3">
-                    <MudText Typo="Typo.h6">QDF &amp; Stakeholder Working Group</MudText>
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.PersonAdd" OnClick="AddMemberAsync">
-                        Add Working Group Member
-                    </MudButton>
-                </MudStack>
+                <div class="pa-4">
+                    <div class="d-flex justify-space-between align-center mb-3">
+                        <MudText Typo="Typo.h6">QDF &amp; Stakeholder Working Group</MudText>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.PersonAdd" OnClick="AddMemberAsync" aria-label="Add Working Group Member">
+                            Add Working Group Member
+                        </MudButton>
+                    </div>
 
-                <MudTable Items="_qcd.WorkingGroupMembers" Dense="true" Elevation="0" Outlined="true">
-                    <HeaderContent>
-                        <MudTh>Member Name</MudTh>
-                        <MudTh>Stakeholder Role</MudTh>
-                        <MudTh>Organisation Represented</MudTh>
-                        <MudTh>Email</MudTh>
-                        <MudTh>Phone</MudTh>
-                        <MudTh>Attendance</MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd Class="fw-semibold">@context.MemberName</MudTd>
-                        <MudTd>
-                            <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">@context.StakeholderRoleTitle</MudChip>
-                        </MudTd>
-                        <MudTd>@context.OrganisationRepresented</MudTd>
-                        <MudTd>@context.EmailAddress</MudTd>
-                        <MudTd>@context.PhoneNumber</MudTd>
-                        <MudTd>
-                            <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Filled">Confirmed</MudChip>
-                        </MudTd>
-                    </RowTemplate>
-                </MudTable>
+                    <MudTable Items="_qcd.WorkingGroupMembers" Dense="true" Elevation="0" Outlined="true">
+                        <HeaderContent>
+                            <MudTh>Member Name</MudTh>
+                            <MudTh>Stakeholder Role</MudTh>
+                            <MudTh>Organisation Represented</MudTh>
+                            <MudTh>Email</MudTh>
+                            <MudTh>Phone</MudTh>
+                            <MudTh>Attendance</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd Class="fw-semibold">@context.MemberName</MudTd>
+                            <MudTd>
+                                <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">@context.StakeholderRoleTitle</MudChip>
+                            </MudTd>
+                            <MudTd>@context.OrganisationRepresented</MudTd>
+                            <MudTd>@context.EmailAddress</MudTd>
+                            <MudTd>@context.PhoneNumber</MudTd>
+                            <MudTd>
+                                <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Filled">Confirmed</MudChip>
+                            </MudTd>
+                        </RowTemplate>
+                        <NoRecordsContent>
+                            <div class="pa-4 text-center">
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">No working group members added yet.</MudText>
+                            </div>
+                        </NoRecordsContent>
+                    </MudTable>
+                </div>
             </MudTabPanel>
 
             <!-- Tab 3: Skills Programmes & Part-Qualifications -->
             <MudTabPanel Text="Skills Programmes & Modules" Icon="@Icons.Material.Filled.ViewModule">
-                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-3">
-                    <MudText Typo="Typo.h6">Skills Programmes (Part-Qualifications)</MudText>
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add" OnClick="AddSkillsProgAsync">
-                        Add Skills Programme
-                    </MudButton>
-                </MudStack>
+                <div class="pa-4">
+                    <div class="d-flex justify-space-between align-center mb-3">
+                        <MudText Typo="Typo.h6">Skills Programmes (Part-Qualifications)</MudText>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add" OnClick="AddSkillsProgAsync" aria-label="Add Skills Programme">
+                            Add Skills Programme
+                        </MudButton>
+                    </div>
 
-                <MudTable Items="_qcd.SkillsRegistrations" Dense="true" Elevation="0" Outlined="true">
-                    <HeaderContent>
-                        <MudTh>Code</MudTh>
-                        <MudTh>Programme Title</MudTh>
-                        <MudTh>NQF Level</MudTh>
-                        <MudTh>Credits</MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd Class="font-monospace fw-bold">@context.SkillsProgrammeCode</MudTd>
-                        <MudTd>@context.SkillsProgrammeTitle</MudTd>
-                        <MudTd>Level @context.NqfLevel</MudTd>
-                        <MudTd><strong>@context.Credits</strong></MudTd>
-                    </RowTemplate>
-                </MudTable>
+                    <MudTable Items="_qcd.SkillsRegistrations" Dense="true" Elevation="0" Outlined="true">
+                        <HeaderContent>
+                            <MudTh>Code</MudTh>
+                            <MudTh>Programme Title</MudTh>
+                            <MudTh>NQF Level</MudTh>
+                            <MudTh>Credits</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd Class="font-monospace fw-bold">@context.SkillsProgrammeCode</MudTd>
+                            <MudTd>@context.SkillsProgrammeTitle</MudTd>
+                            <MudTd>Level @context.NqfLevel</MudTd>
+                            <MudTd><strong>@context.Credits</strong></MudTd>
+                        </RowTemplate>
+                        <NoRecordsContent>
+                            <div class="pa-4 text-center">
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">No skills programmes or part qualifications registered yet.</MudText>
+                            </div>
+                        </NoRecordsContent>
+                    </MudTable>
+                </div>
+            </MudTabPanel>
+
+            <!-- Tab 4: Evidence Vault -->
+            <MudTabPanel Text="Evidence Vault" Icon="@Icons.Material.Filled.FolderZip">
+                <DocumentVault TargetEntityName="QualificationsCurriculumDevelopment" TargetEntityId="@Id" />
+            </MudTabPanel>
+
+            <!-- Tab 5: Workflow History -->
+            <MudTabPanel Text="Workflow History" Icon="@Icons.Material.Filled.History">
+                <WorkflowTimeline ProcessCode="QCD" EntityId="@Id" />
             </MudTabPanel>
         </MudTabs>
     </MudContainer>
@@ -167,6 +207,7 @@ else
 @code {
     [Parameter] public int Id { get; set; }
     private QualificationsCurriculumDevelopment? _qcd;
+    private int _activeTabIndex = 0;
 
     protected override async Task OnInitializedAsync()
     {
@@ -257,4 +298,13 @@ else
             Snackbar.Add($"Error: {ex.Message}", Severity.Error);
         }
     }
+
+    private static Color GetStatusColor(string? status) => status switch
+    {
+        "ApprovedBySaqa" or "Registered" => Color.Success,
+        "SubmittedToQcto" or "PublicCommentOpen" => Color.Info,
+        "Draft" => Color.Warning,
+        "Rejected" => Color.Error,
+        _ => Color.Default
+    };
 }

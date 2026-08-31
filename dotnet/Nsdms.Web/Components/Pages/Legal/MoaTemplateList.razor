@@ -1,0 +1,186 @@
+@page "/legal/moa-templates"
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Domain.Entities
+@inject IMoaTemplateEngineService TemplateService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>MoA Master Templates | merSETA Legal &amp; Governance</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
+    <!-- Header Summary Card -->
+    <MudCard Elevation="2" Class="mb-4">
+        <MudCardContent Class="d-flex align-center justify-space-between py-4">
+            <div>
+                <MudText Typo="Typo.h5" Class="fw-bold" Color="Color.Primary">
+                    <MudIcon Icon="@Icons.Material.Filled.Gavel" Class="mr-2" /> MoA Master Template Studio
+                </MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    Data-driven legal contract templates, version control, and clause assemblies aligned with annual DHET and merSETA grant policies.
+                </MudText>
+            </div>
+            <MudStack Row="true" Spacing="2">
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.LibraryBooks" OnClick="@(() => Navigation.NavigateTo("/legal/moa-clauses"))">
+                    Clause Library
+                </MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="@(() => Navigation.NavigateTo("/legal/moa-templates/new"))">
+                    Create Template
+                </MudButton>
+            </MudStack>
+        </MudCardContent>
+    </MudCard>
+
+    <!-- Filters & Search Toolbar -->
+    <MudCard Elevation="1" Class="mb-4">
+        <MudCardContent Class="py-3">
+            <MudGrid>
+                <MudItem xs="12" md="4">
+                    <MudTextField @bind-Value="_searchString"
+                                  Placeholder="Search by template code or title..."
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search"
+                                  IconSize="Size.Medium"
+                                  Immediate="true"
+                                  Clearable="true"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" />
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudSelect T="int?" @bind-Value="_selectedYear" Label="Financial Year" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true">
+                        <MudSelectItem T="int?" Value="@((int?)null)">All Financial Years</MudSelectItem>
+                        <MudSelectItem T="int?" Value="@((int?)2027)">2027/28</MudSelectItem>
+                        <MudSelectItem T="int?" Value="@((int?)2026)">2026/27</MudSelectItem>
+                        <MudSelectItem T="int?" Value="@((int?)2025)">2025/26</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudSelect T="string" @bind-Value="_selectedGrantType" Label="Grant Type" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true">
+                        <MudSelectItem Value="@("All")">All Grant Types</MudSelectItem>
+                        <MudSelectItem Value="@("DiscretionaryGrant")">Discretionary Grant</MudSelectItem>
+                        <MudSelectItem Value="@("SpecialProject")">Special Project</MudSelectItem>
+                        <MudSelectItem Value="@("Bursary")">Bursary Scheme</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="2" Class="d-flex align-center justify-end">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadTemplatesAsync">
+                        Refresh
+                    </MudButton>
+                </MudItem>
+            </MudGrid>
+        </MudCardContent>
+    </MudCard>
+
+    <!-- Templates DataTable -->
+    <MudTable Items="@FilteredTemplates"
+              Hover="true"
+              Bordered="false"
+              Striped="true"
+              Elevation="2"
+              Loading="@_isLoading"
+              LoadingProgressColor="Color.Primary"
+              RowsPerPage="10">
+        <HeaderContent>
+            <MudTh>Template Code</MudTh>
+            <MudTh>Title &amp; Policy Scope</MudTh>
+            <MudTh Style="text-align: center;">Year</MudTh>
+            <MudTh>Grant Type</MudTh>
+            <MudTh Style="text-align: center;">Version</MudTh>
+            <MudTh Style="text-align: center;">Sections</MudTh>
+            <MudTh Style="text-align: center;">Status</MudTh>
+            <MudTh Style="text-align: right;">Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Code">
+                <MudLink Href="@($"/legal/moa-templates/{context.Id}")" Underline="Underline.Hover" Color="Color.Primary" Class="fw-bold">
+                    <MudIcon Icon="@Icons.Material.Filled.Article" Size="Size.Small" Class="mr-1 align-middle" />
+                    @context.TemplateCode
+                </MudLink>
+            </MudTd>
+            <MudTd DataLabel="Title">
+                <MudText Typo="Typo.body2" Class="fw-bold">@context.TemplateTitle</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">Target Entity: @context.LegalEntityType</MudText>
+            </MudTd>
+            <MudTd DataLabel="Year" Style="text-align: center;">
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Default">@context.FinancialYear</MudChip>
+            </MudTd>
+            <MudTd DataLabel="Grant Type">@context.GrantTypeCode</MudTd>
+            <MudTd DataLabel="Version" Style="text-align: center;">
+                <code>v@(context.VersionNumber)</code>
+            </MudTd>
+            <MudTd DataLabel="Sections" Style="text-align: center;">
+                <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Text">
+                    @(context.Sections?.Count ?? 0) Clauses
+                </MudChip>
+            </MudTd>
+            <MudTd DataLabel="Status" Style="text-align: center;">
+                <MudChip T="string" Size="Size.Small" Color="@GetStatusColor(context.ApprovalStatus)" Variant="Variant.Filled">
+                    @context.ApprovalStatus
+                </MudChip>
+            </MudTd>
+            <MudTd DataLabel="Actions" Style="text-align: right;">
+                <MudIconButton Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" Color="Color.Primary" Title="View &amp; Edit Template"
+                               OnClick="@(() => Navigation.NavigateTo($"/legal/moa-templates/{context.Id}"))" />
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
+        </PagerContent>
+    </MudTable>
+</MudContainer>
+
+@code {
+    private List<MoaTemplate> _templates = new();
+    private bool _isLoading = true;
+    private string _searchString = string.Empty;
+    private int? _selectedYear;
+    private string _selectedGrantType = "All";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTemplatesAsync();
+    }
+
+    private async Task LoadTemplatesAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _templates = await TemplateService.GetTemplatesAsync(_selectedYear, _selectedGrantType);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading MoA templates: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private IEnumerable<MoaTemplate> FilteredTemplates
+    {
+        get
+        {
+            var list = _templates.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(_searchString))
+            {
+                list = list.Where(t =>
+                    t.TemplateCode.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+                    t.TemplateTitle.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+                    t.GrantTypeCode.Contains(_searchString, StringComparison.OrdinalIgnoreCase));
+            }
+
+            return list;
+        }
+    }
+
+    private Color GetStatusColor(string status) => status switch
+    {
+        "Approved" => Color.Success,
+        "UnderReview" => Color.Warning,
+        "Draft" => Color.Info,
+        "Archived" => Color.Dark,
+        _ => Color.Default
+    };
+}

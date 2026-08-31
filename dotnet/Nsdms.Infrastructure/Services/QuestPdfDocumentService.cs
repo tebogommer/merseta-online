@@ -13,15 +13,18 @@ public class QuestPdfDocumentService : IPdfDocumentService
     private readonly INsdmsDbContextFactory _contextFactory;
     private readonly IFeatureFlagService _featureFlags;
     private readonly ISystemConfigurationService _config;
+    private readonly IDocumentVerificationService? _verificationService;
 
     public QuestPdfDocumentService(
         INsdmsDbContextFactory contextFactory,
         IFeatureFlagService featureFlags, 
-        ISystemConfigurationService config)
+        ISystemConfigurationService config,
+        IDocumentVerificationService? verificationService = null)
     {
         _contextFactory = contextFactory;
         _featureFlags = featureFlags;
         _config = config;
+        _verificationService = verificationService;
         QuestPDF.Settings.License = LicenseType.Community;
     }
 
@@ -29,6 +32,11 @@ public class QuestPdfDocumentService : IPdfDocumentService
     {
         var enableWatermarks = await _featureFlags.IsFeatureEnabledAsync("Pdfs.WatermarksAndQrCodes", true);
         var setaName = await _config.GetValueAsync("General.SetaName", "Manufacturing, Engineering and Related Services SETA (merSETA)");
+
+        var certNum = tradeTest.SerialCertificateNumber ?? $"TT-{tradeTest.Id:D6}";
+        var baseUrl = await _config.GetValueAsync("System.BaseUrl", "https://nsdms.merseta.org.za");
+        var verifyUrl = $"{baseUrl.TrimEnd('/')}/verify/document/{certNum}";
+        var qrBytes = GenerateQrBytes(verifyUrl);
 
         var document = Document.Create(container =>
         {
@@ -63,14 +71,20 @@ public class QuestPdfDocumentService : IPdfDocumentService
 
                     col.Item().PaddingTop(15).Row(row =>
                     {
-                        row.RelativeItem().Column(c =>
+                        row.RelativeItem(3).Column(c =>
                         {
-                            c.Item().Text($"Certificate Number: {tradeTest.SerialCertificateNumber ?? "CERT-PENDING"}").Bold();
+                            c.Item().Text($"Certificate Number: {certNum}").Bold();
                             c.Item().Text($"Issue Date: {tradeTest.CertificateIssueDate?.ToString("yyyy-MM-dd") ?? DateTime.UtcNow.ToString("yyyy-MM-dd")}");
                             c.Item().Text($"Test Centre: {tradeTest.TestCenterName}");
                         });
 
-                        row.RelativeItem().AlignRight().Column(c =>
+                        row.RelativeItem(2).AlignCenter().Column(c =>
+                        {
+                            c.Item().Width(45).Height(45).Image(qrBytes);
+                            c.Item().AlignCenter().Text("Scan to Verify").FontSize(7).FontColor(Colors.Blue.Darken2);
+                        });
+
+                        row.RelativeItem(3).AlignRight().Column(c =>
                         {
                             c.Item().Text("Authorised merSETA Signatory").Bold();
                             c.Item().PaddingTop(20).LineHorizontal(1).LineColor(Colors.Grey.Darken1);
@@ -80,7 +94,7 @@ public class QuestPdfDocumentService : IPdfDocumentService
 
                     if (enableWatermarks)
                     {
-                        col.Item().PaddingTop(10).AlignCenter().Text("Official Government Credential • Issued under the Skills Development Act").FontSize(8).FontColor(Colors.Grey.Medium);
+                        col.Item().PaddingTop(10).AlignCenter().Text("Official Government Credential • Issued under the Skills Development Act • Digitally Hash Anchored").FontSize(8).FontColor(Colors.Grey.Medium);
                     }
                 });
 
@@ -713,5 +727,422 @@ public class QuestPdfDocumentService : IPdfDocumentService
         });
 
         return document.GeneratePdf();
+    }
+
+    public async Task<byte[]> GenerateSimulatedDocumentTemplatePdfAsync(DocumentTemplate template, Dictionary<string, string> tokens, bool includeWatermark = true)
+    {
+        var setaName = await _config.GetValueAsync("General.SetaName", "Manufacturing, Engineering and Related Services SETA (merSETA)");
+
+        var document = Document.Create(container =>
+        {
+            container.Page(page =>
+            {
+                page.Size(PageSizes.A4);
+                page.Margin(1.5f, Unit.Centimetre);
+                page.PageColor(Colors.White);
+                page.DefaultTextStyle(x => x.FontSize(10).FontFamily("Arial"));
+
+                // Header
+                page.Header().Column(col =>
+                {
+                    col.Item().Row(row =>
+                    {
+                        row.RelativeItem().Column(c =>
+                        {
+                            c.Item().Text(setaName).FontSize(13).Bold().FontColor("#0d47a1");
+                            c.Item().Text("NATIONAL SKILLS DEVELOPMENT MANAGEMENT SYSTEM (NSDMS)").FontSize(8).FontColor(Colors.Grey.Darken2);
+                        });
+
+                        row.ConstantItem(180).AlignRight().Column(c =>
+                        {
+                            c.Item().Text(template.DocumentCategory.ToUpperInvariant()).FontSize(9).Bold().FontColor("#1565c0");
+                            c.Item().Text($"Ref: {template.TemplateCode} (v{template.VersionNumber})").FontSize(8).FontColor(Colors.Grey.Darken2);
+                            c.Item().Text($"Scheme Year: {template.FinancialYear}").FontSize(8).FontColor(Colors.Grey.Darken1);
+                        });
+                    });
+
+                    col.Item().PaddingTop(4).LineHorizontal(1.5f).LineColor("#0d47a1");
+
+                    if (includeWatermark)
+                    {
+                        col.Item().PaddingTop(3).Background("#fff3e0").Padding(4).AlignCenter().Text(t =>
+                        {
+                            t.Span("⚠️ SIMULATION PREVIEW — EVALUATED WITH SAMPLE TOKENS — NOT AN EXECUTED STATUTORY RECORD")
+                                .FontSize(7.5f).Bold().FontColor("#e65100");
+                        });
+                    }
+                });
+
+                // Content
+                page.Content().PaddingVertical(10).Column(col =>
+                {
+                    col.Spacing(10);
+
+                    // Document Main Title
+                    col.Item().AlignCenter().Text(template.TemplateTitle.ToUpperInvariant()).Bold().FontSize(14).FontColor("#0d47a1");
+
+                    // Summary Recipient Metadata Box
+                    col.Item().Background("#f5f7fa").Border(1).BorderColor("#e0e0e0").Padding(8).Row(r =>
+                    {
+                        r.RelativeItem().Column(c =>
+                        {
+                            c.Item().Text(t =>
+                            {
+                                t.Span("Recipient / Beneficiary: ").Bold().FontSize(9);
+                                t.Span(tokens.GetValueOrDefault("RecipientName", "Apex Engineering Works (Pty) Ltd")).FontSize(9);
+                            });
+                            c.Item().Text(t =>
+                            {
+                                t.Span("Identification / SDL: ").Bold().FontSize(9);
+                                t.Span(tokens.GetValueOrDefault("RecipientIdentifier", "L998877665")).FontSize(9);
+                            });
+                        });
+
+                        r.RelativeItem().Column(c =>
+                        {
+                            c.Item().Text(t =>
+                            {
+                                t.Span("Document Reference: ").Bold().FontSize(9);
+                                t.Span(tokens.GetValueOrDefault("DocumentNumber", $"DOC-{template.FinancialYear}-SAMPLE-001")).FontSize(9);
+                            });
+                            c.Item().Text(t =>
+                            {
+                                t.Span("Evaluation Date: ").Bold().FontSize(9);
+                                t.Span(tokens.GetValueOrDefault("IssuedDate", DateTime.UtcNow.ToString("dd MMMM yyyy"))).FontSize(9);
+                            });
+                        });
+                    });
+
+                    // Sections & Clauses
+                    foreach (var sec in template.Sections.OrderBy(s => s.SequenceOrder))
+                    {
+                        var clause = sec.DocumentClause;
+                        if (clause == null || !clause.IsActive) continue;
+
+                        col.Item().PaddingTop(4).Column(secCol =>
+                        {
+                            secCol.Spacing(4);
+
+                            if (!string.IsNullOrWhiteSpace(sec.SectionNumber) || !string.IsNullOrWhiteSpace(sec.SectionTitle))
+                            {
+                                secCol.Item().Text($"{sec.SectionNumber} {sec.SectionTitle}".Trim()).Bold().FontSize(11).FontColor("#1b5e20");
+                            }
+
+                            string text = clause.ClauseContent;
+                            foreach (var kvp in tokens)
+                            {
+                                text = text.Replace($"{{{{{kvp.Key}}}}}", kvp.Value);
+                            }
+
+                            var lines = text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+                            foreach (var line in lines)
+                            {
+                                if (string.IsNullOrWhiteSpace(line)) continue;
+
+                                if (line.TrimStart().StartsWith("•") || line.TrimStart().StartsWith("-") || line.TrimStart().StartsWith("*"))
+                                {
+                                    secCol.Item().PaddingLeft(12).Row(bulletRow =>
+                                    {
+                                        bulletRow.ConstantItem(12).Text("•").Bold().FontColor("#0d47a1");
+                                        bulletRow.RelativeItem().Text(line.TrimStart('•', '-', '*', ' ')).FontSize(9.5f);
+                                    });
+                                }
+                                else
+                                {
+                                    secCol.Item().Text(line).FontSize(9.5f).LineHeight(1.3f);
+                                }
+                            }
+                        });
+                    }
+
+                    // Signatures Block
+                    col.Item().PaddingTop(15).BorderTop(1).BorderColor("#e0e0e0").Row(r =>
+                    {
+                        r.RelativeItem().Column(c =>
+                        {
+                            c.Item().Text("For Recipient / Grantee:").Bold().FontSize(9);
+                            c.Item().Text(tokens.GetValueOrDefault("RecipientName", "Authorised Representative")).FontSize(8.5f);
+                            c.Item().PaddingTop(25).LineHorizontal(0.5f).LineColor(Colors.Grey.Darken1);
+                            c.Item().Text("Authorised Signature").FontSize(8).Italic();
+                            c.Item().Text($"Date: {tokens.GetValueOrDefault("IssuedDate", DateTime.UtcNow.ToString("yyyy-MM-dd"))}").FontSize(8);
+                        });
+
+                        r.ConstantItem(40);
+
+                        r.RelativeItem().Column(c =>
+                        {
+                            c.Item().Text($"For {setaName}:").Bold().FontSize(9);
+                            c.Item().Text(tokens.GetValueOrDefault("SignatoryTitle", "Chief Executive Officer / ETQA Senior Manager")).FontSize(8.5f);
+                            c.Item().PaddingTop(25).LineHorizontal(0.5f).LineColor(Colors.Grey.Darken1);
+                            c.Item().Text(tokens.GetValueOrDefault("SignatoryName", "merSETA Executive Authority")).FontSize(8).Italic();
+                            c.Item().Text($"Date: {DateTime.UtcNow:yyyy-MM-dd}").FontSize(8);
+                        });
+                    });
+
+                    // Footer Disclaimer if specified
+                    if (!string.IsNullOrWhiteSpace(template.FooterDisclaimerText))
+                    {
+                        col.Item().PaddingTop(8).Text(template.FooterDisclaimerText).FontSize(7.5f).Italic().FontColor(Colors.Grey.Darken1);
+                    }
+                });
+
+                // Footer
+                page.Footer().Column(col =>
+                {
+                    col.Item().LineHorizontal(0.5f).LineColor("#cccccc");
+                    col.Item().PaddingTop(4).Row(row =>
+                    {
+                        row.RelativeItem().Text($"merSETA NSDMS Document Simulation Engine • Template: {template.TemplateCode} (v{template.VersionNumber})").FontSize(7.5f).FontColor("#777777");
+                        row.RelativeItem().AlignRight().Text(x =>
+                        {
+                            x.DefaultTextStyle(t => t.FontSize(7.5f).FontColor("#777777"));
+                            x.Span("Page ");
+                            x.CurrentPageNumber();
+                            x.Span(" of ");
+                            x.TotalPages();
+                        });
+                    });
+                });
+            });
+        });
+
+        return document.GeneratePdf();
+    }
+
+    public async Task<byte[]> GenerateSimulatedMoaTemplatePdfAsync(MoaTemplate template, Dictionary<string, string> tokens, bool includeWatermark = true)
+    {
+        var setaName = await _config.GetValueAsync("General.SetaName", "Manufacturing, Engineering and Related Services SETA (merSETA)");
+
+        var document = Document.Create(container =>
+        {
+            container.Page(page =>
+            {
+                page.Size(PageSizes.A4);
+                page.Margin(1.5f, Unit.Centimetre);
+                page.PageColor(Colors.White);
+                page.DefaultTextStyle(x => x.FontSize(10).FontFamily("Arial"));
+
+                // Header
+                page.Header().Column(col =>
+                {
+                    col.Item().Row(row =>
+                    {
+                        row.RelativeItem().Column(c =>
+                        {
+                            c.Item().Text(setaName).FontSize(13).Bold().FontColor("#0d47a1");
+                            c.Item().Text("MEMORANDUM OF AGREEMENT (DISCRETIONARY GRANT)").FontSize(9).Bold().FontColor("#1565c0");
+                        });
+
+                        row.ConstantItem(180).AlignRight().Column(c =>
+                        {
+                            c.Item().Text($"Template: {template.TemplateCode}").FontSize(8.5f).Bold();
+                            c.Item().Text($"Version: {template.VersionNumber} | FinYear: {template.FinancialYear}").FontSize(8).FontColor(Colors.Grey.Darken2);
+                            c.Item().Text($"Policy: {template.GrantTypeCode}").FontSize(8).FontColor(Colors.Grey.Darken1);
+                        });
+                    });
+
+                    col.Item().PaddingTop(4).LineHorizontal(1.5f).LineColor("#0d47a1");
+
+                    if (includeWatermark)
+                    {
+                        col.Item().PaddingTop(3).Background("#fff3e0").Padding(4).AlignCenter().Text(t =>
+                        {
+                            t.Span("⚠️ SIMULATION PREVIEW — EVALUATED WITH SAMPLE TOKENS — NOT AN EXECUTED STATUTORY RECORD")
+                                .FontSize(7.5f).Bold().FontColor("#e65100");
+                        });
+                    }
+                });
+
+                // Content
+                page.Content().PaddingVertical(10).Column(col =>
+                {
+                    col.Spacing(10);
+
+                    // Agreement Main Title
+                    col.Item().AlignCenter().Text(template.TemplateTitle.ToUpperInvariant()).Bold().FontSize(13).FontColor("#0d47a1");
+
+                    // Contract Summary Card
+                    col.Item().Background("#f5f7fa").Border(1).BorderColor("#e0e0e0").Padding(8).Row(r =>
+                    {
+                        r.RelativeItem().Column(c =>
+                        {
+                            c.Item().Text(t =>
+                            {
+                                t.Span("Employer / Beneficiary: ").Bold().FontSize(9);
+                                t.Span(tokens.GetValueOrDefault("EmployerName", "Apex Engineering Works (Pty) Ltd")).FontSize(9);
+                            });
+                            c.Item().Text(t =>
+                            {
+                                t.Span("SDL Reference Number: ").Bold().FontSize(9);
+                                t.Span(tokens.GetValueOrDefault("SdlNumber", "L998877665")).FontSize(9);
+                            });
+                            c.Item().Text(t =>
+                            {
+                                t.Span("Skills Project Title: ").Bold().FontSize(9);
+                                t.Span(tokens.GetValueOrDefault("ProjectTitle", "Apprenticeship Skills Development Programme 2026")).FontSize(9);
+                            });
+                        });
+
+                        r.RelativeItem().Column(c =>
+                        {
+                            c.Item().Text(t =>
+                            {
+                                t.Span("Contract MoA Reference: ").Bold().FontSize(9);
+                                t.Span(tokens.GetValueOrDefault("MoaNumber", $"MOA-{template.FinancialYear}-SAMPLE-001")).FontSize(9);
+                            });
+                            c.Item().Text(t =>
+                            {
+                                t.Span("Total Contract Value: ").Bold().FontSize(9);
+                                t.Span(tokens.GetValueOrDefault("TotalContractValue", "R 450,000.00")).FontSize(9).FontColor("#1b5e20");
+                            });
+                            c.Item().Text(t =>
+                            {
+                                t.Span("Contract Period: ").Bold().FontSize(9);
+                                t.Span(tokens.GetValueOrDefault("ContractPeriod", $"{DateTime.UtcNow:yyyy-MM-dd} to {DateTime.UtcNow.AddYears(1):yyyy-MM-dd}")).FontSize(9);
+                            });
+                        });
+                    });
+
+                    // Sections & Clauses
+                    foreach (var sec in template.Sections.OrderBy(s => s.SequenceOrder))
+                    {
+                        var clause = sec.MoaClause;
+                        if (clause == null || !clause.IsActive) continue;
+
+                        col.Item().PaddingTop(4).Column(secCol =>
+                        {
+                            secCol.Spacing(4);
+
+                            if (!string.IsNullOrWhiteSpace(sec.SectionNumber) || !string.IsNullOrWhiteSpace(sec.SectionTitle))
+                            {
+                                secCol.Item().Text($"{sec.SectionNumber} {sec.SectionTitle}".Trim()).Bold().FontSize(11).FontColor("#1b5e20");
+                            }
+
+                            string text = clause.ClauseContent;
+                            foreach (var kvp in tokens)
+                            {
+                                text = text.Replace($"{{{{{kvp.Key}}}}}", kvp.Value);
+                            }
+
+                            var lines = text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
+                            foreach (var line in lines)
+                            {
+                                if (string.IsNullOrWhiteSpace(line)) continue;
+
+                                if (line.TrimStart().StartsWith("•") || line.TrimStart().StartsWith("-") || line.TrimStart().StartsWith("*"))
+                                {
+                                    secCol.Item().PaddingLeft(12).Row(bulletRow =>
+                                    {
+                                        bulletRow.ConstantItem(12).Text("•").Bold().FontColor("#0d47a1");
+                                        bulletRow.RelativeItem().Text(line.TrimStart('•', '-', '*', ' ')).FontSize(9.5f);
+                                    });
+                                }
+                                else
+                                {
+                                    secCol.Item().Text(line).FontSize(9.5f).LineHeight(1.3f);
+                                }
+                            }
+                        });
+                    }
+
+                    // Tranche Milestones Table (Simulated Schedule)
+                    col.Item().PaddingTop(6).Text("SCHEDULE A: TRANCHE PAYMENT MILESTONES").Bold().FontSize(10.5f).FontColor("#0d47a1");
+                    col.Item().Table(table =>
+                    {
+                        table.ColumnsDefinition(columns =>
+                        {
+                            columns.ConstantColumn(30);
+                            columns.RelativeColumn(3);
+                            columns.ConstantColumn(60);
+                            columns.ConstantColumn(90);
+                            columns.ConstantColumn(80);
+                        });
+
+                        table.Header(h =>
+                        {
+                            h.Cell().Background("#0d47a1").Padding(4).Text("#").FontColor(Colors.White).Bold().FontSize(8.5f);
+                            h.Cell().Background("#0d47a1").Padding(4).Text("Milestone Deliverable").FontColor(Colors.White).Bold().FontSize(8.5f);
+                            h.Cell().Background("#0d47a1").Padding(4).Text("Tranche %").FontColor(Colors.White).Bold().FontSize(8.5f);
+                            h.Cell().Background("#0d47a1").Padding(4).Text("Amount (ZAR)").FontColor(Colors.White).Bold().FontSize(8.5f);
+                            h.Cell().Background("#0d47a1").Padding(4).Text("Target Date").FontColor(Colors.White).Bold().FontSize(8.5f);
+                        });
+
+                        table.Cell().BorderBottom(1).BorderColor("#e0e0e0").Padding(4).Text("1").FontSize(8.5f);
+                        table.Cell().BorderBottom(1).BorderColor("#e0e0e0").Padding(4).Text("Project Inception, Learner Registration & Induction").FontSize(8.5f);
+                        table.Cell().BorderBottom(1).BorderColor("#e0e0e0").Padding(4).Text("30%").FontSize(8.5f);
+                        table.Cell().BorderBottom(1).BorderColor("#e0e0e0").Padding(4).Text("R 135,000.00").FontSize(8.5f);
+                        table.Cell().BorderBottom(1).BorderColor("#e0e0e0").Padding(4).Text(DateTime.UtcNow.AddMonths(1).ToString("yyyy-MM-dd")).FontSize(8.5f);
+
+                        table.Cell().BorderBottom(1).BorderColor("#e0e0e0").Padding(4).Text("2").FontSize(8.5f);
+                        table.Cell().BorderBottom(1).BorderColor("#e0e0e0").Padding(4).Text("Mid-Term Workplace Monitoring & Formative Assessment").FontSize(8.5f);
+                        table.Cell().BorderBottom(1).BorderColor("#e0e0e0").Padding(4).Text("40%").FontSize(8.5f);
+                        table.Cell().BorderBottom(1).BorderColor("#e0e0e0").Padding(4).Text("R 180,000.00").FontSize(8.5f);
+                        table.Cell().BorderBottom(1).BorderColor("#e0e0e0").Padding(4).Text(DateTime.UtcNow.AddMonths(6).ToString("yyyy-MM-dd")).FontSize(8.5f);
+
+                        table.Cell().BorderBottom(1).BorderColor("#e0e0e0").Padding(4).Text("3").FontSize(8.5f);
+                        table.Cell().BorderBottom(1).BorderColor("#e0e0e0").Padding(4).Text("Final Trade Test Assessment, Moderation & Close-out").FontSize(8.5f);
+                        table.Cell().BorderBottom(1).BorderColor("#e0e0e0").Padding(4).Text("30%").FontSize(8.5f);
+                        table.Cell().BorderBottom(1).BorderColor("#e0e0e0").Padding(4).Text("R 135,000.00").FontSize(8.5f);
+                        table.Cell().BorderBottom(1).BorderColor("#e0e0e0").Padding(4).Text(DateTime.UtcNow.AddMonths(12).ToString("yyyy-MM-dd")).FontSize(8.5f);
+                    });
+
+                    // Signatures Block
+                    col.Item().PaddingTop(15).BorderTop(1).BorderColor("#e0e0e0").Row(r =>
+                    {
+                        r.RelativeItem().Column(c =>
+                        {
+                            c.Item().Text("For Employer / Grantee:").Bold().FontSize(9);
+                            c.Item().Text(tokens.GetValueOrDefault("EmployerName", "Apex Engineering Works (Pty) Ltd")).FontSize(8.5f);
+                            c.Item().PaddingTop(25).LineHorizontal(0.5f).LineColor(Colors.Grey.Darken1);
+                            c.Item().Text("Authorised Representative").FontSize(8).Italic();
+                            c.Item().Text($"Date: {DateTime.UtcNow:yyyy-MM-dd}").FontSize(8);
+                        });
+
+                        r.ConstantItem(40);
+
+                        r.RelativeItem().Column(c =>
+                        {
+                            c.Item().Text($"For {setaName}:").Bold().FontSize(9);
+                            c.Item().Text("Chief Executive Officer / ETQA Senior Manager").FontSize(8.5f);
+                            c.Item().PaddingTop(25).LineHorizontal(0.5f).LineColor(Colors.Grey.Darken1);
+                            c.Item().Text("merSETA Executive Authority").FontSize(8).Italic();
+                            c.Item().Text($"Date: {DateTime.UtcNow:yyyy-MM-dd}").FontSize(8);
+                        });
+                    });
+                });
+
+                // Footer
+                page.Footer().Column(col =>
+                {
+                    col.Item().LineHorizontal(0.5f).LineColor("#cccccc");
+                    col.Item().PaddingTop(4).Row(row =>
+                    {
+                        row.RelativeItem().Text($"merSETA NSDMS MoA Simulation Engine • Template: {template.TemplateCode} (v{template.VersionNumber})").FontSize(7.5f).FontColor("#777777");
+                        row.RelativeItem().AlignRight().Text(x =>
+                        {
+                            x.DefaultTextStyle(t => t.FontSize(7.5f).FontColor("#777777"));
+                            x.Span("Page ");
+                            x.CurrentPageNumber();
+                            x.Span(" of ");
+                            x.TotalPages();
+                        });
+                    });
+                });
+            });
+        });
+
+        return document.GeneratePdf();
+    }
+
+    private byte[] GenerateQrBytes(string verifyUrl)
+    {
+        if (_verificationService != null)
+        {
+            return _verificationService.GenerateVerificationQrCodeBytes(verifyUrl, 6);
+        }
+        using var qrGenerator = new QRCoder.QRCodeGenerator();
+        using var qrCodeData = qrGenerator.CreateQrCode(verifyUrl, QRCoder.QRCodeGenerator.ECCLevel.Q);
+        var qrCode = new QRCoder.PngByteQRCode(qrCodeData);
+        return qrCode.GetGraphic(6);
     }
 }

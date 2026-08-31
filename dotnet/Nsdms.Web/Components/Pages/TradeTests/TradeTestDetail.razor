@@ -1,12 +1,16 @@
+@page "/trade-tests/{Id:int}"
+@page "/trade-tests/{Id:int}/edit"
 @page "/tradetests/{Id:int}"
 @page "/tradetests/{Id:int}/edit"
 @using Nsdms.Application.Common.Interfaces
 @using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
 @inject ITradeTestAndArplService TradeTestService
 @inject IPdfDocumentService PdfService
 @inject NavigationManager Nav
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
+@rendermode InteractiveServer
 
 <PageTitle>Trade Test Detail | merSETA NSDMS</PageTitle>
 
@@ -21,90 +25,99 @@ else
 {
     <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
         <!-- Sticky Top Bar -->
-        <MudCard Elevation="2" Class="mb-4 sticky-top-header" Style="position: sticky; top: var(--mud-appbar-height, 64px) !important; z-index: 10;">
-            <MudCardContent Class="d-flex align-center justify-space-between py-3">
-                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Primary" OnClick="@(() => Nav.NavigateTo("/tradetests"))" />
-                    <div>
+        <MudPaper Elevation="2" Class="mb-4 pa-4 sticky-top bg-surface d-flex flex-wrap justify-space-between align-center gap-4 rounded-lg" Style="top: var(--mud-appbar-height, 64px); z-index: 10;">
+            <div class="d-flex align-center gap-3">
+                <MudButton Variant="Variant.Text"
+                           StartIcon="@Icons.Material.Filled.ArrowBack"
+                           Color="Color.Default"
+                           OnClick="@(() => Nav.NavigateTo("/tradetests"))"
+                           aria-label="Back to Trade Tests">
+                    Back to Registry
+                </MudButton>
+                <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-2" />
+                <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Small">
+                    <MudIcon Icon="@Icons.Material.Filled.Construction" Size="Size.Small" />
+                </MudAvatar>
+                <div>
+                    <div class="d-flex align-center gap-2">
                         <MudText Typo="Typo.h5" Class="fw-bold">@_app.ApplicationNumber — @_app.TradeTitle</MudText>
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">
-                            Candidate: <strong>@(_app.Person?.FirstName) @(_app.Person?.LastName)</strong> (RSA ID: @_app.Person?.RsaIdNumber) | Type: <strong>@_app.ApplicationTypeCode</strong> | Attempt: #@_app.AttemptNumber
-                        </MudText>
-                    </div>
-                </MudStack>
-
-                <MudStack Row="true" Spacing="2">
-                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Cancel" OnClick="@(() => Nav.NavigateTo("/tradetests"))">
-                        Cancel
-                    </MudButton>
-
-                    @if (_app.StatusCode == "Submitted" || _app.StatusCode == "TradeCenterAllocated")
-                    {
-                        <MudButton Variant="Variant.Outlined" Color="Color.Info" StartIcon="@Icons.Material.Filled.Send" OnClick="SubmitToNambAsync">
-                            Submit to NAMB
-                        </MudButton>
-                    }
-
-                    @if (_app.StatusCode == "AwaitingNambApproval")
-                    {
-                        <MudButton Variant="Variant.Filled" Color="Color.Warning" StartIcon="@Icons.Material.Filled.AssignmentTurnedIn" OnClick="RecordNambDecisionAsync">
-                            Record NAMB Approval
-                        </MudButton>
-                    }
-
-                    @if (_app.StatusCode == "Assessing" || _app.StatusCode == "TradeCenterAllocated")
-                    {
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.FactCheck" OnClick="RecordTasksAsync">
-                            Score Assessment
-                        </MudButton>
-                    }
-
-                    @if (_app.CompetencyStatusCode == "Competent" && _app.StatusCode != "Certified")
-                    {
-                        <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.WorkspacePremium" OnClick="IssueCertificateAsync">
-                            Issue Trade Certificate
-                        </MudButton>
-                    }
-
-                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PictureAsPdf" OnClick="DownloadCertificatePdf">
-                        Download Certificate (PDF)
-                    </MudButton>
-
-                    @if (_app.StatusCode == "Certified")
-                    {
-                        <MudChip T="string" Color="Color.Success" Variant="Variant.Filled" Size="Size.Large" Icon="@Icons.Material.Filled.CheckCircle">
-                            CERTIFIED ARTISAN: @_app.SerialCertificateNumber
+                        <MudChip T="string" Color="@GetStatusColor(_app.StatusCode)" Size="Size.Small" Variant="Variant.Filled">
+                            @_app.StatusCode
                         </MudChip>
-                    }
-                </MudStack>
-            </MudCardContent>
-        </MudCard>
+                        @if (_app.CompetencyStatusCode == "Competent")
+                        {
+                            <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.CheckCircle">
+                                COMPETENT
+                            </MudChip>
+                        }
+                    </div>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        Candidate: <strong>@(_app.Person?.FirstName) @(_app.Person?.LastName)</strong> (RSA ID: @_app.Person?.RsaIdNumber) | Type: <strong>@_app.ApplicationTypeCode</strong> | Attempt: #@_app.AttemptNumber
+                    </MudText>
+                </div>
+            </div>
+
+            <div class="d-flex align-center gap-2 flex-wrap">
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Cancel" OnClick="@(() => Nav.NavigateTo("/tradetests"))" aria-label="Cancel">
+                    Cancel
+                </MudButton>
+
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PictureAsPdf" OnClick="DownloadCertificatePdf" aria-label="Download Certificate PDF">
+                    Download Certificate (PDF)
+                </MudButton>
+
+                @if (_app.StatusCode == "Certified")
+                {
+                    <MudChip T="string" Color="Color.Success" Variant="Variant.Filled" Size="Size.Medium" Icon="@Icons.Material.Filled.CheckCircle">
+                        CERTIFIED ARTISAN: @_app.SerialCertificateNumber
+                    </MudChip>
+                }
+            </div>
+        </MudPaper>
+
+        <!-- Workflow State Tracker & Action Bridge -->
+        <WorkflowProgressBar ProcessCode="TRADETEST" 
+                             EntityId="@Id" 
+                             EntityTitle="@($"{_app.ApplicationNumber} - {_app.TradeTitle}")" 
+                             EntityRef="@_app.ApplicationNumber" />
+
+        <WorkflowActionBridge ProcessCode="TRADETEST" 
+                              EntityId="@Id" 
+                              EntityTitle="@($"{_app.ApplicationNumber} - {_app.TradeTitle}")" 
+                              EntityRef="@_app.ApplicationNumber" 
+                              OnStatusChanged="OnWorkflowStatusChanged" />
 
         <!-- Main Structure Tabs -->
-        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6" Color="Color.Primary">
+        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Color="Color.Surface" @bind-ActivePanelIndex="_activeTabIndex">
+            
             <!-- Tab 1: Candidate & Application Overview -->
-            <MudTabPanel Text="Overview & Logistics" Icon="@Icons.Material.Filled.Person">
-                <MudGrid>
+            <MudTabPanel Text="Candidate & Scope" Icon="@Icons.Material.Filled.Person">
+                <MudGrid Spacing="3" Class="pa-4">
                     <MudItem xs="12" md="6">
                         <MudCard Outlined="true" Class="pa-4 h-100">
-                            <MudText Typo="Typo.h6" Class="fw-bold mb-3">Candidate & Trade Information</MudText>
+                            <MudText Typo="Typo.h6" Class="fw-bold mb-3">Candidate &amp; Trade Information</MudText>
                             <MudSimpleTable Dense="true" Elevation="0">
                                 <tbody>
                                     <tr><td><strong>Trade Title:</strong></td><td>@_app.TradeTitle</td></tr>
                                     <tr><td><strong>OFO Code:</strong></td><td>@(_app.TradeOfoCode ?? "N/A")</td></tr>
                                     <tr><td><strong>Application Type:</strong></td><td>@_app.ApplicationTypeCode</td></tr>
                                     <tr><td><strong>Candidate Name:</strong></td><td>@_app.Person?.FirstName @_app.Person?.LastName</td></tr>
-                                    <tr><td><strong>ID Number:</strong></td><td>@_app.Person?.RsaIdNumber</td></tr>
+                                    <tr><td><strong>RSA ID / Passport:</strong></td><td>@_app.Person?.RsaIdNumber</td></tr>
                                     <tr><td><strong>Email:</strong></td><td>@_app.Person?.EmailAddress</td></tr>
                                     <tr><td><strong>Cell Phone:</strong></td><td>@_app.Person?.CellPhoneNumber</td></tr>
                                 </tbody>
                             </MudSimpleTable>
+                            <div class="mt-3">
+                                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.OpenInNew" Href="@($"/learners/{_app.PersonId}")">
+                                    Open Learner 360° Hub
+                                </MudButton>
+                            </div>
                         </MudCard>
                     </MudItem>
 
                     <MudItem xs="12" md="6">
                         <MudCard Outlined="true" Class="pa-4 h-100">
-                            <MudText Typo="Typo.h6" Class="fw-bold mb-3">Assessment Centre & Schedule</MudText>
+                            <MudText Typo="Typo.h6" Class="fw-bold mb-3">Assessment Centre &amp; Schedule</MudText>
                             <MudSimpleTable Dense="true" Elevation="0">
                                 <tbody>
                                     <tr><td><strong>Assessment Centre:</strong></td><td>@(_app.AssessmentCenterName ?? "Not Yet Allocated")</td></tr>
@@ -113,7 +126,7 @@ else
                                     <tr><td><strong>Assessor:</strong></td><td>@(_app.AssessorName ?? "TBD") (Reg: @(_app.AssessorRegistrationNumber ?? "N/A"))</td></tr>
                                     <tr><td><strong>Moderator:</strong></td><td>@(_app.ModeratorName ?? "TBD") (Reg: @(_app.ModeratorRegistrationNumber ?? "N/A"))</td></tr>
                                     <tr><td><strong>NAMB Serial:</strong></td><td><strong class="text-primary">@(_app.NambSerialNumber ?? "Awaiting Allocation")</strong></td></tr>
-                                    <tr><td><strong>Outcome:</strong></td><td><span class="badge bg-success">@_app.CompetencyStatusCode</span></td></tr>
+                                    <tr><td><strong>Outcome:</strong></td><td><MudChip T="string" Color="@GetCompetencyColor(_app.CompetencyStatusCode)" Size="Size.Small">@_app.CompetencyStatusCode</MudChip></td></tr>
                                 </tbody>
                             </MudSimpleTable>
                         </MudCard>
@@ -123,94 +136,167 @@ else
 
             <!-- Tab 2: ARPL Portfolio & Experience Details -->
             <MudTabPanel Text="ARPL Portfolio & Experience" Icon="@Icons.Material.Filled.HistoryEdu">
-                <MudAlert Severity="Severity.Info" Class="mb-4" Dense="true">
-                    Artisan Recognition of Prior Learning (ARPL - Section 28) portfolio evaluation and verified workplace evidence.
-                </MudAlert>
+                <div class="pa-4">
+                    <MudAlert Severity="Severity.Info" Class="mb-4" Dense="true">
+                        Artisan Recognition of Prior Learning (ARPL - Section 28) portfolio evaluation and verified workplace evidence.
+                    </MudAlert>
 
-                <MudText Typo="Typo.subtitle1" Class="fw-bold mb-2">Claimed Workplace Experience</MudText>
-                <MudTable Items="_app.ExperienceDetails" Dense="true" Elevation="0" Outlined="true" Class="mb-4">
-                    <HeaderContent>
-                        <MudTh>Employer</MudTh>
-                        <MudTh>Job Title</MudTh>
-                        <MudTh>Start Date</MudTh>
-                        <MudTh>End Date</MudTh>
-                        <MudTh>Duties & Competencies</MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd>@context.EmployerName</MudTd>
-                        <MudTd>@context.JobTitle</MudTd>
-                        <MudTd>@context.StartDate.ToString("yyyy-MM-dd")</MudTd>
-                        <MudTd>@(context.EndDate?.ToString("yyyy-MM-dd") ?? "Present")</MudTd>
-                        <MudTd>@context.DutiesDescription</MudTd>
-                    </RowTemplate>
-                </MudTable>
+                    <MudText Typo="Typo.subtitle1" Class="fw-bold mb-2">Claimed Workplace Experience</MudText>
+                    <MudTable Items="_app.ExperienceDetails" Dense="true" Elevation="0" Outlined="true" Class="mb-4">
+                        <HeaderContent>
+                            <MudTh>Employer</MudTh>
+                            <MudTh>Job Title</MudTh>
+                            <MudTh>Start Date</MudTh>
+                            <MudTh>End Date</MudTh>
+                            <MudTh>Duties &amp; Competencies</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>@context.EmployerName</MudTd>
+                            <MudTd>@context.JobTitle</MudTd>
+                            <MudTd>@context.StartDate.ToString("yyyy-MM-dd")</MudTd>
+                            <MudTd>@(context.EndDate?.ToString("yyyy-MM-dd") ?? "Present")</MudTd>
+                            <MudTd>@context.DutiesDescription</MudTd>
+                        </RowTemplate>
+                        <NoRecordsContent>
+                            <div class="pa-4 text-center">
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">No prior workplace experience logged.</MudText>
+                            </div>
+                        </NoRecordsContent>
+                    </MudTable>
 
-                <MudText Typo="Typo.subtitle1" Class="fw-bold mb-2">Prior Training Modules</MudText>
-                <MudTable Items="_app.TrainingDetails" Dense="true" Elevation="0" Outlined="true">
-                    <HeaderContent>
-                        <MudTh>Institution</MudTh>
-                        <MudTh>Course / Module</MudTh>
-                        <MudTh>Completion Date</MudTh>
-                        <MudTh>Certificate Reference</MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd>@context.InstitutionName</MudTd>
-                        <MudTd>@context.CourseOrModuleTitle</MudTd>
-                        <MudTd>@(context.CompletionDate?.ToString("yyyy-MM-dd") ?? "N/A")</MudTd>
-                        <MudTd>@(context.CertificateObtained ?? "Completed")</MudTd>
-                    </RowTemplate>
-                </MudTable>
+                    <MudText Typo="Typo.subtitle1" Class="fw-bold mb-2">Prior Training Modules</MudText>
+                    <MudTable Items="_app.TrainingDetails" Dense="true" Elevation="0" Outlined="true">
+                        <HeaderContent>
+                            <MudTh>Institution</MudTh>
+                            <MudTh>Course / Module</MudTh>
+                            <MudTh>Completion Date</MudTh>
+                            <MudTh>Certificate Reference</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>@context.InstitutionName</MudTd>
+                            <MudTd>@context.CourseOrModuleTitle</MudTd>
+                            <MudTd>@(context.CompletionDate?.ToString("yyyy-MM-dd") ?? "N/A")</MudTd>
+                            <MudTd>@(context.CertificateObtained ?? "Completed")</MudTd>
+                        </RowTemplate>
+                        <NoRecordsContent>
+                            <div class="pa-4 text-center">
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">No prior training courses logged.</MudText>
+                            </div>
+                        </NoRecordsContent>
+                    </MudTable>
+                </div>
             </MudTabPanel>
 
             <!-- Tab 3: Practical Assessment Tasks -->
-            <MudTabPanel Text="Practical Assessment Tasks" Icon="@Icons.Material.Filled.Checklist">
-                <MudTable Items="_app.Tasks" Dense="true" Elevation="0" Outlined="true">
-                    <HeaderContent>
-                        <MudTh>Task #</MudTh>
-                        <MudTh>Task Title</MudTh>
-                        <MudTh>Total Marks</MudTh>
-                        <MudTh>Marks Obtained</MudTh>
-                        <MudTh>Percentage</MudTh>
-                        <MudTh>Result</MudTh>
-                        <MudTh>Assessor Comments</MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd>#@context.TaskNumber</MudTd>
-                        <MudTd Class="fw-semibold">@context.TaskTitle</MudTd>
-                        <MudTd>@context.TotalMarksAvailable.ToString("N0")</MudTd>
-                        <MudTd>@context.MarksObtained.ToString("N0")</MudTd>
-                        <MudTd><strong>@context.PercentageAchieved%</strong></MudTd>
-                        <MudTd>
-                            @if (context.IsCompetent)
-                            {
-                                <MudChip T="string" Color="Color.Success" Size="Size.Small">COMPETENT</MudChip>
-                            }
-                            else
-                            {
-                                <MudChip T="string" Color="Color.Error" Size="Size.Small">NOT YET COMPETENT</MudChip>
-                            }
-                        </MudTd>
-                        <MudTd>@context.AssessorComments</MudTd>
-                    </RowTemplate>
-                </MudTable>
+            <MudTabPanel Text="Assessment Tasks" Icon="@Icons.Material.Filled.Checklist">
+                <div class="pa-4">
+                    <div class="d-flex justify-space-between align-center mb-3">
+                        <div>
+                            <MudText Typo="Typo.h6">Practical Trade Test Tasks (SETMIS 505)</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">Demonstrated task competencies evaluated by registered artisan assessor</MudText>
+                        </div>
+                    </div>
+
+                    <MudTable Items="_app.Tasks" Dense="true" Elevation="0" Outlined="true">
+                        <HeaderContent>
+                            <MudTh>Task #</MudTh>
+                            <MudTh>Task Title</MudTh>
+                            <MudTh>Total Marks</MudTh>
+                            <MudTh>Marks Obtained</MudTh>
+                            <MudTh>Percentage</MudTh>
+                            <MudTh>Result</MudTh>
+                            <MudTh>Assessor Comments</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>#@context.TaskNumber</MudTd>
+                            <MudTd Class="fw-semibold">@context.TaskTitle</MudTd>
+                            <MudTd>@context.TotalMarksAvailable.ToString("N0")</MudTd>
+                            <MudTd>@context.MarksObtained.ToString("N0")</MudTd>
+                            <MudTd><strong>@context.PercentageAchieved%</strong></MudTd>
+                            <MudTd>
+                                @if (context.IsCompetent)
+                                {
+                                    <MudChip T="string" Color="Color.Success" Size="Size.Small">COMPETENT</MudChip>
+                                }
+                                else
+                                {
+                                    <MudChip T="string" Color="Color.Error" Size="Size.Small">NOT YET COMPETENT</MudChip>
+                                }
+                            </MudTd>
+                            <MudTd>@context.AssessorComments</MudTd>
+                        </RowTemplate>
+                        <NoRecordsContent>
+                            <div class="pa-4 text-center">
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">No practical assessment tasks scored yet.</MudText>
+                            </div>
+                        </NoRecordsContent>
+                    </MudTable>
+                </div>
             </MudTabPanel>
 
-            <!-- Tab 4: NAMB Moderation Audit -->
-            <MudTabPanel Text="NAMB Moderation History" Icon="@Icons.Material.Filled.History">
-                <MudTimeline TimelineOrientation="TimelineOrientation.Vertical" TimelinePosition="TimelinePosition.Start">
-                    @foreach (var namb in _app.NambHistories)
+            <!-- Tab 4: National Artisan Certificate -->
+            <MudTabPanel Text="Artisan Certificate" Icon="@Icons.Material.Filled.WorkspacePremium">
+                <div class="pa-4">
+                    @if (!string.IsNullOrWhiteSpace(_app.SerialCertificateNumber))
                     {
-                        <MudTimelineItem Color="@(namb.DecisionStatusCode == "Approved" ? Color.Success : Color.Warning)">
-                            <ItemContent>
-                                <MudCard Outlined="true" Class="pa-3">
-                                    <MudText Typo="Typo.subtitle2" Class="fw-bold">@namb.DecisionStatusCode — Officer: @namb.NambOfficerName</MudText>
-                                    <MudText Typo="Typo.body2">@namb.DecisionNotes</MudText>
-                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Recorded on @namb.DecisionDate.ToString("yyyy-MM-dd HH:mm")</MudText>
-                                </MudCard>
-                            </ItemContent>
-                        </MudTimelineItem>
+                        <MudCard Outlined="true" Class="pa-6 text-center border-success" Style="border: 2px solid var(--mud-palette-success);">
+                            <MudIcon Icon="@Icons.Material.Filled.Verified" Color="Color.Success" Size="Size.Large" Class="mb-3" />
+                            <MudText Typo="Typo.h5" Class="fw-bold text-success mb-1">National Red Seal Artisan Certificate</MudText>
+                            <MudText Typo="Typo.h6" Class="fw-bold mb-4">Serial Number: @_app.SerialCertificateNumber</MudText>
+                            <MudDivider Class="my-4" />
+                            <MudGrid>
+                                <MudItem xs="12" md="4">
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Candidate Full Name</MudText>
+                                    <MudText Typo="Typo.body1" Class="fw-bold">@_app.Person?.FirstName @_app.Person?.LastName</MudText>
+                                </MudItem>
+                                <MudItem xs="12" md="4">
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Designated Trade Title</MudText>
+                                    <MudText Typo="Typo.body1" Class="fw-bold">@_app.TradeTitle</MudText>
+                                </MudItem>
+                                <MudItem xs="12" md="4">
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Issue Date</MudText>
+                                    <MudText Typo="Typo.body1" Class="fw-bold">@(_app.CertificateIssueDate?.ToString("dd MMMM yyyy") ?? DateTime.Today.ToString("dd MMMM yyyy"))</MudText>
+                                </MudItem>
+                            </MudGrid>
+                            <div class="mt-6">
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Download" OnClick="DownloadCertificatePdf" aria-label="Download Official Certificate">
+                                    Download Official PDF Certificate
+                                </MudButton>
+                            </div>
+                        </MudCard>
                     }
-                </MudTimeline>
+                    else
+                    {
+                        <MudAlert Severity="Severity.Normal" Class="pa-4 text-center">
+                            Artisan Certificate will be issued once candidate achieves <strong>COMPETENT</strong> status across all assessment modules and NAMB moderation is verified.
+                        </MudAlert>
+                    }
+                </div>
+            </MudTabPanel>
+
+            <!-- Tab 5: NAMB Moderation History -->
+            <MudTabPanel Text="NAMB Moderation History" Icon="@Icons.Material.Filled.History">
+                <div class="pa-4">
+                    <MudTimeline TimelineOrientation="TimelineOrientation.Vertical" TimelinePosition="TimelinePosition.Start">
+                        @foreach (var namb in _app.NambHistories)
+                        {
+                            <MudTimelineItem Color="@(namb.DecisionStatusCode == "Approved" ? Color.Success : Color.Warning)">
+                                <ItemContent>
+                                    <MudCard Outlined="true" Class="pa-3">
+                                        <MudText Typo="Typo.subtitle2" Class="fw-bold">@namb.DecisionStatusCode — Officer: @namb.NambOfficerName</MudText>
+                                        <MudText Typo="Typo.body2">@namb.DecisionNotes</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Recorded on @namb.DecisionDate.ToString("yyyy-MM-dd HH:mm")</MudText>
+                                    </MudCard>
+                                </ItemContent>
+                            </MudTimelineItem>
+                        }
+                    </MudTimeline>
+                </div>
+            </MudTabPanel>
+
+            <!-- Tab 6: Evidence Vault -->
+            <MudTabPanel Text="Evidence Vault" Icon="@Icons.Material.Filled.FolderZip">
+                <DocumentVault TargetEntityName="LearnerTradeTest" TargetEntityId="@Id" />
             </MudTabPanel>
         </MudTabs>
     </MudContainer>
@@ -219,6 +305,7 @@ else
 @code {
     [Parameter] public int Id { get; set; }
     private LearnerTradeTestApplication? _app;
+    private int _activeTabIndex = 0;
 
     protected override async Task OnInitializedAsync()
     {
@@ -294,4 +381,26 @@ else
     {
         Nav.NavigateTo($"/api/documents/tradetest/{Id}/pdf", forceLoad: true);
     }
+
+    private async Task OnWorkflowStatusChanged(string newStatus)
+    {
+        await LoadApplicationAsync();
+        StateHasChanged();
+    }
+
+    private static Color GetStatusColor(string? status) => status switch
+    {
+        "Certified" or "Approved" or "Competent" => Color.Success,
+        "Assessing" or "Submitted" or "TradeCenterAllocated" => Color.Info,
+        "AwaitingNambApproval" or "Draft" => Color.Warning,
+        "Rejected" or "NotYetCompetent" => Color.Error,
+        _ => Color.Default
+    };
+
+    private static Color GetCompetencyColor(string? status) => status switch
+    {
+        "Competent" => Color.Success,
+        "NotYetCompetent" => Color.Error,
+        _ => Color.Default
+    };
 }

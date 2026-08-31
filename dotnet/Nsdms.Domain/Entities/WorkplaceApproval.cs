@@ -93,6 +93,26 @@ public class WorkplaceApproval : BaseEntity
     public bool IsActive { get; set; } = true;
 
     /// <summary>
+    /// Designated Trade / Occupational Code (references TradeMentorRatioPolicy.TradeCode, e.g. WELD, ELEC, FITT).
+    /// </summary>
+    public string? TradeCode { get; set; }
+
+    /// <summary>
+    /// Explicit mentor ratio enforcement override for this workplace approval (null = inherit Org/Global, true = enforce, false = exempt).
+    /// </summary>
+    public bool? IsRatioEnforced { get; set; }
+
+    /// <summary>
+    /// Custom site-specific learner-to-mentor ratio override (e.g. 3 for 1:3), overriding the standard trade policy.
+    /// </summary>
+    public int? CustomTradeRatio { get; set; }
+
+    /// <summary>
+    /// Exemption justification or special dispensation notes for this workplace approval.
+    /// </summary>
+    public string? MentorRatioExemptionNotes { get; set; }
+
+    /// <summary>
     /// Certified artisan mentors assigned to supervise learners at this site.
     /// </summary>
     public ICollection<WorkplaceApprovalMentor> Mentors { get; set; } = new List<WorkplaceApprovalMentor>();

@@ -10,11 +10,13 @@ public class BankingDetailsService : IBankingDetailsService
 {
     private readonly INsdmsDbContextFactory _factory;
     private readonly AuditService _audit;
+    private readonly IBankservAvsService? _avsService;
 
-    public BankingDetailsService(INsdmsDbContextFactory factory, AuditService audit)
+    public BankingDetailsService(INsdmsDbContextFactory factory, AuditService audit, IBankservAvsService? avsService = null)
     {
         _factory = factory;
         _audit = audit;
+        _avsService = avsService;
     }
 
     public async Task<List<BankingDetails>> GetBankingDetailsListAsync()
@@ -39,6 +41,31 @@ public class BankingDetailsService : IBankingDetailsService
     public async Task<BankingDetails> SubmitBankingDetailsAsync(int? organisationId, int? trainingProviderId, string bankName, string branchCode, string? branchName, string accountNumber, string accountHolderName, string accountTypeCode, string? docPath, DateTime? docDate, string currentUsername)
     {
         using var db = await _factory.CreateDbContextAsync();
+
+        // 1. Anti-Collusion Duplicate Account Check (Check if account exists across distinct entities)
+        var isDuplicateAccount = await db.BankingDetails.AnyAsync(b => 
+            b.AccountNumber == accountNumber && 
+            b.BranchCode == branchCode && 
+            b.IsActive &&
+            ((organisationId.HasValue && b.OrganisationId != organisationId.Value) ||
+             (trainingProviderId.HasValue && b.TrainingProviderId != trainingProviderId.Value)));
+
+        // 2. Check if this is an updated bank account on an existing organisation (triggers 14-day cooling-off)
+        var hasExistingActiveBank = organisationId.HasValue && await db.BankingDetails.AnyAsync(b => b.OrganisationId == organisationId.Value && b.IsActive && b.ApprovalStatusCode == "FullyApproved");
+
+        // 3. Run Real-Time Bankserv AVS Verification
+        AvsVerificationResult? avsResult = null;
+        if (_avsService != null)
+        {
+            avsResult = await _avsService.VerifyAccountAsync(new AvsVerificationRequest
+            {
+                BankName = bankName,
+                BranchCode = branchCode,
+                AccountNumber = accountNumber,
+                AccountHolderName = accountHolderName
+            });
+        }
+
         var entity = new BankingDetails
         {
             OrganisationId = organisationId,
@@ -51,7 +78,16 @@ public class BankingDetailsService : IBankingDetailsService
             AccountTypeCode = accountTypeCode,
             BankConfirmationDocumentPath = docPath,
             BankConfirmationDate = docDate ?? DateTime.UtcNow,
-            ApprovalStatusCode = "PendingVerification",
+            ApprovalStatusCode = isDuplicateAccount 
+                ? "FlaggedForForensicReview" 
+                : (avsResult != null && !avsResult.IsValid ? "AvsFailed" : "PendingVerification"),
+            RequiresForensicApproval = isDuplicateAccount,
+            FraudRiskFlags = isDuplicateAccount ? "CROSS_ORGANISATION_DUPLICATE_ACCOUNT" : (avsResult != null && !avsResult.IsValid ? avsResult.ResponseCode : null),
+            IsCoolingOffActive = hasExistingActiveBank,
+            CoolingOffExpiresAt = hasExistingActiveBank ? DateTime.UtcNow.AddDays(14) : null,
+            AvsVerificationReference = avsResult?.VerificationReference,
+            AvsVerifiedAt = avsResult?.VerifiedAt,
+            AvsStatusResponse = avsResult?.ResponseMessage,
             IsErpActive = false,
             CreatedBy = currentUsername,
             CreatedAt = DateTime.UtcNow
@@ -63,15 +99,15 @@ public class BankingDetailsService : IBankingDetailsService
         var auditLog = new BankingDetailsAudit
         {
             BankingDetailsId = entity.Id,
-            ActionType = "SubmitBankingDetails",
-            NewStateJson = JsonSerializer.Serialize(new { entity.BankName, entity.AccountNumber, entity.ApprovalStatusCode }),
+            ActionType = isDuplicateAccount ? "SubmitBankingDetails_FLAGGED_DUPLICATE" : "SubmitBankingDetails",
+            NewStateJson = JsonSerializer.Serialize(new { entity.BankName, entity.AccountNumber, entity.ApprovalStatusCode, entity.RequiresForensicApproval, entity.IsCoolingOffActive }),
             ChangedByUserId = currentUsername,
             ChangedAt = DateTime.UtcNow
         };
         db.BankingDetailsAudits.Add(auditLog);
         await db.SaveChangesAsync();
 
-        await _audit.LogAsync("BankingDetails", entity.Id, "SubmitBankingDetails", currentUsername, new { entity.BankName, entity.AccountNumber });
+        await _audit.LogAsync("BankingDetails", entity.Id, "SubmitBankingDetails", currentUsername, new { entity.BankName, entity.AccountNumber, entity.ApprovalStatusCode, entity.RequiresForensicApproval, entity.IsCoolingOffActive });
         return entity;
     }
 

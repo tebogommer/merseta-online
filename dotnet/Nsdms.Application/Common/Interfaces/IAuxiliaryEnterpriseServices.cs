@@ -16,8 +16,10 @@ public interface ISdfAppointmentService
     Task<List<SdfCompany>> GetSdfAppointmentsAsync();
     Task<SdfCompany?> GetSdfAppointmentByIdAsync(int id);
     Task<SdfCompany> SubmitSdfAppointmentAsync(int organisationId, int personId, string sdfTypeCode, DateTime startDate, string? docPath, bool allowWsp, bool allowDg, string currentUsername);
+    Task<SdfCompany> UpdateSdfAppointmentAsync(int id, string sdfTypeCode, DateTime startDate, DateTime? endDate, bool allowWsp, bool allowDg, string? docPath, string currentUsername);
     Task<SdfCompany> ApproveSdfAppointmentAsync(int id, string comments, string currentUsername);
     Task<SdfCompany> TerminateSdfAppointmentAsync(int id, string reason, string currentUsername);
+    Task<bool> DeleteSdfAppointmentAsync(int id, string currentUsername);
 }
 
 public interface ISdfManagementService

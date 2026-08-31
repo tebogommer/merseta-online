@@ -1,0 +1,627 @@
+@page "/legal/moa-templates/{Id:int}"
+@page "/legal/moa-templates/new"
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Domain.Entities
+@inject IMoaTemplateEngineService TemplateService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>@(_isNew ? "New MoA Template | merSETA Legal" : $"{_template?.TemplateCode} | merSETA Legal")</PageTitle>
+
+@if (_isLoading)
+{
+    <MudContainer Class="my-8 text-center">
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Class="mb-3" />
+        <MudText Typo="Typo.body1">Loading MoA template structure...</MudText>
+    </MudContainer>
+}
+else if (_template == null)
+{
+    <MudContainer Class="my-8">
+        <MudAlert Severity="Severity.Error" Variant="Variant.Filled">MoA Template record not found.</MudAlert>
+        <MudButton Variant="Variant.Outlined" Class="mt-3" StartIcon="@Icons.Material.Filled.ArrowBack" OnClick="@(() => Navigation.NavigateTo("/legal/moa-templates"))">
+            Back to Templates
+        </MudButton>
+    </MudContainer>
+}
+else
+{
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
+        <!-- Sticky Top Action Bar -->
+        <MudCard Elevation="2" Class="mb-4 sticky-top-header" Style="position: sticky; top: var(--mud-appbar-height, 64px) !important; z-index: 10;">
+            <MudCardContent Class="d-flex align-center justify-space-between py-3">
+                <div class="d-flex align-center gap-3">
+                    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Default" OnClick="@(() => Navigation.NavigateTo("/legal/moa-templates"))" Title="Back to List" />
+                    <div>
+                        <div class="d-flex align-center gap-2">
+                            <MudText Typo="Typo.h5" Class="fw-bold">@(_isNew ? "New MoA Template Draft" : _template.TemplateCode)</MudText>
+                            <MudChip T="string" Color="@GetStatusColor(_template.ApprovalStatus)" Size="Size.Small" Variant="Variant.Filled">
+                                @_template.ApprovalStatus
+                            </MudChip>
+                        </div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                            @_template.TemplateTitle (FY: @_template.FinancialYear | v@_template.VersionNumber)
+                        </MudText>
+                    </div>
+                </div>
+                <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Cancel" OnClick="@(() => Navigation.NavigateTo("/legal/moa-templates"))">
+                        Cancel
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveTemplateAsync">
+                        Save Changes
+                    </MudButton>
+                    @if (!_isNew && _template.ApprovalStatus != "Approved")
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.VerifiedUser" OnClick="ApproveTemplateAsync">
+                            Approve Template
+                        </MudButton>
+                    }
+                </MudStack>
+            </MudCardContent>
+        </MudCard>
+
+        <!-- Master-Detail Tabs -->
+        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6" Color="Color.Primary">
+            <!-- Tab 1: General & Policy Metadata -->
+            <MudTabPanel Text="Policy &amp; General Metadata" Icon="@Icons.Material.Filled.Tune">
+                <MudGrid>
+                    <MudItem xs="12" md="6">
+                        <MudTextField @bind-Value="_template.TemplateCode" Label="Template Code" Variant="Variant.Outlined" Required="true" HelperText="Unique code identifier, e.g. DG-STD-2026" />
+                    </MudItem>
+                    <MudItem xs="12" md="6">
+                        <MudTextField @bind-Value="_template.TemplateTitle" Label="Template Title" Variant="Variant.Outlined" Required="true" HelperText="Human-readable legal contract title" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="4">
+                        <MudNumericField @bind-Value="_template.FinancialYear" Label="Financial Year" Variant="Variant.Outlined" Min="2020" Max="2035" Required="true" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="4">
+                        <MudSelect T="string" @bind-Value="_template.GrantTypeCode" Label="Grant Type" Variant="Variant.Outlined">
+                            <MudSelectItem Value="@("DiscretionaryGrant")">Discretionary Grant</MudSelectItem>
+                            <MudSelectItem Value="@("SpecialProject")">Special Project</MudSelectItem>
+                            <MudSelectItem Value="@("Bursary")">Bursary Scheme</MudSelectItem>
+                            <MudSelectItem Value="@("Candidacy")">Candidacy Support</MudSelectItem>
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="4">
+                        <MudSelect T="string" @bind-Value="_template.LegalEntityType" Label="Target Entity Type" Variant="Variant.Outlined">
+                            <MudSelectItem Value="@("All")">All Legal Entities</MudSelectItem>
+                            <MudSelectItem Value="@("Employer")">Private Employers</MudSelectItem>
+                            <MudSelectItem Value="@("TVET")">TVET Colleges</MudSelectItem>
+                            <MudSelectItem Value="@("University")">Universities / HET</MudSelectItem>
+                            <MudSelectItem Value="@("NGO")">NGOs / Community Orgs</MudSelectItem>
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="4">
+                        <MudTextField @bind-Value="_template.VersionNumber" Label="Policy Version" Variant="Variant.Outlined" HelperText="Semantic version, e.g. 1.0.0" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="4">
+                        <MudDatePicker @bind-Date="_effectiveFromDate" Label="Effective From Date" Variant="Variant.Outlined" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="4">
+                        <MudDatePicker @bind-Date="_effectiveToDate" Label="Effective Sunset Date" Variant="Variant.Outlined" Clearable="true" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="4">
+                        <MudSwitch @bind-Value="_template.IsActive" Label="Active for Contract Generation" Color="Color.Primary" />
+                    </MudItem>
+                    @if (!string.IsNullOrWhiteSpace(_template.ApprovedBy))
+                    {
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudTextField @bind-Value="_template.ApprovedBy" Label="Approved By" Variant="Variant.Outlined" ReadOnly="true" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6" md="4">
+                            <MudTextField Value="@(_template.ApprovedAt?.ToString("yyyy-MM-dd HH:mm:ss") ?? "")" Label="Approved At" Variant="Variant.Outlined" ReadOnly="true" />
+                        </MudItem>
+                    }
+                </MudGrid>
+            </MudTabPanel>
+
+            <!-- Tab 2: Clause Composition & Section Ordering -->
+            <MudTabPanel Text="Clause Composition &amp; Sections" Icon="@Icons.Material.Filled.FormatListNumbered">
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+                    <div>
+                        <MudText Typo="Typo.h6">Document Section Architecture</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">
+                            Ordered legal clauses rendered in sequence. Drag or use arrow controls to reorder.
+                        </MudText>
+                    </div>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenAddClauseDialog">
+                        Add Clause Section
+                    </MudButton>
+                </MudStack>
+
+                @if (_template.Sections == null || !_template.Sections.Any())
+                {
+                    <MudAlert Severity="Severity.Info" Variant="Variant.Outlined">
+                        No clauses are currently mapped to this template. Click <strong>Add Clause Section</strong> above to compose your agreement structure.
+                    </MudAlert>
+                }
+                else
+                {
+                    <MudTable Items="@_template.Sections.OrderBy(s => s.SequenceOrder)" Hover="true" Dense="true" Elevation="1" Outlined="true">
+                        <HeaderContent>
+                            <MudTh Style="width: 70px; text-align: center;">Order</MudTh>
+                            <MudTh Style="width: 100px;">Section #</MudTh>
+                            <MudTh>Section Heading</MudTh>
+                            <MudTh>Linked Reusable Clause</MudTh>
+                            <MudTh Style="text-align: center;">Category</MudTh>
+                            <MudTh Style="text-align: center;">Mandatory</MudTh>
+                            <MudTh Style="text-align: right; width: 160px;">Actions</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Order" Style="text-align: center;">
+                                <MudChip T="string" Size="Size.Small" Variant="Variant.Text">@context.SequenceOrder</MudChip>
+                            </MudTd>
+                            <MudTd DataLabel="Section #">
+                                <strong>@context.SectionNumber</strong>
+                            </MudTd>
+                            <MudTd DataLabel="Heading">
+                                <MudText Typo="Typo.body2" Class="fw-bold">@context.SectionTitle</MudText>
+                            </MudTd>
+                            <MudTd DataLabel="Linked Clause">
+                                <MudLink Href="@($"/legal/moa-clauses/{context.MoaClauseId}")" Color="Color.Primary">
+                                    @(context.MoaClause?.ClauseCode ?? $"Clause #{context.MoaClauseId}")
+                                </MudLink>
+                            </MudTd>
+                            <MudTd DataLabel="Category" Style="text-align: center;">
+                                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Default">
+                                    @(context.MoaClause?.Category ?? "General")
+                                </MudChip>
+                            </MudTd>
+                            <MudTd DataLabel="Mandatory" Style="text-align: center;">
+                                <MudIcon Icon="@(context.IsMandatory ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.RadioButtonUnchecked)"
+                                         Color="@(context.IsMandatory ? Color.Success : Color.Default)" Size="Size.Small" />
+                            </MudTd>
+                            <MudTd DataLabel="Actions" Style="text-align: right;">
+                                <MudIconButton Icon="@Icons.Material.Filled.ArrowUpward" Size="Size.Small" Color="Color.Default" Title="Move Up"
+                                               OnClick="@(() => MoveSectionOrderAsync(context, -1))" />
+                                <MudIconButton Icon="@Icons.Material.Filled.ArrowDownward" Size="Size.Small" Color="Color.Default" Title="Move Down"
+                                               OnClick="@(() => MoveSectionOrderAsync(context, 1))" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" Title="Remove from Template"
+                                               OnClick="@(() => RemoveSectionAsync(context.Id))" />
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            </MudTabPanel>
+
+            <!-- Tab 3: Live Document Preview -->
+            <MudTabPanel Text="Live Simulation &amp; PDF Export" Icon="@Icons.Material.Filled.PictureAsPdf">
+                <MudGrid>
+                    <!-- Left Column: Scenario & Token Inspector -->
+                    <MudItem xs="12" md="4">
+                        <MudCard Elevation="1" Class="rounded-lg mb-4">
+                            <MudCardHeader>
+                                <CardHeaderContent>
+                                    <MudText Typo="Typo.subtitle1" Class="font-weight-bold">
+                                        <MudIcon Icon="@Icons.Material.Filled.Tune" Size="Size.Small" Class="mr-1" />
+                                        MoA Scenario &amp; Grant Tokens
+                                    </MudText>
+                                </CardHeaderContent>
+                            </MudCardHeader>
+                            <MudCardContent Class="pt-0">
+                                <MudSelect T="string" Label="Grantee Scenario Profile" Value="_selectedScenario" ValueChanged="OnScenarioChanged" Variant="Variant.Outlined" Class="mb-3">
+                                    <MudSelectItem Value="@("LevyEmployer")">Discretionary Grant — Corporate Employer</MudSelectItem>
+                                    <MudSelectItem Value="@("NonLevySme")">Special Project — Non-Levy Community Trust</MudSelectItem>
+                                    <MudSelectItem Value="@("TvetCollege")">Public TVET College Partnership</MudSelectItem>
+                                    <MudSelectItem Value="@("BursaryCandidacy")">Bursary &amp; Candidate Engineer Mentorship</MudSelectItem>
+                                </MudSelect>
+
+                                <MudDivider Class="my-3" />
+
+                                <MudTextField Value="@GetCustomToken("EmployerName")" ValueChanged="@((string v) => SetCustomToken("EmployerName", v))" Label="Employer / Grantee Name" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-2" />
+                                <MudTextField Value="@GetCustomToken("SdlNumber")" ValueChanged="@((string v) => SetCustomToken("SdlNumber", v))" Label="SDL Reference Number" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-2" />
+                                <MudTextField Value="@GetCustomToken("ProjectTitle")" ValueChanged="@((string v) => SetCustomToken("ProjectTitle", v))" Label="Skills Project Title" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-2" />
+                                <MudTextField Value="@GetCustomToken("MoaNumber")" ValueChanged="@((string v) => SetCustomToken("MoaNumber", v))" Label="MoA Contract Reference" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-2" />
+                                <MudTextField Value="@GetCustomToken("TotalContractValue")" ValueChanged="@((string v) => SetCustomToken("TotalContractValue", v))" Label="Total Contract Value (ZAR)" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-2" />
+                                <MudTextField Value="@GetCustomToken("ContractPeriod")" ValueChanged="@((string v) => SetCustomToken("ContractPeriod", v))" Label="Contract Period" Variant="Variant.Outlined" Margin="Margin.Dense" Class="mb-3" />
+
+                                <MudSwitch @bind-Value="_includeWatermark" Label="Simulation Preview Watermark" Color="Color.Warning" Class="mb-3" />
+
+                                <div class="d-flex gap-2">
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Default" Size="Size.Small" StartIcon="@Icons.Material.Filled.RestartAlt" OnClick="ResetScenarioTokens">
+                                        Reset Tokens
+                                    </MudButton>
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh" OnClick="RefreshSimulationPdfAsync">
+                                        Update Preview
+                                    </MudButton>
+                                </div>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+
+                    <!-- Right Column: Live QuestPDF Preview Canvas -->
+                    <MudItem xs="12" md="8">
+                        <MudCard Elevation="1" Class="rounded-lg">
+                            <MudCardHeader>
+                                <CardHeaderContent>
+                                    <div class="d-flex align-center justify-space-between flex-wrap gap-2">
+                                        <div>
+                                            <MudText Typo="Typo.subtitle1" Class="font-weight-bold">
+                                                <MudIcon Icon="@Icons.Material.Filled.Visibility" Size="Size.Small" Class="mr-1" />
+                                                Real-Time Assembled MoA Agreement
+                                            </MudText>
+                                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                                WYSIWYG contract layout generated with QuestPDF • Matches executed legal agreements
+                                            </MudText>
+                                        </div>
+                                        <div class="d-flex align-center gap-2">
+                                            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small"
+                                                       StartIcon="@(_showRawMarkdown ? Icons.Material.Filled.PictureAsPdf : Icons.Material.Filled.Code)"
+                                                       OnClick="@(() => _showRawMarkdown = !_showRawMarkdown)">
+                                                @(_showRawMarkdown ? "Show PDF View" : "Show Raw Markdown")
+                                            </MudButton>
+                                            @if (!_isNew)
+                                            {
+                                                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small"
+                                                           StartIcon="@Icons.Material.Filled.OpenInNew"
+                                                           Href="@($"/api/documents/moa-templates/{Id}/simulation-pdf?scenario={_selectedScenario}")" Target="_blank">
+                                                    Open Fullscreen
+                                                </MudButton>
+                                                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
+                                                           StartIcon="@Icons.Material.Filled.Download"
+                                                           OnClick="DownloadSimulationPdfAsync" Disabled="_generatingPdf">
+                                                    Download Simulated MoA (PDF)
+                                                </MudButton>
+                                            }
+                                        </div>
+                                    </div>
+                                </CardHeaderContent>
+                            </MudCardHeader>
+                            <MudCardContent Class="pt-0">
+                                @if (_generatingPdf)
+                                {
+                                    <div class="d-flex flex-column align-center justify-center py-12">
+                                        <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" Class="mb-3" />
+                                        <MudText Typo="Typo.body2" Color="Color.Secondary">Generating high-fidelity MoA simulation PDF...</MudText>
+                                    </div>
+                                }
+                                else if (_showRawMarkdown)
+                                {
+                                    <MudPaper Elevation="0" Class="pa-4 rounded-lg mud-background-gray" Style="max-height: 750px; overflow-y: auto;">
+                                        <pre style="white-space: pre-wrap; font-family: 'Segoe UI', sans-serif; font-size: 13px; line-height: 1.6;">@(_previewContent ?? "Generating document preview...")</pre>
+                                    </MudPaper>
+                                }
+                                else if (!string.IsNullOrEmpty(_pdfBase64))
+                                {
+                                    <iframe src="@($"data:application/pdf;base64,{_pdfBase64}")"
+                                            style="width: 100%; height: 750px; border: 1px solid var(--mud-palette-lines-default); border-radius: 8px;"
+                                            title="MoA Simulation PDF Preview">
+                                    </iframe>
+                                }
+                                else
+                                {
+                                    <MudAlert Severity="Severity.Info">Save this MoA template to generate dynamic QuestPDF simulation output.</MudAlert>
+                                }
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+                </MudGrid>
+            </MudTabPanel>
+        </MudTabs>
+    </MudContainer>
+
+    <!-- Add Clause Section Dialog Modal -->
+    <MudDialog @bind-Visible="_showAddClauseDialog" Options="_dialogOptions">
+        <TitleContent>
+            <MudText Typo="Typo.h6">
+                <MudIcon Icon="@Icons.Material.Filled.LibraryAdd" Class="mr-2" /> Add Clause Section
+            </MudText>
+        </TitleContent>
+        <DialogContent>
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudSelect T="int" @bind-Value="_selectedClauseId" Label="Select Reusable Clause" Variant="Variant.Outlined" Required="true">
+                        @foreach (var cl in _availableClauses)
+                        {
+                            <MudSelectItem Value="@cl.Id">[@cl.Category] @cl.ClauseCode — @cl.ClauseTitle</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="_newSectionNumber" Label="Section Number / Label" Variant="Variant.Outlined" Placeholder="e.g. 1.0, 2.1, Schedule 1" />
+                </MudItem>
+                <MudItem xs="12" sm="6">
+                    <MudTextField @bind-Value="_newSectionTitle" Label="Section Title Override" Variant="Variant.Outlined" Placeholder="Leave empty to use clause title" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudSwitch @bind-Value="_newSectionIsMandatory" Label="Mandatory Clause" Color="Color.Primary" />
+                </MudItem>
+            </MudGrid>
+        </DialogContent>
+        <DialogActions>
+            <MudButton OnClick="@(() => _showAddClauseDialog = false)">Cancel</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ConfirmAddSectionAsync">Add to Template</MudButton>
+        </DialogActions>
+    </MudDialog>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    [Inject] private IJSRuntime JS { get; set; } = default!;
+
+    private MoaTemplate? _template;
+    private bool _isLoading = true;
+    private bool _isNew = false;
+    private bool _generatingPdf = false;
+    private bool _showRawMarkdown = false;
+    private bool _includeWatermark = true;
+
+    private DateTime? _effectiveFromDate = DateTime.Today;
+    private DateTime? _effectiveToDate = DateTime.Today.AddYears(1);
+
+    private string? _previewContent;
+    private string _pdfBase64 = string.Empty;
+    private string _selectedScenario = "LevyEmployer";
+    private Dictionary<string, Dictionary<string, string>> _scenarioProfiles = new();
+    private Dictionary<string, string> _customTokens = new();
+
+    private bool _showAddClauseDialog = false;
+    private List<MoaClause> _availableClauses = new();
+    private int _selectedClauseId;
+    private string _newSectionNumber = string.Empty;
+    private string _newSectionTitle = string.Empty;
+    private bool _newSectionIsMandatory = true;
+
+    private readonly DialogOptions _dialogOptions = new() { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true };
+
+    protected override async Task OnInitializedAsync()
+    {
+        _isNew = Id == 0;
+        _scenarioProfiles = TemplateService.GetDefaultScenarioTokenProfiles();
+        ResetScenarioTokens();
+        await LoadTemplateAsync();
+    }
+
+    private void ResetScenarioTokens()
+    {
+        if (_scenarioProfiles.TryGetValue(_selectedScenario, out var profile))
+        {
+            _customTokens = new Dictionary<string, string>(profile);
+        }
+        else
+        {
+            _customTokens = new Dictionary<string, string>
+            {
+                ["EmployerName"] = "Apex Engineering Works (Pty) Ltd",
+                ["SdlNumber"] = "L998877665",
+                ["ProjectTitle"] = "Apprenticeship Skills Development Programme 2026",
+                ["MoaNumber"] = $"MOA-{_template?.FinancialYear ?? 2026}-DG-SAMPLE-001",
+                ["TotalContractValue"] = "R 450,000.00",
+                ["ContractPeriod"] = $"{DateTime.UtcNow:yyyy-MM-dd} to {DateTime.UtcNow.AddYears(1):yyyy-MM-dd}"
+            };
+        }
+    }
+
+    private string GetCustomToken(string key) => _customTokens.TryGetValue(key, out var val) ? val : string.Empty;
+    private void SetCustomToken(string key, string val) => _customTokens[key] = val;
+
+    private async Task OnScenarioChanged(string scenario)
+    {
+        _selectedScenario = scenario;
+        ResetScenarioTokens();
+        await RefreshSimulationPdfAsync();
+    }
+
+    private async Task RefreshSimulationPdfAsync()
+    {
+        await GenerateLivePreviewAsync();
+        Snackbar.Add("MoA Simulation PDF updated with current scenario tokens.", Severity.Info);
+    }
+
+    private async Task LoadTemplateAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            if (_isNew)
+            {
+                _template = new MoaTemplate
+                {
+                    TemplateCode = $"DG-STD-{DateTime.Now.Year}",
+                    TemplateTitle = $"merSETA Discretionary Grant Agreement ({DateTime.Now.Year}/{DateTime.Now.Year + 1})",
+                    FinancialYear = DateTime.Now.Year,
+                    GrantTypeCode = "DiscretionaryGrant",
+                    LegalEntityType = "All",
+                    VersionNumber = "1.0.0",
+                    ApprovalStatus = "Draft",
+                    EffectiveFrom = DateTime.Today,
+                    EffectiveTo = DateTime.Today.AddYears(1),
+                    IsActive = true
+                };
+            }
+            else
+            {
+                _template = await TemplateService.GetTemplateByIdAsync(Id);
+                if (_template != null)
+                {
+                    _effectiveFromDate = _template.EffectiveFrom;
+                    _effectiveToDate = _template.EffectiveTo;
+                    await GenerateLivePreviewAsync();
+                }
+            }
+
+            _availableClauses = await TemplateService.GetClausesAsync(activeOnly: true);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading template: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task SaveTemplateAsync()
+    {
+        if (_template == null) return;
+
+        try
+        {
+            _template.EffectiveFrom = _effectiveFromDate ?? DateTime.UtcNow;
+            _template.EffectiveTo = _effectiveToDate;
+
+            if (_isNew)
+            {
+                _template = await TemplateService.CreateTemplateAsync(_template, "LegalOfficer");
+                Snackbar.Add($"Template {_template.TemplateCode} created successfully.", Severity.Success);
+                Navigation.NavigateTo($"/legal/moa-templates/{_template.Id}");
+            }
+            else
+            {
+                _template = await TemplateService.UpdateTemplateAsync(_template, "LegalOfficer");
+                Snackbar.Add($"Template {_template.TemplateCode} updated successfully.", Severity.Success);
+                await GenerateLivePreviewAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving template: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task ApproveTemplateAsync()
+    {
+        if (_template == null) return;
+        try
+        {
+            _template = await TemplateService.ApproveTemplateAsync(_template.Id, "Legal & Governance Executive");
+            Snackbar.Add($"Template {_template.TemplateCode} has been approved and activated for issuance.", Severity.Success);
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error approving template: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void OpenAddClauseDialog()
+    {
+        _selectedClauseId = _availableClauses.FirstOrDefault()?.Id ?? 0;
+        _newSectionNumber = $"{(_template?.Sections?.Count ?? 0) + 1}.0";
+        _newSectionTitle = string.Empty;
+        _newSectionIsMandatory = true;
+        _showAddClauseDialog = true;
+    }
+
+    private async Task ConfirmAddSectionAsync()
+    {
+        if (_template == null || _selectedClauseId == 0) return;
+
+        try
+        {
+            int nextOrder = ((_template.Sections?.Count ?? 0) + 1) * 10;
+            _template = await TemplateService.AddSectionAsync(
+                _template.Id,
+                _selectedClauseId,
+                _newSectionNumber,
+                _newSectionTitle,
+                nextOrder,
+                _newSectionIsMandatory,
+                "LegalOfficer");
+
+            _showAddClauseDialog = false;
+            Snackbar.Add("Clause section added to template.", Severity.Success);
+            await GenerateLivePreviewAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error adding section: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task RemoveSectionAsync(int sectionId)
+    {
+        if (_template == null) return;
+        try
+        {
+            _template = await TemplateService.RemoveSectionAsync(sectionId, "LegalOfficer");
+            Snackbar.Add("Section removed from template.", Severity.Success);
+            await GenerateLivePreviewAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error removing section: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task MoveSectionOrderAsync(MoaTemplateSection section, int delta)
+    {
+        if (_template?.Sections == null) return;
+
+        var ordered = _template.Sections.OrderBy(s => s.SequenceOrder).ToList();
+        int currentIndex = ordered.IndexOf(section);
+        int newIndex = currentIndex + delta;
+
+        if (newIndex < 0 || newIndex >= ordered.Count) return;
+
+        ordered.RemoveAt(currentIndex);
+        ordered.Insert(newIndex, section);
+
+        var idsInOrder = ordered.Select(s => s.Id).ToList();
+        try
+        {
+            _template = await TemplateService.ReorderSectionsAsync(_template.Id, idsInOrder, "LegalOfficer");
+            Snackbar.Add("Clause sequence reordered.", Severity.Info);
+            await GenerateLivePreviewAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error reordering sections: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task GenerateLivePreviewAsync()
+    {
+        if (_template == null || _isNew) return;
+
+        _generatingPdf = true;
+        try
+        {
+            _previewContent = await TemplateService.AssembleTemplatePreviewAsync(_template.Id);
+            var pdfBytes = await TemplateService.GenerateSimulatedPdfAsync(_template.Id, _customTokens, _includeWatermark);
+            _pdfBase64 = Convert.ToBase64String(pdfBytes);
+        }
+        catch (Exception ex)
+        {
+            _previewContent = $"Preview generation failed: {ex.Message}";
+            _pdfBase64 = string.Empty;
+            Snackbar.Add($"Error generating MoA simulation PDF: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _generatingPdf = false;
+        }
+    }
+
+    private async Task DownloadSimulationPdfAsync()
+    {
+        if (string.IsNullOrEmpty(_pdfBase64) || _template == null)
+        {
+            Snackbar.Add("No simulated MoA PDF available to download.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            string fileName = $"{_template.TemplateCode}_MoA_Simulation_{_selectedScenario}_{DateTime.UtcNow:yyyyMMdd}.pdf";
+            await JS.InvokeVoidAsync("downloadFileFromBase64", fileName, "application/pdf", _pdfBase64);
+            Snackbar.Add("Simulated MoA agreement PDF downloaded successfully.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Download failed: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private Color GetStatusColor(string status) => status switch
+    {
+        "Approved" => Color.Success,
+        "UnderReview" => Color.Warning,
+        "Draft" => Color.Info,
+        "Archived" => Color.Dark,
+        _ => Color.Default
+    };
+}

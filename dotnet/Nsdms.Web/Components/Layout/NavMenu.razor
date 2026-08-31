@@ -1,56 +1,248 @@
-<NavPanel>
-    <MudNavMenu Class="mud-width-full">
-        <MudText Typo="Typo.caption" Class="px-4 mt-2 font-weight-bold" Color="Color.Secondary">WORKFLOW ORCHESTRATION</MudText>
-        <MudNavLink href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Executive Dashboard</MudNavLink>
-        <MudNavLink href="tasks" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Inbox">Universal Task Inbox</MudNavLink>
+@namespace Nsdms.Web.Components.Layout
+@using MudBlazor
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Application.Services
+@inject INavigationMenuService NavService
+@inject ICaslAbilityService CaslService
+@inject ISnackbar Snackbar
+@inject NavigationManager Nav
 
-        <MudText Typo="Typo.caption" Class="px-4 mt-4 font-weight-bold" Color="Color.Secondary">CORE REGISTRIES</MudText>
-        <MudNavLink href="people" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.People">People &amp; Demographics</MudNavLink>
-        <MudNavLink href="employers" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Business">Employers / Organisations</MudNavLink>
-        <MudNavLink href="employers/sdf" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Badge">SDF Appointments</MudNavLink>
-        <MudNavLink href="sdp" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.School">Skills Development Providers</MudNavLink>
-        <MudNavLink href="curriculum" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.MenuBook">Curriculum Development (QCD)</MudNavLink>
+<NavPanel Collapsed="@Collapsed" CurrentPath="@Nav.Uri">
+    <div class="nsdms-menu-container pa-1">
+        @if (_isLoading)
+        {
+            <div class="pa-4 text-center">
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Small" />
+                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block mt-2">Loading workspaces...</MudText>
+            </div>
+        }
+        else
+        {
+            <MudNavMenu Class="mud-width-full" Dense="true" Rounded="true">
+                <!-- 1. Pinned Shortcuts Section ("My Quick Access") -->
+                @if (_navTree?.PinnedItems != null && _navTree.PinnedItems.Any())
+                {
+                    <div class="nsdms-nav-group-header px-3 pt-2 pb-1 d-flex align-center justify-space-between">
+                        <div class="d-flex align-center gap-1">
+                            <MudIcon Icon="@Icons.Material.Filled.Star" Size="Size.Small" Style="color: #f59e0b; font-size: 1rem;" />
+                            <MudText Typo="Typo.caption" Class="font-weight-bold" Style="color: var(--mud-palette-text-secondary); letter-spacing: 0.05em; font-size: 0.68rem;">
+                                PINNED SHORTCUTS
+                            </MudText>
+                        </div>
+                        <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" Class="px-1 py-0" Style="font-size: 0.6rem; height: 16px;">
+                            @_navTree.PinnedItems.Count
+                        </MudChip>
+                    </div>
 
-        <MudText Typo="Typo.caption" Class="px-4 mt-4 font-weight-bold" Color="Color.Secondary">GRANTS &amp; WSP</MudText>
-        <MudNavLink href="wsp" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Assignment">WSP &amp; Mandatory Grants</MudNavLink>
-        <MudNavLink href="wsp/committees" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Groups">Training Committees</MudNavLink>
-        <MudNavLink href="grants" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AccountBalanceWallet">Discretionary Grants (DG)</MudNavLink>
-        <MudNavLink href="grants/pip" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AssignmentTurnedIn">Project Implementation (PIP)</MudNavLink>
-        <MudNavLink href="contracts/variations" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Difference">Contract Addenda &amp; Variations</MudNavLink>
+                    @foreach (var item in _navTree.PinnedItems)
+                    {
+                        <div class="position-relative nsdms-nav-item-wrapper">
+                            <MudNavLink href="@item.Href" 
+                                        Match="@(item.ExactMatch ? NavLinkMatch.All : NavLinkMatch.Prefix)" 
+                                        Icon="@GetIcon(item.Icon)" 
+                                        IconColor="Color.Primary"
+                                        Class="nsdms-nav-link pr-8">
+                                <div class="d-flex align-center justify-space-between mud-width-full">
+                                    <span class="text-truncate">@item.Title</span>
+                                    @if (item.BadgeCount > 0)
+                                    {
+                                        <MudChip T="string" 
+                                                 Size="Size.Small" 
+                                                 Variant="Variant.Filled" 
+                                                 Color="@GetBadgeColor(item.BadgeColor)" 
+                                                 Class="ml-2 px-1 py-0 font-weight-bold" 
+                                                 Style="font-size: 0.65rem; height: 18px;">
+                                            @item.BadgeCount
+                                        </MudChip>
+                                    }
+                                </div>
+                            </MudNavLink>
+                            <MudIconButton Icon="@Icons.Material.Filled.Star" 
+                                           Size="Size.Small" 
+                                           OnClick="@(() => TogglePinAsync(item))"
+                                           Title="Unpin from shortcuts" 
+                                           Class="nsdms-pin-btn" 
+                                           Style="position: absolute; right: 4px; top: 50%; transform: translateY(-50%); color: #f59e0b; padding: 2px;" />
+                        </div>
+                    }
 
-        <MudText Typo="Typo.caption" Class="px-4 mt-4 font-weight-bold" Color="Color.Secondary">FINANCE &amp; DISBURSEMENTS</MudText>
-        <MudNavLink href="finance/grants" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Description">Grant MOAs &amp; Tranches</MudNavLink>
-        <MudNavLink href="finance/banking-details" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AccountBalance">Banking Details &amp; Signoff</MudNavLink>
-        <MudNavLink href="finance/levy-rebates" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Payments">Mandatory Grant Rebates</MudNavLink>
-        <MudNavLink href="finance/levy-audits" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Calculate">SARS Levy Audits &amp; Clawbacks</MudNavLink>
-        <MudNavLink href="levies" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.ReceiptLong">SARS Levy Files</MudNavLink>
-        <MudNavLink href="inter-seta-transfers" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.SwapHoriz">Inter-SETA Transfers</MudNavLink>
+                    <MudDivider Class="my-2 mx-2" Style="opacity: 0.5;" />
+                }
 
-        <MudText Typo="Typo.caption" Class="px-4 mt-4 font-weight-bold" Color="Color.Secondary">LEARNER LIFECYCLE</MudText>
-        <MudNavLink href="learners" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.School">Learner Management</MudNavLink>
-        <MudNavLink href="tradetests" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.FactCheck">Trade Tests &amp; ARPL</MudNavLink>
-        <MudNavLink href="assessments/summative" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AssignmentTurnedIn">Summative Assessments &amp; SOR</MudNavLink>
-
-        <MudText Typo="Typo.caption" Class="px-4 mt-4 font-weight-bold" Color="Color.Secondary">QUALITY ASSURANCE</MudText>
-        <MudNavLink href="monitoring" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.FactCheck">Workplace Monitoring &amp; Audits</MudNavLink>
-        <MudNavLink href="etqa" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.VerifiedUser">ETQA &amp; Assessors</MudNavLink>
-        <MudNavLink href="etqa/aqp" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.FactCheck">Assessment Quality Partners (AQP)</MudNavLink>
-        <MudNavLink href="etqa/scope-extensions" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.FactCheck">Accreditation Scope Extensions</MudNavLink>
-        <MudNavLink href="non-seta/verifications" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.DomainVerification">Non-SETA Articulations</MudNavLink>
-        <MudNavLink href="workplace-approvals" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Handyman">Workplace Approvals (WPA)</MudNavLink>
-
-        <MudText Typo="Typo.caption" Class="px-4 mt-4 font-weight-bold" Color="Color.Secondary">SKILLS PLANNING &amp; BI</MudText>
-        <MudNavLink href="reports/bi" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Insights">Executive Skills BI &amp; SSP</MudNavLink>
-
-        <MudText Typo="Typo.caption" Class="px-4 mt-4 font-weight-bold" Color="Color.Secondary">SYSTEM GOVERNANCE</MudText>
-        <MudNavLink href="governance/meetings" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Gavel">Committee &amp; MANCO Meetings</MudNavLink>
-        <MudNavLink href="admin/roles" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Security">Security Roles &amp; Permissions</MudNavLink>
-        <MudNavLink href="admin/settings" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Settings">System Settings &amp; Features</MudNavLink>
-        <MudNavLink href="compliance/statutory" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.FactCheck">Statutory Submissions &amp; Audits</MudNavLink>
-        <MudNavLink href="admin/lookups" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Tune">Lookup Hub &amp; Enums</MudNavLink>
-        <MudNavLink href="developer/schema" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.MenuBook">Data Dictionary &amp; Schema</MudNavLink>
-        <MudNavLink href="developer/compliance-audit" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Verified">UI/UX Compliance HUD</MudNavLink>
-        <MudNavLink href="audit-logs" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.History">Audit Trail</MudNavLink>
-    </MudNavMenu>
+                <!-- 2. Dynamic Role-Filtered Functional Groups -->
+                @if (_navTree?.Groups != null)
+                {
+                    @foreach (var group in _navTree.Groups)
+                    {
+                        <MudNavGroup Title="@group.GroupName" 
+                                     Icon="@GetIcon(group.Icon)" 
+                                     Expanded="@group.IsExpanded" 
+                                     Class="nsdms-nav-group font-weight-bold" 
+                                     Style="font-size: 0.72rem; letter-spacing: 0.03em;">
+                            @foreach (var item in group.Items)
+                            {
+                                <div class="position-relative nsdms-nav-item-wrapper">
+                                    <MudNavLink href="@item.Href" 
+                                                Match="@(item.ExactMatch ? NavLinkMatch.All : NavLinkMatch.Prefix)" 
+                                                Icon="@GetIcon(item.Icon)" 
+                                                Class="nsdms-nav-link pr-8">
+                                        <div class="d-flex align-center justify-space-between mud-width-full">
+                                            <span class="text-truncate" style="font-size: 0.8125rem;">@item.Title</span>
+                                            @if (item.BadgeCount > 0)
+                                            {
+                                                <MudChip T="string" 
+                                                         Size="Size.Small" 
+                                                         Variant="Variant.Filled" 
+                                                         Color="@GetBadgeColor(item.BadgeColor)" 
+                                                         Class="ml-2 px-1 py-0 font-weight-bold" 
+                                                         Style="font-size: 0.65rem; height: 18px;">
+                                                    @item.BadgeCount
+                                                </MudChip>
+                                            }
+                                        </div>
+                                    </MudNavLink>
+                                    <MudIconButton Icon="@(item.IsPinned ? Icons.Material.Filled.Star : Icons.Material.Outlined.StarOutline)" 
+                                                   Size="Size.Small" 
+                                                   OnClick="@(() => TogglePinAsync(item))"
+                                                   Title="@(item.IsPinned ? "Unpin from shortcuts" : "Pin to quick shortcuts")" 
+                                                   Class="nsdms-pin-btn" 
+                                                   Style="@($"position: absolute; right: 4px; top: 50%; transform: translateY(-50%); color: {(item.IsPinned ? "#f59e0b" : "var(--mud-palette-text-secondary)")}; opacity: {(item.IsPinned ? "1" : "0.5")}; padding: 2px;")" />
+                                </div>
+                            }
+                        </MudNavGroup>
+                    }
+                }
+            </MudNavMenu>
+        }
+    </div>
 </NavPanel>
 
+@code {
+    [Parameter]
+    public bool Collapsed { get; set; } = false;
+
+    [Parameter]
+    public string ActivePersona { get; set; } = "All Roles (Unified)";
+
+    [Parameter]
+    public string CurrentUsername { get; set; } = "Admin";
+
+    [Parameter]
+    public List<string> CurrentRoles { get; set; } = new() { "SuperAdmin", "Admin", "FinanceManager", "CLO" };
+
+    private NavigationTreeResultDto? _navTree;
+    private bool _isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadNavigationAsync();
+    }
+
+    public async Task SetActivePersonaAsync(string persona)
+    {
+        ActivePersona = persona;
+        await LoadNavigationAsync();
+    }
+
+    public async Task RefreshBadgesAsync()
+    {
+        await LoadNavigationAsync();
+    }
+
+    private async Task LoadNavigationAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            var userContext = await CaslService.GetUserContextByUsernameAsync(CurrentUsername);
+            var roles = userContext.Roles.Any() ? userContext.Roles : CurrentRoles;
+            var perms = userContext.Permissions;
+
+            _navTree = await NavService.GetUserNavigationTreeAsync(CurrentUsername, roles, perms, ActivePersona);
+        }
+        catch
+        {
+            // Graceful fallback during prerendering
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task TogglePinAsync(NavItemDto item)
+    {
+        bool newPinned = !item.IsPinned;
+        await NavService.TogglePinItemAsync(CurrentUsername, item.Id);
+        item.IsPinned = newPinned;
+
+        if (newPinned)
+        {
+            Snackbar.Add($"⭐ Pinned '{item.Title}' to Quick Access", Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add($"Removed '{item.Title}' from Quick Access", Severity.Info);
+        }
+
+        await LoadNavigationAsync();
+    }
+
+    private Color GetBadgeColor(string badgeColor)
+    {
+        return badgeColor switch
+        {
+            "Error" => Color.Error,
+            "Warning" => Color.Warning,
+            "Info" => Color.Info,
+            "Success" => Color.Success,
+            _ => Color.Primary
+        };
+    }
+
+    private string GetIcon(string iconName)
+    {
+        return iconName switch
+        {
+            "Dashboard" => Icons.Material.Filled.Dashboard,
+            "Inbox" => Icons.Material.Filled.Inbox,
+            "AccountTree" => Icons.Material.Filled.AccountTree,
+            "People" => Icons.Material.Filled.People,
+            "Business" => Icons.Material.Filled.Business,
+            "Badge" => Icons.Material.Filled.Badge,
+            "School" => Icons.Material.Filled.School,
+            "MenuBook" => Icons.Material.Filled.MenuBook,
+            "Assignment" => Icons.Material.Filled.Assignment,
+            "Groups" => Icons.Material.Filled.Groups,
+            "AccountBalanceWallet" => Icons.Material.Filled.AccountBalanceWallet,
+            "AssignmentTurnedIn" => Icons.Material.Filled.AssignmentTurnedIn,
+            "Difference" => Icons.Material.Filled.Difference,
+            "Description" => Icons.Material.Filled.Description,
+            "AccountBalance" => Icons.Material.Filled.AccountBalance,
+            "Payments" => Icons.Material.Filled.Payments,
+            "Calculate" => Icons.Material.Filled.Calculate,
+            "ReceiptLong" => Icons.Material.Filled.ReceiptLong,
+            "SwapHoriz" => Icons.Material.Filled.SwapHoriz,
+            "FactCheck" => Icons.Material.Filled.FactCheck,
+            "VerifiedUser" => Icons.Material.Filled.VerifiedUser,
+            "DomainVerification" => Icons.Material.Filled.DomainVerification,
+            "Handyman" => Icons.Material.Filled.Handyman,
+            "Insights" => Icons.Material.Filled.Insights,
+            "Gavel" => Icons.Material.Filled.Gavel,
+            "LibraryBooks" => Icons.Material.Filled.LibraryBooks,
+            "Security" => Icons.Material.Filled.Security,
+            "AdminPanelSettings" => Icons.Material.Filled.AdminPanelSettings,
+            "Settings" => Icons.Material.Filled.Settings,
+            "Tune" => Icons.Material.Filled.Tune,
+            "MeetingRoom" => Icons.Material.Filled.MeetingRoom,
+            "History" => Icons.Material.Filled.History,
+            "Verified" => Icons.Material.Filled.Verified,
+            "FolderShared" => Icons.Material.Filled.FolderShared,
+            "Layers" => Icons.Material.Filled.Layers,
+            "Star" => Icons.Material.Filled.Star,
+            "StarBorder" => Icons.Material.Filled.StarBorder,
+            _ => Icons.Material.Filled.Folder
+        };
+    }
+}

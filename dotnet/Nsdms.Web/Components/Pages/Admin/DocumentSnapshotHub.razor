@@ -1,0 +1,267 @@
+@page "/admin/document-snapshots"
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Domain.Entities
+@inject IDocumentVerificationService VerificationService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>Document Security &amp; Provenance Hub | merSETA NSDMS</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
+    <!-- Header -->
+    <div class="d-flex align-center justify-space-between flex-wrap gap-4 mb-4">
+        <div>
+            <div class="d-flex align-center gap-2">
+                <MudText Typo="Typo.h5" Class="font-weight-bold">Document Security &amp; Provenance Hub</MudText>
+                <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Security">
+                    Non-Repudiation Engine
+                </MudChip>
+            </div>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                Audit trail of all cryptographically frozen statutory certificates, outcome letters, and grant agreements with SHA-256 fingerprinting.
+            </MudText>
+        </div>
+
+        <div class="d-flex align-center gap-2">
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Search"
+                       OnClick="@(() => Navigation.NavigateTo("/verify"))">
+                Public Verification Portal
+            </MudButton>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.MenuBook"
+                       OnClick="@(() => Navigation.NavigateTo("/admin/document-templates"))">
+                Template Studio
+            </MudButton>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <MudPaper Elevation="1" Class="pa-4 mb-4 rounded-lg">
+        <MudGrid>
+            <MudItem xs="12" md="5">
+                <MudTextField @bind-Value="_searchQuery"
+                              Placeholder="Search by document number, recipient name, ID/SDL number, or hash..."
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              Immediate="true"
+                              Clearable="true" />
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudSelect T="string" Label="Document Type" @bind-Value="_selectedType" Clearable="true">
+                    <MudSelectItem Value="@("")">All Document Types</MudSelectItem>
+                    <MudSelectItem Value="@("TradeTestCertificate")">Trade Test Artisan Certificate</MudSelectItem>
+                    <MudSelectItem Value="@("WspApprovalLetter")">WSP Approval Letter</MudSelectItem>
+                    <MudSelectItem Value="@("WspRejectionLetter")">WSP Non-Approval Notice</MudSelectItem>
+                    <MudSelectItem Value="@("AccreditationCertificate")">Accreditation Certificate</MudSelectItem>
+                    <MudSelectItem Value="@("RemittanceAdvice")">Rebate Remittance Advice</MudSelectItem>
+                    <MudSelectItem Value="@("SarsClawbackNotice")">SARS Clawback Notice</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="3" Class="d-flex align-center">
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadSnapshotsAsync" FullWidth="true">
+                    Refresh Snapshots
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    <!-- Snapshots Table -->
+    <MudTable Items="@FilteredSnapshots"
+              Hover="true"
+              Striped="true"
+              Dense="true"
+              Loading="@_loading"
+              Elevation="2"
+              Class="rounded-lg"
+              T="DocumentSnapshot">
+        <HeaderContent>
+            <MudTh>Doc Ref #</MudTh>
+            <MudTh>Document Type</MudTh>
+            <MudTh>Recipient Name</MudTh>
+            <MudTh>ID / SDL Number</MudTh>
+            <MudTh>Date Issued</MudTh>
+            <MudTh>SHA-256 Fingerprint</MudTh>
+            <MudTh>Scans</MudTh>
+            <MudTh>Status</MudTh>
+            <MudTh>Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Doc Ref #">
+                <MudLink Href="@($"/verify/document/{context.RenderedContentHash}")" Target="_blank" Typo="Typo.body2" Class="font-weight-bold">
+                    @context.DocumentSnapshotNumber
+                </MudLink>
+            </MudTd>
+            <MudTd DataLabel="Document Type">
+                <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">
+                    @context.DocumentTypeCode
+                </MudChip>
+            </MudTd>
+            <MudTd DataLabel="Recipient">
+                <strong>@context.RecipientName</strong>
+            </MudTd>
+            <MudTd DataLabel="Identifier">
+                <code>@context.RecipientIdentifier</code>
+            </MudTd>
+            <MudTd DataLabel="Date Issued">
+                @context.IssuedAt.ToString("yyyy-MM-dd HH:mm")
+            </MudTd>
+            <MudTd DataLabel="SHA-256">
+                <code class="mud-background-gray pa-1 rounded" title="@context.RenderedContentHash">
+                    @context.RenderedContentHash[..12]...
+                </code>
+            </MudTd>
+            <MudTd DataLabel="Scans">
+                <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default">
+                    @context.VerificationScanCount
+                </MudChip>
+            </MudTd>
+            <MudTd DataLabel="Status">
+                @if (context.IsRevoked)
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Error" Variant="Variant.Filled">Revoked</MudChip>
+                }
+                else
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Filled">Authentic</MudChip>
+                }
+            </MudTd>
+            <MudTd DataLabel="Actions">
+                <MudIconButton Icon="@Icons.Material.Filled.QrCode" Size="Size.Small" Color="Color.Primary" OnClick="@(() => ViewQrCode(context))" Title="View QR Code" />
+                <MudIconButton Icon="@Icons.Material.Filled.VerifiedUser" Size="Size.Small" Color="Color.Success" OnClick="@(() => Navigation.NavigateTo($"/verify/document/{context.RenderedContentHash}"))" Title="Verify Provenance" />
+                @if (!context.IsRevoked)
+                {
+                    <MudIconButton Icon="@Icons.Material.Filled.Block" Size="Size.Small" Color="Color.Error" OnClick="@(() => OpenRevokeDialog(context))" Title="Revoke Document" />
+                }
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText Typo="Typo.body1" Class="pa-4 text-center">No document snapshots found.</MudText>
+        </NoRecordsContent>
+    </MudTable>
+</MudContainer>
+
+<!-- QR Code Modal -->
+<MudDialog @bind-Visible="_qrDialogOpen" Options="_dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6"><MudIcon Icon="@Icons.Material.Filled.QrCode" Class="mr-2" /> Document Verification QR Code</MudText>
+    </TitleContent>
+    <DialogContent>
+        @if (_activeSnapshot != null)
+        {
+            <div class="d-flex flex-column align-center pa-4">
+                @if (!string.IsNullOrWhiteSpace(_activeSnapshot.VerificationQrBase64))
+                {
+                    <img src="@_activeSnapshot.VerificationQrBase64" alt="Verification QR Code" style="width: 200px; height: 200px; border-radius: 8px;" />
+                }
+                <MudText Typo="Typo.subtitle1" Class="font-weight-bold mt-3">@_activeSnapshot.DocumentSnapshotNumber</MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="text-center">
+                    Issued to: @_activeSnapshot.RecipientName (@_activeSnapshot.RecipientIdentifier)
+                </MudText>
+                <code class="pa-2 rounded mud-background-gray mt-2 text-center" style="word-break: break-all; font-size: 11px;">
+                    @_activeSnapshot.VerificationUri
+                </code>
+            </div>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _qrDialogOpen = false)">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<!-- Revoke Dialog -->
+<MudDialog @bind-Visible="_revokeDialogOpen" Options="_dialogOptions">
+    <TitleContent>
+        <MudText Typo="Typo.h6" Color="Color.Error"><MudIcon Icon="@Icons.Material.Filled.Warning" Class="mr-2" /> Revoke Document Snapshot</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mb-3">
+            Are you sure you want to revoke document <strong>@_activeSnapshot?.DocumentSnapshotNumber</strong>? Once revoked, any public verification scans will report this document as invalid.
+        </MudText>
+        <MudTextField @bind-Value="_revocationReason" Label="Reason for Revocation" Required="true" Variant="Variant.Outlined" Lines="3" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _revokeDialogOpen = false)">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="ConfirmRevocationAsync" Disabled="string.IsNullOrWhiteSpace(_revocationReason)">
+            Confirm Revocation
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private List<DocumentSnapshot> _snapshots = new();
+    private bool _loading = true;
+    private string _searchQuery = string.Empty;
+    private string _selectedType = string.Empty;
+
+    private bool _qrDialogOpen = false;
+    private bool _revokeDialogOpen = false;
+    private DocumentSnapshot? _activeSnapshot;
+    private string _revocationReason = string.Empty;
+    private readonly DialogOptions _dialogOptions = new() { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSnapshotsAsync();
+    }
+
+    private async Task LoadSnapshotsAsync()
+    {
+        _loading = true;
+        try
+        {
+            _snapshots = await VerificationService.GetRecentSnapshotsAsync(string.IsNullOrWhiteSpace(_selectedType) ? null : _selectedType, 100);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading snapshots: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private IEnumerable<DocumentSnapshot> FilteredSnapshots => _snapshots.Where(s =>
+    {
+        if (string.IsNullOrWhiteSpace(_searchQuery)) return true;
+        return s.DocumentSnapshotNumber.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase)
+            || s.RecipientName.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase)
+            || s.RecipientIdentifier.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase)
+            || s.RenderedContentHash.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase);
+    });
+
+    private void ViewQrCode(DocumentSnapshot snapshot)
+    {
+        _activeSnapshot = snapshot;
+        _qrDialogOpen = true;
+    }
+
+    private void OpenRevokeDialog(DocumentSnapshot snapshot)
+    {
+        _activeSnapshot = snapshot;
+        _revocationReason = string.Empty;
+        _revokeDialogOpen = true;
+    }
+
+    private async Task ConfirmRevocationAsync()
+    {
+        if (_activeSnapshot == null || string.IsNullOrWhiteSpace(_revocationReason)) return;
+        try
+        {
+            bool success = await VerificationService.RevokeDocumentSnapshotAsync(_activeSnapshot.Id, _revocationReason, "ChiefGovernanceOfficer");
+            if (success)
+            {
+                Snackbar.Add($"Document #{_activeSnapshot.DocumentSnapshotNumber} has been revoked.", Severity.Warning);
+                _revokeDialogOpen = false;
+                await LoadSnapshotsAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Revocation error: {ex.Message}", Severity.Error);
+        }
+    }
+}

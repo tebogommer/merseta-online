@@ -22,17 +22,33 @@ public interface IWorkplaceApprovalService
 
     Task<WorkplaceApproval> ApproveWorkplaceAsync(int id, string recommendations, string currentUsername = "SYSTEM");
     Task<WorkplaceApproval> RejectWorkplaceAsync(int id, string reason, string currentUsername = "SYSTEM");
+
+    // 360-Degree Relational Queries
+    Task<List<Nsdms.Application.Common.Models.WpaLearnerDto>> GetPlacedLearnersAsync(int workplaceApprovalId);
+    Task<List<Nsdms.Application.Common.Models.WpaSdpDto>> GetPartnerSdpsAsync(int workplaceApprovalId);
+    Task<List<Nsdms.Application.Common.Models.WpaVisitDto>> GetVerificationVisitsAsync(int workplaceApprovalId);
+    Task<MentorRatioEvaluationResult> GetRatioEvaluationAsync(int workplaceApprovalId);
 }
 
 public class WorkplaceApprovalService : IWorkplaceApprovalService
 {
     private readonly INsdmsDbContextFactory _contextFactory;
     private readonly IAuditService _audit;
+    private readonly IMentorRatioPolicyEngine _ratioEngine;
 
-    public WorkplaceApprovalService(INsdmsDbContextFactory contextFactory, IAuditService audit)
+    public WorkplaceApprovalService(
+        INsdmsDbContextFactory contextFactory,
+        IAuditService audit,
+        IMentorRatioPolicyEngine ratioEngine)
     {
         _contextFactory = contextFactory;
         _audit = audit;
+        _ratioEngine = ratioEngine;
+    }
+
+    public async Task<MentorRatioEvaluationResult> GetRatioEvaluationAsync(int workplaceApprovalId)
+    {
+        return await _ratioEngine.EvaluateWorkplaceApprovalCapacityAsync(workplaceApprovalId);
     }
 
     public async Task<List<WorkplaceApproval>> GetAllAsync(string? search = null, string? status = null, int? organisationId = null)
@@ -132,12 +148,17 @@ public class WorkplaceApprovalService : IWorkplaceApprovalService
         existing.QualificationTitle = approval.QualificationTitle;
         existing.SaqaQualificationId = approval.SaqaQualificationId;
         existing.OrganisationSiteId = approval.OrganisationSiteId;
+        existing.ContactPersonId = approval.ContactPersonId;
         existing.AssessorPersonId = approval.AssessorPersonId;
         existing.InspectionDate = approval.InspectionDate;
         existing.ApprovalDate = approval.ApprovalDate;
         existing.ExpiryDate = approval.ExpiryDate;
         existing.ApprovalStatusCode = approval.ApprovalStatusCode;
         existing.Recommendations = approval.Recommendations;
+        existing.TradeCode = approval.TradeCode;
+        existing.IsRatioEnforced = approval.IsRatioEnforced;
+        existing.CustomTradeRatio = approval.CustomTradeRatio;
+        existing.MentorRatioExemptionNotes = approval.MentorRatioExemptionNotes;
         existing.IsActive = approval.IsActive;
         existing.ModifiedAt = DateTime.UtcNow;
         existing.ModifiedBy = currentUsername;
@@ -253,4 +274,113 @@ public class WorkplaceApprovalService : IWorkplaceApprovalService
         await db.SaveChangesAsync();
         return existing;
     }
+
+    #region 360-Degree Relational Queries
+
+    public async Task<List<Nsdms.Application.Common.Models.WpaLearnerDto>> GetPlacedLearnersAsync(int workplaceApprovalId)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var wpa = await db.WorkplaceApprovals.FindAsync(workplaceApprovalId);
+        if (wpa == null) return new List<Nsdms.Application.Common.Models.WpaLearnerDto>();
+
+        var query = db.CompanyLearners
+            .Include(l => l.Person)
+            .Where(l => l.OrganisationId == wpa.OrganisationId);
+
+        if (wpa.OrganisationSiteId.HasValue)
+        {
+            query = query.Where(l => l.OrganisationSiteId == wpa.OrganisationSiteId.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(wpa.QualificationTitle))
+        {
+            query = query.Where(l => l.QualificationTitle.Contains(wpa.QualificationTitle) || wpa.QualificationTitle.Contains(l.QualificationTitle));
+        }
+
+        var learners = await query.OrderByDescending(l => l.Id).ToListAsync();
+
+        return learners.Select(l => new Nsdms.Application.Common.Models.WpaLearnerDto(
+            l.Id,
+            l.LearnerContractNumber,
+            l.Person != null ? $"{l.Person.FirstName} {l.Person.LastName}".Trim() : "Placed Candidate",
+            l.Person?.RsaIdNumber,
+            l.QualificationTitle,
+            GetProgrammeTypeName(l.LearningProgrammeTypeCode),
+            l.EnrolmentStatusCode ?? "Active",
+            l.RegistrationDate
+        )).ToList();
+    }
+
+    public async Task<List<Nsdms.Application.Common.Models.WpaSdpDto>> GetPartnerSdpsAsync(int workplaceApprovalId)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var wpa = await db.WorkplaceApprovals.FindAsync(workplaceApprovalId);
+        if (wpa == null) return new List<Nsdms.Application.Common.Models.WpaSdpDto>();
+
+        var providerIds = await db.CompanyLearners
+            .Where(l => l.OrganisationId == wpa.OrganisationId && l.TrainingProviderId != null)
+            .Select(l => l.TrainingProviderId!.Value)
+            .Distinct()
+            .ToListAsync();
+
+        var providers = await db.TrainingProviders
+            .Include(p => p.Organisation)
+            .Include(p => p.PrimaryContactPerson)
+            .Where(p => providerIds.Contains(p.Id))
+            .ToListAsync();
+
+        var list = new List<Nsdms.Application.Common.Models.WpaSdpDto>();
+        foreach (var p in providers)
+        {
+            var count = await db.CompanyLearners.CountAsync(l => l.OrganisationId == wpa.OrganisationId && l.TrainingProviderId == p.Id);
+            var contact = p.PrimaryContactPerson;
+            list.Add(new Nsdms.Application.Common.Models.WpaSdpDto(
+                p.Id,
+                p.ProviderName,
+                p.AccreditationNumber,
+                contact != null ? $"{contact.FirstName} {contact.LastName}".Trim() : null,
+                contact?.Email,
+                count
+            ));
+        }
+        return list;
+    }
+
+    public async Task<List<Nsdms.Application.Common.Models.WpaVisitDto>> GetVerificationVisitsAsync(int workplaceApprovalId)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var wpa = await db.WorkplaceApprovals.FindAsync(workplaceApprovalId);
+        if (wpa == null) return new List<Nsdms.Application.Common.Models.WpaVisitDto>();
+
+        var visits = await db.Visits
+            .Include(v => v.ContactPerson)
+            .Where(v => v.OrganisationId == wpa.OrganisationId && (v.VisitTypeCode == "WorkplaceApproval" || v.VisitTypeCode == "SiteInspection" || v.Purpose.Contains("Workplace") || v.Purpose.Contains("WPA")))
+            .OrderByDescending(v => v.VisitDate)
+            .ToListAsync();
+
+        return visits.Select(v => new Nsdms.Application.Common.Models.WpaVisitDto(
+            v.Id,
+            v.VisitDate,
+            v.VisitTypeCode ?? "Workplace Approval Audit",
+            v.VisitStatusCode ?? "Completed",
+            v.ContactPerson != null ? $"{v.ContactPerson.FirstName} {v.ContactPerson.LastName}".Trim() : null,
+            v.Location,
+            v.Purpose,
+            v.OutcomeNotes
+        )).ToList();
+    }
+
+    private static string GetProgrammeTypeName(string? code) => code switch
+    {
+        "01" => "Apprenticeship",
+        "02" => "Learnership",
+        "03" => "Skills Programme",
+        "04" => "Internship",
+        "05" => "Bursary",
+        "06" => "Candidacy",
+        "07" => "ARPL",
+        _ => code ?? "Apprenticeship"
+    };
+
+    #endregion
 }

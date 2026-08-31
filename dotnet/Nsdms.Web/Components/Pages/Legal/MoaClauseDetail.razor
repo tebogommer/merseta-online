@@ -1,0 +1,294 @@
+@page "/legal/moa-clauses/{Id:int}"
+@page "/legal/moa-clauses/new"
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Domain.Entities
+@inject IMoaTemplateEngineService TemplateService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>@(_isNew ? "New MoA Clause | merSETA Legal" : $"{_clause?.ClauseCode} | merSETA Legal")</PageTitle>
+
+@if (_isLoading)
+{
+    <MudContainer Class="my-8 text-center">
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" Class="mb-3" />
+        <MudText Typo="Typo.body1">Loading clause details...</MudText>
+    </MudContainer>
+}
+else if (_clause == null)
+{
+    <MudContainer Class="my-8">
+        <MudAlert Severity="Severity.Error" Variant="Variant.Filled">MoA Clause not found.</MudAlert>
+        <MudButton Variant="Variant.Outlined" Class="mt-3" StartIcon="@Icons.Material.Filled.ArrowBack" OnClick="@(() => Navigation.NavigateTo("/legal/moa-clauses"))">
+            Back to Clause Library
+        </MudButton>
+    </MudContainer>
+}
+else
+{
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
+        <!-- Sticky Top Bar -->
+        <MudCard Elevation="2" Class="mb-4 sticky-top-header" Style="position: sticky; top: var(--mud-appbar-height, 64px) !important; z-index: 10;">
+            <MudCardContent Class="d-flex align-center justify-space-between py-3">
+                <div class="d-flex align-center gap-3">
+                    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Default" OnClick="@(() => Navigation.NavigateTo("/legal/moa-clauses"))" Title="Back to Library" />
+                    <div>
+                        <div class="d-flex align-center gap-2">
+                            <MudText Typo="Typo.h5" Class="fw-bold">@(_isNew ? "New Legal Clause Definition" : _clause.ClauseCode)</MudText>
+                            <MudChip T="string" Color="@GetCategoryColor(_clause.Category)" Size="Size.Small" Variant="Variant.Filled">
+                                @_clause.Category
+                            </MudChip>
+                        </div>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">@_clause.ClauseTitle</MudText>
+                    </div>
+                </div>
+                <MudStack Row="true" Spacing="2" AlignItems="AlignItems.Center">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Cancel" OnClick="@(() => Navigation.NavigateTo("/legal/moa-clauses"))">
+                        Cancel
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveClauseAsync">
+                        Save Clause
+                    </MudButton>
+                </MudStack>
+            </MudCardContent>
+        </MudCard>
+
+        <MudGrid>
+            <!-- Left Panel: Form Attributes & Editor -->
+            <MudItem xs="12" lg="7">
+                <MudCard Elevation="2" Class="mb-4">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">Clause Attributes &amp; Classification</MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudGrid>
+                            <MudItem xs="12" sm="6">
+                                <MudTextField @bind-Value="_clause.ClauseCode" Label="Clause Code" Variant="Variant.Outlined" Required="true" HelperText="e.g. CLAUSE-POPIA, CLAUSE-TRANCHES-02" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6">
+                                <MudSelect T="string" @bind-Value="_clause.Category" Label="Clause Category" Variant="Variant.Outlined">
+                                    <MudSelectItem Value="@("Statutory")">Statutory Authority</MudSelectItem>
+                                    <MudSelectItem Value="@("Financial")">Financial &amp; Disbursements</MudSelectItem>
+                                    <MudSelectItem Value="@("Compliance")">Compliance &amp; Governance</MudSelectItem>
+                                    <MudSelectItem Value="@("General")">General Provisions</MudSelectItem>
+                                    <MudSelectItem Value="@("Annexure")">Annexure Schedules</MudSelectItem>
+                                </MudSelect>
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudTextField @bind-Value="_clause.ClauseTitle" Label="Clause Title" Variant="Variant.Outlined" Required="true" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6">
+                                <MudSwitch @bind-Value="_clause.IsMandatory" Label="Mandatory Legal Clause" Color="Color.Primary" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6">
+                                <MudSwitch @bind-Value="_clause.IsActive" Label="Active in Library" Color="Color.Success" />
+                            </MudItem>
+                        </MudGrid>
+                    </MudCardContent>
+                </MudCard>
+
+                <MudCard Elevation="2">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">Clause Content (Markdown &amp; Tokens)</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                Click any dynamic token chip below to insert it at the cursor position.
+                            </MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <!-- Dynamic Token Palette -->
+                        <MudPaper Elevation="0" Outlined="true" Class="pa-3 mb-3" Style="background-color: var(--mud-palette-background-grey);">
+                            <MudText Typo="Typo.subtitle2" Class="fw-bold mb-2">Available Grant Metadata Tokens:</MudText>
+                            <div class="d-flex flex-wrap gap-1">
+                                @foreach (var token in _availableTokens)
+                                {
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined" OnClick="@(() => InsertToken(token))">
+                                        @token
+                                    </MudChip>
+                                }
+                            </div>
+                        </MudPaper>
+
+                        <MudTextField @bind-Value="_clause.ClauseContent"
+                                      Label="Legal Clause Text (Markdown)"
+                                      Variant="Variant.Outlined"
+                                      Lines="14"
+                                      Required="true"
+                                      Class="font-monospace"
+                                      HelperText="Supports Markdown syntax: **bold**, _italics_, lists, and placeholder tokens." />
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+
+            <!-- Right Panel: Live Dynamic Simulation Preview & Usage -->
+            <MudItem xs="12" lg="5">
+                <MudCard Elevation="2" Class="mb-4">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">Simulated Dynamic Preview</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                Live token interpolation with sample employer grant data.
+                            </MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudPaper Elevation="0" Outlined="true" Class="pa-4" Style="background-color: var(--mud-palette-background-grey); min-height: 250px; font-family: monospace; white-space: pre-wrap; font-size: 13px;">
+                            @GetSimulatedPreview()
+                        </MudPaper>
+                    </MudCardContent>
+                </MudCard>
+
+                @if (!_isNew && _clause.TemplateSections != null && _clause.TemplateSections.Any())
+                {
+                    <MudCard Elevation="2">
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h6">Active Template Associations</MudText>
+                            </CardHeaderContent>
+                        </MudCardHeader>
+                        <MudCardContent Class="pa-0">
+                            <MudList T="string" Dense="true">
+                                @foreach (var sec in _clause.TemplateSections)
+                                {
+                                    <MudListItem Icon="@Icons.Material.Filled.Article">
+                                        <MudLink Href="@($"/legal/moa-templates/{sec.MoaTemplateId}")" Color="Color.Primary">
+                                            @(sec.MoaTemplate?.TemplateCode ?? $"Template #{sec.MoaTemplateId}")
+                                        </MudLink>
+                                        <MudText Typo="Typo.caption" Class="d-block text-secondary">
+                                            Section @sec.SectionNumber: @sec.SectionTitle
+                                        </MudText>
+                                    </MudListItem>
+                                }
+                            </MudList>
+                        </MudCardContent>
+                    </MudCard>
+                }
+            </MudItem>
+        </MudGrid>
+    </MudContainer>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private MoaClause? _clause;
+    private bool _isLoading = true;
+    private bool _isNew = false;
+
+    private readonly string[] _availableTokens = new[]
+    {
+        "{{OrganisationName}}",
+        "{{TradingName}}",
+        "{{LevyNumber}}",
+        "{{GrantYear}}",
+        "{{MoaNumber}}",
+        "{{TotalContractValue}}",
+        "{{ContractStartDate}}",
+        "{{ContractEndDate}}",
+        "{{ProjectTitle}}",
+        "{{TrancheScheduleTable}}",
+        "{{SignatoryEmployer}}",
+        "{{SignatorySeta}}"
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        _isNew = Id == 0;
+        await LoadClauseAsync();
+    }
+
+    private async Task LoadClauseAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            if (_isNew)
+            {
+                _clause = new MoaClause
+                {
+                    ClauseCode = $"CLAUSE-CUSTOM-{DateTime.Now:yyyyMMdd}",
+                    ClauseTitle = "New Custom Legal Clause",
+                    Category = "General",
+                    IsMandatory = false,
+                    IsActive = true,
+                    ClauseContent = "The Grantee ({{OrganisationName}}, SDL: {{LevyNumber}}) agrees to fulfill all agreed terms under Discretionary Grant {{GrantYear}} for project {{ProjectTitle}}."
+                };
+            }
+            else
+            {
+                _clause = await TemplateService.GetClauseByIdAsync(Id);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading clause: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void InsertToken(string token)
+    {
+        if (_clause == null) return;
+        _clause.ClauseContent += $" {token} ";
+        StateHasChanged();
+    }
+
+    private string GetSimulatedPreview()
+    {
+        if (_clause == null || string.IsNullOrWhiteSpace(_clause.ClauseContent))
+            return "No content entered yet.";
+
+        return _clause.ClauseContent
+            .Replace("{{OrganisationName}}", "Acme Precision Engineering (Pty) Ltd")
+            .Replace("{{TradingName}}", "Acme Precision")
+            .Replace("{{LevyNumber}}", "L192837465")
+            .Replace("{{GrantYear}}", "2026/27")
+            .Replace("{{MoaNumber}}", "MOA-2026-DG-0042")
+            .Replace("{{TotalContractValue}}", "850,000.00")
+            .Replace("{{ContractStartDate}}", "01 April 2026")
+            .Replace("{{ContractEndDate}}", "31 March 2027")
+            .Replace("{{ProjectTitle}}", "Artisan Apprenticeship & CNC Machining Programme")
+            .Replace("{{SignatoryEmployer}}", "Jane Doe (Managing Director)")
+            .Replace("{{SignatorySeta}}", "merSETA Chief Executive Officer")
+            .Replace("{{TrancheScheduleTable}}", "| Tranche # | Deliverable | % | Amount |\n|---|---|---|---|\n| 1 | Inception | 30% | R 255,000.00 |\n| 2 | Midterm | 30% | R 255,000.00 |\n| 3 | Closeout | 40% | R 340,000.00 |");
+    }
+
+    private async Task SaveClauseAsync()
+    {
+        if (_clause == null) return;
+
+        try
+        {
+            if (_isNew)
+            {
+                _clause = await TemplateService.CreateClauseAsync(_clause, "LegalOfficer");
+                Snackbar.Add($"Clause {_clause.ClauseCode} created successfully.", Severity.Success);
+                Navigation.NavigateTo($"/legal/moa-clauses/{_clause.Id}");
+            }
+            else
+            {
+                _clause = await TemplateService.UpdateClauseAsync(_clause, "LegalOfficer");
+                Snackbar.Add($"Clause {_clause.ClauseCode} saved successfully.", Severity.Success);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving clause: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private Color GetCategoryColor(string category) => category switch
+    {
+        "Statutory" => Color.Primary,
+        "Financial" => Color.Success,
+        "Compliance" => Color.Warning,
+        "Annexure" => Color.Info,
+        _ => Color.Default
+    };
+}

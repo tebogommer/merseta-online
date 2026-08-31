@@ -1,0 +1,299 @@
+@page "/employers/sdf/create"
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Application.Common.Utilities
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@inject ISdfAppointmentService SdfService
+@inject IPersonService PersonService
+@inject IOrganisationService OrgService
+@inject NavigationManager Nav
+@inject ISnackbar Snackbar
+@rendermode InteractiveServer
+
+<PageTitle>Appoint Skills Development Facilitator (SDF) | merSETA NSDMS</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
+    <!-- Sticky Top Action Bar -->
+    <MudCard Elevation="2" Class="mb-4 sticky-top-header" Style="position: sticky; top: var(--mud-appbar-height, 64px) !important; z-index: 10;">
+        <MudCardContent Class="d-flex align-center justify-space-between py-3">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Primary" OnClick="@(() => Nav.NavigateTo("/employers/sdf"))" aria-label="Back to SDF List" />
+                <div>
+                    <MudBreadcrumbs Items="_breadcrumbs" Class="pa-0 mb-1" />
+                    <MudText Typo="Typo.h5" Class="fw-bold">Appoint Skills Development Facilitator (SDF)</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        Statutory appointment of Primary, Secondary, or Labour SDF with WSP submission delegations.
+                    </MudText>
+                </div>
+            </MudStack>
+
+            <MudStack Row="true" Spacing="2">
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Cancel" OnClick="@(() => Nav.NavigateTo("/employers/sdf"))" Disabled="_isSubmitting">
+                    Cancel
+                </MudButton>
+
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd" OnClick="SubmitAppointmentAsync" Disabled="@(_isSubmitting || _selectedOrgId == 0)">
+                    @if (_isSubmitting)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                        <span>Submitting...</span>
+                    }
+                    else
+                    {
+                        <span>Appoint SDF</span>
+                    }
+                </MudButton>
+            </MudStack>
+        </MudCardContent>
+    </MudCard>
+
+    <MudGrid>
+        <!-- Step 1: Facilitator Selection / Registration -->
+        <MudItem xs="12" md="6">
+            <MudCard Outlined="true" Class="pa-4 h-100">
+                <div class="d-flex align-center gap-2 mb-3">
+                    <MudIcon Icon="@Icons.Material.Filled.Person" Color="Color.Primary" />
+                    <MudText Typo="Typo.h6" Class="fw-bold">1. Facilitator Person Demographics</MudText>
+                </div>
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                    Select an existing registered Person from the Central Registry or capture a new facilitator.
+                </MudText>
+
+                <MudRadioGroup T="bool" @bind-Value="_isNewPerson" Class="mb-3">
+                    <MudRadio Value="false" Color="Color.Primary">Select Existing Person</MudRadio>
+                    <MudRadio Value="true" Color="Color.Secondary">Capture New Person</MudRadio>
+                </MudRadioGroup>
+
+                @if (!_isNewPerson)
+                {
+                    <MudSelect T="int" Label="Registered Facilitator" @bind-Value="_selectedPersonId" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter" Class="mb-3" Required="true">
+                        <MudSelectItem Value="0">-- Select Person --</MudSelectItem>
+                        @foreach (var p in _peopleList)
+                        {
+                            <MudSelectItem Value="@p.Id">@p.FirstName @p.LastName (@(string.IsNullOrEmpty(p.RsaIdNumber) ? p.EmailAddress : p.RsaIdNumber))</MudSelectItem>
+                        }
+                    </MudSelect>
+                }
+                else
+                {
+                    <MudGrid>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="_newPerson.FirstName" Label="First Name" Variant="Variant.Outlined" Required="true" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="_newPerson.LastName" Label="Last Name" Variant="Variant.Outlined" Required="true" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="_newPerson.RsaIdNumber" Label="RSA ID Number" Variant="Variant.Outlined" TextChanged="OnRsaIdChanged" HelperText="@_rsaValidationHelper" HelperTextOnFocus="true" Required="true" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="_newPerson.EmailAddress" Label="Email Address" Variant="Variant.Outlined" Required="true" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField @bind-Value="_newPerson.CellPhoneNumber" Label="Mobile Number" Variant="Variant.Outlined" />
+                        </MudItem>
+                    </MudGrid>
+                }
+            </MudCard>
+        </MudItem>
+
+        <!-- Step 2: Organisation Affiliation -->
+        <MudItem xs="12" md="6">
+            <MudCard Outlined="true" Class="pa-4 h-100">
+                <div class="d-flex align-center gap-2 mb-3">
+                    <MudIcon Icon="@Icons.Material.Filled.Business" Color="Color.Primary" />
+                    <MudText Typo="Typo.h6" Class="fw-bold">2. Employer / Organisation</MudText>
+                </div>
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                    Select the levy-paying or non-levy-paying organisation appointing this SDF.
+                </MudText>
+
+                <MudSelect T="int" Label="Appointing Organisation" @bind-Value="_selectedOrgId" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter" Class="mb-3" Required="true">
+                    <MudSelectItem Value="0">-- Select Organisation --</MudSelectItem>
+                    @foreach (var o in _orgList)
+                    {
+                        <MudSelectItem Value="@o.Id">@o.CompanyName (@(string.IsNullOrEmpty(o.SdlNumber) ? "No SDL" : o.SdlNumber))</MudSelectItem>
+                    }
+                </MudSelect>
+
+                <div class="d-flex align-center gap-2 mb-3 mt-4">
+                    <MudIcon Icon="@Icons.Material.Filled.Badge" Color="Color.Primary" />
+                    <MudText Typo="Typo.h6" Class="fw-bold">3. Appointment Role &amp; Timeline</MudText>
+                </div>
+
+                <MudGrid>
+                    <MudItem xs="12" sm="6">
+                        <MudSelect T="string" Label="SDF Role Type" @bind-Value="_sdfTypeCode" Variant="Variant.Outlined">
+                            <MudSelectItem Value="@("Primary")">Primary SDF (Full WSP/ATR Authority)</MudSelectItem>
+                            <MudSelectItem Value="@("Secondary")">Secondary SDF (Deputy / Consultant)</MudSelectItem>
+                            <MudSelectItem Value="@("Labour")">Labour SDF (Organised Labour Rep)</MudSelectItem>
+                        </MudSelect>
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MudDatePicker Label="Appointment Start Date" @bind-Date="_startDate" Variant="Variant.Outlined" />
+                    </MudItem>
+                </MudGrid>
+            </MudCard>
+        </MudItem>
+
+        <!-- Step 3: Statutory Delegations & Uploads -->
+        <MudItem xs="12">
+            <MudCard Outlined="true" Class="pa-4">
+                <div class="d-flex align-center gap-2 mb-3">
+                    <MudIcon Icon="@Icons.Material.Filled.Gavel" Color="Color.Primary" />
+                    <MudText Typo="Typo.h6" Class="fw-bold">4. Statutory Delegations &amp; Code of Conduct</MudText>
+                </div>
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                    Configure statutory submission permissions under the Skills Development Act and merSETA governance framework.
+                </MudText>
+
+                <MudGrid>
+                    <MudItem xs="12" md="6">
+                        <MudSwitch @bind-Value="_allowWsp" Color="Color.Success" Label="Authorize WSP / ATR Submission Sign-Off" />
+                        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block ml-8">Allows this facilitator to prepare, sign, and submit annual Workplace Skills Plans and Annual Training Reports.</MudText>
+                    </MudItem>
+
+                    <MudItem xs="12" md="6">
+                        <MudSwitch @bind-Value="_allowDg" Color="Color.Success" Label="Authorize Discretionary Grant Applications" />
+                        <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block ml-8">Permits the facilitator to initiate and track Discretionary Grant funding applications.</MudText>
+                    </MudItem>
+
+                    <MudItem xs="12" md="6">
+                        <MudCheckBox @bind-Value="_appointmentLetterReceived" Color="Color.Primary" Label="Signed Appointment Letter from CEO/Managing Director Received" />
+                    </MudItem>
+
+                    <MudItem xs="12" md="6">
+                        <MudCheckBox @bind-Value="_declarationAccepted" Color="Color.Primary" Label="SDF Code of Conduct &amp; Statutory Declaration Accepted" />
+                    </MudItem>
+                </MudGrid>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+@code {
+    [SupplyParameterFromQuery(Name = "orgId")] public int? OrgIdQuery { get; set; }
+
+    private List<BreadcrumbItem> _breadcrumbs = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Core Registries", href: "/employers"),
+        new BreadcrumbItem("SDF Appointments", href: "/employers/sdf"),
+        new BreadcrumbItem("Appoint SDF", href: null, disabled: true)
+    };
+
+    private List<Person> _peopleList = new();
+    private List<Organisation> _orgList = new();
+
+    private bool _isNewPerson = false;
+    private int _selectedPersonId = 0;
+    private Person _newPerson = new() { Title = "Mr", Gender = "Male", GenderCode = "M", CitizenStatusCode = "SA_CIT", IsSouthAfricanCitizen = true, NationalityCode = "ZA", EquityCode = "African", IsActive = true };
+    private string _rsaValidationHelper = "Enter 13-digit RSA National ID to auto-populate Demographics";
+
+    private int _selectedOrgId = 0;
+    private string _sdfTypeCode = "Primary";
+    private DateTime? _startDate = DateTime.UtcNow;
+    private bool _allowWsp = true;
+    private bool _allowDg = true;
+    private bool _appointmentLetterReceived = true;
+    private bool _declarationAccepted = true;
+    private bool _isSubmitting = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _peopleList = await PersonService.GetAllAsync();
+        _orgList = await OrgService.GetAllAsync();
+
+        if (OrgIdQuery.HasValue && OrgIdQuery.Value > 0)
+        {
+            _selectedOrgId = OrgIdQuery.Value;
+        }
+    }
+
+    private void OnRsaIdChanged(string rsaId)
+    {
+        _newPerson.RsaIdNumber = rsaId;
+        if (string.IsNullOrWhiteSpace(rsaId) || rsaId.Length != 13)
+        {
+            _rsaValidationHelper = "Enter 13-digit RSA National ID";
+            return;
+        }
+
+        var parsed = RsaIdValidator.Parse(rsaId);
+        if (parsed.IsValid)
+        {
+            _rsaValidationHelper = $"Valid RSA ID: DOB {parsed.DateOfBirth:yyyy-MM-dd}, {parsed.Gender}, {(parsed.IsSouthAfricanCitizen == true ? "SA Citizen" : "Permanent Resident")}";
+            if (parsed.DateOfBirth.HasValue) _newPerson.DateOfBirth = parsed.DateOfBirth.Value;
+            if (!string.IsNullOrEmpty(parsed.Gender))
+            {
+                _newPerson.Gender = parsed.Gender;
+                _newPerson.GenderCode = parsed.Gender.StartsWith("M", StringComparison.OrdinalIgnoreCase) ? "M" : "F";
+            }
+            if (parsed.IsSouthAfricanCitizen.HasValue)
+            {
+                _newPerson.IsSouthAfricanCitizen = parsed.IsSouthAfricanCitizen.Value;
+                _newPerson.CitizenStatusCode = parsed.IsSouthAfricanCitizen.Value ? "SA_CIT" : "PERM_RES";
+            }
+        }
+        else
+        {
+            _rsaValidationHelper = $"Invalid RSA ID: {parsed.ErrorMessage}";
+        }
+    }
+
+    private async Task SubmitAppointmentAsync()
+    {
+        if (_selectedOrgId <= 0)
+        {
+            Snackbar.Add("Please select an appointing organisation.", Severity.Warning);
+            return;
+        }
+
+        int personId = _selectedPersonId;
+        _isSubmitting = true;
+
+        try
+        {
+            if (_isNewPerson)
+            {
+                if (string.IsNullOrWhiteSpace(_newPerson.FirstName) || string.IsNullOrWhiteSpace(_newPerson.LastName))
+                {
+                    Snackbar.Add("First name and last name are required for new person registration.", Severity.Warning);
+                    _isSubmitting = false;
+                    return;
+                }
+
+                var createdPerson = await PersonService.CreateAsync(_newPerson, "Admin");
+                personId = createdPerson.Id;
+            }
+
+            if (personId <= 0)
+            {
+                Snackbar.Add("Please select or capture a valid facilitator person.", Severity.Warning);
+                _isSubmitting = false;
+                return;
+            }
+
+            var appt = await SdfService.SubmitSdfAppointmentAsync(
+                organisationId: _selectedOrgId,
+                personId: personId,
+                sdfTypeCode: _sdfTypeCode,
+                startDate: _startDate ?? DateTime.UtcNow,
+                docPath: _appointmentLetterReceived ? "/uploads/sdf/appointment_letter.pdf" : null,
+                allowWsp: _allowWsp,
+                allowDg: _allowDg,
+                currentUsername: "Admin");
+
+            Snackbar.Add($"SDF Appointment created successfully for {_sdfTypeCode} SDF.", Severity.Success);
+            Nav.NavigateTo($"/employers/sdf/{appt.Id}");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error creating SDF appointment: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSubmitting = false;
+        }
+    }
+}

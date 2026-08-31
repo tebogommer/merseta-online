@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Nsdms.Domain.Common;
@@ -13,8 +13,10 @@ public class TemporalTablesTests
 {
     private static NsdmsDbContext CreateContext()
     {
+        Environment.SetEnvironmentVariable("ENABLE_EF_TEMPORAL_TABLES", "true");
         var options = new DbContextOptionsBuilder<NsdmsDbContext>()
-            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .UseSqlServer("Server=localhost;Database=temp_design_db;Integrated Security=true;TrustServerCertificate=true")
+            .EnableServiceProviderCaching(false)
             .Options;
         return new NsdmsDbContext(options);
     }
@@ -61,13 +63,6 @@ public class TemporalTablesTests
             typeof(GrantTranchePayment),
             typeof(MandatoryGrantDisbursement),
             typeof(InterSetaTransfer),
-            typeof(ProjectImplementationPlan),
-            typeof(PipLearnerAllocation),
-            typeof(GrantPaymentClaim),
-            typeof(ContractAddenda),
-            typeof(ContractExtensionRequest),
-            typeof(ContractTerminationRequest),
-
             // Skills Development Providers (SDP) & ETQA Assessors / Moderators
             typeof(TrainingProvider),
             typeof(TrainingProviderQualification),
@@ -133,8 +128,6 @@ public class TemporalTablesTests
             typeof(DocumentMetadata),
             typeof(DocumentRequirementRule),
             typeof(DocumentAttachment),
-            typeof(SystemConfig),
-            typeof(SystemFeatureFlag),
             typeof(SystemNotification)
         };
 

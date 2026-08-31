@@ -1,6 +1,7 @@
 @page "/employers/{id:int}"
 @page "/employers/{id:int}/edit"
 @page "/employers/create"
+@using Nsdms.Application.Common.Models
 @using Nsdms.Application.Services
 @inject IOrganisationService OrgService
 @inject IPersonService PersonService
@@ -18,13 +19,14 @@
         <MudButton Variant="Variant.Text"
                    StartIcon="@Icons.Material.Filled.ArrowBack"
                    Color="Color.Default"
-                   OnClick="BackToList">
+                   OnClick="BackToList"
+                   aria-label="Back to Employers List">
             Back to Employers
         </MudButton>
         <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-2" />
         @if (!string.IsNullOrEmpty(_logoDataUri))
         {
-            <img src="@_logoDataUri" alt="Logo" style="height: 38px; width: 38px; object-fit: cover; border-radius: 4px; border: 1px solid var(--mud-palette-lines-default);" />
+            <img src="@_logoDataUri" alt="Employer Logo" style="height: 38px; width: 38px; object-fit: cover; border-radius: 4px; border: 1px solid var(--mud-palette-lines-default);" />
         }
         else
         {
@@ -45,26 +47,30 @@
             <MudButton Variant="Variant.Outlined"
                        Color="Color.Info"
                        StartIcon="@Icons.Material.Filled.PhotoCamera"
-                       OnClick="@(() => _showLogoDialog = true)">
+                       OnClick="@(() => _showLogoDialog = true)"
+                       aria-label="Update Corporate Logo">
                 Brand Logo
             </MudButton>
             <MudButton Variant="Variant.Outlined"
                        Color="Color.Error"
                        StartIcon="@Icons.Material.Filled.Delete"
-                       OnClick="DeleteEmployer">
+                       OnClick="DeleteEmployer"
+                       aria-label="Delete Employer Record">
                 Delete
             </MudButton>
         }
         <MudButton Variant="Variant.Outlined"
                    Color="Color.Secondary"
-                   OnClick="BackToList">
+                   OnClick="BackToList"
+                   aria-label="Cancel and Return to List">
             Cancel
         </MudButton>
         <MudButton Variant="Variant.Filled"
                    Color="Color.Primary"
                    StartIcon="@Icons.Material.Filled.Save"
                    OnClick="SaveEmployer"
-                   Disabled="_isSaving">
+                   Disabled="_isSaving"
+                   aria-label="Save Employer Record">
             @(_isSaving ? "Saving..." : "Save Employer")
         </MudButton>
     </div>
@@ -77,7 +83,8 @@
     }
     else
     {
-        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Color="Color.Surface">
+        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Color="Color.Surface" @bind-ActivePanelIndex="_activeTabIndex">
+            
             <!-- TAB 1: General Master Details -->
             <MudTabPanel Text="General Master Details" Icon="@Icons.Material.Filled.Business">
                 <MudForm @ref="_form" @bind-IsValid="_isValid">
@@ -202,142 +209,130 @@
                                                 }
                                             </MudSelect>
                                         </MudItem>
+                                    </MudGrid>
+                                </MudCardContent>
+                            </MudCard>
+
+                            <!-- Physical & Postal Address Card -->
+                            <MudCard Elevation="2">
+                                <MudCardHeader>
+                                    <CardHeaderAvatar>
+                                        <MudAvatar Color="Color.Success" Variant="Variant.Filled">
+                                            <MudIcon Icon="@Icons.Material.Filled.Place" />
+                                        </MudAvatar>
+                                    </CardHeaderAvatar>
+                                    <CardHeaderContent>
+                                        <MudText Typo="Typo.h6">Physical & Postal Location</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Registered Head Office and postal details</MudText>
+                                    </CardHeaderContent>
+                                </MudCardHeader>
+                                <MudCardContent>
+                                    <MudGrid>
                                         <MudItem xs="12" md="6">
-                                            <MudSelect T="string" Label="Primary Province" @bind-Value="_organisation.ProvinceCode" Variant="Variant.Outlined">
-                                                @foreach (var prov in _provinces)
+                                            <MudTextField T="string" Label="Physical Address Line 1" @bind-Value="_organisation.PhysicalAddress" Variant="Variant.Outlined" Lines="2" />
+                                        </MudItem>
+                                        <MudItem xs="12" md="6">
+                                            <MudTextField T="string" Label="Postal Address" @bind-Value="_organisation.PostalAddress" Variant="Variant.Outlined" Lines="2" />
+                                        </MudItem>
+                                        <MudItem xs="12" md="4">
+                                            <MudTextField T="string" Label="Physical Postal Code" @bind-Value="_organisation.PhysicalAddressPostalCode" Variant="Variant.Outlined" />
+                                        </MudItem>
+                                        <MudItem xs="12" md="4">
+                                            <MudSelect T="string" Label="Province" @bind-Value="_organisation.ProvinceCode" Variant="Variant.Outlined">
+                                                @foreach (var p in _provinces)
                                                 {
-                                                    <MudSelectItem Value="@prov.Code">@prov.Name (@prov.Code)</MudSelectItem>
+                                                    <MudSelectItem Value="@p.Code">@p.Name</MudSelectItem>
                                                 }
                                             </MudSelect>
                                         </MudItem>
-                                        <MudItem xs="12" md="6">
-                                            <MudSelect T="string" Label="Record Lifecycle Status" @bind-Value="_organisation.StatusCode" Variant="Variant.Outlined">
-                                                @foreach (var st in _statusTypes)
-                                                {
-                                                    <MudSelectItem Value="@st.Code">@st.Name</MudSelectItem>
-                                                }
-                                            </MudSelect>
+                                        <MudItem xs="12" md="4">
+                                            <MudTextField T="string" Label="Postal Delivery Code" @bind-Value="_organisation.PostalAddressPostalCode" Variant="Variant.Outlined" />
                                         </MudItem>
                                     </MudGrid>
                                 </MudCardContent>
                             </MudCard>
 
-                            <!-- Banking Details -->
-                            <MudCard Elevation="2" Class="mb-4">
+                            <!-- Workplace Accreditation & Mentor Ratio Policy Override Card -->
+                            <MudCard Elevation="2" Class="mt-4">
                                 <MudCardHeader>
                                     <CardHeaderAvatar>
-                                        <MudAvatar Color="Color.Success" Variant="Variant.Filled">
-                                            <MudIcon Icon="@Icons.Material.Filled.AccountBalance" />
+                                        <MudAvatar Color="Color.Warning" Variant="Variant.Filled">
+                                            <MudIcon Icon="@Icons.Material.Filled.Engineering" />
                                         </MudAvatar>
                                     </CardHeaderAvatar>
                                     <CardHeaderContent>
-                                        <MudText Typo="Typo.h6">Banking & Disbursement Information</MudText>
-                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Bank account details for grant disbursement and verification</MudText>
+                                        <MudText Typo="Typo.h6">Workplace Mentor Ratio Policy</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Employer-level statutory ratio enforcement overrides and custom capacities</MudText>
                                     </CardHeaderContent>
-                                    <CardHeaderActions>
-                                        <MudChip T="string" Color="@(_organisation.BankingDetailsVerified ? Color.Success : Color.Warning)" Size="Size.Small" Variant="Variant.Filled">
-                                            @(_organisation.BankingDetailsVerified ? "Verified with Bank" : "Pending Verification")
-                                        </MudChip>
-                                    </CardHeaderActions>
                                 </MudCardHeader>
                                 <MudCardContent>
                                     <MudGrid>
                                         <MudItem xs="12" md="6">
-                                            <MudTextField T="string" Label="Bank Name" @bind-Value="_organisation.BankName" Variant="Variant.Outlined" Placeholder="e.g. Standard Bank, FNB, ABSA, Nedbank" />
-                                        </MudItem>
-                                        <MudItem xs="12" md="6">
-                                            <MudTextField T="string" Label="Branch Code" @bind-Value="_organisation.BankBranchCode" Variant="Variant.Outlined" Placeholder="e.g. 051001" />
-                                        </MudItem>
-                                        <MudItem xs="12" md="6">
-                                            <MudTextField T="string" Label="Account Number" @bind-Value="_organisation.BankAccountNumber" Variant="Variant.Outlined" Placeholder="e.g. 1012345678" />
-                                        </MudItem>
-                                        <MudItem xs="12" md="6">
-                                            <MudSelect T="string" Label="Account Type" @bind-Value="_organisation.BankAccountType" Variant="Variant.Outlined">
-                                                <MudSelectItem Value="@("Cheque / Current")">Cheque / Current</MudSelectItem>
-                                                <MudSelectItem Value="@("Savings")">Savings</MudSelectItem>
-                                                <MudSelectItem Value="@("Transmission")">Transmission</MudSelectItem>
+                                            <MudSelect T="bool?" Label="Mentor Ratio Enforcement Policy" @bind-Value="_organisation.IsMentorRatioEnforced" Variant="Variant.Outlined">
+                                                <MudSelectItem Value="@((bool?)null)">Default (Inherit Global System Setting)</MudSelectItem>
+                                                <MudSelectItem Value="@((bool?)true)">Strictly Enforce Ratios</MudSelectItem>
+                                                <MudSelectItem Value="@((bool?)false)">Exempt Employer from Ratio Checking</MudSelectItem>
                                             </MudSelect>
                                         </MudItem>
-                                        <MudItem xs="12">
-                                            <MudSwitch T="bool" @bind-Value="_organisation.BankingDetailsVerified" Color="Color.Success" Label="Banking Details Formally Verified by MerSETA Finance" />
+                                        <MudItem xs="12" md="6">
+                                            <MudNumericField T="int?" Label="Custom Organisation Ratio Cap" @bind-Value="_organisation.CustomMentorRatioCap" Variant="Variant.Outlined" Min="1" Max="20" Placeholder="Leave empty to use Trade Standard" HelperText="Overrides trade ratio for all sites of this employer" />
                                         </MudItem>
+                                        @if (_organisation.IsMentorRatioEnforced == false)
+                                        {
+                                            <MudItem xs="12">
+                                                <MudTextField T="string" Label="Organisation Ratio Exemption Reason / Gazette Dispensation" @bind-Value="_organisation.MentorRatioExemptionReason" Variant="Variant.Outlined" Required="true" Placeholder="e.g. NAMB section 28 approved accelerated apprenticeship programme dispensation" Lines="2" />
+                                            </MudItem>
+                                        }
                                     </MudGrid>
                                 </MudCardContent>
                             </MudCard>
                         </MudItem>
 
-                        <!-- Right Column: Status & Contact Summary -->
+                        <!-- Right Summary & Operational Status Sidebar -->
                         <MudItem xs="12" lg="4">
-                            <!-- Primary Contact Person -->
                             <MudCard Elevation="2" Class="mb-4">
                                 <MudCardHeader>
-                                    <CardHeaderAvatar>
-                                        <MudAvatar Color="Color.Warning" Variant="Variant.Filled">
-                                            <MudIcon Icon="@Icons.Material.Filled.PersonPin" />
-                                        </MudAvatar>
-                                    </CardHeaderAvatar>
+                                    <CardHeaderContent>
+                                        <MudText Typo="Typo.h6">Status & Compliance</MudText>
+                                    </CardHeaderContent>
+                                </MudCardHeader>
+                                <MudCardContent>
+                                    <div class="d-flex flex-column gap-3">
+                                        <MudSelect T="string" Label="Registration Status" @bind-Value="_organisation.StatusCode" Variant="Variant.Outlined">
+                                            @foreach (var st in _statusTypes)
+                                            {
+                                                <MudSelectItem Value="@st.Code">@st.Name</MudSelectItem>
+                                            }
+                                        </MudSelect>
+                                        <MudSelect T="string" Label="SARS Levy Category" @bind-Value="_organisation.LevyCategoryCode" Variant="Variant.Outlined">
+                                            <MudSelectItem Value="@("LEVY_PAYING")">Levy Paying Entity</MudSelectItem>
+                                            <MudSelectItem Value="@("NON_LEVY_PAYING")">Non-Levy Paying</MudSelectItem>
+                                            <MudSelectItem Value="@("EXEMPT")">Statutory Exempt</MudSelectItem>
+                                        </MudSelect>
+                                        <MudTextField T="string" Label="Telephone Switchboard" @bind-Value="_organisation.PhoneNumber" Variant="Variant.Outlined" Placeholder="e.g. 011-555-0100" />
+                                        <MudTextField T="string" Label="Corporate Website" @bind-Value="_organisation.WebsiteUrl" Variant="Variant.Outlined" Placeholder="e.g. https://www.organisation.co.za" />
+                                        <MudSwitch T="bool" @bind-Value="_organisation.IsActive" Color="Color.Primary" Label="Organisation is Active" />
+                                        <MudSwitch T="bool" @bind-Value="_organisation.BankingDetailsVerified" Color="Color.Success" Label="Banking Details Verified" />
+                                    </div>
+                                </MudCardContent>
+                            </MudCard>
+
+                            <MudCard Elevation="2">
+                                <MudCardHeader>
                                     <CardHeaderContent>
                                         <MudText Typo="Typo.h6">Primary Contact Person</MudText>
-                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Chief executive or principal SDF</MudText>
                                     </CardHeaderContent>
                                 </MudCardHeader>
                                 <MudCardContent>
                                     <MudSelect T="int?" Label="Assigned Primary Contact" @bind-Value="_organisation.PrimaryContactPersonId" Variant="Variant.Outlined" Clearable="true">
-                                        <MudSelectItem Value="@((int?)null)">-- No Primary Contact Assigned --</MudSelectItem>
                                         @foreach (var p in _peopleList)
                                         {
-                                            <MudSelectItem Value="@((int?)p.Id)">@p.FirstName @p.LastName (@(!string.IsNullOrWhiteSpace(p.RsaIdNumber) ? p.RsaIdNumber : p.Email))</MudSelectItem>
+                                            <MudSelectItem Value="@((int?)p.Id)">@p.FirstName @p.LastName (@p.Email)</MudSelectItem>
                                         }
                                     </MudSelect>
-
-                                    @if (_organisation.PrimaryContactPersonId.HasValue)
-                                    {
-                                        var selectedContact = _peopleList.FirstOrDefault(p => p.Id == _organisation.PrimaryContactPersonId.Value);
-                                        if (selectedContact != null)
-                                        {
-                                            <MudPaper Elevation="0" Class="pa-3 mt-3 mud-background-gray rounded">
-                                                <MudText Typo="Typo.body2" Class="fw-bold">@selectedContact.FirstName @selectedContact.LastName</MudText>
-                                                <MudText Typo="Typo.caption" Class="d-block text-muted">Email: @selectedContact.Email</MudText>
-                                                <MudText Typo="Typo.caption" Class="d-block text-muted">Phone: @selectedContact.PhoneNumber / @selectedContact.CellNumber</MudText>
-                                            </MudPaper>
-                                        }
-                                    }
-                                </MudCardContent>
-                            </MudCard>
-
-                            <!-- Governance & Audit -->
-                            <MudCard Elevation="2" Class="mb-4">
-                                <MudCardHeader>
-                                    <CardHeaderAvatar>
-                                        <MudAvatar Color="Color.Dark" Variant="Variant.Filled">
-                                            <MudIcon Icon="@Icons.Material.Filled.Security" />
-                                        </MudAvatar>
-                                    </CardHeaderAvatar>
-                                    <CardHeaderContent>
-                                        <MudText Typo="Typo.h6">Record Governance</MudText>
-                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Status and audit details</MudText>
-                                    </CardHeaderContent>
-                                </MudCardHeader>
-                                <MudCardContent>
-                                    <MudSwitch T="bool" @bind-Value="_organisation.IsActive" Color="Color.Success" Label="Organisation Active Status" />
-                                    <MudDivider Class="my-3" />
-                                    <div class="d-flex flex-column gap-2 text-muted">
-                                        <div class="d-flex justify-space-between">
-                                            <MudText Typo="Typo.caption">Organisation ID:</MudText>
-                                            <MudText Typo="Typo.caption" Class="fw-bold">@(Id > 0 ? Id.ToString() : "Draft")</MudText>
-                                        </div>
-                                        <div class="d-flex justify-space-between">
-                                            <MudText Typo="Typo.caption">Created At:</MudText>
-                                            <MudText Typo="Typo.caption">@(_organisation.CreatedAt > DateTime.MinValue ? _organisation.CreatedAt.ToString("yyyy-MM-dd HH:mm") : "-")</MudText>
-                                        </div>
-                                        <div class="d-flex justify-space-between">
-                                            <MudText Typo="Typo.caption">Created By:</MudText>
-                                            <MudText Typo="Typo.caption">@(!string.IsNullOrWhiteSpace(_organisation.CreatedBy) ? _organisation.CreatedBy : "-")</MudText>
-                                        </div>
-                                        <div class="d-flex justify-space-between">
-                                            <MudText Typo="Typo.caption">Modified At:</MudText>
-                                            <MudText Typo="Typo.caption">@(_organisation.ModifiedAt.HasValue ? _organisation.ModifiedAt.Value.ToString("yyyy-MM-dd HH:mm") : "-")</MudText>
-                                        </div>
+                                    <div class="mt-3">
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Tel: @(_organisation.PrimaryContactPerson?.PhoneNumber ?? _organisation.PrimaryContactPerson?.CellNumber ?? "N/A")</MudText><br />
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Email: @(_organisation.PrimaryContactPerson?.Email ?? "N/A")</MudText>
                                     </div>
                                 </MudCardContent>
                             </MudCard>
@@ -346,8 +341,9 @@
                 </MudForm>
             </MudTabPanel>
 
-            <!-- TAB 2: Contacts & SDF Linkages -->
-            <MudTabPanel Text="Contacts & SDF Linkages" Icon="@Icons.Material.Filled.Group">
+            <!-- TAB 2: Contacts, SDFs & Training Committee -->
+            <MudTabPanel Text="Contacts & Committee" Icon="@Icons.Material.Filled.Group">
+                <!-- Section 1: Contacts & SDFs -->
                 <div class="d-flex justify-space-between align-center mb-4">
                     <div>
                         <MudText Typo="Typo.h6">Designated Contacts & Skills Development Facilitators (SDFs)</MudText>
@@ -355,7 +351,7 @@
                     </div>
                     @if (Id > 0)
                     {
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd" OnClick="OpenAddContactForm">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd" OnClick="OpenAddContactForm" aria-label="Add Contact or Appoint SDF">
                             Add Contact / SDF
                         </MudButton>
                     }
@@ -402,7 +398,7 @@
                     </MudCard>
                 }
 
-                <MudTable Items="_contacts" Hover="true" Dense="true" Striped="true">
+                <MudTable Items="_contacts" Hover="true" Dense="true" Striped="true" Class="mb-6">
                     <HeaderContent>
                         <MudTh>Full Name</MudTh>
                         <MudTh>Contact Type</MudTh>
@@ -457,9 +453,89 @@
                         </div>
                     </NoRecordsContent>
                 </MudTable>
+
+                <!-- Section 2: Workplace Training Committee -->
+                <div class="d-flex justify-space-between align-center mb-4 mt-6">
+                    <div>
+                        <MudText Typo="Typo.h6">Workplace Training Committee Members</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Statutory employer and union representatives for skills planning and WSP signoff</MudText>
+                    </div>
+                    @if (Id > 0)
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.GroupAdd" OnClick="@(() => _showAddCommitteeForm = true)" aria-label="Add Training Committee Member">
+                            Add Committee Member
+                        </MudButton>
+                    }
+                </div>
+
+                @if (_showAddCommitteeForm)
+                {
+                    <MudCard Class="pa-4 mb-4 border-secondary" Elevation="3">
+                        <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-3">Appoint Committee Member</MudText>
+                        <MudGrid>
+                            <MudItem xs="12" md="5">
+                                <MudSelect T="int" Label="Select Person" @bind-Value="_newCommitteePersonId" Required="true" Variant="Variant.Outlined">
+                                    @foreach (var p in _peopleList)
+                                    {
+                                        <MudSelectItem Value="@p.Id">@p.FirstName @p.LastName (@(!string.IsNullOrWhiteSpace(p.RsaIdNumber) ? p.RsaIdNumber : p.Email))</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </MudItem>
+                            <MudItem xs="12" md="4">
+                                <MudSelect T="string" Label="Member Role" @bind-Value="_newCommitteeRole" Variant="Variant.Outlined">
+                                    <MudSelectItem Value="@("UnionRepresentative")">Union Representative</MudSelectItem>
+                                    <MudSelectItem Value="@("EmployerRepresentative")">Employer Representative</MudSelectItem>
+                                    <MudSelectItem Value="@("Chairperson")">Committee Chairperson</MudSelectItem>
+                                    <MudSelectItem Value="@("SdfSecretary")">SDF Secretary</MudSelectItem>
+                                </MudSelect>
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudTextField T="string" Label="Constituency / Union" @bind-Value="_newCommitteeConstituency" Variant="Variant.Outlined" Placeholder="e.g. NUMSA, Solidarity, Management" />
+                            </MudItem>
+                            <MudItem xs="12" Class="d-flex justify-end gap-2">
+                                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" OnClick="@(() => _showAddCommitteeForm = false)">Cancel</MudButton>
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Check" OnClick="SaveNewCommitteeMember">Appoint Member</MudButton>
+                            </MudItem>
+                        </MudGrid>
+                    </MudCard>
+                }
+
+                <MudTable Items="_committeeMembers" Hover="true" Dense="true" Striped="true">
+                    <HeaderContent>
+                        <MudTh>Member Name</MudTh>
+                        <MudTh>RSA ID</MudTh>
+                        <MudTh>Role</MudTh>
+                        <MudTh>Constituency</MudTh>
+                        <MudTh>Contact Email</MudTh>
+                        <MudTh>Status</MudTh>
+                        <MudTh Style="text-align:right">Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Member Name"><strong>@context.PersonFullName</strong></MudTd>
+                        <MudTd DataLabel="RSA ID">@(context.RsaIdNumber ?? "-")</MudTd>
+                        <MudTd DataLabel="Role"><MudChip T="string" Color="Color.Info" Size="Size.Small">@context.MemberRoleCode</MudChip></MudTd>
+                        <MudTd DataLabel="Constituency">@context.Constituency</MudTd>
+                        <MudTd DataLabel="Email">@(context.EmailAddress ?? "-")</MudTd>
+                        <MudTd DataLabel="Status">
+                            <MudChip T="string" Color="@(context.IsActive ? Color.Success : Color.Default)" Size="Size.Small">
+                                @(context.IsActive ? "Active" : "Inactive")
+                            </MudChip>
+                        </MudTd>
+                        <MudTd Style="text-align:right" DataLabel="Actions">
+                            <MudTooltip Text="Remove Committee Member">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => RemoveCommitteeMember(context.MemberId))" aria-label="Remove Committee Member" />
+                            </MudTooltip>
+                        </MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <div class="pa-4 text-center">
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">No training committee members appointed yet.</MudText>
+                        </div>
+                    </NoRecordsContent>
+                </MudTable>
             </MudTabPanel>
 
-            <!-- TAB 3: Sites / Branches -->
+            <!-- TAB 3: Sites & Branches -->
             <MudTabPanel Text="Sites & Branches" Icon="@Icons.Material.Filled.LocationCity">
                 <div class="d-flex justify-space-between align-center mb-4">
                     <div>
@@ -468,7 +544,7 @@
                     </div>
                     @if (Id > 0)
                     {
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AddLocation" OnClick="OpenAddSiteForm">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AddLocation" OnClick="OpenAddSiteForm" aria-label="Add Operating Site or Branch">
                             Add Site / Branch
                         </MudButton>
                     }
@@ -481,46 +557,45 @@
                 @if (_showAddSiteForm)
                 {
                     <MudCard Class="pa-4 mb-4 border-primary" Elevation="3">
-                        <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-3">Add / Edit Operating Site</MudText>
+                        <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-3">Register Operating Branch / Site</MudText>
                         <MudGrid>
                             <MudItem xs="12" md="6">
-                                <MudTextField T="string" Label="Site Name" Required="true" @bind-Value="_newSite.SiteName" Variant="Variant.Outlined" Placeholder="e.g. Pretoria North Workshop" />
+                                <MudTextField T="string" Label="Site / Branch Name" @bind-Value="_newSite.SiteName" Required="true" Variant="Variant.Outlined" Placeholder="e.g. Rosslyn Manufacturing Plant" />
                             </MudItem>
                             <MudItem xs="12" md="3">
-                                <MudTextField T="string" Label="Site Code" @bind-Value="_newSite.SiteCode" Variant="Variant.Outlined" Placeholder="e.g. SITE-01" />
+                                <MudTextField T="string" Label="Site Code / Number" @bind-Value="_newSite.SiteCode" Variant="Variant.Outlined" Placeholder="e.g. SITE-002" />
                             </MudItem>
                             <MudItem xs="12" md="3">
                                 <MudSelect T="string" Label="Province" @bind-Value="_newSite.ProvinceCode" Variant="Variant.Outlined">
-                                    @foreach (var prov in _provinces)
+                                    @foreach (var p in _provinces)
                                     {
-                                        <MudSelectItem Value="@prov.Code">@prov.Name (@prov.Code)</MudSelectItem>
+                                        <MudSelectItem Value="@p.Code">@p.Name</MudSelectItem>
                                     }
                                 </MudSelect>
                             </MudItem>
                             <MudItem xs="12" md="6">
-                                <MudTextField T="string" Label="Physical Address" @bind-Value="_newSite.PhysicalAddress" Variant="Variant.Outlined" Lines="2" Placeholder="Street address, building..." />
+                                <MudTextField T="string" Label="Physical Address" @bind-Value="_newSite.PhysicalAddress" Variant="Variant.Outlined" Lines="2" />
                             </MudItem>
                             <MudItem xs="12" md="3">
-                                <MudTextField T="string" Label="City / Suburb" @bind-Value="_newSite.City" Variant="Variant.Outlined" />
+                                <MudTextField T="string" Label="City" @bind-Value="_newSite.City" Variant="Variant.Outlined" />
                             </MudItem>
                             <MudItem xs="12" md="3">
                                 <MudTextField T="string" Label="Postal Code" @bind-Value="_newSite.PostalCode" Variant="Variant.Outlined" />
                             </MudItem>
                             <MudItem xs="12" md="6">
-                                <MudSelect T="int?" Label="Site Contact Person" @bind-Value="_newSite.PrimaryContactPersonId" Variant="Variant.Outlined" Clearable="true">
-                                    <MudSelectItem Value="@((int?)null)">-- None --</MudSelectItem>
+                                <MudSelect T="int?" Label="Branch Site Contact Person" @bind-Value="_newSite.PrimaryContactPersonId" Variant="Variant.Outlined" Clearable="true">
                                     @foreach (var p in _peopleList)
                                     {
-                                        <MudSelectItem Value="@((int?)p.Id)">@p.FirstName @p.LastName</MudSelectItem>
+                                        <MudSelectItem Value="@((int?)p.Id)">@p.FirstName @p.LastName (@p.Email)</MudSelectItem>
                                     }
                                 </MudSelect>
                             </MudItem>
                             <MudItem xs="12" md="6">
-                                <MudSwitch T="bool" @bind-Value="_newSite.IsHeadOffice" Color="Color.Success" Label="Designate as Head Office Site" />
+                                <MudSwitch T="bool" @bind-Value="_newSite.IsHeadOffice" Color="Color.Primary" Label="Designate as Main Head Office" />
                             </MudItem>
                             <MudItem xs="12" Class="d-flex justify-end gap-2">
                                 <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" OnClick="CancelAddSiteForm">Cancel</MudButton>
-                                <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveNewSite">Save Site</MudButton>
+                                <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Filled.Check" OnClick="SaveNewSite">Save Operating Site</MudButton>
                             </MudItem>
                         </MudGrid>
                     </MudCard>
@@ -529,33 +604,27 @@
                 <MudTable Items="_sites" Hover="true" Dense="true" Striped="true">
                     <HeaderContent>
                         <MudTh>Site Name</MudTh>
-                        <MudTh>Physical Address</MudTh>
-                        <MudTh>City</MudTh>
+                        <MudTh>Site Code</MudTh>
+                        <MudTh>Address & City</MudTh>
                         <MudTh>Province</MudTh>
-                        <MudTh>Contact Person</MudTh>
+                        <MudTh>Site Contact</MudTh>
                         <MudTh>Head Office</MudTh>
                         <MudTh Style="text-align:right">Actions</MudTh>
                     </HeaderContent>
                     <RowTemplate>
                         <MudTd DataLabel="Site Name">
-                            <MudText Typo="Typo.body2" Class="fw-bold">@context.SiteName</MudText>
-                            @if (!string.IsNullOrWhiteSpace(context.SiteCode))
-                            {
-                                <MudText Typo="Typo.caption" Color="Color.Secondary">Code: @context.SiteCode</MudText>
-                            }
+                            <div class="d-flex align-center gap-2">
+                                <MudIcon Icon="@Icons.Material.Filled.LocationOn" Color="Color.Primary" Size="Size.Small" />
+                                <MudText Typo="Typo.body2" Class="fw-bold">@context.SiteName</MudText>
+                            </div>
                         </MudTd>
-                        <MudTd DataLabel="Address">@(!string.IsNullOrWhiteSpace(context.PhysicalAddress) ? context.PhysicalAddress : "-")</MudTd>
-                        <MudTd DataLabel="City">@(!string.IsNullOrWhiteSpace(context.City) ? context.City : "-")</MudTd>
-                        <MudTd DataLabel="Province">@(!string.IsNullOrWhiteSpace(context.ProvinceCode) ? context.ProvinceCode : "-")</MudTd>
-                        <MudTd DataLabel="Contact Person">
-                            @if (context.PrimaryContactPerson != null)
-                            {
-                                <span>@context.PrimaryContactPerson.FirstName @context.PrimaryContactPerson.LastName</span>
-                            }
-                            else
-                            {
-                                <span class="text-muted">-</span>
-                            }
+                        <MudTd DataLabel="Code">@(!string.IsNullOrWhiteSpace(context.SiteCode) ? context.SiteCode : "-")</MudTd>
+                        <MudTd DataLabel="Address">@(context.PhysicalAddress ?? "-"), @(context.City ?? "-")</MudTd>
+                        <MudTd DataLabel="Province">
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@(context.ProvinceCode ?? "GP")</MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Contact">
+                            @(context.PrimaryContactPerson != null ? $"{context.PrimaryContactPerson.FirstName} {context.PrimaryContactPerson.LastName}" : "-")
                         </MudTd>
                         <MudTd DataLabel="Head Office">
                             @if (context.IsHeadOffice)
@@ -564,30 +633,329 @@
                             }
                         </MudTd>
                         <MudTd Style="text-align:right" DataLabel="Actions">
-                            <MudTooltip Text="Remove Site">
-                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => RemoveSite(context.Id))" aria-label="Remove Site" />
+                            <MudTooltip Text="Delete Site">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Small" OnClick="@(() => RemoveSite(context.Id))" aria-label="Delete Site" />
                             </MudTooltip>
                         </MudTd>
                     </RowTemplate>
                     <NoRecordsContent>
                         <div class="pa-4 text-center">
-                            <MudText Typo="Typo.body2" Color="Color.Secondary">No physical branch sites registered yet.</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">No branch or operating sites recorded.</MudText>
                         </div>
                     </NoRecordsContent>
                 </MudTable>
             </MudTabPanel>
 
-            <!-- TAB 4: Site Visits & Monitoring -->
+            <!-- TAB 4: Learner Ecosystem (SETMIS 500/501) -->
+            <MudTabPanel Text="Learner Ecosystem" Icon="@Icons.Material.Filled.School">
+                <div class="d-flex flex-wrap justify-space-between align-center mb-4 gap-3">
+                    <div>
+                        <MudText Typo="Typo.h6">Registered & Hosted Learners (SETMIS Files 500 / 501)</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">All learnerships, apprenticeships, skills programmes, and interns linked to this employer</MudText>
+                    </div>
+                    <div class="d-flex align-center gap-2">
+                        <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Filled">
+                            @(_filteredLearners.Count) Enrolled Learners
+                        </MudChip>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonSearch" Href="/learners" aria-label="Open Learner Registry">
+                            Learner Registry
+                        </MudButton>
+                    </div>
+                </div>
+
+                <!-- Learner Search & Programme Filters -->
+                <MudPaper Class="pa-3 mb-4 rounded-lg d-flex flex-wrap align-center gap-3" Elevation="1">
+                    <MudTextField @bind-Value="_learnerSearch" Placeholder="Search by Learner Name, RSA ID, or Contract Number..."
+                                  Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                                  Immediate="true" Variant="Variant.Outlined" Margin="Margin.Dense" Class="flex-grow-1" />
+                    <MudSelect T="string" Label="Filter Programme Type" @bind-Value="_selectedProgrammeFilter" Variant="Variant.Outlined" Margin="Margin.Dense" Style="min-width: 220px;">
+                        <MudSelectItem Value="@("All")">All Programmes</MudSelectItem>
+                        <MudSelectItem Value="@("Apprenticeship")">Apprenticeship</MudSelectItem>
+                        <MudSelectItem Value="@("Learnership")">Learnership</MudSelectItem>
+                        <MudSelectItem Value="@("Skills Programme")">Skills Programme</MudSelectItem>
+                        <MudSelectItem Value="@("Internship")">Internship</MudSelectItem>
+                        <MudSelectItem Value="@("Bursary")">Bursary</MudSelectItem>
+                        <MudSelectItem Value="@("Candidacy")">Candidacy</MudSelectItem>
+                        <MudSelectItem Value="@("ARPL")">ARPL</MudSelectItem>
+                    </MudSelect>
+                </MudPaper>
+
+                @if (_loadingLearners)
+                {
+                    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+                }
+                else
+                {
+                    <MudTable Items="_filteredLearners" Hover="true" Dense="true" Striped="true" Elevation="1">
+                        <HeaderContent>
+                            <MudTh>Learner Name</MudTh>
+                            <MudTh>RSA ID / Passport</MudTh>
+                            <MudTh>Programme Type</MudTh>
+                            <MudTh>Qualification / Trade</MudTh>
+                            <MudTh>Contract No</MudTh>
+                            <MudTh>Training Provider</MudTh>
+                            <MudTh>Status</MudTh>
+                            <MudTh Style="text-align:right">Action</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Learner Name">
+                                <div class="d-flex align-center gap-2">
+                                    <MudAvatar Color="Color.Primary" Size="Size.Small">
+                                        <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Small" />
+                                    </MudAvatar>
+                                    <div>
+                                        <MudLink Href="@($"/learners/{context.PersonId}")" Typo="Typo.body2" Class="fw-bold" Color="Color.Primary">
+                                            @context.LearnerFullName
+                                        </MudLink>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">Registered: @(context.RegistrationDate.HasValue ? context.RegistrationDate.Value.ToString("yyyy-MM-dd") : "-")</MudText>
+                                    </div>
+                                </div>
+                            </MudTd>
+                            <MudTd DataLabel="ID / Passport">@(context.RsaIdNumber ?? context.PassportNumber ?? "-")</MudTd>
+                            <MudTd DataLabel="Programme">
+                                <MudChip T="string" Color="Color.Info" Size="Size.Small" Variant="Variant.Outlined">
+                                    @context.LearningProgrammeTypeName
+                                </MudChip>
+                            </MudTd>
+                            <MudTd DataLabel="Qualification">
+                                <MudText Typo="Typo.body2">@(!string.IsNullOrWhiteSpace(context.QualificationTitle) ? context.QualificationTitle : "Skills Intervention")</MudText>
+                                @if (context.NqfLevel.HasValue)
+                                {
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">NQF Level @context.NqfLevel</MudText>
+                                }
+                            </MudTd>
+                            <MudTd DataLabel="Contract No">@(!string.IsNullOrWhiteSpace(context.LearnerContractNumber) ? context.LearnerContractNumber : "-")</MudTd>
+                            <MudTd DataLabel="Provider">@(context.TrainingProviderName ?? "-")</MudTd>
+                            <MudTd DataLabel="Status">
+                                <MudChip T="string" Color="@GetStatusColor(context.EnrolmentStatusName)" Size="Size.Small" Variant="Variant.Filled">
+                                    @context.EnrolmentStatusName
+                                </MudChip>
+                            </MudTd>
+                            <MudTd Style="text-align:right" DataLabel="Action">
+                                <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Visibility" Href="@($"/learners/{context.PersonId}")" aria-label="View Learner Details">
+                                    View
+                                </MudButton>
+                            </MudTd>
+                        </RowTemplate>
+                        <NoRecordsContent>
+                            <div class="pa-4 text-center">
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">No registered learners found for this employer.</MudText>
+                            </div>
+                        </NoRecordsContent>
+                    </MudTable>
+                }
+            </MudTabPanel>
+
+            <!-- TAB 5: WSP / ATR & SARS Levies -->
+            <MudTabPanel Text="WSP & Levies" Icon="@Icons.Material.Filled.Assignment">
+                <MudGrid Spacing="3">
+                    <!-- WSP Submissions -->
+                    <MudItem xs="12" lg="6">
+                        <MudCard Elevation="2" Class="h-100">
+                            <MudCardHeader>
+                                <CardHeaderAvatar>
+                                    <MudAvatar Color="Color.Primary" Variant="Variant.Filled">
+                                        <MudIcon Icon="@Icons.Material.Filled.Assignment" />
+                                    </MudAvatar>
+                                </CardHeaderAvatar>
+                                <CardHeaderContent>
+                                    <MudText Typo="Typo.h6">WSP & Mandatory Grant Submissions</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Annual Workplace Skills Plans and Training Reports</MudText>
+                                </CardHeaderContent>
+                            </MudCardHeader>
+                            <MudCardContent>
+                                <MudTable Items="_organisation.WspSubmissions" Hover="true" Dense="true">
+                                    <HeaderContent>
+                                        <MudTh>Fin Year</MudTh>
+                                        <MudTh>Reference</MudTh>
+                                        <MudTh>Employees</MudTh>
+                                        <MudTh>Training Budget</MudTh>
+                                        <MudTh>Status</MudTh>
+                                    </HeaderContent>
+                                    <RowTemplate>
+                                        <MudTd>@context.FinYear</MudTd>
+                                        <MudTd>@context.ReferenceNumber</MudTd>
+                                        <MudTd>@context.EmployeeCount</MudTd>
+                                        <MudTd>@context.PlannedTrainingBudget.ToString("C")</MudTd>
+                                        <MudTd><MudChip T="string" Color="Color.Success" Size="Size.Small">Approved</MudChip></MudTd>
+                                    </RowTemplate>
+                                    <NoRecordsContent>
+                                        <div class="pa-3 text-center text-muted">No WSP submissions recorded.</div>
+                                    </NoRecordsContent>
+                                </MudTable>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+
+                    <!-- SARS Monthly Levy & Rebate Reconciliations -->
+                    <MudItem xs="12" lg="6">
+                        <MudCard Elevation="2" Class="h-100">
+                            <MudCardHeader>
+                                <CardHeaderAvatar>
+                                    <MudAvatar Color="Color.Success" Variant="Variant.Filled">
+                                        <MudIcon Icon="@Icons.Material.Filled.AccountBalance" />
+                                    </MudAvatar>
+                                </CardHeaderAvatar>
+                                <CardHeaderContent>
+                                    <MudText Typo="Typo.h6">SARS SDL Monthly Levies & Rebates</MudText>
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Monthly 1% skills levy received and 20% Mandatory Grant rebates</MudText>
+                                </CardHeaderContent>
+                            </MudCardHeader>
+                            <MudCardContent>
+                                <MudTable Items="_levyRecons" Hover="true" Dense="true">
+                                    <HeaderContent>
+                                        <MudTh>Year</MudTh>
+                                        <MudTh>Gross Levy</MudTh>
+                                        <MudTh>20% MG Rebate</MudTh>
+                                        <MudTh>49.5% DG Pool</MudTh>
+                                        <MudTh>Status</MudTh>
+                                    </HeaderContent>
+                                    <RowTemplate>
+                                        <MudTd>@context.FinYear</MudTd>
+                                        <MudTd>@context.GrossLevyReceived.ToString("C")</MudTd>
+                                        <MudTd>@context.MandatoryGrantLevyCalculated.ToString("C")</MudTd>
+                                        <MudTd>@context.DiscretionaryGrantLevyCalculated.ToString("C")</MudTd>
+                                        <MudTd><MudChip T="string" Color="Color.Primary" Size="Size.Small">@context.ReconStatus</MudChip></MudTd>
+                                    </RowTemplate>
+                                    <NoRecordsContent>
+                                        <div class="pa-3 text-center text-muted">No SARS levy reconciliation entries found.</div>
+                                    </NoRecordsContent>
+                                </MudTable>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+                </MudGrid>
+            </MudTabPanel>
+
+            <!-- TAB 6: Grants & MoAs (DG & MG) -->
+            <MudTabPanel Text="Grants & MoAs" Icon="@Icons.Material.Filled.MonetizationOn">
+                <div class="d-flex flex-wrap justify-space-between align-center mb-4 gap-3">
+                    <div>
+                        <MudText Typo="Typo.h6">Discretionary Grants (DG) & Memoranda of Agreement (MoA)</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Project funding applications, approved bilateral MoAs, tranches, and claims</MudText>
+                    </div>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AccountBalanceWallet" Href="/finance/grant-moas" aria-label="Open Grant MOA Hub">
+                        Finance MOA Hub
+                    </MudButton>
+                </div>
+
+                @if (_loadingGrants)
+                {
+                    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+                }
+                else
+                {
+                    <MudTable Items="_grantSummaries" Hover="true" Dense="true" Striped="true" Elevation="1">
+                        <HeaderContent>
+                            <MudTh>MoA / App Number</MudTh>
+                            <MudTh>Project Title</MudTh>
+                            <MudTh>Funding Window</MudTh>
+                            <MudTh>Intervention</MudTh>
+                            <MudTh>Approved Value</MudTh>
+                            <MudTh>Total Disbursed</MudTh>
+                            <MudTh>Status</MudTh>
+                            <MudTh Style="text-align:right">Action</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="MoA / App No">
+                                <strong>@context.ApplicationOrMoaNumber</strong>
+                            </MudTd>
+                            <MudTd DataLabel="Project Title">@context.ProjectTitle</MudTd>
+                            <MudTd DataLabel="Funding Window">@(context.FundingWindowName ?? "Discretionary Window")</MudTd>
+                            <MudTd DataLabel="Intervention">@(context.InterventionType ?? "Skills Grant")</MudTd>
+                            <MudTd DataLabel="Approved Value">@context.ApprovedAmount.ToString("C")</MudTd>
+                            <MudTd DataLabel="Disbursed">@context.TotalDisbursed.ToString("C")</MudTd>
+                            <MudTd DataLabel="Status">
+                                <MudChip T="string" Color="@GetGrantStatusColor(context.StatusCode)" Size="Size.Small">
+                                    @context.StatusCode
+                                </MudChip>
+                            </MudTd>
+                            <MudTd Style="text-align:right" DataLabel="Action">
+                                <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Description" Href="@($"/finance/grant-moas/{context.GrantMoaId ?? context.GrantApplicationId}")" aria-label="View MoA Details">
+                                    View MoA
+                                </MudButton>
+                            </MudTd>
+                        </RowTemplate>
+                        <NoRecordsContent>
+                            <div class="pa-4 text-center">
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">No Discretionary Grant applications or MoAs recorded.</MudText>
+                            </div>
+                        </NoRecordsContent>
+                    </MudTable>
+                }
+            </MudTabPanel>
+
+            <!-- TAB 7: Workplace Approvals (WPA) -->
+            <MudTabPanel Text="Workplace Approvals" Icon="@Icons.Material.Filled.FactCheck">
+                <div class="d-flex flex-wrap justify-space-between align-center mb-4 gap-3">
+                    <div>
+                        <MudText Typo="Typo.h6">Workplace Site Approvals (WPA)</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Host workplace site inspections, approved trades, qualified artisan mentors, and tooling</MudText>
+                    </div>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Engineering" Href="/workplace-approvals" aria-label="Open Workplace Approval Hub">
+                        WPA Hub
+                    </MudButton>
+                </div>
+
+                @if (_loadingWpas)
+                {
+                    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+                }
+                else
+                {
+                    <MudTable Items="_wpas" Hover="true" Dense="true" Striped="true" Elevation="1">
+                        <HeaderContent>
+                            <MudTh>Approval Number</MudTh>
+                            <MudTh>Facility / Site</MudTh>
+                            <MudTh>Approved Trade / Qualification</MudTh>
+                            <MudTh>Mentors</MudTh>
+                            <MudTh>Tool Items</MudTh>
+                            <MudTh>Inspection Date</MudTh>
+                            <MudTh>Status</MudTh>
+                            <MudTh Style="text-align:right">Action</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Approval No"><strong>@context.ApprovalNumber</strong></MudTd>
+                            <MudTd DataLabel="Site">@context.SiteName</MudTd>
+                            <MudTd DataLabel="Qualification">@context.QualificationTitle</MudTd>
+                            <MudTd DataLabel="Mentors">
+                                <MudChip T="string" Color="Color.Info" Size="Size.Small">@context.MentorsCount Mentors</MudChip>
+                            </MudTd>
+                            <MudTd DataLabel="Tools">
+                                <MudChip T="string" Color="Color.Secondary" Size="Size.Small">@context.ToolItemsCount Verified</MudChip>
+                            </MudTd>
+                            <MudTd DataLabel="Inspection Date">@(context.InspectionDate.HasValue ? context.InspectionDate.Value.ToString("yyyy-MM-dd") : "-")</MudTd>
+                            <MudTd DataLabel="Status">
+                                <MudChip T="string" Color="@(context.ApprovalStatusCode == "Approved" ? Color.Success : Color.Warning)" Size="Size.Small">
+                                    @context.ApprovalStatusCode
+                                </MudChip>
+                            </MudTd>
+                            <MudTd Style="text-align:right" DataLabel="Action">
+                                <MudButton Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.FactCheck" Href="@($"/workplace-approvals/{context.WorkplaceApprovalId}")" aria-label="View Workplace Approval">
+                                    View WPA
+                                </MudButton>
+                            </MudTd>
+                        </RowTemplate>
+                        <NoRecordsContent>
+                            <div class="pa-4 text-center">
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">No workplace approvals registered for this employer yet.</MudText>
+                            </div>
+                        </NoRecordsContent>
+                    </MudTable>
+                }
+            </MudTabPanel>
+
+            <!-- TAB 8: Site Visits & Monitoring -->
             <MudTabPanel Text="Site Visits & Monitoring" Icon="@Icons.Material.Filled.Event">
                 <div class="d-flex justify-space-between align-center mb-4">
                     <div>
-                        <MudText Typo="Typo.h6">Scheduled Monitoring & Approval Visits</MudText>
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">Mandatory quality assurance, workplace approval, and monitoring visits</MudText>
+                        <MudText Typo="Typo.h6">Scheduled Site Visits & Monitoring Inspections</MudText>
+                        <MudText Typo="Typo.caption" Color="Color.Secondary">Compliance monitoring, workplace inspections, and employer liaison visits</MudText>
                     </div>
                     @if (Id > 0)
                     {
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.EventAvailable" OnClick="OpenScheduleVisitForm">
-                            Schedule Visit
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.EventAvailable" OnClick="OpenScheduleVisitForm" aria-label="Schedule New Employer Site Visit">
+                            Schedule Site Visit
                         </MudButton>
                     }
                     else
@@ -599,16 +967,16 @@
                 @if (_showScheduleVisitForm)
                 {
                     <MudCard Class="pa-4 mb-4 border-primary" Elevation="3">
-                        <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-3">Schedule Monitoring Visit</MudText>
+                        <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-3">Schedule Employer Site Visit</MudText>
                         <MudGrid>
                             <MudItem xs="12" md="6">
-                                <MudTextField T="string" Label="Visit Title / Subject" Required="true" @bind-Value="_newVisit.Title" Variant="Variant.Outlined" Placeholder="e.g. Annual Quality Assurance Audit" />
+                                <MudTextField T="string" Label="Visit Title / Subject" @bind-Value="_newVisit.Title" Required="true" Variant="Variant.Outlined" Placeholder="e.g. Annual Workplace Skills Verification" />
                             </MudItem>
                             <MudItem xs="12" md="3">
-                                <MudDatePicker Label="Visit Date" @bind-Date="_visitDate" Required="true" Variant="Variant.Outlined" DateFormat="yyyy-MM-dd" Placeholder="Visit date (yyyy-MM-dd)" aria-label="Visit Date" />
+                                <MudDatePicker Label="Scheduled Visit Date" @bind-Date="_visitDate" Variant="Variant.Outlined" Required="true" />
                             </MudItem>
                             <MudItem xs="12" md="3">
-                                <MudSelect T="string" Label="Visit Type" @bind-Value="_newVisit.VisitTypeCode" Variant="Variant.Outlined">
+                                <MudSelect T="string" Label="Visit Purpose / Type" @bind-Value="_newVisit.VisitTypeCode" Variant="Variant.Outlined">
                                     @foreach (var vt in _visitTypes)
                                     {
                                         <MudSelectItem Value="@vt.Code">@vt.Name</MudSelectItem>
@@ -616,23 +984,22 @@
                                 </MudSelect>
                             </MudItem>
                             <MudItem xs="12" md="6">
-                                <!-- Mandatory Contact Person Selection for Visit -->
-                                <MudSelect T="int" Label="Contact Person (Mandatory)" Required="true" RequiredError="You must explicitly select a contact person for the visit" @bind-Value="_newVisit.ContactPersonId" Variant="Variant.Outlined">
+                                <MudSelect T="int" Label="Mandatory Designated Contact Person Met" @bind-Value="_newVisit.ContactPersonId" Required="true" Variant="Variant.Outlined">
                                     @foreach (var p in _peopleList)
                                     {
-                                        <MudSelectItem Value="@p.Id">@p.FirstName @p.LastName (@(!string.IsNullOrWhiteSpace(p.RsaIdNumber) ? p.RsaIdNumber : p.Email))</MudSelectItem>
+                                        <MudSelectItem Value="@p.Id">@p.FirstName @p.LastName (@p.Email)</MudSelectItem>
                                     }
                                 </MudSelect>
                             </MudItem>
                             <MudItem xs="12" md="6">
-                                <MudTextField T="string" Label="Location / Facility" @bind-Value="_newVisit.Location" Variant="Variant.Outlined" Placeholder="e.g. Pretoria Plant - Boardroom A" />
+                                <MudTextField T="string" Label="Physical Site Location" @bind-Value="_newVisit.Location" Variant="Variant.Outlined" Placeholder="e.g. Main Factory Plant" />
                             </MudItem>
                             <MudItem xs="12">
-                                <MudTextField T="string" Label="Outcome / Audit Notes" @bind-Value="_newVisit.OutcomeNotes" Lines="3" Variant="Variant.Outlined" Placeholder="Findings, recommendations, follow-up items..." />
+                                <MudTextField T="string" Label="Preliminary Notes / Focus Areas" @bind-Value="_newVisit.OutcomeNotes" Variant="Variant.Outlined" Lines="2" />
                             </MudItem>
                             <MudItem xs="12" Class="d-flex justify-end gap-2">
                                 <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Small" OnClick="CancelScheduleVisitForm">Cancel</MudButton>
-                                <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Filled.Check" OnClick="SaveScheduledVisit">Confirm Visit Schedule</MudButton>
+                                <MudButton Variant="Variant.Filled" Color="Color.Success" Size="Size.Small" StartIcon="@Icons.Material.Filled.Event" OnClick="SaveScheduledVisit">Confirm Visit Schedule</MudButton>
                             </MudItem>
                         </MudGrid>
                     </MudCard>
@@ -640,112 +1007,39 @@
 
                 <MudTable Items="_visits" Hover="true" Dense="true" Striped="true">
                     <HeaderContent>
-                        <MudTh>Title</MudTh>
                         <MudTh>Visit Date</MudTh>
-                        <MudTh>Visit Type</MudTh>
-                        <MudTh>Contact Person (Mandatory)</MudTh>
+                        <MudTh>Subject</MudTh>
+                        <MudTh>Type</MudTh>
                         <MudTh>Location</MudTh>
-                        <MudTh>Outcome Notes</MudTh>
+                        <MudTh>Designated Contact Met</MudTh>
+                        <MudTh>Outcome</MudTh>
                     </HeaderContent>
                     <RowTemplate>
-                        <MudTd DataLabel="Title">
-                            <MudText Typo="Typo.body2" Class="fw-bold">@context.Title</MudText>
+                        <MudTd DataLabel="Date">
+                            <div class="d-flex align-center gap-2">
+                                <MudIcon Icon="@Icons.Material.Filled.CalendarToday" Color="Color.Primary" Size="Size.Small" />
+                                <strong>@context.VisitDate.ToString("yyyy-MM-dd")</strong>
+                            </div>
                         </MudTd>
-                        <MudTd DataLabel="Date">@context.VisitDate.ToString("yyyy-MM-dd")</MudTd>
+                        <MudTd DataLabel="Title">@context.Title</MudTd>
                         <MudTd DataLabel="Type">
-                            <MudChip T="string" Color="Color.Secondary" Size="Size.Small" Variant="Variant.Outlined">
-                                @(!string.IsNullOrWhiteSpace(context.VisitTypeCode) ? context.VisitTypeCode : "Monitoring")
-                            </MudChip>
+                            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined">@(context.VisitTypeCode ?? "MONITORING")</MudChip>
                         </MudTd>
-                        <MudTd DataLabel="Contact Person">
-                            @if (context.ContactPerson != null)
-                            {
-                                <div class="d-flex align-center gap-1">
-                                    <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Small" Color="Color.Primary" />
-                                    <MudText Typo="Typo.body2">@context.ContactPerson.FirstName @context.ContactPerson.LastName</MudText>
-                                </div>
-                            }
-                            else
-                            {
-                                <MudText Typo="Typo.caption" Color="Color.Secondary">ID: @context.ContactPersonId</MudText>
-                            }
+                        <MudTd DataLabel="Location">@(context.Location ?? "Head Office")</MudTd>
+                        <MudTd DataLabel="Contact Met">
+                            @(context.ContactPerson != null ? $"{context.ContactPerson.FirstName} {context.ContactPerson.LastName}" : $"Person ID: {context.ContactPersonId}")
                         </MudTd>
-                        <MudTd DataLabel="Location">@(!string.IsNullOrWhiteSpace(context.Location) ? context.Location : "-")</MudTd>
-                        <MudTd DataLabel="Notes">@(!string.IsNullOrWhiteSpace(context.OutcomeNotes) ? context.OutcomeNotes : "-")</MudTd>
+                        <MudTd DataLabel="Outcome">@(!string.IsNullOrWhiteSpace(context.OutcomeNotes) ? context.OutcomeNotes : "Pending completion")</MudTd>
                     </RowTemplate>
                     <NoRecordsContent>
                         <div class="pa-4 text-center">
-                            <MudText Typo="Typo.body2" Color="Color.Secondary">No monitoring or site visits scheduled for this organisation.</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">No site visits scheduled or executed.</MudText>
                         </div>
                     </NoRecordsContent>
                 </MudTable>
             </MudTabPanel>
 
-            <!-- TAB 5: WSP & Grants History -->
-            <MudTabPanel Text="WSP & Grant History" Icon="@Icons.Material.Filled.Assignment">
-                <MudGrid Spacing="3">
-                    <MudItem xs="12" md="6">
-                        <MudCard Elevation="2">
-                            <MudCardHeader>
-                                <CardHeaderContent>
-                                    <MudText Typo="Typo.h6">WSP & Mandatory Grants</MudText>
-                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Workplace Skills Plan submissions</MudText>
-                                </CardHeaderContent>
-                            </MudCardHeader>
-                            <MudCardContent>
-                                <MudTable Items="_organisation.WspSubmissions" Hover="true" Dense="true">
-                                    <HeaderContent>
-                                        <MudTh>Fin Year</MudTh>
-                                        <MudTh>Reference</MudTh>
-                                        <MudTh>Employees</MudTh>
-                                        <MudTh>Planned Budget</MudTh>
-                                    </HeaderContent>
-                                    <RowTemplate>
-                                        <MudTd>@context.FinYear</MudTd>
-                                        <MudTd>@context.ReferenceNumber</MudTd>
-                                        <MudTd>@context.EmployeeCount</MudTd>
-                                        <MudTd>@context.PlannedTrainingBudget.ToString("C")</MudTd>
-                                    </RowTemplate>
-                                    <NoRecordsContent>
-                                        <div class="pa-3 text-center text-muted">No WSP submissions recorded.</div>
-                                    </NoRecordsContent>
-                                </MudTable>
-                            </MudCardContent>
-                        </MudCard>
-                    </MudItem>
-                    <MudItem xs="12" md="6">
-                        <MudCard Elevation="2">
-                            <MudCardHeader>
-                                <CardHeaderContent>
-                                    <MudText Typo="Typo.h6">Discretionary Grants (DG)</MudText>
-                                    <MudText Typo="Typo.caption" Color="Color.Secondary">Project applications and approvals</MudText>
-                                </CardHeaderContent>
-                            </MudCardHeader>
-                            <MudCardContent>
-                                <MudTable Items="_organisation.GrantApplications" Hover="true" Dense="true">
-                                    <HeaderContent>
-                                        <MudTh>App No</MudTh>
-                                        <MudTh>Project Title</MudTh>
-                                        <MudTh>Requested</MudTh>
-                                        <MudTh>Approved</MudTh>
-                                    </HeaderContent>
-                                    <RowTemplate>
-                                        <MudTd>@context.ApplicationNumber</MudTd>
-                                        <MudTd>@context.ProjectTitle</MudTd>
-                                        <MudTd>@context.RequestedAmount.ToString("C")</MudTd>
-                                        <MudTd>@(context.ApprovedAmount.HasValue ? context.ApprovedAmount.Value.ToString("C") : "Pending")</MudTd>
-                                    </RowTemplate>
-                                    <NoRecordsContent>
-                                        <div class="pa-3 text-center text-muted">No Discretionary Grant applications found.</div>
-                                    </NoRecordsContent>
-                                </MudTable>
-                            </MudCardContent>
-                        </MudCard>
-                    </MudItem>
-                </MudGrid>
-            </MudTabPanel>
-
-            <!-- TAB 6: Evidence Vault -->
+            <!-- TAB 9: Evidence Vault & Audit Logs -->
             @if (Id > 0)
             {
                 <MudTabPanel Text="Evidence Vault" Icon="@Icons.Material.Filled.FolderZip">
@@ -769,7 +1063,7 @@
         @if (!string.IsNullOrEmpty(_newLogoUri))
         {
             <div class="pa-2 border rounded text-center">
-                <img src="@_newLogoUri" style="max-height: 80px; max-width: 100%; object-fit: contain;" alt="Preview" />
+                <img src="@_newLogoUri" style="max-height: 80px; max-width: 100%; object-fit: contain;" alt="Logo Preview" />
             </div>
         }
     </DialogContent>
@@ -787,11 +1081,36 @@
     private bool _isValid;
     private bool _loading = true;
     private bool _isSaving = false;
+    private int _activeTabIndex = 0;
 
     private List<OrganisationContact> _contacts = new();
     private List<OrganisationSite> _sites = new();
     private List<Visit> _visits = new();
     private List<Person> _peopleList = new();
+
+    // 360-Degree Relational Tab Collections
+    private List<OrganisationLearnerDto> _learners = new();
+    private List<OrganisationGrantSummaryDto> _grantSummaries = new();
+    private List<OrganisationWpaDto> _wpas = new();
+    private List<OrganisationCommitteeMemberDto> _committeeMembers = new();
+    private List<OrganisationLevyReconDto> _levyRecons = new();
+
+    private bool _loadingLearners = false;
+    private bool _loadingGrants = false;
+    private bool _loadingWpas = false;
+
+    // Filters
+    private string _learnerSearch = string.Empty;
+    private string _selectedProgrammeFilter = "All";
+
+    private List<OrganisationLearnerDto> _filteredLearners => _learners
+        .Where(l => _selectedProgrammeFilter == "All" || string.Equals(l.LearningProgrammeTypeName, _selectedProgrammeFilter, StringComparison.OrdinalIgnoreCase))
+        .Where(l => string.IsNullOrWhiteSpace(_learnerSearch) ||
+                    l.LearnerFullName.Contains(_learnerSearch, StringComparison.OrdinalIgnoreCase) ||
+                    (l.RsaIdNumber != null && l.RsaIdNumber.Contains(_learnerSearch, StringComparison.OrdinalIgnoreCase)) ||
+                    (l.LearnerContractNumber != null && l.LearnerContractNumber.Contains(_learnerSearch, StringComparison.OrdinalIgnoreCase)) ||
+                    (l.QualificationTitle != null && l.QualificationTitle.Contains(_learnerSearch, StringComparison.OrdinalIgnoreCase)))
+        .ToList();
 
     // Lookups
     private List<LookupItemDto> _sectors = new();
@@ -810,6 +1129,12 @@
     private string _newContactType = "Primary SDF";
     private string? _newContactDesignation;
     private bool _newContactIsPrimary = false;
+
+    // Training Committee Form State
+    private bool _showAddCommitteeForm = false;
+    private int _newCommitteePersonId;
+    private string _newCommitteeRole = "UnionRepresentative";
+    private string _newCommitteeConstituency = "NUMSA";
 
     // Site Form State
     private bool _showAddSiteForm = false;
@@ -883,6 +1208,23 @@
             _contacts = await OrgService.GetContactsAsync(Id);
             _sites = await OrgService.GetSitesAsync(Id);
             _visits = await VisitService.GetVisitsForOrganisationAsync(Id);
+
+            // Lazy-load secondary relational data asynchronously
+            _loadingLearners = true;
+            _loadingGrants = true;
+            _loadingWpas = true;
+
+            _learners = await OrgService.GetLinkedLearnersAsync(Id);
+            _loadingLearners = false;
+
+            _grantSummaries = await OrgService.GetGrantMoasAndApplicationsAsync(Id);
+            _loadingGrants = false;
+
+            _wpas = await OrgService.GetWorkplaceApprovalsAsync(Id);
+            _loadingWpas = false;
+
+            _committeeMembers = await OrgService.GetTrainingCommitteeMembersAsync(Id);
+            _levyRecons = await OrgService.GetLevyReconHistoryAsync(Id);
         }
         else
         {
@@ -1022,6 +1364,45 @@
         }
     }
 
+    // Committee Members Management
+    private async Task SaveNewCommitteeMember()
+    {
+        if (_newCommitteePersonId <= 0)
+        {
+            Snackbar.Add("Please select a valid person from the registry.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            await OrgService.AddTrainingCommitteeMemberAsync(Id, _newCommitteePersonId, _newCommitteeRole, _newCommitteeConstituency, "Admin");
+            Snackbar.Add("Training committee member appointed successfully with audit log.", Severity.Success);
+            _showAddCommitteeForm = false;
+            _committeeMembers = await OrgService.GetTrainingCommitteeMembersAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error appointing committee member: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task RemoveCommitteeMember(int memberId)
+    {
+        try
+        {
+            var removed = await OrgService.RemoveTrainingCommitteeMemberAsync(memberId, "Admin");
+            if (removed)
+            {
+                Snackbar.Add("Training committee member removed successfully.", Severity.Success);
+                _committeeMembers = await OrgService.GetTrainingCommitteeMembersAsync(Id);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error removing committee member: {ex.Message}", Severity.Error);
+        }
+    }
+
     // Sites Management
     private void OpenAddSiteForm()
     {
@@ -1129,4 +1510,21 @@
             Snackbar.Add(ex.Message, Severity.Error);
         }
     }
+
+    private static Color GetStatusColor(string? status) => status switch
+    {
+        "Achieved" or "Certificated" => Color.Success,
+        "Enrolled / Active" or "Active" or "Registered" => Color.Info,
+        "Transferred" => Color.Warning,
+        "Terminated" => Color.Error,
+        _ => Color.Default
+    };
+
+    private static Color GetGrantStatusColor(string? status) => status switch
+    {
+        "Active" or "Approved" or "Completed" => Color.Success,
+        "Pending" or "Draft" or "Submitted" => Color.Warning,
+        "Terminated" or "Rejected" => Color.Error,
+        _ => Color.Info
+    };
 }

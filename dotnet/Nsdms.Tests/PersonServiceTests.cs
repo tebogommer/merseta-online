@@ -337,4 +337,101 @@ public class PersonServiceTests
     }
 
     #endregion
+
+    #region 360-Degree Relational Query Tests
+
+    [Fact]
+    public async Task GetPersonLearnersAsync_ReturnsAssociatedLearnerAgreements()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+
+        var person = new Person { FirstName = "Learner", LastName = "Candidate", Email = "learner@test.com" };
+        var org = new Organisation { CompanyName = "Engineering Works Ltd", SdlNumber = "L123456789" };
+        db.People.Add(person);
+        db.Organisations.Add(org);
+        await db.SaveChangesAsync();
+
+        var cl = new CompanyLearner
+        {
+            PersonId = person.Id,
+            OrganisationId = org.Id,
+            LearnerContractNumber = "CON-2026-001",
+            QualificationTitle = "Automotive Repairer NQF 4",
+            LearningProgrammeTypeCode = "01",
+            EnrolmentStatusCode = "Active",
+            RegistrationDate = DateTime.UtcNow
+        };
+        db.CompanyLearners.Add(cl);
+        await db.SaveChangesAsync();
+
+        // Act
+        var result = await service.GetPersonLearnersAsync(person.Id);
+
+        // Assert
+        Assert.Single(result);
+        Assert.Equal("CON-2026-001", result[0].LearnerContractNumber);
+        Assert.Equal("Engineering Works Ltd", result[0].EmployerName);
+        Assert.Equal("Apprenticeship", result[0].ProgrammeTypeName);
+    }
+
+    [Fact]
+    public async Task GetPersonEmployersAsync_ReturnsPrimaryContactAndCommitteeRoles()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+
+        var person = new Person { FirstName = "Executive", LastName = "Director", Email = "director@corp.co.za" };
+        db.People.Add(person);
+        await db.SaveChangesAsync();
+
+        var org = new Organisation { CompanyName = "Auto Parts SA", SdlNumber = "L987654321", PrimaryContactPersonId = person.Id };
+        db.Organisations.Add(org);
+        await db.SaveChangesAsync();
+
+        // Act
+        var result = await service.GetPersonEmployersAsync(person.Id);
+
+        // Assert
+        Assert.Single(result);
+        Assert.Equal("Auto Parts SA", result[0].CompanyName);
+        Assert.Contains("Primary Contact", result[0].Designation);
+    }
+
+    [Fact]
+    public async Task GetPersonEtqaPractitionersAsync_ReturnsPractitionerWithScopesCount()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+
+        var person = new Person { FirstName = "Assessor", LastName = "Pro", Email = "assessor@test.com" };
+        db.People.Add(person);
+        await db.SaveChangesAsync();
+
+        var assessor = new EtqaAssessor
+        {
+            PersonId = person.Id,
+            RegistrationNumber = "ASS-2026-99",
+            EtqaRole = "Assessor",
+            RegistrationStatusCode = "Registered",
+            StartDate = DateTime.UtcNow.AddYears(-1),
+            EndDate = DateTime.UtcNow.AddYears(2),
+            Scopes = new List<AssessorModeratorScope>
+            {
+                new() { SaqaQualificationId = 58781, QualificationTitle = "National Certificate: Mechanical Engineering" }
+            }
+        };
+        db.EtqaAssessors.Add(assessor);
+        await db.SaveChangesAsync();
+
+        // Act
+        var result = await service.GetPersonEtqaPractitionersAsync(person.Id);
+
+        // Assert
+        Assert.Single(result);
+        Assert.Equal("ASS-2026-99", result[0].RegistrationNumber);
+        Assert.Equal(1, result[0].ScopesCount);
+    }
+
+    #endregion
 }

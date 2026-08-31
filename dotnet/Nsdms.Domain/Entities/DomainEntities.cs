@@ -130,6 +130,12 @@ public class LevyFile : BaseEntity
 
     [System.ComponentModel.DataAnnotations.Schema.NotMapped]
     public string FileStatusCode => ImportStatusCode ?? "Processed";
+
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    public string BatchNumber { get => FileRef; set => FileRef = value; }
+
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    public string? FileByteChecksum { get; set; }
 }
 
 /// <summary>
@@ -196,6 +202,18 @@ public class LevyFileLine : BaseEntity
     /// Indicates whether this levy line has been matched and reconciled to an employer ledger.
     /// </summary>
     public bool IsReconciled { get; set; } = false;
+
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    public string? OrganisationName { get; set; }
+
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    public decimal MandatoryAmount { get => MandatoryLevyAmount; set => MandatoryLevyAmount = value; }
+
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    public decimal DiscretionaryAmount { get => DiscretionaryLevyAmount; set => DiscretionaryLevyAmount = value; }
+
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    public decimal AdminAmount { get => AdminLevyAmount; set => AdminLevyAmount = value; }
 }
 
 /// <summary>
@@ -241,6 +259,9 @@ public class GrantApplication : BaseEntity
     [System.ComponentModel.DataAnnotations.Schema.NotMapped]
     public string? StatusCode { get => ApplicationStatusCode; set => ApplicationStatusCode = value; }
 
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    public int? FinancialYear => FundingWindow?.FinYear;
+
     /// <summary>
     /// Total grant funding amount requested by the applicant in ZAR.
     /// </summary>
@@ -260,6 +281,31 @@ public class GrantApplication : BaseEntity
     /// Descriptive title of the skills development project.
     /// </summary>
     public string ProjectTitle { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Optional foreign key referencing the compliant Mandatory Grant WSP submission for this financial year (SETA Grant Regulation 4(4)).
+    /// </summary>
+    public int? WspSubmissionId { get; set; }
+
+    /// <summary>
+    /// Navigational reference to the linked WSP submission.
+    /// </summary>
+    public WspSubmission? WspSubmission { get; set; }
+
+    /// <summary>
+    /// Indicates whether the applicant has an approved, compliant WSP/ATR on file for the scheme year.
+    /// </summary>
+    public bool IsWspCompliant { get; set; } = false;
+
+    /// <summary>
+    /// Indicates whether the applicant is legally exempt from WSP submission (e.g. Non-Levy Payer, Public TVET, NGO, Community Trust).
+    /// </summary>
+    public bool IsWspExempt { get; set; } = false;
+
+    /// <summary>
+    /// Statutory justification or rationale for WSP submission exemption.
+    /// </summary>
+    public string? WspExemptionReason { get; set; }
 
     /// <summary>
     /// Cost line items and budget breakdown for the grant project.

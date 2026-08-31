@@ -1,0 +1,190 @@
+@namespace Nsdms.Web.Components.Shared
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Security
+@using MudBlazor
+@inject ICaslAbilityService CaslService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+@if (_isAuthorized)
+{
+    @if (!string.IsNullOrEmpty(Tooltip))
+    {
+        <MudTooltip Text="@Tooltip" Arrow="true" Placement="Placement.Top">
+            @RenderButton()
+        </MudTooltip>
+    }
+    else
+    {
+        @RenderButton()
+    }
+
+    @if (_showReasonModal)
+    {
+        <MudOverlay Visible="true" DarkBackground="true" ZIndex="9999" AutoClose="false">
+            <MudPaper Class="pa-4 rounded-lg" Style="max-width: 480px; width: 90vw; margin: auto;">
+                <div class="d-flex align-center gap-2 mb-3">
+                    <MudIcon Icon="@(IsDestructive ? Icons.Material.Filled.Warning : Icons.Material.Filled.Comment)" 
+                             Color="@(IsDestructive ? Color.Error : Color.Primary)" />
+                    <MudText Typo="Typo.h6">@(ReasonDialogTitle ?? $"Reason for {Action}")</MudText>
+                </div>
+
+                <MudText Typo="Typo.body2" Class="mb-3 text-secondary">
+                    @(ReasonDialogPrompt ?? $"Please provide a mandatory reason or notes to proceed with this action:")
+                </MudText>
+
+                <MudTextField @bind-Value="_reasonText" 
+                              Label="Mandatory Reason / Comments" 
+                              Variant="Variant.Outlined" 
+                              Lines="3" 
+                              Immediate="true"
+                              Required="true"
+                              Placeholder="Enter formal justification or feedback..." />
+
+                <div class="d-flex justify-end gap-2 mt-4">
+                    <MudButton Variant="Variant.Outlined" 
+                               Color="Color.Default" 
+                               OnClick="CancelReasonModal" 
+                               Disabled="@_isProcessing">
+                        Cancel
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled" 
+                               Color="@Color" 
+                               OnClick="ConfirmWithReasonAsync" 
+                               Disabled="@(string.IsNullOrWhiteSpace(_reasonText) || _isProcessing)"
+                               StartIcon="@Icons.Material.Filled.Check">
+                        @if (_isProcessing)
+                        {
+                            <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                            <span>Processing...</span>
+                        }
+                        else
+                        {
+                            <span>Confirm @Action</span>
+                        }
+                    </MudButton>
+                </div>
+            </MudPaper>
+        </MudOverlay>
+    }
+}
+
+@code {
+    [Parameter, EditorRequired] public string Action { get; set; } = AppPermissions.ActionView;
+    [Parameter, EditorRequired] public string Subject { get; set; } = string.Empty;
+    [Parameter] public int? TargetOrganisationId { get; set; }
+    [Parameter] public string? Text { get; set; }
+    [Parameter] public string? Icon { get; set; }
+    [Parameter] public Variant Variant { get; set; } = Variant.Filled;
+    [Parameter] public Color Color { get; set; } = Color.Primary;
+    [Parameter] public Size Size { get; set; } = Size.Medium;
+    [Parameter] public bool Disabled { get; set; } = false;
+    [Parameter] public string? Tooltip { get; set; }
+
+    [Parameter] public bool RequireConfirm { get; set; } = false;
+    [Parameter] public string? ConfirmTitle { get; set; }
+    [Parameter] public string? ConfirmMessage { get; set; }
+
+    [Parameter] public bool IsDestructive { get; set; } = false;
+    [Parameter] public bool RequireReason { get; set; } = false;
+    [Parameter] public string? ReasonDialogTitle { get; set; }
+    [Parameter] public string? ReasonDialogPrompt { get; set; }
+
+    [Parameter] public EventCallback OnClick { get; set; }
+    [Parameter] public EventCallback<string?> OnClickWithReason { get; set; }
+
+    private bool _isAuthorized = false;
+    private bool _isProcessing = false;
+    private bool _showReasonModal = false;
+    private string _reasonText = string.Empty;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await EvaluateAuthorizationAsync();
+    }
+
+    private async Task EvaluateAuthorizationAsync()
+    {
+        // Get user context (defaulting to current authenticated session or demo context)
+        var userContext = await CaslService.GetUserContextByUsernameAsync("Admin");
+        _isAuthorized = CaslService.Can(userContext, Action, Subject, TargetOrganisationId);
+    }
+
+    private RenderFragment RenderButton() => __builder =>
+    {
+        <MudButton Variant="@Variant"
+                   Color="@Color"
+                   Size="@Size"
+                   StartIcon="@Icon"
+                   Disabled="@(Disabled || _isProcessing)"
+                   OnClick="HandleButtonClickAsync"
+                   aria-label="@(Text ?? Action)">
+            @if (_isProcessing)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                <span>Processing...</span>
+            }
+            else
+            {
+                <span>@(Text ?? Action)</span>
+            }
+        </MudButton>
+    };
+
+    private async Task HandleButtonClickAsync()
+    {
+        if (IsDestructive || RequireReason)
+        {
+            _reasonText = string.Empty;
+            _showReasonModal = true;
+            return;
+        }
+
+        if (RequireConfirm)
+        {
+            var title = ConfirmTitle ?? $"Confirm {Action}";
+            var message = ConfirmMessage ?? $"Are you sure you want to {Action.ToLowerInvariant()} this record?";
+            var confirm = await DialogService.ShowMessageBoxAsync(title, message, yesText: "Confirm", cancelText: "Cancel");
+            if (confirm != true) return;
+        }
+
+        await ExecuteActionAsync(null);
+    }
+
+    private void CancelReasonModal()
+    {
+        _showReasonModal = false;
+        _reasonText = string.Empty;
+    }
+
+    private async Task ConfirmWithReasonAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_reasonText)) return;
+        _showReasonModal = false;
+        await ExecuteActionAsync(_reasonText);
+    }
+
+    private async Task ExecuteActionAsync(string? reason)
+    {
+        try
+        {
+            _isProcessing = true;
+            if (OnClickWithReason.HasDelegate)
+            {
+                await OnClickWithReason.InvokeAsync(reason);
+            }
+            else if (OnClick.HasDelegate)
+            {
+                await OnClick.InvokeAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Action failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isProcessing = false;
+        }
+    }
+}

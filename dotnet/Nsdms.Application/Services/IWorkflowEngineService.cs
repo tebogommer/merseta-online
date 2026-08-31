@@ -91,4 +91,69 @@ public interface IWorkflowEngineService
     /// Returns the total count of pending actionable tasks for a role/user.
     /// </summary>
     Task<int> GetPendingTaskCountAsync(string? userRole = null, string? userId = null);
+
+    /// <summary>
+    /// Retrieves all workflow definitions with states, transitions, and instances included.
+    /// </summary>
+    Task<List<WorkflowDefinition>> GetAllDefinitionsAsync();
+
+    /// <summary>
+    /// Retrieves a workflow definition by its primary key ID with all related states, transitions, and instances.
+    /// </summary>
+    Task<WorkflowDefinition?> GetDefinitionByIdAsync(int id);
+
+    /// <summary>
+    /// Creates or updates a workflow definition, recording an audit log entry.
+    /// </summary>
+    Task<WorkflowDefinition> SaveDefinitionAsync(WorkflowDefinition definition, string actorUserId, string actorName);
+
+    /// <summary>
+    /// Deactivates or removes a workflow definition.
+    /// </summary>
+    Task<bool> DeleteDefinitionAsync(int id, string actorUserId, string actorName);
+
+    /// <summary>
+    /// Creates or updates a lifecycle state on a workflow definition.
+    /// </summary>
+    Task<WorkflowState> SaveStateAsync(WorkflowState state, string actorUserId, string actorName);
+
+    /// <summary>
+    /// Deletes a lifecycle state if no active instances are currently in this state.
+    /// </summary>
+    Task<bool> DeleteStateAsync(int stateId, string actorUserId, string actorName);
+
+    /// <summary>
+    /// Creates or updates a state transition rule.
+    /// </summary>
+    Task<WorkflowTransition> SaveTransitionAsync(WorkflowTransition transition, string actorUserId, string actorName);
+
+    /// <summary>
+    /// Deletes a state transition rule.
+    /// </summary>
+    Task<bool> DeleteTransitionAsync(int transitionId, string actorUserId, string actorName);
+
+    /// <summary>
+    /// Retrieves all execution instances running a specific workflow definition.
+    /// </summary>
+    Task<List<WorkflowInstance>> GetInstancesByDefinitionIdAsync(int definitionId);
+
+    /// <summary>
+    /// Retrieves document requirement rules for a workflow process.
+    /// </summary>
+    Task<List<DocumentRequirementRule>> GetDocumentRequirementsAsync(string processCode);
+
+    /// <summary>
+    /// Saves or updates a document requirement rule.
+    /// </summary>
+    Task<DocumentRequirementRule> SaveDocumentRequirementAsync(DocumentRequirementRule rule, string actorUserId, string actorName);
+
+    /// <summary>
+    /// Deletes a document requirement rule.
+    /// </summary>
+    Task<bool> DeleteDocumentRequirementAsync(int ruleId, string actorUserId, string actorName);
+
+    /// <summary>
+    /// Clones an existing workflow blueprint with its states and transitions into a new blueprint.
+    /// </summary>
+    Task<WorkflowDefinition> CloneDefinitionAsync(int sourceDefinitionId, string newCode, string newName, string actorUserId, string actorName);
 }

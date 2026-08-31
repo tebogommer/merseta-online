@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Nsdms.Application.Common;
 using Nsdms.Application.Common.Interfaces;
 using Nsdms.Domain.Entities;
@@ -85,6 +85,33 @@ public class SdfAppointmentService : ISdfAppointmentService
         entity.ModifiedAt = DateTime.UtcNow;
         entity.ModifiedBy = currentUsername;
 
+        // If primary SDF, supersede any prior active primary appointments for this organisation
+        if (string.Equals(entity.SdfTypeCode, "PRIMARY", StringComparison.OrdinalIgnoreCase) || 
+            string.Equals(entity.SdfTypeCode, "Primary", StringComparison.OrdinalIgnoreCase))
+        {
+            var priorPrimaries = await db.SdfCompanies
+                .Where(s => s.OrganisationId == entity.OrganisationId && s.Id != id && s.SdfStatusCode == "Approved" && (s.SdfTypeCode == "PRIMARY" || s.SdfTypeCode == "Primary"))
+                .ToListAsync();
+
+            foreach (var prior in priorPrimaries)
+            {
+                prior.SdfStatusCode = "Superseded";
+                prior.AppointmentEndDate = DateTime.UtcNow;
+                prior.ModifiedAt = DateTime.UtcNow;
+                prior.ModifiedBy = currentUsername;
+
+                db.SdfAppointmentHistories.Add(new SdfAppointmentHistory
+                {
+                    SdfCompanyId = prior.Id,
+                    PreviousStatusCode = "Approved",
+                    NewStatusCode = "Superseded",
+                    ChangeReason = $"Superseded by newly approved Primary SDF appointment #{id}.",
+                    ChangedByUserId = currentUsername,
+                    ChangedAt = DateTime.UtcNow
+                });
+            }
+        }
+
         var history = new SdfAppointmentHistory
         {
             SdfCompanyId = entity.Id,
@@ -126,5 +153,44 @@ public class SdfAppointmentService : ISdfAppointmentService
 
         await _audit.LogAsync("SdfCompany", entity.Id, "TerminateSdfAppointment", currentUsername, new { entity.SdfStatusCode, reason });
         return entity;
+    }
+
+    public async Task<SdfCompany> UpdateSdfAppointmentAsync(int id, string sdfTypeCode, DateTime startDate, DateTime? endDate, bool allowWsp, bool allowDg, string? docPath, string currentUsername)
+    {
+        using var db = await _factory.CreateDbContextAsync();
+        var entity = await db.SdfCompanies.FindAsync(id) ?? throw new InvalidOperationException($"SDF appointment #{id} not found.");
+
+        entity.SdfTypeCode = sdfTypeCode;
+        entity.AppointmentStartDate = startDate;
+        entity.AppointmentEndDate = endDate;
+        entity.AllowWspSubmission = allowWsp;
+        entity.AllowDgApplication = allowDg;
+        if (!string.IsNullOrEmpty(docPath))
+        {
+            entity.AppointmentLetterDocumentPath = docPath;
+            entity.SignedAppointmentLetterReceived = true;
+        }
+        entity.ModifiedAt = DateTime.UtcNow;
+        entity.ModifiedBy = currentUsername;
+
+        await db.SaveChangesAsync();
+        await _audit.LogAsync("SdfCompany", entity.Id, "UpdateSdfAppointment", currentUsername, new { sdfTypeCode, startDate, endDate, allowWsp, allowDg });
+        return entity;
+    }
+
+    public async Task<bool> DeleteSdfAppointmentAsync(int id, string currentUsername)
+    {
+        using var db = await _factory.CreateDbContextAsync();
+        var entity = await db.SdfCompanies.FindAsync(id);
+        if (entity == null) return false;
+
+        entity.SdfStatusCode = "Deactivated";
+        entity.AppointmentEndDate = DateTime.UtcNow;
+        entity.ModifiedAt = DateTime.UtcNow;
+        entity.ModifiedBy = currentUsername;
+
+        await db.SaveChangesAsync();
+        await _audit.LogAsync("SdfCompany", entity.Id, "DeleteSdfAppointment", currentUsername, new { entity.Id, StatusCode = "Deactivated" });
+        return true;
     }
 }

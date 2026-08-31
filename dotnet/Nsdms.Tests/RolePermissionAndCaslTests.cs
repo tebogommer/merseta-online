@@ -350,5 +350,80 @@ public class RolePermissionAndCaslTests
         Assert.NotNull(audit);
         Assert.Equal("AdminUser", audit.Actor);
     }
+
+    [Fact]
+    public async Task UserPermissionOverride_GrantAndRevoke_ShouldAffectEffectivePermissionsAndCaslCan()
+    {
+        var (roleService, caslService, factory) = CreateServices();
+
+        using (var db = await factory.CreateDbContextAsync())
+        {
+            var cloRole = new ApplicationRole { Id = 101, Name = "CLO", NormalizedName = "CLO", Active = true };
+            db.Roles.Add(cloRole);
+            db.RoleClaims.Add(new IdentityRoleClaim<int>
+            {
+                RoleId = 101,
+                ClaimType = RolePermissionService.PermissionClaimType,
+                ClaimValue = "Workplace:View"
+            });
+            db.RoleClaims.Add(new IdentityRoleClaim<int>
+            {
+                RoleId = 101,
+                ClaimType = RolePermissionService.PermissionClaimType,
+                ClaimValue = "Workplace:Verify"
+            });
+
+            var user = new ApplicationUser
+            {
+                Id = 55,
+                UserName = "ThaboCLO",
+                NormalizedUserName = "THABOCLO",
+                Email = "thabo@merseta.org.za",
+                IsActive = true
+            };
+            db.Users.Add(user);
+            db.UserRoles.Add(new IdentityUserRole<int> { UserId = 55, RoleId = 101 });
+            await db.SaveChangesAsync();
+        }
+
+        // 1. Initial State: CLO has Workplace:View and Workplace:Verify
+        var initialPerms = await roleService.GetUserPermissionsAsync(55);
+        Assert.Contains("Workplace:View", initialPerms);
+        Assert.Contains("Workplace:Verify", initialPerms);
+        Assert.DoesNotContain("Grants:Approve", initialPerms);
+
+        var context1 = await caslService.GetUserContextAsync(55);
+        Assert.True(caslService.Can(context1, "Verify", "Workplace"));
+        Assert.False(caslService.Can(context1, "Approve", "Grants"));
+
+        // 2. Grant User-Specific Override: Give ThaboCLO extra "Grants:Approve"
+        var grantResult = await roleService.SetUserPermissionOverrideAsync(55, "Grants:Approve", isGranted: true, "Acting Grant Manager", "AdminUser");
+        Assert.True(grantResult);
+
+        var permsAfterGrant = await roleService.GetUserPermissionsAsync(55);
+        Assert.Contains("Grants:Approve", permsAfterGrant);
+
+        var context2 = await caslService.GetUserContextAsync(55);
+        Assert.True(caslService.Can(context2, "Approve", "Grants"));
+
+        // 3. Revoke User-Specific Override: Revoke inherited "Workplace:Verify" from ThaboCLO
+        var revokeResult = await roleService.SetUserPermissionOverrideAsync(55, "Workplace:Verify", isGranted: false, "Under probation review", "AdminUser");
+        Assert.True(revokeResult);
+
+        var permsAfterRevoke = await roleService.GetUserPermissionsAsync(55);
+        Assert.DoesNotContain("Workplace:Verify", permsAfterRevoke);
+        Assert.Contains("Workplace:View", permsAfterRevoke); // Other role perms retained
+
+        var context3 = await caslService.GetUserContextAsync(55);
+        Assert.False(caslService.Can(context3, "Verify", "Workplace"));
+        Assert.True(caslService.Can(context3, "View", "Workplace"));
+
+        // 4. Remove the revocation override: Returns back to role default
+        var removeRevocation = await roleService.RemoveUserPermissionOverrideAsync(55, "Workplace:Verify", "AdminUser");
+        Assert.True(removeRevocation);
+
+        var context4 = await caslService.GetUserContextAsync(55);
+        Assert.True(caslService.Can(context4, "Verify", "Workplace"));
+    }
 }
 

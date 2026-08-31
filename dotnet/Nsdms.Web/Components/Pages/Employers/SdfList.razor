@@ -1,16 +1,22 @@
-﻿@page "/employers/sdf"
+@page "/employers/sdf"
 @using Nsdms.Application.Common.Interfaces
+@using Nsdms.Application.Services
 @using Nsdms.Domain.Entities
+@using Nsdms.Domain.Security
 @inject ISdfAppointmentService SdfService
+@inject ICaslAbilityService CaslService
 @inject NavigationManager Nav
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject IJSRuntime JS
+@rendermode InteractiveServer
 
 <PageTitle>Skills Development Facilitators (SDF) | merSETA NSDMS</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
     <!-- Top Bar -->
     <MudCard Elevation="2" Class="mb-4">
-        <MudCardContent Class="d-flex align-center justify-space-between py-3">
+        <MudCardContent Class="d-flex flex-wrap align-center justify-space-between gap-3 py-3">
             <div>
                 <MudBreadcrumbs Items="_breadcrumbs" Class="pa-0 mb-1" />
                 <MudText Typo="Typo.h5" Class="fw-bold">Skills Development Facilitators (SDF) &amp; Appointments</MudText>
@@ -18,13 +24,37 @@
                     Primary, Secondary, and Labour SDF registration, signed appointment letters, employer sign-offs, and WSP submission access delegations.
                 </MudText>
             </div>
-            <MudStack Row="true" Spacing="2">
+            <MudStack Row="true" Spacing="2" Class="align-center">
+                <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.FileDownload" OnClick="ExportCsvAsync">
+                    Export CSV
+                </MudButton>
+
                 <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadDataAsync">
                     Refresh
+                </MudButton>
+
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.PersonAdd" OnClick="@(() => Nav.NavigateTo("/employers/sdf/create"))">
+                    Appoint SDF
                 </MudButton>
             </MudStack>
         </MudCardContent>
     </MudCard>
+
+    <!-- Quick Status Filter Chips -->
+    <MudPaper Elevation="0" Class="d-flex flex-wrap align-center gap-2 mb-3 px-1 py-1">
+        <MudChip T="string" Color="@(_statusFilter == null ? Color.Primary : Color.Default)" Variant="@(_statusFilter == null ? Variant.Filled : Variant.Outlined)" OnClick="@(() => SetStatusFilter(null))">
+            All (@_appointments.Count)
+        </MudChip>
+        <MudChip T="string" Color="Color.Success" Variant="@(_statusFilter == "Approved" ? Variant.Filled : Variant.Outlined)" OnClick="@(() => SetStatusFilter("Approved"))">
+            Approved (@_appointments.Count(a => a.SdfStatusCode == "Approved"))
+        </MudChip>
+        <MudChip T="string" Color="Color.Warning" Variant="@(_statusFilter == "PendingApproval" ? Variant.Filled : Variant.Outlined)" OnClick="@(() => SetStatusFilter("PendingApproval"))">
+            Pending Approval (@_appointments.Count(a => a.SdfStatusCode == "PendingApproval"))
+        </MudChip>
+        <MudChip T="string" Color="Color.Error" Variant="@(_statusFilter == "Terminated" ? Variant.Filled : Variant.Outlined)" OnClick="@(() => SetStatusFilter("Terminated"))">
+            Terminated (@_appointments.Count(a => a.SdfStatusCode == "Terminated" || a.SdfStatusCode == "Superseded" || a.SdfStatusCode == "Deactivated"))
+        </MudChip>
+    </MudPaper>
 
     @if (_isLoading)
     {
@@ -34,11 +64,11 @@
     <!-- Table -->
     <MudCard Elevation="2">
         <MudCardContent>
-            <MudTable Items="_appointments" Hover="true" Dense="true" Elevation="0" Filter="FilterSdf">
+            <MudTable Items="_filteredAppointments" Hover="true" Dense="true" Elevation="0">
                 <ToolBarContent>
-                    <MudText Typo="Typo.h6">SDF Appointments (@_appointments.Count)</MudText>
+                    <MudText Typo="Typo.h6">SDF Appointments (@_filteredAppointments.Count)</MudText>
                     <MudSpacer />
-                    <MudTextField @bind-Value="_searchString" Placeholder="Search by facilitator, employer, role..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Immediate="true" />
+                    <MudTextField @bind-Value="_searchString" Placeholder="Search by facilitator, employer, SDL, role..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Immediate="true" />
                 </ToolBarContent>
                 <HeaderContent>
                     <MudTh>Facilitator Name</MudTh>
@@ -47,17 +77,37 @@
                     <MudTh>Start Date</MudTh>
                     <MudTh>WSP Access</MudTh>
                     <MudTh>Status</MudTh>
-                    <MudTh Style="text-align: right;">Action</MudTh>
+                    <MudTh Style="text-align: right;">Actions</MudTh>
                 </HeaderContent>
                 <RowTemplate>
-                    <MudTd DataLabel="Facilitator Name" Class="fw-bold">@(context.Person != null ? $"{context.Person.FirstName} {context.Person.LastName}" : "SDF Candidate")</MudTd>
-                    <MudTd DataLabel="Organisation">@(context.Organisation?.CompanyName ?? "Registered Employer")</MudTd>
+                    <MudTd DataLabel="Facilitator Name" Class="fw-bold">
+                        <MudLink Href="@($"/employers/sdf/{context.Id}")" Color="Color.Primary" Underline="Underline.Hover">
+                            @(context.Person != null ? $"{context.Person.FirstName} {context.Person.LastName}" : "SDF Facilitator")
+                        </MudLink>
+                        @if (!string.IsNullOrEmpty(context.Person?.RsaIdNumber))
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block font-monospace">@context.Person.RsaIdNumber</MudText>
+                        }
+                    </MudTd>
+                    <MudTd DataLabel="Organisation">
+                        @if (context.Organisation != null)
+                        {
+                            <MudLink Href="@($"/employers/{context.OrganisationId}")" Color="Color.Inherit" Underline="Underline.Hover">
+                                @context.Organisation.CompanyName
+                            </MudLink>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block font-monospace">SDL: @context.Organisation.SdlNumber</MudText>
+                        }
+                        else
+                        {
+                            <span>Registered Employer</span>
+                        }
+                    </MudTd>
                     <MudTd DataLabel="SDF Type">
                         <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">@context.SdfTypeCode SDF</MudChip>
                     </MudTd>
                     <MudTd DataLabel="Start Date">@context.AppointmentStartDate.ToString("dd MMM yyyy")</MudTd>
                     <MudTd DataLabel="WSP Access">
-                        <MudChip T="string" Size="Size.Small" Color="@(context.AllowWspSubmission ? Color.Success : Color.Default)" Variant="Variant.Text">
+                        <MudChip T="string" Size="Size.Small" Color="@(context.AllowWspSubmission ? Color.Success : Color.Default)" Variant="Variant.Text" Icon="@(context.AllowWspSubmission ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Block)">
                             @(context.AllowWspSubmission ? "Authorized" : "Restricted")
                         </MudChip>
                     </MudTd>
@@ -66,10 +116,53 @@
                             @context.SdfStatusCode
                         </MudChip>
                     </MudTd>
-                    <MudTd DataLabel="Action" Style="text-align: right;">
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Badge" OnClick="@(() => Nav.NavigateTo($"/employers/sdf/{context.Id}"))">
-                            View Appointment
-                        </MudButton>
+                    <MudTd DataLabel="Actions" Style="text-align: right;">
+                        <MudButtonGroup Size="Size.Small" Variant="Variant.Outlined">
+                            <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                           Color="Color.Primary"
+                                           Size="Size.Small"
+                                           OnClick="@(() => Nav.NavigateTo($"/employers/sdf/{context.Id}"))"
+                                           aria-label="View SDF Appointment"
+                                           Title="View Details" />
+
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                           Color="Color.Secondary"
+                                           Size="Size.Small"
+                                           OnClick="@(() => Nav.NavigateTo($"/employers/sdf/{context.Id}/edit"))"
+                                           aria-label="Edit SDF Appointment"
+                                           Title="Edit Delegations" />
+
+                            @if (context.SdfStatusCode == "PendingApproval")
+                            {
+                                <MudIconButton Icon="@Icons.Material.Filled.CheckCircle"
+                                               Color="Color.Success"
+                                               Size="Size.Small"
+                                               OnClick="@(() => PromptApproveAppointmentAsync(context.Id))"
+                                               aria-label="Approve SDF Appointment"
+                                               Title="Approve Appointment" />
+                            }
+
+                            @if (context.SdfStatusCode == "Approved")
+                            {
+                                <MudIconButton Icon="@Icons.Material.Filled.PersonRemove"
+                                               Color="Color.Warning"
+                                               Size="Size.Small"
+                                               OnClick="@(() => PromptTerminateAppointmentAsync(context.Id))"
+                                               aria-label="Terminate SDF Appointment"
+                                               Title="Terminate Appointment" />
+                            }
+
+                            <MudMenu Icon="@Icons.Material.Filled.MoreVert" Size="Size.Small" Dense="true" AnchorOrigin="Origin.BottomRight">
+                                <MudMenuItem Icon="@Icons.Material.Filled.Description" OnClick="@(() => DownloadAppointmentLetter(context.Id))">Download Appointment Letter</MudMenuItem>
+                                <MudMenuItem Icon="@Icons.Material.Filled.Business" OnClick="@(() => Nav.NavigateTo($"/employers/{context.OrganisationId}"))">View Employer 360°</MudMenuItem>
+                                @if (context.PersonId > 0)
+                                {
+                                    <MudMenuItem Icon="@Icons.Material.Filled.Person" OnClick="@(() => Nav.NavigateTo($"/people/{context.PersonId}"))">View Person Profile</MudMenuItem>
+                                }
+                                <MudDivider />
+                                <MudMenuItem Icon="@Icons.Material.Filled.Delete" IconColor="Color.Error" OnClick="@(() => PromptDeleteAppointmentAsync(context.Id))">Deactivate Record</MudMenuItem>
+                            </MudMenu>
+                        </MudButtonGroup>
                     </MudTd>
                 </RowTemplate>
                 <PagerContent>
@@ -79,6 +172,65 @@
         </MudCardContent>
     </MudCard>
 </MudContainer>
+
+<!-- Approve Dialog -->
+<MudDialog @bind-IsVisible="_showApproveDialog">
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
+            <MudText Typo="Typo.h6">Approve SDF Appointment</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mb-3">
+            Confirm that the signed appointment letter and employer signatory declarations have been verified.
+        </MudText>
+        <MudTextField @bind-Value="_approvalComments" Label="Approval Comments / Notes" Variant="Variant.Outlined" Lines="2" Required="true" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showApproveDialog = false)">Cancel</MudButton>
+        <MudButton Color="Color.Success" Variant="Variant.Filled" OnClick="ConfirmApproveAsync" Disabled="@(string.IsNullOrWhiteSpace(_approvalComments))">Approve Appointment</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<!-- Terminate Dialog -->
+<MudDialog @bind-IsVisible="_showTerminateDialog">
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.Warning" Color="Color.Warning" />
+            <MudText Typo="Typo.h6">Terminate SDF Appointment</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mb-3">
+            Please provide the statutory motivation or resignation reason for terminating this SDF appointment.
+        </MudText>
+        <MudTextField @bind-Value="_terminationReason" Label="Reason for Termination" Variant="Variant.Outlined" Lines="2" Required="true" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showTerminateDialog = false)">Cancel</MudButton>
+        <MudButton Color="Color.Error" Variant="Variant.Filled" OnClick="ConfirmTerminateAsync" Disabled="@(string.IsNullOrWhiteSpace(_terminationReason))">Confirm Termination</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<!-- Delete Dialog -->
+<MudDialog @bind-IsVisible="_showDeleteDialog">
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.DeleteForever" Color="Color.Error" />
+            <MudText Typo="Typo.h6">Deactivate SDF Appointment</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body2">
+            Are you sure you want to deactivate SDF appointment #@_targetSdfId? This will set the record status to Deactivated and log an audit entry.
+        </MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => _showDeleteDialog = false)">Cancel</MudButton>
+        <MudButton Color="Color.Error" Variant="Variant.Filled" OnClick="ConfirmDeleteAsync">Deactivate Record</MudButton>
+    </DialogActions>
+</MudDialog>
 
 @code {
     private List<BreadcrumbItem> _breadcrumbs = new()
@@ -91,6 +243,16 @@
     private List<SdfCompany> _appointments = new();
     private bool _isLoading = true;
     private string _searchString = string.Empty;
+    private string? _statusFilter = null;
+
+    private int _targetSdfId = 0;
+    private bool _showApproveDialog = false;
+    private string _approvalComments = "Verified statutory appointment letter and employer signatory.";
+
+    private bool _showTerminateDialog = false;
+    private string _terminationReason = "Facilitator appointment concluded / replaced by employer.";
+
+    private bool _showDeleteDialog = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -114,13 +276,117 @@
         }
     }
 
-    private bool FilterSdf(SdfCompany s)
+    private void SetStatusFilter(string? status)
     {
+        _statusFilter = status;
+    }
+
+    private List<SdfCompany> _filteredAppointments => _appointments.Where(s =>
+    {
+        if (!string.IsNullOrEmpty(_statusFilter))
+        {
+            if (_statusFilter == "Terminated")
+            {
+                if (s.SdfStatusCode != "Terminated" && s.SdfStatusCode != "Superseded" && s.SdfStatusCode != "Deactivated")
+                    return false;
+            }
+            else if (!string.Equals(s.SdfStatusCode, _statusFilter, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+        }
+
         if (string.IsNullOrWhiteSpace(_searchString)) return true;
-        var personName = s.Person != null ? $"{s.Person.FirstName} {s.Person.LastName}" : "";
+        var personName = s.Person != null ? $"{s.Person.FirstName} {s.Person.LastName} {s.Person.RsaIdNumber}" : "";
+        var orgName = s.Organisation != null ? $"{s.Organisation.CompanyName} {s.Organisation.SdlNumber}" : "";
         return personName.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
-               (s.Organisation != null && s.Organisation.CompanyName.Contains(_searchString, StringComparison.OrdinalIgnoreCase)) ||
-               s.SdfTypeCode.Contains(_searchString, StringComparison.OrdinalIgnoreCase);
+               orgName.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+               s.SdfTypeCode.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+               s.SdfStatusCode.Contains(_searchString, StringComparison.OrdinalIgnoreCase);
+    }).ToList();
+
+    private void PromptApproveAppointmentAsync(int id)
+    {
+        _targetSdfId = id;
+        _showApproveDialog = true;
+    }
+
+    private async Task ConfirmApproveAsync()
+    {
+        try
+        {
+            await SdfService.ApproveSdfAppointmentAsync(_targetSdfId, _approvalComments, "Admin");
+            Snackbar.Add($"SDF appointment #{_targetSdfId} approved successfully.", Severity.Success);
+            _showApproveDialog = false;
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error approving SDF appointment: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void PromptTerminateAppointmentAsync(int id)
+    {
+        _targetSdfId = id;
+        _showTerminateDialog = true;
+    }
+
+    private async Task ConfirmTerminateAsync()
+    {
+        try
+        {
+            await SdfService.TerminateSdfAppointmentAsync(_targetSdfId, _terminationReason, "Admin");
+            Snackbar.Add($"SDF appointment #{_targetSdfId} terminated.", Severity.Warning);
+            _showTerminateDialog = false;
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error terminating SDF appointment: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void PromptDeleteAppointmentAsync(int id)
+    {
+        _targetSdfId = id;
+        _showDeleteDialog = true;
+    }
+
+    private async Task ConfirmDeleteAsync()
+    {
+        try
+        {
+            await SdfService.DeleteSdfAppointmentAsync(_targetSdfId, "Admin");
+            Snackbar.Add($"SDF appointment #{_targetSdfId} marked inactive.", Severity.Success);
+            _showDeleteDialog = false;
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error deactivating SDF appointment: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void DownloadAppointmentLetter(int id)
+    {
+        Snackbar.Add($"Generating official SDF Appointment Letter for record #{id}...", Severity.Info);
+        Nav.NavigateTo($"/api/documents/wsp/{id}/pdf", forceLoad: true);
+    }
+
+    private async Task ExportCsvAsync()
+    {
+        var csv = new System.Text.StringBuilder();
+        csv.AppendLine("Id,FacilitatorName,RsaId,OrganisationName,SdlNumber,SdfType,StartDate,WspAccess,DgAccess,Status");
+        foreach (var item in _filteredAppointments)
+        {
+            csv.AppendLine($"{item.Id},\"{item.Person?.FirstName} {item.Person?.LastName}\",\"{item.Person?.RsaIdNumber}\",\"{item.Organisation?.CompanyName}\",\"{item.Organisation?.SdlNumber}\",\"{item.SdfTypeCode}\",{item.AppointmentStartDate:yyyy-MM-dd},{item.AllowWspSubmission},{item.AllowDgApplication},\"{item.SdfStatusCode}\"");
+        }
+
+        var bytes = System.Text.Encoding.UTF8.GetBytes(csv.ToString());
+        var base64 = Convert.ToBase64String(bytes);
+        await JS.InvokeVoidAsync("eval", $"const a = document.createElement('a'); a.href = 'data:text/csv;base64,{base64}'; a.download = 'SdfAppointments_{DateTime.UtcNow:yyyyMMdd}.csv'; a.click();");
+        Snackbar.Add("SDF Appointments exported to CSV successfully.", Severity.Success);
     }
 
     private Color GetStatusColor(string status) => status switch
@@ -128,6 +394,8 @@
         "Approved" => Color.Success,
         "PendingApproval" => Color.Warning,
         "Terminated" => Color.Error,
+        "Superseded" => Color.Dark,
+        "Deactivated" => Color.Default,
         _ => Color.Default
     };
 }

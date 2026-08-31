@@ -4,12 +4,15 @@
 @inject IReviewCommitteeService CommitteeService
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
+@inject IJSRuntime JS
+@rendermode InteractiveServer
 
 <PageTitle>Review Committee &amp; MANCO Meetings | merSETA NSDMS</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
+    <!-- Top Bar -->
     <MudCard Elevation="2" Class="mb-4">
-        <MudCardContent Class="d-flex align-center justify-space-between py-3">
+        <MudCardContent Class="d-flex flex-wrap align-center justify-space-between gap-3 py-3">
             <div>
                 <MudBreadcrumbs Items="_breadcrumbs" Class="pa-0 mb-1" />
                 <MudText Typo="Typo.h5" Class="fw-bold">Review Committee &amp; MANCO Governance</MudText>
@@ -17,18 +20,29 @@
                     Adjudication agendas, accreditation resolutions, and committee voting records.
                 </MudText>
             </div>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="ScheduleMeetingAsync">
-                Schedule Committee Meeting
-            </MudButton>
+            <MudStack Row="true" Spacing="2" Class="align-center">
+                <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.FileDownload" OnClick="ExportCsvAsync">
+                    Export CSV
+                </MudButton>
+
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadMeetingsAsync">
+                    Refresh
+                </MudButton>
+
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="ScheduleMeetingAsync">
+                    Schedule Meeting
+                </MudButton>
+            </MudStack>
         </MudCardContent>
     </MudCard>
 
+    <!-- Table -->
     <MudCard Elevation="2">
-        <MudTable Items="_meetings" Hover="true" Dense="true" Elevation="0" OnRowClick="@((TableRowClickEventArgs<ReviewCommitteeMeeting> args) => Navigation.NavigateTo($"/governance/meetings/{args.Item.Id}"))" RowClass="cursor-pointer">
+        <MudTable Items="_meetings" Hover="true" Dense="true" Elevation="0">
             <ToolBarContent>
-                <MudText Typo="Typo.h6">Scheduled Meetings</MudText>
+                <MudText Typo="Typo.h6">Scheduled Meetings (@_meetings.Count)</MudText>
                 <MudSpacer />
-                <MudTextField @bind-Value="_searchString" Placeholder="Search meeting title, number or venue..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" />
+                <MudTextField @bind-Value="_searchString" Placeholder="Search meeting title, number or venue..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Immediate="true" />
             </ToolBarContent>
             <HeaderContent>
                 <MudTh>Meeting #</MudTh>
@@ -37,10 +51,14 @@
                 <MudTh Class="hidden md:table-cell">Venue</MudTh>
                 <MudTh>Agendas</MudTh>
                 <MudTh>Status</MudTh>
-                <MudTh Style="text-align: right;">Action</MudTh>
+                <MudTh Style="text-align: right;">Actions</MudTh>
             </HeaderContent>
             <RowTemplate>
-                <MudTd DataLabel="Meeting #" Class="fw-bold">@context.MeetingNumber</MudTd>
+                <MudTd DataLabel="Meeting #" Class="fw-bold font-monospace">
+                    <MudLink Href="@($"/governance/meetings/{context.Id}")" Color="Color.Primary" Underline="Underline.Hover">
+                        @context.MeetingNumber
+                    </MudLink>
+                </MudTd>
                 <MudTd DataLabel="Title">
                     <MudText Typo="Typo.body2" Class="fw-bold">@context.Title</MudText>
                     <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Text">@context.MeetingTypeCode</MudChip>
@@ -58,17 +76,27 @@
                         <MudChip T="string" Color="Color.Info" Size="Size.Small" Variant="Variant.Filled">@context.StatusCode</MudChip>
                     }
                 </MudTd>
-                <MudTd DataLabel="Action" Style="text-align: right;">
-                    <MudTooltip Text="View Meeting Details">
-                        <MudIconButton Icon="@Icons.Material.Filled.ArrowForward" 
-                                       Color="Color.Primary" 
-                                       Size="Size.Medium" 
-                                       aria-label="@($"View Meeting {context.MeetingNumber}")"
-                                       Title="View Meeting Details"
-                                       OnClick="@(() => Navigation.NavigateTo($"/governance/meetings/{context.Id}"))" />
-                    </MudTooltip>
+                <MudTd DataLabel="Actions" Style="text-align: right;">
+                    <MudButtonGroup Size="Size.Small" Variant="Variant.Outlined">
+                        <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                       Color="Color.Primary"
+                                       Size="Size.Small"
+                                       OnClick="@(() => Navigation.NavigateTo($"/governance/meetings/{context.Id}"))"
+                                       aria-label="View Meeting Details"
+                                       Title="View Meeting Details" />
+
+                        <MudIconButton Icon="@Icons.Material.Filled.Download"
+                                       Color="Color.Secondary"
+                                       Size="Size.Small"
+                                       OnClick="@(() => DownloadMeetingPack(context.Id))"
+                                       aria-label="Download Meeting Pack"
+                                       Title="Download Meeting Pack" />
+                    </MudButtonGroup>
                 </MudTd>
             </RowTemplate>
+            <PagerContent>
+                <MudTablePager />
+            </PagerContent>
         </MudTable>
     </MudCard>
 </MudContainer>
@@ -114,5 +142,26 @@
         var created = await CommitteeService.ScheduleMeetingAsync(newMeeting, "AdminUser");
         Snackbar.Add("Committee meeting scheduled.", Severity.Success);
         Navigation.NavigateTo($"/governance/meetings/{created.Id}");
+    }
+
+    private void DownloadMeetingPack(int id)
+    {
+        Snackbar.Add($"Downloading Meeting Pack for session #{id}...", Severity.Info);
+        Navigation.NavigateTo($"/api/documents/wsp/{id}/pdf", forceLoad: true);
+    }
+
+    private async Task ExportCsvAsync()
+    {
+        var csv = new System.Text.StringBuilder();
+        csv.AppendLine("MeetingNumber,Title,MeetingTypeCode,FromDateTime,Venue,AgendasCount,Status");
+        foreach (var m in _meetings)
+        {
+            csv.AppendLine($"\"{m.MeetingNumber}\",\"{m.Title}\",\"{m.MeetingTypeCode}\",{m.FromDateTime:yyyy-MM-dd HH:mm},\"{m.Venue}\",{m.Agendas.Count},\"{m.StatusCode}\"");
+        }
+
+        var bytes = System.Text.Encoding.UTF8.GetBytes(csv.ToString());
+        var base64 = Convert.ToBase64String(bytes);
+        await JS.InvokeVoidAsync("eval", $"const a = document.createElement('a'); a.href = 'data:text/csv;base64,{base64}'; a.download = 'CommitteeMeetings_{DateTime.UtcNow:yyyyMMdd}.csv'; a.click();");
+        Snackbar.Add("Committee meetings exported to CSV successfully.", Severity.Success);
     }
 }

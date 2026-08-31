@@ -1,0 +1,123 @@
+﻿# Phased Implementation Roadmap: Database Normalization & Convention Alignment
+
+## Executive Summary
+This roadmap establishes a phased, zero-downtime engineering strategy to normalize the 16 wide tables (> 20 columns) in the \NSDMS-NET\ database, resolve the \CompanyLearner\ convention breach, segregate sensitive POPIA/banking data, and optimize system-versioned temporal table performance.
+
+---
+
+## 🎯 Strategic Objectives
+1. **Convention Alignment:** Migrate \CompanyLearner\ and its satellite tables to canonical DDD naming (\LearnerEnrolment\, \LearnerTransfer\, \LearnerLostTime\, \LearnerTermination\) while preserving 100% backward compatibility for DHET SETMIS statutory exports via database views.
+2. **Monolith Decomposition:** Vertically partition the top 3 monolithic entities (\Person\ [49 cols], \CompanyLearner\ [44 cols], \Organisation\ [41 cols]) into coherent 1:1 and 1:N sub-tables.
+3. **Data Security & POPIA Isolation:** Vertically segregate Washington Group functional disability scores and raw banking data to enforce granular role-based authorization.
+4. **Performance & Storage Optimization:** Eliminate full-row write amplification in temporal tables (\history.*\) and enforce projection DTOs across all Blazor interactive master-detail grids.
+
+---
+
+## 🗺️ 4-Phase Implementation Schedule
+
+### Phase 1: Zero-Breaking Optimization & Query Projection Baseline
+> **Goal:** Immediate UI/performance gains without touching physical database table structures.
+
+#### Tasks:
+1. **Enforce Projection DTOs (UI Standard §11.2):**
+   - Audit all queries in \Nsdms.Application/Services/\ that fetch \Person\, \CompanyLearner\, or \Organisation\.
+   - Replace entity fetches with lightweight \*GridDto\ projections (\.Select(p => new PersonGridDto { ... })\) ensuring no grid requests more than 7 visible columns.
+2. **Consolidate \Organisation\ Banking References:**
+   - Deprecate reads/writes to the 5 denormalized embedded bank fields (\BankName\, \BankAccountNumber\, \BankBranchCode\, \BankAccountType\, \BankingDetailsVerified\).
+   - Route all banking modifications exclusively through \BankingDetails\ foreign keys.
+3. **Automated Baseline Regression:**
+   - Execute all Playwright test suites (\	est_all_pages_playwright.py\, \	est_workflow_playwright.py\) to record baseline test parity.
+
+---
+
+### Phase 2: Domain Aliasing & DDD Semantic Realignment
+> **Goal:** Adopt canonical \Organisation\ and \LearnerEnrolment\ naming in C# without breaking existing database tables.
+
+#### Tasks:
+1. **Entity-Level Mapping in EF Core:**
+   - Create \LearnerEnrolment.cs\ in \Nsdms.Domain/Entities/\.
+   - In \NsdmsDbContext.cs\, map \modelBuilder.Entity<LearnerEnrolment>().ToTable("CompanyLearner")\.
+   - Maintain backward-compatible type aliases for legacy service interfaces.
+2. **Application Service Modernization:**
+   - Refactor \LearnerLifecycleService.cs\ to operate on \LearnerEnrolmentTransfer\, \LearnerEnrolmentLostTime\, and \LearnerEnrolmentTermination\.
+   - Update \INsdmsDbContext\ to expose \DbSet<LearnerEnrolment> LearnerEnrolments\.
+3. **Double-Write Audit Verification:**
+   - Ensure all mutation events log to \udit_logs\ using the canonical entity identifier \LearnerEnrolment\.
+
+---
+
+### Phase 3: Vertical Partitioning of Core Monoliths
+> **Goal:** Decompose 40+ column tables into normalized, secure 1:1 sub-tables with idempotent T-SQL migrations.
+
+#### Tasks:
+1. **\Person\ (49 → 14 columns):**
+   - Create \PersonContact\ (1:1): \Email\, \PhoneNumber\, \CellNumber\, \FaxNumber\, \PhysicalAddress\, \PostalAddress\, \ProvinceCode\.
+   - Create \PersonDisabilityRating\ (1:1): 6 Washington Group ratings (\SeeingRatingId\, \HearingRatingId\, \WalkingRatingId\, \RememberingRatingId\, \CommunicatingRatingId\, \SelfCareRatingId\).
+   - Create \PersonDemographics\ (1:1): \EquityCode\, \HomeLanguageCode\, \NationalityCode\, \CitizenStatusCode\, \PopiActStatusId\, \PopiActConsentDate\.
+   - Create \PersonSetmisLegacy\ (1:1): \LastSchoolEmisNumber\, \LastSchoolYear\, \PreviousProviderCode\, \PreviousProviderEtqaId\, \StatssaAreaCode\.
+2. **\WorkplaceMonitoringSiteVisit\ (34 → 15 columns):**
+   - Extract \SiteVisitNonCompliance\ (1:N) for non-compliance holding area notes and finding flags.
+   - Extract multi-officer approval chains into standard \WorkflowHistory\ records.
+3. **Migration & Idempotent Backfill Scripts:**
+   - Author transactional T-SQL scripts in \Nsdms.Infrastructure/Data/V2026_09_Vertical_Partitioning.sql\.
+   - Include rollback safety scripts and data verification checks.
+
+---
+
+### Phase 4: Physical Renaming & SETMIS Compatibility Layer
+> **Goal:** Complete physical database alignment and optimize temporal tables while keeping external DHET file exports 100% compliant.
+
+#### Tasks:
+1. **SETMIS Compatibility Views:**
+   - Create database views preserving legacy column contracts:
+     \\\sql
+     CREATE VIEW dbo.vw_SetmisCompanyLearner AS
+     SELECT 
+         le.Id,
+         le.PersonId,
+         le.OrganisationId AS CompanyId,
+         le.RegistrationNumber,
+         le.LearnershipId
+     FROM dbo.LearnerEnrolment le;
+     \\\
+2. **Physical Table Cutover (\sp_rename\):**
+   - Execute \EXEC sp_rename 'dbo.CompanyLearner', 'LearnerEnrolment';\
+   - Update EF Core mapping to \modelBuilder.Entity<LearnerEnrolment>().ToTable("LearnerEnrolment")\.
+3. **Temporal Table Tuning:**
+   - Reconfigure system-versioning on sub-tables so that updates to \PersonContact\ or \PersonDemographics\ write minimal history entries, eliminating full-row bloat in \history.PersonHistory\.
+4. **Final Verification Gate:**
+   - Run end-to-end integration and Playwright test suites across all portal modules.
+
+---
+
+## 👥 Multi-Agent Assignment Matrix
+
+| Agent | Responsibilities | Assigned Phases |
+|---|---|:---:|
+| \project-planner\ | Plan management, milestone tracking, rollback protocols | All Phases |
+| \database-architect\ | T-SQL schema migrations, DDL scripts, index creation, temporal table tuning | Phase 1, 3, 4 |
+| \ackend-specialist\ | EF Core Fluent API, DTO projections, service refactoring, Clean Architecture | Phase 1, 2, 3 |
+| \security-auditor\ | POPIA access validation on \PersonDisabilityRating\, banking isolation audit | Phase 1, 3 |
+| \	est-engineer\ | Unit tests in \Nsdms.Tests\, Playwright regression tests (\	est_all_pages_playwright.py\) | All Phases |
+
+---
+
+## 🛡️ Risk & Mitigation Matrix
+
+| Identified Risk | Severity | Mitigation Strategy |
+|---|:---:|---|
+| **SETMIS File Export Breakage** | **High** | Introduce \w_SetmisCompanyLearner\ view prior to table rename; verify flat-file generation output matches DHET specs byte-for-byte. |
+| **Data Drift During Backfill** | **High** | Wrap all data migration statements in single transaction blocks with checksum validation before and after partitioning. |
+| **Windows EF Core File Lock** | **Medium** | Ensure database updates are applied via idempotent SQL scripts or standard migrators without requiring dev server restarts during normal runs. |
+| **Temporal History Desync** | **Low** | Disable system-versioning temporarily during table restructuring (\SET (SYSTEM_VERSIONING = OFF)\), apply DDL changes, backfill history tables, and re-enable with consistent period definitions. |
+
+---
+
+## ✅ Quality & Verification Gate Checklist
+
+- [ ] **Baseline:** Full Playwright test suite passes prior to initiating Phase 1.
+- [ ] **UI Standard:** All master grids display <= 8 columns and use projection DTOs.
+- [ ] **POPIA Compliance:** Access to \PersonDisabilityRating\ is protected by explicit CASL / policy checks.
+- [ ] **Nomenclature:** Zero user-facing occurrences of \Company\ or \CompanyLearner\ in new UI components and service methods.
+- [ ] **SETMIS Interop:** \w_SetmisCompanyLearner\ passes all statutory export format validations.
+- [ ] **History Tables:** System-versioned history queries (\.TemporalAll()\) return correct historical timelines.

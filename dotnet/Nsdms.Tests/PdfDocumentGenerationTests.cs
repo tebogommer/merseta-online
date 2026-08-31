@@ -18,7 +18,8 @@ public class PdfDocumentGenerationTests
         var audit = new AuditService(factory);
         var config = new SystemConfigurationService(factory, conf, audit);
         var flags = new FeatureFlagService(factory, conf, audit);
-        var pdfService = new QuestPdfDocumentService(factory, flags, config);
+        var verification = new DocumentVerificationService(factory, audit, config);
+        var pdfService = new QuestPdfDocumentService(factory, flags, config, verification);
 
         return (pdfService, factory);
     }

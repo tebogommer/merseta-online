@@ -1,0 +1,215 @@
+@namespace Nsdms.Web.Components.Pages.Admin
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@inject IWorkflowEngineService WorkflowService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.AddCircle" Color="Color.Primary" />
+            <MudText Typo="Typo.h6">Create Workflow Blueprint</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form" @bind-IsValid="_isValid">
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_definition.Code"
+                                  Label="Process Blueprint Code"
+                                  Placeholder="e.g. MOA, BURSARY, APPRENTICE"
+                                  Required="true"
+                                  RequiredError="Process code is mandatory"
+                                  Variant="Variant.Outlined"
+                                  HelperText="Unique identifier used in API and domain services"
+                                  Class="mb-3" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudSelect T="string"
+                               @bind-Value="_definition.TargetEntityName"
+                               Label="Target Domain Entity"
+                               Required="true"
+                               RequiredError="Target entity is required"
+                               Variant="Variant.Outlined"
+                               Class="mb-3">
+                        <MudSelectItem Value="@("Organisation")">Organisation</MudSelectItem>
+                        <MudSelectItem Value="@("WspSubmission")">WspSubmission</MudSelectItem>
+                        <MudSelectItem Value="@("GrantApplication")">GrantApplication</MudSelectItem>
+                        <MudSelectItem Value="@("GrantMoa")">GrantMoa</MudSelectItem>
+                        <MudSelectItem Value="@("TrainingProvider")">TrainingProvider</MudSelectItem>
+                        <MudSelectItem Value="@("WorkplaceApproval")">WorkplaceApproval</MudSelectItem>
+                        <MudSelectItem Value="@("CompanyLearner")">CompanyLearner</MudSelectItem>
+                        <MudSelectItem Value="@("LearnerTradeTest")">LearnerTradeTest</MudSelectItem>
+                        <MudSelectItem Value="@("InterSetaTransfer")">InterSetaTransfer</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="_definition.Name"
+                                  Label="Process Display Name"
+                                  Placeholder="e.g. Grant MoA Signoff & Tranche Approval"
+                                  Required="true"
+                                  RequiredError="Process name is mandatory"
+                                  Variant="Variant.Outlined"
+                                  Class="mb-3" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="_definition.KeyFieldName"
+                                  Label="Primary Key Field Name"
+                                  Variant="Variant.Outlined"
+                                  HelperText="Default is 'Id'"
+                                  Class="mb-3" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudSwitch @bind-Value="_definition.IsActive"
+                               Label="Activate Blueprint Immediately"
+                               Color="Color.Success"
+                               Class="mt-2" />
+                </MudItem>
+                <MudItem xs="12">
+                    <MudAlert Severity="Severity.Info" Dense="true" Class="rounded-lg">
+                        Initial draft and terminal approved/rejected states will be provisioned automatically. You can configure custom states and transition gates in the detail studio.
+                    </MudAlert>
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" StartIcon="@Icons.Material.Filled.Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   OnClick="Submit"
+                   Disabled="@(!_isValid || _isSaving)"
+                   StartIcon="@Icons.Material.Filled.Save">
+            @if (_isSaving)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                <span>Creating...</span>
+            }
+            else
+            {
+                <span>Create Blueprint</span>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+
+    private MudForm _form = default!;
+    private bool _isValid;
+    private bool _isSaving;
+
+    private WorkflowDefinition _definition = new()
+    {
+        Code = string.Empty,
+        Name = string.Empty,
+        TargetEntityName = "Organisation",
+        KeyFieldName = "Id",
+        IsActive = true
+    };
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Submit()
+    {
+        await _form.Validate();
+        if (!_isValid) return;
+
+        _isSaving = true;
+        try
+        {
+            _definition.Code = _definition.Code.ToUpperInvariant().Trim();
+            _definition.Name = _definition.Name.Trim();
+
+            // Save definition
+            var savedDef = await WorkflowService.SaveDefinitionAsync(_definition, "admin@merseta.org.za", "System Administrator");
+
+            // Provision default baseline states: Draft -> Under Review -> Approved / Rejected
+            var s1 = new WorkflowState
+            {
+                WorkflowDefinitionId = savedDef.Id,
+                StateCode = "DRAFT",
+                StateName = "Draft Application",
+                StepOrder = 1,
+                IsInitial = true,
+                AllowedGroupRole = "Applicant"
+            };
+            var s2 = new WorkflowState
+            {
+                WorkflowDefinitionId = savedDef.Id,
+                StateCode = "UNDER_REVIEW",
+                StateName = "Under Review",
+                StepOrder = 2,
+                AllowedGroupRole = "Client Liaison Officer (CLO)"
+            };
+            var s3 = new WorkflowState
+            {
+                WorkflowDefinitionId = savedDef.Id,
+                StateCode = "APPROVED",
+                StateName = "Approved",
+                StepOrder = 3,
+                IsTerminal = true
+            };
+            var s4 = new WorkflowState
+            {
+                WorkflowDefinitionId = savedDef.Id,
+                StateCode = "REJECTED",
+                StateName = "Rejected",
+                StepOrder = 4,
+                IsTerminal = true
+            };
+
+            var savedS1 = await WorkflowService.SaveStateAsync(s1, "admin@merseta.org.za", "System Administrator");
+            var savedS2 = await WorkflowService.SaveStateAsync(s2, "admin@merseta.org.za", "System Administrator");
+            var savedS3 = await WorkflowService.SaveStateAsync(s3, "admin@merseta.org.za", "System Administrator");
+            var savedS4 = await WorkflowService.SaveStateAsync(s4, "admin@merseta.org.za", "System Administrator");
+
+            // Default baseline transitions
+            await WorkflowService.SaveTransitionAsync(new WorkflowTransition
+            {
+                WorkflowDefinitionId = savedDef.Id,
+                FromStateId = savedS1.Id,
+                ToStateId = savedS2.Id,
+                ActionName = "Submit for Review",
+                ButtonColor = "#1e40af",
+                ButtonIcon = "Send",
+                NewEntityStatusCode = "SUBMITTED"
+            }, "admin@merseta.org.za", "System Administrator");
+
+            await WorkflowService.SaveTransitionAsync(new WorkflowTransition
+            {
+                WorkflowDefinitionId = savedDef.Id,
+                FromStateId = savedS2.Id,
+                ToStateId = savedS3.Id,
+                ActionName = "Approve Record",
+                ButtonColor = "#16a34a",
+                ButtonIcon = "CheckCircle",
+                NewEntityStatusCode = "APPROVED"
+            }, "admin@merseta.org.za", "System Administrator");
+
+            await WorkflowService.SaveTransitionAsync(new WorkflowTransition
+            {
+                WorkflowDefinitionId = savedDef.Id,
+                FromStateId = savedS2.Id,
+                ToStateId = savedS4.Id,
+                ActionName = "Reject Record",
+                ButtonColor = "#dc2626",
+                ButtonIcon = "Cancel",
+                RequiresComments = true,
+                NewEntityStatusCode = "REJECTED"
+            }, "admin@merseta.org.za", "System Administrator");
+
+            Snackbar.Add($"Workflow blueprint '{savedDef.Code}' created successfully.", Severity.Success);
+            MudDialog.Close(DialogResult.Ok(savedDef));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error creating blueprint: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+}

@@ -82,6 +82,9 @@ builder.Services.AddScoped<LevyService>(sp => (LevyService)sp.GetRequiredService
 builder.Services.AddScoped<IEtqaService, EtqaService>();
 builder.Services.AddScoped<EtqaService>(sp => (EtqaService)sp.GetRequiredService<IEtqaService>());
 
+builder.Services.AddScoped<IMentorRatioPolicyEngine, MentorRatioPolicyEngine>();
+builder.Services.AddScoped<MentorRatioPolicyEngine>(sp => (MentorRatioPolicyEngine)sp.GetRequiredService<IMentorRatioPolicyEngine>());
+
 builder.Services.AddScoped<IWorkplaceApprovalService, WorkplaceApprovalService>();
 builder.Services.AddScoped<WorkplaceApprovalService>(sp => (WorkplaceApprovalService)sp.GetRequiredService<IWorkplaceApprovalService>());
 
@@ -114,9 +117,17 @@ builder.Services.AddScoped<SystemConfigurationService>(sp => (SystemConfiguratio
 builder.Services.AddScoped<IFeatureFlagService, FeatureFlagService>();
 builder.Services.AddScoped<FeatureFlagService>(sp => (FeatureFlagService)sp.GetRequiredService<IFeatureFlagService>());
 
+// Advanced Administration Catalog & Search Engine
+builder.Services.AddScoped<IAdminCatalogService, AdminCatalogService>();
+builder.Services.AddScoped<AdminCatalogService>(sp => (AdminCatalogService)sp.GetRequiredService<IAdminCatalogService>());
+
 // Grid View Preferences Persistence (Clause 11.2.7)
 builder.Services.AddScoped<IGridViewPreferenceService, GridViewPreferenceService>();
 builder.Services.AddScoped<GridViewPreferenceService>(sp => (GridViewPreferenceService)sp.GetRequiredService<IGridViewPreferenceService>());
+
+// Modern Navigation Menu & Role-Based Workspaces (Option C)
+builder.Services.AddScoped<INavigationMenuService, NavigationMenuService>();
+builder.Services.AddScoped<NavigationMenuService>(sp => (NavigationMenuService)sp.GetRequiredService<INavigationMenuService>());
 
 // Configurable Document & File Storage
 builder.Services.AddScoped<IFileStorageService, Nsdms.Infrastructure.Services.LocalFileStorageService>();
@@ -204,6 +215,25 @@ builder.Services.AddScoped<Nsdms.Infrastructure.Services.ReportExportService>(sp
 builder.Services.AddScoped<IWorkflowGovernanceService, WorkflowGovernanceService>();
 builder.Services.AddScoped<WorkflowGovernanceService>(sp => (WorkflowGovernanceService)sp.GetRequiredService<IWorkflowGovernanceService>());
 
+// MoA Template & Reusable Clause Engine (Option A)
+builder.Services.AddScoped<IMoaTemplateEngineService, MoaTemplateEngineService>();
+builder.Services.AddScoped<MoaTemplateEngineService>(sp => (MoaTemplateEngineService)sp.GetRequiredService<IMoaTemplateEngineService>());
+
+// BankservAfrica AVS Service (Option C)
+builder.Services.AddScoped<IBankservAvsService, Nsdms.Infrastructure.Services.BankservAvsService>();
+builder.Services.AddScoped<Nsdms.Infrastructure.Services.BankservAvsService>(sp => (Nsdms.Infrastructure.Services.BankservAvsService)sp.GetRequiredService<IBankservAvsService>());
+
+// High-Throughput Streaming Batch Ingestion Service (Option D)
+builder.Services.AddScoped<ISqlBulkBatchIngestionService, Nsdms.Infrastructure.Services.SqlBulkBatchIngestionService>();
+builder.Services.AddScoped<Nsdms.Infrastructure.Services.SqlBulkBatchIngestionService>(sp => (Nsdms.Infrastructure.Services.SqlBulkBatchIngestionService)sp.GetRequiredService<ISqlBulkBatchIngestionService>());
+
+// Universal Document Template & Cryptographic Verification Engine (Strategic Action Items)
+builder.Services.AddScoped<IDocumentVerificationService, DocumentVerificationService>();
+builder.Services.AddScoped<DocumentVerificationService>(sp => (DocumentVerificationService)sp.GetRequiredService<IDocumentVerificationService>());
+
+builder.Services.AddScoped<IEnterpriseDocumentTemplateService, EnterpriseDocumentTemplateService>();
+builder.Services.AddScoped<EnterpriseDocumentTemplateService>(sp => (EnterpriseDocumentTemplateService)sp.GetRequiredService<IEnterpriseDocumentTemplateService>());
+
 // Real-time SignalR Notification Service & Transport Publisher
 builder.Services.AddSingleton<Nsdms.Web.Services.RealtimeNotificationService>();
 builder.Services.AddSingleton<IRealtimeNotificationService>(sp => sp.GetRequiredService<Nsdms.Web.Services.RealtimeNotificationService>());
@@ -259,6 +289,42 @@ app.MapGet("/api/documents/remittance/{id:int}/pdf", async (int id, IPdfDocument
     return Results.File(bytes, "application/pdf", $"Mandatory_Rebate_Remittance_{id}.pdf");
 });
 
+app.MapGet("/api/documents/templates/{id:int}/simulation-pdf", async (int id, IEnterpriseDocumentTemplateService templateService, string? scenario, HttpContext context) =>
+{
+    var profiles = templateService.GetDefaultScenarioTokenProfiles();
+    var selectedScenario = !string.IsNullOrEmpty(scenario) && profiles.ContainsKey(scenario) ? scenario : "LevyEmployer";
+    var tokens = new Dictionary<string, string>(profiles[selectedScenario]);
+
+    foreach (var query in context.Request.Query)
+    {
+        if (query.Key != "scenario" && query.Key != "t" && !string.IsNullOrWhiteSpace(query.Value))
+        {
+            tokens[query.Key] = query.Value.ToString();
+        }
+    }
+
+    var bytes = await templateService.GenerateSimulatedPdfAsync(id, tokens, includeWatermark: true);
+    return Results.File(bytes, "application/pdf", $"Template_Simulation_{id}_{selectedScenario}.pdf");
+});
+
+app.MapGet("/api/documents/moa-templates/{id:int}/simulation-pdf", async (int id, IMoaTemplateEngineService moaService, string? scenario, HttpContext context) =>
+{
+    var profiles = moaService.GetDefaultScenarioTokenProfiles();
+    var selectedScenario = !string.IsNullOrEmpty(scenario) && profiles.ContainsKey(scenario) ? scenario : "LevyEmployer";
+    var tokens = new Dictionary<string, string>(profiles[selectedScenario]);
+
+    foreach (var query in context.Request.Query)
+    {
+        if (query.Key != "scenario" && query.Key != "t" && !string.IsNullOrWhiteSpace(query.Value))
+        {
+            tokens[query.Key] = query.Value.ToString();
+        }
+    }
+
+    var bytes = await moaService.GenerateSimulatedPdfAsync(id, tokens, includeWatermark: true);
+    return Results.File(bytes, "application/pdf", $"MoaTemplate_Simulation_{id}_{selectedScenario}.pdf");
+});
+
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
@@ -279,6 +345,11 @@ using (var scope = app.Services.CreateScope())
         Phase8NotificationSchemaMigrator.MigrateNotificationSchemaAsync(app.Services).GetAwaiter().GetResult();
         Phase8WspSurveyAndAqpSchemaMigrator.MigrateAsync(db).GetAwaiter().GetResult();
         Phase9TemporalTablesSchemaMigrator.MigrateTemporalTablesSchemaAsync(app.Services).GetAwaiter().GetResult();
+        Phase10MoaTemplateEngineMigrator.MigrateMoaTemplateSchemaAsync(app.Services).GetAwaiter().GetResult();
+        Phase11UniversalDocumentVerificationMigrator.MigrateDocumentVerificationSchemaAsync(app.Services).GetAwaiter().GetResult();
+        Phase12SchemaAlignmentMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult();
+        Phase13TradeMentorRatioSchemaMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult();
+        Phase14WspEligibilityAndMoaProvisioningMigrator.MigrateAsync(app.Services).GetAwaiter().GetResult();
         SampleDataSeeder.SeedSampleDataAsync(db).GetAwaiter().GetResult();
         var featureFlags = scope.ServiceProvider.GetRequiredService<IFeatureFlagService>();
         featureFlags.SeedDefaultFeatureFlagsAsync().GetAwaiter().GetResult();

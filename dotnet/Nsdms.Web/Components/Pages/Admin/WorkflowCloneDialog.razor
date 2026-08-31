@@ -1,0 +1,110 @@
+@namespace Nsdms.Web.Components.Pages.Admin
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@inject IWorkflowEngineService WorkflowService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.ContentCopy" Color="Color.Primary" />
+            <MudText Typo="Typo.h6">Clone Workflow Blueprint</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form" @bind-IsValid="_isValid">
+            <div class="mb-4">
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    Cloning blueprint: <strong>@SourceDefinition?.Name (@SourceDefinition?.Code)</strong>
+                </MudText>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                    All @(SourceDefinition?.States?.Count ?? 0) states and @(SourceDefinition?.Transitions?.Count ?? 0) transitions will be duplicated into the new blueprint.
+                </MudText>
+            </div>
+
+            <MudTextField @bind-Value="_newCode"
+                          Label="New Blueprint Code"
+                          Placeholder="e.g. WSP_V2"
+                          Required="true"
+                          RequiredError="New blueprint code is required"
+                          Variant="Variant.Outlined"
+                          Class="mb-3" />
+
+            <MudTextField @bind-Value="_newName"
+                          Label="New Blueprint Name"
+                          Placeholder="e.g. Workplace Skills Plan Submission (2027 Schema)"
+                          Required="true"
+                          RequiredError="New blueprint name is required"
+                          Variant="Variant.Outlined"
+                          Class="mb-3" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" StartIcon="@Icons.Material.Filled.Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   OnClick="Submit"
+                   Disabled="@(!_isValid || _isSaving)"
+                   StartIcon="@Icons.Material.Filled.ContentCopy">
+            @if (_isSaving)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                <span>Cloning...</span>
+            }
+            else
+            {
+                <span>Clone Blueprint</span>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter] public WorkflowDefinition SourceDefinition { get; set; } = default!;
+
+    private MudForm _form = default!;
+    private bool _isValid;
+    private bool _isSaving;
+    private string _newCode = string.Empty;
+    private string _newName = string.Empty;
+
+    protected override void OnInitialized()
+    {
+        if (SourceDefinition != null)
+        {
+            _newCode = $"{SourceDefinition.Code}_COPY";
+            _newName = $"{SourceDefinition.Name} (Copy)";
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Submit()
+    {
+        await _form.Validate();
+        if (!_isValid || SourceDefinition == null) return;
+
+        _isSaving = true;
+        try
+        {
+            var cloned = await WorkflowService.CloneDefinitionAsync(
+                SourceDefinition.Id,
+                _newCode,
+                _newName,
+                "admin@merseta.org.za",
+                "System Administrator");
+
+            Snackbar.Add($"Workflow blueprint '{cloned.Code}' cloned successfully.", Severity.Success);
+            MudDialog.Close(DialogResult.Ok(cloned));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error cloning blueprint: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+}

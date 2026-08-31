@@ -1,16 +1,18 @@
-﻿@page "/etqa/scope-extensions"
+@page "/etqa/scope-extensions"
 @using Nsdms.Application.Common.Interfaces
 @using Nsdms.Domain.Entities
 @inject IExtensionOfScopeService ScopeService
 @inject NavigationManager Nav
 @inject ISnackbar Snackbar
+@inject IJSRuntime JS
+@rendermode InteractiveServer
 
 <PageTitle>Accreditation Scope Extensions | merSETA NSDMS</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
     <!-- Top Bar -->
     <MudCard Elevation="2" Class="mb-4">
-        <MudCardContent Class="d-flex align-center justify-space-between py-3">
+        <MudCardContent Class="d-flex flex-wrap align-center justify-space-between gap-3 py-3">
             <div>
                 <MudBreadcrumbs Items="_breadcrumbs" Class="pa-0 mb-1" />
                 <MudText Typo="Typo.h5" Class="fw-bold">Provider &amp; Assessor Scope Extensions</MudText>
@@ -18,13 +20,37 @@
                     Skills Development Provider additional qualification applications, site evaluation audits, and committee endorsement.
                 </MudText>
             </div>
-            <MudStack Row="true" Spacing="2">
+            <MudStack Row="true" Spacing="2" Class="align-center">
+                <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.FileDownload" OnClick="ExportCsvAsync">
+                    Export CSV
+                </MudButton>
+
                 <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadDataAsync">
                     Refresh
+                </MudButton>
+
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AddCircle" OnClick="@(() => Nav.NavigateTo("/sdp"))">
+                    Apply for Scope
                 </MudButton>
             </MudStack>
         </MudCardContent>
     </MudCard>
+
+    <!-- Quick Status Filter Chips -->
+    <MudPaper Elevation="0" Class="d-flex flex-wrap align-center gap-2 mb-3 px-1 py-1">
+        <MudChip T="string" Color="@(_statusFilter == null ? Color.Primary : Color.Default)" Variant="@(_statusFilter == null ? Variant.Filled : Variant.Outlined)" OnClick="@(() => _statusFilter = null)">
+            All (@_extensions.Count)
+        </MudChip>
+        <MudChip T="string" Color="Color.Success" Variant="@(_statusFilter == "Approved" ? Variant.Filled : Variant.Outlined)" OnClick="@(() => _statusFilter = "Approved")">
+            Approved (@_extensions.Count(e => e.StatusCode == "Approved"))
+        </MudChip>
+        <MudChip T="string" Color="Color.Info" Variant="@(_statusFilter == "CommitteeReview" ? Variant.Filled : Variant.Outlined)" OnClick="@(() => _statusFilter = "CommitteeReview")">
+            Committee Review (@_extensions.Count(e => e.StatusCode == "CommitteeReview"))
+        </MudChip>
+        <MudChip T="string" Color="Color.Warning" Variant="@(_statusFilter == "Submitted" ? Variant.Filled : Variant.Outlined)" OnClick="@(() => _statusFilter = "Submitted")">
+            Submitted (@_extensions.Count(e => e.StatusCode == "Submitted"))
+        </MudChip>
+    </MudPaper>
 
     @if (_isLoading)
     {
@@ -34,9 +60,9 @@
     <!-- Table -->
     <MudCard Elevation="2">
         <MudCardContent>
-            <MudTable Items="_extensions" Hover="true" Dense="true" Elevation="0" Filter="FilterExtensions">
+            <MudTable Items="_filteredExtensions" Hover="true" Dense="true" Elevation="0">
                 <ToolBarContent>
-                    <MudText Typo="Typo.h6">Scope Extension Applications (@_extensions.Count)</MudText>
+                    <MudText Typo="Typo.h6">Scope Extension Applications (@_filteredExtensions.Count)</MudText>
                     <MudSpacer />
                     <MudTextField @bind-Value="_searchString" Placeholder="Search by application #, qualification, provider..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Immediate="true" />
                 </ToolBarContent>
@@ -48,11 +74,26 @@
                     <MudTh>Credits</MudTh>
                     <MudTh>Site Inspection</MudTh>
                     <MudTh>Status</MudTh>
-                    <MudTh Style="text-align: right;">Action</MudTh>
+                    <MudTh Style="text-align: right;">Actions</MudTh>
                 </HeaderContent>
                 <RowTemplate>
-                    <MudTd DataLabel="App #" Class="font-monospace fw-bold">@context.ApplicationNumber</MudTd>
-                    <MudTd DataLabel="Provider Name">@(context.TrainingProvider?.ProviderName ?? "Accredited SDP")</MudTd>
+                    <MudTd DataLabel="App #" Class="font-monospace fw-bold">
+                        <MudLink Href="@($"/etqa/scope-extensions/{context.Id}")" Color="Color.Primary" Underline="Underline.Hover">
+                            @context.ApplicationNumber
+                        </MudLink>
+                    </MudTd>
+                    <MudTd DataLabel="Provider Name">
+                        @if (context.TrainingProviderId > 0)
+                        {
+                            <MudLink Href="@($"/sdp/{context.TrainingProviderId}")" Color="Color.Inherit" Underline="Underline.Hover">
+                                @(context.TrainingProvider?.ProviderName ?? "Accredited SDP")
+                            </MudLink>
+                        }
+                        else
+                        {
+                            <span>@(context.TrainingProvider?.ProviderName ?? "Accredited SDP")</span>
+                        }
+                    </MudTd>
                     <MudTd DataLabel="Additional Qualification">@context.AdditionalQualificationTitle</MudTd>
                     <MudTd DataLabel="NQF Level">Level @context.NqfLevel</MudTd>
                     <MudTd DataLabel="Credits">@context.Credits</MudTd>
@@ -66,10 +107,22 @@
                             @context.StatusCode
                         </MudChip>
                     </MudTd>
-                    <MudTd DataLabel="Action" Style="text-align: right;">
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.FactCheck" OnClick="@(() => Nav.NavigateTo($"/etqa/scope-extensions/{context.Id}"))">
-                            Evaluate Scope
-                        </MudButton>
+                    <MudTd DataLabel="Actions" Style="text-align: right;">
+                        <MudButtonGroup Size="Size.Small" Variant="Variant.Outlined">
+                            <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                           Color="Color.Primary"
+                                           Size="Size.Small"
+                                           OnClick="@(() => Nav.NavigateTo($"/etqa/scope-extensions/{context.Id}"))"
+                                           aria-label="Evaluate Scope"
+                                           Title="Evaluate Scope Application" />
+
+                            <MudIconButton Icon="@Icons.Material.Filled.Download"
+                                           Color="Color.Secondary"
+                                           Size="Size.Small"
+                                           OnClick="@(() => DownloadScopeSchedulePdf(context.Id))"
+                                           aria-label="Download Scope Schedule"
+                                           Title="Download Scope Schedule" />
+                        </MudButtonGroup>
                     </MudTd>
                 </RowTemplate>
                 <PagerContent>
@@ -91,6 +144,7 @@
     private List<SdpExtensionOfScope> _extensions = new();
     private bool _isLoading = true;
     private string _searchString = string.Empty;
+    private string? _statusFilter = null;
 
     protected override async Task OnInitializedAsync()
     {
@@ -114,12 +168,37 @@
         }
     }
 
-    private bool FilterExtensions(SdpExtensionOfScope s)
+    private List<SdpExtensionOfScope> _filteredExtensions => _extensions.Where(s =>
     {
+        if (!string.IsNullOrEmpty(_statusFilter) && !string.Equals(s.StatusCode, _statusFilter, StringComparison.OrdinalIgnoreCase))
+            return false;
+
         if (string.IsNullOrWhiteSpace(_searchString)) return true;
         return s.ApplicationNumber.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
                s.AdditionalQualificationTitle.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
-               (s.TrainingProvider != null && s.TrainingProvider.ProviderName.Contains(_searchString, StringComparison.OrdinalIgnoreCase));
+               (s.TrainingProvider != null && s.TrainingProvider.ProviderName.Contains(_searchString, StringComparison.OrdinalIgnoreCase)) ||
+               s.StatusCode.Contains(_searchString, StringComparison.OrdinalIgnoreCase);
+    }).ToList();
+
+    private void DownloadScopeSchedulePdf(int id)
+    {
+        Snackbar.Add($"Generating Scope Schedule Document for application #{id}...", Severity.Info);
+        Nav.NavigateTo($"/api/documents/tradetest/{id}/pdf", forceLoad: true);
+    }
+
+    private async Task ExportCsvAsync()
+    {
+        var csv = new System.Text.StringBuilder();
+        csv.AppendLine("ApplicationNumber,ProviderName,QualificationTitle,NqfLevel,Credits,SiteInspectionPassed,Status");
+        foreach (var item in _filteredExtensions)
+        {
+            csv.AppendLine($"\"{item.ApplicationNumber}\",\"{item.TrainingProvider?.ProviderName}\",\"{item.AdditionalQualificationTitle}\",{item.NqfLevel},{item.Credits},{item.SiteInspectionPassed},\"{item.StatusCode}\"");
+        }
+
+        var bytes = System.Text.Encoding.UTF8.GetBytes(csv.ToString());
+        var base64 = Convert.ToBase64String(bytes);
+        await JS.InvokeVoidAsync("eval", $"const a = document.createElement('a'); a.href = 'data:text/csv;base64,{base64}'; a.download = 'ScopeExtensions_{DateTime.UtcNow:yyyyMMdd}.csv'; a.click();");
+        Snackbar.Add("Scope extensions exported to CSV successfully.", Severity.Success);
     }
 
     private Color GetStatusColor(string status) => status switch

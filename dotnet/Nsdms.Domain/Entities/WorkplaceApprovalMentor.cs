@@ -51,4 +51,24 @@ public class WorkplaceApprovalMentor : BaseEntity
     /// Indicates whether the mentor is actively mentoring learners at this site.
     /// </summary>
     public bool IsActive { get; set; } = true;
+
+    /// <summary>
+    /// Optional custom maximum apprentice supervision capacity for this specific mentor (overrides trade baseline).
+    /// </summary>
+    public int? MaxLearnerCapacity { get; set; }
+
+    /// <summary>
+    /// Indicates whether this mentor is exempt from statutory ratio enforcement.
+    /// </summary>
+    public bool IsRatioExempt { get; set; } = false;
+
+    /// <summary>
+    /// Indicates whether ratio enforcement is active for this mentor.
+    /// </summary>
+    public bool IsRatioEnforced { get; set; } = true;
+
+    /// <summary>
+    /// Specific notes or special conditions regarding this mentor's capacity.
+    /// </summary>
+    public string? Notes { get; set; }
 }

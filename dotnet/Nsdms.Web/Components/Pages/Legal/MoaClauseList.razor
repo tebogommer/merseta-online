@@ -1,0 +1,192 @@
+@page "/legal/moa-clauses"
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Domain.Entities
+@inject IMoaTemplateEngineService TemplateService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>MoA Clause Library | merSETA Legal &amp; Governance</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
+    <!-- Header Card -->
+    <MudCard Elevation="2" Class="mb-4">
+        <MudCardContent Class="d-flex align-center justify-space-between py-4">
+            <div>
+                <MudText Typo="Typo.h5" Class="fw-bold" Color="Color.Primary">
+                    <MudIcon Icon="@Icons.Material.Filled.LibraryBooks" Class="mr-2" /> Reusable MoA Clause Library
+                </MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    Central repository of atomic legal clauses, statutory covenants, warranties, and dynamic placeholder tokens for contract assembly.
+                </MudText>
+            </div>
+            <MudStack Row="true" Spacing="2">
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Gavel" OnClick="@(() => Navigation.NavigateTo("/legal/moa-templates"))">
+                    Template Studio
+                </MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="@(() => Navigation.NavigateTo("/legal/moa-clauses/new"))">
+                    Create Clause
+                </MudButton>
+            </MudStack>
+        </MudCardContent>
+    </MudCard>
+
+    <!-- Filter & Search Toolbar -->
+    <MudCard Elevation="1" Class="mb-4">
+        <MudCardContent Class="py-3">
+            <MudGrid>
+                <MudItem xs="12" md="5">
+                    <MudTextField @bind-Value="_searchString"
+                                  Placeholder="Search by clause code, title, or keyword..."
+                                  Adornment="Adornment.Start"
+                                  AdornmentIcon="@Icons.Material.Filled.Search"
+                                  IconSize="Size.Medium"
+                                  Immediate="true"
+                                  Clearable="true"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" />
+                </MudItem>
+                <MudItem xs="12" sm="6" md="4">
+                    <MudSelect T="string" @bind-Value="_selectedCategory" Label="Category Filter" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true">
+                        <MudSelectItem Value="@("All")">All Categories</MudSelectItem>
+                        <MudSelectItem Value="@("Statutory")">Statutory Authority</MudSelectItem>
+                        <MudSelectItem Value="@("Financial")">Financial &amp; Disbursements</MudSelectItem>
+                        <MudSelectItem Value="@("Compliance")">Compliance &amp; Governance</MudSelectItem>
+                        <MudSelectItem Value="@("General")">General Provisions</MudSelectItem>
+                        <MudSelectItem Value="@("Annexure")">Annexure Schedules</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="3" Class="d-flex align-center justify-end">
+                    <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadClausesAsync">
+                        Refresh
+                    </MudButton>
+                </MudItem>
+            </MudGrid>
+        </MudCardContent>
+    </MudCard>
+
+    <!-- Clauses DataTable -->
+    <MudTable Items="@FilteredClauses"
+              Hover="true"
+              Bordered="false"
+              Striped="true"
+              Elevation="2"
+              Loading="@_isLoading"
+              LoadingProgressColor="Color.Primary"
+              RowsPerPage="10">
+        <HeaderContent>
+            <MudTh>Clause Code</MudTh>
+            <MudTh>Clause Title</MudTh>
+            <MudTh Style="text-align: center;">Category</MudTh>
+            <MudTh Style="text-align: center;">Mandatory</MudTh>
+            <MudTh Style="text-align: center;">Status</MudTh>
+            <MudTh Style="text-align: right;">Actions</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Code">
+                <MudLink Href="@($"/legal/moa-clauses/{context.Id}")" Color="Color.Primary" Class="fw-bold">
+                    <MudIcon Icon="@Icons.Material.Filled.BookmarkBorder" Size="Size.Small" Class="mr-1 align-middle" />
+                    @context.ClauseCode
+                </MudLink>
+            </MudTd>
+            <MudTd DataLabel="Title">
+                <MudText Typo="Typo.body2" Class="fw-bold">@context.ClauseTitle</MudText>
+            </MudTd>
+            <MudTd DataLabel="Category" Style="text-align: center;">
+                <MudChip T="string" Size="Size.Small" Color="@GetCategoryColor(context.Category)" Variant="Variant.Outlined">
+                    @context.Category
+                </MudChip>
+            </MudTd>
+            <MudTd DataLabel="Mandatory" Style="text-align: center;">
+                <MudIcon Icon="@(context.IsMandatory ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.RadioButtonUnchecked)"
+                         Color="@(context.IsMandatory ? Color.Success : Color.Default)" Size="Size.Small" />
+            </MudTd>
+            <MudTd DataLabel="Status" Style="text-align: center;">
+                <MudChip T="string" Size="Size.Small" Color="@(context.IsActive ? Color.Success : Color.Dark)" Variant="Variant.Filled">
+                    @(context.IsActive ? "Active" : "Inactive")
+                </MudChip>
+            </MudTd>
+            <MudTd DataLabel="Actions" Style="text-align: right;">
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Primary" Title="Edit Clause"
+                               OnClick="@(() => Navigation.NavigateTo($"/legal/moa-clauses/{context.Id}"))" />
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" Title="Deactivate/Delete"
+                               OnClick="@(() => DeleteClauseAsync(context.Id))" />
+            </MudTd>
+        </RowTemplate>
+        <PagerContent>
+            <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
+        </PagerContent>
+    </MudTable>
+</MudContainer>
+
+@code {
+    private List<MoaClause> _clauses = new();
+    private bool _isLoading = true;
+    private string _searchString = string.Empty;
+    private string _selectedCategory = "All";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadClausesAsync();
+    }
+
+    private async Task LoadClausesAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            _clauses = await TemplateService.GetClausesAsync(_selectedCategory);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading clauses: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private IEnumerable<MoaClause> FilteredClauses
+    {
+        get
+        {
+            var list = _clauses.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(_searchString))
+            {
+                list = list.Where(c =>
+                    c.ClauseCode.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+                    c.ClauseTitle.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+                    c.ClauseContent.Contains(_searchString, StringComparison.OrdinalIgnoreCase));
+            }
+
+            return list;
+        }
+    }
+
+    private async Task DeleteClauseAsync(int clauseId)
+    {
+        try
+        {
+            var success = await TemplateService.DeleteClauseAsync(clauseId, "LegalOfficer");
+            if (success)
+            {
+                Snackbar.Add("Clause updated/deactivated successfully.", Severity.Success);
+                await LoadClausesAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error removing clause: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private Color GetCategoryColor(string category) => category switch
+    {
+        "Statutory" => Color.Primary,
+        "Financial" => Color.Success,
+        "Compliance" => Color.Warning,
+        "Annexure" => Color.Info,
+        _ => Color.Default
+    };
+}

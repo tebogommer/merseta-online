@@ -15,6 +15,12 @@ public interface IPersonService
     Task<Person> CreateAsync(Person person, string currentUsername = "SYSTEM");
     Task<Person> UpdateAsync(Person person, string currentUsername = "SYSTEM");
     Task<bool> DeleteAsync(int id, string currentUsername = "SYSTEM");
+
+    // 360-Degree Relational Queries
+    Task<List<Nsdms.Application.Common.Models.PersonLearnerDto>> GetPersonLearnersAsync(int personId);
+    Task<List<Nsdms.Application.Common.Models.PersonEmployerLinkDto>> GetPersonEmployersAsync(int personId);
+    Task<List<Nsdms.Application.Common.Models.PersonEtqaDto>> GetPersonEtqaPractitionersAsync(int personId);
+    Task<List<Nsdms.Application.Common.Models.PersonMentorDto>> GetPersonMentorshipsAsync(int personId);
 }
 
 public class PersonService : IPersonService
@@ -317,4 +323,130 @@ public class PersonService : IPersonService
             }
         }
     }
+
+    #region 360-Degree Relational Queries
+
+    public async Task<List<PersonLearnerDto>> GetPersonLearnersAsync(int personId)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var learners = await db.CompanyLearners
+            .Include(l => l.Organisation)
+            .Where(l => l.PersonId == personId)
+            .OrderByDescending(l => l.RegistrationDate)
+            .ToListAsync();
+
+        return learners.Select(l => new PersonLearnerDto(
+            l.Id,
+            l.LearnerContractNumber,
+            l.Organisation?.CompanyName ?? "Unknown Employer",
+            l.OrganisationId,
+            l.QualificationTitle ?? "Skills Programme",
+            GetProgrammeTypeName(l.LearningProgrammeTypeCode),
+            l.EnrolmentStatusCode ?? "Registered",
+            l.RegistrationDate
+        )).ToList();
+    }
+
+    public async Task<List<PersonEmployerLinkDto>> GetPersonEmployersAsync(int personId)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var list = new List<PersonEmployerLinkDto>();
+
+        // 1. Primary contact person link
+        var primaryOrgs = await db.Organisations
+            .Where(o => o.PrimaryContactPersonId == personId)
+            .ToListAsync();
+
+        foreach (var org in primaryOrgs)
+        {
+            list.Add(new PersonEmployerLinkDto(
+                org.Id,
+                org.CompanyName,
+                org.SdlNumber,
+                "Primary Contact Person / Executive",
+                null,
+                null
+            ));
+        }
+
+        // 2. Training committee membership
+        var committeeMembers = await db.TrainingCommitteeMembers
+            .Include(m => m.TrainingCommittee)
+                .ThenInclude(tc => tc!.Organisation)
+            .Where(m => m.PersonId == personId && m.TrainingCommittee != null && m.TrainingCommittee.Organisation != null)
+            .ToListAsync();
+
+        foreach (var m in committeeMembers)
+        {
+            var org = m.TrainingCommittee!.Organisation!;
+            if (!list.Any(x => x.OrganisationId == org.Id))
+            {
+                list.Add(new PersonEmployerLinkDto(
+                    org.Id,
+                    org.CompanyName,
+                    org.SdlNumber,
+                    $"Training Committee Member ({m.Constituency} - {m.MemberRoleCode})",
+                    null,
+                    null
+                ));
+            }
+        }
+
+        return list;
+    }
+
+    public async Task<List<PersonEtqaDto>> GetPersonEtqaPractitionersAsync(int personId)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var assessors = await db.EtqaAssessors
+            .Include(a => a.Scopes)
+            .Where(a => a.PersonId == personId)
+            .OrderByDescending(a => a.StartDate)
+            .ToListAsync();
+
+        return assessors.Select(a => new PersonEtqaDto(
+            a.Id,
+            a.RegistrationNumber,
+            a.EtqaRole ?? "Assessor",
+            a.RegistrationStatusCode ?? "Active",
+            a.StartDate,
+            a.EndDate,
+            a.Scopes.Count
+        )).ToList();
+    }
+
+    public async Task<List<PersonMentorDto>> GetPersonMentorshipsAsync(int personId)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var mentors = await db.WorkplaceApprovalMentors
+            .Include(m => m.WorkplaceApproval)
+                .ThenInclude(w => w!.Organisation)
+            .Where(m => m.PersonId == personId && m.WorkplaceApproval != null)
+            .ToListAsync();
+
+        return mentors.Select(m => new PersonMentorDto(
+            m.Id,
+            m.WorkplaceApprovalId,
+            m.WorkplaceApproval?.Organisation?.CompanyName ?? "Approved Workshop",
+            m.WorkplaceApproval?.QualificationTitle ?? "Trade",
+            m.Designation ?? "Artisan Mentor",
+            m.ArtisanTradeNumber,
+            m.YearsExperience,
+            m.IsCertifiedArtisan
+        )).ToList();
+    }
+
+    private static string GetProgrammeTypeName(string? code) => code switch
+    {
+        "01" => "Apprenticeship",
+        "02" => "Learnership",
+        "03" => "Skills Programme",
+        "04" => "Internship",
+        "05" => "Bursary",
+        "06" => "Candidacy",
+        "07" => "ARPL",
+        _ => code ?? "Learnership"
+    };
+
+    #endregion
 }

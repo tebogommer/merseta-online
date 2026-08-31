@@ -33,6 +33,16 @@
                     return;
                 }
 
+                // 2. Ctrl+K or Cmd+K -> Trigger Command Palette
+                if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+                    e.preventDefault();
+                    const cmdBtn = document.querySelector("button[title*='Command Palette' i], div[title*='Command Palette' i], button[aria-label*='Command Palette' i]");
+                    if (cmdBtn) {
+                        cmdBtn.click();
+                    }
+                    return;
+                }
+
                 // Check if user is typing in a form input
                 const activeTag = (document.activeElement?.tagName || '').toLowerCase();
                 const isTyping = activeTag === 'input' || activeTag === 'textarea' || activeTag === 'select' || document.activeElement?.isContentEditable;

@@ -68,6 +68,10 @@ public class LevyService : ILevyService
         _audit = audit;
     }
 
+    /// <summary>
+    /// Calculates the statutory 4-way levy split using the Hare-Niemeyer (Largest Remainder) Method.
+    /// Guarantees zero cent-drift and exact mathematical balance across Mandatory (20%), Discretionary (49.5%), Admin (10.5%), and QCTO (0.5%).
+    /// </summary>
     public StatutoryLevySplit CalculateStatutorySplit(decimal totalLevyAmount)
     {
         if (totalLevyAmount <= 0)
@@ -75,11 +79,49 @@ public class LevyService : ILevyService
             return new StatutoryLevySplit(0, 0, 0, 0, 0, 0);
         }
 
-        var mandatory = Math.Round(totalLevyAmount * MandatoryRate, 2);
-        var discretionary = Math.Round(totalLevyAmount * DiscretionaryRate, 2);
-        var admin = Math.Round(totalLevyAmount * AdminRate, 2);
-        var qcto = Math.Round(totalLevyAmount * QctoRate, 2);
-        var totalSeta = mandatory + discretionary + admin + qcto;
+        // Total statutory SETA portion is exactly 80.5% (20% + 49.5% + 10.5% + 0.5%)
+        long totalTargetCents = (long)Math.Round(totalLevyAmount * 0.805m * 100m, MidpointRounding.AwayFromZero);
+
+        // Calculate unrounded exact cents for each statutory component
+        decimal unroundedMg = totalLevyAmount * 20.0m;
+        decimal unroundedDg = totalLevyAmount * 49.5m;
+        decimal unroundedAdmin = totalLevyAmount * 10.5m;
+        decimal unroundedQcto = totalLevyAmount * 0.5m;
+
+        // Base integer floors
+        long baseMg = (long)Math.Floor(unroundedMg);
+        long baseDg = (long)Math.Floor(unroundedDg);
+        long baseAdmin = (long)Math.Floor(unroundedAdmin);
+        long baseQcto = (long)Math.Floor(unroundedQcto);
+
+        // Fractional remainders
+        var remainders = new List<(string Component, decimal Remainder)>
+        {
+            ("DG", unroundedDg - baseDg),
+            ("MG", unroundedMg - baseMg),
+            ("ADMIN", unroundedAdmin - baseAdmin),
+            ("QCTO", unroundedQcto - baseQcto)
+        };
+
+        long allocatedCents = baseMg + baseDg + baseAdmin + baseQcto;
+        long leftoverCents = totalTargetCents - allocatedCents;
+
+        // Distribute leftover cents to components in descending order of fractional remainder
+        var sortedRemainders = remainders.OrderByDescending(r => r.Remainder).ToList();
+        for (int i = 0; i < leftoverCents && i < sortedRemainders.Count; i++)
+        {
+            var comp = sortedRemainders[i].Component;
+            if (comp == "DG") baseDg++;
+            else if (comp == "MG") baseMg++;
+            else if (comp == "ADMIN") baseAdmin++;
+            else if (comp == "QCTO") baseQcto++;
+        }
+
+        decimal mandatory = baseMg / 100m;
+        decimal discretionary = baseDg / 100m;
+        decimal admin = baseAdmin / 100m;
+        decimal qcto = baseQcto / 100m;
+        decimal totalSeta = mandatory + discretionary + admin + qcto;
 
         return new StatutoryLevySplit(
             TotalAmount: totalLevyAmount,
@@ -91,7 +133,7 @@ public class LevyService : ILevyService
         );
     }
 
-    public bool ValidateLevySplit(decimal totalLevy, decimal mandatory, decimal discretionary, decimal admin, decimal qcto, decimal tolerance = 0.05m)
+    public bool ValidateLevySplit(decimal totalLevy, decimal mandatory, decimal discretionary, decimal admin, decimal qcto, decimal tolerance = 0.00m)
     {
         if (totalLevy <= 0)
         {
@@ -104,8 +146,9 @@ public class LevyService : ILevyService
         var isDiscretionaryValid = Math.Abs(discretionary - expected.DiscretionaryGrantAmount) <= tolerance;
         var isAdminValid = Math.Abs(admin - expected.AdminLevyAmount) <= tolerance;
         var isQctoValid = Math.Abs(qcto - expected.QctoLevyAmount) <= tolerance;
+        var isTotalValid = Math.Abs((mandatory + discretionary + admin + qcto) - expected.TotalSetaPortion) <= tolerance;
 
-        return isMandatoryValid && isDiscretionaryValid && isAdminValid && isQctoValid;
+        return isMandatoryValid && isDiscretionaryValid && isAdminValid && isQctoValid && isTotalValid;
     }
 
     public List<LevyFileLine> ParseSarsFileContent(string content)

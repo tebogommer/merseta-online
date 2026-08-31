@@ -1,15 +1,18 @@
-﻿@page "/grants/pip"
+@page "/grants/pip"
 @using Nsdms.Application.Common.Interfaces
 @using Nsdms.Domain.Entities
 @inject IDgProjectImplementationService PipService
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
+@inject IJSRuntime JS
+@rendermode InteractiveServer
 
 <PageTitle>Project Implementation Plans (PIP) | merSETA NSDMS</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
+    <!-- Top Bar -->
     <MudCard Elevation="2" Class="mb-4">
-        <MudCardContent Class="d-flex align-center justify-space-between py-3">
+        <MudCardContent Class="d-flex flex-wrap align-center justify-space-between gap-3 py-3">
             <div>
                 <MudBreadcrumbs Items="_breadcrumbs" Class="pa-0 mb-1" />
                 <MudText Typo="Typo.h5" Class="fw-bold">DG Project Implementation Plans (PIP)</MudText>
@@ -17,41 +20,104 @@
                     Contracting milestones, learner allocation budgets, and tranche payment claims.
                 </MudText>
             </div>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="@(() => Navigation.NavigateTo("/grants/pip/create"))">
-                Create New PIP Plan
-            </MudButton>
+            <MudStack Row="true" Spacing="2" Class="align-center">
+                <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.FileDownload" OnClick="ExportCsvAsync">
+                    Export CSV
+                </MudButton>
+
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadDataAsync">
+                    Refresh
+                </MudButton>
+
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="@(() => Navigation.NavigateTo("/grants/pip/create"))">
+                    Create New PIP Plan
+                </MudButton>
+            </MudStack>
         </MudCardContent>
     </MudCard>
 
+    <!-- Quick Status Filter Chips -->
+    <MudPaper Elevation="0" Class="d-flex flex-wrap align-center gap-2 mb-3 px-1 py-1">
+        <MudChip T="string" Color="@(_statusFilter == null ? Color.Primary : Color.Default)" Variant="@(_statusFilter == null ? Variant.Filled : Variant.Outlined)" OnClick="@(() => _statusFilter = null)">
+            All (@_pips.Count)
+        </MudChip>
+        <MudChip T="string" Color="Color.Success" Variant="@(_statusFilter == "ActiveContractsSigned" ? Variant.Filled : Variant.Outlined)" OnClick="@(() => _statusFilter = "ActiveContractsSigned")">
+            Active Signed (@_pips.Count(p => p.StatusCode == "ActiveContractsSigned"))
+        </MudChip>
+        <MudChip T="string" Color="Color.Info" Variant="@(_statusFilter == "Draft" ? Variant.Filled : Variant.Outlined)" OnClick="@(() => _statusFilter = "Draft")">
+            Draft Plans (@_pips.Count(p => p.StatusCode == "Draft" || string.IsNullOrEmpty(p.StatusCode)))
+        </MudChip>
+    </MudPaper>
+
+    <!-- Table -->
     <MudCard Elevation="2">
-        <MudTable Items="_pips" Hover="true" Dense="true" Elevation="0" OnRowClick="@((TableRowClickEventArgs<ProjectImplementationPlan> args) => Navigation.NavigateTo($"/grants/pip/{args.Item.Id}"))" RowClass="cursor-pointer">
-            <HeaderContent>
-                <MudTh>Plan Reference</MudTh>
-                <MudTh>Employer / Organisation</MudTh>
-                <MudTh>Intervention Type</MudTh>
-                <MudTh>Awarded Learners</MudTh>
-                <MudTh>Total Awarded Amount</MudTh>
-                <MudTh>Status</MudTh>
-                <MudTh Style="text-align: right;">Action</MudTh>
-            </HeaderContent>
-            <RowTemplate>
-                <MudTd DataLabel="Plan" Class="fw-bold">@context.PlanReferenceNumber</MudTd>
-                <MudTd DataLabel="Employer">@(context.Organisation?.CompanyName ?? "Apex Engineering")</MudTd>
-                <MudTd DataLabel="Type">
-                    <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">@context.InterventionTypeCode</MudChip>
-                </MudTd>
-                <MudTd DataLabel="Learners">@context.TotalLearnersAwarded</MudTd>
-                <MudTd DataLabel="Amount" Class="fw-bold">@context.TotalAwardedAmount.ToString("C2")</MudTd>
-                <MudTd DataLabel="Status">
-                    <MudChip T="string" Size="Size.Small" Color="@(context.StatusCode == "ActiveContractsSigned" ? Color.Success : Color.Info)" Variant="Variant.Filled">
-                        @context.StatusCode
-                    </MudChip>
-                </MudTd>
-                <MudTd DataLabel="Action" Style="text-align: right;">
-                    <MudIconButton Icon="@Icons.Material.Filled.ArrowForward" Color="Color.Primary" Size="Size.Small" OnClick="@(() => Navigation.NavigateTo($"/grants/pip/{context.Id}"))" />
-                </MudTd>
-            </RowTemplate>
-        </MudTable>
+        <MudCardContent>
+            <MudTable Items="_filteredPips" Hover="true" Dense="true" Elevation="0">
+                <ToolBarContent>
+                    <MudText Typo="Typo.h6">Project Implementation Plans (@_filteredPips.Count)</MudText>
+                    <MudSpacer />
+                    <MudTextField @bind-Value="_searchString" Placeholder="Search by plan #, employer, intervention..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Immediate="true" />
+                </ToolBarContent>
+                <HeaderContent>
+                    <MudTh>Plan Reference</MudTh>
+                    <MudTh>Employer / Organisation</MudTh>
+                    <MudTh>Intervention Type</MudTh>
+                    <MudTh>Awarded Learners</MudTh>
+                    <MudTh>Total Awarded Amount</MudTh>
+                    <MudTh>Status</MudTh>
+                    <MudTh Style="text-align: right;">Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Plan" Class="fw-bold">
+                        <MudLink Href="@($"/grants/pip/{context.Id}")" Color="Color.Primary" Underline="Underline.Hover">
+                            @context.PlanReferenceNumber
+                        </MudLink>
+                    </MudTd>
+                    <MudTd DataLabel="Employer">
+                        @if (context.OrganisationId > 0)
+                        {
+                            <MudLink Href="@($"/employers/{context.OrganisationId}")" Color="Color.Inherit" Underline="Underline.Hover">
+                                @(context.Organisation?.CompanyName ?? "Apex Engineering")
+                            </MudLink>
+                        }
+                        else
+                        {
+                            <span>@(context.Organisation?.CompanyName ?? "Apex Engineering")</span>
+                        }
+                    </MudTd>
+                    <MudTd DataLabel="Type">
+                        <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">@context.InterventionTypeCode</MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Learners">@context.TotalLearnersAwarded</MudTd>
+                    <MudTd DataLabel="Amount" Class="fw-bold">@context.TotalAwardedAmount.ToString("C2")</MudTd>
+                    <MudTd DataLabel="Status">
+                        <MudChip T="string" Size="Size.Small" Color="@(context.StatusCode == "ActiveContractsSigned" ? Color.Success : Color.Info)" Variant="Variant.Filled">
+                            @context.StatusCode
+                        </MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="Actions" Style="text-align: right;">
+                        <MudButtonGroup Size="Size.Small" Variant="Variant.Outlined">
+                            <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                           Color="Color.Primary"
+                                           Size="Size.Small"
+                                           OnClick="@(() => Navigation.NavigateTo($"/grants/pip/{context.Id}"))"
+                                           aria-label="View PIP"
+                                           Title="View PIP Details" />
+
+                            <MudIconButton Icon="@Icons.Material.Filled.Download"
+                                           Color="Color.Secondary"
+                                           Size="Size.Small"
+                                           OnClick="@(() => DownloadPipSummary(context.Id))"
+                                           aria-label="Download PIP Summary"
+                                           Title="Download PIP Schedule" />
+                        </MudButtonGroup>
+                    </MudTd>
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager />
+                </PagerContent>
+            </MudTable>
+        </MudCardContent>
     </MudCard>
 </MudContainer>
 
@@ -64,8 +130,15 @@
     };
 
     private List<ProjectImplementationPlan> _pips = new();
+    private string _searchString = string.Empty;
+    private string? _statusFilter = null;
 
     protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
     {
         try
         {
@@ -75,5 +148,37 @@
         {
             Snackbar.Add($"Error loading PIPs: {ex.Message}", Severity.Error);
         }
+    }
+
+    private List<ProjectImplementationPlan> _filteredPips => _pips.Where(p =>
+    {
+        if (!string.IsNullOrEmpty(_statusFilter) && !string.Equals(p.StatusCode, _statusFilter, StringComparison.OrdinalIgnoreCase))
+            return false;
+
+        if (string.IsNullOrWhiteSpace(_searchString)) return true;
+        return p.PlanReferenceNumber.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+               (p.Organisation != null && p.Organisation.CompanyName.Contains(_searchString, StringComparison.OrdinalIgnoreCase)) ||
+               p.InterventionTypeCode.Contains(_searchString, StringComparison.OrdinalIgnoreCase);
+    }).ToList();
+
+    private void DownloadPipSummary(int id)
+    {
+        Snackbar.Add($"Downloading PIP Schedule #{id}...", Severity.Info);
+        Navigation.NavigateTo($"/api/documents/moa/{id}/pdf", forceLoad: true);
+    }
+
+    private async Task ExportCsvAsync()
+    {
+        var csv = new System.Text.StringBuilder();
+        csv.AppendLine("PlanReference,EmployerName,InterventionType,LearnersAwarded,TotalAmount,Status");
+        foreach (var item in _filteredPips)
+        {
+            csv.AppendLine($"\"{item.PlanReferenceNumber}\",\"{item.Organisation?.CompanyName}\",\"{item.InterventionTypeCode}\",{item.TotalLearnersAwarded},{item.TotalAwardedAmount},\"{item.StatusCode}\"");
+        }
+
+        var bytes = System.Text.Encoding.UTF8.GetBytes(csv.ToString());
+        var base64 = Convert.ToBase64String(bytes);
+        await JS.InvokeVoidAsync("eval", $"const a = document.createElement('a'); a.href = 'data:text/csv;base64,{base64}'; a.download = 'PipPlans_{DateTime.UtcNow:yyyyMMdd}.csv'; a.click();");
+        Snackbar.Add("PIP plans exported to CSV successfully.", Severity.Success);
     }
 }

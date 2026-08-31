@@ -32,8 +32,23 @@ public interface IGrantService
     Task<List<GrantProjectBudget>> GetProjectBudgetsAsync(int applicationId);
     Task<decimal> RecalculateApplicationBudgetAsync(int applicationId);
     Task<bool> RemoveBudgetItemAsync(int budgetId, string currentUsername = "SYSTEM");
-    Task<bool> RemoveProjectBudgetAsync(int budgetId, string currentUsername = "SYSTEM");
+    // 360-Degree Relational MoA link
+    Task<GrantMoa?> GetGrantMoaByApplicationIdAsync(int applicationId);
+
+    // Statutory WSP Eligibility & 1-Click MoA Provisioning
+    Task<WspEligibilityResult> EvaluateWspEligibilityAsync(int organisationId, int? finYear = null);
+    Task<GrantMoa> GenerateGrantMoaFromApplicationAsync(int grantApplicationId, string currentUsername = "SYSTEM");
 }
+
+public record WspEligibilityResult(
+    bool IsEligible,
+    bool IsExempt,
+    string Status,
+    int? WspSubmissionId,
+    string Reason,
+    string? WspReferenceNumber = null,
+    DateTime? ApprovalDate = null
+);
 
 public class GrantService : IGrantService
 {
@@ -136,6 +151,19 @@ public class GrantService : IGrantService
             application.ApplicationStatusCode = "Submitted";
         }
 
+        // Automatic WSP Eligibility evaluation if not explicitly overridden
+        if (application.OrganisationId > 0 && !application.IsWspExempt)
+        {
+            var wspResult = await EvaluateWspEligibilityAsync(application.OrganisationId, application.FinancialYear);
+            application.IsWspCompliant = wspResult.IsEligible;
+            application.IsWspExempt = wspResult.IsExempt;
+            application.WspSubmissionId = wspResult.WspSubmissionId;
+            if (string.IsNullOrWhiteSpace(application.WspExemptionReason))
+            {
+                application.WspExemptionReason = wspResult.Reason;
+            }
+        }
+
         using var db = await _contextFactory.CreateDbContextAsync();
         application.ApplicationDate = DateTime.UtcNow;
         application.CreatedAt = DateTime.UtcNow;
@@ -170,7 +198,10 @@ public class GrantService : IGrantService
             existing.GrantTypeCode,
             existing.ApplicationStatusCode,
             existing.RequestedAmount,
-            existing.ApprovedAmount
+            existing.ApprovedAmount,
+            existing.IsWspCompliant,
+            existing.IsWspExempt,
+            existing.WspSubmissionId
         };
 
         existing.ProjectTitle = application.ProjectTitle;
@@ -178,6 +209,10 @@ public class GrantService : IGrantService
         existing.ApplicationStatusCode = application.ApplicationStatusCode;
         existing.RequestedAmount = application.RequestedAmount;
         existing.ApprovedAmount = application.ApprovedAmount;
+        existing.IsWspCompliant = application.IsWspCompliant;
+        existing.IsWspExempt = application.IsWspExempt;
+        existing.WspExemptionReason = application.WspExemptionReason;
+        existing.WspSubmissionId = application.WspSubmissionId;
         existing.ModifiedAt = DateTime.UtcNow;
         existing.ModifiedBy = currentUsername;
 
@@ -208,6 +243,7 @@ public class GrantService : IGrantService
         return await db.GrantApplications
             .Include(g => g.Organisation)
             .Include(g => g.FundingWindow)
+            .Include(g => g.WspSubmission)
             .Include(g => g.ProjectBudgets)
             .FirstOrDefaultAsync(g => g.Id == id);
     }
@@ -460,5 +496,196 @@ public class GrantService : IGrantService
     public async Task<bool> RemoveProjectBudgetAsync(int budgetId, string currentUsername = "SYSTEM")
     {
         return await RemoveBudgetItemAsync(budgetId, currentUsername);
+    }
+
+    public async Task<GrantMoa?> GetGrantMoaByApplicationIdAsync(int applicationId)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        return await db.GrantMoas
+            .Include(m => m.Milestones)
+            .FirstOrDefaultAsync(m => m.GrantApplicationId == applicationId);
+    }
+
+    public async Task<WspEligibilityResult> EvaluateWspEligibilityAsync(int organisationId, int? finYear = null)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var org = await db.Organisations.FindAsync(organisationId);
+        if (org == null)
+        {
+            return new WspEligibilityResult(false, false, "UnknownOrganisation", null, "Organisation record not found.");
+        }
+
+        var targetYear = finYear ?? DateTime.UtcNow.Year;
+
+        // Check if organisation is an exempt entity type (TVET College, Non-Levy Payer, NGO, Community Trust, Government)
+        bool isNonLevy = string.Equals(org.LevyCategoryCode, "NON_LEVY_PAYING", StringComparison.OrdinalIgnoreCase) ||
+                         string.Equals(org.LevyCategoryCode, "EXEMPT", StringComparison.OrdinalIgnoreCase) ||
+                         string.Equals(org.OrganisationTypeCode, "PUBLIC_ENTITY", StringComparison.OrdinalIgnoreCase) ||
+                         string.Equals(org.OrganisationTypeCode, "NGO_NPO", StringComparison.OrdinalIgnoreCase) ||
+                         string.Equals(org.OrganisationTypeCode, "TVET", StringComparison.OrdinalIgnoreCase);
+
+        if (isNonLevy)
+        {
+            return new WspEligibilityResult(
+                IsEligible: true,
+                IsExempt: true,
+                Status: "Exempt",
+                WspSubmissionId: null,
+                Reason: $"Organisation is exempt from Mandatory Grant WSP submission ({org.OrganisationTypeCode ?? org.LevyCategoryCode ?? "Non-Levy Payer"}).",
+                WspReferenceNumber: null,
+                ApprovalDate: null
+            );
+        }
+
+        // Lookup WspSubmission for this organisation and target financial year
+        var wsp = await db.WspSubmissions
+            .Where(w => w.OrganisationId == organisationId && w.FinYear == targetYear)
+            .OrderByDescending(w => w.Id)
+            .FirstOrDefaultAsync();
+
+        if (wsp == null)
+        {
+            return new WspEligibilityResult(
+                IsEligible: false,
+                IsExempt: false,
+                Status: "Missing",
+                WspSubmissionId: null,
+                Reason: $"No WSP/ATR submission on record for financial year {targetYear} (SETA Grant Regulation 4(4)).",
+                WspReferenceNumber: null,
+                ApprovalDate: null
+            );
+        }
+
+        var isApproved = string.Equals(wsp.WspApprovalStatusCode, "Approved", StringComparison.OrdinalIgnoreCase) ||
+                         string.Equals(wsp.WspApprovalStatusCode, "Compliant", StringComparison.OrdinalIgnoreCase);
+
+        if (isApproved)
+        {
+            return new WspEligibilityResult(
+                IsEligible: true,
+                IsExempt: false,
+                Status: "Approved",
+                WspSubmissionId: wsp.Id,
+                Reason: $"Compliant WSP #{wsp.ReferenceNumber} approved.",
+                WspReferenceNumber: wsp.ReferenceNumber,
+                ApprovalDate: wsp.ModifiedAt
+            );
+        }
+
+        return new WspEligibilityResult(
+            IsEligible: false,
+            IsExempt: false,
+            Status: wsp.WspApprovalStatusCode ?? "Pending",
+            WspSubmissionId: wsp.Id,
+            Reason: $"WSP #{wsp.ReferenceNumber} is in status '{wsp.WspApprovalStatusCode}'. Mandatory Grant approval required for DG eligibility.",
+            WspReferenceNumber: wsp.ReferenceNumber,
+            ApprovalDate: null
+        );
+    }
+
+    public async Task<GrantMoa> GenerateGrantMoaFromApplicationAsync(int grantApplicationId, string currentUsername = "SYSTEM")
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var app = await db.GrantApplications
+            .Include(a => a.FundingWindow)
+            .Include(a => a.Organisation)
+            .FirstOrDefaultAsync(a => a.Id == grantApplicationId);
+
+        if (app == null)
+        {
+            throw new ArgumentException($"Grant application #{grantApplicationId} not found.");
+        }
+
+        // Check if Moa already exists
+        var existingMoa = await db.GrantMoas
+            .Include(m => m.Milestones)
+            .FirstOrDefaultAsync(m => m.GrantApplicationId == grantApplicationId);
+
+        if (existingMoa != null)
+        {
+            return existingMoa;
+        }
+
+        var finYear = app.FundingWindow?.FinYear ?? DateTime.UtcNow.Year;
+        var contractValue = app.ApprovedAmount ?? (app.RequestedAmount > 0 ? app.RequestedAmount : 450000m);
+        var moaNumber = $"MOA-{finYear}-DG-{app.Id:D4}";
+
+        var moa = new GrantMoa
+        {
+            GrantApplicationId = app.Id,
+            MoaNumber = moaNumber,
+            ContractStartDate = DateTime.UtcNow.Date,
+            ContractEndDate = DateTime.UtcNow.Date.AddYears(1),
+            TotalContractValue = contractValue,
+            MoaStatusCode = "Draft",
+            SpecialConditions = "Project funded under MerSETA Discretionary Grant Policy. Tranche disbursements subject to verification of milestone evidence in accordance with SETA governance guidelines.",
+            CreatedAt = DateTime.UtcNow,
+            CreatedBy = currentUsername
+        };
+
+        // Standard 4-Tranche Milestone Schedule
+        moa.Milestones.Add(new GrantMoaMilestone
+        {
+            MilestoneNumber = 1,
+            MilestoneTitle = "Inception & Learner Registration",
+            MilestoneDescription = "Bilateral MoA execution, proof of learner agreement upload, and project inception report.",
+            DeliverableRequirement = "Signed MoA, Certified ID Copies, Proof of Enrolment on merSETA NSDMS.",
+            TranchePercentage = 30m,
+            TrancheAmount = Math.Round(contractValue * 0.30m, 2),
+            TargetDueDate = DateTime.UtcNow.Date.AddMonths(3),
+            MilestoneStatusCode = "Pending",
+            CreatedAt = DateTime.UtcNow,
+            CreatedBy = currentUsername
+        });
+
+        moa.Milestones.Add(new GrantMoaMilestone
+        {
+            MilestoneNumber = 2,
+            MilestoneTitle = "Midterm Structured Learning & Progress",
+            MilestoneDescription = "Completion of foundational theory modules and formative workplace assessment logbooks.",
+            DeliverableRequirement = "Midterm Progress Report, Logbook Assessment Records, Workplace Monitoring Signoff.",
+            TranchePercentage = 30m,
+            TrancheAmount = Math.Round(contractValue * 0.30m, 2),
+            TargetDueDate = DateTime.UtcNow.Date.AddMonths(6),
+            MilestoneStatusCode = "Pending",
+            CreatedAt = DateTime.UtcNow,
+            CreatedBy = currentUsername
+        });
+
+        moa.Milestones.Add(new GrantMoaMilestone
+        {
+            MilestoneNumber = 3,
+            MilestoneTitle = "Workplace Evidence & Practical Assessment",
+            MilestoneDescription = "Practical workplace exposure verification and readiness for summative assessment.",
+            DeliverableRequirement = "Workplace Mentor Signoff, Completed Logbooks, Trade Test / EISA Entry Forms.",
+            TranchePercentage = 30m,
+            TrancheAmount = Math.Round(contractValue * 0.30m, 2),
+            TargetDueDate = DateTime.UtcNow.Date.AddMonths(9),
+            MilestoneStatusCode = "Pending",
+            CreatedAt = DateTime.UtcNow,
+            CreatedBy = currentUsername
+        });
+
+        moa.Milestones.Add(new GrantMoaMilestone
+        {
+            MilestoneNumber = 4,
+            MilestoneTitle = "Final Project Closeout & Certification",
+            MilestoneDescription = "Summative assessment completion, external moderation endorsement, and project closeout reconciliation.",
+            DeliverableRequirement = "Statement of Results (SOR) / Trade Test Certificates, Final Closeout Expenditure Audit.",
+            TranchePercentage = 10m,
+            TrancheAmount = contractValue - (Math.Round(contractValue * 0.30m, 2) * 3),
+            TargetDueDate = DateTime.UtcNow.Date.AddMonths(12),
+            MilestoneStatusCode = "Pending",
+            CreatedAt = DateTime.UtcNow,
+            CreatedBy = currentUsername
+        });
+
+        db.GrantMoas.Add(moa);
+        await db.SaveChangesAsync();
+
+        _audit.LogAction(db, "GrantMoa", moa.Id, "GenerateFromApplication", currentUsername, null, moa);
+        await db.SaveChangesAsync();
+
+        return moa;
     }
 }

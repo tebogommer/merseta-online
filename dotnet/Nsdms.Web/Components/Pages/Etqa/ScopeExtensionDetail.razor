@@ -1,6 +1,7 @@
 @page "/etqa/scope-extensions/{Id:int}"
 @using Nsdms.Application.Common.Interfaces
 @using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
 @inject IExtensionOfScopeService ScopeService
 @inject NavigationManager Nav
 @inject ISnackbar Snackbar
@@ -35,20 +36,6 @@ else
                         Cancel
                     </MudButton>
 
-                    @if (!_eos.SiteInspectionPassed && _eos.StatusCode == "Submitted")
-                    {
-                        <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Checklist" OnClick="RecordInspectionAsync">
-                            Record Site Inspection Passed
-                        </MudButton>
-                    }
-
-                    @if (_eos.SiteInspectionPassed && _eos.StatusCode == "CommitteeReview")
-                    {
-                        <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.CheckCircle" OnClick="ApproveAsync">
-                            Approve Scope Extension
-                        </MudButton>
-                    }
-
                     @if (_eos.StatusCode == "Approved")
                     {
                         <MudChip T="string" Color="Color.Success" Variant="Variant.Filled" Size="Size.Large" Icon="@Icons.Material.Filled.Verified">
@@ -58,6 +45,18 @@ else
                 </MudStack>
             </MudCardContent>
         </MudCard>
+
+        <!-- Workflow State Tracker & Action Bridge -->
+        <WorkflowProgressBar ProcessCode="SCOPE" 
+                             EntityId="@Id" 
+                             EntityTitle="@($"{_eos.ApplicationNumber} - {_eos.AdditionalQualificationTitle}")" 
+                             EntityRef="@_eos.ApplicationNumber" />
+
+        <WorkflowActionBridge ProcessCode="SCOPE" 
+                              EntityId="@Id" 
+                              EntityTitle="@($"{_eos.ApplicationNumber} - {_eos.AdditionalQualificationTitle}")" 
+                              EntityRef="@_eos.ApplicationNumber" 
+                              OnStatusChanged="OnWorkflowStatusChanged" />
 
         <!-- Main Structure -->
         <MudGrid>
@@ -134,5 +133,11 @@ else
         {
             Snackbar.Add($"Error: {ex.Message}", Severity.Error);
         }
+    }
+
+    private async Task OnWorkflowStatusChanged(string newStatus)
+    {
+        await LoadRecordAsync();
+        StateHasChanged();
     }
 }

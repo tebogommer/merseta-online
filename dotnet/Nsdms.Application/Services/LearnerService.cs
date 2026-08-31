@@ -23,6 +23,13 @@ public interface ILearnerService
     Task<List<LearnerTradeTest>> GetAllTradeTestsAsync(string? search = null, string? resultStatus = null);
     Task<List<LearnerTradeTest>> GetTradeTestsForLearnerAsync(int companyLearnerId);
     Task<bool> DeleteTradeTestAsync(int id, string currentUsername = "SYSTEM");
+
+    // 360-Degree Learner Relational Queries
+    Task<List<LearnerEnrolmentDto>> GetLearnerEnrolmentsAsync(int personId);
+    Task<List<LearnerEmployerLinkDto>> GetLearnerEmployersAsync(int personId);
+    Task<List<LearnerSdpLinkDto>> GetLearnerProvidersAsync(int personId);
+    Task<List<LearnerAssessmentDto>> GetLearnerAssessmentsAsync(int personId);
+    Task<List<LearnerStipendDto>> GetLearnerStipendsAsync(int personId);
 }
 
 public class LearnerService : ILearnerService
@@ -448,4 +455,154 @@ public class LearnerService : ILearnerService
         await db.SaveChangesAsync();
         return true;
     }
+
+    // 360-Degree Learner Relational Queries Implementation
+    public async Task<List<LearnerEnrolmentDto>> GetLearnerEnrolmentsAsync(int personId)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var enrolments = await db.CompanyLearners
+            .Include(l => l.Organisation)
+            .Include(l => l.TrainingProvider)
+            .Where(l => l.PersonId == personId)
+            .OrderByDescending(l => l.Id)
+            .ToListAsync();
+
+        return enrolments.Select(l => new LearnerEnrolmentDto(
+            l.Id,
+            l.LearnerContractNumber,
+            l.LearningProgrammeTypeCode,
+            GetProgrammeTypeName(l.LearningProgrammeTypeCode),
+            l.QualificationTitle,
+            l.NqfLevel,
+            l.SaqaQualificationId?.ToString(),
+            l.OfoCode,
+            l.EnrolmentStatusId,
+            l.EnrolmentStatusCode ?? "Registered",
+            l.RegistrationDate,
+            l.CommencementDate,
+            l.CompletionDate,
+            l.Organisation?.CompanyName,
+            l.OrganisationId > 0 ? l.OrganisationId : null,
+            l.TrainingProvider?.ProviderName,
+            l.TrainingProviderId
+        )).ToList();
+    }
+
+    public async Task<List<LearnerEmployerLinkDto>> GetLearnerEmployersAsync(int personId)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var agreements = await db.CompanyLearners
+            .Include(l => l.Organisation!)
+                .ThenInclude(o => o.PrimaryContactPerson)
+            .Include(l => l.OrganisationSite!)
+                .ThenInclude(s => s.PrimaryContactPerson)
+            .Where(l => l.PersonId == personId && l.Organisation != null)
+            .OrderByDescending(l => l.Id)
+            .ToListAsync();
+
+        var list = new List<LearnerEmployerLinkDto>();
+        foreach (var a in agreements)
+        {
+            if (a.Organisation == null) continue;
+            var contact = a.OrganisationSite?.PrimaryContactPerson ?? a.Organisation.PrimaryContactPerson;
+            list.Add(new LearnerEmployerLinkDto(
+                a.Organisation.Id,
+                a.Organisation.CompanyName,
+                a.Organisation.SdlNumber,
+                a.OrganisationSite?.SiteName ?? "Head Office / Plant",
+                a.OrganisationSite?.PhysicalAddress ?? a.Organisation.PhysicalAddress,
+                contact != null ? $"{contact.FirstName} {contact.LastName}".Trim() : null,
+                contact?.Email,
+                contact?.PhoneNumber ?? contact?.CellNumber,
+                "Host & Sponsoring Employer",
+                a.CommencementDate ?? a.RegistrationDate
+            ));
+        }
+        return list;
+    }
+
+    public async Task<List<LearnerSdpLinkDto>> GetLearnerProvidersAsync(int personId)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var agreements = await db.CompanyLearners
+            .Include(l => l.TrainingProvider!)
+                .ThenInclude(p => p.PrimaryContactPerson)
+            .Where(l => l.PersonId == personId && l.TrainingProvider != null)
+            .OrderByDescending(l => l.Id)
+            .ToListAsync();
+
+        var list = new List<LearnerSdpLinkDto>();
+        foreach (var a in agreements)
+        {
+            if (a.TrainingProvider == null) continue;
+            var contact = a.TrainingProvider.PrimaryContactPerson;
+            list.Add(new LearnerSdpLinkDto(
+                a.TrainingProvider.Id,
+                a.TrainingProvider.ProviderName,
+                a.TrainingProvider.AccreditationNumber,
+                contact != null ? $"{contact.FirstName} {contact.LastName}".Trim() : null,
+                contact?.Email,
+                contact?.PhoneNumber ?? contact?.CellNumber,
+                a.AssessorRegistrationNumber != null ? $"Assessor Reg #{a.AssessorRegistrationNumber}" : "Unassigned",
+                a.AssessorRegistrationNumber,
+                a.EnrolmentTypeId == "01" ? "Contact Delivery" : "Workplace Based"
+            ));
+        }
+        return list;
+    }
+
+    public async Task<List<LearnerAssessmentDto>> GetLearnerAssessmentsAsync(int personId)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var assessments = await db.LearnerAssessments
+            .Include(a => a.EtqaAssessor!)
+                .ThenInclude(ea => ea.Person)
+            .Where(a => a.PersonId == personId)
+            .OrderByDescending(a => a.AssessmentDate)
+            .ToListAsync();
+
+        return assessments.Select(a => new LearnerAssessmentDto(
+            a.Id,
+            a.CompanyLearnerId ?? 0,
+            a.UnitStandardId?.ToString() ?? "US-" + a.Id,
+            a.UnitStandardTitle ?? a.QualificationTitle,
+            a.AssessmentDate,
+            a.EnrolmentTypeId,
+            a.EnrolmentStatusId == "02" ? "Competent" : "NotYetCompetent",
+            a.EtqaAssessor?.Person != null ? $"{a.EtqaAssessor.Person.FirstName} {a.EtqaAssessor.Person.LastName}".Trim() : null,
+            a.AssessorRegistrationNumber,
+            a.CertificateNumber
+        )).ToList();
+    }
+
+    public async Task<List<LearnerStipendDto>> GetLearnerStipendsAsync(int personId)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var agreements = await db.CompanyLearners
+            .Where(l => l.PersonId == personId)
+            .OrderByDescending(l => l.Id)
+            .ToListAsync();
+
+        return agreements.Select(a => new LearnerStipendDto(
+            a.Id,
+            a.FundingTypeCode ?? "DiscretionaryGrant",
+            a.CumulativeSpend,
+            a.QualificationTitle + " Stipend Pool",
+            "MOA-" + a.OrganisationId + "-DG",
+            a.FundingTypeCode == "DiscretionaryGrant" ? 4500.00m : 0.00m,
+            a.IsActive ? "Active Disbursement" : "Completed"
+        )).ToList();
+    }
+
+    private static string GetProgrammeTypeName(string? code) => code switch
+    {
+        "01" => "Apprenticeship",
+        "02" => "Learnership",
+        "03" => "Skills Programme",
+        "04" => "Internship",
+        "05" => "Bursary",
+        "06" => "Candidacy",
+        "07" => "ARPL",
+        _ => code ?? "Learnership"
+    };
 }

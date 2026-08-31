@@ -11,6 +11,12 @@ public interface IFinanceService
     Task<GrantMoa> UpdateGrantMoaAsync(GrantMoa moa, string userId);
     Task<bool> DeleteGrantMoaAsync(int id, string userId);
 
+    // 360-Degree Grant MoA Relational Queries
+    Task<List<Nsdms.Application.Common.Models.GrantMoaBeneficiaryDto>> GetGrantMoaBeneficiariesAsync(int moaId);
+    Task<List<Nsdms.Application.Common.Models.GrantMoaEmployerDto>> GetGrantMoaEmployersAsync(int moaId);
+    Task<List<Nsdms.Application.Common.Models.GrantMoaSdpDto>> GetGrantMoaSdpsAsync(int moaId);
+    Task<List<Nsdms.Application.Common.Models.GrantMoaVariationDto>> GetGrantMoaVariationsAsync(int moaId);
+
     // Milestones
     Task<GrantMoaMilestone?> GetMilestoneByIdAsync(int milestoneId);
     Task<bool> VerifyMilestoneAsync(int milestoneId, string userId, string comments);
@@ -27,10 +33,13 @@ public interface IFinanceService
     Task<bool> ApproveMandatoryDisbursementAsync(int id, string userId, string batchNumber);
     Task<bool> ProcessMandatoryDisbursementPayoutAsync(int id, string userId);
 
-    // Inter-SETA Transfers
+    // Inter-SETA Transfers & Statutory Netting
     Task<List<InterSetaTransfer>> GetInterSetaTransfersAsync();
     Task<InterSetaTransfer?> GetInterSetaTransferByIdAsync(int id);
     Task<InterSetaTransfer> SaveInterSetaTransferAsync(InterSetaTransfer transfer, string userId);
     Task<bool> ApproveInterSetaTransferAsync(int id, string userId, string? dhetRef = null);
     Task<bool> DeleteInterSetaTransferAsync(int id, string userId);
+
+    // Statutory Clawback Netting Engine
+    Task<Nsdms.Application.Common.Models.ClawbackNettingResult> NetClawbackLiabilitiesAsync(int organisationId, decimal requestedDisbursementAmount, string userId);
 }

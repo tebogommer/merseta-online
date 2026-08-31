@@ -1,7 +1,10 @@
 @namespace Nsdms.Web.Components.Shared
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
 @using Nsdms.Application.Services
 @using Nsdms.Domain.Entities
 @inject IWorkflowEngineService WorkflowService
+@inject AuthenticationStateProvider AuthStateProvider
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 
@@ -13,7 +16,7 @@
                 <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" />
             </div>
             <div>
-                <div class="d-flex align-center gap-2">
+                <div class="d-flex align-center gap-2 flex-wrap">
                     <span style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; color: var(--mud-palette-text-secondary);">
                         Current Stage:
                     </span>
@@ -29,11 +32,18 @@
                     }
                     else
                     {
-                        <StatusBadge Status="Draft" Size="Size.Small" />
+                        <StatusBadge Status="Draft / Uninitiated" Size="Size.Small" />
+                    }
+
+                    @if (_mandatoryDocsCount > 0)
+                    {
+                        <MudChip T="string" Color="Color.Info" Variant="Variant.Outlined" Size="Size.Small" Icon="@Icons.Material.Filled.FolderZip">
+                            @_mandatoryDocsCount Mandatory Document@(_mandatoryDocsCount > 1 ? "s" : "") Enforced
+                        </MudChip>
                     }
                 </div>
                 <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block mt-1">
-                    @(_instance?.IsCompleted == true ? "Lifecycle successfully finalized and locked." : "Active workflow gate. Authorized officers can advance or return this record.")
+                    @(_instance?.IsCompleted == true ? "Lifecycle successfully finalized and locked." : (_instance == null ? "Record is in draft. Click Initiate Workflow to trigger review and routing gates." : "Active workflow gate. Authorized officers can advance or return this record."))
                 </MudText>
             </div>
         </div>
@@ -48,7 +58,7 @@
                            StartIcon="@Icons.Material.Filled.PlayArrow"
                            Disabled="@_isProcessing"
                            OnClick="StartWorkflowAsync">
-                    Initiate Workflow
+                    Initiate @(!string.IsNullOrEmpty(ProcessCode) ? ProcessCode : "Workflow")
                 </MudButton>
             }
             else if (!_instance.IsCompleted && _availableTransitions.Any())
@@ -56,10 +66,11 @@
                 @foreach (var transition in _availableTransitions.OrderByDescending(t => !t.ActionName.Contains("Reject", StringComparison.OrdinalIgnoreCase) && !t.ActionName.Contains("Decline", StringComparison.OrdinalIgnoreCase)))
                 {
                     var isReject = transition.ActionName.Contains("Reject", StringComparison.OrdinalIgnoreCase) || transition.ActionName.Contains("Decline", StringComparison.OrdinalIgnoreCase);
+                    var icon = GetTransitionIcon(transition);
                     <MudButton Variant="@(isReject ? Variant.Outlined : Variant.Filled)"
                                Color="@(isReject ? Color.Error : Color.Primary)"
                                Size="Size.Medium"
-                               StartIcon="@(isReject ? Icons.Material.Filled.Cancel : Icons.Material.Filled.CheckCircle)"
+                               StartIcon="@icon"
                                Disabled="@_isProcessing"
                                OnClick="() => HandleTransitionClickAsync(transition)">
                         @transition.ActionName
@@ -118,10 +129,12 @@
 
     private WorkflowInstance? _instance;
     private List<WorkflowTransition> _availableTransitions = new();
+    private int _mandatoryDocsCount = 0;
     private bool _isProcessing = false;
     private bool _showCommentModal = false;
     private WorkflowTransition? _selectedTransition;
     private string _commentText = string.Empty;
+    private ClaimsPrincipal? _currentUser;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -132,15 +145,21 @@
     {
         if (string.IsNullOrEmpty(ProcessCode) || EntityId <= 0) return;
 
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        _currentUser = authState.User;
+
         _instance = await WorkflowService.GetInstanceByEntityAsync(ProcessCode, EntityId);
         if (_instance != null)
         {
-            _availableTransitions = await WorkflowService.GetAvailableTransitionsAsync(_instance.Id, null);
+            _availableTransitions = await WorkflowService.GetAvailableTransitionsAsync(_instance.Id, _currentUser);
         }
         else
         {
             _availableTransitions.Clear();
         }
+
+        var docRules = await WorkflowService.GetDocumentRequirementsAsync(ProcessCode);
+        _mandatoryDocsCount = docRules.Count(r => r.IsMandatory);
     }
 
     private async Task StartWorkflowAsync()
@@ -148,13 +167,16 @@
         _isProcessing = true;
         try
         {
+            var userEmail = _currentUser?.Identity?.Name ?? "admin@merseta.org.za";
+            var userName = _currentUser?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value ?? "Authorized User";
+
             var result = await WorkflowService.StartWorkflowAsync(
                 ProcessCode, 
                 EntityId, 
                 EntityTitle, 
                 EntityRef, 
-                "admin@merseta.org.za", 
-                "System Administrator");
+                userEmail, 
+                userName);
 
             if (result.Success)
             {
@@ -178,7 +200,7 @@
         _selectedTransition = transition;
         _commentText = string.Empty;
 
-        if (transition.RequiresComments || transition.ActionName.Contains("Reject", StringComparison.OrdinalIgnoreCase))
+        if (transition.RequiresComments || transition.ActionName.Contains("Reject", StringComparison.OrdinalIgnoreCase) || transition.ActionName.Contains("Decline", StringComparison.OrdinalIgnoreCase))
         {
             _showCommentModal = true;
         }
@@ -195,12 +217,16 @@
         _isProcessing = true;
         try
         {
+            var userEmail = _currentUser?.Identity?.Name ?? "admin@merseta.org.za";
+            var userName = _currentUser?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value ?? "Authorized User";
+            var userRole = _currentUser?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value ?? "Administrator";
+
             var result = await WorkflowService.AdvanceWorkflowAsync(
                 _instance.Id,
                 _selectedTransition.Id,
-                "admin@merseta.org.za",
-                "System Administrator",
-                "Administrator",
+                userEmail,
+                userName,
+                userRole,
                 _commentText);
 
             if (result.Success)
@@ -219,5 +245,54 @@
         {
             _isProcessing = false;
         }
+    }
+
+    private string GetTransitionIcon(WorkflowTransition transition)
+    {
+        if (!string.IsNullOrEmpty(transition.ButtonIcon))
+        {
+            return transition.ButtonIcon switch
+            {
+                "Send" => Icons.Material.Filled.Send,
+                "Draw" => Icons.Material.Filled.Draw,
+                "Verified" => Icons.Material.Filled.Verified,
+                "Check" => Icons.Material.Filled.Check,
+                "CheckCircle" => Icons.Material.Filled.CheckCircle,
+                "DoneAll" => Icons.Material.Filled.DoneAll,
+                "Event" => Icons.Material.Filled.Event,
+                "EventAvailable" => Icons.Material.Filled.EventAvailable,
+                "FactCheck" => Icons.Material.Filled.FactCheck,
+                "Grading" => Icons.Material.Filled.Grading,
+                "Group" => Icons.Material.Filled.Group,
+                "HelpOutline" => Icons.Material.Filled.HelpOutline,
+                "Engineering" => Icons.Material.Filled.Engineering,
+                "HowToVote" => Icons.Material.Filled.HowToVote,
+                "Schedule" => Icons.Material.Filled.Schedule,
+                "ThumbUp" => Icons.Material.Filled.ThumbUp,
+                "Warning" => Icons.Material.Filled.Warning,
+                "VerifiedUser" => Icons.Material.Filled.VerifiedUser,
+                "WorkspacePremium" => Icons.Material.Filled.WorkspacePremium,
+                "Approval" => Icons.Material.Filled.Approval,
+                "Checklist" => Icons.Material.Filled.Checklist,
+                "Cancel" or "Close" or "Block" => Icons.Material.Filled.Cancel,
+                _ => Icons.Material.Filled.CheckCircle
+            };
+        }
+
+        var name = transition.ActionName.ToLowerInvariant();
+        if (name.Contains("reject") || name.Contains("decline") || name.Contains("cancel"))
+            return Icons.Material.Filled.Cancel;
+        if (name.Contains("sign") || name.Contains("draw"))
+            return Icons.Material.Filled.Draw;
+        if (name.Contains("submit") || name.Contains("send"))
+            return Icons.Material.Filled.Send;
+        if (name.Contains("schedule") || name.Contains("audit") || name.Contains("visit"))
+            return Icons.Material.Filled.Event;
+        if (name.Contains("certif"))
+            return Icons.Material.Filled.WorkspacePremium;
+        if (name.Contains("approv") || name.Contains("endorse"))
+            return Icons.Material.Filled.CheckCircle;
+        
+        return Icons.Material.Filled.CheckCircle;
     }
 }

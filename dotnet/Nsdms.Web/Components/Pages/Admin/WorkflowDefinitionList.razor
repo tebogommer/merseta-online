@@ -1,0 +1,455 @@
+@page "/admin/workflows"
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@using MudBlazor
+@inject IWorkflowEngineService WorkflowService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@rendermode InteractiveServer
+
+<PageTitle>Workflow Studio &amp; State Machine Blueprints | merSETA NSDMS</PageTitle>
+
+@*
+  UI-STANDARD.md Archetype: A1 (Master List / Reference Data & Configuration Studio)
+  Clauses: 4.1, 4.3, 6.1, 7.2, 8.1, 11.1–11.9
+*@
+
+<EntityHeader Title="Workflow Studio &amp; State Machine Blueprints"
+              Subtitle="Enterprise state machine orchestration, lifecycle stages, gate transition matrices, and SLA policies"
+              Status="Active"
+              BreadcrumbItems="@_breadcrumbItems">
+    <ActionZone>
+        <MudButton Variant="Variant.Outlined"
+                   Color="Color.Default"
+                   Size="Size.Small"
+                   StartIcon="@Icons.Material.Filled.Inbox"
+                   OnClick="@(() => Navigation.NavigateTo("/tasks"))">
+            Task Inbox
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   Size="Size.Small"
+                   StartIcon="@Icons.Material.Filled.Add"
+                   OnClick="OpenCreateBlueprintDialog">
+            New Blueprint
+        </MudButton>
+    </ActionZone>
+</EntityHeader>
+
+<!-- Stat Card Overview Row -->
+<div class="d-flex flex-wrap gap-4 mb-4">
+    <MudPaper Elevation="0" Class="pa-4 flex-grow-1 rounded-lg border-default" Style="background-color: var(--mud-palette-surface); border: 1px solid var(--mud-palette-lines-default); min-width: 200px;">
+        <div class="d-flex align-center justify-space-between">
+            <div>
+                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="text-uppercase font-weight-bold">Total Blueprints</MudText>
+                <MudText Typo="Typo.h5" Class="font-weight-bold mt-1">@_definitions.Count</MudText>
+            </div>
+            <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Medium">
+                <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" />
+            </MudAvatar>
+        </div>
+    </MudPaper>
+
+    <MudPaper Elevation="0" Class="pa-4 flex-grow-1 rounded-lg border-default" Style="background-color: var(--mud-palette-surface); border: 1px solid var(--mud-palette-lines-default); min-width: 200px;">
+        <div class="d-flex align-center justify-space-between">
+            <div>
+                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="text-uppercase font-weight-bold">Active Engines</MudText>
+                <MudText Typo="Typo.h5" Class="font-weight-bold mt-1" Color="Color.Success">@_definitions.Count(d => d.IsActive)</MudText>
+            </div>
+            <MudAvatar Color="Color.Success" Variant="Variant.Filled" Size="Size.Medium">
+                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" />
+            </MudAvatar>
+        </div>
+    </MudPaper>
+
+    <MudPaper Elevation="0" Class="pa-4 flex-grow-1 rounded-lg border-default" Style="background-color: var(--mud-palette-surface); border: 1px solid var(--mud-palette-lines-default); min-width: 200px;">
+        <div class="d-flex align-center justify-space-between">
+            <div>
+                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="text-uppercase font-weight-bold">Configured States</MudText>
+                <MudText Typo="Typo.h5" Class="font-weight-bold mt-1" Color="Color.Info">@_definitions.Sum(d => d.States.Count)</MudText>
+            </div>
+            <MudAvatar Color="Color.Info" Variant="Variant.Filled" Size="Size.Medium">
+                <MudIcon Icon="@Icons.Material.Filled.LinearScale" Size="Size.Small" />
+            </MudAvatar>
+        </div>
+    </MudPaper>
+
+    <MudPaper Elevation="0" Class="pa-4 flex-grow-1 rounded-lg border-default" Style="background-color: var(--mud-palette-surface); border: 1px solid var(--mud-palette-lines-default); min-width: 200px;">
+        <div class="d-flex align-center justify-space-between">
+            <div>
+                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="text-uppercase font-weight-bold">Live Instances</MudText>
+                <MudText Typo="Typo.h5" Class="font-weight-bold mt-1" Color="Color.Warning">@_definitions.Sum(d => d.Instances.Count)</MudText>
+            </div>
+            <MudAvatar Color="Color.Warning" Variant="Variant.Filled" Size="Size.Medium">
+                <MudIcon Icon="@Icons.Material.Filled.PlayCircleFilled" Size="Size.Small" />
+            </MudAvatar>
+        </div>
+    </MudPaper>
+</div>
+
+<!-- Unified Studio Surface -->
+<div class="nsdms-workspace-surface" role="region" aria-label="Workflow Blueprint Matrix">
+    <!-- Compact Enterprise Toolbar -->
+    <div class="nsdms-table-toolbar d-flex flex-wrap align-center justify-space-between gap-3 pa-4 border-bottom" style="border-bottom: 1px solid var(--mud-palette-lines-default);">
+        <div class="d-flex align-center flex-grow-1 gap-2" style="max-width: 720px;">
+            <div class="flex-grow-1" style="max-width: 360px;">
+                <MudTextField T="string"
+                              @bind-Value="_searchString"
+                              @bind-Value:after="HandleFilterChanged"
+                              Placeholder="Search blueprint code or process name..."
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              IconSize="Size.Small"
+                              Margin="Margin.Dense"
+                              Variant="Variant.Outlined"
+                              Clearable="true"
+                              Immediate="true"
+                              DebounceInterval="200"
+                              aria-label="Search blueprints" />
+            </div>
+
+            <div style="width: 200px;">
+                <MudSelect T="string"
+                           Value="@_selectedEntity"
+                           ValueChanged="OnEntityFilterChanged"
+                           Margin="Margin.Dense"
+                           Variant="Variant.Outlined"
+                           Dense="true"
+                           AnchorOrigin="Origin.BottomLeft"
+                           aria-label="Target entity filter">
+                    <MudSelectItem Value="@("All")">All Entities</MudSelectItem>
+                    <MudSelectItem Value="@("Organisation")">Organisation</MudSelectItem>
+                    <MudSelectItem Value="@("WspSubmission")">WspSubmission</MudSelectItem>
+                    <MudSelectItem Value="@("GrantApplication")">GrantApplication</MudSelectItem>
+                    <MudSelectItem Value="@("TrainingProvider")">TrainingProvider</MudSelectItem>
+                    <MudSelectItem Value="@("WorkplaceApproval")">WorkplaceApproval</MudSelectItem>
+                    <MudSelectItem Value="@("CompanyLearner")">CompanyLearner</MudSelectItem>
+                    <MudSelectItem Value="@("LearnerTradeTest")">LearnerTradeTest</MudSelectItem>
+                </MudSelect>
+            </div>
+
+            <div style="width: 140px;">
+                <MudSelect T="string"
+                           Value="@_statusFilter"
+                           ValueChanged="OnStatusFilterChanged"
+                           Margin="Margin.Dense"
+                           Variant="Variant.Outlined"
+                           Dense="true"
+                           AnchorOrigin="Origin.BottomLeft"
+                           aria-label="Active status filter">
+                    <MudSelectItem Value="@("All")">All Status</MudSelectItem>
+                    <MudSelectItem Value="@("Active")">Active</MudSelectItem>
+                    <MudSelectItem Value="@("Inactive")">Inactive</MudSelectItem>
+                </MudSelect>
+            </div>
+        </div>
+
+        <div class="d-flex align-center gap-2">
+            <MudButton Variant="Variant.Outlined" Color="Color.Default" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadDefinitionsAsync">
+                Refresh
+            </MudButton>
+            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="font-monospace">
+                @FilteredDefinitions.Count blueprint@(FilteredDefinitions.Count == 1 ? "" : "s")
+            </MudText>
+        </div>
+    </div>
+
+    <!-- Active Filters Row -->
+    @if (HasActiveFilters)
+    {
+        <div class="d-flex flex-wrap align-center gap-2 px-4 py-2 bg-light border-bottom" style="border-bottom: 1px solid var(--mud-palette-lines-default);" role="region" aria-label="Active Filters">
+            <span style="font-size: 0.75rem; font-weight: 600; color: var(--mud-palette-text-secondary);">Active filters:</span>
+            @if (!string.IsNullOrWhiteSpace(_searchString))
+            {
+                <MudChip T="string" Size="Size.Small" OnClose="@(() => { _searchString = string.Empty; HandleFilterChanged(); })">
+                    Search: @_searchString
+                </MudChip>
+            }
+            @if (_selectedEntity != "All")
+            {
+                <MudChip T="string" Size="Size.Small" Color="Color.Primary" OnClose="@(() => { _selectedEntity = "All"; HandleFilterChanged(); })">
+                    Entity: @_selectedEntity
+                </MudChip>
+            }
+            @if (_statusFilter != "All")
+            {
+                <MudChip T="string" Size="Size.Small" Color="Color.Info" OnClose="@(() => { _statusFilter = "All"; HandleFilterChanged(); })">
+                    Status: @_statusFilter
+                </MudChip>
+            }
+            <MudButton Variant="Variant.Text" Color="Color.Error" Size="Size.Small" OnClick="ClearFilters" StartIcon="@Icons.Material.Filled.ClearAll">
+                Clear all
+            </MudButton>
+        </div>
+    }
+
+    <!-- Table Workspace -->
+    @if (_loading)
+    {
+        <div class="pa-8">
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-3" />
+            <div class="d-flex flex-column gap-2">
+                <MudSkeleton Height="36px" />
+                <MudSkeleton Height="36px" />
+                <MudSkeleton Height="36px" />
+            </div>
+        </div>
+    }
+    else if (!FilteredDefinitions.Any())
+    {
+        <div class="nsdms-empty-state pa-8 text-center">
+            <div class="nsdms-empty-icon-wrap mb-2">
+                <MudIcon Icon="@Icons.Material.Outlined.AccountTree" Color="Color.Secondary" Size="Size.Large" />
+            </div>
+            <MudText Typo="Typo.subtitle1" Class="font-weight-bold mb-1">No workflow blueprints found</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                @(HasActiveFilters ? "Try adjusting or clearing your filters." : "Create your first workflow blueprint to get started.")
+            </MudText>
+            @if (HasActiveFilters)
+            {
+                <MudButton Variant="Variant.Outlined" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.ClearAll" OnClick="ClearFilters">
+                    Clear filters
+                </MudButton>
+            }
+            else
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenCreateBlueprintDialog">
+                    Create Blueprint
+                </MudButton>
+            }
+        </div>
+    }
+    else
+    {
+        <MudTable T="WorkflowDefinition"
+                  Items="@FilteredDefinitions"
+                  Hover="true"
+                  Dense="true"
+                  Elevation="0"
+                  Breakpoint="Breakpoint.Sm">
+            <HeaderContent>
+                <MudTh>Code</MudTh>
+                <MudTh>Blueprint Title &amp; Process</MudTh>
+                <MudTh>Target Domain Entity</MudTh>
+                <MudTh>States</MudTh>
+                <MudTh>Transitions</MudTh>
+                <MudTh>Live Instances</MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh Style="text-align: right;">Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Code">
+                    <a href="/admin/workflows/@context.Id" class="d-flex align-center gap-1 font-monospace fw-bold text-primary text-decoration-none">
+                        <MudIcon Icon="@Icons.Material.Filled.AccountTree" Size="Size.Small" />
+                        <span>@context.Code</span>
+                    </a>
+                </MudTd>
+                <MudTd DataLabel="Process Name">
+                    <MudText Typo="Typo.body2" Class="fw-bold">@context.Name</MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        Key Field: <code>@context.KeyFieldName</code>
+                    </MudText>
+                </MudTd>
+                <MudTd DataLabel="Target Entity">
+                    <MudChip T="string" Size="Size.Small" Color="Color.Dark" Variant="Variant.Text">
+                        @context.TargetEntityName
+                    </MudChip>
+                </MudTd>
+                <MudTd DataLabel="States">
+                    <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">
+                        @context.States.Count states
+                    </MudChip>
+                </MudTd>
+                <MudTd DataLabel="Transitions">
+                    <MudChip T="string" Size="Size.Small" Color="Color.Primary" Variant="Variant.Outlined">
+                        @context.Transitions.Count rules
+                    </MudChip>
+                </MudTd>
+                <MudTd DataLabel="Instances">
+                    <MudChip T="string" Size="Size.Small" Color="@(context.Instances.Any() ? Color.Warning : Color.Default)" Variant="Variant.Filled">
+                        @context.Instances.Count
+                    </MudChip>
+                </MudTd>
+                <MudTd DataLabel="Status">
+                    @if (context.IsActive)
+                    {
+                        <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.CheckCircle">
+                            Active
+                        </MudChip>
+                    }
+                    else
+                    {
+                        <MudChip T="string" Color="Color.Default" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Cancel">
+                            Inactive
+                        </MudChip>
+                    }
+                </MudTd>
+                <MudTd Style="text-align: right;" DataLabel="Actions">
+                    <div class="d-flex justify-end gap-1">
+                        <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                       Color="Color.Primary"
+                                       Size="Size.Small"
+                                       Title="View / Edit Blueprint"
+                                       OnClick="@(() => Navigation.NavigateTo($"/admin/workflows/{context.Id}"))" />
+                        <MudIconButton Icon="@Icons.Material.Filled.ContentCopy"
+                                       Color="Color.Secondary"
+                                       Size="Size.Small"
+                                       Title="Clone Blueprint"
+                                       OnClick="@(() => OpenCloneDialog(context))" />
+                        <MudIconButton Icon="@(context.IsActive ? Icons.Material.Filled.ToggleOn : Icons.Material.Filled.ToggleOff)"
+                                       Color="@(context.IsActive ? Color.Success : Color.Default)"
+                                       Size="Size.Small"
+                                       Title="@(context.IsActive ? "Deactivate Blueprint" : "Activate Blueprint")"
+                                       OnClick="@(() => ToggleActiveStatusAsync(context))" />
+                    </div>
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <div class="d-flex flex-wrap justify-space-between align-center pa-3 border-top" style="border-top: 1px solid var(--mud-palette-lines-default);">
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        Total Blueprints: <strong class="font-monospace">@FilteredDefinitions.Count</strong>
+                    </MudText>
+                    <MudTablePager PageSizeOptions="new int[] { 10, 20, 50 }" />
+                </div>
+            </PagerContent>
+        </MudTable>
+    }
+</div>
+
+@code {
+    private List<WorkflowDefinition> _definitions = new();
+    private bool _loading = true;
+    private string _searchString = string.Empty;
+    private string _selectedEntity = "All";
+    private string _statusFilter = "All";
+
+    private List<BreadcrumbItem> _breadcrumbItems = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("System Governance", href: null, disabled: true),
+        new BreadcrumbItem("Workflow Studio", href: "/admin/workflows")
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDefinitionsAsync();
+    }
+
+    private async Task LoadDefinitionsAsync()
+    {
+        _loading = true;
+        try
+        {
+            _definitions = await WorkflowService.GetAllDefinitionsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading workflow blueprints: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private List<WorkflowDefinition> FilteredDefinitions
+    {
+        get
+        {
+            var query = _definitions.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(_searchString))
+            {
+                var s = _searchString.Trim();
+                query = query.Where(d =>
+                    (d.Code != null && d.Code.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    (d.Name != null && d.Name.Contains(s, StringComparison.OrdinalIgnoreCase)) ||
+                    (d.TargetEntityName != null && d.TargetEntityName.Contains(s, StringComparison.OrdinalIgnoreCase)));
+            }
+
+            if (_selectedEntity != "All")
+            {
+                query = query.Where(d => d.TargetEntityName.Equals(_selectedEntity, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (_statusFilter == "Active")
+            {
+                query = query.Where(d => d.IsActive);
+            }
+            else if (_statusFilter == "Inactive")
+            {
+                query = query.Where(d => !d.IsActive);
+            }
+
+            return query.ToList();
+        }
+    }
+
+    private bool HasActiveFilters => !string.IsNullOrWhiteSpace(_searchString) || _selectedEntity != "All" || _statusFilter != "All";
+
+    private void HandleFilterChanged() => StateHasChanged();
+
+    private void OnEntityFilterChanged(string val)
+    {
+        _selectedEntity = val;
+        HandleFilterChanged();
+    }
+
+    private void OnStatusFilterChanged(string val)
+    {
+        _statusFilter = val;
+        HandleFilterChanged();
+    }
+
+    private void ClearFilters()
+    {
+        _searchString = string.Empty;
+        _selectedEntity = "All";
+        _statusFilter = "All";
+        StateHasChanged();
+    }
+
+    private async Task ToggleActiveStatusAsync(WorkflowDefinition definition)
+    {
+        try
+        {
+            definition.IsActive = !definition.IsActive;
+            await WorkflowService.SaveDefinitionAsync(definition, "admin@merseta.org.za", "System Administrator");
+            Snackbar.Add($"Blueprint '{definition.Code}' is now {(definition.IsActive ? "Active" : "Inactive")}.", Severity.Success);
+            await LoadDefinitionsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task OpenCreateBlueprintDialog()
+    {
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true };
+        var dialog = await DialogService.ShowAsync<WorkflowCreateDialog>("Create New Workflow Blueprint", options);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled && result.Data is WorkflowDefinition newDef)
+        {
+            await LoadDefinitionsAsync();
+            Navigation.NavigateTo($"/admin/workflows/{newDef.Id}");
+        }
+    }
+
+    private async Task OpenCloneDialog(WorkflowDefinition definition)
+    {
+        var parameters = new DialogParameters { ["SourceDefinition"] = definition };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true };
+        var dialog = await DialogService.ShowAsync<WorkflowCloneDialog>("Clone Workflow Blueprint", parameters, options);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled && result.Data is WorkflowDefinition clonedDef)
+        {
+            await LoadDefinitionsAsync();
+            Navigation.NavigateTo($"/admin/workflows/{clonedDef.Id}");
+        }
+    }
+}

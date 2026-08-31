@@ -27,6 +27,10 @@ public interface IPdfDocumentService
     Task<byte[]> GenerateTradeTestCertificatePdfAsync(int tradeTestId);
     Task<byte[]> GenerateWspOutcomeLetterPdfAsync(int wspSubmissionId);
     Task<byte[]> GenerateMandatoryRebateRemittancePdfAsync(int disbursementId);
+
+    // Dynamic Live Simulation PDF Generation
+    Task<byte[]> GenerateSimulatedDocumentTemplatePdfAsync(DocumentTemplate template, Dictionary<string, string> tokens, bool includeWatermark = true);
+    Task<byte[]> GenerateSimulatedMoaTemplatePdfAsync(MoaTemplate template, Dictionary<string, string> tokens, bool includeWatermark = true);
 }
 
 public class ErpDisbursementResult

@@ -192,6 +192,21 @@ public class Organisation : BaseEntity
     /// Indicates whether the organisation is currently active.
     /// </summary>
     public bool IsActive { get; set; } = true;
+
+    /// <summary>
+    /// Explicit mentor ratio enforcement override for this organisation (null = inherit Global, true = enforce, false = exempt).
+    /// </summary>
+    public bool? IsMentorRatioEnforced { get; set; }
+
+    /// <summary>
+    /// Statutory or executive justification when the organisation is granted an exemption from mentor ratios (e.g. State-Owned Enterprise Training Academy).
+    /// </summary>
+    public string? MentorRatioExemptionReason { get; set; }
+
+    /// <summary>
+    /// Optional enterprise-wide uniform mentor capacity cap override (e.g. 5 learners per mentor across all site workshops).
+    /// </summary>
+    public int? CustomMentorRatioCap { get; set; }
     
     /// <summary>
     /// Registered contact persons and Skills Development Facilitators (SDFs).

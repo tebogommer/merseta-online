@@ -26,6 +26,14 @@ public class RoleDetailDto
     public List<string> Users { get; set; } = new();
 }
 
+public class UserPermissionOverrideDto
+{
+    public int UserId { get; set; }
+    public string PermissionClaim { get; set; } = string.Empty;
+    public bool IsGranted { get; set; }
+    public string? Reason { get; set; }
+}
+
 public interface IRolePermissionService
 {
     Task<List<RoleSummaryDto>> GetAllRolesAsync();
@@ -35,6 +43,9 @@ public interface IRolePermissionService
     Task<bool> DeleteRoleAsync(int id, string currentUsername = "SYSTEM");
     Task<List<string>> GetRolePermissionsAsync(int roleId);
     Task<List<string>> GetUserPermissionsAsync(int userId);
+    Task<List<UserPermissionOverrideDto>> GetUserPermissionOverridesAsync(int userId);
+    Task<bool> SetUserPermissionOverrideAsync(int userId, string permissionClaim, bool isGranted, string? reason = null, string currentUsername = "SYSTEM");
+    Task<bool> RemoveUserPermissionOverrideAsync(int userId, string permissionClaim, string currentUsername = "SYSTEM");
     Task<bool> UserHasPermissionAsync(int userId, string module, string action);
     Task SeedDefaultRolePermissionsAsync();
 }
@@ -214,6 +225,8 @@ public class RolePermissionService : IRolePermissionService
             .ToListAsync();
     }
 
+    public const string RevokedPermissionClaimType = "RevokedPermission";
+
     public async Task<List<string>> GetUserPermissionsAsync(int userId)
     {
         using var db = await _contextFactory.CreateDbContextAsync();
@@ -230,17 +243,99 @@ public class RolePermissionService : IRolePermissionService
             .Select(r => r.NormalizedName)
             .ToListAsync();
 
-        // SuperAdmin has wildcard access
+        // Base permissions from active assigned roles
+        HashSet<string> effectivePermissions;
         if (roles.Contains("SUPERADMIN") || roles.Contains("ADMIN"))
         {
-            return AppPermissions.GetAllPermissions().Select(p => p.ClaimValue).ToList();
+            effectivePermissions = new HashSet<string>(AppPermissions.GetAllPermissions().Select(p => p.ClaimValue), StringComparer.OrdinalIgnoreCase);
+        }
+        else
+        {
+            var roleClaims = await db.RoleClaims
+                .Where(rc => roleIds.Contains(rc.RoleId) && rc.ClaimType == PermissionClaimType && rc.ClaimValue != null)
+                .Select(rc => rc.ClaimValue!)
+                .ToListAsync();
+
+            effectivePermissions = new HashSet<string>(roleClaims, StringComparer.OrdinalIgnoreCase);
         }
 
-        return await db.RoleClaims
-            .Where(rc => roleIds.Contains(rc.RoleId) && rc.ClaimType == PermissionClaimType && rc.ClaimValue != null)
-            .Select(rc => rc.ClaimValue!)
-            .Distinct()
+        // Apply User-Specific Overrides (UserClaims)
+        var userClaims = await db.UserClaims
+            .Where(uc => uc.UserId == userId && uc.ClaimValue != null)
             .ToListAsync();
+
+        // 1. Explicitly Granted User Overrides
+        foreach (var grant in userClaims.Where(uc => uc.ClaimType == PermissionClaimType))
+        {
+            effectivePermissions.Add(grant.ClaimValue!);
+        }
+
+        // 2. Explicitly Revoked User Overrides
+        foreach (var revocation in userClaims.Where(uc => uc.ClaimType == RevokedPermissionClaimType))
+        {
+            effectivePermissions.Remove(revocation.ClaimValue!);
+        }
+
+        return effectivePermissions.ToList();
+    }
+
+    public async Task<List<UserPermissionOverrideDto>> GetUserPermissionOverridesAsync(int userId)
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var userClaims = await db.UserClaims
+            .Where(uc => uc.UserId == userId && (uc.ClaimType == PermissionClaimType || uc.ClaimType == RevokedPermissionClaimType) && uc.ClaimValue != null)
+            .ToListAsync();
+
+        return userClaims.Select(uc => new UserPermissionOverrideDto
+        {
+            UserId = userId,
+            PermissionClaim = uc.ClaimValue!,
+            IsGranted = uc.ClaimType == PermissionClaimType
+        }).ToList();
+    }
+
+    public async Task<bool> SetUserPermissionOverrideAsync(int userId, string permissionClaim, bool isGranted, string? reason = null, string currentUsername = "SYSTEM")
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var user = await db.Users.FindAsync(userId);
+        if (user == null) return false;
+
+        // Remove any existing override for this permission claim
+        var existing = await db.UserClaims
+            .Where(uc => uc.UserId == userId && (uc.ClaimType == PermissionClaimType || uc.ClaimType == RevokedPermissionClaimType) && uc.ClaimValue == permissionClaim)
+            .ToListAsync();
+
+        if (existing.Any())
+        {
+            db.UserClaims.RemoveRange(existing);
+        }
+
+        var targetClaimType = isGranted ? PermissionClaimType : RevokedPermissionClaimType;
+        db.UserClaims.Add(new IdentityUserClaim<int>
+        {
+            UserId = userId,
+            ClaimType = targetClaimType,
+            ClaimValue = permissionClaim
+        });
+
+        _audit.LogAction(db, "UserPermissionOverride", userId, "SetUserPermissionOverride", currentUsername, null, new { userId, permissionClaim, isGranted, reason });
+        await db.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> RemoveUserPermissionOverrideAsync(int userId, string permissionClaim, string currentUsername = "SYSTEM")
+    {
+        using var db = await _contextFactory.CreateDbContextAsync();
+        var existing = await db.UserClaims
+            .Where(uc => uc.UserId == userId && (uc.ClaimType == PermissionClaimType || uc.ClaimType == RevokedPermissionClaimType) && uc.ClaimValue == permissionClaim)
+            .ToListAsync();
+
+        if (!existing.Any()) return false;
+
+        db.UserClaims.RemoveRange(existing);
+        _audit.LogAction(db, "UserPermissionOverride", userId, "RemoveUserPermissionOverride", currentUsername, null, new { userId, permissionClaim });
+        await db.SaveChangesAsync();
+        return true;
     }
 
     public async Task<bool> UserHasPermissionAsync(int userId, string module, string action)

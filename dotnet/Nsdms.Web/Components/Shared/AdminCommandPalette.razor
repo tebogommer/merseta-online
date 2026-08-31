@@ -1,0 +1,267 @@
+@namespace Nsdms.Web.Components.Shared
+@using Nsdms.Application.Common.Interfaces
+@using Nsdms.Application.Services
+@using MudBlazor
+@inject INavigationMenuService NavMenuService
+@inject IAdminCatalogService CatalogService
+@inject ICaslAbilityService CaslService
+@inject NavigationManager Nav
+
+<MudDialog @bind-Visible="_isOpen" Options="_dialogOptions" Class="admin-command-palette-dialog">
+    <DialogContent>
+        <div class="pa-2">
+            <!-- Search Header -->
+            <div class="d-flex align-center gap-2 mb-3">
+                <MudIcon Icon="@Icons.Material.Filled.Search" Color="Color.Primary" Size="Size.Medium" />
+                <MudTextField @bind-Value="_query"
+                              Placeholder="Type to jump to any page, execute an action, or configure a setting... (Ctrl+K)"
+                              Adornment="Adornment.None"
+                              Immediate="true"
+                              DebounceInterval="100"
+                              OnDebounceIntervalElapsed="OnSearch"
+                              Clearable="true"
+                              OnClearButtonClick="Clear"
+                              Variant="Variant.Text"
+                              Margin="Margin.Dense"
+                              AutoGrow="false"
+                              Class="fs-5 fw-medium"
+                              Style="font-size: 1.1rem !important;" />
+                <span class="kbd-shortcut">Esc</span>
+            </div>
+
+            <!-- Quick Filter Category Chips -->
+            <div class="d-flex align-center gap-1 mb-2 px-1 overflow-x-auto">
+                <MudChip T="string" Size="Size.Small" Variant="@(_selectedCategory == "All" ? Variant.Filled : Variant.Outlined)" Color="Color.Primary" OnClick="@(() => FilterByCategory("All"))" Class="py-0 px-2 cursor-pointer" Style="font-size: 0.7rem;">All</MudChip>
+                <MudChip T="string" Size="Size.Small" Variant="@(_selectedCategory == "Navigation" ? Variant.Filled : Variant.Outlined)" Color="Color.Info" OnClick="@(() => FilterByCategory("Navigation"))" Class="py-0 px-2 cursor-pointer" Style="font-size: 0.7rem;">Pages &amp; Workspaces</MudChip>
+                <MudChip T="string" Size="Size.Small" Variant="@(_selectedCategory == "QuickAction" ? Variant.Filled : Variant.Outlined)" Color="Color.Success" OnClick="@(() => FilterByCategory("QuickAction"))" Class="py-0 px-2 cursor-pointer" Style="font-size: 0.7rem;">Quick Actions</MudChip>
+                <MudChip T="string" Size="Size.Small" Variant="@(_selectedCategory == "AdminConfig" ? Variant.Filled : Variant.Outlined)" Color="Color.Warning" OnClick="@(() => FilterByCategory("AdminConfig"))" Class="py-0 px-2 cursor-pointer" Style="font-size: 0.7rem;">Admin Settings</MudChip>
+            </div>
+
+            <MudDivider Class="mb-2" />
+
+            @if (_isLoading)
+            {
+                <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-2" />
+            }
+
+            <!-- Results List -->
+            <div style="max-height: 440px; overflow-y: auto;" class="pr-1">
+                @if (!FilteredResults.Any() && !string.IsNullOrWhiteSpace(_query))
+                {
+                    <div class="pa-6 text-center text-secondary">
+                        <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" Class="mb-2 opacity-50" />
+                        <MudText Typo="Typo.body2">No matching pages, actions, or configurations found for "<strong>@_query</strong>"</MudText>
+                        <MudText Typo="Typo.caption" Class="d-block mt-1">Try searching "WSP", "Grant", "Learner", "MOA", "SARS", or "Settings"</MudText>
+                    </div>
+                }
+                else
+                {
+                    <MudList T="OmnisearchResultItemDto" Dense="true" Clickable="true">
+                        @foreach (var item in FilteredResults)
+                        {
+                            <MudListItem T="OmnisearchResultItemDto" OnClick="@(() => SelectItem(item))" Class="rounded-lg mb-1 hover-bg-light">
+                                <div class="d-flex align-center justify-space-between py-1">
+                                    <div class="d-flex align-center gap-3">
+                                        <MudAvatar Color="@GetItemColor(item.ItemType)" Size="Size.Small" Variant="Variant.Filled">
+                                            <MudIcon Icon="@GetItemIcon(item.Icon, item.ItemType)" Size="Size.Small" />
+                                        </MudAvatar>
+                                        <div>
+                                            <div class="d-flex align-center gap-2">
+                                                <MudText Typo="Typo.body2" Class="fw-bold">@item.Title</MudText>
+                                                <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="@GetItemColor(item.ItemType)" Class="py-0 px-1" Style="font-size: 0.62rem; height: 18px;">
+                                                    @(item.ItemType == "QuickAction" ? "Action" : item.Category)
+                                                </MudChip>
+                                                @if (!string.IsNullOrEmpty(item.BadgeText))
+                                                {
+                                                    <MudChip T="string" Size="Size.Small" Variant="Variant.Filled" Color="Color.Error" Class="py-0 px-1 font-weight-bold" Style="font-size: 0.62rem; height: 18px;">
+                                                        @item.BadgeText
+                                                    </MudChip>
+                                                }
+                                            </div>
+                                            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="text-truncate d-block" Style="max-width: 440px;">
+                                                @item.Description
+                                            </MudText>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-center gap-2">
+                                        <span class="font-monospace text-secondary d-none d-sm-inline" style="font-size: 0.72rem; opacity: 0.7;">/@item.Href</span>
+                                        <MudIcon Icon="@Icons.Material.Filled.KeyboardReturn" Size="Size.Small" Color="Color.Secondary" Class="opacity-50" />
+                                    </div>
+                                </div>
+                            </MudListItem>
+                        }
+                    </MudList>
+                }
+            </div>
+
+            <!-- Footer Key Hints -->
+            <MudDivider Class="my-2" />
+            <div class="d-flex justify-space-between align-center px-2 text-secondary" style="font-size: 0.72rem;">
+                <div class="d-flex align-center gap-3">
+                    <span><span class="kbd-shortcut mr-1">&uarr;&darr;</span> Navigate</span>
+                    <span><span class="kbd-shortcut mr-1">&crarr;</span> Jump</span>
+                    <span><span class="kbd-shortcut mr-1">Esc</span> Close</span>
+                </div>
+                <span>OmniSearch &amp; Command Palette • MerSETA NSDMS</span>
+            </div>
+        </div>
+    </DialogContent>
+</MudDialog>
+
+@code {
+    [Parameter]
+    public string CurrentUsername { get; set; } = "Admin";
+
+    [Parameter]
+    public List<string> CurrentRoles { get; set; } = new() { "SuperAdmin", "Admin", "FinanceManager", "CLO" };
+
+    private bool _isOpen = false;
+    private string _query = string.Empty;
+    private string _selectedCategory = "All";
+    private bool _isLoading = false;
+    private List<OmnisearchResultItemDto> _results = new();
+
+    private IEnumerable<OmnisearchResultItemDto> FilteredResults =>
+        _selectedCategory == "All" 
+            ? _results 
+            : _results.Where(r => r.ItemType.Equals(_selectedCategory, StringComparison.OrdinalIgnoreCase));
+
+    private DialogOptions _dialogOptions = new()
+    {
+        MaxWidth = MaxWidth.Medium,
+        FullWidth = true,
+        CloseButton = false,
+        NoHeader = true,
+        BackgroundClass = "admin-command-palette-backdrop"
+    };
+
+    public async Task OpenAsync()
+    {
+        _isOpen = true;
+        _query = string.Empty;
+        _selectedCategory = "All";
+        await LoadDefaultItemsAsync();
+        StateHasChanged();
+    }
+
+    public void Open()
+    {
+        _ = OpenAsync();
+    }
+
+    public void Close()
+    {
+        _isOpen = false;
+        StateHasChanged();
+    }
+
+    private void FilterByCategory(string cat)
+    {
+        _selectedCategory = cat;
+    }
+
+    private async Task LoadDefaultItemsAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            var userContext = await CaslService.GetUserContextByUsernameAsync(CurrentUsername);
+            var roles = userContext.Roles.Any() ? userContext.Roles : CurrentRoles;
+            var perms = userContext.Permissions;
+
+            _results = await NavMenuService.SearchOmnisearchAsync("", CurrentUsername, roles, perms, 18);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task OnSearch(string q)
+    {
+        _query = q;
+        _isLoading = true;
+        try
+        {
+            var userContext = await CaslService.GetUserContextByUsernameAsync(CurrentUsername);
+            var roles = userContext.Roles.Any() ? userContext.Roles : CurrentRoles;
+            var perms = userContext.Permissions;
+
+            _results = await NavMenuService.SearchOmnisearchAsync(q, CurrentUsername, roles, perms, 25);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void Clear()
+    {
+        _query = string.Empty;
+        _ = LoadDefaultItemsAsync();
+    }
+
+    private void SelectItem(OmnisearchResultItemDto item)
+    {
+        _isOpen = false;
+        if (!string.IsNullOrWhiteSpace(item.Href))
+        {
+            Nav.NavigateTo(item.Href);
+        }
+    }
+
+    private Color GetItemColor(string itemType)
+    {
+        return itemType switch
+        {
+            "QuickAction" => Color.Success,
+            "AdminConfig" => Color.Warning,
+            "ReferenceData" => Color.Info,
+            _ => Color.Primary
+        };
+    }
+
+    private string GetItemIcon(string iconName, string itemType)
+    {
+        if (itemType == "QuickAction") return Icons.Material.Filled.Bolt;
+        if (itemType == "AdminConfig") return Icons.Material.Filled.Tune;
+
+        return iconName switch
+        {
+            "Dashboard" => Icons.Material.Filled.Dashboard,
+            "Inbox" => Icons.Material.Filled.Inbox,
+            "AccountTree" => Icons.Material.Filled.AccountTree,
+            "People" => Icons.Material.Filled.People,
+            "Business" => Icons.Material.Filled.Business,
+            "Badge" => Icons.Material.Filled.Badge,
+            "School" => Icons.Material.Filled.School,
+            "MenuBook" => Icons.Material.Filled.MenuBook,
+            "Assignment" => Icons.Material.Filled.Assignment,
+            "Groups" => Icons.Material.Filled.Groups,
+            "AccountBalanceWallet" => Icons.Material.Filled.AccountBalanceWallet,
+            "AssignmentTurnedIn" => Icons.Material.Filled.AssignmentTurnedIn,
+            "Difference" => Icons.Material.Filled.Difference,
+            "Description" => Icons.Material.Filled.Description,
+            "AccountBalance" => Icons.Material.Filled.AccountBalance,
+            "Payments" => Icons.Material.Filled.Payments,
+            "Calculate" => Icons.Material.Filled.Calculate,
+            "ReceiptLong" => Icons.Material.Filled.ReceiptLong,
+            "SwapHoriz" => Icons.Material.Filled.SwapHoriz,
+            "FactCheck" => Icons.Material.Filled.FactCheck,
+            "VerifiedUser" => Icons.Material.Filled.VerifiedUser,
+            "DomainVerification" => Icons.Material.Filled.DomainVerification,
+            "Handyman" => Icons.Material.Filled.Handyman,
+            "Insights" => Icons.Material.Filled.Insights,
+            "Gavel" => Icons.Material.Filled.Gavel,
+            "LibraryBooks" => Icons.Material.Filled.LibraryBooks,
+            "Security" => Icons.Material.Filled.Security,
+            "AdminPanelSettings" => Icons.Material.Filled.AdminPanelSettings,
+            "Settings" => Icons.Material.Filled.Settings,
+            "Tune" => Icons.Material.Filled.Tune,
+            "MeetingRoom" => Icons.Material.Filled.MeetingRoom,
+            "History" => Icons.Material.Filled.History,
+            "Verified" => Icons.Material.Filled.Verified,
+            _ => Icons.Material.Filled.Navigation
+        };
+    }
+}

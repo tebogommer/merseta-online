@@ -1,0 +1,520 @@
+@page "/reference-data/trade-mentor-ratios"
+@page "/workplace-approvals/trade-ratios"
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@using MudBlazor
+@inject IMentorRatioPolicyEngine RatioEngine
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@rendermode InteractiveServer
+
+@*
+  UI-STANDARD.md Archetype: T3 (Reference Data - Trade Mentor Ratio Policies)
+  Clauses: 4.2, 4.3, 6.1, 7.2, 8.1, 8.3, 11.1–11.9, 15.2.5
+*@
+
+<EntityHeader Title="Trade Mentor Ratio Policies"
+              Subtitle="Configure statutory artisan mentor-to-apprentice ratios and multi-tiered policy exemptions"
+              ReferenceKey="T3-TRADE-MENTOR-RATIOS"
+              Status="Active"
+              BreadcrumbItems="@_breadcrumbItems">
+    <ActionZone>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Add"
+                   OnClick="OpenCreateDialog"
+                   aria-label="Add Trade Ratio Policy">
+            New Trade Policy
+        </MudButton>
+    </ActionZone>
+</EntityHeader>
+
+<!-- GLOBAL MASTER SWITCH CARD -->
+<MudCard Outlined="true" Class="pa-4 mb-4 elevation-1">
+    <div class="d-flex flex-wrap justify-space-between align-center gap-3">
+        <div class="d-flex align-center gap-3">
+            <MudAvatar Color="@(_globalEnforcement ? Color.Success : Color.Warning)" Variant="Variant.Filled">
+                <MudIcon Icon="@(_globalEnforcement ? Icons.Material.Filled.Security : Icons.Material.Filled.LockOpen)" />
+            </MudAvatar>
+            <div>
+                <div class="d-flex align-center gap-2">
+                    <MudText Typo="Typo.h6" Class="fw-bold">Global Mentor-to-Learner Ratio Enforcement</MudText>
+                    @if (_globalEnforcement)
+                    {
+                        <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled">Strictly Active</MudChip>
+                    }
+                    else
+                    {
+                        <MudChip T="string" Color="Color.Warning" Size="Size.Small" Variant="Variant.Filled">Global Bypass / Migration Mode</MudChip>
+                    }
+                </div>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    @(_globalEnforcement 
+                        ? "The system actively enforces statutory ratios across all host workplaces (unless explicitly exempted at Organisation or Workplace level)."
+                        : "Ratio enforcement is globally disabled. All learner enrollments and workplace capacity checks will bypass blocking limits.")
+                </MudText>
+            </div>
+        </div>
+        <div>
+            <MudButton Variant="Variant.Outlined"
+                       Color="@(_globalEnforcement ? Color.Warning : Color.Success)"
+                       StartIcon="@(_globalEnforcement ? Icons.Material.Filled.PauseCircle : Icons.Material.Filled.PlayCircle)"
+                       OnClick="ToggleGlobalEnforcementAsync"
+                       Disabled="@_togglingGlobal">
+                @if (_togglingGlobal)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                    <span>Updating Policy...</span>
+                }
+                else
+                {
+                    <span>@(_globalEnforcement ? "Pause Global Enforcement" : "Enable Global Enforcement")</span>
+                }
+            </MudButton>
+        </div>
+    </div>
+</MudCard>
+
+<!-- FILTER BAR -->
+<FilterBar SearchPlaceholder="Search trade code, qualification title, OFO code..."
+           @bind-SearchText="_searchString"
+           OnSearch="LoadData"
+           OnClear="ClearFilters">
+    <FilterContent>
+        <MudSelect T="string"
+                   Label="Enforcement Mode"
+                   Value="_selectedMode"
+                   ValueChanged="OnModeFilterChanged"
+                   Variant="Variant.Outlined"
+                   Margin="Margin.Dense"
+                   Dense="true">
+            <MudSelectItem Value="@("All")">All Policies</MudSelectItem>
+            <MudSelectItem Value="@("Strict")">Strict Blocking</MudSelectItem>
+            <MudSelectItem Value="@("Advisory")">Advisory Only</MudSelectItem>
+            <MudSelectItem Value="@("Active")">Active Only</MudSelectItem>
+        </MudSelect>
+    </FilterContent>
+    <ActiveFilterChips>
+        @if (!string.IsNullOrWhiteSpace(_searchString))
+        {
+            <MudChip T="string" Size="Size.Small" OnClose="@(() => { _searchString = string.Empty; LoadData(); })">
+                Keyword: @_searchString
+            </MudChip>
+        }
+        @if (_selectedMode != "All" && !string.IsNullOrWhiteSpace(_selectedMode))
+        {
+            <MudChip T="string" Size="Size.Small" Color="Color.Primary" OnClose="@(() => { _selectedMode = "All"; LoadData(); })">
+                Filter: @_selectedMode
+            </MudChip>
+        }
+    </ActiveFilterChips>
+</FilterBar>
+
+<!-- DATA TABLE -->
+<MudTable Items="@FilteredPolicies"
+          Hover="true"
+          Striped="true"
+          Dense="true"
+          Elevation="1"
+          Class="rounded-lg mb-6"
+          Loading="@_loading">
+    <HeaderContent>
+        <MudTh>Trade Code</MudTh>
+        <MudTh>Trade / Qualification Title</MudTh>
+        <MudTh>OFO Code</MudTh>
+        <MudTh>Standard Ratio</MudTh>
+        <MudTh>Max Cap</MudTh>
+        <MudTh>Min Experience</MudTh>
+        <MudTh>Enforcement Mode</MudTh>
+        <MudTh>Status</MudTh>
+        <MudTh Style="text-align: right;">Actions</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Trade Code">
+            <MudChip T="string" Size="Size.Small" Variant="Variant.Outlined" Color="Color.Primary" Class="fw-bold">
+                @context.TradeCode
+            </MudChip>
+        </MudTd>
+        <MudTd DataLabel="Trade Title">
+            <div>
+                <div class="fw-bold">@context.TradeTitle</div>
+                @if (!string.IsNullOrWhiteSpace(context.Notes))
+                {
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">@context.Notes</MudText>
+                }
+            </div>
+        </MudTd>
+        <MudTd DataLabel="OFO Code">@(context.TradeOfoCode ?? "—")</MudTd>
+        <MudTd DataLabel="Standard Ratio">
+            <MudChip T="string" Color="Color.Info" Size="Size.Small" Variant="Variant.Filled">
+                1:@context.StandardRatio
+            </MudChip>
+        </MudTd>
+        <MudTd DataLabel="Max Cap">1:@context.MaxAllowedRatio</MudTd>
+        <MudTd DataLabel="Min Experience">@context.MinExperienceYearsRequired yrs</MudTd>
+        <MudTd DataLabel="Enforcement Mode">
+            @if (context.EnforceStrictly)
+            {
+                <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Gavel">
+                    Strict Blocking
+                </MudChip>
+            }
+            else
+            {
+                <MudChip T="string" Color="Color.Default" Size="Size.Small" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.Info">
+                    Advisory Only
+                </MudChip>
+            }
+        </MudTd>
+        <MudTd DataLabel="Status">
+            @if (context.IsActive)
+            {
+                <MudChip T="string" Color="Color.Success" Size="Size.Small">Active</MudChip>
+            }
+            else
+            {
+                <MudChip T="string" Color="Color.Default" Size="Size.Small">Inactive</MudChip>
+            }
+        </MudTd>
+        <MudTd DataLabel="Actions" Style="text-align: right;">
+            <div class="d-flex justify-end gap-1">
+                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                               Color="Color.Primary"
+                               Size="Size.Small"
+                               OnClick="@(() => OpenEditDialog(context))"
+                               aria-label="Edit Trade Policy" />
+                @if (context.IsActive)
+                {
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                   Color="Color.Error"
+                                   Size="Size.Small"
+                                   OnClick="@(() => DeletePolicy(context.Id))"
+                                   aria-label="Deactivate Trade Policy" />
+                }
+            </div>
+        </MudTd>
+    </RowTemplate>
+    <NoRecordsContent>
+        <div class="pa-6 text-center">
+            <MudIcon Icon="@Icons.Material.Filled.Rule" Size="Size.Large" Color="Color.Secondary" Class="mb-2" />
+            <MudText Typo="Typo.h6">No Trade Ratio Policies Found</MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+                No ratio policies match the current filter. Create a new policy to define statutory mentor capacities.
+            </MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add" OnClick="OpenCreateDialog">
+                Create Policy
+            </MudButton>
+        </div>
+    </NoRecordsContent>
+</MudTable>
+
+<!-- CREATE / EDIT DIALOG -->
+<MudDialog @bind-Visible="_dialogOpen" Options="_dialogOptions">
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@Icons.Material.Filled.Engineering" Color="Color.Primary" />
+            <MudText Typo="Typo.h6">@(_editingPolicy.Id == 0 ? "New Trade Mentor Ratio Policy" : $"Edit Trade Policy: {_editingPolicy.TradeCode}")</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="12" sm="4">
+                <MudTextField @bind-Value="_editingPolicy.TradeCode"
+                              Label="Trade Code (Unique)"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Placeholder="e.g. WELD, ELEC, FITT"
+                              Disabled="@(_editingPolicy.Id != 0)" />
+            </MudItem>
+            <MudItem xs="12" sm="8">
+                <MudTextField @bind-Value="_editingPolicy.TradeTitle"
+                              Label="Official Trade Qualification Title"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              Placeholder="e.g. Welder, Electrician, Fitter and Turner" />
+            </MudItem>
+
+            <MudItem xs="12" sm="6">
+                <MudTextField @bind-Value="_editingPolicy.TradeOfoCode"
+                              Label="OFO Occupational Code"
+                              Variant="Variant.Outlined"
+                              Placeholder="e.g. 651202, 671101" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudNumericField @bind-Value="_editingPolicy.SaqaQualificationId"
+                                 Label="SAQA Registered Qualification ID"
+                                 Variant="Variant.Outlined"
+                                 Placeholder="e.g. 96420" />
+            </MudItem>
+
+            <MudItem xs="12" sm="4">
+                <MudNumericField @bind-Value="_editingPolicy.StandardRatio"
+                                 Label="Standard Ratio (Learners/Mentor)"
+                                 Variant="Variant.Outlined"
+                                 Min="1"
+                                 Max="20"
+                                 HelperText="Statutory default, e.g. 2 for 1:2 or 4 for 1:4" />
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MudNumericField @bind-Value="_editingPolicy.MaxAllowedRatio"
+                                 Label="Max Permissible Cap"
+                                 Variant="Variant.Outlined"
+                                 Min="1"
+                                 Max="30"
+                                 HelperText="Maximum under special dispensation" />
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MudNumericField @bind-Value="_editingPolicy.MinExperienceYearsRequired"
+                                 Label="Min Experience (Years)"
+                                 Variant="Variant.Outlined"
+                                 Min="0"
+                                 Max="20"
+                                 HelperText="Minimum post-trade experience" />
+            </MudItem>
+
+            <MudItem xs="12" sm="6">
+                <MudCheckBox @bind-Value="_editingPolicy.EnforceStrictly"
+                             Label="Enforce Strictly (Block Excess Enrollments)"
+                             Color="Color.Primary" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudCheckBox @bind-Value="_editingPolicy.IsActive"
+                             Label="Policy Is Active"
+                             Color="Color.Success" />
+            </MudItem>
+
+            <MudItem xs="12">
+                <MudTextField @bind-Value="_editingPolicy.Notes"
+                              Label="Regulatory Gazette Notes &amp; Guidelines"
+                              Variant="Variant.Outlined"
+                              Lines="3"
+                              Placeholder="e.g. NAMB gazette ratio standard for high-voltage and hazardous machinery..." />
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton StartIcon="@Icons.Material.Filled.Cancel" OnClick="@(() => _dialogOpen = false)">
+            Cancel
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Save"
+                   OnClick="SavePolicyAsync"
+                   Disabled="@_isSaving">
+            @if (_isSaving)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                <span>Saving...</span>
+            }
+            else
+            {
+                <span>Save Policy</span>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private List<BreadcrumbItem> _breadcrumbItems = new()
+    {
+        new BreadcrumbItem("Home", href: "/"),
+        new BreadcrumbItem("Accreditation & Approvals", href: "/workplace-approvals"),
+        new BreadcrumbItem("Trade Mentor Ratios", href: null, disabled: true)
+    };
+
+    private List<TradeMentorRatioPolicy> _policies = new();
+    private bool _loading = true;
+    private bool _globalEnforcement = true;
+    private bool _togglingGlobal = false;
+
+    private string _searchString = string.Empty;
+    private string _selectedMode = "All";
+
+    // Dialog state
+    private bool _dialogOpen = false;
+    private bool _isSaving = false;
+    private TradeMentorRatioPolicy _editingPolicy = new();
+    private DialogOptions _dialogOptions = new() { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        _loading = true;
+        try
+        {
+            _globalEnforcement = await RatioEngine.GetGlobalRatioEnforcementAsync();
+            _policies = await RatioEngine.GetAllTradePoliciesAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading trade policies: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private IEnumerable<TradeMentorRatioPolicy> FilteredPolicies
+    {
+        get
+        {
+            var result = _policies.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(_searchString))
+            {
+                var s = _searchString.Trim().ToLower();
+                result = result.Where(p =>
+                    p.TradeCode.ToLower().Contains(s) ||
+                    p.TradeTitle.ToLower().Contains(s) ||
+                    (p.TradeOfoCode != null && p.TradeOfoCode.ToLower().Contains(s)) ||
+                    (p.Notes != null && p.Notes.ToLower().Contains(s)));
+            }
+
+            if (_selectedMode == "Strict")
+            {
+                result = result.Where(p => p.EnforceStrictly);
+            }
+            else if (_selectedMode == "Advisory")
+            {
+                result = result.Where(p => !p.EnforceStrictly);
+            }
+            else if (_selectedMode == "Active")
+            {
+                result = result.Where(p => p.IsActive);
+            }
+
+            return result;
+        }
+    }
+
+    private void ClearFilters()
+    {
+        _searchString = string.Empty;
+        _selectedMode = "All";
+    }
+
+    private void OnModeFilterChanged(string val)
+    {
+        _selectedMode = val;
+    }
+
+    private async Task ToggleGlobalEnforcementAsync()
+    {
+        _togglingGlobal = true;
+        try
+        {
+            var newState = !_globalEnforcement;
+            await RatioEngine.SetGlobalRatioEnforcementAsync(newState, "SUPERADMIN");
+            _globalEnforcement = newState;
+
+            Snackbar.Add(_globalEnforcement
+                ? "Global mentor ratio enforcement enabled across all host workplaces."
+                : "Global mentor ratio enforcement paused. All ratio checks will bypass blocking.",
+                _globalEnforcement ? Severity.Success : Severity.Warning);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to update global enforcement: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _togglingGlobal = false;
+        }
+    }
+
+    private void OpenCreateDialog()
+    {
+        _editingPolicy = new TradeMentorRatioPolicy
+        {
+            StandardRatio = 4,
+            MaxAllowedRatio = 6,
+            MinExperienceYearsRequired = 3,
+            EnforceStrictly = true,
+            IsActive = true
+        };
+        _dialogOpen = true;
+    }
+
+    private void OpenEditDialog(TradeMentorRatioPolicy policy)
+    {
+        _editingPolicy = new TradeMentorRatioPolicy
+        {
+            Id = policy.Id,
+            TradeCode = policy.TradeCode,
+            TradeTitle = policy.TradeTitle,
+            TradeOfoCode = policy.TradeOfoCode,
+            SaqaQualificationId = policy.SaqaQualificationId,
+            StandardRatio = policy.StandardRatio,
+            MaxAllowedRatio = policy.MaxAllowedRatio,
+            MinExperienceYearsRequired = policy.MinExperienceYearsRequired,
+            EnforceStrictly = policy.EnforceStrictly,
+            IsActive = policy.IsActive,
+            Notes = policy.Notes,
+            CreatedAt = policy.CreatedAt,
+            CreatedBy = policy.CreatedBy
+        };
+        _dialogOpen = true;
+    }
+
+    private async Task SavePolicyAsync()
+    {
+        if (string.IsNullOrWhiteSpace(_editingPolicy.TradeCode))
+        {
+            Snackbar.Add("Trade Code is mandatory.", Severity.Warning);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(_editingPolicy.TradeTitle))
+        {
+            Snackbar.Add("Trade Qualification Title is mandatory.", Severity.Warning);
+            return;
+        }
+
+        if (_editingPolicy.StandardRatio <= 0)
+        {
+            Snackbar.Add("Standard ratio must be greater than 0.", Severity.Warning);
+            return;
+        }
+
+        _isSaving = true;
+        try
+        {
+            await RatioEngine.SaveTradePolicyAsync(_editingPolicy, "SUPERADMIN");
+            Snackbar.Add($"Trade ratio policy '{_editingPolicy.TradeCode}' successfully saved.", Severity.Success);
+            _dialogOpen = false;
+            await LoadData();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving trade policy: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+
+    private async Task DeletePolicy(int id)
+    {
+        try
+        {
+            var success = await RatioEngine.DeleteTradePolicyAsync(id, "SUPERADMIN");
+            if (success)
+            {
+                Snackbar.Add("Trade ratio policy successfully deactivated.", Severity.Info);
+                await LoadData();
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error deactivating trade policy: {ex.Message}", Severity.Error);
+        }
+    }
+}

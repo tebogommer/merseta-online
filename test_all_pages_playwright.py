@@ -21,6 +21,7 @@ PAGES_TO_TEST = [
     {"name": "Create SDP Form", "url": "/sdp/create"},
     {"name": "SDP Detail View", "url": "/sdp/1"},
     {"name": "Curriculum Development (QCD)", "url": "/curriculum"},
+    {"name": "Curriculum Detail View", "url": "/curriculum/1"},
     {"name": "WSP Submissions", "url": "/wsp"},
     {"name": "Training Committees", "url": "/wsp/committees"},
     {"name": "Create WSP Form", "url": "/wsp/create"},
@@ -32,6 +33,7 @@ PAGES_TO_TEST = [
     {"name": "Grant MOAs & Tranches", "url": "/finance/grants"},
     {"name": "Grant MOA Detail View", "url": "/finance/grants/1"},
     {"name": "Banking Details & Dual-Signoff", "url": "/finance/banking-details"},
+    {"name": "Banking Details Detail View", "url": "/finance/banking-details/1"},
     {"name": "Mandatory Grant Rebates", "url": "/finance/levy-rebates"},
     {"name": "SARS Levy Audits & Clawbacks", "url": "/finance/levy-audits"},
     {"name": "SARS Monthly Levies", "url": "/levies"},
@@ -45,8 +47,10 @@ PAGES_TO_TEST = [
     {"name": "Trade Tests & ARPL List", "url": "/tradetests"},
     {"name": "Summative Assessment Reports & SOR", "url": "/assessments/summative"},
     {"name": "Workplace Monitoring & Audits", "url": "/monitoring"},
+    {"name": "Workplace Monitoring Detail View", "url": "/monitoring/1"},
     {"name": "ETQA Assessors & Moderators", "url": "/etqa"},
     {"name": "Assessment Quality Partners (AQP)", "url": "/etqa/aqp"},
+    {"name": "AQP Partner Detail View", "url": "/etqa/aqp/1"},
     {"name": "Register AQP Partner Form", "url": "/etqa/aqp/create"},
     {"name": "Register Assessor Form", "url": "/etqa/create"},
     {"name": "Assessor Detail View", "url": "/etqa/1"},
@@ -57,15 +61,21 @@ PAGES_TO_TEST = [
     {"name": "Workplace Approval Detail", "url": "/workplace-approvals/1"},
     {"name": "Executive Skills Intelligence & BI", "url": "/reports/bi"},
     {"name": "Committee & MANCO Meetings", "url": "/governance/meetings"},
+    {"name": "Committee Meeting Detail View", "url": "/governance/meetings/1"},
     {"name": "Role & Module Delegations", "url": "/governance/delegations"},
     {"name": "Create Role Delegation Form", "url": "/governance/delegations/create"},
     {"name": "Financial Approval Limits (DoA)", "url": "/governance/thresholds"},
+    {"name": "System Administration Hub", "url": "/admin"},
     {"name": "Security Roles & Permissions", "url": "/admin/roles"},
     {"name": "Create Security Role Form", "url": "/admin/roles/create"},
     {"name": "Security Role Detail View", "url": "/admin/roles/1"},
     {"name": "System Settings & Features", "url": "/admin/settings"},
     {"name": "System Lookups Hub", "url": "/admin/lookups"},
+    {"name": "Enterprise Document Templates", "url": "/admin/document-templates"},
+    {"name": "Document Security Snapshots", "url": "/admin/document-snapshots"},
+    {"name": "Digital Verification Portal", "url": "/verify"},
     {"name": "Developer Data Dictionary", "url": "/developer/schema"},
+    {"name": "Developer Compliance HUD", "url": "/developer/compliance-audit"},
     {"name": "Audit Trail Logs", "url": "/audit-logs"},
 ]
 
@@ -74,6 +84,22 @@ def run_suite():
     print("   NSDMS COMPREHENSIVE PLAYWRIGHT TEST SUITE")
     print(f"   Target: {BASE_URL} ({len(PAGES_TO_TEST)} Pages)")
     print("==================================================\n")
+
+    import urllib.request
+    print("Waiting for server to be responsive at " + BASE_URL + "...")
+    server_ready = False
+    for attempt in range(25):
+        try:
+            with urllib.request.urlopen(BASE_URL, timeout=2) as response:
+                if response.status in (200, 302):
+                    server_ready = True
+                    print(f"Server is online and responsive! (Attempt {attempt+1})\n")
+                    break
+        except Exception:
+            time.sleep(1)
+
+    if not server_ready:
+        print("Warning: Could not confirm server health via HTTP, proceeding with test suite...\n")
 
     results = []
     failed_count = 0

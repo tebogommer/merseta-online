@@ -520,14 +520,22 @@ BEGIN
         id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_SdfCompany PRIMARY KEY CLUSTERED,
         OrganisationId INT NOT NULL CONSTRAINT FK_Sdf_Org FOREIGN KEY REFERENCES dbo.Organisation(id),
         PersonId INT NOT NULL CONSTRAINT FK_Sdf_Person FOREIGN KEY REFERENCES dbo.Person(id),
-        SdfTypeCode NVARCHAR(50) NOT NULL CONSTRAINT DF_Sdf_Type DEFAULT N'PrimarySdf',
+        SdfTypeCode NVARCHAR(50) NOT NULL CONSTRAINT DF_Sdf_Type DEFAULT N'Primary',
+        SdfStatusCode NVARCHAR(50) NOT NULL CONSTRAINT DF_Sdf_StatusCode DEFAULT N'PendingApproval',
+        AppointmentStartDate DATETIME2(7) NOT NULL CONSTRAINT DF_Sdf_ApptStart DEFAULT SYSUTCDATETIME(),
+        AppointmentEndDate DATETIME2(7) NULL,
         AppointmentLetterDocumentPath NVARCHAR(500) NULL,
         CompanyResolutionDocumentPath NVARCHAR(500) NULL,
-        StartDate DATETIME2(7) NOT NULL,
-        EndDate DATETIME2(7) NULL,
+        SignedAppointmentLetterReceived BIT NOT NULL CONSTRAINT DF_Sdf_SignedAppt DEFAULT 0,
+        SignedAcceptanceDeclarationReceived BIT NOT NULL CONSTRAINT DF_Sdf_SignedDecl DEFAULT 0,
         AllowWspSubmission BIT NOT NULL CONSTRAINT DF_Sdf_Wsp DEFAULT 1,
-        AllowDiscretionaryGrantSubmission BIT NOT NULL CONSTRAINT DF_Sdf_Dg DEFAULT 1,
-        ApprovalStatusCode NVARCHAR(50) NOT NULL CONSTRAINT DF_Sdf_Status DEFAULT N'PendingVerification',
+        AllowDgApplication BIT NOT NULL CONSTRAINT DF_Sdf_AllowDg DEFAULT 1,
+        AllowTrancheClaims BIT NOT NULL CONSTRAINT DF_Sdf_Tranche DEFAULT 0,
+        IsActive BIT NOT NULL CONSTRAINT DF_Sdf_IsActive DEFAULT 1,
+        StartDate DATETIME2(7) NULL,
+        EndDate DATETIME2(7) NULL,
+        AllowDiscretionaryGrantSubmission BIT NULL,
+        ApprovalStatusCode NVARCHAR(50) NULL,
         ApprovalDate DATETIME2(7) NULL,
         ApprovedByUserId NVARCHAR(100) NULL,
         ApprovalComments NVARCHAR(500) NULL,
@@ -541,8 +549,23 @@ BEGIN
     );
     CREATE NONCLUSTERED INDEX IX_Sdf_Org ON dbo.SdfCompany (OrganisationId);
     CREATE NONCLUSTERED INDEX IX_Sdf_Person ON dbo.SdfCompany (PersonId);
-    CREATE NONCLUSTERED INDEX IX_Sdf_Status ON dbo.SdfCompany (ApprovalStatusCode);
+    CREATE NONCLUSTERED INDEX IX_Sdf_Status ON dbo.SdfCompany (SdfStatusCode);
     PRINT 'Created table [dbo].[SdfCompany].';
+END
+
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'SdfAppointmentHistory' AND schema_id = SCHEMA_ID(N'dbo'))
+BEGIN
+    CREATE TABLE dbo.SdfAppointmentHistory (
+        id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_SdfAppointmentHistory PRIMARY KEY CLUSTERED,
+        SdfCompanyId INT NOT NULL CONSTRAINT FK_SdfHist_SdfCompany FOREIGN KEY REFERENCES dbo.SdfCompany(id) ON DELETE CASCADE,
+        PreviousStatusCode NVARCHAR(50) NOT NULL,
+        NewStatusCode NVARCHAR(50) NOT NULL,
+        ChangeReason NVARCHAR(MAX) NULL,
+        ChangedByUserId NVARCHAR(100) NOT NULL CONSTRAINT DF_SdfHist_ChangedBy DEFAULT N'SYSTEM',
+        ChangedAt DATETIME2(7) NOT NULL CONSTRAINT DF_SdfHist_ChangedAt DEFAULT SYSUTCDATETIME()
+    );
+    CREATE NONCLUSTERED INDEX IX_SdfHist_SdfCompanyId ON dbo.SdfAppointmentHistory (SdfCompanyId);
+    PRINT 'Created table [dbo].[SdfAppointmentHistory].';
 END
 
 -- 14. Contract Addenda & Variations (Auxiliary Option C)
@@ -767,6 +790,67 @@ BEGIN
     CREATE NONCLUSTERED INDEX IX_AqpAssessment_Partner ON dbo.AqpLearnerAssessment (AqpPartnerId);
     CREATE NONCLUSTERED INDEX IX_AqpAssessment_Learner ON dbo.AqpLearnerAssessment (CompanyLearnerId);
     PRINT 'Created table [dbo].[AqpLearnerAssessment].';
+END
+
+-- 28. Trade Mentor Ratio Policies & Cascading Policy Engine
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = N'TradeMentorRatioPolicy' AND schema_id = SCHEMA_ID(N'dbo'))
+BEGIN
+    CREATE TABLE dbo.TradeMentorRatioPolicy (
+        id INT IDENTITY(1,1) NOT NULL CONSTRAINT PK_TradeMentorRatioPolicy PRIMARY KEY CLUSTERED,
+        TradeCode NVARCHAR(50) NOT NULL,
+        TradeTitle NVARCHAR(200) NOT NULL,
+        TradeOfoCode NVARCHAR(50) NULL,
+        SaqaQualificationId INT NULL,
+        StandardRatio INT NOT NULL CONSTRAINT DF_TradeMentorRatioPolicy_Ratio DEFAULT 4,
+        MaxAllowedRatio INT NOT NULL CONSTRAINT DF_TradeMentorRatioPolicy_Max DEFAULT 6,
+        MinExperienceYearsRequired INT NOT NULL CONSTRAINT DF_TradeMentorRatioPolicy_Exp DEFAULT 3,
+        EnforceStrictly BIT NOT NULL CONSTRAINT DF_TradeMentorRatioPolicy_Strict DEFAULT 1,
+        IsActive BIT NOT NULL CONSTRAINT DF_TradeMentorRatioPolicy_Active DEFAULT 1,
+        Notes NVARCHAR(500) NULL,
+        CreatedAt DATETIME2(7) NOT NULL CONSTRAINT DF_TradeMentorRatioPolicy_CreatedAt DEFAULT SYSUTCDATETIME(),
+        CreatedBy NVARCHAR(100) NOT NULL CONSTRAINT DF_TradeMentorRatioPolicy_CreatedBy DEFAULT N'SYSTEM',
+        ModifiedAt DATETIME2(7) NULL,
+        ModifiedBy NVARCHAR(100) NULL
+    );
+    CREATE UNIQUE NONCLUSTERED INDEX UX_TradeMentorRatioPolicy_TradeCode ON dbo.TradeMentorRatioPolicy (TradeCode);
+    CREATE NONCLUSTERED INDEX IX_TradeMentorRatioPolicy_Ofo ON dbo.TradeMentorRatioPolicy (TradeOfoCode);
+    CREATE NONCLUSTERED INDEX IX_TradeMentorRatioPolicy_Saqa ON dbo.TradeMentorRatioPolicy (SaqaQualificationId);
+    CREATE NONCLUSTERED INDEX IX_TradeMentorRatioPolicy_Active ON dbo.TradeMentorRatioPolicy (IsActive);
+    PRINT 'Created table [dbo].[TradeMentorRatioPolicy].';
+END
+
+IF EXISTS (SELECT * FROM sys.tables WHERE name = 'Organisation')
+BEGIN
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Organisation') AND name = 'IsMentorRatioEnforced')
+        ALTER TABLE dbo.Organisation ADD IsMentorRatioEnforced BIT NULL;
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Organisation') AND name = 'MentorRatioExemptionReason')
+        ALTER TABLE dbo.Organisation ADD MentorRatioExemptionReason NVARCHAR(500) NULL;
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Organisation') AND name = 'CustomMentorRatioCap')
+        ALTER TABLE dbo.Organisation ADD CustomMentorRatioCap INT NULL;
+END
+
+IF EXISTS (SELECT * FROM sys.tables WHERE name = 'WorkplaceApproval')
+BEGIN
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('WorkplaceApproval') AND name = 'TradeCode')
+        ALTER TABLE dbo.WorkplaceApproval ADD TradeCode NVARCHAR(50) NULL;
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('WorkplaceApproval') AND name = 'IsRatioEnforced')
+        ALTER TABLE dbo.WorkplaceApproval ADD IsRatioEnforced BIT NULL;
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('WorkplaceApproval') AND name = 'CustomTradeRatio')
+        ALTER TABLE dbo.WorkplaceApproval ADD CustomTradeRatio INT NULL;
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('WorkplaceApproval') AND name = 'MentorRatioExemptionNotes')
+        ALTER TABLE dbo.WorkplaceApproval ADD MentorRatioExemptionNotes NVARCHAR(500) NULL;
+END
+
+IF EXISTS (SELECT * FROM sys.tables WHERE name = 'WorkplaceApprovalMentor')
+BEGIN
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('WorkplaceApprovalMentor') AND name = 'MaxLearnerCapacity')
+        ALTER TABLE dbo.WorkplaceApprovalMentor ADD MaxLearnerCapacity INT NULL;
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('WorkplaceApprovalMentor') AND name = 'IsRatioExempt')
+        ALTER TABLE dbo.WorkplaceApprovalMentor ADD IsRatioExempt BIT NOT NULL CONSTRAINT DF_WPAMentor_Exempt DEFAULT 0;
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('WorkplaceApprovalMentor') AND name = 'IsRatioEnforced')
+        ALTER TABLE dbo.WorkplaceApprovalMentor ADD IsRatioEnforced BIT NOT NULL CONSTRAINT DF_WPAMentor_Enforced DEFAULT 1;
+    IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('WorkplaceApprovalMentor') AND name = 'Notes')
+        ALTER TABLE dbo.WorkplaceApprovalMentor ADD Notes NVARCHAR(500) NULL;
 END
 
 PRINT 'Complete Idempotent Enterprise DDL Deployment Succeeded!';

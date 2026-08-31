@@ -1,16 +1,18 @@
-﻿@page "/assessments/summative"
+@page "/assessments/summative"
 @using Nsdms.Application.Common.Interfaces
 @using Nsdms.Domain.Entities
 @inject ISummativeAssessmentAndModerationService AssessmentService
 @inject NavigationManager Nav
 @inject ISnackbar Snackbar
+@inject IJSRuntime JS
+@rendermode InteractiveServer
 
 <PageTitle>Summative Assessment & Statement of Results | merSETA NSDMS</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
     <!-- Top Bar -->
     <MudCard Elevation="2" Class="mb-4">
-        <MudCardContent Class="d-flex align-center justify-space-between py-3">
+        <MudCardContent Class="d-flex flex-wrap align-center justify-space-between gap-3 py-3">
             <div>
                 <MudBreadcrumbs Items="_breadcrumbs" Class="pa-0 mb-1" />
                 <MudText Typo="Typo.h5" Class="fw-bold">Summative Assessment & Statement of Results (SOR)</MudText>
@@ -18,13 +20,37 @@
                     Unit standard credit recording, internal/external ETQA moderation, EISA occupational exam capture, and certified Statement of Results issuing.
                 </MudText>
             </div>
-            <MudStack Row="true" Spacing="2">
+            <MudStack Row="true" Spacing="2" Class="align-center">
+                <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.FileDownload" OnClick="ExportCsvAsync">
+                    Export CSV
+                </MudButton>
+
                 <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadDataAsync">
                     Refresh
+                </MudButton>
+
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AddCircle" OnClick="@(() => Nav.NavigateTo("/learners"))">
+                    Capture Assessment
                 </MudButton>
             </MudStack>
         </MudCardContent>
     </MudCard>
+
+    <!-- Quick Status Filter Chips -->
+    <MudPaper Elevation="0" Class="d-flex flex-wrap align-center gap-2 mb-3 px-1 py-1">
+        <MudChip T="string" Color="@(_statusFilter == null ? Color.Primary : Color.Default)" Variant="@(_statusFilter == null ? Variant.Filled : Variant.Outlined)" OnClick="@(() => _statusFilter = null)">
+            All (@_reports.Count)
+        </MudChip>
+        <MudChip T="string" Color="Color.Success" Variant="@(_statusFilter == "SorIssued" ? Variant.Filled : Variant.Outlined)" OnClick="@(() => _statusFilter = "SorIssued")">
+            SOR Issued (@_reports.Count(r => r.StatusCode == "SorIssued"))
+        </MudChip>
+        <MudChip T="string" Color="Color.Info" Variant="@(_statusFilter == "EtqaModerated" ? Variant.Filled : Variant.Outlined)" OnClick="@(() => _statusFilter = "EtqaModerated")">
+            ETQA Moderated (@_reports.Count(r => r.StatusCode == "EtqaModerated"))
+        </MudChip>
+        <MudChip T="string" Color="Color.Warning" Variant="@(_statusFilter == "InternalModerated" ? Variant.Filled : Variant.Outlined)" OnClick="@(() => _statusFilter = "InternalModerated")">
+            Internal Moderated (@_reports.Count(r => r.StatusCode == "InternalModerated"))
+        </MudChip>
+    </MudPaper>
 
     @if (_isLoading)
     {
@@ -34,9 +60,9 @@
     <!-- Table -->
     <MudCard Elevation="2">
         <MudCardContent>
-            <MudTable Items="_reports" Hover="true" Dense="true" Elevation="0" Filter="FilterReports">
+            <MudTable Items="_filteredReports" Hover="true" Dense="true" Elevation="0">
                 <ToolBarContent>
-                    <MudText Typo="Typo.h6">Summative Assessment Reports (@_reports.Count)</MudText>
+                    <MudText Typo="Typo.h6">Summative Assessment Reports (@_filteredReports.Count)</MudText>
                     <MudSpacer />
                     <MudTextField @bind-Value="_searchString" Placeholder="Search by report #, learner, qualification..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Immediate="true" />
                 </ToolBarContent>
@@ -47,11 +73,26 @@
                     <MudTh>NQF Level</MudTh>
                     <MudTh>Credits Earned</MudTh>
                     <MudTh>Status</MudTh>
-                    <MudTh Style="text-align: right;">Action</MudTh>
+                    <MudTh Style="text-align: right;">Actions</MudTh>
                 </HeaderContent>
                 <RowTemplate>
-                    <MudTd DataLabel="Report #" Class="font-monospace fw-bold">@context.ReportNumber</MudTd>
-                    <MudTd DataLabel="Learner">@(context.Person != null ? $"{context.Person.FirstName} {context.Person.LastName}" : "Learner")</MudTd>
+                    <MudTd DataLabel="Report #" Class="font-monospace fw-bold">
+                        <MudLink Href="@($"/assessments/summative/{context.Id}")" Color="Color.Primary" Underline="Underline.Hover">
+                            @context.ReportNumber
+                        </MudLink>
+                    </MudTd>
+                    <MudTd DataLabel="Learner">
+                        @if (context.PersonId > 0)
+                        {
+                            <MudLink Href="@($"/people/{context.PersonId}")" Color="Color.Inherit" Underline="Underline.Hover">
+                                @(context.Person != null ? $"{context.Person.FirstName} {context.Person.LastName}" : "Learner")
+                            </MudLink>
+                        }
+                        else
+                        {
+                            <span>@(context.Person != null ? $"{context.Person.FirstName} {context.Person.LastName}" : "Learner")</span>
+                        }
+                    </MudTd>
                     <MudTd DataLabel="Qualification Title">@context.QualificationTitle</MudTd>
                     <MudTd DataLabel="NQF Level">Level @context.NqfLevel</MudTd>
                     <MudTd DataLabel="Credits Earned">
@@ -62,10 +103,22 @@
                             @context.StatusCode
                         </MudChip>
                     </MudTd>
-                    <MudTd DataLabel="Action" Style="text-align: right;">
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.Assignment" OnClick="@(() => Nav.NavigateTo($"/assessments/summative/{context.Id}"))">
-                            Open Workbench
-                        </MudButton>
+                    <MudTd DataLabel="Actions" Style="text-align: right;">
+                        <MudButtonGroup Size="Size.Small" Variant="Variant.Outlined">
+                            <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                           Color="Color.Primary"
+                                           Size="Size.Small"
+                                           OnClick="@(() => Nav.NavigateTo($"/assessments/summative/{context.Id}"))"
+                                           aria-label="Open Assessment Workbench"
+                                           Title="Open Workbench" />
+
+                            <MudIconButton Icon="@Icons.Material.Filled.Download"
+                                           Color="Color.Secondary"
+                                           Size="Size.Small"
+                                           OnClick="@(() => DownloadSorCertificate(context.Id))"
+                                           aria-label="Download SOR Certificate"
+                                           Title="Download Statement of Results" />
+                        </MudButtonGroup>
                     </MudTd>
                 </RowTemplate>
                 <PagerContent>
@@ -87,6 +140,7 @@
     private List<SummativeAssessmentReport> _reports = new();
     private bool _isLoading = true;
     private string _searchString = string.Empty;
+    private string? _statusFilter = null;
 
     protected override async Task OnInitializedAsync()
     {
@@ -110,13 +164,38 @@
         }
     }
 
-    private bool FilterReports(SummativeAssessmentReport report)
+    private List<SummativeAssessmentReport> _filteredReports => _reports.Where(report =>
     {
+        if (!string.IsNullOrEmpty(_statusFilter) && !string.Equals(report.StatusCode, _statusFilter, StringComparison.OrdinalIgnoreCase))
+            return false;
+
         if (string.IsNullOrWhiteSpace(_searchString)) return true;
         var personName = report.Person != null ? $"{report.Person.FirstName} {report.Person.LastName}" : "";
         return report.ReportNumber.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
                report.QualificationTitle.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
-               personName.Contains(_searchString, StringComparison.OrdinalIgnoreCase);
+               personName.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+               report.StatusCode.Contains(_searchString, StringComparison.OrdinalIgnoreCase);
+    }).ToList();
+
+    private void DownloadSorCertificate(int id)
+    {
+        Snackbar.Add($"Generating Statement of Results (SOR) Certificate for report #{id}...", Severity.Info);
+        Nav.NavigateTo($"/api/documents/tradetest/{id}/pdf", forceLoad: true);
+    }
+
+    private async Task ExportCsvAsync()
+    {
+        var csv = new System.Text.StringBuilder();
+        csv.AppendLine("ReportNumber,LearnerName,QualificationTitle,NqfLevel,CreditsEarned,CreditsRequired,Status");
+        foreach (var item in _filteredReports)
+        {
+            csv.AppendLine($"\"{item.ReportNumber}\",\"{item.Person?.FirstName} {item.Person?.LastName}\",\"{item.QualificationTitle}\",{item.NqfLevel},{item.TotalCreditsEarned},{item.TotalCreditsRequired},\"{item.StatusCode}\"");
+        }
+
+        var bytes = System.Text.Encoding.UTF8.GetBytes(csv.ToString());
+        var base64 = Convert.ToBase64String(bytes);
+        await JS.InvokeVoidAsync("eval", $"const a = document.createElement('a'); a.href = 'data:text/csv;base64,{base64}'; a.download = 'SummativeAssessments_{DateTime.UtcNow:yyyyMMdd}.csv'; a.click();");
+        Snackbar.Add("Summative assessment reports exported to CSV successfully.", Severity.Success);
     }
 
     private Color GetStatusColor(string status) => status switch

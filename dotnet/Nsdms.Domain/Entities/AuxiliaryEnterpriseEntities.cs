@@ -59,6 +59,15 @@ public class BankingDetails
     public string? ErpVendorId { get; set; }
     public DateTime? ErpSyncDate { get; set; }
 
+    // Option C: Real-Time AVS & Anti-Fraud Shield
+    public bool RequiresForensicApproval { get; set; } = false;
+    public string? FraudRiskFlags { get; set; }
+    public bool IsCoolingOffActive { get; set; } = false;
+    public DateTime? CoolingOffExpiresAt { get; set; }
+    public string? AvsVerificationReference { get; set; }
+    public DateTime? AvsVerifiedAt { get; set; }
+    public string? AvsStatusResponse { get; set; }
+
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public string CreatedBy { get; set; } = "SYSTEM";

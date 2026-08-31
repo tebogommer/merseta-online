@@ -1,16 +1,18 @@
-﻿@page "/contracts/variations"
+@page "/contracts/variations"
 @using Nsdms.Application.Common.Interfaces
 @using Nsdms.Domain.Entities
 @inject IContractVariationService VariationService
 @inject NavigationManager Nav
 @inject ISnackbar Snackbar
+@inject IJSRuntime JS
+@rendermode InteractiveServer
 
 <PageTitle>Active Contract Variations &amp; Addenda | merSETA NSDMS</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
     <!-- Top Bar -->
     <MudCard Elevation="2" Class="mb-4">
-        <MudCardContent Class="d-flex align-center justify-space-between py-3">
+        <MudCardContent Class="d-flex flex-wrap align-center justify-space-between gap-3 py-3">
             <div>
                 <MudBreadcrumbs Items="_breadcrumbs" Class="pa-0 mb-1" />
                 <MudText Typo="Typo.h5" Class="fw-bold">Active Contract Addenda &amp; Variations</MudText>
@@ -18,13 +20,37 @@
                     Grant MOA contract variations, budget reallocations, timeline extensions, and clawback termination agreements.
                 </MudText>
             </div>
-            <MudStack Row="true" Spacing="2">
+            <MudStack Row="true" Spacing="2" Class="align-center">
+                <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.FileDownload" OnClick="ExportCsvAsync">
+                    Export CSV
+                </MudButton>
+
                 <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Refresh" OnClick="LoadDataAsync">
                     Refresh
+                </MudButton>
+
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.AddCircle" OnClick="@(() => Nav.NavigateTo("/finance/grants"))">
+                    Request Variation
                 </MudButton>
             </MudStack>
         </MudCardContent>
     </MudCard>
+
+    <!-- Quick Status Filter Chips -->
+    <MudPaper Elevation="0" Class="d-flex flex-wrap align-center gap-2 mb-3 px-1 py-1">
+        <MudChip T="string" Color="@(_statusFilter == null ? Color.Primary : Color.Default)" Variant="@(_statusFilter == null ? Variant.Filled : Variant.Outlined)" OnClick="@(() => _statusFilter = null)">
+            All (@_addendas.Count)
+        </MudChip>
+        <MudChip T="string" Color="Color.Success" Variant="@(_statusFilter == "ExecutiveApproved" ? Variant.Filled : Variant.Outlined)" OnClick="@(() => _statusFilter = "ExecutiveApproved")">
+            Executive Approved (@_addendas.Count(a => a.StatusCode == "ExecutiveApproved"))
+        </MudChip>
+        <MudChip T="string" Color="Color.Warning" Variant="@(_statusFilter == "SubmittedForReview" ? Variant.Filled : Variant.Outlined)" OnClick="@(() => _statusFilter = "SubmittedForReview")">
+            Submitted For Review (@_addendas.Count(a => a.StatusCode == "SubmittedForReview"))
+        </MudChip>
+        <MudChip T="string" Color="Color.Info" Variant="@(_statusFilter == "LegalApproved" ? Variant.Filled : Variant.Outlined)" OnClick="@(() => _statusFilter = "LegalApproved")">
+            Legal Approved (@_addendas.Count(a => a.StatusCode == "LegalApproved"))
+        </MudChip>
+    </MudPaper>
 
     @if (_isLoading)
     {
@@ -34,9 +60,9 @@
     <!-- Table -->
     <MudCard Elevation="2">
         <MudCardContent>
-            <MudTable Items="_addendas" Hover="true" Dense="true" Elevation="0" Filter="FilterAddendas">
+            <MudTable Items="_filteredAddendas" Hover="true" Dense="true" Elevation="0">
                 <ToolBarContent>
-                    <MudText Typo="Typo.h6">Contract Addenda Agreements (@_addendas.Count)</MudText>
+                    <MudText Typo="Typo.h6">Contract Addenda Agreements (@_filteredAddendas.Count)</MudText>
                     <MudSpacer />
                     <MudTextField @bind-Value="_searchString" Placeholder="Search by addenda #, MOA #, variation type..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Immediate="true" />
                 </ToolBarContent>
@@ -49,18 +75,33 @@
                     <MudTh>Variance</MudTh>
                     <MudTh>Revised End Date</MudTh>
                     <MudTh>Status</MudTh>
-                    <MudTh Style="text-align: right;">Action</MudTh>
+                    <MudTh Style="text-align: right;">Actions</MudTh>
                 </HeaderContent>
                 <RowTemplate>
-                    <MudTd DataLabel="Addenda #" Class="font-monospace fw-bold">@context.AddendaNumber</MudTd>
-                    <MudTd DataLabel="MOA Reference" Class="font-monospace">@(context.GrantMoa?.MoaNumber ?? "MOA-REF")</MudTd>
+                    <MudTd DataLabel="Addenda #" Class="font-monospace fw-bold">
+                        <MudLink Href="@($"/contracts/variations/{context.Id}")" Color="Color.Primary" Underline="Underline.Hover">
+                            @context.AddendaNumber
+                        </MudLink>
+                    </MudTd>
+                    <MudTd DataLabel="MOA Reference" Class="font-monospace">
+                        @if (context.GrantMoaId > 0)
+                        {
+                            <MudLink Href="@($"/finance/grants/{context.GrantMoaId}")" Color="Color.Inherit" Underline="Underline.Hover">
+                                @(context.GrantMoa?.MoaNumber ?? $"MOA-#{context.GrantMoaId}")
+                            </MudLink>
+                        }
+                        else
+                        {
+                            <span>@(context.GrantMoa?.MoaNumber ?? "MOA-REF")</span>
+                        }
+                    </MudTd>
                     <MudTd DataLabel="Variation Type">
                         <MudChip T="string" Size="Size.Small" Color="Color.Info" Variant="Variant.Outlined">@context.VariationTypeCode</MudChip>
                     </MudTd>
                     <MudTd DataLabel="Original Value">@context.OriginalContractValue.ToString("C")</MudTd>
                     <MudTd DataLabel="Revised Value" Class="fw-bold">@context.RevisedContractValue.ToString("C")</MudTd>
                     <MudTd DataLabel="Variance">
-                        <MudText Typo="Typo.body2" Color="@(context.ContractValueVariance < 0 ? Color.Error : (context.ContractValueVariance > 0 ? Color.Success : Color.Default))">
+                        <MudText Typo="Typo.body2" Color="@(context.ContractValueVariance < 0 ? Color.Error : (context.ContractValueVariance > 0 ? Color.Success : Color.Default))" Class="fw-bold">
                             @context.ContractValueVariance.ToString("C")
                         </MudText>
                     </MudTd>
@@ -70,10 +111,33 @@
                             @context.StatusCode
                         </MudChip>
                     </MudTd>
-                    <MudTd DataLabel="Action" Style="text-align: right;">
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" StartIcon="@Icons.Material.Filled.EditNote" OnClick="@(() => Nav.NavigateTo($"/contracts/variations/{context.Id}"))">
-                            Review Addenda
-                        </MudButton>
+                    <MudTd DataLabel="Actions" Style="text-align: right;">
+                        <MudButtonGroup Size="Size.Small" Variant="Variant.Outlined">
+                            <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                           Color="Color.Primary"
+                                           Size="Size.Small"
+                                           OnClick="@(() => Nav.NavigateTo($"/contracts/variations/{context.Id}"))"
+                                           aria-label="Review Addenda"
+                                           Title="Review Addenda" />
+
+                            @if (context.StatusCode == "SubmittedForReview")
+                            {
+                                <MudIconButton Icon="@Icons.Material.Filled.CheckCircle"
+                                               Color="Color.Success"
+                                               Size="Size.Small"
+                                               OnClick="@(() => ApproveAddendaAsync(context.Id))"
+                                               aria-label="Approve Addenda"
+                                               Title="Executive Approval" />
+                            }
+
+                            <MudMenu Icon="@Icons.Material.Filled.MoreVert" Size="Size.Small" Dense="true" AnchorOrigin="Origin.BottomRight">
+                                <MudMenuItem Icon="@Icons.Material.Filled.Description" OnClick="@(() => DownloadAddendaPdf(context.Id))">Download Addenda PDF</MudMenuItem>
+                                @if (context.GrantMoaId > 0)
+                                {
+                                    <MudMenuItem Icon="@Icons.Material.Filled.Gavel" OnClick="@(() => Nav.NavigateTo($"/finance/grants/{context.GrantMoaId}"))">View Parent Grant MoA</MudMenuItem>
+                                }
+                            </MudMenu>
+                        </MudButtonGroup>
                     </MudTd>
                 </RowTemplate>
                 <PagerContent>
@@ -95,6 +159,7 @@
     private List<ContractAddenda> _addendas = new();
     private bool _isLoading = true;
     private string _searchString = string.Empty;
+    private string? _statusFilter = null;
 
     protected override async Task OnInitializedAsync()
     {
@@ -118,12 +183,51 @@
         }
     }
 
-    private bool FilterAddendas(ContractAddenda a)
+    private List<ContractAddenda> _filteredAddendas => _addendas.Where(a =>
     {
+        if (!string.IsNullOrEmpty(_statusFilter) && !string.Equals(a.StatusCode, _statusFilter, StringComparison.OrdinalIgnoreCase))
+            return false;
+
         if (string.IsNullOrWhiteSpace(_searchString)) return true;
         return a.AddendaNumber.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
                (a.GrantMoa != null && a.GrantMoa.MoaNumber.Contains(_searchString, StringComparison.OrdinalIgnoreCase)) ||
-               a.VariationTypeCode.Contains(_searchString, StringComparison.OrdinalIgnoreCase);
+               a.VariationTypeCode.Contains(_searchString, StringComparison.OrdinalIgnoreCase) ||
+               a.StatusCode.Contains(_searchString, StringComparison.OrdinalIgnoreCase);
+    }).ToList();
+
+    private async Task ApproveAddendaAsync(int id)
+    {
+        try
+        {
+            await VariationService.ApproveAddendaAsync(id, "ExecutiveOfficer");
+            Snackbar.Add($"Addenda #{id} approved successfully.", Severity.Success);
+            await LoadDataAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error approving addenda: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void DownloadAddendaPdf(int id)
+    {
+        Snackbar.Add($"Generating Contract Addenda #{id} PDF...", Severity.Info);
+        Nav.NavigateTo($"/api/documents/moa/{id}/pdf", forceLoad: true);
+    }
+
+    private async Task ExportCsvAsync()
+    {
+        var csv = new System.Text.StringBuilder();
+        csv.AppendLine("AddendaNumber,MoaNumber,VariationType,OriginalValue,RevisedValue,Variance,RevisedEndDate,Status");
+        foreach (var item in _filteredAddendas)
+        {
+            csv.AppendLine($"\"{item.AddendaNumber}\",\"{item.GrantMoa?.MoaNumber}\",\"{item.VariationTypeCode}\",{item.OriginalContractValue},{item.RevisedContractValue},{item.ContractValueVariance},{item.RevisedEndDate:yyyy-MM-dd},\"{item.StatusCode}\"");
+        }
+
+        var bytes = System.Text.Encoding.UTF8.GetBytes(csv.ToString());
+        var base64 = Convert.ToBase64String(bytes);
+        await JS.InvokeVoidAsync("eval", $"const a = document.createElement('a'); a.href = 'data:text/csv;base64,{base64}'; a.download = 'ContractVariations_{DateTime.UtcNow:yyyyMMdd}.csv'; a.click();");
+        Snackbar.Add("Contract Addenda exported to CSV successfully.", Severity.Success);
     }
 
     private Color GetStatusColor(string status) => status switch

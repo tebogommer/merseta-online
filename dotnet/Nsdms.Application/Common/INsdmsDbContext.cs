@@ -18,6 +18,7 @@ public interface INsdmsDbContext : IDisposable, IAsyncDisposable
     DbSet<ApplicationRole> Roles { get; }
     DbSet<Microsoft.AspNetCore.Identity.IdentityUserRole<int>> UserRoles { get; }
     DbSet<Microsoft.AspNetCore.Identity.IdentityRoleClaim<int>> RoleClaims { get; }
+    DbSet<Microsoft.AspNetCore.Identity.IdentityUserClaim<int>> UserClaims { get; }
     DbSet<Visit> Visits { get; }
     DbSet<WspSubmission> WspSubmissions { get; }
     DbSet<LevyFile> LevyFiles { get; }
@@ -36,6 +37,7 @@ public interface INsdmsDbContext : IDisposable, IAsyncDisposable
     DbSet<WorkplaceApproval> WorkplaceApprovals { get; }
     DbSet<WorkplaceApprovalMentor> WorkplaceApprovalMentors { get; }
     DbSet<WorkplaceApprovalToolList> WorkplaceApprovalToolLists { get; }
+    DbSet<TradeMentorRatioPolicy> TradeMentorRatioPolicies { get; }
     DbSet<CompanyLearner> CompanyLearners { get; }
     DbSet<LearnerTradeTest> LearnerTradeTests { get; }
     DbSet<AuditLog> AuditLogs { get; }
@@ -63,6 +65,18 @@ public interface INsdmsDbContext : IDisposable, IAsyncDisposable
     DbSet<GrantTranchePayment> GrantTranchePayments { get; }
     DbSet<MandatoryGrantDisbursement> MandatoryGrantDisbursements { get; }
     DbSet<InterSetaTransfer> InterSetaTransfers { get; }
+
+    // MoA Template & Reusable Clause Engine (Option A)
+    DbSet<MoaTemplate> MoaTemplates { get; }
+    DbSet<MoaClause> MoaClauses { get; }
+    DbSet<MoaTemplateSection> MoaTemplateSections { get; }
+    DbSet<MoaExecutionSnapshot> MoaExecutionSnapshots { get; }
+
+    // Universal Document & Verification Engine (Strategic Action Items)
+    DbSet<DocumentTemplate> DocumentTemplates { get; }
+    DbSet<DocumentClause> DocumentClauses { get; }
+    DbSet<DocumentTemplateSection> DocumentTemplateSections { get; }
+    DbSet<DocumentSnapshot> DocumentSnapshots { get; }
 
 
     // System Configuration & Feature Flags

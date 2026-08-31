@@ -483,4 +483,153 @@ public class OrganisationServiceTests
     }
 
     #endregion
+
+    #region 360-Degree Relational Tab Tests
+
+    [Fact]
+    public async Task GetLinkedLearnersAsync_ReturnsAllEnrolledLearners()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+
+        var org = new Organisation { CompanyName = "Toyota SA Motors", SdlNumber = "L100000099" };
+        db.Organisations.Add(org);
+        await db.SaveChangesAsync();
+
+        var person = new Person { FirstName = "Thabo", LastName = "Mokoena", RsaIdNumber = "9901015009087" };
+        db.People.Add(person);
+        await db.SaveChangesAsync();
+
+        var learner = new CompanyLearner
+        {
+            OrganisationId = org.Id,
+            PersonId = person.Id,
+            LearnerContractNumber = "CON-2026-001",
+            LearningProgrammeTypeCode = "01",
+            QualificationTitle = "Automotive Electrician",
+            NqfLevel = 4,
+            EnrolmentStatusId = "01"
+        };
+        db.CompanyLearners.Add(learner);
+        await db.SaveChangesAsync();
+
+        // Act
+        var result = await service.GetLinkedLearnersAsync(org.Id);
+
+        // Assert
+        Assert.Single(result);
+        Assert.Equal("Thabo Mokoena", result[0].LearnerFullName);
+        Assert.Equal("9901015009087", result[0].RsaIdNumber);
+        Assert.Equal("Apprenticeship", result[0].LearningProgrammeTypeName);
+        Assert.Equal("Automotive Electrician", result[0].QualificationTitle);
+    }
+
+    [Fact]
+    public async Task GetGrantMoasAndApplicationsAsync_ReturnsGrantsAndDisbursements()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+
+        var org = new Organisation { CompanyName = "BMW Rosslyn", SdlNumber = "L200000099" };
+        db.Organisations.Add(org);
+        await db.SaveChangesAsync();
+
+        var app = new GrantApplication
+        {
+            OrganisationId = org.Id,
+            ApplicationNumber = "DG-2026-001",
+            ProjectTitle = "Apprentice Skills Initiative",
+            RequestedAmount = 500000m,
+            ApprovedAmount = 450000m,
+            ApplicationStatusCode = "Approved"
+        };
+        db.GrantApplications.Add(app);
+        await db.SaveChangesAsync();
+
+        var moa = new GrantMoa
+        {
+            GrantApplicationId = app.Id,
+            MoaNumber = "MOA-2026-001",
+            TotalContractValue = 450000m,
+            MoaStatusCode = "Active",
+            ContractStartDate = DateTime.UtcNow
+        };
+        db.GrantMoas.Add(moa);
+        await db.SaveChangesAsync();
+
+        // Act
+        var result = await service.GetGrantMoasAndApplicationsAsync(org.Id);
+
+        // Assert
+        Assert.Single(result);
+        Assert.Equal("MOA-2026-001", result[0].ApplicationOrMoaNumber);
+        Assert.Equal(450000m, result[0].ApprovedAmount);
+        Assert.Equal("Active", result[0].StatusCode);
+    }
+
+    [Fact]
+    public async Task GetWorkplaceApprovalsAsync_ReturnsApprovalsWithCounts()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+
+        var org = new Organisation { CompanyName = "Ford Motor Co", SdlNumber = "L300000099" };
+        db.Organisations.Add(org);
+        await db.SaveChangesAsync();
+
+        var wpa = new WorkplaceApproval
+        {
+            OrganisationId = org.Id,
+            ApprovalNumber = "WPA-2026-001",
+            QualificationTitle = "Fitter and Turner",
+            ApprovalStatusCode = "Approved",
+            InspectionDate = DateTime.UtcNow
+        };
+        db.WorkplaceApprovals.Add(wpa);
+        await db.SaveChangesAsync();
+
+        // Act
+        var result = await service.GetWorkplaceApprovalsAsync(org.Id);
+
+        // Assert
+        Assert.Single(result);
+        Assert.Equal("WPA-2026-001", result[0].ApprovalNumber);
+        Assert.Equal("Fitter and Turner", result[0].QualificationTitle);
+        Assert.Equal("Approved", result[0].ApprovalStatusCode);
+    }
+
+    [Fact]
+    public async Task TrainingCommittee_AddAndRemoveMember_WorksWithAudit()
+    {
+        // Arrange
+        var (factory, db, audit, service) = CreateTestContext();
+
+        var org = new Organisation { CompanyName = "Scaw Metals", SdlNumber = "L400000099" };
+        db.Organisations.Add(org);
+        await db.SaveChangesAsync();
+
+        var person = new Person { FirstName = "Sipho", LastName = "Ndlovu", RsaIdNumber = "8501015009087" };
+        db.People.Add(person);
+        await db.SaveChangesAsync();
+
+        // Act - Add
+        var member = await service.AddTrainingCommitteeMemberAsync(org.Id, person.Id, "UnionRepresentative", "NUMSA", "AdminUser");
+
+        // Assert - Add
+        Assert.NotNull(member);
+        Assert.Equal("Sipho Ndlovu", member.PersonFullName);
+        Assert.Equal("NUMSA", member.Constituency);
+
+        var list = await service.GetTrainingCommitteeMembersAsync(org.Id);
+        Assert.Single(list);
+
+        // Act - Remove
+        var removed = await service.RemoveTrainingCommitteeMemberAsync(member.MemberId, "AdminUser");
+        Assert.True(removed);
+
+        var listAfter = await service.GetTrainingCommitteeMembersAsync(org.Id);
+        Assert.Empty(listAfter);
+    }
+
+    #endregion
 }

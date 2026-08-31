@@ -110,11 +110,18 @@ public class FinanceServiceTests
         var submitted = await financeService.SubmitTranchePaymentAsync(payment, "sdf@employer.co.za");
         Assert.Equal("Submitted", submitted.PaymentStatusCode);
 
-        // Act 2: Approve
+        // Gatekeeping assertion: Unverified milestone approval must be blocked
+        await Assert.ThrowsAsync<InvalidOperationException>(() => 
+            financeService.ApproveTranchePaymentAsync(submitted.Id, "cfo@merseta.org.za", "BATCH-2026-01", "Should fail unverified"));
+
+        // Act 2: Verify milestone first
+        await financeService.VerifyMilestoneAsync(milestone.Id, "clo@merseta.org.za", "Deliverables confirmed.");
+
+        // Act 3: Approve
         var approved = await financeService.ApproveTranchePaymentAsync(submitted.Id, "cfo@merseta.org.za", "BATCH-2026-01", "Approved for EFT");
         Assert.True(approved);
 
-        // Act 3: Payout
+        // Act 4: Payout
         var paid = await financeService.ProcessTranchePayoutAsync(submitted.Id, "finance@merseta.org.za", "MERSETA-EFT-991");
         Assert.True(paid);
 
@@ -197,4 +204,121 @@ public class FinanceServiceTests
         Assert.Equal("Approved by CEO", updated!.TransferStatusCode);
         Assert.Equal("DHET-SETMIS-TRF-001", updated.DhetReferenceNumber);
     }
+
+    #region 360-Degree Grant MoA Relational Tests
+
+    [Fact]
+    public async Task GetGrantMoaBeneficiariesAsync_ReturnsEnrolledLearnersUnderProject()
+    {
+        var factory = new TestDbContextFactory(Guid.NewGuid().ToString());
+        var financeService = new FinanceService(factory);
+
+        int moaId;
+        using (var ctx = factory.CreateDbContext())
+        {
+            var org = new Organisation { CompanyName = "Bell Equipment", SdlNumber = "L100200300" };
+            ctx.Organisations.Add(org);
+            await ctx.SaveChangesAsync();
+
+            var app = new GrantApplication
+            {
+                OrganisationId = org.Id,
+                ProjectTitle = "Heavy Equipment Apprenticeships",
+                ApplicationNumber = "DG-2026-BELL",
+                StatusCode = "Approved"
+            };
+            ctx.GrantApplications.Add(app);
+            await ctx.SaveChangesAsync();
+
+            var moa = new GrantMoa
+            {
+                GrantApplicationId = app.Id,
+                MoaNumber = "MOA-2026-BELL-001",
+                TotalContractValue = 2500000m,
+                ContractStartDate = DateTime.Today,
+                ContractEndDate = DateTime.Today.AddYears(3)
+            };
+            ctx.GrantMoas.Add(moa);
+            await ctx.SaveChangesAsync();
+            moaId = moa.Id;
+
+            var person = new Person { FirstName = "Bongani", LastName = "Nkosi", RsaIdNumber = "0101015009087" };
+            ctx.People.Add(person);
+            await ctx.SaveChangesAsync();
+
+            ctx.CompanyLearners.Add(new CompanyLearner
+            {
+                PersonId = person.Id,
+                OrganisationId = org.Id,
+                LearnerContractNumber = "LC-BELL-001",
+                QualificationTitle = "Earthmoving Equipment Mechanic",
+                LearningProgrammeTypeCode = "01",
+                EnrolmentStatusCode = "Registered"
+            });
+            await ctx.SaveChangesAsync();
+        }
+
+        var beneficiaries = await financeService.GetGrantMoaBeneficiariesAsync(moaId);
+
+        Assert.Single(beneficiaries);
+        Assert.Equal("Bongani Nkosi", beneficiaries[0].FullName);
+        Assert.Equal("Earthmoving Equipment Mechanic", beneficiaries[0].QualificationTitle);
+        Assert.Equal("Apprenticeship", beneficiaries[0].ProgrammeTypeName);
+    }
+
+    [Fact]
+    public async Task GetGrantMoaEmployersAsync_ReturnsParticipatingWorkplaces()
+    {
+        var factory = new TestDbContextFactory(Guid.NewGuid().ToString());
+        var financeService = new FinanceService(factory);
+
+        int moaId;
+        using (var ctx = factory.CreateDbContext())
+        {
+            var contact = new Person { FirstName = "Nalini", LastName = "Govender", Email = "nalini@toyota.co.za" };
+            ctx.People.Add(contact);
+            await ctx.SaveChangesAsync();
+
+            var org = new Organisation
+            {
+                CompanyName = "Toyota SA Motors",
+                SdlNumber = "L999888777",
+                ChamberCode = "Automotive",
+                PrimaryContactPersonId = contact.Id
+            };
+            ctx.Organisations.Add(org);
+            await ctx.SaveChangesAsync();
+
+            var app = new GrantApplication
+            {
+                OrganisationId = org.Id,
+                ProjectTitle = "Auto Electrician Upskilling",
+                ApplicationNumber = "DG-2026-TSAM",
+                StatusCode = "Approved"
+            };
+            ctx.GrantApplications.Add(app);
+            await ctx.SaveChangesAsync();
+
+            var moa = new GrantMoa
+            {
+                GrantApplicationId = app.Id,
+                MoaNumber = "MOA-2026-TSAM-001",
+                TotalContractValue = 3000000m,
+                ContractStartDate = DateTime.Today,
+                ContractEndDate = DateTime.Today.AddYears(2)
+            };
+            ctx.GrantMoas.Add(moa);
+            await ctx.SaveChangesAsync();
+            moaId = moa.Id;
+        }
+
+        var employers = await financeService.GetGrantMoaEmployersAsync(moaId);
+
+        Assert.Single(employers);
+        Assert.Equal("Toyota SA Motors", employers[0].CompanyName);
+        Assert.Equal("Nalini Govender", employers[0].ContactPersonName);
+        Assert.Equal("nalini@toyota.co.za", employers[0].ContactEmail);
+    }
+
+    #endregion
 }

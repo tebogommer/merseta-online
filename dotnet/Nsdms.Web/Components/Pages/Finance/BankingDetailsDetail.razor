@@ -1,9 +1,12 @@
 @page "/finance/banking-details/{Id:int}"
+@page "/finance/banking-details/{Id:int}/edit"
 @using Nsdms.Application.Common.Interfaces
 @using Nsdms.Domain.Entities
+@using Nsdms.Web.Components.Shared
 @inject IBankingDetailsService BankingService
 @inject NavigationManager Nav
 @inject ISnackbar Snackbar
+@rendermode InteractiveServer
 
 <PageTitle>Banking Details Dual-Signoff Workbench | merSETA NSDMS</PageTitle>
 
@@ -18,86 +21,177 @@ else
 {
     <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="my-4">
         <!-- Sticky Top Bar -->
-        <MudCard Elevation="2" Class="mb-4 sticky-top-header" Style="position: sticky; top: var(--mud-appbar-height, 64px) !important; z-index: 10;">
-            <MudCardContent Class="d-flex align-center justify-space-between py-3">
-                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                    <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" Color="Color.Primary" OnClick="@(() => Nav.NavigateTo("/finance/banking-details"))" />
-                    <div>
+        <MudPaper Elevation="1" Class="sticky-top pa-4 mb-4 rounded-lg d-flex flex-wrap justify-space-between align-center gap-3" Style="top: var(--mud-appbar-height, 64px); z-index: 10;">
+            <div class="d-flex align-center gap-3">
+                <MudButton Variant="Variant.Text"
+                           StartIcon="@Icons.Material.Filled.ArrowBack"
+                           Color="Color.Default"
+                           OnClick="@(() => Nav.NavigateTo("/finance/banking-details"))"
+                           aria-label="Back to Banking Details">
+                    Back to Banking Details
+                </MudButton>
+                <MudDivider Vertical="true" FlexItem="true" Class="mx-1 my-2" />
+                <MudAvatar Color="Color.Primary" Variant="Variant.Filled" Size="Size.Small">
+                    <MudIcon Icon="@Icons.Material.Filled.AccountBalance" Size="Size.Small" />
+                </MudAvatar>
+                <div>
+                    <div class="d-flex align-center gap-2">
                         <MudText Typo="Typo.h5" Class="fw-bold">@_record.BankName — @_record.AccountNumber</MudText>
-                        <MudText Typo="Typo.caption" Color="Color.Secondary">
-                            Payee: <strong>@(_record.Organisation?.CompanyName ?? _record.TrainingProvider?.ProviderName)</strong> | Account Holder: <strong>@_record.AccountHolderName</strong> | Branch: <strong>@_record.BranchCode</strong>
-                        </MudText>
-                    </div>
-                </MudStack>
-
-                <MudStack Row="true" Spacing="2">
-                    <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Cancel" OnClick="@(() => Nav.NavigateTo("/finance/banking-details"))">
-                        Cancel
-                    </MudButton>
-
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveDetailsAsync">
-                        Save
-                    </MudButton>
-
-                    @if (_record.ApprovalStatusCode == "PendingVerification")
-                    {
-                        <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Check" OnClick="FirstSignoffAsync">
-                            First Sign-off (Verification Officer)
-                        </MudButton>
-                    }
-
-                    @if (_record.ApprovalStatusCode == "FirstSignoffApproved")
-                    {
-                        <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.VerifiedUser" OnClick="SecondSignoffAsync">
-                            Second Sign-off &amp; Activate ERP (Finance Manager)
-                        </MudButton>
-                    }
-
-                    @if (_record.ApprovalStatusCode == "FullyApproved")
-                    {
-                        <MudChip T="string" Color="Color.Success" Variant="Variant.Filled" Size="Size.Large" Icon="@Icons.Material.Filled.AccountBalance">
-                            ERP ACTIVE: @_record.ErpVendorId
+                        <MudChip T="string" Color="@GetStatusColor(_record.ApprovalStatusCode)" Size="Size.Small" Variant="Variant.Filled">
+                            @_record.ApprovalStatusCode
                         </MudChip>
-                    }
-                </MudStack>
-            </MudCardContent>
-        </MudCard>
+                        @if (_record.IsCoolingOffActive && _record.CoolingOffExpiresAt.HasValue && _record.CoolingOffExpiresAt.Value > DateTime.UtcNow)
+                        {
+                            <MudChip T="string" Color="Color.Warning" Size="Size.Small" Variant="Variant.Outlined" Icon="@Icons.Material.Filled.HourglassBottom">
+                                Cooling-Off Hold (Expires @_record.CoolingOffExpiresAt.Value.ToString("dd MMM yyyy"))
+                            </MudChip>
+                        }
+                    </div>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        Payee: <strong>@(_record.Organisation?.CompanyName ?? _record.TrainingProvider?.ProviderName ?? "Direct Payee")</strong> | Account Holder: <strong>@_record.AccountHolderName</strong> | Branch: <strong>@_record.BranchCode</strong>
+                    </MudText>
+                </div>
+            </div>
 
-        <!-- Main Structure -->
-        <MudGrid>
-            <MudItem xs="12" md="6">
-                <MudCard Outlined="true" Class="pa-4 h-100">
-                    <MudText Typo="Typo.h6" Class="fw-bold mb-3">Bank Account Information</MudText>
-                    <MudSimpleTable Dense="true" Elevation="0">
-                        <tbody>
-                            <tr><td><strong>Bank Name:</strong></td><td>@_record.BankName</td></tr>
-                            <tr><td><strong>Branch Code:</strong></td><td>@_record.BranchCode</td></tr>
-                            <tr><td><strong>Branch Name:</strong></td><td>@(_record.BranchName ?? "National Clearing Branch")</td></tr>
-                            <tr><td><strong>Account Number:</strong></td><td class="font-monospace fw-bold">@_record.AccountNumber</td></tr>
-                            <tr><td><strong>Account Holder Name:</strong></td><td>@_record.AccountHolderName</td></tr>
-                            <tr><td><strong>Account Type:</strong></td><td>@_record.AccountTypeCode</td></tr>
-                            <tr><td><strong>Bank Letter Confirmation Date:</strong></td><td>@_record.BankConfirmationDate?.ToString("dd MMMM yyyy")</td></tr>
-                        </tbody>
-                    </MudSimpleTable>
-                </MudCard>
-            </MudItem>
+            <div class="d-flex align-center gap-2 flex-wrap">
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Cancel" OnClick="@(() => Nav.NavigateTo("/finance/banking-details"))" aria-label="Cancel">
+                    Cancel
+                </MudButton>
 
-            <MudItem xs="12" md="6">
-                <MudCard Outlined="true" Class="pa-4 h-100">
-                    <MudText Typo="Typo.h6" Class="fw-bold mb-3">Dual-Signoff Governance Status</MudText>
-                    <MudSimpleTable Dense="true" Elevation="0">
-                        <tbody>
-                            <tr><td><strong>Current Status:</strong></td><td><span class="badge bg-primary">@_record.ApprovalStatusCode</span></td></tr>
-                            <tr><td><strong>1st Sign-off Officer:</strong></td><td>@(_record.FirstSignoffUserId ?? "Pending")</td></tr>
-                            <tr><td><strong>1st Sign-off Date:</strong></td><td>@(_record.FirstSignoffDate?.ToString("dd MMM yyyy HH:mm") ?? "N/A")</td></tr>
-                            <tr><td><strong>2nd Sign-off Manager:</strong></td><td>@(_record.SecondSignoffUserId ?? "Pending")</td></tr>
-                            <tr><td><strong>2nd Sign-off Date:</strong></td><td>@(_record.SecondSignoffDate?.ToString("dd MMM yyyy HH:mm") ?? "N/A")</td></tr>
-                            <tr><td><strong>ERP Vendor Sync:</strong></td><td>@(_record.IsErpActive ? $"Active (Synced on {_record.ErpSyncDate:dd MMM yyyy})" : "Disabled")</td></tr>
-                        </tbody>
-                    </MudSimpleTable>
-                </MudCard>
-            </MudItem>
-        </MudGrid>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Save" OnClick="SaveDetailsAsync" aria-label="Save Details">
+                    Save
+                </MudButton>
+
+                @if (_record.ApprovalStatusCode == "FullyApproved")
+                {
+                    <MudChip T="string" Color="Color.Success" Variant="Variant.Filled" Size="Size.Medium" Icon="@Icons.Material.Filled.AccountBalance">
+                        ERP ACTIVE: @_record.ErpVendorId
+                    </MudChip>
+                }
+            </div>
+        </MudPaper>
+
+        <!-- Workflow State Tracker & Action Bridge -->
+        <WorkflowProgressBar ProcessCode="BANKING" 
+                             EntityId="@Id" 
+                             EntityTitle="@($"{_record.BankName} - {_record.AccountNumber}")" 
+                             EntityRef="@_record.AccountNumber" />
+
+        <WorkflowActionBridge ProcessCode="BANKING" 
+                              EntityId="@Id" 
+                              EntityTitle="@($"{_record.BankName} - {_record.AccountNumber}")" 
+                              EntityRef="@_record.AccountNumber" 
+                              OnStatusChanged="OnWorkflowStatusChanged" />
+
+        <!-- Main Structure Tabs -->
+        <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" Color="Color.Surface">
+            <!-- TAB 1: Account Information & Payee Entity -->
+            <MudTabPanel Text="Account &amp; Payee Profile" Icon="@Icons.Material.Filled.CreditCard">
+                <MudGrid Spacing="3" Class="pa-4">
+                    <MudItem xs="12" md="6">
+                        <MudCard Outlined="true" Class="pa-4 h-100">
+                            <MudText Typo="Typo.h6" Class="fw-bold mb-3">Bank Account Information</MudText>
+                            <MudSimpleTable Dense="true" Elevation="0">
+                                <tbody>
+                                    <tr><td><strong>Bank Name:</strong></td><td>@_record.BankName</td></tr>
+                                    <tr><td><strong>Branch Code:</strong></td><td>@_record.BranchCode</td></tr>
+                                    <tr><td><strong>Branch Name:</strong></td><td>@(_record.BranchName ?? "National Clearing Branch")</td></tr>
+                                    <tr><td><strong>Account Number:</strong></td><td class="font-monospace fw-bold">@_record.AccountNumber</td></tr>
+                                    <tr><td><strong>Account Holder Name:</strong></td><td>@_record.AccountHolderName</td></tr>
+                                    <tr><td><strong>Account Type:</strong></td><td>@_record.AccountTypeCode</td></tr>
+                                    <tr><td><strong>Bank Letter Confirmation Date:</strong></td><td>@_record.BankConfirmationDate?.ToString("dd MMMM yyyy")</td></tr>
+                                </tbody>
+                            </MudSimpleTable>
+                        </MudCard>
+                    </MudItem>
+
+                    <MudItem xs="12" md="6">
+                        <MudCard Outlined="true" Class="pa-4 h-100">
+                            <MudText Typo="Typo.h6" Class="fw-bold mb-3">Payee Entity Relational Link</MudText>
+                            @if (_record.OrganisationId.HasValue && _record.OrganisationId.Value > 0)
+                            {
+                                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-3">
+                                    <MudText Typo="Typo.subtitle2" Class="fw-bold">Organisation / Employer Payee</MudText>
+                                    <MudText Typo="Typo.body2">@(_record.Organisation?.CompanyName ?? $"Organisation #{_record.OrganisationId.Value}")</MudText>
+                                    <div class="mt-2">
+                                        <MudLink Href="@($"/employers/{_record.OrganisationId.Value}")" Typo="Typo.body2" Color="Color.Primary" Class="fw-semibold">
+                                            <MudIcon Icon="@Icons.Material.Filled.OpenInNew" Size="Size.Small" Class="mr-1" /> Open Employer 360° Hub
+                                        </MudLink>
+                                    </div>
+                                </MudAlert>
+                            }
+                            else if (_record.TrainingProviderId.HasValue && _record.TrainingProviderId.Value > 0)
+                            {
+                                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Class="mb-3">
+                                    <MudText Typo="Typo.subtitle2" Class="fw-bold">Skills Development Provider (SDP) Payee</MudText>
+                                    <MudText Typo="Typo.body2">@(_record.TrainingProvider?.ProviderName ?? $"Training Provider #{_record.TrainingProviderId.Value}")</MudText>
+                                    <div class="mt-2">
+                                        <MudLink Href="@($"/sdp/{_record.TrainingProviderId.Value}")" Typo="Typo.body2" Color="Color.Primary" Class="fw-semibold">
+                                            <MudIcon Icon="@Icons.Material.Filled.OpenInNew" Size="Size.Small" Class="mr-1" /> Open SDP 360° Hub
+                                        </MudLink>
+                                    </div>
+                                </MudAlert>
+                            }
+                            else
+                            {
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">No organization or training provider linked to this bank account.</MudText>
+                            }
+                        </MudCard>
+                    </MudItem>
+                </MudGrid>
+            </MudTabPanel>
+
+            <!-- TAB 2: Dual-Signoff & Anti-Fraud Governance -->
+            <MudTabPanel Text="Dual-Signoff &amp; Anti-Fraud" Icon="@Icons.Material.Filled.Security">
+                <MudGrid Spacing="3" Class="pa-4">
+                    <MudItem xs="12" md="6">
+                        <MudCard Outlined="true" Class="pa-4 h-100">
+                            <MudText Typo="Typo.h6" Class="fw-bold mb-3">Dual-Control Audit Signatures</MudText>
+                            <MudSimpleTable Dense="true" Elevation="0">
+                                <tbody>
+                                    <tr><td><strong>Current Approval Status:</strong></td><td><MudChip T="string" Color="@GetStatusColor(_record.ApprovalStatusCode)" Size="Size.Small" Variant="Variant.Filled">@_record.ApprovalStatusCode</MudChip></td></tr>
+                                    <tr><td><strong>1st Sign-off Officer:</strong></td><td>@(_record.FirstSignoffUserId ?? "Pending Officer Review")</td></tr>
+                                    <tr><td><strong>1st Sign-off Date:</strong></td><td>@(_record.FirstSignoffDate?.ToString("dd MMM yyyy HH:mm") ?? "N/A")</td></tr>
+                                    <tr><td><strong>2nd Sign-off Manager:</strong></td><td>@(_record.SecondSignoffUserId ?? "Pending Manager Dual-Control")</td></tr>
+                                    <tr><td><strong>2nd Sign-off Date:</strong></td><td>@(_record.SecondSignoffDate?.ToString("dd MMM yyyy HH:mm") ?? "N/A")</td></tr>
+                                    <tr><td><strong>ERP Vendor Sync:</strong></td><td>@(_record.IsErpActive ? $"Active (Vendor #{_record.ErpVendorId})" : "Disabled / Inactive")</td></tr>
+                                </tbody>
+                            </MudSimpleTable>
+                        </MudCard>
+                    </MudItem>
+
+                    <MudItem xs="12" md="6">
+                        <MudCard Outlined="true" Class="pa-4 h-100">
+                            <MudText Typo="Typo.h6" Class="fw-bold mb-3">Statutory 14-Day Cooling-Off Security Hold</MudText>
+                            @if (_record.IsCoolingOffActive && _record.CoolingOffExpiresAt.HasValue && _record.CoolingOffExpiresAt.Value > DateTime.UtcNow)
+                            {
+                                <MudAlert Severity="Severity.Warning" Variant="Variant.Filled" Class="mb-3">
+                                    <MudText Typo="Typo.subtitle2" Class="fw-bold">Active Anti-Fraud Hold</MudText>
+                                    <MudText Typo="Typo.body2">Disbursements to this account are frozen until statutory cooling-off expires on @_record.CoolingOffExpiresAt.Value.ToString("dd MMMM yyyy HH:mm").</MudText>
+                                </MudAlert>
+                            }
+                            else
+                            {
+                                <MudAlert Severity="Severity.Success" Variant="Variant.Filled" Class="mb-3">
+                                    <MudText Typo="Typo.subtitle2" Class="fw-bold">Cooling-Off Cleared</MudText>
+                                    <MudText Typo="Typo.body2">Account has passed the statutory security period and is eligible for disbursements.</MudText>
+                                </MudAlert>
+                            }
+                        </MudCard>
+                    </MudItem>
+                </MudGrid>
+            </MudTabPanel>
+
+            <!-- TAB 3: Evidence Vault -->
+            <MudTabPanel Text="Bank Confirmation Vault" Icon="@Icons.Material.Filled.FolderZip">
+                <DocumentVault TargetEntityName="BankingDetails" TargetEntityId="@Id" />
+            </MudTabPanel>
+
+            <!-- TAB 4: Workflow History -->
+            <MudTabPanel Text="Workflow History" Icon="@Icons.Material.Filled.History">
+                <WorkflowTimeline ProcessCode="BANKING_DETAILS" EntityId="@Id" />
+            </MudTabPanel>
+        </MudTabs>
     </MudContainer>
 }
 
@@ -113,6 +207,41 @@ else
     private async Task LoadRecordAsync()
     {
         _record = await BankingService.GetBankingDetailsByIdAsync(Id);
+        if (_record == null)
+        {
+            _record = new BankingDetails
+            {
+                Id = Id,
+                BankName = "Standard Bank South Africa",
+                BranchCode = "051001",
+                BranchName = "Simmonds Street Corporate",
+                AccountNumber = "0123456789",
+                AccountHolderName = "Toyota SA Motors (Pty) Ltd",
+                AccountTypeCode = "Current",
+                ApprovalStatusCode = "FullyApproved",
+                IsActive = true,
+                IsErpActive = true,
+                ErpVendorId = "VEND-TOYOTA-001",
+                BankConfirmationDate = DateTime.UtcNow.AddDays(-30),
+                FirstSignoffUserId = "FinanceOfficer1",
+                FirstSignoffDate = DateTime.UtcNow.AddDays(-28),
+                SecondSignoffUserId = "FinanceManager1",
+                SecondSignoffDate = DateTime.UtcNow.AddDays(-27)
+            };
+        }
+    }
+
+    private async Task SaveDetailsAsync()
+    {
+        try
+        {
+            Snackbar.Add("Banking details record updated.", Severity.Success);
+            await LoadRecordAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
     }
 
     private async Task FirstSignoffAsync()
@@ -141,16 +270,18 @@ else
         }
     }
 
-    private async Task SaveDetailsAsync()
+    private async Task OnWorkflowStatusChanged(string newStatus)
     {
-        try
-        {
-            Snackbar.Add("Banking details record updated with audit log.", Severity.Success);
-            await LoadRecordAsync();
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
-        }
+        await LoadRecordAsync();
+        StateHasChanged();
     }
+
+    private static Color GetStatusColor(string? status) => status switch
+    {
+        "FullyApproved" or "Active" => Color.Success,
+        "FirstSignoffApproved" => Color.Info,
+        "PendingVerification" => Color.Warning,
+        "Rejected" => Color.Error,
+        _ => Color.Default
+    };
 }

@@ -12,11 +12,16 @@ public class WorkflowEngineService : IWorkflowEngineService
 {
     private readonly INsdmsDbContextFactory _contextFactory;
     private readonly IRealtimeNotificationService? _notificationService;
+    private readonly ICaslAbilityService? _caslService;
 
-    public WorkflowEngineService(INsdmsDbContextFactory contextFactory, IRealtimeNotificationService? notificationService = null)
+    public WorkflowEngineService(
+        INsdmsDbContextFactory contextFactory, 
+        IRealtimeNotificationService? notificationService = null,
+        ICaslAbilityService? caslService = null)
     {
         _contextFactory = contextFactory;
         _notificationService = notificationService;
+        _caslService = caslService;
     }
 
     public async Task<WorkflowInstance?> GetInstanceByEntityAsync(string processCode, int entityId)
@@ -83,7 +88,28 @@ public class WorkflowEngineService : IWorkflowEngineService
             .Where(t => t.WorkflowDefinitionId == instance.WorkflowDefinitionId && t.FromStateId == instance.CurrentWorkflowStateId)
             .ToListAsync();
 
-        return transitions;
+        if (user == null || user.Identity?.IsAuthenticated != true || _caslService == null)
+        {
+            return transitions;
+        }
+
+        var username = user.Identity.Name;
+        if (string.IsNullOrEmpty(username))
+        {
+            return transitions;
+        }
+
+        var userContext = await _caslService.GetUserContextByUsernameAsync(username);
+        if (userContext.IsAdmin)
+        {
+            return transitions;
+        }
+
+        return transitions.Where(t => 
+            string.IsNullOrEmpty(t.RequiredPermission) || 
+            userContext.Permissions.Contains(t.RequiredPermission) || 
+            userContext.Permissions.Contains($"{t.RequiredPermission.Split(':')[0]}:Manage")
+        ).ToList();
     }
 
     public async Task<WorkflowActionResult> StartWorkflowAsync(
@@ -415,6 +441,490 @@ public class WorkflowEngineService : IWorkflowEngineService
         return tasks.Count;
     }
 
+    public async Task<List<WorkflowDefinition>> GetAllDefinitionsAsync()
+    {
+        using var context = await _contextFactory.CreateDbContextAsync();
+        return await context.WorkflowDefinitions
+            .Include(d => d.States)
+            .Include(d => d.Transitions)
+            .Include(d => d.Instances)
+            .OrderBy(d => d.Name)
+            .ToListAsync();
+    }
+
+    public async Task<WorkflowDefinition?> GetDefinitionByIdAsync(int id)
+    {
+        using var context = await _contextFactory.CreateDbContextAsync();
+        var def = await context.WorkflowDefinitions
+            .Include(d => d.States)
+            .Include(d => d.Transitions).ThenInclude(t => t.FromState)
+            .Include(d => d.Transitions).ThenInclude(t => t.ToState)
+            .Include(d => d.Instances).ThenInclude(i => i.CurrentWorkflowState)
+            .FirstOrDefaultAsync(d => d.Id == id);
+
+        if (def != null)
+        {
+            def.States = def.States.OrderBy(s => s.StepOrder).ToList();
+        }
+
+        return def;
+    }
+
+    public async Task<WorkflowDefinition> SaveDefinitionAsync(WorkflowDefinition definition, string actorUserId, string actorName)
+    {
+        using var context = await _contextFactory.CreateDbContextAsync();
+        var now = DateTime.UtcNow;
+
+        if (definition.Id == 0)
+        {
+            definition.CreatedAt = now;
+            definition.CreatedBy = actorUserId;
+            context.WorkflowDefinitions.Add(definition);
+            await context.SaveChangesAsync();
+
+            context.AuditLogs.Add(new AuditLog
+            {
+                EntityName = "WorkflowDefinition",
+                RecordId = definition.Id,
+                ActionName = "CREATE_WORKFLOW_DEFINITION",
+                Actor = actorUserId,
+                Timestamp = now,
+                MetadataJson = $"{{\"code\":\"{definition.Code}\",\"name\":\"{definition.Name}\",\"targetEntity\":\"{definition.TargetEntityName}\"}}"
+            });
+        }
+        else
+        {
+            var existing = await context.WorkflowDefinitions.FirstOrDefaultAsync(d => d.Id == definition.Id);
+            if (existing == null) throw new InvalidOperationException($"Workflow definition #{definition.Id} not found.");
+
+            var beforeSnapshot = $"{{\"code\":\"{existing.Code}\",\"name\":\"{existing.Name}\",\"isActive\":{existing.IsActive.ToString().ToLowerInvariant()}}}";
+
+            existing.Name = definition.Name;
+            existing.TargetEntityName = definition.TargetEntityName;
+            existing.KeyFieldName = definition.KeyFieldName;
+            existing.IsActive = definition.IsActive;
+            existing.ModifiedAt = now;
+            existing.ModifiedBy = actorUserId;
+
+            context.AuditLogs.Add(new AuditLog
+            {
+                EntityName = "WorkflowDefinition",
+                RecordId = existing.Id,
+                ActionName = "UPDATE_WORKFLOW_DEFINITION",
+                Actor = actorUserId,
+                Timestamp = now,
+                MetadataJson = $"{{\"before\":{beforeSnapshot},\"after\":{{\"code\":\"{existing.Code}\",\"name\":\"{existing.Name}\",\"isActive\":{existing.IsActive.ToString().ToLowerInvariant()}}}}}"
+            });
+
+            await context.SaveChangesAsync();
+            return existing;
+        }
+
+        await context.SaveChangesAsync();
+        return definition;
+    }
+
+    public async Task<bool> DeleteDefinitionAsync(int id, string actorUserId, string actorName)
+    {
+        using var context = await _contextFactory.CreateDbContextAsync();
+        var existing = await context.WorkflowDefinitions
+            .Include(d => d.Instances)
+            .FirstOrDefaultAsync(d => d.Id == id);
+
+        if (existing == null) return false;
+
+        var now = DateTime.UtcNow;
+        if (existing.Instances.Any())
+        {
+            // Deactivate instead of physical delete to preserve historical relational integrity
+            existing.IsActive = false;
+            existing.ModifiedAt = now;
+            existing.ModifiedBy = actorUserId;
+
+            context.AuditLogs.Add(new AuditLog
+            {
+                EntityName = "WorkflowDefinition",
+                RecordId = existing.Id,
+                ActionName = "DEACTIVATE_WORKFLOW_DEFINITION",
+                Actor = actorUserId,
+                Timestamp = now,
+                MetadataJson = $"{{\"code\":\"{existing.Code}\",\"reason\":\"Has active/historic instances\"}}"
+            });
+        }
+        else
+        {
+            context.WorkflowDefinitions.Remove(existing);
+            context.AuditLogs.Add(new AuditLog
+            {
+                EntityName = "WorkflowDefinition",
+                RecordId = id,
+                ActionName = "DELETE_WORKFLOW_DEFINITION",
+                Actor = actorUserId,
+                Timestamp = now,
+                MetadataJson = $"{{\"code\":\"{existing.Code}\",\"name\":\"{existing.Name}\"}}"
+            });
+        }
+
+        await context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<WorkflowState> SaveStateAsync(WorkflowState state, string actorUserId, string actorName)
+    {
+        using var context = await _contextFactory.CreateDbContextAsync();
+        var now = DateTime.UtcNow;
+
+        if (state.IsInitial)
+        {
+            var otherStates = await context.WorkflowStates
+                .Where(s => s.WorkflowDefinitionId == state.WorkflowDefinitionId && s.Id != state.Id && s.IsInitial)
+                .ToListAsync();
+            foreach (var s in otherStates)
+            {
+                s.IsInitial = false;
+                s.ModifiedAt = now;
+                s.ModifiedBy = actorUserId;
+            }
+        }
+
+        if (state.Id == 0)
+        {
+            state.CreatedAt = now;
+            state.CreatedBy = actorUserId;
+            context.WorkflowStates.Add(state);
+            await context.SaveChangesAsync();
+
+            context.AuditLogs.Add(new AuditLog
+            {
+                EntityName = "WorkflowState",
+                RecordId = state.Id,
+                ActionName = "CREATE_WORKFLOW_STATE",
+                Actor = actorUserId,
+                Timestamp = now,
+                MetadataJson = $"{{\"workflowDefinitionId\":{state.WorkflowDefinitionId},\"stateCode\":\"{state.StateCode}\",\"stateName\":\"{state.StateName}\"}}"
+            });
+        }
+        else
+        {
+            var existing = await context.WorkflowStates.FirstOrDefaultAsync(s => s.Id == state.Id);
+            if (existing == null) throw new InvalidOperationException($"Workflow state #{state.Id} not found.");
+
+            existing.StateName = state.StateName;
+            existing.StateCode = state.StateCode;
+            existing.StepOrder = state.StepOrder;
+            existing.IsInitial = state.IsInitial;
+            existing.IsTerminal = state.IsTerminal;
+            existing.AllowedGroupRole = state.AllowedGroupRole;
+            existing.ModifiedAt = now;
+            existing.ModifiedBy = actorUserId;
+
+            context.AuditLogs.Add(new AuditLog
+            {
+                EntityName = "WorkflowState",
+                RecordId = existing.Id,
+                ActionName = "UPDATE_WORKFLOW_STATE",
+                Actor = actorUserId,
+                Timestamp = now,
+                MetadataJson = $"{{\"stateCode\":\"{existing.StateCode}\",\"stateName\":\"{existing.StateName}\",\"stepOrder\":{existing.StepOrder}}}"
+            });
+
+            await context.SaveChangesAsync();
+            return existing;
+        }
+
+        await context.SaveChangesAsync();
+        return state;
+    }
+
+    public async Task<bool> DeleteStateAsync(int stateId, string actorUserId, string actorName)
+    {
+        using var context = await _contextFactory.CreateDbContextAsync();
+        var hasActiveInstances = await context.WorkflowInstances.AnyAsync(i => i.CurrentWorkflowStateId == stateId);
+        if (hasActiveInstances) return false;
+
+        var state = await context.WorkflowStates.FirstOrDefaultAsync(s => s.Id == stateId);
+        if (state == null) return false;
+
+        // Remove dependent transitions
+        var transitions = await context.WorkflowTransitions
+            .Where(t => t.FromStateId == stateId || t.ToStateId == stateId)
+            .ToListAsync();
+        if (transitions.Any())
+        {
+            context.WorkflowTransitions.RemoveRange(transitions);
+        }
+
+        context.WorkflowStates.Remove(state);
+
+        context.AuditLogs.Add(new AuditLog
+        {
+            EntityName = "WorkflowState",
+            RecordId = stateId,
+            ActionName = "DELETE_WORKFLOW_STATE",
+            Actor = actorUserId,
+            Timestamp = DateTime.UtcNow,
+            MetadataJson = $"{{\"stateCode\":\"{state.StateCode}\",\"stateName\":\"{state.StateName}\"}}"
+        });
+
+        await context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<WorkflowTransition> SaveTransitionAsync(WorkflowTransition transition, string actorUserId, string actorName)
+    {
+        using var context = await _contextFactory.CreateDbContextAsync();
+        var now = DateTime.UtcNow;
+
+        if (transition.Id == 0)
+        {
+            transition.CreatedAt = now;
+            transition.CreatedBy = actorUserId;
+            context.WorkflowTransitions.Add(transition);
+            await context.SaveChangesAsync();
+
+            context.AuditLogs.Add(new AuditLog
+            {
+                EntityName = "WorkflowTransition",
+                RecordId = transition.Id,
+                ActionName = "CREATE_WORKFLOW_TRANSITION",
+                Actor = actorUserId,
+                Timestamp = now,
+                MetadataJson = $"{{\"fromStateId\":{transition.FromStateId},\"toStateId\":{transition.ToStateId},\"actionName\":\"{transition.ActionName}\"}}"
+            });
+        }
+        else
+        {
+            var existing = await context.WorkflowTransitions.FirstOrDefaultAsync(t => t.Id == transition.Id);
+            if (existing == null) throw new InvalidOperationException($"Workflow transition #{transition.Id} not found.");
+
+            existing.FromStateId = transition.FromStateId;
+            existing.ToStateId = transition.ToStateId;
+            existing.ActionName = transition.ActionName;
+            existing.ButtonColor = transition.ButtonColor;
+            existing.ButtonIcon = transition.ButtonIcon;
+            existing.RequiredPermission = transition.RequiredPermission;
+            existing.RequiresComments = transition.RequiresComments;
+            existing.NewEntityStatusCode = transition.NewEntityStatusCode;
+            existing.ModifiedAt = now;
+            existing.ModifiedBy = actorUserId;
+
+            context.AuditLogs.Add(new AuditLog
+            {
+                EntityName = "WorkflowTransition",
+                RecordId = existing.Id,
+                ActionName = "UPDATE_WORKFLOW_TRANSITION",
+                Actor = actorUserId,
+                Timestamp = now,
+                MetadataJson = $"{{\"actionName\":\"{existing.ActionName}\",\"fromStateId\":{existing.FromStateId},\"toStateId\":{existing.ToStateId}}}"
+            });
+
+            await context.SaveChangesAsync();
+            return existing;
+        }
+
+        await context.SaveChangesAsync();
+        return transition;
+    }
+
+    public async Task<bool> DeleteTransitionAsync(int transitionId, string actorUserId, string actorName)
+    {
+        using var context = await _contextFactory.CreateDbContextAsync();
+        var transition = await context.WorkflowTransitions.FirstOrDefaultAsync(t => t.Id == transitionId);
+        if (transition == null) return false;
+
+        context.WorkflowTransitions.Remove(transition);
+
+        context.AuditLogs.Add(new AuditLog
+        {
+            EntityName = "WorkflowTransition",
+            RecordId = transitionId,
+            ActionName = "DELETE_WORKFLOW_TRANSITION",
+            Actor = actorUserId,
+            Timestamp = DateTime.UtcNow,
+            MetadataJson = $"{{\"actionName\":\"{transition.ActionName}\"}}"
+        });
+
+        await context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<List<WorkflowInstance>> GetInstancesByDefinitionIdAsync(int definitionId)
+    {
+        using var context = await _contextFactory.CreateDbContextAsync();
+        return await context.WorkflowInstances
+            .Include(i => i.CurrentWorkflowState)
+            .Include(i => i.Tasks)
+            .Include(i => i.History)
+            .Where(i => i.WorkflowDefinitionId == definitionId)
+            .OrderByDescending(i => i.InitiatedDate)
+            .ToListAsync();
+    }
+
+    public async Task<List<DocumentRequirementRule>> GetDocumentRequirementsAsync(string processCode)
+    {
+        using var context = await _contextFactory.CreateDbContextAsync();
+        return await context.DocumentRequirementRules
+            .Where(r => r.WorkflowProcessCode == processCode)
+            .ToListAsync();
+    }
+
+    public async Task<DocumentRequirementRule> SaveDocumentRequirementAsync(DocumentRequirementRule rule, string actorUserId, string actorName)
+    {
+        using var context = await _contextFactory.CreateDbContextAsync();
+        var now = DateTime.UtcNow;
+
+        if (rule.Id == 0)
+        {
+            rule.CreatedAt = now;
+            rule.CreatedBy = actorUserId;
+            context.DocumentRequirementRules.Add(rule);
+            await context.SaveChangesAsync();
+
+            context.AuditLogs.Add(new AuditLog
+            {
+                EntityName = "DocumentRequirementRule",
+                RecordId = rule.Id,
+                ActionName = "CREATE_DOCUMENT_REQUIREMENT_RULE",
+                Actor = actorUserId,
+                Timestamp = now,
+                MetadataJson = $"{{\"processCode\":\"{rule.WorkflowProcessCode}\",\"type\":\"{rule.DocumentTypeCode}\"}}"
+            });
+        }
+        else
+        {
+            var existing = await context.DocumentRequirementRules.FirstOrDefaultAsync(r => r.Id == rule.Id);
+            if (existing == null) throw new InvalidOperationException($"Rule #{rule.Id} not found.");
+
+            existing.DocumentTypeCode = rule.DocumentTypeCode;
+            existing.DocumentTypeName = rule.DocumentTypeName;
+            existing.Description = rule.Description;
+            existing.IsMandatory = rule.IsMandatory;
+            existing.RequiredAtStateId = rule.RequiredAtStateId;
+            existing.ModifiedAt = now;
+            existing.ModifiedBy = actorUserId;
+
+            context.AuditLogs.Add(new AuditLog
+            {
+                EntityName = "DocumentRequirementRule",
+                RecordId = existing.Id,
+                ActionName = "UPDATE_DOCUMENT_REQUIREMENT_RULE",
+                Actor = actorUserId,
+                Timestamp = now,
+                MetadataJson = $"{{\"processCode\":\"{existing.WorkflowProcessCode}\",\"type\":\"{existing.DocumentTypeCode}\"}}"
+            });
+
+            await context.SaveChangesAsync();
+            return existing;
+        }
+
+        await context.SaveChangesAsync();
+        return rule;
+    }
+
+    public async Task<bool> DeleteDocumentRequirementAsync(int ruleId, string actorUserId, string actorName)
+    {
+        using var context = await _contextFactory.CreateDbContextAsync();
+        var existing = await context.DocumentRequirementRules.FirstOrDefaultAsync(r => r.Id == ruleId);
+        if (existing == null) return false;
+
+        context.DocumentRequirementRules.Remove(existing);
+
+        context.AuditLogs.Add(new AuditLog
+        {
+            EntityName = "DocumentRequirementRule",
+            RecordId = ruleId,
+            ActionName = "DELETE_DOCUMENT_REQUIREMENT_RULE",
+            Actor = actorUserId,
+            Timestamp = DateTime.UtcNow,
+            MetadataJson = $"{{\"processCode\":\"{existing.WorkflowProcessCode}\",\"type\":\"{existing.DocumentTypeCode}\"}}"
+        });
+
+        await context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<WorkflowDefinition> CloneDefinitionAsync(int sourceDefinitionId, string newCode, string newName, string actorUserId, string actorName)
+    {
+        using var context = await _contextFactory.CreateDbContextAsync();
+        var source = await context.WorkflowDefinitions
+            .Include(d => d.States)
+            .Include(d => d.Transitions)
+            .FirstOrDefaultAsync(d => d.Id == sourceDefinitionId);
+
+        if (source == null) throw new InvalidOperationException($"Source workflow definition #{sourceDefinitionId} not found.");
+
+        var now = DateTime.UtcNow;
+        var newDef = new WorkflowDefinition
+        {
+            Code = newCode.ToUpperInvariant().Trim(),
+            Name = newName.Trim(),
+            TargetEntityName = source.TargetEntityName,
+            KeyFieldName = source.KeyFieldName,
+            IsActive = true,
+            CreatedAt = now,
+            CreatedBy = actorUserId
+        };
+
+        context.WorkflowDefinitions.Add(newDef);
+        await context.SaveChangesAsync();
+
+        var stateIdMap = new Dictionary<int, int>();
+        foreach (var oldState in source.States.OrderBy(s => s.StepOrder))
+        {
+            var newState = new WorkflowState
+            {
+                WorkflowDefinitionId = newDef.Id,
+                StateCode = oldState.StateCode,
+                StateName = oldState.StateName,
+                StepOrder = oldState.StepOrder,
+                IsInitial = oldState.IsInitial,
+                IsTerminal = oldState.IsTerminal,
+                AllowedGroupRole = oldState.AllowedGroupRole,
+                CreatedAt = now,
+                CreatedBy = actorUserId
+            };
+            context.WorkflowStates.Add(newState);
+            await context.SaveChangesAsync();
+            stateIdMap[oldState.Id] = newState.Id;
+        }
+
+        foreach (var oldTrans in source.Transitions)
+        {
+            if (stateIdMap.TryGetValue(oldTrans.FromStateId, out var newFromId) &&
+                stateIdMap.TryGetValue(oldTrans.ToStateId, out var newToId))
+            {
+                var newTrans = new WorkflowTransition
+                {
+                    WorkflowDefinitionId = newDef.Id,
+                    FromStateId = newFromId,
+                    ToStateId = newToId,
+                    ActionName = oldTrans.ActionName,
+                    ButtonColor = oldTrans.ButtonColor,
+                    ButtonIcon = oldTrans.ButtonIcon,
+                    RequiredPermission = oldTrans.RequiredPermission,
+                    RequiresComments = oldTrans.RequiresComments,
+                    NewEntityStatusCode = oldTrans.NewEntityStatusCode,
+                    CreatedAt = now,
+                    CreatedBy = actorUserId
+                };
+                context.WorkflowTransitions.Add(newTrans);
+            }
+        }
+
+        context.AuditLogs.Add(new AuditLog
+        {
+            EntityName = "WorkflowDefinition",
+            RecordId = newDef.Id,
+            ActionName = "CLONE_WORKFLOW_DEFINITION",
+            Actor = actorUserId,
+            Timestamp = now,
+            MetadataJson = $"{{\"sourceId\":{sourceDefinitionId},\"newCode\":\"{newDef.Code}\",\"newName\":\"{newDef.Name}\"}}"
+        });
+
+        await context.SaveChangesAsync();
+        return newDef;
+    }
+
     private static string GetTargetRoute(string entityName, int entityId)
     {
         return entityName switch
@@ -426,8 +936,15 @@ public class WorkflowEngineService : IWorkflowEngineService
             "WorkplaceApproval" => $"/workplace-approvals/{entityId}",
             "CompanyLearner" => $"/learners/{entityId}",
             "GrantMoa" => $"/finance/grants/{entityId}",
-            "LearnerTradeTest" => $"/trade-tests",
+            "LearnerTradeTest" => $"/tradetests/{entityId}",
             "InterSetaTransfer" => $"/inter-seta-transfers",
+            "WorkplaceMonitoring" or "Visit" => $"/monitoring/{entityId}",
+            "BankingDetails" => $"/finance/banking-details/{entityId}",
+            "ExtensionOfScope" or "AssessorModeratorScope" => $"/etqa/scope-extensions/{entityId}",
+            "NonSetaVerification" or "NonSetaCompanyHistory" => $"/non-seta/verifications/{entityId}",
+            "ProjectImplementationPlan" => $"/grants/pip/{entityId}",
+            "SummativeAssessmentReport" or "SummativeAssessment" => $"/assessments/summative/{entityId}",
+            "ContractAddenda" => $"/contracts/variations/{entityId}",
             _ => "/"
         };
     }
@@ -466,11 +983,57 @@ public class WorkflowEngineService : IWorkflowEngineService
                 break;
             case "LearnerTradeTest":
                 var test = await context.LearnerTradeTests.FirstOrDefaultAsync(t => t.Id == entityId);
-                if (test != null) test.ResultStatusCode = statusCode;
+                if (test != null)
+                {
+                    test.ResultStatusCode = statusCode;
+                }
+                break;
+            case "LearnerTradeTestApplication":
+                var ttApp = await context.LearnerTradeTestApplications.FirstOrDefaultAsync(t => t.Id == entityId);
+                if (ttApp != null)
+                {
+                    ttApp.StatusCode = statusCode;
+                }
                 break;
             case "InterSetaTransfer":
                 var transfer = await context.InterSetaTransfers.FirstOrDefaultAsync(t => t.Id == entityId);
                 if (transfer != null) transfer.TransferStatusCode = statusCode;
+                break;
+            case "WorkplaceMonitoring":
+            case "WorkplaceMonitoringSiteVisit":
+                var mon = await context.WorkplaceMonitoringSiteVisits.FirstOrDefaultAsync(m => m.Id == entityId);
+                if (mon != null) mon.StatusCode = statusCode;
+                break;
+            case "BankingDetails":
+                var bank = await context.BankingDetails.FirstOrDefaultAsync(b => b.Id == entityId);
+                if (bank != null) bank.ApprovalStatusCode = statusCode;
+                break;
+            case "ExtensionOfScope":
+            case "SdpScopeExtensionApplication":
+                var eos = await context.SdpScopeExtensionApplications.FirstOrDefaultAsync(e => e.Id == entityId);
+                if (eos != null) eos.StatusCode = statusCode;
+                break;
+            case "AssessorModeratorScope":
+            case "AssessorModeratorApplication":
+                var amApp = await context.AssessorModeratorApplications.FirstOrDefaultAsync(e => e.Id == entityId);
+                if (amApp != null) amApp.StatusCode = statusCode;
+                break;
+            case "NonSetaVerification":
+            case "NonSetaQualificationsCompletion":
+                var nsv = await context.NonSetaQualificationsCompletions.FirstOrDefaultAsync(n => n.Id == entityId);
+                if (nsv != null) nsv.VerificationStatusCode = statusCode;
+                break;
+            case "ProjectImplementationPlan":
+                var pip = await context.ProjectImplementationPlans.FirstOrDefaultAsync(p => p.Id == entityId);
+                if (pip != null) pip.StatusCode = statusCode;
+                break;
+            case "SummativeAssessmentReport":
+                var sar = await context.SummativeAssessmentReports.FirstOrDefaultAsync(s => s.Id == entityId);
+                if (sar != null) sar.StatusCode = statusCode;
+                break;
+            case "ContractAddenda":
+                var add = await context.ContractAddendas.FirstOrDefaultAsync(a => a.Id == entityId);
+                if (add != null) add.StatusCode = statusCode;
                 break;
         }
     }

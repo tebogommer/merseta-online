@@ -1,0 +1,174 @@
+@namespace Nsdms.Web.Components.Pages.Admin
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@inject IWorkflowEngineService WorkflowService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@(Transition.Id == 0 ? Icons.Material.Filled.AddCircle : Icons.Material.Filled.Edit)" Color="Color.Primary" />
+            <MudText Typo="Typo.h6">@(Transition.Id == 0 ? "Add State Transition Rule" : "Edit State Transition Rule")</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form" @bind-IsValid="_isValid">
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudSelect T="int"
+                               @bind-Value="Transition.FromStateId"
+                               Label="Originating State (From)"
+                               Required="true"
+                               RequiredError="Originating state is required"
+                               Variant="Variant.Outlined"
+                               Class="mb-3">
+                        @foreach (var s in AvailableStates.OrderBy(s => s.StepOrder))
+                        {
+                            <MudSelectItem Value="@s.Id">@s.StepOrder. @s.StateName (@s.StateCode)</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudSelect T="int"
+                               @bind-Value="Transition.ToStateId"
+                               Label="Destination State (To)"
+                               Required="true"
+                               RequiredError="Destination state is required"
+                               Variant="Variant.Outlined"
+                               Class="mb-3">
+                        @foreach (var s in AvailableStates.OrderBy(s => s.StepOrder))
+                        {
+                            <MudSelectItem Value="@s.Id">@s.StepOrder. @s.StateName (@s.StateCode)</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudTextField @bind-Value="Transition.ActionName"
+                                  Label="Action Button Trigger Label"
+                                  Placeholder="e.g. Recommend to Review Committee"
+                                  Required="true"
+                                  RequiredError="Action trigger label is mandatory"
+                                  Variant="Variant.Outlined"
+                                  HelperText="Displayed on the Action Bridge button on entity detail views"
+                                  Class="mb-3" />
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudSelect T="string"
+                               @bind-Value="Transition.ButtonColor"
+                               Label="Button Theme Color"
+                               Variant="Variant.Outlined"
+                               Class="mb-3">
+                        <MudSelectItem Value="@("#1e40af")">Primary Blue (#1e40af)</MudSelectItem>
+                        <MudSelectItem Value="@("#16a34a")">Success Green (#16a34a)</MudSelectItem>
+                        <MudSelectItem Value="@("#0284c7")">Sky Cyan (#0284c7)</MudSelectItem>
+                        <MudSelectItem Value="@("#f59e0b")">Warning Amber (#f59e0b)</MudSelectItem>
+                        <MudSelectItem Value="@("#dc2626")">Danger Red (#dc2626)</MudSelectItem>
+                        <MudSelectItem Value="@("#475569")">Slate Dark (#475569)</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudSelect T="string"
+                               @bind-Value="Transition.ButtonIcon"
+                               Label="Button Material Icon"
+                               Variant="Variant.Outlined"
+                               Class="mb-3">
+                        <MudSelectItem Value="@("Send")">Send / Submit</MudSelectItem>
+                        <MudSelectItem Value="@("CheckCircle")">Check / Approve</MudSelectItem>
+                        <MudSelectItem Value="@("Cancel")">Cancel / Reject</MudSelectItem>
+                        <MudSelectItem Value="@("ThumbUp")">Thumb Up / Recommend</MudSelectItem>
+                        <MudSelectItem Value="@("Verified")">Verified / Accredit</MudSelectItem>
+                        <MudSelectItem Value="@("HelpOutline")">Question / Query</MudSelectItem>
+                        <MudSelectItem Value="@("Schedule")">Schedule Visit</MudSelectItem>
+                        <MudSelectItem Value="@("WorkspacePremium")">Certificate / Issue</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="Transition.RequiredPermission"
+                                  Label="Required CASL Permission / Role Gate"
+                                  Placeholder="e.g. APPROVE_WSP, RECOMMEND_PROVIDER"
+                                  Variant="Variant.Outlined"
+                                  HelperText="Optional: Leaves open to assigned role if blank"
+                                  Class="mb-3" />
+                </MudItem>
+
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="Transition.NewEntityStatusCode"
+                                  Label="Pushed Domain Entity Status Code"
+                                  Placeholder="e.g. APPROVED, UNDER_REVIEW, QUERIED"
+                                  Variant="Variant.Outlined"
+                                  HelperText="Automatically updates target record's status code upon execution"
+                                  Class="mb-3" />
+                </MudItem>
+
+                <MudItem xs="12">
+                    <MudSwitch @bind-Value="Transition.RequiresComments"
+                               Label="Enforce Mandatory Audit Justification Remarks"
+                               Color="Color.Warning" />
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" StartIcon="@Icons.Material.Filled.Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   OnClick="Submit"
+                   Disabled="@(!_isValid || _isSaving)"
+                   StartIcon="@Icons.Material.Filled.Save">
+            @if (_isSaving)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                <span>Saving...</span>
+            }
+            else
+            {
+                <span>Save Transition</span>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter] public WorkflowTransition Transition { get; set; } = new();
+    [Parameter] public List<WorkflowState> AvailableStates { get; set; } = new();
+
+    private MudForm _form = default!;
+    private bool _isValid;
+    private bool _isSaving;
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Submit()
+    {
+        await _form.Validate();
+        if (!_isValid) return;
+
+        _isSaving = true;
+        try
+        {
+            Transition.ActionName = Transition.ActionName.Trim();
+            if (!string.IsNullOrEmpty(Transition.NewEntityStatusCode))
+            {
+                Transition.NewEntityStatusCode = Transition.NewEntityStatusCode.ToUpperInvariant().Trim();
+            }
+
+            var saved = await WorkflowService.SaveTransitionAsync(Transition, "admin@merseta.org.za", "System Administrator");
+            Snackbar.Add($"Transition rule '{saved.ActionName}' saved successfully.", Severity.Success);
+            MudDialog.Close(DialogResult.Ok(saved));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving transition: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+}

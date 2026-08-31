@@ -1,0 +1,129 @@
+@namespace Nsdms.Web.Components.Pages.Admin
+@using Nsdms.Application.Services
+@using Nsdms.Domain.Entities
+@inject IWorkflowEngineService WorkflowService
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <div class="d-flex align-center gap-2">
+            <MudIcon Icon="@(State.Id == 0 ? Icons.Material.Filled.AddCircle : Icons.Material.Filled.Edit)" Color="Color.Primary" />
+            <MudText Typo="Typo.h6">@(State.Id == 0 ? "Add Lifecycle State" : "Edit Lifecycle State")</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="_form" @bind-IsValid="_isValid">
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="State.StateName"
+                                  Label="State Display Name"
+                                  Placeholder="e.g. Under Desktop Review"
+                                  Required="true"
+                                  RequiredError="State name is mandatory"
+                                  Variant="Variant.Outlined"
+                                  Class="mb-3" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudTextField @bind-Value="State.StateCode"
+                                  Label="State Machine Code"
+                                  Placeholder="e.g. DESK_REVIEW"
+                                  Required="true"
+                                  RequiredError="State code is mandatory"
+                                  Variant="Variant.Outlined"
+                                  Class="mb-3" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudNumericField @bind-Value="State.StepOrder"
+                                     Label="Sequential Step Order Index"
+                                     Min="1"
+                                     Max="50"
+                                     Required="true"
+                                     Variant="Variant.Outlined"
+                                     Class="mb-3" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudSelect T="string"
+                               @bind-Value="State.AllowedGroupRole"
+                               Label="Authorized Action Role"
+                               Clearable="true"
+                               Variant="Variant.Outlined"
+                               Class="mb-3">
+                        <MudSelectItem Value="@("Client Liaison Officer (CLO)")">Client Liaison Officer (CLO)</MudSelectItem>
+                        <MudSelectItem Value="@("Primary SDF")">Primary SDF</MudSelectItem>
+                        <MudSelectItem Value="@("Provider")">Training Provider</MudSelectItem>
+                        <MudSelectItem Value="@("Organised Labour")">Organised Labour</MudSelectItem>
+                        <MudSelectItem Value="@("Quality Assurance Manager")">Quality Assurance Manager</MudSelectItem>
+                        <MudSelectItem Value="@("Review Committee Member")">Review Committee Member</MudSelectItem>
+                        <MudSelectItem Value="@("Discretionary Grant Committee")">Discretionary Grant Committee</MudSelectItem>
+                        <MudSelectItem Value="@("Finance Officer")">Finance Officer</MudSelectItem>
+                        <MudSelectItem Value="@("SuperAdmin")">Administrator</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudSwitch @bind-Value="State.IsInitial"
+                               Label="Initial / Entry State (Draft Stage)"
+                               Color="Color.Primary" />
+                </MudItem>
+                <MudItem xs="12" md="6">
+                    <MudSwitch @bind-Value="State.IsTerminal"
+                               Label="Terminal State (Final / Closed Stage)"
+                               Color="Color.Success" />
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" StartIcon="@Icons.Material.Filled.Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   OnClick="Submit"
+                   Disabled="@(!_isValid || _isSaving)"
+                   StartIcon="@Icons.Material.Filled.Save">
+            @if (_isSaving)
+            {
+                <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                <span>Saving...</span>
+            }
+            else
+            {
+                <span>Save State</span>
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter] public WorkflowState State { get; set; } = new();
+
+    private MudForm _form = default!;
+    private bool _isValid;
+    private bool _isSaving;
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task Submit()
+    {
+        await _form.Validate();
+        if (!_isValid) return;
+
+        _isSaving = true;
+        try
+        {
+            State.StateCode = State.StateCode.ToUpperInvariant().Trim();
+            State.StateName = State.StateName.Trim();
+
+            var saved = await WorkflowService.SaveStateAsync(State, "admin@merseta.org.za", "System Administrator");
+            Snackbar.Add($"State '{saved.StateName}' saved successfully.", Severity.Success);
+            MudDialog.Close(DialogResult.Ok(saved));
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error saving state: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSaving = false;
+        }
+    }
+}
